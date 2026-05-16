@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 
 export interface LoginRequest {
-  email: string;
+  username: string;
   password: string;
 }
 
@@ -16,12 +16,13 @@ export interface RegisterRequest {
   email: string;
   password: string;
   type: string;
+  role?: string;
 }
 
 export interface AuthResponse {
   token: string;
   tokenType: string;
-  email: string;
+  username: string;
   role: string;
 }
 
@@ -41,12 +42,17 @@ export class AuthService {
   }
 
   register(data: RegisterRequest): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/signup`, data);
+    const { login, ...rest } = data;
+    return this.http.post<void>(`${this.apiUrl}/signup`, { ...rest, username: login });
   }
 
   logout(): void {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+  }
+
+  getToken(): string | null {
+    return localStorage.getItem('token');
   }
 
   isAuthenticated(): boolean {
