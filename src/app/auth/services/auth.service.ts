@@ -1,0 +1,55 @@
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, tap } from 'rxjs';
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface RegisterRequest {
+  matricule: string;
+  phone: string;
+  login: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  type: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  tokenType: string;
+  email: string;
+  role: string;
+}
+
+@Injectable({ providedIn: 'root' })
+export class AuthService {
+  private apiUrl = 'http://localhost:9090/api/auth';
+
+  constructor(private http: HttpClient) {}
+
+  login(credentials: LoginRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/signin`, credentials).pipe(
+      tap(response => {
+        localStorage.setItem('token', response.token);
+        localStorage.setItem('user', JSON.stringify(response));
+      })
+    );
+  }
+
+  register(data: RegisterRequest): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/signup`, data);
+  }
+
+  logout(): void {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+  }
+
+  isAuthenticated(): boolean {
+    return !!localStorage.getItem('token');
+  }
+}
