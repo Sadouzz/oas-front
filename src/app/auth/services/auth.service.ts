@@ -58,4 +58,19 @@ export class AuthService {
   isAuthenticated(): boolean {
     return !!localStorage.getItem('token');
   }
+
+  getRole(): string | null {
+    const user = localStorage.getItem('user');
+    if (!user) return null;
+    return JSON.parse(user).role;
+  }
+
+  hasRole(role: string): boolean {
+    return this.getRole() === role;
+  }
+
+  getUser(): AuthResponse | null {
+    const user = localStorage.getItem('user');
+    return user ? JSON.parse(user) : null;
+  }
 }
