@@ -1,15 +1,23 @@
-import { Component } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-forbidden',
   standalone: true,
   templateUrl: './forbidden.component.html',
 })
-export class ForbiddenComponent {
-  constructor(private router: Router) {}
+export class ForbiddenComponent implements OnInit {
+  private router = inject(Router);
+  private authService = inject(AuthService);
+
+  ngOnInit(): void {
+    if (!this.authService.isAuthenticated()) {
+      this.router.navigate(['/login'], { replaceUrl: true });
+    }
+  }
 
   goBack(): void {
-    this.router.navigate(['/dashboard']);
+    this.router.navigate(['/dashboard'], { replaceUrl: true });
   }
 }

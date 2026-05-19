@@ -5,11 +5,12 @@ import { ForbiddenComponent } from './auth/forbidden/forbidden.component';
 import { LayoutComponent } from './layout/layout.component';
 import { authGuard } from './auth/guards/auth.guard';
 import { roleGuard } from './auth/guards/role.guard';
+import { noAuthGuard } from './auth/guards/no-auth.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
-  { path: 'login', component: LoginComponent },
-  { path: 'register', component: RegisterComponent },
+  { path: 'login', component: LoginComponent, canActivate: [noAuthGuard] },
+  { path: 'register', component: RegisterComponent, canActivate: [noAuthGuard] },
   { path: 'forbidden', component: ForbiddenComponent },
 
   {

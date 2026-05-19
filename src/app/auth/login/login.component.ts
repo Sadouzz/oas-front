@@ -51,7 +51,7 @@ export class LoginComponent {
     this.errorMessage = '';
 
     this.authService.login(this.form.value).subscribe({
-      next: () => this.router.navigate(['/dashboard']),
+      next: () => this.router.navigate(['/dashboard'], { replaceUrl: true }),
         error: (err: any) => {
         this.loading = false;
         this.errorMessage = err.error?.message || "Nom d'utilisateur ou mot de passe incorrect.";
