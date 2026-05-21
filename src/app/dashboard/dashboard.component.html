@@ -1,0 +1,115 @@
+<div>
+
+  <!-- Welcome -->
+  <div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-900">Bonjour, {{ username }} 👋</h2>
+    <p class="text-gray-500 text-sm mt-1">Voici un aperçu de l'activité du garage.</p>
+  </div>
+
+  <!-- Stats cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+      <div class="flex items-center justify-between mb-3">
+        <p class="text-sm font-medium text-gray-500">Clients</p>
+        <div class="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center">
+          <svg class="w-4.5 h-4.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+        </div>
+      </div>
+      <p class="text-3xl font-bold text-gray-900">{{ totalClients }}</p>
+      <a routerLink="/clients" class="text-xs text-blue-600 hover:underline mt-2 inline-block">Voir tous →</a>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+      <div class="flex items-center justify-between mb-3">
+        <p class="text-sm font-medium text-gray-500">Véhicules</p>
+        <div class="w-9 h-9 bg-indigo-50 rounded-xl flex items-center justify-center">
+          <svg class="w-4.5 h-4.5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/>
+          </svg>
+        </div>
+      </div>
+      <p class="text-3xl font-bold text-gray-900">{{ totalVehicules }}</p>
+      <a routerLink="/vehicules" class="text-xs text-indigo-600 hover:underline mt-2 inline-block">Voir tous →</a>
+    </div>
+
+    <div class="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl shadow-sm p-5 text-white">
+      <p class="text-sm font-medium text-blue-200 mb-3">Accès rapide</p>
+      <p class="text-sm font-semibold mb-4">Enregistrer un nouveau client</p>
+      <a routerLink="/register"
+         class="inline-flex items-center gap-1.5 bg-white text-blue-700 text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-blue-50 transition">
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+        </svg>
+        Nouveau compte
+      </a>
+    </div>
+
+  </div>
+
+  <!-- Tables section -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+    <!-- Recent clients -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <h3 class="font-semibold text-gray-800 text-sm">Clients récents</h3>
+        <a routerLink="/clients" class="text-xs text-blue-600 hover:underline">Voir tout</a>
+      </div>
+      @if (loading) {
+        <div class="py-10 text-center text-gray-400 text-sm">Chargement...</div>
+      } @else if (recentClients.length === 0) {
+        <div class="py-10 text-center text-gray-400 text-sm">Aucun client enregistré</div>
+      } @else {
+        <ul class="divide-y divide-gray-50">
+          @for (client of recentClients; track client.id) {
+            <li class="flex items-center gap-3 px-5 py-3">
+              <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                {{ client.firstName[0] }}{{ client.lastName[0] }}
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-900 truncate">{{ client.firstName }} {{ client.lastName }}</p>
+                <p class="text-xs text-gray-400 truncate">{{ client.email }}</p>
+              </div>
+              @if (!client.enabled) {
+                <span class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">Archivé</span>
+              }
+            </li>
+          }
+        </ul>
+      }
+    </div>
+
+    <!-- Recent vehicles -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <h3 class="font-semibold text-gray-800 text-sm">Véhicules récents</h3>
+        <a routerLink="/vehicules" class="text-xs text-indigo-600 hover:underline">Voir tout</a>
+      </div>
+      @if (loading) {
+        <div class="py-10 text-center text-gray-400 text-sm">Chargement...</div>
+      } @else if (recentVehicules.length === 0) {
+        <div class="py-10 text-center text-gray-400 text-sm">Aucun véhicule enregistré</div>
+      } @else {
+        <ul class="divide-y divide-gray-50">
+          @for (v of recentVehicules; track v.id) {
+            <li class="flex items-center gap-3 px-5 py-3">
+              <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center flex-shrink-0">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/>
+                </svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-900">{{ v.immatriculation }}</p>
+                <p class="text-xs text-gray-400">{{ v.marque }} {{ v.modele }} · {{ v.annee }}</p>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+
+  </div>
+</div>
