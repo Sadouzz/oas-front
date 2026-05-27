@@ -42,9 +42,9 @@ export class LayoutComponent {
     return name ? name.slice(0, 2).toUpperCase() : 'OA';
   }
 
-  isSuperAgent(): boolean {
-    return this.authService.hasRole('ROLE_SUPER_AGENT');
-  }
+  isSuperAgent(): boolean { return this.authService.hasRole('ROLE_SUPER_AGENT'); }
+  isChefAtelier(): boolean { return this.authService.hasRole('ROLE_CHEF_ATELIER'); }
+  isMagasinier(): boolean { return this.authService.hasRole('ROLE_AGENT_MAGASIN'); }
 
   logout(): void {
     this.authService.logout();

@@ -12,6 +12,8 @@ export class HistoryComponent implements OnInit {
 
   history: ConnectionHistoryModel[] = [];
   filtered: ConnectionHistoryModel[] = [];
+  page = 1;
+  readonly pageSize = 10;
   loading = false;
 
   ngOnInit() {
@@ -37,7 +39,14 @@ export class HistoryComponent implements OnInit {
           h.status?.toLowerCase().includes(term)
         )
       : this.history;
+    this.page = 1;
   }
+
+  get paged(): ConnectionHistoryModel[] { return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize); }
+  get totalPages(): number { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }
+  get rangeEnd(): number { return Math.min(this.page * this.pageSize, this.filtered.length); }
+  prevPage(): void { if (this.page > 1) this.page--; }
+  nextPage(): void { if (this.page < this.totalPages) this.page++; }
 
   formatDate(ts: string): string {
     if (!ts) return '–';

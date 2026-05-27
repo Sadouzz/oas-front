@@ -1,14 +1,18 @@
 <div>
-
-  <!-- Header -->
   <div class="flex items-center justify-between mb-6">
     <div>
-      <h2 class="text-xl font-bold text-gray-900">Clients</h2>
-      <p class="text-sm text-gray-500 mt-0.5">{{ filtered.length }} client(s) affiché(s)</p>
+      <h2 class="text-xl font-bold text-gray-900">Main d'œuvre — Catalogue des prestations</h2>
+      <p class="text-sm text-gray-500 mt-0.5">{{ filtered.length }} prestation(s) affichée(s)</p>
     </div>
+    <button (click)="openCreate()"
+            class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition cursor-pointer">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+      </svg>
+      Ajouter une prestation
+    </button>
   </div>
 
-  <!-- Notifications -->
   @if (successMessage) {
     <div class="mb-4 px-4 py-3 bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl">{{ successMessage }}</div>
   }
@@ -25,7 +29,7 @@
         </svg>
       </span>
       <input type="text" (input)="onSearch($event)"
-             placeholder="Rechercher par nom, email, matricule ou téléphone..."
+             placeholder="Rechercher par catégorie..."
              class="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
     </div>
   </div>
@@ -36,10 +40,9 @@
       <table class="w-full text-sm">
         <thead class="bg-gray-50 border-b border-gray-200">
           <tr>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Matricule</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Nom complet</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Téléphone</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Catégorie</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Prix (FCFA)</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Nb heures</th>
             <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Statut</th>
             <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
           </tr>
@@ -47,7 +50,7 @@
         <tbody class="divide-y divide-gray-100">
           @if (loading) {
             <tr>
-              <td colspan="6" class="text-center py-14 text-gray-400">
+              <td colspan="5" class="text-center py-14 text-gray-400">
                 <svg class="animate-spin h-5 w-5 mx-auto mb-2" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
@@ -56,24 +59,17 @@
               </td>
             </tr>
           } @else {
-            @for (client of paged; track client.id) {
+            @for (item of paged; track item.id) {
               <tr class="hover:bg-gray-50 transition">
-                <td class="px-4 py-3 font-mono text-gray-600 text-xs">{{ client.matricule }}</td>
                 <td class="px-4 py-3">
-                  <div class="flex items-center gap-2.5">
-                    <div class="w-7 h-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold flex-shrink-0">
-                      {{ client.firstName[0] }}{{ client.lastName[0] }}
-                    </div>
-                    <div>
-                      <p class="font-medium text-gray-900">{{ client.firstName }} {{ client.lastName }}</p>
-                      <p class="text-xs text-gray-400">&#64;{{ client.username }}</p>
-                    </div>
-                  </div>
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold {{ categorieBadge(item.categorie) }}">
+                    {{ categorieLabel(item.categorie) }}
+                  </span>
                 </td>
-                <td class="px-4 py-3 text-gray-600">{{ client.email }}</td>
-                <td class="px-4 py-3 text-gray-600">{{ client.phone }}</td>
+                <td class="px-4 py-3 font-medium text-gray-900">{{ item.prix | number:'1.0-0' }} FCFA</td>
+                <td class="px-4 py-3 text-gray-700">{{ item.nbreHeure }} h</td>
                 <td class="px-4 py-3">
-                  @if (client.enabled) {
+                  @if (!item.isArchived) {
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Actif</span>
                   } @else {
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">Archivé</span>
@@ -81,28 +77,25 @@
                 </td>
                 <td class="px-4 py-3">
                   <div class="flex items-center justify-end gap-1">
-                    <button (click)="openEdit(client)" title="Modifier"
+                    <button (click)="openEdit(item)" title="Modifier"
                             class="p-1.5 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-600 transition cursor-pointer">
                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                       </svg>
                     </button>
-                    @if (client.enabled) {
-                      <button (click)="archive(client)" title="Archiver"
-                              class="p-1.5 rounded-lg hover:bg-amber-50 text-gray-400 hover:text-amber-600 transition cursor-pointer">
+                    <button (click)="toggleArchive(item)" [title]="item.isArchived ? 'Désarchiver' : 'Archiver'"
+                            class="p-1.5 rounded-lg transition cursor-pointer {{ item.isArchived ? 'hover:bg-green-50 text-gray-400 hover:text-green-600' : 'hover:bg-amber-50 text-gray-400 hover:text-amber-600' }}">
+                      @if (!item.isArchived) {
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
                         </svg>
-                      </button>
-                    } @else {
-                      <button (click)="unarchive(client)" title="Désarchiver"
-                              class="p-1.5 rounded-lg hover:bg-green-50 text-gray-400 hover:text-green-600 transition cursor-pointer">
+                      } @else {
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
                         </svg>
-                      </button>
-                    }
-                    <button (click)="deleteClient(client)" title="Supprimer"
+                      }
+                    </button>
+                    <button (click)="delete(item)" title="Supprimer"
                             class="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition cursor-pointer">
                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -113,11 +106,11 @@
               </tr>
             } @empty {
               <tr>
-                <td colspan="6" class="text-center py-14">
+                <td colspan="5" class="text-center py-14">
                   <svg class="w-10 h-10 text-gray-200 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z"/>
                   </svg>
-                  <p class="text-gray-400 text-sm">Aucun client trouvé</p>
+                  <p class="text-gray-400 text-sm">Aucune prestation trouvée</p>
                 </td>
               </tr>
             }
@@ -136,61 +129,52 @@
       </div>
     }
   </div>
-
 </div>
 
-<!-- ── Edit Modal ── -->
-@if (showEditModal) {
+<!-- Modal -->
+@if (showModal) {
   <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
       <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-        <h3 class="font-bold text-gray-900">Modifier le client</h3>
+        <h3 class="font-bold text-gray-900">{{ isNew ? 'Nouvelle prestation' : 'Modifier la prestation' }}</h3>
         <button (click)="closeModal()" class="p-1 rounded-lg hover:bg-gray-100 text-gray-400 transition cursor-pointer">
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
           </svg>
         </button>
       </div>
-      <form [formGroup]="editForm" (ngSubmit)="saveEdit()" class="px-6 py-5 space-y-4">
+      <form [formGroup]="form" (ngSubmit)="save()" class="px-6 py-5 space-y-4">
+        @if (errorMessage) {
+          <div class="px-3 py-2 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg">{{ errorMessage }}</div>
+        }
 
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
-            <input type="text" formControlName="firstName"
-                   class="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                   [class.border-red-400]="fEdit['firstName'].invalid && fEdit['firstName'].touched"/>
-            @if (fEdit['firstName'].invalid && fEdit['firstName'].touched) {
-              <p class="text-red-500 text-xs mt-1">Champ requis</p>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Catégorie *</label>
+          <select formControlName="categorie"
+                  class="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+            @for (c of categories; track c) {
+              <option [value]="c">{{ categorieLabel(c) }}</option>
             }
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Nom</label>
-            <input type="text" formControlName="lastName"
-                   class="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                   [class.border-red-400]="fEdit['lastName'].invalid && fEdit['lastName'].touched"/>
-            @if (fEdit['lastName'].invalid && fEdit['lastName'].touched) {
-              <p class="text-red-500 text-xs mt-1">Champ requis</p>
-            }
-          </div>
+          </select>
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-          <input type="email" formControlName="email"
-                 class="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                 [class.border-red-400]="fEdit['email'].invalid && fEdit['email'].touched"/>
-          @if (fEdit['email'].invalid && fEdit['email'].touched) {
-            <p class="text-red-500 text-xs mt-1">Email invalide</p>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Prix (FCFA) *</label>
+          <input type="number" formControlName="prix" min="0" placeholder="Ex: 15000"
+                 class="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                 [class.border-red-400]="fc['prix'].invalid && fc['prix'].touched"/>
+          @if (fc['prix'].invalid && fc['prix'].touched) {
+            <p class="text-red-500 text-xs mt-1">Prix valide requis (min 0)</p>
           }
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
-          <input type="text" formControlName="phone"
-                 class="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                 [class.border-red-400]="fEdit['phone'].invalid && fEdit['phone'].touched"/>
-          @if (fEdit['phone'].invalid && fEdit['phone'].touched) {
-            <p class="text-red-500 text-xs mt-1">Champ requis</p>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nombre d'heures *</label>
+          <input type="number" formControlName="nbreHeure" min="1" placeholder="Ex: 2"
+                 class="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                 [class.border-red-400]="fc['nbreHeure'].invalid && fc['nbreHeure'].touched"/>
+          @if (fc['nbreHeure'].invalid && fc['nbreHeure'].touched) {
+            <p class="text-red-500 text-xs mt-1">Nombre d'heures requis (min 1)</p>
           }
         </div>
 
@@ -201,10 +185,9 @@
           </button>
           <button type="submit" [disabled]="saving"
                   class="px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-            {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
+            {{ saving ? 'Enregistrement...' : (isNew ? 'Créer' : 'Enregistrer') }}
           </button>
         </div>
-
       </form>
     </div>
   </div>

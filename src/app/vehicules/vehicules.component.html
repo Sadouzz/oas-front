@@ -63,7 +63,7 @@
               </td>
             </tr>
           } @else {
-            @for (v of filtered; track v.id) {
+            @for (v of paged; track v.id) {
               <tr class="hover:bg-gray-50 transition">
                 <td class="px-4 py-3 font-mono font-semibold text-gray-800">{{ v.immatriculation }}</td>
                 <td class="px-4 py-3">
@@ -111,6 +111,16 @@
         </tbody>
       </table>
     </div>
+    @if (totalPages > 1) {
+      <div class="flex items-center justify-between px-4 py-3 border-t border-gray-100 text-xs text-gray-500">
+        <span>{{ (page - 1) * pageSize + 1 }}–{{ rangeEnd }} sur {{ filtered.length }}</span>
+        <div class="flex items-center gap-1">
+          <button (click)="prevPage()" [disabled]="page === 1" class="px-2.5 py-1 rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer">‹</button>
+          <span class="px-2 font-medium text-gray-700">{{ page }} / {{ totalPages }}</span>
+          <button (click)="nextPage()" [disabled]="page === totalPages" class="px-2.5 py-1 rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer">›</button>
+        </div>
+      </div>
+    }
   </div>
 
 </div>
@@ -200,9 +210,9 @@
                   class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition cursor-pointer">
             Annuler
           </button>
-          <button type="submit"
-                  class="px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition cursor-pointer">
-            {{ isNew ? 'Créer' : 'Enregistrer' }}
+          <button type="submit" [disabled]="saving"
+                  class="px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+            {{ saving ? 'Enregistrement...' : (isNew ? 'Créer' : 'Enregistrer') }}
           </button>
         </div>
 

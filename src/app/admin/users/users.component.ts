@@ -17,7 +17,10 @@ export class UsersComponent implements OnInit {
 
   users: UserModel[] = [];
   filtered: UserModel[] = [];
+  page = 1;
+  readonly pageSize = 10;
   loading = false;
+  saving = false;
   successMessage = '';
   errorMessage = '';
 
@@ -64,7 +67,14 @@ export class UsersComponent implements OnInit {
           u.username.toLowerCase().includes(term)
         )
       : this.users;
+    this.page = 1;
   }
+
+  get paged(): UserModel[] { return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize); }
+  get totalPages(): number { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }
+  get rangeEnd(): number { return Math.min(this.page * this.pageSize, this.filtered.length); }
+  prevPage(): void { if (this.page > 1) this.page--; }
+  nextPage(): void { if (this.page < this.totalPages) this.page++; }
 
   openCreate() {
     this.isNew = true;
@@ -99,23 +109,24 @@ export class UsersComponent implements OnInit {
   }
 
   save() {
-    if (this.form.invalid) {
+    if (this.form.invalid || this.saving) {
       this.form.markAllAsTouched();
       return;
     }
+    this.saving = true;
     const val = this.form.value;
 
     if (this.isNew) {
       const payload = { ...val, type: 'AGENT' } as any;
       this.userService.create(payload).subscribe({
-        next: () => { this.showSuccess('Utilisateur créé avec succès !'); this.closeModal(); this.loadUsers(); },
-        error: (err: any) => { this.errorMessage = err.error?.message || 'Erreur lors de la création.'; }
+        next: () => { this.saving = false; this.showSuccess('Utilisateur créé avec succès !'); this.closeModal(); this.loadUsers(); },
+        error: (err: any) => { this.saving = false; this.errorMessage = err.error?.message || 'Erreur lors de la création.'; }
       });
     } else {
       const payload = { phone: val.phone, firstName: val.firstName, lastName: val.lastName, email: val.email, role: val.role };
       this.userService.update(this.editingId!, payload as any).subscribe({
-        next: () => { this.showSuccess('Utilisateur modifié avec succès !'); this.closeModal(); this.loadUsers(); },
-        error: (err: any) => { this.errorMessage = err.error?.message || 'Erreur lors de la modification.'; }
+        next: () => { this.saving = false; this.showSuccess('Utilisateur modifié avec succès !'); this.closeModal(); this.loadUsers(); },
+        error: (err: any) => { this.saving = false; this.errorMessage = err.error?.message || 'Erreur lors de la modification.'; }
       });
     }
   }

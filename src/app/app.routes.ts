@@ -5,6 +5,7 @@ import { ForbiddenComponent } from './auth/forbidden/forbidden.component';
 import { LayoutComponent } from './layout/layout.component';
 import { authGuard } from './auth/guards/auth.guard';
 import { roleGuard } from './auth/guards/role.guard';
+import { multiRoleGuard } from './auth/guards/multi-role.guard';
 import { noAuthGuard } from './auth/guards/no-auth.guard';
 
 export const routes: Routes = [
@@ -34,6 +35,34 @@ export const routes: Routes = [
           import('./vehicules/vehicules.component').then(m => m.VehiculesComponent),
       },
       {
+        path: 'pieces-detachees',
+        loadComponent: () =>
+          import('./pieces-detachees/pieces-detachees.component').then(m => m.PiecesDetacheesComponent),
+      },
+      {
+        path: 'bons-de-sortie',
+        loadComponent: () =>
+          import('./bons-de-sortie/bons-de-sortie.component').then(m => m.BonsDeSortieComponent),
+      },
+      {
+        path: 'stock',
+        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_AGENT_MAGASIN'])],
+        loadComponent: () =>
+          import('./stock/stock.component').then(m => m.StockComponent),
+      },
+      {
+        path: 'inventaire',
+        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_AGENT_MAGASIN'])],
+        loadComponent: () =>
+          import('./inventaire/inventaire.component').then(m => m.InventaireComponent),
+      },
+      {
+        path: 'fournisseurs',
+        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_AGENT_MAGASIN'])],
+        loadComponent: () =>
+          import('./fournisseurs/fournisseurs.component').then(m => m.FournisseursComponent),
+      },
+      {
         path: 'admin',
         canActivate: [roleGuard('ROLE_SUPER_AGENT')],
         children: [
@@ -46,6 +75,11 @@ export const routes: Routes = [
             path: 'history',
             loadComponent: () =>
               import('./admin/history/history.component').then(m => m.HistoryComponent),
+          },
+          {
+            path: 'main-doeuvre',
+            loadComponent: () =>
+              import('./main-doeuvre/main-doeuvre.component').then(m => m.MainDoeuvreComponent),
           },
         ],
       },

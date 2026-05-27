@@ -1,21 +1,18 @@
 <div>
-
-  <!-- Header -->
   <div class="flex items-center justify-between mb-6">
     <div>
-      <h2 class="text-xl font-bold text-gray-900">Utilisateurs</h2>
-      <p class="text-sm text-gray-500 mt-0.5">{{ filtered.length }} utilisateur(s) affiché(s)</p>
+      <h2 class="text-xl font-bold text-gray-900">Fournisseurs</h2>
+      <p class="text-sm text-gray-500 mt-0.5">{{ filtered.length }} fournisseur(s) affiché(s)</p>
     </div>
     <button (click)="openCreate()"
             class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition cursor-pointer">
       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
       </svg>
-      Créer un utilisateur
+      Ajouter un fournisseur
     </button>
   </div>
 
-  <!-- Notifications -->
   @if (successMessage) {
     <div class="mb-4 px-4 py-3 bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl">{{ successMessage }}</div>
   }
@@ -32,7 +29,7 @@
         </svg>
       </span>
       <input type="text" (input)="onSearch($event)"
-             placeholder="Rechercher par nom, email, matricule ou identifiant..."
+             placeholder="Rechercher par entreprise, matricule ou nom du contact..."
              class="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
     </div>
   </div>
@@ -44,9 +41,8 @@
         <thead class="bg-gray-50 border-b border-gray-200">
           <tr>
             <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Matricule</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Utilisateur</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Rôle</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Entreprise</th>
+            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Contact</th>
             <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Statut</th>
             <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
           </tr>
@@ -54,7 +50,7 @@
         <tbody class="divide-y divide-gray-100">
           @if (loading) {
             <tr>
-              <td colspan="6" class="text-center py-14 text-gray-400">
+              <td colspan="5" class="text-center py-14 text-gray-400">
                 <svg class="animate-spin h-5 w-5 mx-auto mb-2" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
@@ -63,28 +59,13 @@
               </td>
             </tr>
           } @else {
-            @for (user of paged; track user.id) {
+            @for (f of paged; track f.id) {
               <tr class="hover:bg-gray-50 transition">
-                <td class="px-4 py-3 font-mono text-gray-600 text-xs">{{ user.matricule }}</td>
+                <td class="px-4 py-3 font-mono text-gray-600 text-xs">{{ f.matricule }}</td>
+                <td class="px-4 py-3 font-semibold text-gray-900">{{ f.nomEntreprise }}</td>
+                <td class="px-4 py-3 text-gray-700">{{ f.prenom }} {{ f.nom }}</td>
                 <td class="px-4 py-3">
-                  <div class="flex items-center gap-2.5">
-                    <div class="w-7 h-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold flex-shrink-0">
-                      {{ user.firstName[0] }}{{ user.lastName[0] }}
-                    </div>
-                    <div>
-                      <p class="font-medium text-gray-900">{{ user.firstName }} {{ user.lastName }}</p>
-                      <p class="text-xs text-gray-400">&#64;{{ user.username }}</p>
-                    </div>
-                  </div>
-                </td>
-                <td class="px-4 py-3 text-gray-600">{{ user.email }}</td>
-                <td class="px-4 py-3">
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
-                    {{ roleLabel(user.role) }}
-                  </span>
-                </td>
-                <td class="px-4 py-3">
-                  @if (user.enabled) {
+                  @if (!f.archived) {
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Actif</span>
                   } @else {
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">Archivé</span>
@@ -92,28 +73,28 @@
                 </td>
                 <td class="px-4 py-3">
                   <div class="flex items-center justify-end gap-1">
-                    <button (click)="openEdit(user)" title="Modifier"
+                    <button (click)="openEdit(f)" title="Modifier"
                             class="p-1.5 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-600 transition cursor-pointer">
                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                       </svg>
                     </button>
-                    @if (user.enabled) {
-                      <button (click)="archive(user)" title="Archiver"
+                    @if (!f.archived) {
+                      <button (click)="archive(f)" title="Archiver"
                               class="p-1.5 rounded-lg hover:bg-amber-50 text-gray-400 hover:text-amber-600 transition cursor-pointer">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
                         </svg>
                       </button>
                     } @else {
-                      <button (click)="unarchive(user)" title="Désarchiver"
+                      <button (click)="unarchive(f)" title="Désarchiver"
                               class="p-1.5 rounded-lg hover:bg-green-50 text-gray-400 hover:text-green-600 transition cursor-pointer">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
                         </svg>
                       </button>
                     }
-                    <button (click)="deleteUser(user)" title="Supprimer"
+                    <button (click)="delete(f)" title="Supprimer"
                             class="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition cursor-pointer">
                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -124,11 +105,11 @@
               </tr>
             } @empty {
               <tr>
-                <td colspan="6" class="text-center py-14">
+                <td colspan="5" class="text-center py-14">
                   <svg class="w-10 h-10 text-gray-200 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                   </svg>
-                  <p class="text-gray-400 text-sm">Aucun utilisateur trouvé</p>
+                  <p class="text-gray-400 text-sm">Aucun fournisseur trouvé</p>
                 </td>
               </tr>
             }
@@ -147,15 +128,14 @@
       </div>
     }
   </div>
-
 </div>
 
-<!-- ── Create / Edit Modal ── -->
+<!-- Modal -->
 @if (showModal) {
   <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white">
-        <h3 class="font-bold text-gray-900">{{ isNew ? 'Créer un utilisateur' : 'Modifier l\'utilisateur' }}</h3>
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <h3 class="font-bold text-gray-900">{{ isNew ? 'Ajouter un fournisseur' : 'Modifier le fournisseur' }}</h3>
         <button (click)="closeModal()" class="p-1 rounded-lg hover:bg-gray-100 text-gray-400 transition cursor-pointer">
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
@@ -163,89 +143,49 @@
         </button>
       </div>
       <form [formGroup]="form" (ngSubmit)="save()" class="px-6 py-5 space-y-4">
-
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Prénom *</label>
-            <input type="text" formControlName="firstName"
-                   class="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                   [class.border-red-400]="f['firstName'].invalid && f['firstName'].touched"/>
-            @if (f['firstName'].invalid && f['firstName'].touched) {
-              <p class="text-red-500 text-xs mt-1">Champ requis</p>
-            }
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
-            <input type="text" formControlName="lastName"
-                   class="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                   [class.border-red-400]="f['lastName'].invalid && f['lastName'].touched"/>
-            @if (f['lastName'].invalid && f['lastName'].touched) {
-              <p class="text-red-500 text-xs mt-1">Champ requis</p>
-            }
-          </div>
-        </div>
-
-        @if (isNew) {
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Matricule *</label>
-              <input type="text" formControlName="matricule"
-                     class="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                     [class.border-red-400]="f['matricule'].invalid && f['matricule'].touched"/>
-              @if (f['matricule'].invalid && f['matricule'].touched) {
-                <p class="text-red-500 text-xs mt-1">Champ requis</p>
-              }
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Identifiant *</label>
-              <input type="text" formControlName="username"
-                     class="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                     [class.border-red-400]="f['username'].invalid && f['username'].touched"/>
-              @if (f['username'].invalid && f['username'].touched) {
-                <p class="text-red-500 text-xs mt-1">Champ requis</p>
-              }
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe *</label>
-            <input type="password" formControlName="password"
-                   class="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                   [class.border-red-400]="f['password'].invalid && f['password'].touched"/>
-            @if (f['password'].invalid && f['password'].touched) {
-              <p class="text-red-500 text-xs mt-1">Champ requis</p>
-            }
-          </div>
+        @if (errorMessage) {
+          <div class="px-3 py-2 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg">{{ errorMessage }}</div>
         }
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-          <input type="email" formControlName="email"
-                 class="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                 [class.border-red-400]="f['email'].invalid && f['email'].touched"/>
-          @if (f['email'].invalid && f['email'].touched) {
-            <p class="text-red-500 text-xs mt-1">Email invalide</p>
-          }
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone *</label>
-          <input type="text" formControlName="phone"
-                 class="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                 [class.border-red-400]="f['phone'].invalid && f['phone'].touched"/>
-          @if (f['phone'].invalid && f['phone'].touched) {
+          <label class="block text-sm font-medium text-gray-700 mb-1">Matricule *</label>
+          <input type="text" formControlName="matricule"
+                 class="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                 [class.border-red-400]="f['matricule'].invalid && f['matricule'].touched"/>
+          @if (f['matricule'].invalid && f['matricule'].touched) {
             <p class="text-red-500 text-xs mt-1">Champ requis</p>
           }
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Rôle *</label>
-          <select formControlName="role"
-                  class="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-            @for (r of roles; track r) {
-              <option [value]="r">{{ roleLabel(r) }}</option>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nom de l'entreprise *</label>
+          <input type="text" formControlName="nomEntreprise"
+                 class="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                 [class.border-red-400]="f['nomEntreprise'].invalid && f['nomEntreprise'].touched"/>
+          @if (f['nomEntreprise'].invalid && f['nomEntreprise'].touched) {
+            <p class="text-red-500 text-xs mt-1">Champ requis</p>
+          }
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Prénom contact *</label>
+            <input type="text" formControlName="prenom"
+                   class="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                   [class.border-red-400]="f['prenom'].invalid && f['prenom'].touched"/>
+            @if (f['prenom'].invalid && f['prenom'].touched) {
+              <p class="text-red-500 text-xs mt-1">Champ requis</p>
             }
-          </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Nom contact *</label>
+            <input type="text" formControlName="nom"
+                   class="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                   [class.border-red-400]="f['nom'].invalid && f['nom'].touched"/>
+            @if (f['nom'].invalid && f['nom'].touched) {
+              <p class="text-red-500 text-xs mt-1">Champ requis</p>
+            }
+          </div>
         </div>
 
         <div class="flex justify-end gap-2 pt-2">
@@ -258,7 +198,6 @@
             {{ saving ? 'Enregistrement...' : (isNew ? 'Créer' : 'Enregistrer') }}
           </button>
         </div>
-
       </form>
     </div>
   </div>
