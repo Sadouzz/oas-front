@@ -14,7 +14,10 @@ export class ClientsComponent implements OnInit {
 
   clients: UserModel[] = [];
   filtered: UserModel[] = [];
+  page = 1;
+  readonly pageSize = 10;
   loading = false;
+  saving = false;
   successMessage = '';
   errorMessage = '';
 
@@ -54,7 +57,14 @@ export class ClientsComponent implements OnInit {
           c.phone.includes(term)
         )
       : this.clients;
+    this.page = 1;
   }
+
+  get paged(): UserModel[] { return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize); }
+  get totalPages(): number { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }
+  get rangeEnd(): number { return Math.min(this.page * this.pageSize, this.filtered.length); }
+  prevPage(): void { if (this.page > 1) this.page--; }
+  nextPage(): void { if (this.page < this.totalPages) this.page++; }
 
   openEdit(client: UserModel) {
     this.editingClient = client;
@@ -74,17 +84,20 @@ export class ClientsComponent implements OnInit {
   }
 
   saveEdit() {
-    if (this.editForm.invalid || !this.editingClient) {
+    if (this.editForm.invalid || !this.editingClient || this.saving) {
       this.editForm.markAllAsTouched();
       return;
     }
+    this.saving = true;
     this.clientService.update(this.editingClient.id, this.editForm.value as any).subscribe({
       next: () => {
+        this.saving = false;
         this.showSuccess('Client modifié avec succès !');
         this.closeModal();
         this.loadClients();
       },
       error: (err: any) => {
+        this.saving = false;
         this.errorMessage = err.error?.message || 'Erreur lors de la modification.';
       }
     });

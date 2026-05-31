@@ -6,12 +6,12 @@ import { UserModel } from './client.service';
 export interface VehiculeModel {
   id: number;
   immatriculation: string;
-  annee: number;
+  annee: number | null;
   modele: string;
   marque: string;
-  kilometrage: number;
+  kilometrage: number | null;
   numeroChassis: string;
-  client: UserModel;
+  client: UserModel | null;
   createdAt: string;
 }
 

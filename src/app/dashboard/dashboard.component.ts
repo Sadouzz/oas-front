@@ -3,6 +3,9 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/services/auth.service';
 import { ClientService, UserModel } from '../services/client.service';
 import { VehiculeService, VehiculeModel } from '../services/vehicule.service';
+import { StockService } from '../services/stock.service';
+import { PieceDetacheeService, AlerteStock } from '../services/piece-detachee.service';
+import { BonDeSortieService, BonDeSortie } from '../services/bon-de-sortie.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -14,39 +17,52 @@ export class DashboardComponent implements OnInit {
   private authService = inject(AuthService);
   private clientService = inject(ClientService);
   private vehiculeService = inject(VehiculeService);
+  private stockService = inject(StockService);
+  private pieceService = inject(PieceDetacheeService);
+  private bonService = inject(BonDeSortieService);
 
   recentClients: UserModel[] = [];
   recentVehicules: VehiculeModel[] = [];
+  alertes: AlerteStock[] = [];
+  bonsEnAttente: BonDeSortie[] = [];
+
   totalClients = 0;
   totalVehicules = 0;
   loading = true;
 
-  get username(): string {
-    return this.authService.getUser()?.username ?? '';
-  }
+  get role(): string { return this.authService.getRole() ?? ''; }
+  get username(): string { return this.authService.getUser()?.username ?? ''; }
+
+  get isSuperAgent()  { return this.role === 'ROLE_SUPER_AGENT'; }
+  get isAgent()       { return this.role === 'ROLE_AGENT'; }
+  get isChefAtelier() { return this.role === 'ROLE_CHEF_ATELIER'; }
+  get isMagasinier()  { return this.role === 'ROLE_AGENT_MAGASIN'; }
 
   ngOnInit() {
-    this.clientService.getAll().subscribe({
-      next: (data) => {
-        this.totalClients = data.length;
-        this.recentClients = data.slice(0, 5);
-        this.checkDone();
-      },
-      error: () => this.checkDone()
-    });
-
-    this.vehiculeService.getAll().subscribe({
-      next: (data) => {
-        this.totalVehicules = data.length;
-        this.recentVehicules = data.slice(0, 5);
-        this.checkDone();
-      },
-      error: () => this.checkDone()
-    });
+    if (this.isSuperAgent || this.isAgent) {
+      this.clientService.getAll().subscribe({ next: (d) => { this.totalClients = d.length; this.recentClients = d.slice(0, 5); this.done(); }, error: () => this.done() });
+      this.vehiculeService.getAll().subscribe({ next: (d) => { this.totalVehicules = d.length; this.recentVehicules = d.slice(0, 5); this.done(); }, error: () => this.done() });
+    }
+    if (this.isSuperAgent || this.isMagasinier) {
+      this.stockService.alertes().subscribe({ next: (d) => { this.alertes = d; this.done(); }, error: () => this.done() });
+    }
+    if (this.isSuperAgent || this.isAgent || this.isChefAtelier || this.isMagasinier) {
+      this.bonService.getAll({ statut: 'EN_ATTENTE' }).subscribe({ next: (d) => { this.bonsEnAttente = d; this.done(); }, error: () => this.done() });
+    }
+    if (this.isChefAtelier) {
+      this.vehiculeService.getAll().subscribe({ next: (d) => { this.totalVehicules = d.length; this.recentVehicules = d.slice(0, 5); this.done(); }, error: () => this.done() });
+    }
+    if (this.isMagasinier) {
+      this.pieceService.getAll({ statut: 'ACTIF' }).subscribe({ next: (d) => { this.totalVehicules = d.length; this.done(); }, error: () => this.done() });
+    }
+    setTimeout(() => this.loading = false, 1500);
   }
 
   private loaded = 0;
-  private checkDone() {
-    if (++this.loaded >= 2) this.loading = false;
-  }
+  private done() { if (++this.loaded >= 1) this.loading = false; }
+
+  get ruptures(): AlerteStock[] { return this.alertes.filter(a => a.typeAlerte === 'RUPTURE'); }
+  get stocksFaibles(): AlerteStock[] { return this.alertes.filter(a => a.typeAlerte === 'STOCK_FAIBLE'); }
+
+  formatDate(d: string): string { return new Date(d).toLocaleString('fr-FR'); }
 }

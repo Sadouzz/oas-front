@@ -17,8 +17,11 @@ export class VehiculesComponent implements OnInit {
 
   vehicules: VehiculeModel[] = [];
   filtered: VehiculeModel[] = [];
+  page = 1;
+  readonly pageSize = 10;
   clients: UserModel[] = [];
   loading = false;
+  saving = false;
   successMessage = '';
   errorMessage = '';
 
@@ -65,7 +68,14 @@ export class VehiculesComponent implements OnInit {
           `${v.client?.firstName} ${v.client?.lastName}`.toLowerCase().includes(term)
         )
       : this.vehicules;
+    this.page = 1;
   }
+
+  get paged(): VehiculeModel[] { return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize); }
+  get totalPages(): number { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }
+  get rangeEnd(): number { return Math.min(this.page * this.pageSize, this.filtered.length); }
+  prevPage(): void { if (this.page > 1) this.page--; }
+  nextPage(): void { if (this.page < this.totalPages) this.page++; }
 
   openCreate() {
     this.isNew = true;
@@ -95,21 +105,19 @@ export class VehiculesComponent implements OnInit {
   }
 
   save() {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
-    }
+    if (this.form.invalid || this.saving) { this.form.markAllAsTouched(); return; }
+    this.saving = true;
     const payload = this.form.value as any;
 
     if (this.isNew) {
       this.vehiculeService.create(payload).subscribe({
-        next: () => { this.showSuccess('Véhicule créé avec succès !'); this.closeModal(); this.loadVehicules(); },
-        error: (err: any) => { this.errorMessage = err.error?.message || 'Erreur lors de la création.'; }
+        next: () => { this.saving = false; this.showSuccess('Véhicule créé avec succès !'); this.closeModal(); this.loadVehicules(); },
+        error: (err: any) => { this.saving = false; this.errorMessage = err.error?.message || 'Erreur lors de la création.'; }
       });
     } else {
       this.vehiculeService.update(this.editingId!, payload).subscribe({
-        next: () => { this.showSuccess('Véhicule modifié avec succès !'); this.closeModal(); this.loadVehicules(); },
-        error: (err: any) => { this.errorMessage = err.error?.message || 'Erreur lors de la modification.'; }
+        next: () => { this.saving = false; this.showSuccess('Véhicule modifié avec succès !'); this.closeModal(); this.loadVehicules(); },
+        error: (err: any) => { this.saving = false; this.errorMessage = err.error?.message || 'Erreur lors de la modification.'; }
       });
     }
   }
