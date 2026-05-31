@@ -1,0 +1,135 @@
+<div class="space-y-6">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Garages</h1>
+      <p class="text-sm text-gray-500 mt-0.5">{{ filtered.length }} garage(s)</p>
+    </div>
+    <button (click)="openNew()"
+            class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+      </svg>
+      Nouveau garage
+    </button>
+  </div>
+
+  <!-- Messages -->
+  @if (successMessage) {
+    <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg text-sm">{{ successMessage }}</div>
+  }
+  @if (errorMessage) {
+    <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm">{{ errorMessage }}</div>
+  }
+
+  <!-- Search -->
+  <div class="bg-white rounded-xl border border-gray-200 p-4">
+    <input (input)="onSearch($event)" placeholder="Rechercher par libellé, ville ou adresse..."
+           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+  </div>
+
+  <!-- Table -->
+  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    @if (loading) {
+      <div class="flex items-center justify-center py-16">
+        <div class="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    } @else if (paged.length === 0) {
+      <div class="text-center py-16 text-gray-400 text-sm">Aucun garage trouvé.</div>
+    } @else {
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 border-b border-gray-200">
+          <tr>
+            <th class="text-left px-4 py-3 font-medium text-gray-600">Libellé</th>
+            <th class="text-left px-4 py-3 font-medium text-gray-600">Ville</th>
+            <th class="text-left px-4 py-3 font-medium text-gray-600">Adresse</th>
+            <th class="text-left px-4 py-3 font-medium text-gray-600">Contact</th>
+            <th class="text-left px-4 py-3 font-medium text-gray-600">Créé le</th>
+            <th class="px-4 py-3"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          @for (g of paged; track g.id) {
+            <tr class="hover:bg-gray-50 transition">
+              <td class="px-4 py-3 font-medium text-gray-900">{{ g.libelle }}</td>
+              <td class="px-4 py-3 text-gray-600">{{ g.ville }}</td>
+              <td class="px-4 py-3 text-gray-500">{{ g.adresse || '—' }}</td>
+              <td class="px-4 py-3 text-gray-500">{{ g.contact || '—' }}</td>
+              <td class="px-4 py-3 text-gray-500">{{ formatDate(g.createdAt) }}</td>
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-2 justify-end">
+                  <button (click)="openEdit(g)"
+                          class="text-blue-600 hover:text-blue-800 text-xs font-medium px-2 py-1 rounded hover:bg-blue-50 transition">
+                    Modifier
+                  </button>
+                  <button (click)="delete(g.id)"
+                          class="text-red-600 hover:text-red-800 text-xs font-medium px-2 py-1 rounded hover:bg-red-50 transition">
+                    Supprimer
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      @if (totalPages > 1) {
+        <div class="flex items-center justify-between px-4 py-3 border-t border-gray-100 text-sm text-gray-500">
+          <span>Page {{ page }} / {{ totalPages }}</span>
+          <div class="flex gap-2">
+            <button (click)="prevPage()" [disabled]="page === 1"
+                    class="px-3 py-1 rounded border border-gray-300 disabled:opacity-40 hover:bg-gray-50 transition">‹</button>
+            <button (click)="nextPage()" [disabled]="page === totalPages"
+                    class="px-3 py-1 rounded border border-gray-300 disabled:opacity-40 hover:bg-gray-50 transition">›</button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+</div>
+
+<!-- Modal -->
+@if (showModal) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
+      <h2 class="text-lg font-semibold text-gray-900 mb-5">
+        {{ isNew ? 'Nouveau garage' : 'Modifier le garage' }}
+      </h2>
+      <form [formGroup]="form" (ngSubmit)="save()" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Libellé *</label>
+          <input formControlName="libelle" placeholder="Nom du garage"
+                 class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                 [class.border-red-400]="form.get('libelle')?.invalid && form.get('libelle')?.touched"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Ville *</label>
+          <input formControlName="ville" placeholder="Dakar"
+                 class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                 [class.border-red-400]="form.get('ville')?.invalid && form.get('ville')?.touched"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Adresse</label>
+          <input formControlName="adresse" placeholder="Rue, quartier..."
+                 class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Contact</label>
+          <input formControlName="contact" placeholder="Téléphone ou email"
+                 class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+        </div>
+        <div class="flex justify-end gap-3 pt-2">
+          <button type="button" (click)="showModal = false"
+                  class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+            Annuler
+          </button>
+          <button type="submit" [disabled]="saving"
+                  class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-60 transition">
+            {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

@@ -63,6 +63,24 @@ export const routes: Routes = [
           import('./fournisseurs/fournisseurs.component').then(m => m.FournisseursComponent),
       },
       {
+        path: 'fiches-atelier',
+        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_CHEF_ATELIER'])],
+        loadComponent: () =>
+          import('./fiches-atelier/fiches-atelier.component').then(m => m.FichesAtelierComponent),
+      },
+      {
+        path: 'mecaniciens',
+        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_CHEF_ATELIER'])],
+        loadComponent: () =>
+          import('./mecaniciens/mecaniciens.component').then(m => m.MecaniciensComponent),
+      },
+      {
+        path: 'devis-previsionnels',
+        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_CHEF_ATELIER'])],
+        loadComponent: () =>
+          import('./devis-previsionnels/devis-previsionnels.component').then(m => m.DevisPrevisionnelsComponent),
+      },
+      {
         path: 'admin',
         canActivate: [roleGuard('ROLE_SUPER_AGENT')],
         children: [
@@ -80,6 +98,11 @@ export const routes: Routes = [
             path: 'main-doeuvre',
             loadComponent: () =>
               import('./main-doeuvre/main-doeuvre.component').then(m => m.MainDoeuvreComponent),
+          },
+          {
+            path: 'garages',
+            loadComponent: () =>
+              import('./admin/garages/garages.component').then(m => m.GaragesComponent),
           },
         ],
       },
