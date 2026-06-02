@@ -45,6 +45,11 @@ export const routes: Routes = [
           import('./bons-de-sortie/bons-de-sortie.component').then(m => m.BonsDeSortieComponent),
       },
       {
+        path: 'bons-de-commande',
+        loadComponent: () =>
+          import('./bon-de-commande/bon-de-commande.component').then(m => m.BonDeCommandeComponent),
+      },
+      {
         path: 'stock',
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_AGENT_MAGASIN'])],
         loadComponent: () =>
