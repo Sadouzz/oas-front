@@ -19,13 +19,15 @@ export interface BonDeSortie {
   vehicule: { id: number; immatriculation: string; marque: string; modele: string } | null;
   agentEmetteur: { id: number; username: string; firstName: string; lastName: string } | null;
   agentValidateur?: { id: number; username: string; firstName: string; lastName: string };
-  lignes: LigneBonDeSortie[] | null;
+  lignesBonDeSortiePieces: LigneBonDeSortie[];
+  lignesBonDeSortieMainDoeuvres: any[];
 }
 
 export interface BonDeSortieRequest {
   clientId: number;
   vehiculeId: number;
-  lignes: { pieceId: number; quantite: number }[];
+  lignesPieces: { pieceId: number; quantite: number }[];
+  lignesMainDoeuvres?: { mainDoeuvreId: number; quantite: number }[];
   remarque?: string;
 }
 

@@ -55,8 +55,22 @@ export class AuthService {
     return localStorage.getItem('token');
   }
 
+  isTokenExpired(): boolean {
+    const token = this.getToken();
+    if (!token) return true;
+    try {
+      // JWT uses base64url (- and _ instead of + and /); atob() requires standard base64
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const payload = JSON.parse(atob(base64));
+      return payload.exp * 1000 < Date.now();
+    } catch {
+      return true;
+    }
+  }
+
   isAuthenticated(): boolean {
-    return !!localStorage.getItem('token');
+    return !!this.getToken() && !this.isTokenExpired();
   }
 
   getRole(): string | null {

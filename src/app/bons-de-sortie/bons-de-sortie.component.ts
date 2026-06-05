@@ -123,7 +123,7 @@ export class BonsDeSortieComponent implements OnInit {
       clientId: val.clientId,
       vehiculeId: val.vehiculeId,
       remarque: val.remarque,
-      lignes: val.lignes,
+      lignesPieces: val.lignes,
     }).subscribe({
       next: () => { this.saving = false; this.showSuccess('Bon de sortie créé avec succès !'); this.closeCreate(); this.loadBons(); },
       error: (err: any) => { this.saving = false; this.errorMessage = err.error?.message || 'Erreur lors de la création.'; }

@@ -14,7 +14,7 @@ export interface FournisseurModel {
 @Injectable({ providedIn: 'root' })
 export class FournisseurService {
   private http = inject(HttpClient);
-  private base = '/api/fournisseurs';
+  private base = 'http://localhost:9090/api/fournisseurs';
 
   getAll(keyword?: string): Observable<FournisseurModel[]> {
     const params: any = {};

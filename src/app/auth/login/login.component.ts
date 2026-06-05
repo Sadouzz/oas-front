@@ -1,6 +1,6 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
 @Component({
@@ -9,9 +9,10 @@ import { AuthService } from '../services/auth.service';
   imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './login.component.html',
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   private fb = inject(FormBuilder);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private authService = inject(AuthService);
 
   form: FormGroup = this.fb.group({
@@ -22,6 +23,15 @@ export class LoginComponent {
   showPassword = false;
   loading = false;
   errorMessage = '';
+  sessionExpiredMessage = '';
+
+  ngOnInit(): void {
+    this.route.queryParams.subscribe(params => {
+      if (params['sessionExpired'] === 'true') {
+        this.sessionExpiredMessage = 'Votre session a expiré. Veuillez vous reconnecter.';
+      }
+    });
+  }
 
   features = [
     'Suivi des interventions en temps réel',
@@ -49,6 +59,7 @@ export class LoginComponent {
     }
     this.loading = true;
     this.errorMessage = '';
+    this.sessionExpiredMessage = '';
 
     this.authService.login(this.form.value).subscribe({
       next: () => this.router.navigate(['/dashboard'], { replaceUrl: true }),

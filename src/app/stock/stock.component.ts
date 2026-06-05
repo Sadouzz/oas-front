@@ -58,9 +58,14 @@ export class StockComponent implements OnInit {
     const now = new Date();
     const debut = new Date(now);
     debut.setDate(debut.getDate() - 30);
-    this.stockService.historiqueGlobal(debut.toISOString(), now.toISOString()).subscribe({
-      next: (d) => { this.mouvementsRecents = d.slice(0, 10); }
+    this.stockService.historiqueGlobal(this.toLocalISO(debut), this.toLocalISO(now)).subscribe({
+      next: (d) => { this.mouvementsRecents = d; }
     });
+  }
+
+  private toLocalISO(d: Date): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
   }
 
   get ruptures(): AlerteStock[] { return this.alertes.filter(a => a.typeAlerte === 'RUPTURE'); }

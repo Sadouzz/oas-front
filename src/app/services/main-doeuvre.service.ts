@@ -15,7 +15,7 @@ export interface MainDoeuvreModel {
 @Injectable({ providedIn: 'root' })
 export class MainDoeuvreService {
   private http = inject(HttpClient);
-  private base = '/api/main-doeuvres';
+  private base = 'http://localhost:9090/api/main-doeuvres';
 
   getAll(): Observable<MainDoeuvreModel[]> {
     return this.http.get<MainDoeuvreModel[]>(this.base);

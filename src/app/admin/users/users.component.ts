@@ -27,11 +27,14 @@ export class UsersComponent implements OnInit {
   showModal = false;
   isNew = false;
   editingId: number | null = null;
+  keyword = '';
+  roleFilter = '';
+  statusFilter: 'all' | 'active' | 'archived' = 'all';
 
   readonly roles = ROLES;
 
   form = this.fb.group({
-    matricule: ['', Validators.required],
+    matricule: [{ value: '', disabled: true }, Validators.required],
     phone: ['', Validators.required],
     username: ['', Validators.required],
     firstName: ['', Validators.required],
@@ -48,25 +51,33 @@ export class UsersComponent implements OnInit {
   loadUsers() {
     this.loading = true;
     this.userService.getAll().subscribe({
-      next: (data) => {
-        this.users = data;
-        this.filtered = data;
-        this.loading = false;
-      },
+      next: (data) => { this.users = data; this.applyFilters(); this.loading = false; },
       error: () => { this.loading = false; }
     });
   }
 
   onSearch(event: Event) {
-    const term = (event.target as HTMLInputElement).value.toLowerCase().trim();
-    this.filtered = term
-      ? this.users.filter(u =>
-          `${u.firstName} ${u.lastName}`.toLowerCase().includes(term) ||
-          u.email.toLowerCase().includes(term) ||
-          u.matricule.toLowerCase().includes(term) ||
-          u.username.toLowerCase().includes(term)
-        )
-      : this.users;
+    this.keyword = (event.target as HTMLInputElement).value.toLowerCase().trim();
+    this.applyFilters();
+  }
+
+  setRoleFilter(r: string) { this.roleFilter = r; this.applyFilters(); }
+  setStatusFilter(s: 'all' | 'active' | 'archived') { this.statusFilter = s; this.applyFilters(); }
+
+  private applyFilters() {
+    let result = this.users;
+    if (this.roleFilter) result = result.filter(u => u.role === this.roleFilter);
+    if (this.statusFilter === 'active')   result = result.filter(u => u.enabled);
+    if (this.statusFilter === 'archived') result = result.filter(u => !u.enabled);
+    if (this.keyword) {
+      result = result.filter(u =>
+        `${u.firstName} ${u.lastName}`.toLowerCase().includes(this.keyword) ||
+        u.email.toLowerCase().includes(this.keyword) ||
+        u.matricule.toLowerCase().includes(this.keyword) ||
+        u.username.toLowerCase().includes(this.keyword)
+      );
+    }
+    this.filtered = result;
     this.page = 1;
   }
 
@@ -80,9 +91,17 @@ export class UsersComponent implements OnInit {
     this.isNew = true;
     this.editingId = null;
     this.form.reset({ role: 'AGENT' });
+    this.form.patchValue({ matricule: this.nextMatricule('AGT', this.users) });
     this.form.get('password')?.setValidators(Validators.required);
     this.form.get('password')?.updateValueAndValidity();
     this.showModal = true;
+  }
+
+  private nextMatricule(prefix: string, list: { matricule?: string }[]): string {
+    const re = new RegExp(`^${prefix}-(\\d+)$`);
+    const nums = list.map(i => i.matricule ?? '').map(m => { const match = m.match(re); return match ? parseInt(match[1], 10) : 0; }).filter(n => n > 0);
+    const next = nums.length ? Math.max(...nums) + 1 : 1;
+    return `${prefix}-${String(next).padStart(5, '0')}`;
   }
 
   openEdit(user: UserModel) {
@@ -117,7 +136,7 @@ export class UsersComponent implements OnInit {
     const val = this.form.value;
 
     if (this.isNew) {
-      const payload = { ...val, type: 'AGENT' } as any;
+      const payload = { ...this.form.getRawValue(), type: 'AGENT' } as any;
       this.userService.create(payload).subscribe({
         next: () => { this.saving = false; this.showSuccess('Utilisateur créé avec succès !'); this.closeModal(); this.loadUsers(); },
         error: (err: any) => { this.saving = false; this.errorMessage = err.error?.message || 'Erreur lors de la création.'; }

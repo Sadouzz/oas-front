@@ -25,6 +25,9 @@ export class VehiculesComponent implements OnInit {
   successMessage = '';
   errorMessage = '';
 
+  keyword = '';
+  marqueFilter = '';
+
   showModal = false;
   isNew = false;
   editingId: number | null = null;
@@ -51,23 +54,39 @@ export class VehiculesComponent implements OnInit {
     this.vehiculeService.getAll().subscribe({
       next: (data) => {
         this.vehicules = data;
-        this.filtered = data;
+        this.applyFilters();
         this.loading = false;
       },
       error: () => { this.loading = false; }
     });
   }
 
+  get uniqueMarques(): string[] {
+    return [...new Set(this.vehicules.map(v => v.marque).filter(Boolean))].sort();
+  }
+
   onSearch(event: Event) {
-    const term = (event.target as HTMLInputElement).value.toLowerCase().trim();
-    this.filtered = term
-      ? this.vehicules.filter(v =>
-          v.immatriculation.toLowerCase().includes(term) ||
-          v.marque.toLowerCase().includes(term) ||
-          v.modele.toLowerCase().includes(term) ||
-          `${v.client?.firstName} ${v.client?.lastName}`.toLowerCase().includes(term)
-        )
-      : this.vehicules;
+    this.keyword = (event.target as HTMLInputElement).value.toLowerCase().trim();
+    this.applyFilters();
+  }
+
+  setMarqueFilter(marque: string) {
+    this.marqueFilter = marque;
+    this.applyFilters();
+  }
+
+  private applyFilters() {
+    let result = this.vehicules;
+    if (this.marqueFilter) result = result.filter(v => v.marque === this.marqueFilter);
+    if (this.keyword) {
+      result = result.filter(v =>
+        v.immatriculation.toLowerCase().includes(this.keyword) ||
+        v.marque.toLowerCase().includes(this.keyword) ||
+        v.modele.toLowerCase().includes(this.keyword) ||
+        `${v.client?.firstName} ${v.client?.lastName}`.toLowerCase().includes(this.keyword)
+      );
+    }
+    this.filtered = result;
     this.page = 1;
   }
 

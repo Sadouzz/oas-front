@@ -25,6 +25,9 @@ export class MainDoeuvreComponent implements OnInit {
   showModal = false;
   isNew = false;
   editingId: number | null = null;
+  keyword = '';
+  categorieFilter = '';
+  archivedFilter: 'all' | 'active' | 'archived' = 'all';
 
   readonly categories: CategorieMainDoeuvre[] = ['MECANIQUE', 'CARROSSERIE', 'ELECTRIQUE', 'PEINTURE'];
 
@@ -39,16 +42,26 @@ export class MainDoeuvreComponent implements OnInit {
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: (data) => { this.items = data; this.filtered = data; this.loading = false; },
+      next: (data) => { this.items = data; this.applyFilters(); this.loading = false; },
       error: () => { this.loading = false; }
     });
   }
 
   onSearch(event: Event) {
-    const term = (event.target as HTMLInputElement).value.toLowerCase().trim();
-    this.filtered = term
-      ? this.items.filter(i => i.categorie.toLowerCase().includes(term))
-      : this.items;
+    this.keyword = (event.target as HTMLInputElement).value.toLowerCase().trim();
+    this.applyFilters();
+  }
+
+  setCategorieFilter(c: string) { this.categorieFilter = c; this.applyFilters(); }
+  setArchivedFilter(f: 'all' | 'active' | 'archived') { this.archivedFilter = f; this.applyFilters(); }
+
+  private applyFilters() {
+    let result = this.items;
+    if (this.categorieFilter) result = result.filter(i => i.categorie === this.categorieFilter);
+    if (this.archivedFilter === 'active')   result = result.filter(i => !i.isArchived);
+    if (this.archivedFilter === 'archived') result = result.filter(i => i.isArchived);
+    if (this.keyword) result = result.filter(i => i.categorie.toLowerCase().includes(this.keyword));
+    this.filtered = result;
     this.page = 1;
   }
 

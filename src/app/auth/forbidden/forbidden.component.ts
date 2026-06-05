@@ -12,9 +12,11 @@ export class ForbiddenComponent implements OnInit {
   private authService = inject(AuthService);
 
   ngOnInit(): void {
+    // Si pas de session valide → redirect login (l'intercepteur gère le cas token expiré)
     if (!this.authService.isAuthenticated()) {
       this.router.navigate(['/login'], { replaceUrl: true });
     }
+    // Sinon : utilisateur connecté mais sans les droits → afficher la page 403
   }
 
   goBack(): void {

@@ -20,13 +20,15 @@ export class FournisseursComponent implements OnInit {
   saving = false;
   successMessage = '';
   errorMessage = '';
+  keyword = '';
+  statusFilter: 'all' | 'active' | 'archived' = 'all';
 
   showModal = false;
   isNew = false;
   editingId: number | null = null;
 
   form = this.fb.group({
-    matricule: ['', Validators.required],
+    matricule: [{ value: '', disabled: true }, Validators.required],
     nomEntreprise: ['', Validators.required],
     nom: ['', Validators.required],
     prenom: ['', Validators.required],
@@ -37,20 +39,33 @@ export class FournisseursComponent implements OnInit {
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: (data) => { this.fournisseurs = data; this.filtered = data; this.loading = false; },
+      next: (data) => { this.fournisseurs = data; this.applyFilters(); this.loading = false; },
       error: () => { this.loading = false; }
     });
   }
 
   onSearch(event: Event) {
-    const term = (event.target as HTMLInputElement).value.toLowerCase().trim();
-    this.filtered = term
-      ? this.fournisseurs.filter(f =>
-          f.nomEntreprise.toLowerCase().includes(term) ||
-          f.matricule.toLowerCase().includes(term) ||
-          `${f.prenom} ${f.nom}`.toLowerCase().includes(term)
-        )
-      : this.fournisseurs;
+    this.keyword = (event.target as HTMLInputElement).value.toLowerCase().trim();
+    this.applyFilters();
+  }
+
+  setStatusFilter(f: 'all' | 'active' | 'archived') {
+    this.statusFilter = f;
+    this.applyFilters();
+  }
+
+  private applyFilters() {
+    let result = this.fournisseurs;
+    if (this.statusFilter === 'active')   result = result.filter(f => !f.archived);
+    if (this.statusFilter === 'archived') result = result.filter(f => f.archived);
+    if (this.keyword) {
+      result = result.filter(f =>
+        f.nomEntreprise.toLowerCase().includes(this.keyword) ||
+        f.matricule.toLowerCase().includes(this.keyword) ||
+        `${f.prenom} ${f.nom}`.toLowerCase().includes(this.keyword)
+      );
+    }
+    this.filtered = result;
     this.page = 1;
   }
 
@@ -64,7 +79,15 @@ export class FournisseursComponent implements OnInit {
     this.isNew = true;
     this.editingId = null;
     this.form.reset();
+    this.form.patchValue({ matricule: this.nextMatricule('FRN', this.fournisseurs) });
     this.showModal = true;
+  }
+
+  private nextMatricule(prefix: string, list: { matricule?: string }[]): string {
+    const re = new RegExp(`^${prefix}-(\\d+)$`);
+    const nums = list.map(i => i.matricule ?? '').map(m => { const match = m.match(re); return match ? parseInt(match[1], 10) : 0; }).filter(n => n > 0);
+    const next = nums.length ? Math.max(...nums) + 1 : 1;
+    return `${prefix}-${String(next).padStart(5, '0')}`;
   }
 
   openEdit(f: FournisseurModel) {
@@ -79,7 +102,7 @@ export class FournisseursComponent implements OnInit {
   save() {
     if (this.form.invalid || this.saving) { this.form.markAllAsTouched(); return; }
     this.saving = true;
-    const payload = this.form.value as any;
+    const payload = this.form.getRawValue() as any;
     const obs = this.isNew
       ? this.service.create(payload)
       : this.service.update(this.editingId!, payload);

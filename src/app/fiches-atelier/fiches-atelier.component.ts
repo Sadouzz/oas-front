@@ -90,7 +90,7 @@ export class FichesAtelierComponent implements OnInit {
       listeReception: raw.listeReception || undefined,
       listeDefauts: raw.listeDefauts || undefined,
       vehiculeId: Number(raw.vehiculeId),
-      dateSortie: raw.dateSortie || undefined,
+      dateSortie: raw.dateSortie ? `${raw.dateSortie}T00:00:00` : undefined,
     };
     const req$ = this.isNew
       ? this.service.create(payload)

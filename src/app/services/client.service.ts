@@ -23,6 +23,16 @@ export interface UserUpdatePayload {
   email?: string;
 }
 
+export interface CreateClientPayload {
+  matricule: string;
+  phone: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ClientService {
   private api = 'http://localhost:9090/api/clients';
@@ -52,6 +62,13 @@ export class ClientService {
 
   unarchive(id: number): Observable<string> {
     return this.http.patch<string>(`${this.api}/${id}/unarchive`, {});
+  }
+
+  create(data: CreateClientPayload): Observable<void> {
+    return this.http.post<void>('http://localhost:9090/api/auth/signup', {
+      ...data,
+      type: 'CLIENT',
+    });
   }
 
   delete(id: number): Observable<string> {
