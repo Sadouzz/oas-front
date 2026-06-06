@@ -1,30 +1,15 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { DevisPrevisionnel, DevisPrevisionnelRequest } from '../shared/models';
 
-export interface DevisPrevisionnel {
-  id: number;
-  notesReparation: string;
-  montantTotal: number;
-  kilometrageVehicule: number;
-  createdAt: string;
-  vehicule: { id: number; immatriculation: string; marque: string; modele: string } | null;
-  client: { id: number; firstName: string; lastName: string; phone: string } | null;
-}
-
-export interface DevisPrevisionnelRequest {
-  notesReparation: string;
-  montantTotal: number;
-  kilometrageVehicule: number;
-  vehiculeId: number;
-  clientId: number;
-}
+export type { DevisPrevisionnel, DevisPrevisionnelRequest };
 
 @Injectable({ providedIn: 'root' })
 export class DevisPrevisionnelService {
-  private api = 'http://localhost:9090/api/devis-previsionnels';
-
-  constructor(private http: HttpClient) {}
+  private http = inject(HttpClient);
+  private api = `${environment.apiUrl}/api/devis-previsionnels`;
 
   getAll(params?: { clientId?: number; vehiculeId?: number }): Observable<DevisPrevisionnel[]> {
     const p: Record<string, string> = {};

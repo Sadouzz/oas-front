@@ -1,24 +1,15 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { Mecanicien, MecanicienRequest } from '../shared/models';
 
-export interface Mecanicien {
-  id: number;
-  nom: string;
-  createdAt: string;
-  garage: { id: number; libelle: string; ville: string } | null;
-}
-
-export interface MecanicienRequest {
-  nom: string;
-  garageId?: number | null;
-}
+export type { Mecanicien, MecanicienRequest };
 
 @Injectable({ providedIn: 'root' })
 export class MecanicienService {
-  private api = 'http://localhost:9090/api/mecaniciens';
-
-  constructor(private http: HttpClient) {}
+  private http = inject(HttpClient);
+  private api = `${environment.apiUrl}/api/mecaniciens`;
 
   getAll(): Observable<Mecanicien[]> {
     return this.http.get<Mecanicien[]>(this.api);

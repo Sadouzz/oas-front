@@ -1,10 +1,12 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { HistoryService, ConnectionHistoryModel } from '../../services/history.service';
+import { HistoryService } from '../../services/history.service';
+import { ConnectionHistoryModel } from '../../shared/models';
+import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 
 @Component({
   selector: 'app-history',
   standalone: true,
-  imports: [],
+  imports: [PaginationComponent],
   templateUrl: './history.component.html',
 })
 export class HistoryComponent implements OnInit {
@@ -44,7 +46,6 @@ export class HistoryComponent implements OnInit {
 
   get paged(): ConnectionHistoryModel[] { return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize); }
   get totalPages(): number { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }
-  get rangeEnd(): number { return Math.min(this.page * this.pageSize, this.filtered.length); }
   prevPage(): void { if (this.page > 1) this.page--; }
   nextPage(): void { if (this.page < this.totalPages) this.page++; }
 

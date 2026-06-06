@@ -1,20 +1,15 @@
-import { Injectable, inject } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { FournisseurModel } from '../shared/models';
 
-export interface FournisseurModel {
-  id: number;
-  matricule: string;
-  nomEntreprise: string;
-  nom: string;
-  prenom: string;
-  archived: boolean;
-}
+export type { FournisseurModel };
 
 @Injectable({ providedIn: 'root' })
 export class FournisseurService {
   private http = inject(HttpClient);
-  private base = '/api/fournisseurs';
+  private base = `${environment.apiUrl}/api/fournisseurs`;
 
   getAll(keyword?: string): Observable<FournisseurModel[]> {
     const params: any = {};

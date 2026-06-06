@@ -31,7 +31,7 @@ export class DashboardComponent implements OnInit {
   loading = true;
 
   get role(): string { return this.authService.getRole() ?? ''; }
-  get username(): string { return this.authService.getUser()?.username ?? ''; }
+  get username(): string { return this.authService.getUsername() ?? ''; }
 
   get isSuperAgent()  { return this.role === 'ROLE_SUPER_AGENT'; }
   get isAgent()       { return this.role === 'ROLE_AGENT'; }

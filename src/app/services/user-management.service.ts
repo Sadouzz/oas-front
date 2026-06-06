@@ -1,33 +1,15 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { UserModel } from './client.service';
+import { environment } from '../../environments/environment';
+import { AdminUserUpdatePayload, CreateUserPayload, UserModel } from '../shared/models';
 
-export interface CreateUserPayload {
-  matricule: string;
-  phone: string;
-  username: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  type: string;
-  role?: string;
-}
-
-export interface UserUpdatePayload {
-  phone?: string;
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  role?: string;
-}
+export type { AdminUserUpdatePayload, CreateUserPayload, UserModel };
 
 @Injectable({ providedIn: 'root' })
 export class UserManagementService {
-  private api = 'http://localhost:9090/api/admin/users';
-
-  constructor(private http: HttpClient) {}
+  private http = inject(HttpClient);
+  private api = `${environment.apiUrl}/api/admin/users`;
 
   getAll(keyword?: string): Observable<UserModel[]> {
     const params: Record<string, string> = keyword ? { keyword } : {};
@@ -42,7 +24,7 @@ export class UserManagementService {
     return this.http.post<string>(`${this.api}/create`, data);
   }
 
-  update(id: number, data: UserUpdatePayload): Observable<UserModel> {
+  update(id: number, data: AdminUserUpdatePayload): Observable<UserModel> {
     return this.http.put<UserModel>(`${this.api}/${id}`, data);
   }
 

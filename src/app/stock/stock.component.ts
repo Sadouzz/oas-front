@@ -3,13 +3,15 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { StockService, StockMouvement } from '../services/stock.service';
 import { PieceDetacheeService, PieceDetache, AlerteStock } from '../services/piece-detachee.service';
+import { AlertComponent } from '../shared/components/alert/alert.component';
+import { PaginationComponent } from '../shared/components/pagination/pagination.component';
 
 type ModalType = 'entree' | 'sortie' | 'ajustement' | null;
 
 @Component({
   selector: 'app-stock',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, AlertComponent, PaginationComponent],
   templateUrl: './stock.component.html',
 })
 export class StockComponent implements OnInit {
@@ -68,7 +70,6 @@ export class StockComponent implements OnInit {
 
   get pagedAlertes(): AlerteStock[] { return this.alertes.slice((this.alertePage - 1) * this.pageSize, this.alertePage * this.pageSize); }
   get alertesTotalPages(): number { return Math.max(1, Math.ceil(this.alertes.length / this.pageSize)); }
-  get alertesRangeEnd(): number { return Math.min(this.alertePage * this.pageSize, this.alertes.length); }
   prevAlertePage(): void { if (this.alertePage > 1) this.alertePage--; }
   nextAlertePage(): void { if (this.alertePage < this.alertesTotalPages) this.alertePage++; }
 

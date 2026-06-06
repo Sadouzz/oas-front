@@ -1,33 +1,15 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { FicheAtelier, FicheAtelierRequest } from '../shared/models';
 
-export interface FicheAtelier {
-  id: number;
-  numero: string;
-  descriptionTravaux: string;
-  listeReception: string | null;
-  listeDefauts: string | null;
-  dateCreation: string;
-  dateSortie: string | null;
-  vehicule: { id: number; immatriculation: string; marque: string; modele: string } | null;
-  mecaniciens: { id: number; nom: string }[];
-}
-
-export interface FicheAtelierRequest {
-  numero: string;
-  descriptionTravaux: string;
-  listeReception?: string;
-  listeDefauts?: string;
-  dateSortie?: string;
-  vehiculeId: number;
-}
+export type { FicheAtelier, FicheAtelierRequest };
 
 @Injectable({ providedIn: 'root' })
 export class FicheAtelierService {
-  private api = 'http://localhost:9090/api/fiches-atelier';
-
-  constructor(private http: HttpClient) {}
+  private http = inject(HttpClient);
+  private api = `${environment.apiUrl}/api/fiches-atelier`;
 
   getAll(): Observable<FicheAtelier[]> {
     return this.http.get<FicheAtelier[]>(this.api);

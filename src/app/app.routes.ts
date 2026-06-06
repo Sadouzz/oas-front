@@ -3,10 +3,10 @@ import { LoginComponent } from './auth/login/login.component';
 import { RegisterComponent } from './auth/register/register.component';
 import { ForbiddenComponent } from './auth/forbidden/forbidden.component';
 import { LayoutComponent } from './layout/layout.component';
-import { authGuard } from './auth/guards/auth.guard';
-import { roleGuard } from './auth/guards/role.guard';
-import { multiRoleGuard } from './auth/guards/multi-role.guard';
-import { noAuthGuard } from './auth/guards/no-auth.guard';
+import { authGuard } from './core/guards/auth.guard';
+import { roleGuard } from './core/guards/role.guard';
+import { multiRoleGuard } from './core/guards/multi-role.guard';
+import { noAuthGuard } from './core/guards/no-auth.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },

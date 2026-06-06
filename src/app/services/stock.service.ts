@@ -1,42 +1,16 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { AlerteStock } from './piece-detachee.service';
+import { environment } from '../../environments/environment';
+import { AlerteStock, InventaireResponse, StockMouvement } from '../shared/models';
 
-export interface StockMouvement {
-  id: number;
-  type: 'ENTREE' | 'SORTIE' | 'AJUSTEMENT' | 'INVENTAIRE';
-  quantite: number;
-  stockMagasinAvant: number;
-  stockAtelierAvant: number;
-  stockMagasinApres: number;
-  stockAtelierApres: number;
-  motif: string;
-  dateOperation: string;
-  piece: { id: number; reference: string; numeroDeSerie: string } | null;
-  agent: { id: number; username: string; firstName: string; lastName: string } | null;
-}
-
-export interface InventaireResponse {
-  pieceId: number;
-  numeroDeSerie: string;
-  reference: string;
-  stockMagasinTheorique: number;
-  stockAtelierTheorique: number;
-  stockMagasinPhysique: number;
-  stockAtelierPhysique: number;
-  ecartMagasin: number;
-  ecartAtelier: number;
-  ajuste: boolean;
-  mouvement: StockMouvement | null;
-}
+export type { AlerteStock, InventaireResponse, StockMouvement };
 
 @Injectable({ providedIn: 'root' })
 export class StockService {
-  private api = 'http://localhost:9090/api/stock';
-  private invApi = 'http://localhost:9090/api/inventaire';
-
-  constructor(private http: HttpClient) {}
+  private http = inject(HttpClient);
+  private api = `${environment.apiUrl}/api/stock`;
+  private invApi = `${environment.apiUrl}/api/inventaire`;
 
   entree(pieceId: number, quantite: number, motif: string): Observable<StockMouvement> {
     return this.http.post<StockMouvement>(`${this.api}/entree`, { pieceId, quantite, motif });

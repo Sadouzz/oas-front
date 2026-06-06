@@ -1,53 +1,15 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { AlerteStock, PieceDetache, PieceDetacheRequest } from '../shared/models';
 
-export interface PieceDetache {
-  id: number;
-  type: 'PDP' | 'PDG' | 'PDS';
-  numeroDeSerie: string;
-  reference: string;
-  categorie: string;
-  pourcentage: number;
-  statut: 'ACTIF' | 'INACTIF';
-  createdAt: string;
-  // PDP uniquement
-  qteReelle?: number;
-  stockAtelier?: number;
-  stockMagasin?: number;
-  prix?: number;
-  seuilMinimum?: number;
-}
-
-export interface PieceDetacheRequest {
-  type: 'PDP' | 'PDG' | 'PDS';
-  numeroDeSerie: string;
-  reference: string;
-  categorie: string;
-  pourcentage: number;
-  statut?: 'ACTIF' | 'INACTIF';
-  stockMagasin?: number | null;
-  prix?: number | null;
-  seuilMinimum?: number | null;
-}
-
-export interface AlerteStock {
-  pieceId: number;
-  numeroDeSerie: string;
-  reference: string;
-  categorie: string;
-  stockMagasin: number;
-  stockAtelier: number;
-  qteReelle: number;
-  seuilApplique: number;
-  typeAlerte: 'RUPTURE' | 'STOCK_FAIBLE';
-}
+export type { AlerteStock, PieceDetache, PieceDetacheRequest };
 
 @Injectable({ providedIn: 'root' })
 export class PieceDetacheeService {
-  private api = 'http://localhost:9090/api/pieces-detachees';
-
-  constructor(private http: HttpClient) {}
+  private http = inject(HttpClient);
+  private api = `${environment.apiUrl}/api/pieces-detachees`;
 
   getAll(params?: { keyword?: string; statut?: string; type?: string }): Observable<PieceDetache[]> {
     const p: Record<string, string> = {};

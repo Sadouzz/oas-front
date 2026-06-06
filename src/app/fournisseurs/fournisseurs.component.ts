@@ -1,11 +1,14 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { FournisseurService, FournisseurModel } from '../services/fournisseur.service';
+import { FournisseurService } from '../services/fournisseur.service';
+import { FournisseurModel } from '../shared/models';
+import { AlertComponent } from '../shared/components/alert/alert.component';
+import { PaginationComponent } from '../shared/components/pagination/pagination.component';
 
 @Component({
   selector: 'app-fournisseurs',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent],
   templateUrl: './fournisseurs.component.html',
 })
 export class FournisseursComponent implements OnInit {
@@ -56,7 +59,6 @@ export class FournisseursComponent implements OnInit {
 
   get paged(): FournisseurModel[] { return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize); }
   get totalPages(): number { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }
-  get rangeEnd(): number { return Math.min(this.page * this.pageSize, this.filtered.length); }
   prevPage(): void { if (this.page > 1) this.page--; }
   nextPage(): void { if (this.page < this.totalPages) this.page++; }
 

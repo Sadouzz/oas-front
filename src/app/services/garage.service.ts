@@ -1,28 +1,15 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { Garage, GarageRequest } from '../shared/models';
 
-export interface Garage {
-  id: number;
-  libelle: string;
-  ville: string;
-  adresse: string;
-  contact: string;
-  createdAt: string;
-}
-
-export interface GarageRequest {
-  libelle: string;
-  ville: string;
-  adresse: string;
-  contact: string;
-}
+export type { Garage, GarageRequest };
 
 @Injectable({ providedIn: 'root' })
 export class GarageService {
-  private api = 'http://localhost:9090/api/admin/garages';
-
-  constructor(private http: HttpClient) {}
+  private http = inject(HttpClient);
+  private api = `${environment.apiUrl}/api/admin/garages`;
 
   getAll(): Observable<Garage[]> {
     return this.http.get<Garage[]>(this.api);

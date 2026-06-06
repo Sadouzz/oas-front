@@ -5,11 +5,13 @@ import { ClientService, UserModel } from '../services/client.service';
 import { VehiculeService, VehiculeModel } from '../services/vehicule.service';
 import { PieceDetacheeService, PieceDetache } from '../services/piece-detachee.service';
 import { AuthService } from '../auth/services/auth.service';
+import { AlertComponent } from '../shared/components/alert/alert.component';
+import { PaginationComponent } from '../shared/components/pagination/pagination.component';
 
 @Component({
   selector: 'app-bons-de-sortie',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent],
   templateUrl: './bons-de-sortie.component.html',
 })
 export class BonsDeSortieComponent implements OnInit {
@@ -76,7 +78,6 @@ export class BonsDeSortieComponent implements OnInit {
 
   get paged(): BonDeSortie[] { return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize); }
   get totalPages(): number { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }
-  get rangeEnd(): number { return Math.min(this.page * this.pageSize, this.filtered.length); }
   prevPage(): void { if (this.page > 1) this.page--; }
   nextPage(): void { if (this.page < this.totalPages) this.page++; }
 

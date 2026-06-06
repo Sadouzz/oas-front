@@ -1,12 +1,14 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MainDoeuvreService, MainDoeuvreModel, CategorieMainDoeuvre } from '../services/main-doeuvre.service';
+import { MainDoeuvreService, MainDoeuvreModel, CategorieMainDoeuvre, MainDoeuvreRequest } from '../services/main-doeuvre.service';
+import { AlertComponent } from '../shared/components/alert/alert.component';
+import { PaginationComponent } from '../shared/components/pagination/pagination.component';
 
 @Component({
   selector: 'app-main-doeuvre',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe],
+  imports: [ReactiveFormsModule, DecimalPipe, AlertComponent, PaginationComponent],
   templateUrl: './main-doeuvre.component.html',
 })
 export class MainDoeuvreComponent implements OnInit {
@@ -54,7 +56,6 @@ export class MainDoeuvreComponent implements OnInit {
 
   get paged(): MainDoeuvreModel[] { return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize); }
   get totalPages(): number { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }
-  get rangeEnd(): number { return Math.min(this.page * this.pageSize, this.filtered.length); }
   prevPage(): void { if (this.page > 1) this.page--; }
   nextPage(): void { if (this.page < this.totalPages) this.page++; }
 
@@ -77,7 +78,8 @@ export class MainDoeuvreComponent implements OnInit {
   save() {
     if (this.form.invalid || this.saving) { this.form.markAllAsTouched(); return; }
     this.saving = true;
-    const payload = { ...this.form.value, isArchived: false };
+    const { categorie, prix, nbreHeure } = this.form.getRawValue();
+    const payload: MainDoeuvreRequest = { categorie: categorie!, prix: prix!, nbreHeure: nbreHeure! };
     const obs = this.isNew
       ? this.service.create(payload)
       : this.service.update(this.editingId!, payload);

@@ -4,11 +4,13 @@ import { DecimalPipe } from '@angular/common';
 import { DevisPrevisionnelService, DevisPrevisionnel } from '../services/devis-previsionnel.service';
 import { ClientService, UserModel } from '../services/client.service';
 import { VehiculeService, VehiculeModel } from '../services/vehicule.service';
+import { AlertComponent } from '../shared/components/alert/alert.component';
+import { PaginationComponent } from '../shared/components/pagination/pagination.component';
 
 @Component({
   selector: 'app-devis-previsionnels',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe],
+  imports: [ReactiveFormsModule, DecimalPipe, AlertComponent, PaginationComponent],
   templateUrl: './devis-previsionnels.component.html',
 })
 export class DevisPrevisionnelsComponent implements OnInit {

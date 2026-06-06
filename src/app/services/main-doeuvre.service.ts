@@ -1,31 +1,25 @@
-import { Injectable, inject } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { CategorieMainDoeuvre, MainDoeuvreModel, MainDoeuvreRequest } from '../shared/models';
 
-export type CategorieMainDoeuvre = 'MECANIQUE' | 'CARROSSERIE' | 'ELECTRIQUE' | 'PEINTURE';
-
-export interface MainDoeuvreModel {
-  id: number;
-  prix: number;
-  categorie: CategorieMainDoeuvre;
-  nbreHeure: number;
-  isArchived: boolean;
-}
+export type { CategorieMainDoeuvre, MainDoeuvreModel, MainDoeuvreRequest };
 
 @Injectable({ providedIn: 'root' })
 export class MainDoeuvreService {
   private http = inject(HttpClient);
-  private base = '/api/main-doeuvres';
+  private base = `${environment.apiUrl}/api/main-doeuvres`;
 
   getAll(): Observable<MainDoeuvreModel[]> {
     return this.http.get<MainDoeuvreModel[]>(this.base);
   }
 
-  create(data: any): Observable<MainDoeuvreModel> {
+  create(data: MainDoeuvreRequest): Observable<MainDoeuvreModel> {
     return this.http.post<MainDoeuvreModel>(this.base, data);
   }
 
-  update(id: number, data: any): Observable<MainDoeuvreModel> {
+  update(id: number, data: MainDoeuvreRequest): Observable<MainDoeuvreModel> {
     return this.http.put<MainDoeuvreModel>(`${this.base}/${id}`, data);
   }
 

@@ -1,12 +1,15 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MecanicienService, Mecanicien } from '../services/mecanicien.service';
-import { GarageService, Garage } from '../services/garage.service';
+import { MecanicienService } from '../services/mecanicien.service';
+import { GarageService } from '../services/garage.service';
+import { Garage, Mecanicien } from '../shared/models';
+import { AlertComponent } from '../shared/components/alert/alert.component';
+import { PaginationComponent } from '../shared/components/pagination/pagination.component';
 
 @Component({
   selector: 'app-mecaniciens',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent],
   templateUrl: './mecaniciens.component.html',
 })
 export class MecaniciensComponent implements OnInit {

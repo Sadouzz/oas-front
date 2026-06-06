@@ -20,11 +20,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
   openSection: string | null = null;
 
-  get user() { return this.authService.getUser(); }
-
   get fullName(): string {
-    const u = this.user;
-    return u ? u.username : '';
+    return this.authService.getUsername() ?? '';
   }
 
   get roleLabel(): string {

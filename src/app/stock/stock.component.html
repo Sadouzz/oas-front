@@ -29,9 +29,7 @@
     </div>
   </div>
 
-  @if (successMessage) {
-    <div class="mb-4 px-4 py-3 bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl">{{ successMessage }}</div>
-  }
+  <app-alert [success]="successMessage" />
 
   <!-- Stats alertes -->
   <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
@@ -89,16 +87,7 @@
           </tbody>
         </table>
       </div>
-      @if (alertesTotalPages > 1) {
-        <div class="flex items-center justify-between px-4 py-3 border-t border-gray-100 text-xs text-gray-500">
-          <span>{{ (alertePage - 1) * pageSize + 1 }}–{{ alertesRangeEnd }} sur {{ alertes.length }}</span>
-          <div class="flex items-center gap-1">
-            <button (click)="prevAlertePage()" [disabled]="alertePage === 1" class="px-2.5 py-1 rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer">‹</button>
-            <span class="px-2 font-medium text-gray-700">{{ alertePage }} / {{ alertesTotalPages }}</span>
-            <button (click)="nextAlertePage()" [disabled]="alertePage === alertesTotalPages" class="px-2.5 py-1 rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer">›</button>
-          </div>
-        </div>
-      }
+      <app-pagination [page]="alertePage" [totalPages]="alertesTotalPages" [total]="alertes.length" [pageSize]="pageSize" (prev)="prevAlertePage()" (next)="nextAlertePage()" />
     </div>
   }
 

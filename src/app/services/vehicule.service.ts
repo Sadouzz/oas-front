@@ -1,35 +1,15 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { UserModel } from './client.service';
+import { environment } from '../../environments/environment';
+import { VehiculeModel, VehiculeRequest } from '../shared/models';
 
-export interface VehiculeModel {
-  id: number;
-  immatriculation: string;
-  annee: number | null;
-  modele: string;
-  marque: string;
-  kilometrage: number | null;
-  numeroChassis: string;
-  client: UserModel | null;
-  createdAt: string;
-}
-
-export interface VehiculeRequest {
-  immatriculation: string;
-  annee: number | null;
-  modele: string;
-  marque: string;
-  kilometrage: number | null;
-  numeroChassis: string;
-  clientId: number | null;
-}
+export type { VehiculeModel, VehiculeRequest };
 
 @Injectable({ providedIn: 'root' })
 export class VehiculeService {
-  private api = 'http://localhost:9090/api/vehicules';
-
-  constructor(private http: HttpClient) {}
+  private http = inject(HttpClient);
+  private api = `${environment.apiUrl}/api/vehicules`;
 
   getAll(keyword?: string): Observable<VehiculeModel[]> {
     const params: Record<string, string> = keyword ? { keyword } : {};

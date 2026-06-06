@@ -1,33 +1,15 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { UserModel, UserUpdatePayload } from '../shared/models';
 
-export interface UserModel {
-  id: number;
-  matricule: string;
-  phone: string;
-  username: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  type: string;
-  enabled: boolean;
-  createdAt: string;
-  role?: string;
-}
-
-export interface UserUpdatePayload {
-  phone?: string;
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-}
+export type { UserModel, UserUpdatePayload };
 
 @Injectable({ providedIn: 'root' })
 export class ClientService {
-  private api = 'http://localhost:9090/api/clients';
-
-  constructor(private http: HttpClient) {}
+  private http = inject(HttpClient);
+  private api = `${environment.apiUrl}/api/clients`;
 
   getAll(keyword?: string): Observable<UserModel[]> {
     const params: Record<string, string> = keyword ? { keyword } : {};

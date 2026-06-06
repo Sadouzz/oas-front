@@ -2,11 +2,13 @@ import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FicheAtelierService, FicheAtelier } from '../services/fiche-atelier.service';
 import { VehiculeService, VehiculeModel } from '../services/vehicule.service';
+import { AlertComponent } from '../shared/components/alert/alert.component';
+import { PaginationComponent } from '../shared/components/pagination/pagination.component';
 
 @Component({
   selector: 'app-fiches-atelier',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent],
   templateUrl: './fiches-atelier.component.html',
 })
 export class FichesAtelierComponent implements OnInit {

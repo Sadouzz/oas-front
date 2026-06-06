@@ -1,39 +1,15 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { BonDeSortie, BonDeSortieRequest, LigneBonDeSortie } from '../shared/models';
 
-export interface LigneBonDeSortie {
-  id: number;
-  piece: { id: number; reference: string; numeroDeSerie: string; prix?: number } | null;
-  quantite: number;
-}
-
-export interface BonDeSortie {
-  id: number;
-  reference: string;
-  date: string;
-  statut: 'EN_ATTENTE' | 'VALIDE';
-  remarque: string;
-  dateValidation: string | null;
-  client: { id: number; firstName: string; lastName: string; phone: string } | null;
-  vehicule: { id: number; immatriculation: string; marque: string; modele: string } | null;
-  agentEmetteur: { id: number; username: string; firstName: string; lastName: string } | null;
-  agentValidateur?: { id: number; username: string; firstName: string; lastName: string };
-  lignes: LigneBonDeSortie[] | null;
-}
-
-export interface BonDeSortieRequest {
-  clientId: number;
-  vehiculeId: number;
-  lignes: { pieceId: number; quantite: number }[];
-  remarque?: string;
-}
+export type { BonDeSortie, BonDeSortieRequest, LigneBonDeSortie };
 
 @Injectable({ providedIn: 'root' })
 export class BonDeSortieService {
-  private api = 'http://localhost:9090/api/bons-de-sortie';
-
-  constructor(private http: HttpClient) {}
+  private http = inject(HttpClient);
+  private api = `${environment.apiUrl}/api/bons-de-sortie`;
 
   getAll(params?: { statut?: string; clientId?: number; vehiculeId?: number }): Observable<BonDeSortie[]> {
     const p: Record<string, string> = {};
