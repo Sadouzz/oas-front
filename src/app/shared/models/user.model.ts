@@ -10,6 +10,7 @@ export interface UserModel {
   enabled: boolean;
   createdAt: string;
   role?: string;
+  authorities?: { authority: string }[];
 }
 
 export interface UserUpdatePayload {

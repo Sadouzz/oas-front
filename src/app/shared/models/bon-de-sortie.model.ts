@@ -4,6 +4,12 @@ export interface LigneBonDeSortie {
   quantite: number;
 }
 
+export interface LigneBonDeSortieMainDoeuvre {
+  id: number;
+  mainDoeuvre: { id: number; description?: string; prix: number; nbreHeure: number; categorie?: { id: number; nom: string } } | null;
+  quantite: number;
+}
+
 export interface BonDeSortie {
   id: number;
   reference: string;
@@ -16,11 +22,13 @@ export interface BonDeSortie {
   agentEmetteur: { id: number; username: string; firstName: string; lastName: string } | null;
   agentValidateur?: { id: number; username: string; firstName: string; lastName: string };
   lignes: LigneBonDeSortie[] | null;
+  lignesBonDeSortieMainDoeuvres?: LigneBonDeSortieMainDoeuvre[] | null;
 }
 
 export interface BonDeSortieRequest {
   clientId: number;
   vehiculeId: number;
-  lignes: { pieceId: number; quantite: number }[];
+  lignesPieces: { pieceId: number; quantite: number }[];
+  lignesMainDoeuvres: { mainDoeuvreId: number; quantite: number }[];
   remarque?: string;
 }

@@ -1,11 +1,11 @@
 <div>
   <div class="flex items-center justify-between mb-6">
     <div>
-      <h2 class="text-xl font-bold text-gray-900">Main d'œuvre — Catalogue des prestations</h2>
-      <p class="text-sm text-gray-500 mt-0.5">{{ filtered.length }} prestation(s) affichée(s)</p>
+      <h1 class="text-[25px] font-extrabold text-oas-ink tracking-tight">Main d'œuvre — Catalogue des prestations</h1>
+      <p class="text-sm text-oas-muted mt-1">{{ filtered.length }} prestation(s) affichée(s)</p>
     </div>
     <button (click)="openCreate()"
-            class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition cursor-pointer">
+            class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-11 rounded-xl flex items-center gap-2 transition cursor-pointer shadow-lg shadow-oas-accent/25">
       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
       </svg>
@@ -15,38 +15,45 @@
 
   <app-alert [success]="successMessage" [error]="errorMessage" />
 
-  <!-- Search -->
-  <div class="bg-white rounded-xl border border-gray-200 p-3 mb-4">
-    <div class="relative">
-      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+  <!-- Search + filtre catégorie -->
+  <div class="bg-white rounded-2xl border border-oas-line p-3 mb-4 shadow-sm flex flex-col sm:flex-row gap-3">
+    <div class="relative flex-1">
+      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-oas-muted">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
         </svg>
       </span>
       <input type="text" (input)="onSearch($event)"
-             placeholder="Rechercher par catégorie..."
-             class="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
+             placeholder="Rechercher..."
+             class="w-full pl-9 pr-4 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
     </div>
+    <select (change)="onCategorieFilter($event)"
+            class="px-3 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink min-w-[180px]">
+      <option value="">Toutes les catégories</option>
+      @for (c of categories; track c) {
+        <option [value]="c">{{ categorieLabel(c) }}</option>
+      }
+    </select>
   </div>
 
   <!-- Table -->
-  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+  <div class="bg-white rounded-2xl border border-oas-line shadow-sm overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
-        <thead class="bg-gray-50 border-b border-gray-200">
-          <tr>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Catégorie</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Prix (FCFA)</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Nb heures</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Statut</th>
-            <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+        <thead>
+          <tr class="border-b border-oas-line">
+            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Catégorie</th>
+            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Prix (FCFA)</th>
+            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Nb heures</th>
+            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Statut</th>
+            <th class="text-right text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Actions</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-100">
+        <tbody>
           @if (loading) {
             <tr>
-              <td colspan="5" class="text-center py-14 text-gray-400">
-                <svg class="animate-spin h-5 w-5 mx-auto mb-2" fill="none" viewBox="0 0 24 24">
+              <td colspan="5" class="text-center py-14 text-oas-muted">
+                <svg class="animate-spin h-5 w-5 mx-auto mb-2 text-oas-accent" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
                 </svg>
@@ -55,31 +62,35 @@
             </tr>
           } @else {
             @for (item of paged; track item.id) {
-              <tr class="hover:bg-gray-50 transition">
-                <td class="px-4 py-3">
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold {{ categorieBadge(item.categorie) }}">
+              <tr class="hover:bg-oas-bg transition border-b border-oas-line">
+                <td class="px-5 py-4">
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold {{ categorieBadge(item.categorie) }}">
                     {{ categorieLabel(item.categorie) }}
                   </span>
                 </td>
-                <td class="px-4 py-3 font-medium text-gray-900">{{ item.prix | number:'1.0-0' }} FCFA</td>
-                <td class="px-4 py-3 text-gray-700">{{ item.nbreHeure }} h</td>
-                <td class="px-4 py-3">
+                <td class="px-5 py-4 font-bold text-oas-ink">{{ item.prix | number:'1.0-0' }} FCFA</td>
+                <td class="px-5 py-4 text-sm text-oas-ink2">{{ item.nbreHeure }} h</td>
+                <td class="px-5 py-4">
                   @if (!item.isArchived) {
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Actif</span>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-oas-ok-bg text-oas-ok">
+                      <span class="w-1.5 h-1.5 rounded-full bg-oas-ok"></span>Actif
+                    </span>
                   } @else {
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">Archivé</span>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-oas-bg text-oas-muted">
+                      <span class="w-1.5 h-1.5 rounded-full bg-oas-muted"></span>Archivé
+                    </span>
                   }
                 </td>
-                <td class="px-4 py-3">
+                <td class="px-5 py-4">
                   <div class="flex items-center justify-end gap-1">
                     <button (click)="openEdit(item)" title="Modifier"
-                            class="p-1.5 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-600 transition cursor-pointer">
+                            class="p-1.5 rounded-lg hover:bg-oas-info-bg text-oas-muted hover:text-oas-info transition cursor-pointer">
                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                       </svg>
                     </button>
                     <button (click)="toggleArchive(item)" [title]="item.isArchived ? 'Désarchiver' : 'Archiver'"
-                            class="p-1.5 rounded-lg transition cursor-pointer {{ item.isArchived ? 'hover:bg-green-50 text-gray-400 hover:text-green-600' : 'hover:bg-amber-50 text-gray-400 hover:text-amber-600' }}">
+                            class="p-1.5 rounded-lg transition cursor-pointer {{ item.isArchived ? 'hover:bg-oas-ok-bg text-oas-muted hover:text-oas-ok' : 'hover:bg-oas-warn-bg text-oas-muted hover:text-oas-warn' }}">
                       @if (!item.isArchived) {
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
@@ -91,7 +102,7 @@
                       }
                     </button>
                     <button (click)="delete(item)" title="Supprimer"
-                            class="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition cursor-pointer">
+                            class="p-1.5 rounded-lg hover:bg-oas-bad-bg text-oas-muted hover:text-oas-bad transition cursor-pointer">
                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                       </svg>
@@ -101,12 +112,7 @@
               </tr>
             } @empty {
               <tr>
-                <td colspan="5" class="text-center py-14">
-                  <svg class="w-10 h-10 text-gray-200 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z"/>
-                  </svg>
-                  <p class="text-gray-400 text-sm">Aucune prestation trouvée</p>
-                </td>
+                <td colspan="5" class="text-center py-14 text-oas-muted text-sm">Aucune prestation trouvée</td>
               </tr>
             }
           }
@@ -119,11 +125,11 @@
 
 <!-- Modal -->
 @if (showModal) {
-  <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
-      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-        <h3 class="font-bold text-gray-900">{{ isNew ? 'Nouvelle prestation' : 'Modifier la prestation' }}</h3>
-        <button (click)="closeModal()" class="p-1 rounded-lg hover:bg-gray-100 text-gray-400 transition cursor-pointer">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line">
+        <h3 class="font-bold text-oas-ink">{{ isNew ? 'Nouvelle prestation' : 'Modifier la prestation' }}</h3>
+        <button (click)="closeModal()" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted transition cursor-pointer">
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
           </svg>
@@ -131,13 +137,13 @@
       </div>
       <form [formGroup]="form" (ngSubmit)="save()" class="px-6 py-5 space-y-4">
         @if (errorMessage) {
-          <div class="px-3 py-2 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg">{{ errorMessage }}</div>
+          <div class="px-3 py-2 bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-xs rounded-xl">{{ errorMessage }}</div>
         }
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Catégorie *</label>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Catégorie *</label>
           <select formControlName="categorie"
-                  class="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                  class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
             @for (c of categories; track c) {
               <option [value]="c">{{ categorieLabel(c) }}</option>
             }
@@ -145,32 +151,32 @@
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Prix (FCFA) *</label>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Prix (FCFA) *</label>
           <input type="number" formControlName="prix" min="0" placeholder="Ex: 15000"
-                 class="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-                 [class.border-red-400]="fc['prix'].invalid && fc['prix'].touched"/>
+                 class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                 [class.border-oas-bad]="fc['prix'].invalid && fc['prix'].touched"/>
           @if (fc['prix'].invalid && fc['prix'].touched) {
-            <p class="text-red-500 text-xs mt-1">Prix valide requis (min 0)</p>
+            <p class="text-oas-bad text-xs mt-1">Prix valide requis (min 0)</p>
           }
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Nombre d'heures *</label>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Nombre d'heures *</label>
           <input type="number" formControlName="nbreHeure" min="1" placeholder="Ex: 2"
-                 class="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-                 [class.border-red-400]="fc['nbreHeure'].invalid && fc['nbreHeure'].touched"/>
+                 class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                 [class.border-oas-bad]="fc['nbreHeure'].invalid && fc['nbreHeure'].touched"/>
           @if (fc['nbreHeure'].invalid && fc['nbreHeure'].touched) {
-            <p class="text-red-500 text-xs mt-1">Nombre d'heures requis (min 1)</p>
+            <p class="text-oas-bad text-xs mt-1">Nombre d'heures requis (min 1)</p>
           }
         </div>
 
         <div class="flex justify-end gap-2 pt-2">
           <button type="button" (click)="closeModal()"
-                  class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition cursor-pointer">
+                  class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-xl border border-oas-line flex items-center transition cursor-pointer text-sm">
             Annuler
           </button>
           <button type="submit" [disabled]="saving"
-                  class="px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                  class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-10 rounded-xl flex items-center transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm">
             {{ saving ? 'Enregistrement...' : (isNew ? 'Créer' : 'Enregistrer') }}
           </button>
         </div>

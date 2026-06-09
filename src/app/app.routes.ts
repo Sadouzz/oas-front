@@ -99,11 +99,6 @@ export const routes: Routes = [
             loadComponent: () =>
               import('./main-doeuvre/main-doeuvre.component').then(m => m.MainDoeuvreComponent),
           },
-          {
-            path: 'garages',
-            loadComponent: () =>
-              import('./admin/garages/garages.component').then(m => m.GaragesComponent),
-          },
         ],
       },
     ],

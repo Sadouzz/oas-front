@@ -1,48 +1,62 @@
 <div>
 
   <!-- Header -->
-  <div class="flex items-center justify-between mb-6">
+  <div class="flex items-start justify-between mb-6">
     <div>
-      <h2 class="text-xl font-bold text-gray-900">Clients</h2>
-      <p class="text-sm text-gray-500 mt-0.5">{{ filtered.length }} client(s) affiché(s)</p>
+      <h1 class="text-[25px] font-extrabold text-oas-ink tracking-tight">Clients</h1>
+      <p class="text-sm text-oas-muted mt-1">{{ filtered.length }} client(s) affiché(s)</p>
     </div>
+    <button (click)="openCreate()"
+            class="flex items-center gap-2 bg-oas-accent hover:bg-oas-accent-dark text-white text-sm font-bold px-4 h-11 rounded-xl transition cursor-pointer shadow-lg shadow-oas-accent/25">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+      </svg>
+      Nouveau client
+    </button>
   </div>
 
   <app-alert [success]="successMessage" [error]="errorMessage" />
 
-  <!-- Search -->
-  <div class="bg-white rounded-xl border border-gray-200 p-3 mb-4">
-    <div class="relative">
-      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+  <!-- Search + Filtres -->
+  <div class="bg-white rounded-2xl border border-oas-line p-3 mb-4 shadow-sm flex flex-col sm:flex-row gap-3">
+    <div class="relative flex-1">
+      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-oas-muted">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
         </svg>
       </span>
       <input type="text" (input)="onSearch($event)"
-             placeholder="Rechercher par nom, email, matricule ou téléphone..."
-             class="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
+             placeholder="Rechercher par nom, email, matricule, téléphone ou immatriculation..."
+             class="w-full pl-9 pr-4 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
     </div>
+    <select (change)="onStatutFilter($event)"
+            class="px-3 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink min-w-[160px]">
+      <option value="">Tous les statuts</option>
+      <option value="actif">Actifs seulement</option>
+      <option value="archive">Archivés seulement</option>
+    </select>
   </div>
 
   <!-- Table -->
-  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+  <div class="bg-white rounded-2xl border border-oas-line shadow-sm overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
-        <thead class="bg-gray-50 border-b border-gray-200">
-          <tr>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Matricule</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Nom complet</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Téléphone</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Statut</th>
-            <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+        <thead>
+          <tr class="border-b border-oas-line">
+            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Matricule</th>
+            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Nom complet</th>
+            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Email</th>
+            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Téléphone</th>
+            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Véhicules</th>
+            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Statut</th>
+            <th class="text-right text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Actions</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-100">
+        <tbody>
           @if (loading) {
             <tr>
-              <td colspan="6" class="text-center py-14 text-gray-400">
-                <svg class="animate-spin h-5 w-5 mx-auto mb-2" fill="none" viewBox="0 0 24 24">
+              <td colspan="7" class="text-center py-14 text-oas-muted">
+                <svg class="animate-spin h-5 w-5 mx-auto mb-2 text-oas-accent" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
                 </svg>
@@ -51,53 +65,72 @@
             </tr>
           } @else {
             @for (client of paged; track client.id) {
-              <tr class="hover:bg-gray-50 transition">
-                <td class="px-4 py-3 font-mono text-gray-600 text-xs">{{ client.matricule }}</td>
-                <td class="px-4 py-3">
+              <tr class="hover:bg-oas-bg transition border-b border-oas-line">
+                <td class="px-5 py-4 font-mono text-oas-muted text-xs">{{ client.matricule }}</td>
+                <td class="px-5 py-4">
                   <div class="flex items-center gap-2.5">
-                    <div class="w-7 h-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                    <div class="w-8 h-8 rounded-full bg-oas-info-bg text-oas-info flex items-center justify-center text-xs font-bold flex-shrink-0">
                       {{ client.firstName[0] }}{{ client.lastName[0] }}
                     </div>
                     <div>
-                      <p class="font-medium text-gray-900">{{ client.firstName }} {{ client.lastName }}</p>
-                      <p class="text-xs text-gray-400">&#64;{{ client.username }}</p>
+                      <p class="font-semibold text-oas-ink">{{ client.firstName }} {{ client.lastName }}</p>
+                      <p class="text-xs text-oas-muted">&#64;{{ client.username }}</p>
                     </div>
                   </div>
                 </td>
-                <td class="px-4 py-3 text-gray-600">{{ client.email }}</td>
-                <td class="px-4 py-3 text-gray-600">{{ client.phone }}</td>
-                <td class="px-4 py-3">
-                  @if (client.enabled) {
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Actif</span>
+                <td class="px-5 py-4 text-sm text-oas-ink2">{{ client.email }}</td>
+                <td class="px-5 py-4 text-sm text-oas-ink2">{{ client.phone }}</td>
+                <td class="px-5 py-4">
+                  @if (clientVehicleCount(client.id) > 0) {
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-oas-info-bg text-oas-info">
+                      <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/>
+                      </svg>
+                      {{ clientVehicleCount(client.id) }}
+                    </span>
                   } @else {
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">Archivé</span>
+                    <span class="text-xs text-oas-muted">Aucun</span>
                   }
                 </td>
-                <td class="px-4 py-3">
+                <td class="px-5 py-4">
+                  @if (client.enabled) {
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-oas-ok-bg text-oas-ok">
+                      <span class="w-1.5 h-1.5 rounded-full bg-oas-ok"></span>Actif
+                    </span>
+                  } @else {
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-oas-bg text-oas-muted">
+                      <span class="w-1.5 h-1.5 rounded-full bg-oas-muted"></span>Archivé
+                    </span>
+                  }
+                </td>
+                <td class="px-5 py-4">
                   <div class="flex items-center justify-end gap-1">
+                    <!-- Modifier -->
                     <button (click)="openEdit(client)" title="Modifier"
-                            class="p-1.5 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-600 transition cursor-pointer">
+                            class="p-1.5 rounded-lg hover:bg-oas-info-bg text-oas-muted hover:text-oas-info transition cursor-pointer">
                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                       </svg>
                     </button>
+                    <!-- Archiver / Désarchiver -->
                     @if (client.enabled) {
                       <button (click)="archive(client)" title="Archiver"
-                              class="p-1.5 rounded-lg hover:bg-amber-50 text-gray-400 hover:text-amber-600 transition cursor-pointer">
+                              class="p-1.5 rounded-lg hover:bg-oas-warn-bg text-oas-muted hover:text-oas-warn transition cursor-pointer">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
                         </svg>
                       </button>
                     } @else {
                       <button (click)="unarchive(client)" title="Désarchiver"
-                              class="p-1.5 rounded-lg hover:bg-green-50 text-gray-400 hover:text-green-600 transition cursor-pointer">
+                              class="p-1.5 rounded-lg hover:bg-oas-ok-bg text-oas-muted hover:text-oas-ok transition cursor-pointer">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
                         </svg>
                       </button>
                     }
-                    <button (click)="deleteClient(client)" title="Supprimer"
-                            class="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition cursor-pointer">
+                    <!-- Supprimer (hard delete) -->
+                    <button (click)="openRiskModal(client)" title="Supprimer définitivement"
+                            class="p-1.5 rounded-lg hover:bg-oas-bad-bg text-oas-muted hover:text-oas-bad transition cursor-pointer">
                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                       </svg>
@@ -107,11 +140,11 @@
               </tr>
             } @empty {
               <tr>
-                <td colspan="6" class="text-center py-14">
-                  <svg class="w-10 h-10 text-gray-200 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <td colspan="7" class="text-center py-14">
+                  <svg class="w-10 h-10 text-oas-line mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
                   </svg>
-                  <p class="text-gray-400 text-sm">Aucun client trouvé</p>
+                  <p class="text-oas-muted text-sm">Aucun client trouvé</p>
                 </td>
               </tr>
             }
@@ -124,73 +157,572 @@
 
 </div>
 
-<!-- ── Edit Modal ── -->
+<!-- ══════════════════════════════════════════════════════
+     Modal Création (2 étapes)
+     ══════════════════════════════════════════════════════ -->
+@if (showCreateModal) {
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+
+      <!-- Header avec stepper -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line sticky top-0 bg-white">
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold {{ createStep === 1 ? 'bg-oas-accent text-white' : 'bg-oas-ok text-white' }}">
+              @if (createStep === 1) { 1 } @else {
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+              }
+            </div>
+            <span class="text-xs font-semibold {{ createStep === 1 ? 'text-oas-ink' : 'text-oas-muted' }}">Informations</span>
+          </div>
+          <div class="w-6 h-px bg-oas-line"></div>
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold {{ createStep === 2 ? 'bg-oas-accent text-white' : 'bg-oas-line text-oas-muted' }}">2</div>
+            <span class="text-xs font-semibold {{ createStep === 2 ? 'text-oas-ink' : 'text-oas-muted' }}">Véhicule</span>
+          </div>
+        </div>
+        <button (click)="closeCreate()" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted transition cursor-pointer">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Étape 1 : Infos client -->
+      @if (createStep === 1) {
+        <form [formGroup]="createForm" (ngSubmit)="saveCreate()" class="px-6 py-5 space-y-4">
+          @if (errorMessage) {
+            <div class="px-3 py-2 bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-xs rounded-xl">{{ errorMessage }}</div>
+          }
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1">Prénom *</label>
+              <input type="text" formControlName="firstName"
+                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                     [class.border-oas-bad]="fCreate['firstName'].invalid && fCreate['firstName'].touched"/>
+              @if (fCreate['firstName'].invalid && fCreate['firstName'].touched) {
+                <p class="text-oas-bad text-xs mt-1">Requis</p>
+              }
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1">Nom *</label>
+              <input type="text" formControlName="lastName"
+                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                     [class.border-oas-bad]="fCreate['lastName'].invalid && fCreate['lastName'].touched"/>
+              @if (fCreate['lastName'].invalid && fCreate['lastName'].touched) {
+                <p class="text-oas-bad text-xs mt-1">Requis</p>
+              }
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1">
+                Matricule <span class="text-xs text-oas-muted font-normal">(auto-généré)</span>
+              </label>
+              <div class="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-dashed border-oas-line bg-oas-bg/50">
+                <svg class="w-4 h-4 text-oas-muted flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+                <span class="font-mono font-bold text-oas-accent text-sm">{{ generatedMatricule }}</span>
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1">Identifiant *</label>
+              <input type="text" formControlName="username"
+                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                     [class.border-oas-bad]="fCreate['username'].invalid && fCreate['username'].touched"/>
+              @if (fCreate['username'].invalid && fCreate['username'].touched) {
+                <p class="text-oas-bad text-xs mt-1">Requis</p>
+              }
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1">Email *</label>
+            <input type="email" formControlName="email"
+                   class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                   [class.border-oas-bad]="fCreate['email'].invalid && fCreate['email'].touched"/>
+            @if (fCreate['email'].invalid && fCreate['email'].touched) {
+              <p class="text-oas-bad text-xs mt-1">Email invalide</p>
+            }
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1">Téléphone *</label>
+              <input type="text" formControlName="phone"
+                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                     [class.border-oas-bad]="fCreate['phone'].invalid && fCreate['phone'].touched"/>
+              @if (fCreate['phone'].invalid && fCreate['phone'].touched) {
+                <p class="text-oas-bad text-xs mt-1">Requis</p>
+              }
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1">Mot de passe *</label>
+              <input type="password" formControlName="password"
+                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                     [class.border-oas-bad]="fCreate['password'].invalid && fCreate['password'].touched"/>
+              @if (fCreate['password'].invalid && fCreate['password'].touched) {
+                <p class="text-oas-bad text-xs mt-1">Requis</p>
+              }
+            </div>
+          </div>
+          <div class="flex justify-end gap-2 pt-2">
+            <button type="button" (click)="closeCreate()"
+                    class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-xl border border-oas-line flex items-center transition cursor-pointer text-sm">
+              Annuler
+            </button>
+            <button type="submit" [disabled]="saving"
+                    class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-10 rounded-xl flex items-center gap-2 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm">
+              @if (saving) { Création... } @else {
+                Suivant
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                </svg>
+              }
+            </button>
+          </div>
+        </form>
+      }
+
+      <!-- Étape 2 : Ajouter un véhicule -->
+      @if (createStep === 2) {
+        <div class="px-6 py-5">
+          @if (!addingVehicle) {
+            <div class="text-center py-4">
+              <div class="w-16 h-16 rounded-full bg-oas-ok-bg flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-oas-ok" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+              <h3 class="text-base font-bold text-oas-ink mb-1">Client créé avec succès !</h3>
+              <p class="text-sm text-oas-muted mb-6">Souhaitez-vous associer un véhicule à ce client ?</p>
+              <div class="flex flex-col gap-3">
+                <button (click)="startAddVehicle()"
+                        class="w-full flex items-center justify-center gap-2 bg-oas-accent hover:bg-oas-accent-dark text-white font-bold py-3 rounded-xl transition cursor-pointer text-sm">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                  </svg>
+                  Ajouter un véhicule
+                </button>
+                <button (click)="skipVehicle()"
+                        class="w-full flex items-center justify-center gap-2 bg-white hover:bg-oas-bg text-oas-ink font-semibold py-3 rounded-xl border border-oas-line transition cursor-pointer text-sm">
+                  Passer cette étape
+                </button>
+              </div>
+            </div>
+          } @else {
+            <h3 class="text-sm font-bold text-oas-ink mb-4">Informations du véhicule</h3>
+            @if (errorMessage) {
+              <div class="px-3 py-2 bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-xs rounded-xl mb-4">{{ errorMessage }}</div>
+            }
+            <form [formGroup]="vehicleForm" (ngSubmit)="saveVehicle()" class="space-y-4">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-semibold text-oas-ink mb-1">Immatriculation *</label>
+                  <input type="text" formControlName="immatriculation" placeholder="AA-123-BB"
+                         class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                         [class.border-oas-bad]="fVehicle['immatriculation'].invalid && fVehicle['immatriculation'].touched"/>
+                  @if (fVehicle['immatriculation'].invalid && fVehicle['immatriculation'].touched) {
+                    <p class="text-oas-bad text-xs mt-1">Requis</p>
+                  }
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-oas-ink mb-1">N° Châssis</label>
+                  <input type="text" formControlName="numeroChassis"
+                         class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-semibold text-oas-ink mb-1">Marque *</label>
+                  <input type="text" formControlName="marque" placeholder="Toyota"
+                         class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                         [class.border-oas-bad]="fVehicle['marque'].invalid && fVehicle['marque'].touched"/>
+                  @if (fVehicle['marque'].invalid && fVehicle['marque'].touched) {
+                    <p class="text-oas-bad text-xs mt-1">Requis</p>
+                  }
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-oas-ink mb-1">Modèle *</label>
+                  <input type="text" formControlName="modele" placeholder="Corolla"
+                         class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                         [class.border-oas-bad]="fVehicle['modele'].invalid && fVehicle['modele'].touched"/>
+                  @if (fVehicle['modele'].invalid && fVehicle['modele'].touched) {
+                    <p class="text-oas-bad text-xs mt-1">Requis</p>
+                  }
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-semibold text-oas-ink mb-1">Année</label>
+                  <input type="number" formControlName="annee" placeholder="2020" min="1900" max="2099"
+                         class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-oas-ink mb-1">Kilométrage</label>
+                  <input type="number" formControlName="kilometrage" placeholder="50000" min="0"
+                         class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+                </div>
+              </div>
+              <div class="flex justify-end gap-2 pt-2">
+                <button type="button" (click)="cancelVehicle()"
+                        class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-xl border border-oas-line flex items-center transition cursor-pointer text-sm">Annuler</button>
+                <button type="submit" [disabled]="saving"
+                        class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-10 rounded-xl flex items-center transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm">
+                  {{ saving ? 'Enregistrement...' : 'Créer le véhicule' }}
+                </button>
+              </div>
+            </form>
+          }
+        </div>
+      }
+
+    </div>
+  </div>
+}
+
+<!-- ══════════════════════════════════════════════════════
+     Modal Modification
+     ══════════════════════════════════════════════════════ -->
 @if (showEditModal) {
-  <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-        <h3 class="font-bold text-gray-900">Modifier le client</h3>
-        <button (click)="closeModal()" class="p-1 rounded-lg hover:bg-gray-100 text-gray-400 transition cursor-pointer">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line">
+        <h3 class="font-bold text-oas-ink">Modifier le client</h3>
+        <button (click)="closeModal()" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted transition cursor-pointer">
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
           </svg>
         </button>
       </div>
       <form [formGroup]="editForm" (ngSubmit)="saveEdit()" class="px-6 py-5 space-y-4">
-
+        @if (errorMessage) {
+          <div class="px-3 py-2 bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-xs rounded-xl">{{ errorMessage }}</div>
+        }
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
+            <label class="block text-sm font-semibold text-oas-ink mb-1">Prénom</label>
             <input type="text" formControlName="firstName"
-                   class="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                   [class.border-red-400]="fEdit['firstName'].invalid && fEdit['firstName'].touched"/>
-            @if (fEdit['firstName'].invalid && fEdit['firstName'].touched) {
-              <p class="text-red-500 text-xs mt-1">Champ requis</p>
-            }
+                   class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Nom</label>
+            <label class="block text-sm font-semibold text-oas-ink mb-1">Nom</label>
             <input type="text" formControlName="lastName"
-                   class="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                   [class.border-red-400]="fEdit['lastName'].invalid && fEdit['lastName'].touched"/>
-            @if (fEdit['lastName'].invalid && fEdit['lastName'].touched) {
-              <p class="text-red-500 text-xs mt-1">Champ requis</p>
-            }
+                   class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
           </div>
         </div>
-
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Email</label>
           <input type="email" formControlName="email"
-                 class="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                 [class.border-red-400]="fEdit['email'].invalid && fEdit['email'].touched"/>
-          @if (fEdit['email'].invalid && fEdit['email'].touched) {
-            <p class="text-red-500 text-xs mt-1">Email invalide</p>
-          }
+                 class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
         </div>
-
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Téléphone</label>
           <input type="text" formControlName="phone"
-                 class="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                 [class.border-red-400]="fEdit['phone'].invalid && fEdit['phone'].touched"/>
-          @if (fEdit['phone'].invalid && fEdit['phone'].touched) {
-            <p class="text-red-500 text-xs mt-1">Champ requis</p>
-          }
+                 class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
         </div>
-
         <div class="flex justify-end gap-2 pt-2">
           <button type="button" (click)="closeModal()"
-                  class="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition cursor-pointer">
-            Annuler
-          </button>
+                  class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-xl border border-oas-line flex items-center transition cursor-pointer text-sm">Annuler</button>
           <button type="submit" [disabled]="saving"
-                  class="px-4 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                  class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-10 rounded-xl flex items-center transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm">
             {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
           </button>
         </div>
-
       </form>
+    </div>
+  </div>
+}
+
+<!-- ══════════════════════════════════════════════════════
+     Modal Suppression définitive
+     ══════════════════════════════════════════════════════ -->
+@if (showRiskModal && riskClient) {
+  <div class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[92vh] flex flex-col">
+
+      <!-- ── Bandeau rouge d'avertissement ── -->
+      <div class="bg-oas-bad rounded-t-2xl px-6 py-4 flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+          </div>
+          <div>
+            <p class="text-white font-bold text-sm">Suppression définitive du client</p>
+            <p class="text-white/80 text-xs mt-0.5">
+              {{ riskClient.firstName }} {{ riskClient.lastName }} · {{ riskClient.matricule }}
+            </p>
+          </div>
+          <button (click)="closeRiskModal()" class="ml-auto p-1.5 rounded-lg hover:bg-white/20 text-white/70 hover:text-white transition cursor-pointer flex-shrink-0">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Corps scrollable ── -->
+      <div class="overflow-y-auto flex-1 px-6 py-5 space-y-5">
+
+        @if (riskLoading) {
+          <!-- Chargement -->
+          <div class="flex flex-col items-center gap-3 py-10 text-oas-muted">
+            <svg class="animate-spin h-6 w-6 text-oas-accent" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+            </svg>
+            <p class="text-sm">Vérification des informations du client…</p>
+          </div>
+        } @else {
+
+          <!-- ── Bloc : ce que signifie supprimer ── -->
+          <div class="bg-oas-bad-bg border border-oas-bad/25 rounded-xl p-4">
+            <p class="text-sm font-bold text-oas-bad mb-1">Qu'est-ce que ça veut dire ?</p>
+            <p class="text-sm text-oas-ink leading-relaxed">
+              Supprimer un client l'<strong>efface totalement et définitivement</strong> du système.
+              Contrairement à l'archivage, cette action ne peut pas être annulée —
+              il sera impossible de retrouver ce client ou ses informations par la suite.
+            </p>
+          </div>
+
+          <!-- ── Bloc : données rattachées ── -->
+          <div>
+            <p class="text-xs font-bold text-oas-ink uppercase tracking-wide mb-3">
+              Ce qui est rattaché à ce client
+            </p>
+            <div class="space-y-2">
+
+              <!-- Véhicules -->
+              <div class="flex items-start gap-3 rounded-xl border p-3
+                          {{ riskVehicleCount > 0 ? 'border-oas-warn/40 bg-oas-warn-bg' : 'border-oas-line bg-oas-bg' }}">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0
+                             {{ riskVehicleCount > 0 ? 'bg-oas-warn/20' : 'bg-oas-line' }}">
+                  <svg class="w-4 h-4 {{ riskVehicleCount > 0 ? 'text-oas-warn' : 'text-oas-muted' }}"
+                       fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/>
+                  </svg>
+                </div>
+                <div class="flex-1">
+                  <div class="flex items-center justify-between">
+                    <p class="text-sm font-semibold {{ riskVehicleCount > 0 ? 'text-oas-warn' : 'text-oas-muted' }}">
+                      Véhicule(s) enregistré(s)
+                    </p>
+                    <span class="text-sm font-bold {{ riskVehicleCount > 0 ? 'text-oas-warn' : 'text-oas-muted' }}">
+                      {{ riskVehicleCount }}
+                    </span>
+                  </div>
+                  <p class="text-xs text-oas-muted mt-0.5 leading-relaxed">
+                    @if (riskVehicleCount > 0) {
+                      {{ riskVehicleCount }} véhicule(s) sont enregistrés sous le nom de ce client. Ils seront retirés du système lors de la suppression.
+                    } @else {
+                      Aucun véhicule enregistré pour ce client.
+                    }
+                  </p>
+                </div>
+              </div>
+
+              <!-- Bons de sortie -->
+              <div class="flex items-start gap-3 rounded-xl border p-3
+                          {{ riskBonCount > 0 ? 'border-oas-warn/40 bg-oas-warn-bg' : 'border-oas-line bg-oas-bg' }}">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0
+                             {{ riskBonCount > 0 ? 'bg-oas-warn/20' : 'bg-oas-line' }}">
+                  <svg class="w-4 h-4 {{ riskBonCount > 0 ? 'text-oas-warn' : 'text-oas-muted' }}"
+                       fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z"/>
+                  </svg>
+                </div>
+                <div class="flex-1">
+                  <div class="flex items-center justify-between">
+                    <p class="text-sm font-semibold {{ riskBonCount > 0 ? 'text-oas-warn' : 'text-oas-muted' }}">
+                      Bon(s) de sortie
+                    </p>
+                    <span class="text-sm font-bold {{ riskBonCount > 0 ? 'text-oas-warn' : 'text-oas-muted' }}">
+                      {{ riskBonCount }}
+                    </span>
+                  </div>
+                  <p class="text-xs text-oas-muted mt-0.5 leading-relaxed">
+                    @if (riskBonCount > 0) {
+                      {{ riskBonCount }} bon(s) de sortie retracent les pièces fournies à ce client. Ces enregistrements seront affectés par la suppression.
+                    } @else {
+                      Aucun bon de sortie associé à ce client.
+                    }
+                  </p>
+                </div>
+              </div>
+
+              <!-- Factures -->
+              <div class="flex items-start gap-3 rounded-xl border p-3
+                          {{ riskFactures.length > 0 ? 'border-oas-bad/40 bg-oas-bad-bg' : 'border-oas-line bg-oas-bg' }}">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0
+                             {{ riskFactures.length > 0 ? 'bg-oas-bad/20' : 'bg-oas-line' }}">
+                  <svg class="w-4 h-4 {{ riskFactures.length > 0 ? 'text-oas-bad' : 'text-oas-muted' }}"
+                       fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                </div>
+                <div class="flex-1">
+                  <div class="flex items-center justify-between">
+                    <p class="text-sm font-semibold {{ riskFactures.length > 0 ? 'text-oas-bad' : 'text-oas-muted' }}">
+                      Facture(s) établies à son nom
+                    </p>
+                    <span class="text-sm font-bold {{ riskFactures.length > 0 ? 'text-oas-bad' : 'text-oas-muted' }}">
+                      {{ riskFactures.length }}
+                    </span>
+                  </div>
+                  <p class="text-xs mt-0.5 leading-relaxed {{ riskFactures.length > 0 ? 'text-oas-bad' : 'text-oas-muted' }}">
+                    @if (riskFactures.length > 0) {
+                      Ce client a {{ riskFactures.length }} facture(s) établie(s) à son nom. Pour des raisons légales, ces factures doivent rester accessibles indéfiniment — <strong>la suppression sera refusée</strong> par le système tant qu'elles existent.
+                    } @else {
+                      Ce client n'a aucune facture enregistrée. La suppression est techniquement possible.
+                    }
+                  </p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ── Liste des factures (si applicable) ── -->
+          @if (riskFactures.length > 0) {
+            <div>
+              <p class="text-xs font-bold text-oas-ink uppercase tracking-wide mb-2">
+                Détail des {{ riskFactures.length }} facture(s)
+              </p>
+              <div class="border border-oas-line rounded-xl overflow-hidden">
+                <table class="w-full text-xs">
+                  <thead>
+                    <tr class="border-b border-oas-line bg-oas-bg">
+                      <th class="text-left px-3 py-2 font-bold text-oas-muted uppercase tracking-wide">N° Facture</th>
+                      <th class="text-left px-3 py-2 font-bold text-oas-muted uppercase tracking-wide">Véhicule</th>
+                      <th class="text-right px-3 py-2 font-bold text-oas-muted uppercase tracking-wide">Montant TTC</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-oas-line">
+                    @for (f of riskFactures; track f.id) {
+                      <tr class="hover:bg-oas-bg">
+                        <td class="px-3 py-2.5 font-mono font-bold text-oas-accent">{{ f.numero }}</td>
+                        <td class="px-3 py-2.5 text-oas-ink2">{{ f.immatriculation }} <span class="text-oas-muted">{{ f.marque }}</span></td>
+                        <td class="px-3 py-2.5 text-right font-semibold text-oas-ink">{{ f.montantTotal?.toLocaleString('fr-FR') }} FCFA</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+
+          <!-- ── Recommandation ── -->
+          <div class="rounded-xl border-2 p-4
+                      {{ riskFactures.length > 0 ? 'border-oas-ok bg-oas-ok-bg' : 'border-oas-line bg-oas-bg' }}">
+            <div class="flex items-start gap-3">
+              <div class="w-8 h-8 rounded-full bg-oas-ok/15 flex items-center justify-center flex-shrink-0">
+                <svg class="w-4 h-4 text-oas-ok" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm font-bold text-oas-ink">
+                  {{ riskFactures.length > 0 ? 'Que faire ?' : 'Vous avez aussi la possibilité d\'archiver' }}
+                </p>
+                <p class="text-xs text-oas-muted mt-1 leading-relaxed">
+                  @if (riskFactures.length > 0) {
+                    Étant donné les factures existantes, nous vous recommandons d'<strong class="text-oas-ink">archiver ce client</strong> plutôt que de le supprimer. L'archivage le désactive sans effacer aucune donnée — toutes les factures, bons de sortie et véhicules restent intacts et consultables. Le compte peut être réactivé à tout moment si nécessaire.
+                  } @else {
+                    L'archivage est une alternative plus sûre : le client est désactivé mais toutes ses informations sont conservées. Il ne pourra plus être sélectionné dans les formulaires, mais reste consultable dans l'historique.
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
+
+        }
+      </div>
+
+      <!-- ── Footer boutons ── -->
+      <div class="px-6 py-4 border-t border-oas-line flex-shrink-0 space-y-3">
+
+        @if (!riskLoading) {
+          <!-- Cas 1 : des données existent → archivage recommandé, suppression impossible -->
+          @if (!canHardDelete) {
+            <button (click)="confirmArchiveFromModal()" [disabled]="saving"
+                    class="w-full flex items-center justify-center gap-2 bg-oas-navy hover:bg-oas-navy/90 text-white font-bold py-3 rounded-xl transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+              </svg>
+              {{ saving ? 'Archivage en cours…' : 'Archiver ce client' }}
+            </button>
+            <div class="flex items-center gap-2 px-1">
+              <div class="flex-1 h-px bg-oas-line"></div>
+              <span class="text-xs text-oas-muted">ou</span>
+              <div class="flex-1 h-px bg-oas-line"></div>
+            </div>
+            <div class="flex gap-2">
+              <button (click)="closeRiskModal()"
+                      class="flex-1 bg-white hover:bg-oas-bg text-oas-ink font-semibold py-2.5 rounded-xl border border-oas-line transition cursor-pointer text-sm">
+                Annuler
+              </button>
+              <button disabled title="Impossible — ce client possède des données liées (véhicules, bons de sortie ou factures)"
+                      class="flex-1 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-oas-muted text-sm font-semibold flex items-center justify-center gap-1.5 cursor-not-allowed opacity-50">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                </svg>
+                Suppression impossible
+              </button>
+            </div>
+            <p class="text-center text-xs text-oas-muted">
+              La suppression est impossible tant que ce client a des données enregistrées.
+              L'archivage est la seule option disponible.
+            </p>
+          }
+
+          <!-- Cas 2 : aucune donnée liée → les deux options sont disponibles -->
+          @if (canHardDelete) {
+            <div class="bg-oas-ok-bg border border-oas-ok/30 rounded-xl px-3 py-2 text-xs text-oas-ok flex items-center gap-2">
+              <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              Ce client n'a aucune donnée liée. Les deux options ci-dessous sont disponibles.
+            </div>
+            <div class="flex gap-2">
+              <button (click)="closeRiskModal()"
+                      class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 py-2.5 rounded-xl border border-oas-line transition cursor-pointer text-sm">
+                Annuler
+              </button>
+              <button (click)="confirmArchiveFromModal()" [disabled]="saving"
+                      class="flex-1 flex items-center justify-center gap-1.5 bg-oas-bg hover:bg-oas-line/60 text-oas-ink font-semibold py-2.5 rounded-xl border border-oas-line transition cursor-pointer disabled:opacity-50 text-sm">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                </svg>
+                {{ saving ? 'En cours…' : 'Archiver' }}
+              </button>
+              <button (click)="confirmHardDelete()" [disabled]="saving"
+                      class="flex-1 flex items-center justify-center gap-1.5 bg-oas-bad hover:bg-oas-bad/90 text-white font-bold py-2.5 rounded-xl transition cursor-pointer disabled:opacity-50 text-sm">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+                {{ saving ? 'Suppression…' : 'Supprimer définitivement' }}
+              </button>
+            </div>
+          }
+        }
+
+        @if (riskLoading) {
+          <div class="flex gap-2">
+            <button (click)="closeRiskModal()"
+                    class="flex-1 bg-white hover:bg-oas-bg text-oas-ink font-semibold py-2.5 rounded-xl border border-oas-line transition cursor-pointer text-sm">
+              Annuler
+            </button>
+            <button disabled class="flex-1 py-2.5 rounded-xl bg-oas-bg text-oas-muted text-sm opacity-50 cursor-not-allowed">
+              Chargement…
+            </button>
+          </div>
+        }
+
+      </div>
+
     </div>
   </div>
 }

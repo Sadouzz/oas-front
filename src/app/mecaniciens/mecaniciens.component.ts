@@ -1,8 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MecanicienService } from '../services/mecanicien.service';
-import { GarageService } from '../services/garage.service';
-import { Garage, Mecanicien } from '../shared/models';
+import { Mecanicien } from '../shared/models';
 import { AlertComponent } from '../shared/components/alert/alert.component';
 import { PaginationComponent } from '../shared/components/pagination/pagination.component';
 
@@ -14,12 +13,10 @@ import { PaginationComponent } from '../shared/components/pagination/pagination.
 })
 export class MecaniciensComponent implements OnInit {
   private service = inject(MecanicienService);
-  private garageService = inject(GarageService);
   private fb = inject(FormBuilder);
 
   mecaniciens: Mecanicien[] = [];
   filtered: Mecanicien[] = [];
-  garages: Garage[] = [];
   loading = true;
   saving = false;
   showModal = false;
@@ -32,12 +29,10 @@ export class MecaniciensComponent implements OnInit {
 
   form: FormGroup = this.fb.group({
     nom: ['', Validators.required],
-    garageId: [null],
   });
 
   ngOnInit() {
     this.load();
-    this.garageService.getAll().subscribe({ next: g => this.garages = g, error: () => {} });
   }
 
   load() {
@@ -50,10 +45,7 @@ export class MecaniciensComponent implements OnInit {
 
   onSearch(e: Event) {
     const kw = (e.target as HTMLInputElement).value.toLowerCase();
-    this.filtered = this.mecaniciens.filter(m =>
-      m.nom.toLowerCase().includes(kw) ||
-      (m.garage?.libelle ?? '').toLowerCase().includes(kw)
-    );
+    this.filtered = this.mecaniciens.filter(m => m.nom.toLowerCase().includes(kw));
     this.page = 1;
   }
 
@@ -67,7 +59,7 @@ export class MecaniciensComponent implements OnInit {
   openEdit(m: Mecanicien) {
     this.isNew = false;
     this.editingId = m.id;
-    this.form.patchValue({ nom: m.nom, garageId: m.garage?.id ?? null });
+    this.form.patchValue({ nom: m.nom });
     this.showModal = true;
   }
 
@@ -75,7 +67,7 @@ export class MecaniciensComponent implements OnInit {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.saving = true;
     const raw = this.form.value;
-    const payload = { nom: raw.nom, garageId: raw.garageId ? Number(raw.garageId) : null };
+    const payload = { nom: raw.nom };
     const req$ = this.isNew
       ? this.service.create(payload)
       : this.service.update(this.editingId!, payload);

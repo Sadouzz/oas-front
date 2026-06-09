@@ -55,10 +55,10 @@ export class HistoryComponent implements OnInit {
   }
 
   statusClass(status: string): string {
-    if (!status) return 'bg-gray-100 text-gray-600';
+    if (!status) return 'bg-oas-bg text-oas-muted';
     const s = status.toUpperCase();
-    if (s === 'SUCCESS') return 'bg-green-100 text-green-800';
-    if (s === 'FAILURE' || s === 'FAILED') return 'bg-red-100 text-red-700';
-    return 'bg-gray-100 text-gray-600';
+    if (s === 'SUCCESS') return 'bg-oas-ok-bg text-oas-ok';
+    if (s === 'FAILURE' || s === 'FAILED') return 'bg-oas-bad-bg text-oas-bad';
+    return 'bg-oas-bg text-oas-muted';
   }
 }

@@ -5,16 +5,16 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
   standalone: true,
   template: `
     @if (totalPages > 1) {
-      <div class="flex items-center justify-between px-4 py-3 border-t border-gray-100 text-xs text-gray-500">
+      <div class="flex items-center justify-between px-5 py-3 border-t border-oas-line text-xs text-oas-muted">
         <span>{{ rangeStart }}–{{ rangeEnd }} sur {{ total }}</span>
         <div class="flex items-center gap-1">
           <button (click)="prev.emit()" [disabled]="page === 1"
-                  class="px-2.5 py-1 rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer">
+                  class="px-2.5 py-1 rounded-lg border border-oas-line hover:bg-oas-bg disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer">
             ‹
           </button>
-          <span class="px-2 font-medium text-gray-700">{{ page }} / {{ totalPages }}</span>
+          <span class="px-2 font-semibold text-oas-ink2">{{ page }} / {{ totalPages }}</span>
           <button (click)="next.emit()" [disabled]="page === totalPages"
-                  class="px-2.5 py-1 rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer">
+                  class="px-2.5 py-1 rounded-lg border border-oas-line hover:bg-oas-bg disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer">
             ›
           </button>
         </div>

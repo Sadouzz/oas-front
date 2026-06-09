@@ -5,12 +5,12 @@ import { Component, Input } from '@angular/core';
   standalone: true,
   template: `
     @if (success) {
-      <div class="mb-4 px-4 py-3 bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl">
+      <div class="mb-4 px-4 py-3 bg-oas-ok-bg border border-oas-ok/30 text-oas-ok text-sm rounded-xl">
         {{ success }}
       </div>
     }
     @if (error) {
-      <div class="mb-4 px-4 py-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl">
+      <div class="mb-4 px-4 py-3 bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-sm rounded-xl">
         {{ error }}
       </div>
     }

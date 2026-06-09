@@ -1,7 +1,9 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 import { FicheAtelierService, FicheAtelier } from '../services/fiche-atelier.service';
 import { VehiculeService, VehiculeModel } from '../services/vehicule.service';
+import { MecanicienService, Mecanicien } from '../services/mecanicien.service';
 import { AlertComponent } from '../shared/components/alert/alert.component';
 import { PaginationComponent } from '../shared/components/pagination/pagination.component';
 
@@ -14,11 +16,13 @@ import { PaginationComponent } from '../shared/components/pagination/pagination.
 export class FichesAtelierComponent implements OnInit {
   private service = inject(FicheAtelierService);
   private vehiculeService = inject(VehiculeService);
+  private mecanicienService = inject(MecanicienService);
   private fb = inject(FormBuilder);
 
   fiches: FicheAtelier[] = [];
   filtered: FicheAtelier[] = [];
   vehicules: VehiculeModel[] = [];
+  allMecaniciens: Mecanicien[] = [];
   loading = true;
   saving = false;
   showModal = false;
@@ -28,6 +32,11 @@ export class FichesAtelierComponent implements OnInit {
   pageSize = 10;
   successMessage = '';
   errorMessage = '';
+
+  // Mécaniciens modal
+  showMecModal = false;
+  mecFiche: FicheAtelier | null = null;
+  mecToggling: number | null = null;
 
   form: FormGroup = this.fb.group({
     numero: ['', Validators.required],
@@ -40,7 +49,15 @@ export class FichesAtelierComponent implements OnInit {
 
   ngOnInit() {
     this.load();
-    this.vehiculeService.getAll().subscribe({ next: v => this.vehicules = v });
+    forkJoin({
+      vehicules: this.vehiculeService.getAll(),
+      mecaniciens: this.mecanicienService.getAll(),
+    }).subscribe({
+      next: ({ vehicules, mecaniciens }) => {
+        this.vehicules = vehicules;
+        this.allMecaniciens = mecaniciens;
+      },
+    });
   }
 
   load() {
@@ -117,6 +134,45 @@ export class FichesAtelierComponent implements OnInit {
   get totalPages(): number { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }
   prevPage() { if (this.page > 1) this.page--; }
   nextPage() { if (this.page < this.totalPages) this.page++; }
+
+  openMecModal(f: FicheAtelier) {
+    this.mecFiche = f;
+    this.mecToggling = null;
+    this.showMecModal = true;
+  }
+
+  closeMecModal() {
+    this.showMecModal = false;
+    this.mecFiche = null;
+  }
+
+  isMecAssigned(mecId: number): boolean {
+    return !!this.mecFiche?.mecaniciens.some(m => m.id === mecId);
+  }
+
+  toggleMecanicien(mec: Mecanicien) {
+    if (!this.mecFiche || this.mecToggling !== null) return;
+    this.mecToggling = mec.id;
+    const assigned = this.isMecAssigned(mec.id);
+    const req$ = assigned
+      ? this.service.removeMecanicien(this.mecFiche.id, mec.id)
+      : this.service.assignMecanicien(this.mecFiche.id, mec.id);
+
+    req$.subscribe({
+      next: () => {
+        if (assigned) {
+          this.mecFiche!.mecaniciens = this.mecFiche!.mecaniciens.filter(m => m.id !== mec.id);
+        } else {
+          this.mecFiche!.mecaniciens = [...this.mecFiche!.mecaniciens, { id: mec.id, nom: mec.nom }];
+        }
+        this.mecToggling = null;
+      },
+      error: () => {
+        this.mecToggling = null;
+        this.notifyError('Erreur lors de la modification.');
+      },
+    });
+  }
 
   formatDate(d: string | null): string {
     return d ? new Date(d).toLocaleDateString('fr-FR') : '—';

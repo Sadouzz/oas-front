@@ -24,7 +24,13 @@ export class BonDeSortieService {
   }
 
   creer(data: BonDeSortieRequest): Observable<BonDeSortie> {
-    return this.http.post<BonDeSortie>(`${this.api}/creer`, data);
+    return this.http.post<BonDeSortie>(`${this.api}/creer`, {
+      clientId: data.clientId,
+      vehiculeId: data.vehiculeId,
+      lignesPieces: data.lignesPieces,
+      lignesMainDoeuvres: data.lignesMainDoeuvres,
+      remarque: data.remarque,
+    });
   }
 
   valider(id: number): Observable<BonDeSortie> {
