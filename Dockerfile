@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Installer les dépendances (cache)
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 
 # Copier le code et builder
 COPY . .
