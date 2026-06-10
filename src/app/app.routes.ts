@@ -81,6 +81,16 @@ export const routes: Routes = [
           import('./devis-previsionnels/devis-previsionnels.component').then(m => m.DevisPrevisionnelsComponent),
       },
       {
+        path: 'bons-commande',
+        loadComponent: () =>
+          import('./bons-commande/bons-commande.component').then(m => m.BonsCommandeComponent),
+      },
+      {
+        path: 'bons-livraison',
+        loadComponent: () =>
+          import('./bons-livraison/bons-livraison.component').then(m => m.BonsLivraisonComponent),
+      },
+      {
         path: 'admin',
         canActivate: [roleGuard('ROLE_SUPER_AGENT')],
         children: [
