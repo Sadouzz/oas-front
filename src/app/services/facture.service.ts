@@ -14,4 +14,24 @@ export class FactureService {
   getAll(): Observable<FactureModel[]> {
     return this.http.get<FactureModel[]>(this.api);
   }
+
+  getById(id: number): Observable<FactureModel> {
+    return this.http.get<FactureModel>(`${this.api}/${id}`);
+  }
+
+  search(keyword: string): Observable<FactureModel[]> {
+    return this.http.get<FactureModel[]>(`${this.api}/search`, { params: { keyword } });
+  }
+
+  recent(): Observable<FactureModel[]> {
+    return this.http.get<FactureModel[]>(`${this.api}/recent`);
+  }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.api}/${id}`);
+  }
+
+  downloadPdf(id: number): Observable<Blob> {
+    return this.http.get(`${this.api}/${id}/pdf`, { responseType: 'blob' });
+  }
 }

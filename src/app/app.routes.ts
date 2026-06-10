@@ -91,6 +91,41 @@ export const routes: Routes = [
           import('./bons-livraison/bons-livraison.component').then(m => m.BonsLivraisonComponent),
       },
       {
+        path: 'proformas',
+        loadComponent: () =>
+          import('./proformas/proformas.component').then(m => m.ProformasComponent),
+      },
+      {
+        path: 'factures',
+        loadComponent: () =>
+          import('./factures/factures.component').then(m => m.FacturesComponent),
+      },
+      {
+        path: 'avoirs-ttc',
+        loadComponent: () =>
+          import('./avoirs-ttc/avoirs-ttc.component').then(m => m.AvoirsTTCComponent),
+      },
+      {
+        path: 'avoirs-ht',
+        loadComponent: () =>
+          import('./avoirs-ht/avoirs-ht.component').then(m => m.AvoirsHTComponent),
+      },
+      {
+        path: 'notes-prix',
+        loadComponent: () =>
+          import('./notes-prix/notes-prix.component').then(m => m.NotesPrixComponent),
+      },
+      {
+        path: 'gestion-tva',
+        loadComponent: () =>
+          import('./gestion-tva/gestion-tva.component').then(m => m.GestionTvaComponent),
+      },
+      {
+        path: 'gestion-recu',
+        loadComponent: () =>
+          import('./gestion-recu/gestion-recu.component').then(m => m.GestionRecuComponent),
+      },
+      {
         path: 'admin',
         canActivate: [roleGuard('ROLE_SUPER_AGENT')],
         children: [
