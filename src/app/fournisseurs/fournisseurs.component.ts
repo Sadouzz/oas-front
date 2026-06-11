@@ -29,11 +29,15 @@ export class FournisseursComponent implements OnInit {
   editingId: number | null = null;
 
   form = this.fb.group({
-    matricule: ['', Validators.required],
+    matricule: [{ value: '', disabled: true }, Validators.required],
     nomEntreprise: ['', Validators.required],
     nom: ['', Validators.required],
     prenom: ['', Validators.required],
   });
+
+  get generatedMatricule(): string {
+    return this.form.getRawValue().matricule ?? '';
+  }
 
   ngOnInit() { this.load(); }
 
@@ -43,6 +47,15 @@ export class FournisseursComponent implements OnInit {
       next: (data) => { this.fournisseurs = data; this.filtered = data; this.loading = false; },
       error: () => { this.loading = false; }
     });
+  }
+
+  private nextMatricule(): string {
+    const p = 'FRN-';
+    const nums = this.fournisseurs
+      .map(f => f.matricule?.startsWith(p) ? parseInt(f.matricule.slice(p.length), 10) : NaN)
+      .filter(n => !isNaN(n));
+    const next = nums.length > 0 ? Math.max(...nums) + 1 : 1;
+    return `${p}${String(next).padStart(5, '0')}`;
   }
 
   onSearch(event: Event) {
@@ -66,6 +79,7 @@ export class FournisseursComponent implements OnInit {
     this.isNew = true;
     this.editingId = null;
     this.form.reset();
+    this.form.get('matricule')?.setValue(this.nextMatricule());
     this.showModal = true;
   }
 
@@ -81,7 +95,7 @@ export class FournisseursComponent implements OnInit {
   save() {
     if (this.form.invalid || this.saving) { this.form.markAllAsTouched(); return; }
     this.saving = true;
-    const payload = this.form.value as any;
+    const payload = this.form.getRawValue() as any;
     const obs = this.isNew
       ? this.service.create(payload)
       : this.service.update(this.editingId!, payload);

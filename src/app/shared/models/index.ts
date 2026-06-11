@@ -8,6 +8,6 @@ export * from './fiche-atelier.model';
 export * from './bon-de-sortie.model';
 export * from './devis-previsionnel.model';
 export * from './main-doeuvre.model';
-export * from './garage.model';
 export * from './stock.model';
 export * from './history.model';
+export * from './facture.model';

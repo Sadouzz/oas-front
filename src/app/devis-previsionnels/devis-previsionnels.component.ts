@@ -33,6 +33,9 @@ export class DevisPrevisionnelsComponent implements OnInit {
   successMessage = '';
   errorMessage = '';
 
+  filterClientId = '';
+  searchTerm = '';
+
   form: FormGroup = this.fb.group({
     clientId: [null, Validators.required],
     vehiculeId: [null, Validators.required],
@@ -50,20 +53,35 @@ export class DevisPrevisionnelsComponent implements OnInit {
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: data => { this.devis = data; this.filtered = data; this.loading = false; },
+      next: data => { this.devis = data; this.applyFilter(); this.loading = false; },
       error: () => this.loading = false,
     });
   }
 
-  onSearch(e: Event) {
-    const kw = (e.target as HTMLInputElement).value.toLowerCase();
-    this.filtered = this.devis.filter(d =>
-      (d.client?.firstName ?? '').toLowerCase().includes(kw) ||
-      (d.client?.lastName ?? '').toLowerCase().includes(kw) ||
-      (d.vehicule?.immatriculation ?? '').toLowerCase().includes(kw) ||
-      d.notesReparation.toLowerCase().includes(kw)
-    );
+  applyFilter() {
+    let data = this.devis;
+    if (this.filterClientId) data = data.filter(d => String(d.client?.id) === this.filterClientId);
+    if (this.searchTerm) {
+      const kw = this.searchTerm;
+      data = data.filter(d =>
+        (d.client?.firstName ?? '').toLowerCase().includes(kw) ||
+        (d.client?.lastName ?? '').toLowerCase().includes(kw) ||
+        (d.vehicule?.immatriculation ?? '').toLowerCase().includes(kw) ||
+        d.notesReparation.toLowerCase().includes(kw)
+      );
+    }
+    this.filtered = data;
     this.page = 1;
+  }
+
+  onSearch(e: Event) {
+    this.searchTerm = (e.target as HTMLInputElement).value.toLowerCase().trim();
+    this.applyFilter();
+  }
+
+  onClientFilter(e: Event) {
+    this.filterClientId = (e.target as HTMLSelectElement).value;
+    this.applyFilter();
   }
 
   openNew() {

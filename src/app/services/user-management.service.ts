@@ -21,7 +21,7 @@ export class UserManagementService {
   }
 
   create(data: CreateUserPayload): Observable<string> {
-    return this.http.post<string>(`${this.api}/create`, data);
+    return this.http.post<string>(`${this.api}/create`, data, { responseType: 'text' as 'json' });
   }
 
   update(id: number, data: AdminUserUpdatePayload): Observable<UserModel> {

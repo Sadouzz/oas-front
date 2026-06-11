@@ -1,4 +1,55 @@
-/* You can add global styles to this file, and also import other style files */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --color-oas-accent:      #ef6c1a;
+  --color-oas-accent-dark: #d65d12;
+  --color-oas-accent-bg:   #fdeee2;
+  --color-oas-navy:        #0c2742;
+  --color-oas-navy-dark:   #0a1f36;
+  --color-oas-navy-mid:    #13355c;
+  --color-oas-bg:          #f4f6fa;
+  --color-oas-line:        #e7ecf3;
+  --color-oas-ink:         #14233b;
+  --color-oas-ink2:        #3c4d66;
+  --color-oas-muted:       #6c7c93;
+  --color-oas-faint:       #9aa8bd;
+  --color-oas-ok:          #16a34a;
+  --color-oas-ok-bg:       #e8f6ee;
+  --color-oas-info:        #2563eb;
+  --color-oas-info-bg:     #e8f0fe;
+  --color-oas-warn:        #e08a00;
+  --color-oas-warn-bg:     #fdf0d9;
+  --color-oas-bad:         #dc2626;
+  --color-oas-bad-bg:      #fdeaea;
+}
+
+html, body {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Sidebar gradient marine */
+.oas-sidebar {
+  background: linear-gradient(180deg, #0c2742 0%, #0a1f36 100%);
+}
+
+/* Lien actif sidebar : gradient orange */
+.oas-nav-active {
+  background: linear-gradient(90deg, #ef6c1a 0%, #f0853f 100%) !important;
+  color: #fff !important;
+  box-shadow: 0 8px 20px rgba(239,108,26,.32);
+}
+
+/* Sous-item actif */
+.oas-sub-active {
+  color: #ef6c1a !important;
+  font-weight: 700;
+}
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #c8d0dc; border-radius: 3px; }

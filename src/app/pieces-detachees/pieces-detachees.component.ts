@@ -163,11 +163,11 @@ export class PiecesDetacheesComponent implements OnInit {
 
   typeBadge(type: string): string {
     const c: Record<string, string> = {
-      PDP: 'bg-blue-100 text-blue-800',
-      PDG: 'bg-purple-100 text-purple-800',
-      PDS: 'bg-orange-100 text-orange-800',
+      PDP: 'bg-oas-info-bg text-oas-info',
+      PDG: 'bg-oas-accent-bg text-oas-accent',
+      PDS: 'bg-oas-warn-bg text-oas-warn',
     };
-    return c[type] ?? 'bg-gray-100 text-gray-700';
+    return c[type] ?? 'bg-oas-bg text-oas-muted';
   }
 
   private showSuccess(msg: string) {

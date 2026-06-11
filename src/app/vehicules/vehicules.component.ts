@@ -32,7 +32,31 @@ export class VehiculesComponent implements OnInit {
   isNew = false;
   editingId: number | null = null;
 
-  form = this.fb.group({
+  // 2-step creation
+  createStep = 1;
+  pendingVehicle: any = null;
+
+  filterMarque = '';
+  filterClientId: number | null = null;
+  searchTerm = '';
+
+  // Step 1 form (vehicle info)
+  infoForm = this.fb.group({
+    immatriculation: ['', Validators.required],
+    marque: ['', Validators.required],
+    modele: ['', Validators.required],
+    annee: [null as number | null],
+    kilometrage: [null as number | null],
+    numeroChassis: [''],
+  });
+
+  // Step 2 form (select client)
+  clientForm = this.fb.group({
+    clientId: [null as number | null, Validators.required],
+  });
+
+  // Edit form (all fields)
+  editForm = this.fb.group({
     immatriculation: ['', Validators.required],
     marque: ['', Validators.required],
     modele: ['', Validators.required],
@@ -52,26 +76,46 @@ export class VehiculesComponent implements OnInit {
   loadVehicules() {
     this.loading = true;
     this.vehiculeService.getAll().subscribe({
-      next: (data) => {
-        this.vehicules = data;
-        this.filtered = data;
-        this.loading = false;
-      },
+      next: (data) => { this.vehicules = data; this.applyFilter(); this.loading = false; },
       error: () => { this.loading = false; }
     });
   }
 
-  onSearch(event: Event) {
-    const term = (event.target as HTMLInputElement).value.toLowerCase().trim();
-    this.filtered = term
-      ? this.vehicules.filter(v =>
-          v.immatriculation.toLowerCase().includes(term) ||
-          v.marque.toLowerCase().includes(term) ||
-          v.modele.toLowerCase().includes(term) ||
-          `${v.client?.firstName} ${v.client?.lastName}`.toLowerCase().includes(term)
-        )
-      : this.vehicules;
+  get marques(): string[] {
+    return [...new Set(this.vehicules.map(v => v.marque).filter(Boolean))].sort();
+  }
+
+  applyFilter() {
+    let data = this.vehicules;
+    if (this.filterMarque) data = data.filter(v => v.marque === this.filterMarque);
+    if (this.filterClientId != null) data = data.filter(v => v.client?.id === this.filterClientId);
+    if (this.searchTerm) {
+      const kw = this.searchTerm;
+      data = data.filter(v =>
+        v.immatriculation.toLowerCase().includes(kw) ||
+        v.marque.toLowerCase().includes(kw) ||
+        v.modele.toLowerCase().includes(kw) ||
+        `${v.client?.firstName} ${v.client?.lastName}`.toLowerCase().includes(kw)
+      );
+    }
+    this.filtered = data;
     this.page = 1;
+  }
+
+  onSearch(event: Event) {
+    this.searchTerm = (event.target as HTMLInputElement).value.toLowerCase().trim();
+    this.applyFilter();
+  }
+
+  onMarqueFilter(event: Event) {
+    this.filterMarque = (event.target as HTMLSelectElement).value;
+    this.applyFilter();
+  }
+
+  onClientFilter(event: Event) {
+    const val = (event.target as HTMLSelectElement).value;
+    this.filterClientId = val ? Number(val) : null;
+    this.applyFilter();
   }
 
   get paged(): VehiculeModel[] { return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize); }
@@ -79,17 +123,35 @@ export class VehiculesComponent implements OnInit {
   prevPage(): void { if (this.page > 1) this.page--; }
   nextPage(): void { if (this.page < this.totalPages) this.page++; }
 
+  // ── CREATE 2-STEP ──────────────────────────────────────────────
   openCreate() {
     this.isNew = true;
     this.editingId = null;
-    this.form.reset();
+    this.createStep = 1;
+    this.pendingVehicle = null;
+    this.infoForm.reset();
+    this.clientForm.reset();
+    this.errorMessage = '';
     this.showModal = true;
   }
 
+  nextStep() {
+    if (this.infoForm.invalid) { this.infoForm.markAllAsTouched(); return; }
+    this.pendingVehicle = this.infoForm.value;
+    this.createStep = 2;
+    this.errorMessage = '';
+  }
+
+  prevStep() {
+    this.createStep = 1;
+    this.errorMessage = '';
+  }
+
+  // ── EDIT ───────────────────────────────────────────────────────
   openEdit(v: VehiculeModel) {
     this.isNew = false;
     this.editingId = v.id;
-    this.form.patchValue({
+    this.editForm.patchValue({
       immatriculation: v.immatriculation,
       marque: v.marque,
       modele: v.modele,
@@ -98,26 +160,33 @@ export class VehiculesComponent implements OnInit {
       numeroChassis: v.numeroChassis,
       clientId: v.client?.id ?? null,
     });
+    this.errorMessage = '';
     this.showModal = true;
   }
 
   closeModal() {
     this.showModal = false;
-    this.form.reset();
+    this.infoForm.reset();
+    this.clientForm.reset();
+    this.editForm.reset();
+    this.createStep = 1;
+    this.pendingVehicle = null;
+    this.errorMessage = '';
   }
 
   save() {
-    if (this.form.invalid || this.saving) { this.form.markAllAsTouched(); return; }
-    this.saving = true;
-    const payload = this.form.value as any;
-
     if (this.isNew) {
+      if (this.clientForm.invalid || this.saving) { this.clientForm.markAllAsTouched(); return; }
+      this.saving = true;
+      const payload = { ...this.pendingVehicle, clientId: this.clientForm.value.clientId };
       this.vehiculeService.create(payload).subscribe({
         next: () => { this.saving = false; this.showSuccess('Véhicule créé avec succès !'); this.closeModal(); this.loadVehicules(); },
         error: (err: any) => { this.saving = false; this.errorMessage = err.error?.message || 'Erreur lors de la création.'; }
       });
     } else {
-      this.vehiculeService.update(this.editingId!, payload).subscribe({
+      if (this.editForm.invalid || this.saving) { this.editForm.markAllAsTouched(); return; }
+      this.saving = true;
+      this.vehiculeService.update(this.editingId!, this.editForm.value as any).subscribe({
         next: () => { this.saving = false; this.showSuccess('Véhicule modifié avec succès !'); this.closeModal(); this.loadVehicules(); },
         error: (err: any) => { this.saving = false; this.errorMessage = err.error?.message || 'Erreur lors de la modification.'; }
       });
@@ -138,5 +207,7 @@ export class VehiculesComponent implements OnInit {
     setTimeout(() => this.successMessage = '', 3500);
   }
 
-  get f() { return this.form.controls; }
+  get fInfo() { return this.infoForm.controls; }
+  get fClient() { return this.clientForm.controls; }
+  get fEdit() { return this.editForm.controls; }
 }

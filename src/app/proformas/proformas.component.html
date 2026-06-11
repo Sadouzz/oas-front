@@ -1,0 +1,513 @@
+<div class="space-y-6">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-[25px] font-extrabold text-oas-ink tracking-tight">Proformas</h1>
+      <p class="text-sm text-oas-muted mt-1">{{ filtered.length }} proforma(s)</p>
+    </div>
+    <button (click)="openNew()"
+            class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-11 rounded-xl flex items-center gap-2 transition cursor-pointer shadow-lg shadow-oas-accent/25">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+      </svg>
+      Nouveau proforma
+    </button>
+  </div>
+
+  <!-- Alerts -->
+  @if (successMessage) {
+    <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg text-sm">{{ successMessage }}</div>
+  }
+  @if (errorMessage) {
+    <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm">{{ errorMessage }}</div>
+  }
+
+  <!-- Search -->
+  <div class="bg-white rounded-2xl border border-oas-line p-3 shadow-sm">
+    <div class="relative">
+      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-oas-muted">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+      </span>
+      <input (input)="onSearch($event)" placeholder="N°, client, immatriculation..."
+             class="w-full pl-9 pr-4 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
+    </div>
+  </div>
+
+  <!-- Table + Detail -->
+  <div class="flex gap-5">
+
+    <!-- Table -->
+    <div class="bg-white rounded-2xl border border-oas-line shadow-sm overflow-hidden" [class.flex-1]="selectedProforma" [class.w-full]="!selectedProforma">
+      @if (loading) {
+        <div class="flex items-center justify-center py-16">
+          <div class="w-6 h-6 border-2 border-oas-accent border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      } @else if (paged.length === 0) {
+        <div class="text-center py-16 text-oas-muted text-sm">Aucun proforma.</div>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-oas-line">
+                <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">N°</th>
+                @if (!selectedProforma) {
+                  <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Client</th>
+                  <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Immat.</th>
+                  <th class="text-right text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Total</th>
+                }
+                <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Date</th>
+                <th class="px-5 py-3"></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of paged; track p.id) {
+                <tr class="hover:bg-oas-bg transition border-b border-oas-line cursor-pointer"
+                    [ngClass]="{'bg-orange-50': selectedProforma?.id === p.id}"
+                    (click)="openDetail(p)">
+                  <td class="px-5 py-4 font-mono font-bold text-oas-accent text-xs">{{ p.numero }}</td>
+                  @if (!selectedProforma) {
+                    <td class="px-5 py-4 text-oas-ink text-sm">{{ p.clientNom }}</td>
+                    <td class="px-5 py-4 text-oas-muted text-xs">{{ p.immatriculation ?? '—' }}</td>
+                    <td class="px-5 py-4 text-right font-semibold text-oas-ink">{{ fmt(p.montantTotal) }} FCFA</td>
+                  }
+                  <td class="px-5 py-4 text-xs text-oas-muted">{{ formatDate(p.dateCreation) }}</td>
+                  <td class="px-5 py-4" (click)="$event.stopPropagation()">
+                    <div class="flex items-center gap-1 justify-end">
+                      <button (click)="openEdit(p)"
+                              class="p-1.5 rounded-lg hover:bg-oas-info-bg text-oas-muted hover:text-oas-info transition cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                      </button>
+                      <button (click)="delete(p.id)"
+                              class="p-1.5 rounded-lg hover:bg-oas-bad-bg text-oas-muted hover:text-oas-bad transition cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (totalPages > 1) {
+          <div class="flex items-center justify-between px-5 py-3 border-t border-oas-line text-sm text-oas-muted">
+            <span>Page {{ page }} / {{ totalPages }}</span>
+            <div class="flex gap-2">
+              <button (click)="prevPage()" [disabled]="page === 1"
+                      class="px-3 py-1 rounded border border-oas-line disabled:opacity-40 hover:bg-oas-bg transition">‹</button>
+              <button (click)="nextPage()" [disabled]="page === totalPages"
+                      class="px-3 py-1 rounded border border-oas-line disabled:opacity-40 hover:bg-oas-bg transition">›</button>
+            </div>
+          </div>
+        }
+      }
+    </div>
+
+    <!-- Detail panel -->
+    @if (selectedProforma) {
+      <div class="w-96 flex-shrink-0 bg-white rounded-2xl border border-oas-line shadow-sm flex flex-col overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-oas-line">
+          <div>
+            <p class="font-mono font-bold text-oas-accent text-sm">{{ selectedProforma.numero }}</p>
+            <p class="text-xs text-oas-muted mt-0.5">{{ formatDate(selectedProforma.dateCreation) }}</p>
+          </div>
+          <button (click)="closeDetail()" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted cursor-pointer">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-5 space-y-5">
+
+          <!-- Infos -->
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between">
+              <span class="text-oas-muted">Client</span>
+              <span class="font-semibold text-oas-ink">{{ selectedProforma.clientNom }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-oas-muted">Agent</span>
+              <span class="font-semibold text-oas-ink">{{ selectedProforma.agentNom }}</span>
+            </div>
+            @if (selectedProforma.immatriculation) {
+              <div class="flex justify-between">
+                <span class="text-oas-muted">Immatriculation</span>
+                <span class="font-semibold text-oas-ink">{{ selectedProforma.immatriculation }}</span>
+              </div>
+            }
+            @if (selectedProforma.marque || selectedProforma.modele) {
+              <div class="flex justify-between">
+                <span class="text-oas-muted">Véhicule</span>
+                <span class="font-semibold text-oas-ink">{{ selectedProforma.marque }} {{ selectedProforma.modele }} {{ selectedProforma.annee }}</span>
+              </div>
+            }
+            <div class="flex justify-between">
+              <span class="text-oas-muted">Kilométrage</span>
+              <span class="font-semibold text-oas-ink">{{ selectedProforma.kilometrage }} km</span>
+            </div>
+            @if (selectedProforma.numeroBonDeCommande) {
+              <div class="flex justify-between">
+                <span class="text-oas-muted">N° BC</span>
+                <span class="font-mono font-bold text-oas-accent text-xs">{{ selectedProforma.numeroBonDeCommande }}</span>
+              </div>
+            }
+            @if (selectedProforma.remarque) {
+              <div class="flex justify-between gap-4">
+                <span class="text-oas-muted flex-shrink-0">Remarque</span>
+                <span class="text-oas-ink text-right text-xs">{{ selectedProforma.remarque }}</span>
+              </div>
+            }
+          </div>
+
+          <!-- Lignes pièces -->
+          @if (selectedProforma.lignesPieces.length > 0) {
+            <div>
+              <p class="text-xs font-bold text-oas-muted uppercase tracking-wide mb-2">Pièces ({{ selectedProforma.lignesPieces.length }})</p>
+              <div class="border border-oas-line rounded-xl overflow-hidden">
+                <table class="w-full text-xs">
+                  <thead class="bg-oas-bg">
+                    <tr>
+                      <th class="text-left px-3 py-2 font-bold text-oas-muted">Pièce</th>
+                      <th class="text-center px-3 py-2 font-bold text-oas-muted">Qté</th>
+                      <th class="text-right px-3 py-2 font-bold text-oas-muted">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-oas-line">
+                    @for (l of selectedProforma.lignesPieces; track l.id) {
+                      <tr>
+                        <td class="px-3 py-2 text-oas-ink">{{ l.designationPiece }}</td>
+                        <td class="px-3 py-2 text-center">{{ l.quantite }}</td>
+                        <td class="px-3 py-2 text-right font-semibold">{{ fmt(l.montantTotal) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+
+          <!-- Lignes main d'œuvre -->
+          @if (selectedProforma.lignesMainDoeuvres.length > 0) {
+            <div>
+              <p class="text-xs font-bold text-oas-muted uppercase tracking-wide mb-2">Main d'œuvre ({{ selectedProforma.lignesMainDoeuvres.length }})</p>
+              <div class="border border-oas-line rounded-xl overflow-hidden">
+                <table class="w-full text-xs">
+                  <thead class="bg-oas-bg">
+                    <tr>
+                      <th class="text-left px-3 py-2 font-bold text-oas-muted">Description</th>
+                      <th class="text-center px-3 py-2 font-bold text-oas-muted">H</th>
+                      <th class="text-right px-3 py-2 font-bold text-oas-muted">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-oas-line">
+                    @for (l of selectedProforma.lignesMainDoeuvres; track l.id) {
+                      <tr>
+                        <td class="px-3 py-2 text-oas-ink">{{ l.descriptionMainDoeuvre }}</td>
+                        <td class="px-3 py-2 text-center">{{ l.nbreHeure }}</td>
+                        <td class="px-3 py-2 text-right font-semibold">{{ fmt(l.montantTotal) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+
+          <!-- Totaux -->
+          <div class="bg-oas-bg rounded-xl p-4 space-y-1.5 text-sm">
+            <div class="flex justify-between">
+              <span class="text-oas-muted">Montant HT</span>
+              <span class="font-semibold text-oas-ink">{{ fmt(selectedProforma.montantHT) }} FCFA</span>
+            </div>
+            @if (selectedProforma.montantTVA > 0) {
+              <div class="flex justify-between">
+                <span class="text-oas-muted">TVA</span>
+                <span class="font-semibold text-oas-ink">{{ fmt(selectedProforma.montantTVA) }} FCFA</span>
+              </div>
+            }
+            @if (selectedProforma.montantTimbre > 0) {
+              <div class="flex justify-between">
+                <span class="text-oas-muted">Timbre</span>
+                <span class="font-semibold text-oas-ink">{{ fmt(selectedProforma.montantTimbre) }} FCFA</span>
+              </div>
+            }
+            @if (selectedProforma.montantAutre > 0) {
+              <div class="flex justify-between">
+                <span class="text-oas-muted">Autre</span>
+                <span class="font-semibold text-oas-ink">{{ fmt(selectedProforma.montantAutre) }} FCFA</span>
+              </div>
+            }
+            <div class="flex justify-between pt-1.5 border-t border-oas-line">
+              <span class="font-bold text-oas-ink">Total</span>
+              <span class="font-extrabold text-oas-accent text-base">{{ fmt(selectedProforma.montantTotal) }} FCFA</span>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="space-y-2">
+            <button (click)="convertToFacture(selectedProforma.id)"
+                    class="w-full bg-oas-accent hover:bg-oas-accent-dark text-white font-bold py-2.5 rounded-xl transition text-sm cursor-pointer flex items-center justify-center gap-2">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+              Convertir en facture TTC
+            </button>
+            <button (click)="downloadPdf(selectedProforma.id)"
+                    class="w-full bg-white hover:bg-oas-bg border border-oas-line text-oas-ink font-semibold py-2.5 rounded-xl transition text-sm cursor-pointer flex items-center justify-center gap-2">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              Télécharger PDF
+            </button>
+          </div>
+
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Create / Edit Modal -->
+@if (showModal) {
+  <div class="fixed inset-0 z-50 flex items-start justify-center bg-black/50 overflow-y-auto py-6">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 my-auto">
+
+      <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line">
+        <h2 class="text-base font-bold text-oas-ink">{{ isNew ? 'Nouveau proforma' : 'Modifier le proforma' }}</h2>
+        <button (click)="showModal = false" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted cursor-pointer">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="px-6 py-5">
+        <form [formGroup]="form" (ngSubmit)="save()" class="space-y-5">
+
+          <!-- Client + Véhicule -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1">Client *</label>
+              <select formControlName="clientId" (change)="onClientChange()"
+                      class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink"
+                      [class.border-oas-bad]="form.get('clientId')?.invalid && form.get('clientId')?.touched">
+                <option [ngValue]="null" disabled>Sélectionner...</option>
+                @for (c of clients; track c.id) {
+                  <option [value]="c.id">{{ c.firstName }} {{ c.lastName }}</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1">Véhicule</label>
+              <select formControlName="vehiculeId" (change)="onVehiculeChange()"
+                      class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
+                <option [ngValue]="null">Aucun</option>
+                @for (v of clientVehicules; track v.id) {
+                  <option [value]="v.id">{{ v.immatriculation }} — {{ v.marque }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <!-- Immatriculation + N° châssis -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1">Immatriculation</label>
+              <input formControlName="immatriculation" placeholder="Ex: AA-123-BA"
+                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1">N° châssis</label>
+              <input formControlName="numeroChassis" placeholder="N° châssis..."
+                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+            </div>
+          </div>
+
+          <!-- Marque + Modèle + Année -->
+          <div class="grid grid-cols-3 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1">Marque</label>
+              <input formControlName="marque" placeholder="Toyota..."
+                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1">Modèle</label>
+              <input formControlName="modele" placeholder="Corolla..."
+                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1">Année</label>
+              <input formControlName="annee" type="number" placeholder="2020"
+                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+            </div>
+          </div>
+
+          <!-- Kilométrage + N° BC -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1">Kilométrage *</label>
+              <input formControlName="kilometrage" type="number" min="0" placeholder="Ex: 45000"
+                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                     [class.border-oas-bad]="form.get('kilometrage')?.invalid && form.get('kilometrage')?.touched"/>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1">N° bon de commande</label>
+              <input formControlName="numeroBonDeCommande" placeholder="BC-..."
+                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+            </div>
+          </div>
+
+          <!-- TVA + Timbre + Autre + Remarque -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1">Taux TVA (%)</label>
+              <input formControlName="tvaRate" type="number" min="0" max="100" placeholder="18"
+                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1">Montant timbre</label>
+              <input formControlName="montantTimbre" type="number" min="0"
+                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1">Montant autre</label>
+              <input formControlName="montantAutre" type="number" min="0"
+                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1">Remarque</label>
+              <input formControlName="remarque" placeholder="Remarque..."
+                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+            </div>
+          </div>
+
+          <!-- Lignes pièces -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-sm font-bold text-oas-ink">Pièces détachées</label>
+              <button type="button" (click)="addPiece()"
+                      class="text-xs font-bold text-oas-accent hover:text-oas-accent-dark flex items-center gap-1 cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                </svg>
+                Ajouter
+              </button>
+            </div>
+            <div formArrayName="lignesPieces" class="space-y-2">
+              @for (ligne of lignesPiecesArray.controls; track $index) {
+                <div [formGroupName]="$index" class="flex items-center gap-2 bg-oas-bg rounded-xl p-3">
+                  <select formControlName="pieceId" (change)="onPieceChange($index)"
+                          class="flex-1 px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink"
+                          [class.border-oas-bad]="ligne.get('pieceId')?.invalid && ligne.get('pieceId')?.touched">
+                    <option [ngValue]="null" disabled>Pièce...</option>
+                    @for (p of pieces; track p.id) {
+                      <option [value]="p.id">{{ p.reference }} — {{ p.numeroDeSerie }}</option>
+                    }
+                  </select>
+                  <input formControlName="quantite" type="number" min="1" placeholder="Qté"
+                         class="w-20 px-3 py-2 rounded-lg border border-oas-line bg-white text-sm text-center focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+                  <input formControlName="prix" type="number" min="0" placeholder="Prix"
+                         class="w-28 px-3 py-2 rounded-lg border border-oas-line bg-white text-sm text-right focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+                  <span class="text-xs font-semibold text-oas-ink w-24 text-right">
+                    {{ fmt((ligne.get('quantite')?.value || 0) * (ligne.get('prix')?.value || 0)) }}
+                  </span>
+                  <button type="button" (click)="removePiece($index)"
+                          class="p-1.5 rounded-lg hover:bg-red-50 text-oas-muted hover:text-red-500 transition cursor-pointer flex-shrink-0">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Lignes main d'œuvre -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-sm font-bold text-oas-ink">Main d'œuvre</label>
+              <button type="button" (click)="addMD()"
+                      class="text-xs font-bold text-oas-accent hover:text-oas-accent-dark flex items-center gap-1 cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                </svg>
+                Ajouter
+              </button>
+            </div>
+            <div formArrayName="lignesMainDoeuvres" class="space-y-2">
+              @for (ligne of lignesMDArray.controls; track $index) {
+                <div [formGroupName]="$index" class="flex items-center gap-2 bg-oas-bg rounded-xl p-3">
+                  <select formControlName="mainDoeuvreId" (change)="onMDChange($index)"
+                          class="flex-1 px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink"
+                          [class.border-oas-bad]="ligne.get('mainDoeuvreId')?.invalid && ligne.get('mainDoeuvreId')?.touched">
+                    <option [ngValue]="null" disabled>Main d'œuvre...</option>
+                    @for (m of mainsDoeuvre; track m.id) {
+                      <option [value]="m.id">{{ m.categorie }}</option>
+                    }
+                  </select>
+                  <input formControlName="nbreHeure" type="number" min="1" placeholder="Heures"
+                         class="w-24 px-3 py-2 rounded-lg border border-oas-line bg-white text-sm text-center focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+                  <input formControlName="tarifHoraire" type="number" min="0" placeholder="Tarif/h"
+                         class="w-28 px-3 py-2 rounded-lg border border-oas-line bg-white text-sm text-right focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+                  <span class="text-xs font-semibold text-oas-ink w-24 text-right">
+                    {{ fmt((ligne.get('nbreHeure')?.value || 0) * (ligne.get('tarifHoraire')?.value || 0)) }}
+                  </span>
+                  <button type="button" (click)="removeMD($index)"
+                          class="p-1.5 rounded-lg hover:bg-red-50 text-oas-muted hover:text-red-500 transition cursor-pointer flex-shrink-0">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                  </button>
+                </div>
+              }
+            </div>
+
+            @if (lignesPiecesArray.length > 0 || lignesMDArray.length > 0) {
+              <div class="mt-3 bg-oas-bg rounded-xl p-4 space-y-1.5 text-sm">
+                @if (lignesPiecesArray.length > 0) {
+                  <div class="flex justify-between">
+                    <span class="text-oas-muted">Pièces</span>
+                    <span class="font-semibold">{{ fmt(totalPieces) }} FCFA</span>
+                  </div>
+                }
+                @if (lignesMDArray.length > 0) {
+                  <div class="flex justify-between">
+                    <span class="text-oas-muted">Main d'œuvre</span>
+                    <span class="font-semibold">{{ fmt(totalMD) }} FCFA</span>
+                  </div>
+                }
+                <div class="flex justify-between pt-1.5 border-t border-oas-line">
+                  <span class="font-bold text-oas-ink">Sous-total HT</span>
+                  <span class="font-extrabold text-oas-accent">{{ fmt(totalPieces + totalMD) }} FCFA</span>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Actions -->
+          <div class="flex justify-end gap-3 pt-2">
+            <button type="button" (click)="showModal = false"
+                    class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-xl border border-oas-line flex items-center transition cursor-pointer text-sm">
+              Annuler
+            </button>
+            <button type="submit" [disabled]="saving"
+                    class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-5 h-10 rounded-xl flex items-center gap-2 transition cursor-pointer disabled:opacity-60 text-sm">
+              @if (saving) { <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> }
+              {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+}

@@ -24,6 +24,9 @@ export class MainDoeuvreComponent implements OnInit {
   successMessage = '';
   errorMessage = '';
 
+  filterCategorie = '';
+  searchTerm = '';
+
   showModal = false;
   isNew = false;
   editingId: number | null = null;
@@ -41,17 +44,30 @@ export class MainDoeuvreComponent implements OnInit {
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: (data) => { this.items = data; this.filtered = data; this.loading = false; },
+      next: (data) => { this.items = data; this.applyFilter(); this.loading = false; },
       error: () => { this.loading = false; }
     });
   }
 
-  onSearch(event: Event) {
-    const term = (event.target as HTMLInputElement).value.toLowerCase().trim();
-    this.filtered = term
-      ? this.items.filter(i => i.categorie.toLowerCase().includes(term))
-      : this.items;
+  applyFilter() {
+    let data = this.items;
+    if (this.filterCategorie) data = data.filter(i => i.categorie === this.filterCategorie);
+    if (this.searchTerm) {
+      const kw = this.searchTerm;
+      data = data.filter(i => i.categorie.toLowerCase().includes(kw));
+    }
+    this.filtered = data;
     this.page = 1;
+  }
+
+  onSearch(event: Event) {
+    this.searchTerm = (event.target as HTMLInputElement).value.toLowerCase().trim();
+    this.applyFilter();
+  }
+
+  onCategorieFilter(event: Event) {
+    this.filterCategorie = (event.target as HTMLSelectElement).value;
+    this.applyFilter();
   }
 
   get paged(): MainDoeuvreModel[] { return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize); }
@@ -116,12 +132,12 @@ export class MainDoeuvreComponent implements OnInit {
 
   categorieBadge(c: string): string {
     const classes: Record<string, string> = {
-      MECANIQUE: 'bg-blue-100 text-blue-800',
-      CARROSSERIE: 'bg-orange-100 text-orange-800',
-      ELECTRIQUE: 'bg-yellow-100 text-yellow-800',
-      PEINTURE: 'bg-purple-100 text-purple-800',
+      MECANIQUE: 'bg-oas-info-bg text-oas-info',
+      CARROSSERIE: 'bg-oas-accent-bg text-oas-accent',
+      ELECTRIQUE: 'bg-oas-warn-bg text-oas-warn',
+      PEINTURE: 'bg-oas-ok-bg text-oas-ok',
     };
-    return classes[c] ?? 'bg-gray-100 text-gray-700';
+    return classes[c] ?? 'bg-oas-bg text-oas-muted';
   }
 
   private showSuccess(msg: string) {

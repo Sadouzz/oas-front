@@ -30,4 +30,12 @@ export class FicheAtelierService {
   delete(id: number): Observable<string> {
     return this.http.delete<string>(`${this.api}/${id}`);
   }
+
+  assignMecanicien(ficheId: number, mecId: number): Observable<any> {
+    return this.http.post(`${this.api}/${ficheId}/mecaniciens/${mecId}`, {}, { responseType: 'text' as 'json' });
+  }
+
+  removeMecanicien(ficheId: number, mecId: number): Observable<any> {
+    return this.http.delete(`${this.api}/${ficheId}/mecaniciens/${mecId}`, { responseType: 'text' as 'json' });
+  }
 }

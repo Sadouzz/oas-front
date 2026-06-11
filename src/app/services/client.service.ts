@@ -24,19 +24,23 @@ export class ClientService {
     return this.http.get<UserModel>(`${this.api}/${id}`);
   }
 
+  create(data: any): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/api/admin/users/create`, data, { responseType: 'text' as 'json' });
+  }
+
   update(id: number, data: UserUpdatePayload): Observable<UserModel> {
     return this.http.put<UserModel>(`${this.api}/${id}`, data);
   }
 
-  archive(id: number): Observable<string> {
-    return this.http.patch<string>(`${this.api}/${id}/archive`, {});
+  archive(id: number): Observable<any> {
+    return this.http.patch(`${this.api}/${id}/archive`, {}, { responseType: 'text' as 'json' });
   }
 
-  unarchive(id: number): Observable<string> {
-    return this.http.patch<string>(`${this.api}/${id}/unarchive`, {});
+  unarchive(id: number): Observable<any> {
+    return this.http.patch(`${this.api}/${id}/unarchive`, {}, { responseType: 'text' as 'json' });
   }
 
-  delete(id: number): Observable<string> {
-    return this.http.delete<string>(`${this.api}/${id}`);
+  delete(id: number): Observable<any> {
+    return this.http.delete(`${this.api}/${id}`, { responseType: 'text' as 'json' });
   }
 }

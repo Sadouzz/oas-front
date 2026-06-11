@@ -107,12 +107,12 @@ export class StockComponent implements OnInit {
 
   typeMouvClass(type: string): string {
     const c: Record<string, string> = {
-      ENTREE: 'bg-green-100 text-green-800',
-      SORTIE: 'bg-red-100 text-red-700',
-      AJUSTEMENT: 'bg-blue-100 text-blue-800',
-      INVENTAIRE: 'bg-purple-100 text-purple-800',
+      ENTREE: 'bg-oas-ok-bg text-oas-ok',
+      SORTIE: 'bg-oas-bad-bg text-oas-bad',
+      AJUSTEMENT: 'bg-oas-info-bg text-oas-info',
+      INVENTAIRE: 'bg-oas-accent-bg text-oas-accent',
     };
-    return c[type] ?? 'bg-gray-100 text-gray-600';
+    return c[type] ?? 'bg-oas-bg text-oas-muted';
   }
 
   formatDate(d: string): string { return new Date(d).toLocaleString('fr-FR'); }

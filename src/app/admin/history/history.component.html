@@ -2,42 +2,42 @@
 
   <!-- Header -->
   <div class="mb-6">
-    <h2 class="text-xl font-bold text-gray-900">Historique des connexions</h2>
-    <p class="text-sm text-gray-500 mt-0.5">{{ filtered.length }} entrée(s) affichée(s)</p>
+    <h1 class="text-[25px] font-extrabold text-oas-ink tracking-tight">Historique des connexions</h1>
+    <p class="text-sm text-oas-muted mt-1">{{ filtered.length }} entrée(s) affichée(s)</p>
   </div>
 
   <!-- Search -->
-  <div class="bg-white rounded-xl border border-gray-200 p-3 mb-4">
+  <div class="bg-white rounded-2xl border border-oas-line p-3 mb-4 shadow-sm">
     <div class="relative">
-      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-oas-muted">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
         </svg>
       </span>
       <input type="text" (input)="onSearch($event)"
              placeholder="Filtrer par utilisateur, adresse IP ou statut..."
-             class="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"/>
+             class="w-full pl-9 pr-4 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
     </div>
   </div>
 
   <!-- Table -->
-  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+  <div class="bg-white rounded-2xl border border-oas-line shadow-sm overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
-        <thead class="bg-gray-50 border-b border-gray-200">
-          <tr>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">#</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Utilisateur</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Adresse IP</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Statut</th>
-            <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Date et heure</th>
+        <thead>
+          <tr class="border-b border-oas-line">
+            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">#</th>
+            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Utilisateur</th>
+            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Adresse IP</th>
+            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Statut</th>
+            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Date et heure</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-100">
+        <tbody>
           @if (loading) {
             <tr>
-              <td colspan="5" class="text-center py-14 text-gray-400">
-                <svg class="animate-spin h-5 w-5 mx-auto mb-2" fill="none" viewBox="0 0 24 24">
+              <td colspan="5" class="text-center py-14 text-oas-muted">
+                <svg class="animate-spin h-5 w-5 mx-auto mb-2 text-oas-accent" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
                 </svg>
@@ -45,32 +45,32 @@
               </td>
             </tr>
           } @else {
-            @for (entry of paged; track entry.id; let i = $index) {
-              <tr class="hover:bg-gray-50 transition">
-                <td class="px-4 py-3 text-gray-400 text-xs font-mono">{{ entry.id }}</td>
-                <td class="px-4 py-3">
+            @for (entry of paged; track entry.id) {
+              <tr class="hover:bg-oas-bg transition border-b border-oas-line">
+                <td class="px-5 py-4 text-oas-faint text-xs font-mono">{{ entry.id }}</td>
+                <td class="px-5 py-4">
                   <div class="flex items-center gap-2.5">
-                    <div class="w-7 h-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                    <div class="w-7 h-7 rounded-full bg-oas-info-bg text-oas-info flex items-center justify-center text-xs font-bold flex-shrink-0">
                       {{ entry.username ? entry.username[0].toUpperCase() : '?' }}
                     </div>
-                    <span class="font-medium text-gray-900">{{ entry.username }}</span>
+                    <span class="font-semibold text-oas-ink">{{ entry.username }}</span>
                   </div>
                 </td>
-                <td class="px-4 py-3 font-mono text-gray-600 text-xs">{{ entry.ipAddress || '–' }}</td>
-                <td class="px-4 py-3">
+                <td class="px-5 py-4 font-mono text-oas-ink2 text-xs">{{ entry.ipAddress || '–' }}</td>
+                <td class="px-5 py-4">
                   <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ statusClass(entry.status) }}">
                     {{ entry.status || '–' }}
                   </span>
                 </td>
-                <td class="px-4 py-3 text-gray-600 text-xs">{{ formatDate(entry.timestamp) }}</td>
+                <td class="px-5 py-4 text-oas-muted text-xs">{{ formatDate(entry.timestamp) }}</td>
               </tr>
             } @empty {
               <tr>
                 <td colspan="5" class="text-center py-14">
-                  <svg class="w-10 h-10 text-gray-200 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                  <svg class="w-10 h-10 text-oas-line mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                   </svg>
-                  <p class="text-gray-400 text-sm">Aucun historique disponible</p>
+                  <p class="text-oas-muted text-sm">Aucun historique disponible</p>
                 </td>
               </tr>
             }
