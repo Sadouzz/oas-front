@@ -5,8 +5,9 @@ import { BonDeLivraisonService, BonDeLivraison } from '../services/bon-de-livrai
 import { BonDeCommandeService, BonDeCommande } from '../services/bon-de-commande.service';
 import { PieceDetacheeService } from '../services/piece-detachee.service';
 import { MainDoeuvreService } from '../services/main-doeuvre.service';
+import { VehiculeService } from '../services/vehicule.service';
 import { NgClass } from '@angular/common';
-import { PieceDetache, MainDoeuvreModel } from '../shared/models';
+import { PieceDetache, MainDoeuvreModel, VehiculeModel } from '../shared/models';
 
 @Component({
   selector: 'app-bons-livraison',
@@ -19,6 +20,7 @@ export class BonsLivraisonComponent implements OnInit {
   private bcService = inject(BonDeCommandeService);
   private pieceService = inject(PieceDetacheeService);
   private mdService = inject(MainDoeuvreService);
+  private vehiculeService = inject(VehiculeService);
   private fb = inject(FormBuilder);
 
   bons: BonDeLivraison[] = [];
@@ -26,6 +28,7 @@ export class BonsLivraisonComponent implements OnInit {
   bonsCommande: BonDeCommande[] = [];
   pieces: PieceDetache[] = [];
   mainsDoeuvre: MainDoeuvreModel[] = [];
+  allVehicules: VehiculeModel[] = [];
 
   loading = true;
   saving = false;
@@ -58,11 +61,13 @@ export class BonsLivraisonComponent implements OnInit {
       bonsCommande: this.bcService.getAll(),
       pieces: this.pieceService.getAll(),
       mds: this.mdService.getAll(),
+      vehicules: this.vehiculeService.getAll(),
     }).subscribe({
-      next: ({ bonsCommande, pieces, mds }) => {
+      next: ({ bonsCommande, pieces, mds, vehicules }) => {
         this.bonsCommande = bonsCommande;
         this.pieces = pieces;
         this.mainsDoeuvre = mds.filter(m => !m.isArchived);
+        this.allVehicules = vehicules;
       },
     });
   }
@@ -222,6 +227,35 @@ export class BonsLivraisonComponent implements OnInit {
   get totalMD(): number {
     return this.lignesMDArray.controls.reduce((s, c) =>
       s + (Number(c.get('nbreHeure')?.value) || 0) * (Number(c.get('tarifHoraire')?.value) || 0), 0);
+  }
+
+  get montantBonCommande(): number {
+    const id = this.form.get('bonDeCommandeId')?.value;
+    if (!id) return 0;
+    return this.bonsCommande.find(b => b.id === Number(id))?.montantTTC ?? 0;
+  }
+
+  totalAvecBC(bon: BonDeLivraison): number {
+    const bcAmount = bon.bonDeCommandeId
+      ? this.bonsCommande.find(b => b.id === bon.bonDeCommandeId)?.montantTTC ?? 0
+      : 0;
+    return bcAmount + bon.montantTotal;
+  }
+
+  get detailVehicule(): VehiculeModel | null {
+    if (!this.selectedBon?.bonDeCommandeId) return null;
+    const bc = this.bonsCommande.find(b => b.id === this.selectedBon!.bonDeCommandeId);
+    if (!bc?.vehiculeId) return null;
+    return this.allVehicules.find(v => v.id === bc.vehiculeId) ?? null;
+  }
+
+  get detailClient() {
+    return this.detailVehicule?.client ?? null;
+  }
+
+  get montantBCDetail(): number {
+    if (!this.selectedBon?.bonDeCommandeId) return 0;
+    return this.bonsCommande.find(b => b.id === this.selectedBon!.bonDeCommandeId)?.montantTTC ?? 0;
   }
 
   getPieceName(id: any): string {

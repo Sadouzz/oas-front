@@ -35,9 +35,11 @@ export interface BonDeCommande {
 }
 
 export interface LigneBonDeCommandeRequest {
-  pieceDetacheeId: number;
+  pieceDetacheeId?: number;
   quantite: number;
   prixUnitaire: number;
+  designationPds?: string;
+  typePiece?: string;
 }
 
 export interface BonDeCommandeRequest {

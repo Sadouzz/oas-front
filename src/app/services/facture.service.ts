@@ -2,9 +2,9 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { FactureModel } from '../shared/models/facture.model';
+import { FactureModel, FactureCreateRequest } from '../shared/models/facture.model';
 
-export type { FactureModel };
+export type { FactureModel, FactureCreateRequest };
 
 @Injectable({ providedIn: 'root' })
 export class FactureService {
@@ -29,6 +29,10 @@ export class FactureService {
 
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.api}/${id}`);
+  }
+
+  create(data: FactureCreateRequest): Observable<FactureModel> {
+    return this.http.post<FactureModel>(`${this.api}/creer`, data);
   }
 
   downloadPdf(id: number): Observable<Blob> {
