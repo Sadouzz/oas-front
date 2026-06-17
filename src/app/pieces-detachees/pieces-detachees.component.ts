@@ -1,5 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
+import { DecimalPipe, NgClass } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { PieceDetacheeService, PieceDetache } from '../services/piece-detachee.service';
 import { AuthService } from '../auth/services/auth.service';
@@ -9,7 +9,7 @@ import { PaginationComponent } from '../shared/components/pagination/pagination.
 @Component({
   selector: 'app-pieces-detachees',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, AlertComponent, PaginationComponent],
+  imports: [ReactiveFormsModule, DecimalPipe, NgClass, AlertComponent, PaginationComponent],
   templateUrl: './pieces-detachees.component.html',
 })
 export class PiecesDetacheesComponent implements OnInit {
@@ -32,9 +32,12 @@ export class PiecesDetacheesComponent implements OnInit {
 
   readonly types = ['PDP', 'PDG', 'PDS'] as const;
   readonly statuts = ['ACTIF', 'INACTIF'] as const;
+  readonly Math = Math;
 
   filterType = '';
   filterStatut = '';
+  filterCategorie = '';
+  categories: string[] = [];
 
   form = this.fb.group({
     type: ['PDP', Validators.required],
@@ -48,6 +51,19 @@ export class PiecesDetacheesComponent implements OnInit {
     prix: [null as number | null],
     seuilMinimum: [null as number | null],
   });
+
+  get totalArticles(): number { return this.pieces.filter(p => p.type === 'PDP').length; }
+  get valeurStock(): number {
+    return this.pieces
+      .filter(p => p.type === 'PDP')
+      .reduce((sum, p) => sum + (p.stockMagasin ?? 0) * (p.prix ?? 0), 0);
+  }
+  get stockCritique(): number {
+    return this.pieces.filter(p => p.type === 'PDP' && (p.qteReelle ?? 0) > 0 && (p.qteReelle ?? 0) <= (p.seuilMinimum ?? 10)).length;
+  }
+  get ruptures(): number {
+    return this.pieces.filter(p => p.type === 'PDP' && (p.qteReelle ?? 0) === 0).length;
+  }
 
   get canEdit(): boolean {
     const r = this.authService.getRole();
@@ -63,9 +79,22 @@ export class PiecesDetacheesComponent implements OnInit {
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: (data) => { this.pieces = data; this.applyFilters(); this.loading = false; },
+      next: (data) => {
+        this.pieces = data;
+        this.categories = [...new Set(data.map(p => p.categorie).filter(c => !!c))].sort();
+        this.applyFilters();
+        this.loading = false;
+      },
       error: () => { this.loading = false; }
     });
+  }
+
+  get lowStockPieces(): PieceDetache[] {
+    return this.pieces.filter(p =>
+      p.type === 'PDP' &&
+      p.seuilMinimum != null &&
+      (p.qteReelle ?? 0) <= p.seuilMinimum
+    );
   }
 
   onSearch(event: Event) {
@@ -82,8 +111,14 @@ export class PiecesDetacheesComponent implements OnInit {
     );
     if (this.filterType) result = result.filter(p => p.type === this.filterType);
     if (this.filterStatut) result = result.filter(p => p.statut === this.filterStatut);
+    if (this.filterCategorie) result = result.filter(p => p.categorie === this.filterCategorie);
     this.filtered = result;
     this.page = 1;
+  }
+
+  setFilterCategorie(cat: string) {
+    this.filterCategorie = this.filterCategorie === cat ? '' : cat;
+    this.applyFilters();
   }
 
   get paged(): PieceDetache[] { return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize); }

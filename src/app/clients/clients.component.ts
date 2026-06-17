@@ -1,5 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { NgClass, DatePipe, DecimalPipe } from '@angular/common';
 import { forkJoin } from 'rxjs';
 import { ClientService } from '../services/client.service';
 import { VehiculeService } from '../services/vehicule.service';
@@ -12,7 +13,7 @@ import { PaginationComponent } from '../shared/components/pagination/pagination.
 @Component({
   selector: 'app-clients',
   standalone: true,
-  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent],
+  imports: [ReactiveFormsModule, NgClass, DatePipe, DecimalPipe, AlertComponent, PaginationComponent],
   templateUrl: './clients.component.html',
 })
 export class ClientsComponent implements OnInit {
@@ -52,6 +53,12 @@ export class ClientsComponent implements OnInit {
   filterStatut = '';
   searchTerm = '';
 
+  // Detail panel
+  selectedClient: UserModel | null = null;
+  detailTab: 'profil' | 'vehicules' = 'profil';
+  clientVehicules: VehiculeModel[] = [];
+  loadingVehicules = false;
+
   createForm = this.fb.group({
     matricule: [{ value: '', disabled: true }, Validators.required],
     firstName: ['', Validators.required],
@@ -84,17 +91,24 @@ export class ClientsComponent implements OnInit {
 
   loadAll() {
     this.loading = true;
-    forkJoin({
-      clients: this.clientService.getAll(),
-      vehicules: this.vehiculeService.getAll(),
-    }).subscribe({
-      next: ({ clients, vehicules }) => {
+    this.clientService.getAll().subscribe({
+      next: (clients) => {
         this.clients = clients;
-        this.allVehicules = vehicules;
         this.applyFilter();
         this.loading = false;
+        // Refresh selected client data if one is selected
+        if (this.selectedClient) {
+          const updated = clients.find(c => c.id === this.selectedClient!.id);
+          if (updated) this.selectedClient = updated;
+        }
       },
-      error: () => { this.loading = false; }
+      error: () => {
+        this.loading = false;
+        this.errorMessage = 'Impossible de charger les clients. Vérifiez que le serveur est démarré.';
+      },
+    });
+    this.vehiculeService.getAll().subscribe({
+      next: (vehicules) => { this.allVehicules = vehicules; },
     });
   }
 
@@ -158,6 +172,49 @@ export class ClientsComponent implements OnInit {
     return this.allVehicules.filter(v => v.client?.id === clientId).length;
   }
 
+  // Avatar color based on client name
+  avatarColor(name: string): string {
+    const colors = [
+      '#3b82f6', '#8b5cf6', '#06b6d4', '#10b981',
+      '#f59e0b', '#ef4444', '#ec4899', '#6366f1',
+    ];
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    return colors[Math.abs(hash) % colors.length];
+  }
+
+  clientInitials(client: UserModel): string {
+    return `${client.firstName[0] ?? ''}${client.lastName[0] ?? ''}`.toUpperCase();
+  }
+
+  // Detail panel
+  selectClient(client: UserModel) {
+    this.selectedClient = client;
+    this.detailTab = 'vehicules';
+    this.clientVehicules = [];
+    this.loadClientVehicules(client.id);
+  }
+
+  closeDetail() {
+    this.selectedClient = null;
+    this.clientVehicules = [];
+  }
+
+  setDetailTab(tab: 'profil' | 'vehicules') {
+    this.detailTab = tab;
+    if (tab === 'vehicules' && this.selectedClient) {
+      this.loadClientVehicules(this.selectedClient.id);
+    }
+  }
+
+  loadClientVehicules(clientId: number) {
+    this.loadingVehicules = true;
+    this.vehiculeService.getByClient(clientId).subscribe({
+      next: (v) => { this.clientVehicules = v; this.loadingVehicules = false; },
+      error: () => { this.loadingVehicules = false; },
+    });
+  }
+
   // ── ARCHIVE / UNARCHIVE (direct, no modal) ────────────────────────
   archive(client: UserModel) {
     this.clientService.archive(client.id).subscribe({
@@ -219,6 +276,7 @@ export class ClientsComponent implements OnInit {
       next: () => {
         this.saving = false;
         this.showSuccess(`Client ${this.riskClient!.firstName} ${this.riskClient!.lastName} supprimé définitivement.`);
+        if (this.selectedClient?.id === this.riskClient!.id) this.closeDetail();
         this.closeRiskModal();
         this.loadAll();
       },
@@ -339,6 +397,38 @@ export class ClientsComponent implements OnInit {
         this.showSuccess('Client et véhicule créés avec succès !');
         this.loadAll();
         this.closeCreate();
+      },
+      error: (err: any) => { this.saving = false; this.errorMessage = err.error?.message || 'Erreur lors de la création du véhicule.'; }
+    });
+  }
+
+  // Ajout vehicule depuis panneau detail
+  openAddVehicleFromDetail() {
+    if (!this.selectedClient) return;
+    this.createdClientId = this.selectedClient.id;
+    this.vehicleForm.reset();
+    this.errorMessage = '';
+    this.addingVehicle = true;
+    this.showCreateModal = true;
+    this.createStep = 2;
+  }
+
+  saveVehicleFromDetail() {
+    if (this.vehicleForm.invalid || !this.createdClientId || this.saving) {
+      this.vehicleForm.markAllAsTouched();
+      return;
+    }
+    this.saving = true;
+    const v = this.vehicleForm.value as any;
+    this.vehiculeService.create({ ...v, clientId: this.createdClientId }).subscribe({
+      next: () => {
+        this.saving = false;
+        this.showSuccess('Véhicule ajouté avec succès !');
+        this.showCreateModal = false;
+        this.addingVehicle = false;
+        this.vehicleForm.reset();
+        this.loadAll();
+        if (this.selectedClient) this.loadClientVehicules(this.selectedClient.id);
       },
       error: (err: any) => { this.saving = false; this.errorMessage = err.error?.message || 'Erreur lors de la création du véhicule.'; }
     });

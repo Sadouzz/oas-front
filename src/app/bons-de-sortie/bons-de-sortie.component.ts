@@ -1,5 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 import { BonDeSortieService, BonDeSortie } from '../services/bon-de-sortie.service';
 import { ClientService, UserModel } from '../services/client.service';
 import { VehiculeService, VehiculeModel } from '../services/vehicule.service';
@@ -28,8 +29,9 @@ export class BonsDeSortieComponent implements OnInit {
   filtered: BonDeSortie[] = [];
   page = 1;
   readonly pageSize = 10;
+
   clients: UserModel[] = [];
-  vehicules: VehiculeModel[] = [];
+  allVehicules: VehiculeModel[] = [];
   vehiculesFiltres: VehiculeModel[] = [];
   pdps: PieceDetache[] = [];
   mainDoeuvres: MainDoeuvreModel[] = [];
@@ -43,8 +45,12 @@ export class BonsDeSortieComponent implements OnInit {
   showDetailModal = false;
   selectedBon: BonDeSortie | null = null;
 
-  // 3-step wizard
   createStep = 1;
+
+  clientOpen = false;
+  vehiculeOpen = false;
+  clientFilter = '';
+  vehiculeFilter = '';
 
   filterStatut = '';
   searchTerm = '';
@@ -53,6 +59,8 @@ export class BonsDeSortieComponent implements OnInit {
     clientId: [null as number | null, Validators.required],
     vehiculeId: [null as number | null, Validators.required],
     remarque: [''],
+    appliquerTVA: [false],
+    appliquerTimbre: [false],
     lignesPieces: this.fb.array([]),
     lignesMainDoeuvres: this.fb.array([]),
   });
@@ -64,11 +72,70 @@ export class BonsDeSortieComponent implements OnInit {
   get canCreate(): boolean { return ['ROLE_SUPER_AGENT', 'ROLE_AGENT', 'ROLE_AGENT_MAGASIN'].includes(this.role); }
   get canValidate(): boolean { return ['ROLE_SUPER_AGENT', 'ROLE_CHEF_ATELIER'].includes(this.role); }
 
+  // ── Searchable selects ──────────────────────────────────────────
+
+  get clientLabel(): string {
+    const id = this.form.get('clientId')?.value;
+    if (!id) return '';
+    const c = this.clients.find(x => x.id === Number(id));
+    return c ? `${c.firstName} ${c.lastName}` : '';
+  }
+
+  get vehiculeLabel(): string {
+    const id = this.form.get('vehiculeId')?.value;
+    if (!id) return '';
+    const v = this.allVehicules.find(x => x.id === Number(id));
+    return v ? `${v.immatriculation} — ${v.marque} ${v.modele}` : '';
+  }
+
+  get filteredClients(): UserModel[] {
+    if (!this.clientFilter) return this.clients;
+    const kw = this.clientFilter.toLowerCase();
+    return this.clients.filter(c =>
+      `${c.firstName} ${c.lastName}`.toLowerCase().includes(kw) ||
+      (c.phone ?? '').toLowerCase().includes(kw)
+    );
+  }
+
+  get filteredVehicules(): VehiculeModel[] {
+    if (!this.vehiculeFilter) return this.vehiculesFiltres;
+    const kw = this.vehiculeFilter.toLowerCase();
+    return this.vehiculesFiltres.filter(v =>
+      v.immatriculation.toLowerCase().includes(kw) ||
+      `${v.marque} ${v.modele}`.toLowerCase().includes(kw)
+    );
+  }
+
+  selectClient(c: UserModel) {
+    this.form.patchValue({ clientId: c.id, vehiculeId: null });
+    this.vehiculesFiltres = this.allVehicules.filter(v => v.client?.id === c.id);
+    this.clientFilter = '';
+    this.clientOpen = false;
+  }
+
+  selectVehicule(v: VehiculeModel) {
+    this.form.patchValue({ vehiculeId: v.id });
+    this.vehiculeFilter = '';
+    this.vehiculeOpen = false;
+  }
+
+  // ── Lifecycle ───────────────────────────────────────────────────
+
   ngOnInit() {
     this.loadBons();
-    this.clientService.getAll().subscribe({ next: (d) => { this.clients = d.filter(c => c.enabled); } });
-    this.pieceService.getAll({ type: 'PDP', statut: 'ACTIF' }).subscribe({ next: (d) => { this.pdps = d; } });
-    this.mainDoeuvreService.getAll().subscribe({ next: (d) => { this.mainDoeuvres = d.filter(m => !m.isArchived); } });
+    forkJoin({
+      clients: this.clientService.getAll(),
+      vehicules: this.vehiculeService.getAll(),
+      pdps: this.pieceService.getAll({ type: 'PDP' }),
+      mainDoeuvres: this.mainDoeuvreService.getAll(),
+    }).subscribe({
+      next: ({ clients, vehicules, pdps, mainDoeuvres }) => {
+        this.clients = clients.filter(c => c.enabled);
+        this.allVehicules = vehicules;
+        this.pdps = pdps.filter(p => p.statut === 'ACTIF');
+        this.mainDoeuvres = mainDoeuvres.filter(m => !m.isArchived);
+      },
+    });
   }
 
   loadBons() {
@@ -109,25 +176,18 @@ export class BonsDeSortieComponent implements OnInit {
     this.applyFilter();
   }
 
-  onClientChange(event: Event) {
-    const clientId = Number((event.target as HTMLSelectElement).value);
-    this.form.patchValue({ vehiculeId: null });
-    this.vehiculesFiltres = [];
-    if (clientId) {
-      this.vehiculeService.getByClient(clientId).subscribe({
-        next: (d) => { this.vehiculesFiltres = d; }
-      });
-    }
-  }
-
   // ── WIZARD ─────────────────────────────────────────────────────
 
   openCreate() {
-    this.form.reset({ remarque: '' });
+    this.form.reset({ remarque: '', appliquerTVA: false, appliquerTimbre: false });
     while (this.lignesPieces.length) this.lignesPieces.removeAt(0);
     while (this.lignesMainDoeuvres.length) this.lignesMainDoeuvres.removeAt(0);
     this.addPiece();
     this.vehiculesFiltres = [];
+    this.clientOpen = false;
+    this.vehiculeOpen = false;
+    this.clientFilter = '';
+    this.vehiculeFilter = '';
     this.createStep = 1;
     this.errorMessage = '';
     this.showCreateModal = true;
@@ -140,6 +200,7 @@ export class BonsDeSortieComponent implements OnInit {
       if (this.form.get('clientId')!.invalid || this.form.get('vehiculeId')!.invalid) {
         this.form.get('clientId')!.markAsTouched();
         this.form.get('vehiculeId')!.markAsTouched();
+        this.errorMessage = 'Veuillez selectionner un client et un vehicule.';
         return;
       }
     }
@@ -147,17 +208,32 @@ export class BonsDeSortieComponent implements OnInit {
     this.errorMessage = '';
   }
 
-  // ── Lignes pièces ──
+  // ── Lignes pieces ──
+
   addPiece() {
     this.lignesPieces.push(this.fb.group({
-      pieceId: [null as number | null, Validators.required],
+      pieceId: [null as number | null],
+      pieceRef: [''],
       quantite: [1, [Validators.required, Validators.min(1)]],
+      prix: [null as number | null],
     }));
   }
 
   removePiece(i: number) { if (this.lignesPieces.length > 1) this.lignesPieces.removeAt(i); }
 
+  onPieceInput(index: number, event: Event) {
+    const ref = (event.target as HTMLInputElement).value.trim();
+    const found = this.pdps.find(p => p.reference === ref);
+    const ctrl = this.lignesPieces.at(index);
+    if (found) {
+      ctrl.patchValue({ pieceId: found.id, prix: found.prix ?? null }, { emitEvent: false });
+    } else {
+      ctrl.patchValue({ pieceId: null }, { emitEvent: false });
+    }
+  }
+
   // ── Lignes main d'oeuvre ──
+
   addMainDoeuvre() {
     this.lignesMainDoeuvres.push(this.fb.group({
       mainDoeuvreId: [null as number | null, Validators.required],
@@ -168,28 +244,37 @@ export class BonsDeSortieComponent implements OnInit {
   removeMainDoeuvre(i: number) { this.lignesMainDoeuvres.removeAt(i); }
 
   save() {
-    const hasPieces = this.lignesPieces.length > 0 && this.lignesPieces.controls.some(l => l.get('pieceId')?.value);
-    const hasMd = this.lignesMainDoeuvres.length > 0 && this.lignesMainDoeuvres.controls.some(l => l.get('mainDoeuvreId')?.value);
-    if (!hasPieces && !hasMd) {
-      this.errorMessage = 'Ajoutez au moins une pièce ou une main d\'œuvre.';
+    const val = this.form.value as any;
+    const lignesPieces = (val.lignesPieces ?? [])
+      .filter((l: any) => l.pieceId)
+      .map((l: any) => ({ pieceId: l.pieceId, quantite: l.quantite, prix: l.prix }));
+    const lignesMainDoeuvres = (val.lignesMainDoeuvres ?? []).filter((l: any) => l.mainDoeuvreId);
+
+    if (lignesPieces.length === 0 && lignesMainDoeuvres.length === 0) {
+      this.errorMessage = 'Ajoutez au moins une piece ou une main d\'oeuvre.';
       return;
     }
-    if (this.form.invalid || this.saving) { this.form.markAllAsTouched(); return; }
+    if (this.form.get('clientId')!.invalid || this.form.get('vehiculeId')!.invalid || this.saving) {
+      this.form.markAllAsTouched();
+      return;
+    }
     this.saving = true;
-    const val = this.form.value as any;
-
-    const lignesPieces = (val.lignesPieces ?? []).filter((l: any) => l.pieceId);
-    const lignesMainDoeuvres = (val.lignesMainDoeuvres ?? []).filter((l: any) => l.mainDoeuvreId);
 
     this.bonService.creer({
       clientId: val.clientId,
       vehiculeId: val.vehiculeId,
       remarque: val.remarque,
+      appliquerTVA: !!val.appliquerTVA,
+      appliquerTimbre: !!val.appliquerTimbre,
       lignesPieces,
       lignesMainDoeuvres,
-    }).subscribe({
-      next: () => { this.saving = false; this.showSuccess('Bon de sortie créé avec succès !'); this.closeCreate(); this.loadBons(); },
-      error: (err: any) => { this.saving = false; this.errorMessage = err.error?.message || 'Erreur lors de la création.'; }
+    } as any).subscribe({
+      next: () => { this.saving = false; this.showSuccess('Bon de sortie cree !'); this.closeCreate(); this.loadBons(); },
+      error: (err: any) => {
+        this.saving = false;
+        const msg = err.error?.message ?? (typeof err.error === 'string' ? err.error : '');
+        this.errorMessage = msg || 'Erreur lors de la creation.';
+      }
     });
   }
 
@@ -197,11 +282,11 @@ export class BonsDeSortieComponent implements OnInit {
   closeDetail() { this.showDetailModal = false; this.selectedBon = null; }
 
   valider(bon: BonDeSortie) {
-    if (!confirm(`Valider le bon ${bon.reference} ? Les stocks seront mis à jour.`)) return;
+    if (!confirm(`Valider le bon ${bon.reference} ? Les stocks seront mis a jour.`)) return;
     if (this.saving) return;
     this.saving = true;
     this.bonService.valider(bon.id).subscribe({
-      next: () => { this.saving = false; this.showSuccess(`Bon ${bon.reference} validé !`); this.loadBons(); this.closeDetail(); },
+      next: () => { this.saving = false; this.showSuccess(`Bon ${bon.reference} valide !`); this.loadBons(); this.closeDetail(); },
       error: (err: any) => { this.saving = false; this.errorMessage = err.error?.message || 'Erreur lors de la validation.'; }
     });
   }

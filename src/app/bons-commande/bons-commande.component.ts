@@ -5,6 +5,7 @@ import { BonDeCommandeService, BonDeCommande, StatutBonCommande } from '../servi
 import { FournisseurService } from '../services/fournisseur.service';
 import { VehiculeService } from '../services/vehicule.service';
 import { PieceDetacheeService } from '../services/piece-detachee.service';
+import { ClientService, UserModel } from '../services/client.service';
 import { NgClass } from '@angular/common';
 import { FournisseurModel, VehiculeModel, PieceDetache } from '../shared/models';
 
@@ -19,6 +20,7 @@ export class BonsCommandeComponent implements OnInit {
   private fournisseurService = inject(FournisseurService);
   private vehiculeService = inject(VehiculeService);
   private pieceService = inject(PieceDetacheeService);
+  private clientService = inject(ClientService);
   private fb = inject(FormBuilder);
 
   bons: BonDeCommande[] = [];
@@ -26,6 +28,15 @@ export class BonsCommandeComponent implements OnInit {
   fournisseurs: FournisseurModel[] = [];
   vehicules: VehiculeModel[] = [];
   pieces: PieceDetache[] = [];
+  clients: UserModel[] = [];
+
+  selectedClientId: number | null = null;
+  clientOpen = false;
+  vehiculeOpen = false;
+  fournisseurOpen = false;
+  clientFilter = '';
+  vehiculeFilter = '';
+  fournisseurFilter = '';
 
   loading = true;
   saving = false;
@@ -44,6 +55,7 @@ export class BonsCommandeComponent implements OnInit {
 
   form: FormGroup = this.fb.group({
     fournisseurId: [null, Validators.required],
+    clientId: [null],
     vehiculeId: [null],
     tvaApplicable: [false],
     observation: [''],
@@ -52,17 +64,93 @@ export class BonsCommandeComponent implements OnInit {
 
   get lignesArray(): FormArray { return this.form.get('lignes') as FormArray; }
 
+  get fournisseurLabel(): string {
+    const id = this.form.get('fournisseurId')?.value;
+    if (!id) return '';
+    const f = this.fournisseurs.find(x => x.id === Number(id));
+    return f ? (f.nomEntreprise || f.nom) : '';
+  }
+
+  get filteredFournisseurs(): FournisseurModel[] {
+    if (!this.fournisseurFilter) return this.fournisseurs;
+    const kw = this.fournisseurFilter.toLowerCase();
+    return this.fournisseurs.filter(f =>
+      (f.nomEntreprise ?? '').toLowerCase().includes(kw) ||
+      (f.nom ?? '').toLowerCase().includes(kw)
+    );
+  }
+
+  selectFournisseur(f: FournisseurModel) {
+    this.form.patchValue({ fournisseurId: f.id });
+    this.fournisseurFilter = '';
+    this.fournisseurOpen = false;
+  }
+
+  get clientLabel(): string {
+    const id = this.form.get('clientId')?.value;
+    if (!id) return '';
+    const c = this.clients.find(x => x.id === Number(id));
+    return c ? `${c.firstName} ${c.lastName}` : '';
+  }
+
+  get vehiculeLabel(): string {
+    const id = this.form.get('vehiculeId')?.value;
+    if (!id) return '';
+    const v = this.vehicules.find(x => x.id === Number(id));
+    return v ? `${v.immatriculation} — ${v.marque}` : '';
+  }
+
+  get filteredClients(): UserModel[] {
+    if (!this.clientFilter) return this.clients;
+    const kw = this.clientFilter.toLowerCase();
+    return this.clients.filter(c =>
+      `${c.firstName} ${c.lastName}`.toLowerCase().includes(kw) ||
+      (c.phone ?? '').toLowerCase().includes(kw)
+    );
+  }
+
+  get filteredVehicules(): VehiculeModel[] {
+    const base = this.selectedClientId
+      ? this.vehicules.filter(v => v.client?.id === this.selectedClientId)
+      : this.vehicules;
+    if (!this.vehiculeFilter) return base;
+    const kw = this.vehiculeFilter.toLowerCase();
+    return base.filter(v =>
+      v.immatriculation.toLowerCase().includes(kw) ||
+      `${v.marque} ${v.modele}`.toLowerCase().includes(kw)
+    );
+  }
+
+  selectClient(c: UserModel | null) {
+    this.selectedClientId = c?.id ?? null;
+    this.form.patchValue({ clientId: c?.id ?? null, vehiculeId: null });
+    this.clientFilter = '';
+    this.clientOpen = false;
+  }
+
+  selectVehicule(v: VehiculeModel | null) {
+    this.form.patchValue({ vehiculeId: v?.id ?? null });
+    this.vehiculeFilter = '';
+    this.vehiculeOpen = false;
+  }
+
+  get displayedPieces(): PieceDetache[] {
+    return this.pieces.filter(p => p.type !== 'PDS' && p.statut === 'ACTIF');
+  }
+
   ngOnInit() {
     this.load();
     forkJoin({
       fournisseurs: this.fournisseurService.getAll(),
       vehicules: this.vehiculeService.getAll(),
       pieces: this.pieceService.getAll(),
+      clients: this.clientService.getAll(),
     }).subscribe({
-      next: ({ fournisseurs, vehicules, pieces }) => {
+      next: ({ fournisseurs, vehicules, pieces, clients }) => {
         this.fournisseurs = fournisseurs.filter(f => !f.archived);
         this.vehicules = vehicules;
         this.pieces = pieces;
+        this.clients = clients.filter(c => c.enabled);
       },
     });
   }
@@ -102,7 +190,9 @@ export class BonsCommandeComponent implements OnInit {
 
   private makeLigne(): FormGroup {
     return this.fb.group({
-      pieceDetacheeId: [null, Validators.required],
+      isCustom: [false],
+      pieceDetacheeId: [null],
+      designationPds: [''],
       quantite: [1, [Validators.required, Validators.min(1)]],
       prixUnitaire: [0, [Validators.required, Validators.min(0)]],
     });
@@ -111,43 +201,81 @@ export class BonsCommandeComponent implements OnInit {
   addLigne() { this.lignesArray.push(this.makeLigne()); }
   removeLigne(i: number) { this.lignesArray.removeAt(i); }
 
+  toggleCustom(i: number) {
+    const ctrl = this.lignesArray.at(i);
+    const current = !!ctrl.get('isCustom')?.value;
+    ctrl.patchValue({ isCustom: !current, pieceDetacheeId: null, designationPds: '' });
+  }
+
   openNew() {
     this.isNew = true;
     this.editingId = null;
-    this.form.reset({ tvaApplicable: false, observation: '' });
+    this.selectedClientId = null;
+    this.clientOpen = false;
+    this.vehiculeOpen = false;
+    this.fournisseurOpen = false;
+    this.clientFilter = '';
+    this.vehiculeFilter = '';
+    this.fournisseurFilter = '';
+    this.form.reset({ tvaApplicable: false, observation: '', clientId: null, vehiculeId: null });
     while (this.lignesArray.length) this.lignesArray.removeAt(0);
     this.addLigne();
+    this.errorMessage = '';
     this.showModal = true;
   }
 
   openEdit(bon: BonDeCommande) {
     this.isNew = false;
     this.editingId = bon.id;
+    this.selectedClientId = null;
+    this.clientOpen = false;
+    this.vehiculeOpen = false;
+    this.fournisseurOpen = false;
+    this.clientFilter = '';
+    this.vehiculeFilter = '';
+    this.fournisseurFilter = '';
     this.form.patchValue({
       fournisseurId: bon.fournisseurId,
+      clientId: null,
       vehiculeId: bon.vehiculeId ?? null,
       tvaApplicable: bon.tvaApplicable,
       observation: bon.observation ?? '',
     });
     while (this.lignesArray.length) this.lignesArray.removeAt(0);
     for (const l of bon.lignes) {
+      const matchingPiece = this.pieces.find(p => p.id === l.pieceDetacheeId && p.type !== 'PDS');
+      const isCustom = !matchingPiece;
       this.lignesArray.push(this.fb.group({
-        pieceDetacheeId: [l.pieceDetacheeId, Validators.required],
+        isCustom: [isCustom],
+        pieceDetacheeId: [isCustom ? null : l.pieceDetacheeId],
+        designationPds: [isCustom ? (l.designationPiece || l.reference || '') : ''],
         quantite: [l.quantite, [Validators.required, Validators.min(1)]],
         prixUnitaire: [l.prixUnitaire, [Validators.required, Validators.min(0)]],
       }));
     }
+    this.errorMessage = '';
     this.showModal = true;
   }
 
-  openDetail(bon: BonDeCommande) {
-    this.selectedBon = bon;
-  }
-
+  openDetail(bon: BonDeCommande) { this.selectedBon = bon; }
   closeDetail() { this.selectedBon = null; }
 
   save() {
-    if (this.form.invalid || this.lignesArray.length === 0) { this.form.markAllAsTouched(); return; }
+    if (this.form.get('fournisseurId')?.invalid || this.lignesArray.length === 0) {
+      this.form.markAllAsTouched();
+      return;
+    }
+    const lignesRaw = this.form.value.lignes as any[];
+    for (const l of lignesRaw) {
+      if (l.isCustom && !l.designationPds?.trim()) {
+        this.notifyError('Saisissez une désignation pour les pièces personnalisées.');
+        return;
+      }
+      if (!l.isCustom && !l.pieceDetacheeId) {
+        this.notifyError('Sélectionnez une pièce pour chaque ligne du catalogue.');
+        return;
+      }
+    }
     this.saving = true;
     const raw = this.form.value;
     const payload = {
@@ -155,18 +283,28 @@ export class BonsCommandeComponent implements OnInit {
       vehiculeId: raw.vehiculeId ? Number(raw.vehiculeId) : null,
       tvaApplicable: !!raw.tvaApplicable,
       observation: raw.observation || undefined,
-      lignes: raw.lignes.map((l: any) => ({
-        pieceDetacheeId: Number(l.pieceDetacheeId),
-        quantite: Number(l.quantite),
-        prixUnitaire: Number(l.prixUnitaire),
-      })),
+      lignes: lignesRaw.map((l: any) => {
+        if (l.isCustom) {
+          return {
+            designationPds: l.designationPds.trim(),
+            typePiece: 'PDS',
+            quantite: Number(l.quantite),
+            prixUnitaire: Number(l.prixUnitaire),
+          };
+        }
+        return {
+          pieceDetacheeId: Number(l.pieceDetacheeId),
+          quantite: Number(l.quantite),
+          prixUnitaire: Number(l.prixUnitaire),
+        };
+      }),
     };
     const req$ = this.isNew
       ? this.service.create(payload)
       : this.service.update(this.editingId!, payload);
     req$.subscribe({
       next: () => { this.showModal = false; this.load(); this.notify('Bon de commande enregistré.'); },
-      error: () => { this.saving = false; this.notifyError('Erreur lors de la sauvegarde.'); },
+      error: (err: any) => { this.saving = false; this.notifyError(err?.error?.message || 'Erreur lors de la sauvegarde.'); },
     });
   }
 

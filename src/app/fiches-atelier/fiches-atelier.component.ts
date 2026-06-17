@@ -1,5 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { NgClass } from '@angular/common';
 import { forkJoin } from 'rxjs';
 import { FicheAtelierService, FicheAtelier } from '../services/fiche-atelier.service';
 import { VehiculeService, VehiculeModel } from '../services/vehicule.service';
@@ -10,7 +11,7 @@ import { PaginationComponent } from '../shared/components/pagination/pagination.
 @Component({
   selector: 'app-fiches-atelier',
   standalone: true,
-  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent],
+  imports: [ReactiveFormsModule, NgClass, AlertComponent, PaginationComponent],
   templateUrl: './fiches-atelier.component.html',
 })
 export class FichesAtelierComponent implements OnInit {
@@ -32,6 +33,8 @@ export class FichesAtelierComponent implements OnInit {
   pageSize = 10;
   successMessage = '';
   errorMessage = '';
+
+  selectedFiche: FicheAtelier | null = null;
 
   // Mécaniciens modal
   showMecModal = false;
@@ -176,6 +179,19 @@ export class FichesAtelierComponent implements OnInit {
 
   formatDate(d: string | null): string {
     return d ? new Date(d).toLocaleDateString('fr-FR') : '—';
+  }
+
+  selectFiche(f: FicheAtelier) {
+    this.selectedFiche = f === this.selectedFiche ? null : f;
+  }
+
+  closeDetail() {
+    this.selectedFiche = null;
+  }
+
+  ficheInitials(f: FicheAtelier): string {
+    const immat = f.vehicule?.immatriculation ?? '';
+    return immat ? immat.slice(0, 2).toUpperCase() : 'FA';
   }
 
   private notify(msg: string) {

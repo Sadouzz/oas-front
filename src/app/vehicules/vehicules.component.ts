@@ -55,7 +55,34 @@ export class VehiculesComponent implements OnInit {
     clientId: [null as number | null, Validators.required],
   });
 
-  // Edit form (all fields)
+  editingClient: UserModel | null = null;
+
+  clientOpen = false;
+  clientFilter = '';
+
+  get clientLabel(): string {
+    const id = this.clientForm.get('clientId')?.value;
+    if (!id) return '';
+    const c = this.clients.find(x => x.id === Number(id));
+    return c ? `${c.firstName} ${c.lastName}` : '';
+  }
+
+  get filteredClients(): UserModel[] {
+    if (!this.clientFilter) return this.clients;
+    const kw = this.clientFilter.toLowerCase();
+    return this.clients.filter(c =>
+      `${c.firstName} ${c.lastName}`.toLowerCase().includes(kw) ||
+      (c.phone ?? '').toLowerCase().includes(kw)
+    );
+  }
+
+  selectClient(c: UserModel) {
+    this.clientForm.patchValue({ clientId: c.id });
+    this.clientFilter = '';
+    this.clientOpen = false;
+  }
+
+  // Edit form (all fields except client — client cannot be changed after creation)
   editForm = this.fb.group({
     immatriculation: ['', Validators.required],
     marque: ['', Validators.required],
@@ -63,7 +90,6 @@ export class VehiculesComponent implements OnInit {
     annee: [null as number | null],
     kilometrage: [null as number | null],
     numeroChassis: [''],
-    clientId: [null as number | null, Validators.required],
   });
 
   ngOnInit() {
@@ -77,7 +103,10 @@ export class VehiculesComponent implements OnInit {
     this.loading = true;
     this.vehiculeService.getAll().subscribe({
       next: (data) => { this.vehicules = data; this.applyFilter(); this.loading = false; },
-      error: () => { this.loading = false; }
+      error: () => {
+        this.loading = false;
+        this.errorMessage = 'Impossible de charger les véhicules. Vérifiez que le serveur est démarré.';
+      }
     });
   }
 
@@ -131,6 +160,8 @@ export class VehiculesComponent implements OnInit {
     this.pendingVehicle = null;
     this.infoForm.reset();
     this.clientForm.reset();
+    this.clientOpen = false;
+    this.clientFilter = '';
     this.errorMessage = '';
     this.showModal = true;
   }
@@ -151,6 +182,7 @@ export class VehiculesComponent implements OnInit {
   openEdit(v: VehiculeModel) {
     this.isNew = false;
     this.editingId = v.id;
+    this.editingClient = v.client ?? null;
     this.editForm.patchValue({
       immatriculation: v.immatriculation,
       marque: v.marque,
@@ -158,7 +190,6 @@ export class VehiculesComponent implements OnInit {
       annee: v.annee,
       kilometrage: v.kilometrage,
       numeroChassis: v.numeroChassis,
-      clientId: v.client?.id ?? null,
     });
     this.errorMessage = '';
     this.showModal = true;
@@ -171,6 +202,7 @@ export class VehiculesComponent implements OnInit {
     this.editForm.reset();
     this.createStep = 1;
     this.pendingVehicle = null;
+    this.editingClient = null;
     this.errorMessage = '';
   }
 
@@ -186,7 +218,8 @@ export class VehiculesComponent implements OnInit {
     } else {
       if (this.editForm.invalid || this.saving) { this.editForm.markAllAsTouched(); return; }
       this.saving = true;
-      this.vehiculeService.update(this.editingId!, this.editForm.value as any).subscribe({
+      const payload = { ...this.editForm.value, clientId: this.editingClient?.id ?? null };
+      this.vehiculeService.update(this.editingId!, payload as any).subscribe({
         next: () => { this.saving = false; this.showSuccess('Véhicule modifié avec succès !'); this.closeModal(); this.loadVehicules(); },
         error: (err: any) => { this.saving = false; this.errorMessage = err.error?.message || 'Erreur lors de la modification.'; }
       });

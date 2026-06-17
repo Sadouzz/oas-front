@@ -22,6 +22,20 @@ export interface FactureModel {
   modele: string | null;
   annee: number | null;
   numeroBonDeCommande: string | null;
+  modePaiement?: string | null;
   lignesPieces: { id: number; pieceId: number; designationPiece: string; quantite: number; prix: number; montantTotal: number }[];
   lignesMainDoeuvres: { id: number; mainDoeuvreId: number; descriptionMainDoeuvre: string; nbreHeure: number; tarifHoraire: number; montantTotal: number }[];
+}
+
+export interface FactureCreateRequest {
+  clientId: number;
+  vehiculeId: number;
+  kilometrage?: number | null;
+  remarque?: string | null;
+  bonDeCommandeId?: number | null;
+  lignesPieces: { pieceId: number; quantite: number }[];
+  lignesMainDoeuvres: { mainDoeuvreId: number; nbreHeure: number }[];
+  appliquerTVA: boolean;
+  appliquerTimbre: boolean;
+  modePaiement: string;
 }

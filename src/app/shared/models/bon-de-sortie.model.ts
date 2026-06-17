@@ -28,7 +28,7 @@ export interface BonDeSortie {
 export interface BonDeSortieRequest {
   clientId: number;
   vehiculeId: number;
-  lignesPieces: { pieceId: number; quantite: number }[];
+  lignesPieces: { pieceId: number; quantite: number; prix?: number | null }[];
   lignesMainDoeuvres: { mainDoeuvreId: number; quantite: number }[];
   remarque?: string;
 }

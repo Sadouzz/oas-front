@@ -247,19 +247,36 @@
             </div>
           </div>
 
+          @if (clientOpen) { <div class="fixed inset-0 z-[5]" (click)="clientOpen = false"></div> }
           <form [formGroup]="clientForm" (ngSubmit)="save()" class="space-y-4">
             <div>
-              <label class="block text-sm font-semibold text-oas-ink mb-1">Client propriétaire *</label>
-              <select formControlName="clientId"
-                      class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition text-oas-ink"
-                      [class.border-oas-bad]="fClient['clientId'].invalid && fClient['clientId'].touched">
-                <option [value]="null">-- Sélectionner un client --</option>
-                @for (client of clients; track client.id) {
-                  <option [value]="client.id">{{ client.firstName }} {{ client.lastName }} ({{ client.phone }})</option>
+              <label class="block text-sm font-semibold text-oas-ink mb-1">Client proprietaire *</label>
+              <div class="relative z-[10]">
+                <input type="text"
+                       [value]="clientOpen ? clientFilter : clientLabel"
+                       (focus)="clientOpen = true; clientFilter = ''"
+                       (input)="clientFilter = $any($event.target).value"
+                       placeholder="Rechercher un client..."
+                       class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                       [class.border-oas-bad]="fClient['clientId'].invalid && fClient['clientId'].touched"/>
+                @if (clientOpen) {
+                  <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-oas-line rounded-xl shadow-xl z-[10] max-h-52 overflow-y-auto"
+                       (click)="$event.stopPropagation()">
+                    @for (c of filteredClients; track c.id) {
+                      <div (click)="selectClient(c)"
+                           class="px-3 py-2.5 hover:bg-oas-bg cursor-pointer text-sm text-oas-ink border-b border-oas-line last:border-0">
+                        <span class="font-medium">{{ c.firstName }} {{ c.lastName }}</span>
+                        @if (c.phone) { <span class="text-oas-muted ml-2 text-xs">{{ c.phone }}</span> }
+                      </div>
+                    }
+                    @if (filteredClients.length === 0) {
+                      <div class="px-3 py-3 text-sm text-oas-muted text-center">Aucun resultat</div>
+                    }
+                  </div>
                 }
-              </select>
+              </div>
               @if (fClient['clientId'].invalid && fClient['clientId'].touched) {
-                <p class="text-oas-bad text-xs mt-1">Veuillez sélectionner un client</p>
+                <p class="text-oas-bad text-xs mt-1">Veuillez selectionner un client</p>
               }
             </div>
             <div class="flex justify-between gap-2 pt-2">
@@ -339,15 +356,15 @@
           </div>
         </div>
         <div>
-          <label class="block text-sm font-semibold text-oas-ink mb-1">Client *</label>
-          <select formControlName="clientId"
-                  class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink"
-                  [class.border-oas-bad]="fEdit['clientId'].invalid && fEdit['clientId'].touched">
-            <option [value]="null">-- Sélectionner un client --</option>
-            @for (client of clients; track client.id) {
-              <option [value]="client.id">{{ client.firstName }} {{ client.lastName }} ({{ client.phone }})</option>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Client</label>
+          <div class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm text-oas-ink">
+            @if (editingClient) {
+              <span class="font-semibold">{{ editingClient.firstName }} {{ editingClient.lastName }}</span>
+              <span class="text-oas-muted ml-2">({{ editingClient.phone }})</span>
+            } @else {
+              <span class="text-oas-faint">–</span>
             }
-          </select>
+          </div>
         </div>
         <div class="flex justify-end gap-2 pt-2">
           <button type="button" (click)="closeModal()"
