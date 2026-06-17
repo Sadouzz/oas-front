@@ -22,6 +22,7 @@ export class LoginComponent {
   showPassword = false;
   loading = false;
   errorMessage = '';
+  readonly currentYear = new Date().getFullYear();
 
   features = [
     'Suivi des interventions en temps réel',

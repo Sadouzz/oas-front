@@ -71,7 +71,7 @@
                   @if (!selectedProforma) {
                     <td class="px-5 py-4 text-oas-ink text-sm">{{ p.clientNom }}</td>
                     <td class="px-5 py-4 text-oas-muted text-xs">{{ p.immatriculation ?? '—' }}</td>
-                    <td class="px-5 py-4 text-right font-semibold text-oas-ink">{{ fmt(p.montantTotal) }} FCFA</td>
+                    <td class="px-5 py-4 text-right font-semibold text-oas-ink">{{ fmt(totalAvecBC(p)) }} FCFA</td>
                   }
                   <td class="px-5 py-4 text-xs text-oas-muted">{{ formatDate(p.dateCreation) }}</td>
                   <td class="px-5 py-4" (click)="$event.stopPropagation()">
@@ -244,9 +244,15 @@
                 <span class="font-semibold text-oas-ink">{{ fmt(selectedProforma.montantAutre) }} FCFA</span>
               </div>
             }
+            @if (montantBCDetail > 0) {
+              <div class="flex justify-between">
+                <span class="text-oas-muted">Bon de commande</span>
+                <span class="font-semibold text-oas-ink">{{ fmt(montantBCDetail) }} FCFA</span>
+              </div>
+            }
             <div class="flex justify-between pt-1.5 border-t border-oas-line">
               <span class="font-bold text-oas-ink">Total</span>
-              <span class="font-extrabold text-oas-accent text-base">{{ fmt(selectedProforma.montantTotal) }} FCFA</span>
+              <span class="font-extrabold text-oas-accent text-base">{{ fmt(totalAvecBC(selectedProforma)) }} FCFA</span>
             </div>
           </div>
 
@@ -291,32 +297,121 @@
       <div class="px-6 py-5">
         <form [formGroup]="form" (ngSubmit)="save()" class="space-y-5">
 
+          <!-- Bon de commande -->
+          @if (bcOpen) { <div class="fixed inset-0 z-[5]" (click)="bcOpen = false"></div> }
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1">Bon de commande</label>
+            @if (bcLinked) {
+              <div class="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-oas-accent/40 bg-orange-50 text-sm">
+                <span class="font-mono font-bold text-oas-accent flex-1">{{ bcLabel }}</span>
+                <button type="button" (click)="clearBC()"
+                        class="text-xs text-oas-bad hover:underline cursor-pointer flex-shrink-0">Supprimer</button>
+              </div>
+            } @else {
+              <div class="relative z-[10]">
+                <input type="text"
+                       [value]="bcOpen ? bcFilter : ''"
+                       (focus)="bcOpen = true; bcFilter = ''"
+                       (input)="bcFilter = $any($event.target).value"
+                       placeholder="Rechercher un bon de commande..."
+                       class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+                @if (bcOpen) {
+                  <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-oas-line rounded-xl shadow-xl z-[10] max-h-52 overflow-y-auto"
+                       (click)="$event.stopPropagation()">
+                    @for (bc of filteredBonsCommande; track bc.id) {
+                      <div (click)="selectBC(bc)"
+                           class="flex items-center gap-2 px-3 py-2.5 hover:bg-oas-bg cursor-pointer text-sm text-oas-ink border-b border-oas-line last:border-0">
+                        <span class="font-mono font-bold text-oas-accent">{{ bc.numero }}</span>
+                        @if (bc.immatriculationVehicule) {
+                          <span class="text-oas-muted text-xs">{{ bc.immatriculationVehicule }}</span>
+                        }
+                        <span class="ml-auto font-semibold text-oas-ink text-xs">{{ fmt(bc.montantTTC) }} FCFA</span>
+                      </div>
+                    }
+                    @if (filteredBonsCommande.length === 0) {
+                      <div class="px-3 py-3 text-sm text-oas-muted text-center">Aucun resultat</div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
           <!-- Client + Véhicule -->
+          @if (!bcLinked) {
+            @if (clientOpen) { <div class="fixed inset-0 z-[5]" (click)="clientOpen = false"></div> }
+            @if (vehiculeOpen) { <div class="fixed inset-0 z-[5]" (click)="vehiculeOpen = false"></div> }
+          }
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-semibold text-oas-ink mb-1">Client *</label>
-              <select formControlName="clientId" (change)="onClientChange()"
-                      class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink"
-                      [class.border-oas-bad]="form.get('clientId')?.invalid && form.get('clientId')?.touched">
-                <option [ngValue]="null" disabled>Sélectionner...</option>
-                @for (c of clients; track c.id) {
-                  <option [value]="c.id">{{ c.firstName }} {{ c.lastName }}</option>
-                }
-              </select>
+              @if (bcLinked) {
+                <div class="px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm text-oas-ink opacity-70">{{ clientLabel }}</div>
+              } @else {
+                <div class="relative z-[10]">
+                  <input type="text"
+                         [value]="clientOpen ? clientFilter : clientLabel"
+                         (focus)="clientOpen = true; clientFilter = ''"
+                         (input)="clientFilter = $any($event.target).value"
+                         placeholder="Rechercher un client..."
+                         class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                         [class.border-oas-bad]="form.get('clientId')?.invalid && form.get('clientId')?.touched"/>
+                  @if (clientOpen) {
+                    <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-oas-line rounded-xl shadow-xl z-[10] max-h-52 overflow-y-auto"
+                         (click)="$event.stopPropagation()">
+                      @for (c of filteredClients; track c.id) {
+                        <div (click)="selectClient(c)"
+                             class="px-3 py-2.5 hover:bg-oas-bg cursor-pointer text-sm text-oas-ink border-b border-oas-line last:border-0">
+                          <span class="font-medium">{{ c.firstName }} {{ c.lastName }}</span>
+                          @if (c.phone) { <span class="text-oas-muted ml-2 text-xs">{{ c.phone }}</span> }
+                        </div>
+                      }
+                      @if (filteredClients.length === 0) {
+                        <div class="px-3 py-3 text-sm text-oas-muted text-center">Aucun resultat</div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
             </div>
             <div>
-              <label class="block text-sm font-semibold text-oas-ink mb-1">Véhicule</label>
-              <select formControlName="vehiculeId" (change)="onVehiculeChange()"
-                      class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
-                <option [ngValue]="null">Aucun</option>
-                @for (v of clientVehicules; track v.id) {
-                  <option [value]="v.id">{{ v.immatriculation }} — {{ v.marque }}</option>
-                }
-              </select>
+              <label class="block text-sm font-semibold text-oas-ink mb-1">Vehicule</label>
+              @if (bcLinked) {
+                <div class="px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm text-oas-ink opacity-70">{{ vehiculeLabel }}</div>
+              } @else {
+                <div class="relative z-[10]">
+                  <input type="text"
+                         [value]="vehiculeOpen ? vehiculeFilter : vehiculeLabel"
+                         (focus)="vehiculeOpen = true; vehiculeFilter = ''"
+                         (input)="vehiculeFilter = $any($event.target).value"
+                         [placeholder]="form.get('clientId')?.value ? 'Rechercher un vehicule...' : 'Choisissez d\'abord un client'"
+                         [disabled]="!form.get('clientId')?.value"
+                         class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition disabled:opacity-50"/>
+                  @if (vehiculeOpen && form.get('clientId')?.value) {
+                    <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-oas-line rounded-xl shadow-xl z-[10] max-h-52 overflow-y-auto"
+                         (click)="$event.stopPropagation()">
+                      <div (click)="selectVehicule(null)"
+                           class="px-3 py-2.5 hover:bg-oas-bg cursor-pointer text-sm text-oas-muted border-b border-oas-line">
+                        Aucun vehicule
+                      </div>
+                      @for (v of filteredVehicules; track v.id) {
+                        <div (click)="selectVehicule(v)"
+                             class="px-3 py-2.5 hover:bg-oas-bg cursor-pointer text-sm text-oas-ink border-b border-oas-line last:border-0">
+                          <span class="font-medium font-mono">{{ v.immatriculation }}</span>
+                          <span class="text-oas-muted ml-2">{{ v.marque }} {{ v.modele }}</span>
+                        </div>
+                      }
+                      @if (filteredVehicules.length === 0) {
+                        <div class="px-3 py-3 text-sm text-oas-muted text-center">Aucun vehicule pour ce client</div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
             </div>
           </div>
 
-          <!-- Immatriculation + N° châssis -->
+          <!-- Immatriculation + Kilométrage -->
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-semibold text-oas-ink mb-1">Immatriculation</label>
@@ -324,70 +419,18 @@
                      class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
             </div>
             <div>
-              <label class="block text-sm font-semibold text-oas-ink mb-1">N° châssis</label>
-              <input formControlName="numeroChassis" placeholder="N° châssis..."
-                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
-            </div>
-          </div>
-
-          <!-- Marque + Modèle + Année -->
-          <div class="grid grid-cols-3 gap-4">
-            <div>
-              <label class="block text-sm font-semibold text-oas-ink mb-1">Marque</label>
-              <input formControlName="marque" placeholder="Toyota..."
-                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-oas-ink mb-1">Modèle</label>
-              <input formControlName="modele" placeholder="Corolla..."
-                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-oas-ink mb-1">Année</label>
-              <input formControlName="annee" type="number" placeholder="2020"
-                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
-            </div>
-          </div>
-
-          <!-- Kilométrage + N° BC -->
-          <div class="grid grid-cols-2 gap-4">
-            <div>
               <label class="block text-sm font-semibold text-oas-ink mb-1">Kilométrage *</label>
               <input formControlName="kilometrage" type="number" min="0" placeholder="Ex: 45000"
                      class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
                      [class.border-oas-bad]="form.get('kilometrage')?.invalid && form.get('kilometrage')?.touched"/>
             </div>
-            <div>
-              <label class="block text-sm font-semibold text-oas-ink mb-1">N° bon de commande</label>
-              <input formControlName="numeroBonDeCommande" placeholder="BC-..."
-                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
-            </div>
           </div>
 
-          <!-- TVA + Timbre + Autre + Remarque -->
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-semibold text-oas-ink mb-1">Taux TVA (%)</label>
-              <input formControlName="tvaRate" type="number" min="0" max="100" placeholder="18"
-                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-oas-ink mb-1">Montant timbre</label>
-              <input formControlName="montantTimbre" type="number" min="0"
-                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-semibold text-oas-ink mb-1">Montant autre</label>
-              <input formControlName="montantAutre" type="number" min="0"
-                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-oas-ink mb-1">Remarque</label>
-              <input formControlName="remarque" placeholder="Remarque..."
-                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
-            </div>
+          <!-- Remarque -->
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1">Remarque</label>
+            <input formControlName="remarque" placeholder="Remarque..."
+                   class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
           </div>
 
           <!-- Lignes pièces -->
@@ -471,7 +514,7 @@
               }
             </div>
 
-            @if (lignesPiecesArray.length > 0 || lignesMDArray.length > 0) {
+            @if (lignesPiecesArray.length > 0 || lignesMDArray.length > 0 || bcLinked) {
               <div class="mt-3 bg-oas-bg rounded-xl p-4 space-y-1.5 text-sm">
                 @if (lignesPiecesArray.length > 0) {
                   <div class="flex justify-between">
@@ -485,9 +528,15 @@
                     <span class="font-semibold">{{ fmt(totalMD) }} FCFA</span>
                   </div>
                 }
+                @if (bcLinked && montantBonCommandeForm > 0) {
+                  <div class="flex justify-between">
+                    <span class="text-oas-muted">Bon de commande</span>
+                    <span class="font-semibold">{{ fmt(montantBonCommandeForm) }} FCFA</span>
+                  </div>
+                }
                 <div class="flex justify-between pt-1.5 border-t border-oas-line">
-                  <span class="font-bold text-oas-ink">Sous-total HT</span>
-                  <span class="font-extrabold text-oas-accent">{{ fmt(totalPieces + totalMD) }} FCFA</span>
+                  <span class="font-bold text-oas-ink">Estimé HT</span>
+                  <span class="font-extrabold text-oas-accent">{{ fmt(totalPieces + totalMD + montantBonCommandeForm) }} FCFA</span>
                 </div>
               </div>
             }

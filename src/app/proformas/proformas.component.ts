@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { ProformaService, Proforma } from '../services/proforma.service';
+import { BonDeCommandeService, BonDeCommande } from '../services/bon-de-commande.service';
 import { ClientService } from '../services/client.service';
 import { VehiculeService } from '../services/vehicule.service';
 import { PieceDetacheeService } from '../services/piece-detachee.service';
@@ -17,6 +18,7 @@ import { UserModel, VehiculeModel, PieceDetache, MainDoeuvreModel } from '../sha
 })
 export class ProformasComponent implements OnInit {
   private service = inject(ProformaService);
+  private bcService = inject(BonDeCommandeService);
   private clientService = inject(ClientService);
   private vehiculeService = inject(VehiculeService);
   private pieceService = inject(PieceDetacheeService);
@@ -28,8 +30,13 @@ export class ProformasComponent implements OnInit {
   clients: UserModel[] = [];
   vehicules: VehiculeModel[] = [];
   clientVehicules: VehiculeModel[] = [];
+  bonsCommande: BonDeCommande[] = [];
   pieces: PieceDetache[] = [];
   mainsDoeuvre: MainDoeuvreModel[] = [];
+
+  bcLinked = false;
+  bcOpen = false;
+  bcFilter = '';
 
   loading = true;
   saving = false;
@@ -38,6 +45,11 @@ export class ProformasComponent implements OnInit {
   editingId: number | null = null;
   selectedProforma: Proforma | null = null;
 
+  clientOpen = false;
+  vehiculeOpen = false;
+  clientFilter = '';
+  vehiculeFilter = '';
+
   page = 1;
   readonly pageSize = 10;
   searchTerm = '';
@@ -45,6 +57,7 @@ export class ProformasComponent implements OnInit {
   errorMessage = '';
 
   form: FormGroup = this.fb.group({
+    bonDeCommandeId: [null as number | null],
     clientId: [null, Validators.required],
     vehiculeId: [null],
     kilometrage: [0, [Validators.required, Validators.min(0)]],
@@ -72,12 +85,14 @@ export class ProformasComponent implements OnInit {
       vehicules: this.vehiculeService.getAll(),
       pieces: this.pieceService.getAll(),
       mds: this.mdService.getAll(),
+      bonsCommande: this.bcService.getAll(),
     }).subscribe({
-      next: ({ clients, vehicules, pieces, mds }) => {
+      next: ({ clients, vehicules, pieces, mds, bonsCommande }) => {
         this.clients = clients;
         this.vehicules = vehicules;
         this.pieces = pieces;
         this.mainsDoeuvre = mds.filter(m => !m.isArchived);
+        this.bonsCommande = bonsCommande;
       },
     });
   }
@@ -106,17 +121,104 @@ export class ProformasComponent implements OnInit {
     this.applyFilter();
   }
 
-  onClientChange() {
-    const clientId = Number(this.form.get('clientId')?.value);
-    this.clientVehicules = this.vehicules.filter(v => v.client?.id === clientId);
-    this.form.patchValue({ vehiculeId: null, immatriculation: '', numeroChassis: '', marque: '', modele: '', annee: null });
+  get bcLabel(): string {
+    const id = this.form.get('bonDeCommandeId')?.value;
+    if (!id) return '';
+    const bc = this.bonsCommande.find(b => b.id === Number(id));
+    return bc ? `${bc.numero} — ${bc.immatriculationVehicule ?? ''}` : '';
   }
 
-  onVehiculeChange() {
-    const vehiculeId = Number(this.form.get('vehiculeId')?.value);
-    const v = this.vehicules.find(x => x.id === vehiculeId);
-    if (v) {
+  get filteredBonsCommande(): BonDeCommande[] {
+    if (!this.bcFilter) return this.bonsCommande;
+    const kw = this.bcFilter.toLowerCase();
+    return this.bonsCommande.filter(bc =>
+      bc.numero.toLowerCase().includes(kw) ||
+      (bc.immatriculationVehicule ?? '').toLowerCase().includes(kw)
+    );
+  }
+
+  selectBC(bc: BonDeCommande) {
+    this.form.patchValue({ bonDeCommandeId: bc.id, numeroBonDeCommande: bc.numero });
+    const vehicule = this.vehicules.find(v => v.id === bc.vehiculeId);
+    if (vehicule) {
+      this.clientVehicules = [vehicule];
       this.form.patchValue({
+        clientId: vehicule.client?.id ?? null,
+        vehiculeId: vehicule.id,
+        immatriculation: vehicule.immatriculation,
+        numeroChassis: vehicule.numeroChassis,
+        marque: vehicule.marque,
+        modele: vehicule.modele,
+        annee: vehicule.annee,
+        kilometrage: vehicule.kilometrage ?? 0,
+      });
+    }
+    this.bcLinked = true;
+    this.bcFilter = '';
+    this.bcOpen = false;
+  }
+
+  clearBC() {
+    this.form.patchValue({
+      bonDeCommandeId: null,
+      numeroBonDeCommande: '',
+      clientId: null,
+      vehiculeId: null,
+      immatriculation: '',
+      numeroChassis: '',
+      marque: '',
+      modele: '',
+      annee: null,
+    });
+    this.bcLinked = false;
+    this.clientVehicules = [];
+  }
+
+  get clientLabel(): string {
+    const id = this.form.get('clientId')?.value;
+    if (!id) return '';
+    const c = this.clients.find(x => x.id === Number(id));
+    return c ? `${c.firstName} ${c.lastName}` : '';
+  }
+
+  get vehiculeLabel(): string {
+    const id = this.form.get('vehiculeId')?.value;
+    if (!id) return '';
+    const v = this.vehicules.find(x => x.id === Number(id));
+    return v ? `${v.immatriculation} — ${v.marque}` : '';
+  }
+
+  get filteredClients(): UserModel[] {
+    if (!this.clientFilter) return this.clients;
+    const kw = this.clientFilter.toLowerCase();
+    return this.clients.filter(c =>
+      `${c.firstName} ${c.lastName}`.toLowerCase().includes(kw) ||
+      (c.phone ?? '').toLowerCase().includes(kw)
+    );
+  }
+
+  get filteredVehicules(): VehiculeModel[] {
+    if (!this.vehiculeFilter) return this.clientVehicules;
+    const kw = this.vehiculeFilter.toLowerCase();
+    return this.clientVehicules.filter(v =>
+      v.immatriculation.toLowerCase().includes(kw) ||
+      `${v.marque} ${v.modele}`.toLowerCase().includes(kw)
+    );
+  }
+
+  selectClient(c: UserModel) {
+    this.clientVehicules = this.vehicules.filter(v => v.client?.id === c.id);
+    this.form.patchValue({ clientId: c.id, vehiculeId: null, immatriculation: '', numeroChassis: '', marque: '', modele: '', annee: null });
+    this.clientFilter = '';
+    this.clientOpen = false;
+  }
+
+  selectVehicule(v: VehiculeModel | null) {
+    if (!v) {
+      this.form.patchValue({ vehiculeId: null });
+    } else {
+      this.form.patchValue({
+        vehiculeId: v.id,
         immatriculation: v.immatriculation,
         numeroChassis: v.numeroChassis,
         marque: v.marque,
@@ -125,6 +227,8 @@ export class ProformasComponent implements OnInit {
         kilometrage: v.kilometrage ?? 0,
       });
     }
+    this.vehiculeFilter = '';
+    this.vehiculeOpen = false;
   }
 
   private makeLignePiece(): FormGroup {
@@ -166,6 +270,13 @@ export class ProformasComponent implements OnInit {
     this.isNew = true;
     this.editingId = null;
     this.clientVehicules = [];
+    this.clientOpen = false;
+    this.vehiculeOpen = false;
+    this.clientFilter = '';
+    this.vehiculeFilter = '';
+    this.bcLinked = false;
+    this.bcOpen = false;
+    this.bcFilter = '';
     this.form.reset({ kilometrage: 0, montantTimbre: 0, montantAutre: 0 });
     while (this.lignesPiecesArray.length) this.lignesPiecesArray.removeAt(0);
     while (this.lignesMDArray.length) this.lignesMDArray.removeAt(0);
@@ -177,7 +288,18 @@ export class ProformasComponent implements OnInit {
     this.editingId = p.id;
     const clientId = p.clientId;
     this.clientVehicules = this.vehicules.filter(v => v.client?.id === clientId);
+    this.clientOpen = false;
+    this.vehiculeOpen = false;
+    this.clientFilter = '';
+    this.vehiculeFilter = '';
+    this.bcOpen = false;
+    this.bcFilter = '';
+    const linkedBC = p.numeroBonDeCommande
+      ? this.bonsCommande.find(b => b.numero === p.numeroBonDeCommande) ?? null
+      : null;
+    this.bcLinked = !!linkedBC;
     this.form.patchValue({
+      bonDeCommandeId: linkedBC?.id ?? null,
       clientId: p.clientId,
       vehiculeId: p.vehiculeId ?? null,
       kilometrage: p.kilometrage,
@@ -229,9 +351,6 @@ export class ProformasComponent implements OnInit {
       annee: raw.annee ? Number(raw.annee) : null,
       numeroBonDeCommande: raw.numeroBonDeCommande || undefined,
       remarque: raw.remarque || undefined,
-      tvaRate: raw.tvaRate ? Number(raw.tvaRate) : null,
-      montantTimbre: Number(raw.montantTimbre) || 0,
-      montantAutre: Number(raw.montantAutre) || 0,
       lignesPieces: raw.lignesPieces.map((l: any) => ({
         pieceId: Number(l.pieceId),
         quantite: Number(l.quantite),
@@ -287,6 +406,22 @@ export class ProformasComponent implements OnInit {
   get totalMD(): number {
     return this.lignesMDArray.controls.reduce((s, c) =>
       s + (Number(c.get('nbreHeure')?.value) || 0) * (Number(c.get('tarifHoraire')?.value) || 0), 0);
+  }
+
+  get montantBonCommandeForm(): number {
+    const id = this.form.get('bonDeCommandeId')?.value;
+    if (!id) return 0;
+    return this.bonsCommande.find(b => b.id === Number(id))?.montantTTC ?? 0;
+  }
+
+  totalAvecBC(p: Proforma): number {
+    const bc = this.bonsCommande.find(b => b.numero === p.numeroBonDeCommande);
+    return (bc?.montantTTC ?? 0) + p.montantTotal;
+  }
+
+  get montantBCDetail(): number {
+    if (!this.selectedProforma?.numeroBonDeCommande) return 0;
+    return this.bonsCommande.find(b => b.numero === this.selectedProforma!.numeroBonDeCommande)?.montantTTC ?? 0;
   }
 
   formatDate(d: string): string { return new Date(d).toLocaleDateString('fr-FR'); }
