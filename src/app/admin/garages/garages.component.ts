@@ -4,11 +4,12 @@ import { GarageService } from '../../services/garage.service';
 import { Garage } from '../../shared/models';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
+import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideBuilding2 } from '@lucide/angular';
 
 @Component({
   selector: 'app-garages',
   standalone: true,
-  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent],
+  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideBuilding2],
   templateUrl: './garages.component.html',
 })
 export class GaragesComponent implements OnInit {

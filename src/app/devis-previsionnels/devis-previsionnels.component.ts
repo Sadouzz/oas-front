@@ -6,11 +6,12 @@ import { ClientService, UserModel } from '../services/client.service';
 import { VehiculeService, VehiculeModel } from '../services/vehicule.service';
 import { AlertComponent } from '../shared/components/alert/alert.component';
 import { PaginationComponent } from '../shared/components/pagination/pagination.component';
+import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideArrowRight } from '@lucide/angular';
 
 @Component({
   selector: 'app-devis-previsionnels',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, AlertComponent, PaginationComponent],
+  imports: [ReactiveFormsModule, DecimalPipe, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideArrowRight],
   templateUrl: './devis-previsionnels.component.html',
 })
 export class DevisPrevisionnelsComponent implements OnInit {

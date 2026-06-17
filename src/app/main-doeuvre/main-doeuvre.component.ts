@@ -4,11 +4,12 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MainDoeuvreService, MainDoeuvreModel, CategorieMainDoeuvre, MainDoeuvreRequest } from '../services/main-doeuvre.service';
 import { AlertComponent } from '../shared/components/alert/alert.component';
 import { PaginationComponent } from '../shared/components/pagination/pagination.component';
+import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideArchive, LucideArchiveRestore, LucideLoader2 } from '@lucide/angular';
 
 @Component({
   selector: 'app-main-doeuvre',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, AlertComponent, PaginationComponent],
+  imports: [ReactiveFormsModule, DecimalPipe, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideArchive, LucideArchiveRestore, LucideLoader2],
   templateUrl: './main-doeuvre.component.html',
 })
 export class MainDoeuvreComponent implements OnInit {

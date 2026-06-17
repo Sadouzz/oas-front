@@ -2,14 +2,14 @@
 
   <!-- ══════════════════════════════════════════════ SUPER AGENT ══ -->
   @if (isSuperAgent) {
-    <div class="flex items-start justify-between mb-6">
+    <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4 mb-6 flex items-center justify-between">
       <div>
-        <h1 class="text-[25px] font-extrabold text-oas-ink tracking-tight">Bonjour, {{ username }} 👋</h1>
-        <p class="text-sm text-oas-muted mt-1">Voici un aperçu de l'activité de votre garage aujourd'hui.</p>
+        <h1 class="text-2xl font-bold text-oas-ink">Tableau de bord</h1>
+        <p class="text-sm text-oas-muted mt-1">Vue d'ensemble de l'activité du garage.</p>
       </div>
       <a routerLink="/fiches-atelier"
-         class="flex items-center gap-2 bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-11 rounded-xl transition cursor-pointer shadow-lg shadow-oas-accent/25 text-sm">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+         class="flex items-center gap-2 bg-oas-accent hover:bg-oas-accent-dark text-white font-semibold px-4 h-10 rounded-lg transition cursor-pointer text-sm">
+        <svg lucidePlus class="w-4 h-4"></svg>
         Nouvelle fiche atelier
       </a>
     </div>
@@ -17,66 +17,66 @@
     <!-- KPI row -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <!-- Clients -->
-      <div class="bg-white rounded-2xl border border-oas-line shadow-sm p-5">
+      <div class="bg-white rounded-lg border border-oas-line shadow-card p-5">
         <div class="flex items-start gap-4">
-          <span class="w-[52px] h-[52px] rounded-[14px] bg-oas-info-bg text-oas-info flex items-center justify-center flex-shrink-0">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          <span class="w-11 h-11 rounded-lg bg-oas-info-bg text-oas-info flex items-center justify-center flex-shrink-0">
+            <svg lucideUsers class="w-6 h-6"></svg>
           </span>
           <div class="flex-1 min-w-0">
-            <p class="text-[13.5px] text-oas-muted font-semibold leading-tight">Clients enregistrés</p>
-            <p class="text-[32px] font-extrabold text-oas-ink leading-none mt-1 tracking-tight">{{ totalClients }}</p>
+            <p class="text-sm text-oas-muted">Clients enregistrés</p>
+            <p class="text-3xl font-bold text-oas-ink leading-none mt-1">{{ totalClients }}</p>
           </div>
         </div>
         <a routerLink="/clients" class="flex items-center gap-1 mt-4 text-xs text-oas-accent hover:text-oas-accent-dark font-bold transition">
-          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg>
+          <svg lucideArrowRight class="w-3.5 h-3.5"></svg>
           Voir tous les clients
         </a>
       </div>
       <!-- Véhicules -->
-      <div class="bg-white rounded-2xl border border-oas-line shadow-sm p-5">
+      <div class="bg-white rounded-lg border border-oas-line shadow-card p-5">
         <div class="flex items-start gap-4">
-          <span class="w-[52px] h-[52px] rounded-[14px] bg-oas-ok-bg text-oas-ok flex items-center justify-center flex-shrink-0">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 17a2 2 0 100-.01M19 17a2 2 0 100-.01M5 17h-1a1 1 0 01-1-1v-3.28a1 1 0 01.684-.948l1.923-.641a1 1 0 00.578-.502l1.539-3.076A1 1 0 019.618 7H16a1 1 0 01.894.553l1.382 2.764a1 1 0 00.448.448l1.842.92A1 1 0 0121 12.685V16a1 1 0 01-1 1h-1M7 17h10"/></svg>
+          <span class="w-11 h-11 rounded-lg bg-oas-ok-bg text-oas-ok flex items-center justify-center flex-shrink-0">
+            <svg lucideCar class="w-6 h-6"></svg>
           </span>
           <div class="flex-1 min-w-0">
-            <p class="text-[13.5px] text-oas-muted font-semibold leading-tight">Véhicules au garage</p>
-            <p class="text-[32px] font-extrabold text-oas-ink leading-none mt-1 tracking-tight">{{ totalVehicules }}</p>
+            <p class="text-sm text-oas-muted">Véhicules au garage</p>
+            <p class="text-3xl font-bold text-oas-ink leading-none mt-1">{{ totalVehicules }}</p>
           </div>
         </div>
         <a routerLink="/vehicules" class="flex items-center gap-1 mt-4 text-xs text-oas-accent hover:text-oas-accent-dark font-bold transition">
-          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg>
+          <svg lucideArrowRight class="w-3.5 h-3.5"></svg>
           Voir les véhicules
         </a>
       </div>
       <!-- Ruptures -->
-      <div class="bg-white rounded-2xl border border-oas-line shadow-sm p-5">
+      <div class="bg-white rounded-lg border border-oas-line shadow-card p-5">
         <div class="flex items-start gap-4">
-          <span class="w-[52px] h-[52px] rounded-[14px] bg-oas-bad-bg text-oas-bad flex items-center justify-center flex-shrink-0">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          <span class="w-11 h-11 rounded-lg bg-oas-bad-bg text-oas-bad flex items-center justify-center flex-shrink-0">
+            <svg lucideAlertTriangle class="w-6 h-6"></svg>
           </span>
           <div class="flex-1 min-w-0">
-            <p class="text-[13.5px] text-oas-bad font-semibold leading-tight">Ruptures de stock</p>
-            <p class="text-[32px] font-extrabold text-oas-bad leading-none mt-1 tracking-tight">{{ ruptures.length }}</p>
+            <p class="text-sm text-oas-bad leading-tight">Ruptures de stock</p>
+            <p class="text-3xl font-bold text-oas-bad leading-none mt-1">{{ ruptures.length }}</p>
           </div>
         </div>
         <a routerLink="/stock" class="flex items-center gap-1 mt-4 text-xs text-oas-bad hover:text-oas-bad/80 font-bold transition">
-          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg>
+          <svg lucideArrowRight class="w-3.5 h-3.5"></svg>
           Gérer le stock
         </a>
       </div>
       <!-- Bons en attente -->
-      <div class="bg-white rounded-2xl border border-oas-line shadow-sm p-5">
+      <div class="bg-white rounded-lg border border-oas-line shadow-card p-5">
         <div class="flex items-start gap-4">
-          <span class="w-[52px] h-[52px] rounded-[14px] bg-oas-warn-bg text-oas-warn flex items-center justify-center flex-shrink-0">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span class="w-11 h-11 rounded-lg bg-oas-warn-bg text-oas-warn flex items-center justify-center flex-shrink-0">
+            <svg lucideClock class="w-6 h-6"></svg>
           </span>
           <div class="flex-1 min-w-0">
-            <p class="text-[13.5px] text-oas-warn font-semibold leading-tight">Bons en attente</p>
-            <p class="text-[32px] font-extrabold text-oas-warn leading-none mt-1 tracking-tight">{{ bonsEnAttente.length }}</p>
+            <p class="text-sm text-oas-warn leading-tight">Bons en attente</p>
+            <p class="text-3xl font-bold text-oas-warn leading-none mt-1">{{ bonsEnAttente.length }}</p>
           </div>
         </div>
         <a routerLink="/bons-de-sortie" class="flex items-center gap-1 mt-4 text-xs text-oas-warn hover:text-oas-warn/80 font-bold transition">
-          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg>
+          <svg lucideArrowRight class="w-3.5 h-3.5"></svg>
           Voir les bons
         </a>
       </div>
@@ -86,7 +86,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-5">
 
       <!-- Clients récents -->
-      <div class="bg-white rounded-2xl border border-oas-line shadow-sm overflow-hidden">
+      <div class="bg-white rounded-lg border border-oas-line overflow-hidden">
         <div class="flex items-center justify-between px-5 py-4 border-b border-oas-line">
           <h3 class="font-bold text-oas-ink">Clients récents</h3>
           <a routerLink="/clients" class="text-xs text-oas-accent hover:text-oas-accent-dark font-semibold transition">Voir tout</a>
@@ -97,10 +97,10 @@
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-oas-line">
-                <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Client</th>
-                <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Téléphone</th>
-                <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Email</th>
-                <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Statut</th>
+                <th class="text-left text-xs text-oas-muted px-5 py-3">Client</th>
+                <th class="text-left text-xs text-oas-muted px-5 py-3">Téléphone</th>
+                <th class="text-left text-xs text-oas-muted px-5 py-3">Email</th>
+                <th class="text-left text-xs text-oas-muted px-5 py-3">Statut</th>
               </tr>
             </thead>
             <tbody>
@@ -129,10 +129,10 @@
       </div>
 
       <!-- Sidebar: alertes stock -->
-      <div class="bg-white rounded-2xl border border-oas-line shadow-sm overflow-hidden">
+      <div class="bg-white rounded-lg border border-oas-line overflow-hidden">
         <div class="flex items-center justify-between px-5 py-4 border-b border-oas-line">
           <div class="flex items-center gap-2">
-            <svg class="w-[18px] h-[18px] text-oas-warn" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <svg lucideAlertTriangle class="w-[18px] h-[18px] text-oas-warn"></svg>
             <h3 class="font-bold text-oas-ink text-sm">Alertes stock</h3>
           </div>
           <a routerLink="/stock" class="text-xs text-oas-bad hover:text-oas-bad/80 font-semibold transition">Gérer</a>
@@ -142,7 +142,7 @@
             <div class="flex items-center justify-between px-5 py-3 hover:bg-oas-bg transition">
               <div class="flex items-center gap-3 min-w-0">
                 <span class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 {{ a.typeAlerte === 'RUPTURE' ? 'bg-oas-bad-bg text-oas-bad' : 'bg-oas-warn-bg text-oas-warn' }}">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                  <svg lucidePackage class="w-4 h-4"></svg>
                 </span>
                 <div class="min-w-0">
                   <p class="text-sm font-semibold text-oas-ink truncate">{{ a.reference }}</p>
@@ -156,7 +156,7 @@
             </div>
           } @empty {
             <div class="px-5 py-10 text-center">
-              <svg class="w-8 h-8 text-oas-ok mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <svg lucideCheckCircle class="w-8 h-8 text-oas-ok mx-auto mb-2"></svg>
               <p class="text-oas-ok text-sm font-semibold">Aucune alerte stock</p>
             </div>
           }
@@ -167,46 +167,44 @@
 
   <!-- ══════════════════════════════════════════════ AGENT ══ -->
   @if (isAgent) {
-    <div class="flex items-start justify-between mb-6">
-      <div>
-        <h1 class="text-[25px] font-extrabold text-oas-ink tracking-tight">Bonjour, {{ username }} 👋</h1>
-        <p class="text-sm text-oas-muted mt-1">Voici un aperçu de votre activité.</p>
-      </div>
+    <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4 mb-6">
+      <h1 class="text-2xl font-bold text-oas-ink">Tableau de bord</h1>
+      <p class="text-sm text-oas-muted mt-1">Vue d'ensemble de votre activité.</p>
     </div>
 
     <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-      <div class="bg-white rounded-2xl border border-oas-line shadow-sm p-5">
+      <div class="bg-white rounded-lg border border-oas-line shadow-card p-5">
         <div class="flex items-start gap-4">
-          <span class="w-[52px] h-[52px] rounded-[14px] bg-oas-info-bg text-oas-info flex items-center justify-center flex-shrink-0">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          <span class="w-11 h-11 rounded-lg bg-oas-info-bg text-oas-info flex items-center justify-center flex-shrink-0">
+            <svg lucideUsers class="w-6 h-6"></svg>
           </span>
           <div>
-            <p class="text-[13.5px] text-oas-muted font-semibold">Clients</p>
-            <p class="text-[32px] font-extrabold text-oas-ink leading-none mt-1 tracking-tight">{{ totalClients }}</p>
+            <p class="text-sm text-oas-muted">Clients</p>
+            <p class="text-3xl font-bold text-oas-ink leading-none mt-1">{{ totalClients }}</p>
           </div>
         </div>
         <a routerLink="/clients" class="flex items-center gap-1 mt-4 text-xs text-oas-accent font-bold">Voir tout →</a>
       </div>
-      <div class="bg-white rounded-2xl border border-oas-line shadow-sm p-5">
+      <div class="bg-white rounded-lg border border-oas-line shadow-card p-5">
         <div class="flex items-start gap-4">
-          <span class="w-[52px] h-[52px] rounded-[14px] bg-oas-ok-bg text-oas-ok flex items-center justify-center flex-shrink-0">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 17a2 2 0 100-.01M19 17a2 2 0 100-.01M7 17h10M9.618 7H16a1 1 0 01.894.553l1.382 2.764a1 1 0 00.448.448L20.566 11.685A1 1 0 0121 12.685V16a1 1 0 01-1 1h-1M7 17H6a1 1 0 01-1-1v-3.28a1 1 0 01.684-.948l1.923-.641a1 1 0 00.578-.502l1.539-3.076A1 1 0 019.618 7z"/></svg>
+          <span class="w-11 h-11 rounded-lg bg-oas-ok-bg text-oas-ok flex items-center justify-center flex-shrink-0">
+            <svg lucideCar class="w-6 h-6"></svg>
           </span>
           <div>
-            <p class="text-[13.5px] text-oas-muted font-semibold">Véhicules</p>
-            <p class="text-[32px] font-extrabold text-oas-ink leading-none mt-1 tracking-tight">{{ totalVehicules }}</p>
+            <p class="text-sm text-oas-muted">Véhicules</p>
+            <p class="text-3xl font-bold text-oas-ink leading-none mt-1">{{ totalVehicules }}</p>
           </div>
         </div>
         <a routerLink="/vehicules" class="flex items-center gap-1 mt-4 text-xs text-oas-accent font-bold">Voir tout →</a>
       </div>
-      <div class="bg-white rounded-2xl border border-oas-line shadow-sm p-5">
+      <div class="bg-white rounded-lg border border-oas-line shadow-card p-5">
         <div class="flex items-start gap-4">
-          <span class="w-[52px] h-[52px] rounded-[14px] bg-oas-warn-bg text-oas-warn flex items-center justify-center flex-shrink-0">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span class="w-11 h-11 rounded-lg bg-oas-warn-bg text-oas-warn flex items-center justify-center flex-shrink-0">
+            <svg lucideClock class="w-6 h-6"></svg>
           </span>
           <div>
-            <p class="text-[13.5px] text-oas-warn font-semibold">Bons en attente</p>
-            <p class="text-[32px] font-extrabold text-oas-warn leading-none mt-1 tracking-tight">{{ bonsEnAttente.length }}</p>
+            <p class="text-sm text-oas-warn">Bons en attente</p>
+            <p class="text-3xl font-bold text-oas-warn leading-none mt-1">{{ bonsEnAttente.length }}</p>
           </div>
         </div>
         <a routerLink="/bons-de-sortie" class="flex items-center gap-1 mt-4 text-xs text-oas-warn font-bold">Voir →</a>
@@ -214,7 +212,7 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-      <div class="bg-white rounded-2xl border border-oas-line shadow-sm overflow-hidden">
+      <div class="bg-white rounded-lg border border-oas-line overflow-hidden">
         <div class="flex items-center justify-between px-5 py-4 border-b border-oas-line">
           <h3 class="font-bold text-oas-ink text-sm">Clients récents</h3>
           <a routerLink="/clients" class="text-xs text-oas-accent font-semibold">Voir tout</a>
@@ -233,7 +231,7 @@
           }
         </ul>
       </div>
-      <div class="bg-white rounded-2xl border border-oas-line shadow-sm overflow-hidden">
+      <div class="bg-white rounded-lg border border-oas-line overflow-hidden">
         <div class="flex items-center justify-between px-5 py-4 border-b border-oas-line">
           <h3 class="font-bold text-oas-ink text-sm">Bons en attente</h3>
           <a routerLink="/bons-de-sortie" class="text-xs text-oas-accent font-semibold">Voir tout</a>
@@ -254,39 +252,39 @@
 
   <!-- ══════════════════════════════════════════════ CHEF ATELIER ══ -->
   @if (isChefAtelier) {
-    <div class="mb-6">
-      <h1 class="text-[25px] font-extrabold text-oas-ink tracking-tight">Bonjour, {{ username }} 👋</h1>
+    <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4 mb-6">
+      <h1 class="text-2xl font-bold text-oas-ink">Tableau de bord</h1>
       <p class="text-sm text-oas-muted mt-1">Suivi des interventions atelier.</p>
     </div>
 
     <div class="grid grid-cols-2 gap-4 mb-6">
-      <div class="bg-white rounded-2xl border border-oas-line shadow-sm p-5">
+      <div class="bg-white rounded-lg border border-oas-line shadow-card p-5">
         <div class="flex items-start gap-4">
-          <span class="w-[52px] h-[52px] rounded-[14px] bg-oas-warn-bg text-oas-warn flex items-center justify-center flex-shrink-0">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span class="w-11 h-11 rounded-lg bg-oas-warn-bg text-oas-warn flex items-center justify-center flex-shrink-0">
+            <svg lucideCheckCircle class="w-6 h-6"></svg>
           </span>
           <div>
-            <p class="text-[13.5px] text-oas-warn font-semibold">Bons à valider</p>
-            <p class="text-[32px] font-extrabold text-oas-warn leading-none mt-1 tracking-tight">{{ bonsEnAttente.length }}</p>
+            <p class="text-sm text-oas-warn">Bons à valider</p>
+            <p class="text-3xl font-bold text-oas-warn leading-none mt-1">{{ bonsEnAttente.length }}</p>
           </div>
         </div>
         <a routerLink="/bons-de-sortie" class="flex items-center gap-1 mt-4 text-xs text-oas-warn font-bold">Traiter →</a>
       </div>
-      <div class="bg-white rounded-2xl border border-oas-line shadow-sm p-5">
+      <div class="bg-white rounded-lg border border-oas-line shadow-card p-5">
         <div class="flex items-start gap-4">
-          <span class="w-[52px] h-[52px] rounded-[14px] bg-oas-info-bg text-oas-info flex items-center justify-center flex-shrink-0">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 17a2 2 0 100-.01M19 17a2 2 0 100-.01M7 17h10"/></svg>
+          <span class="w-11 h-11 rounded-lg bg-oas-info-bg text-oas-info flex items-center justify-center flex-shrink-0">
+            <svg lucideCar class="w-6 h-6"></svg>
           </span>
           <div>
-            <p class="text-[13.5px] text-oas-muted font-semibold">Véhicules enregistrés</p>
-            <p class="text-[32px] font-extrabold text-oas-ink leading-none mt-1 tracking-tight">{{ totalVehicules }}</p>
+            <p class="text-sm text-oas-muted">Véhicules enregistrés</p>
+            <p class="text-3xl font-bold text-oas-ink leading-none mt-1">{{ totalVehicules }}</p>
           </div>
         </div>
         <a routerLink="/vehicules" class="flex items-center gap-1 mt-4 text-xs text-oas-accent font-bold">Voir →</a>
       </div>
     </div>
 
-    <div class="bg-white rounded-2xl border border-oas-line shadow-sm overflow-hidden">
+    <div class="bg-white rounded-lg border border-oas-line overflow-hidden">
       <div class="flex items-center justify-between px-5 py-4 border-b border-oas-line">
         <h3 class="font-bold text-oas-ink text-sm">Bons en attente de validation</h3>
         <a routerLink="/bons-de-sortie" class="text-xs text-oas-accent font-semibold">Voir tout</a>
@@ -302,7 +300,7 @@
           </li>
         } @empty {
           <li class="px-5 py-10 text-center">
-            <svg class="w-8 h-8 text-oas-ok mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <svg lucideCheckCircle class="w-8 h-8 text-oas-ok mx-auto mb-2"></svg>
             <p class="text-oas-ok text-sm font-semibold">Aucun bon à valider</p>
           </li>
         }
@@ -312,54 +310,54 @@
 
   <!-- ══════════════════════════════════════════════ MAGASINIER ══ -->
   @if (isMagasinier) {
-    <div class="mb-6">
-      <h1 class="text-[25px] font-extrabold text-oas-ink tracking-tight">Bonjour, {{ username }} 👋</h1>
-      <p class="text-sm text-oas-muted mt-1">Tableau de bord du magasin.</p>
+    <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4 mb-6">
+      <h1 class="text-2xl font-bold text-oas-ink">Tableau de bord</h1>
+      <p class="text-sm text-oas-muted mt-1">Suivi du stock et des bons de sortie.</p>
     </div>
 
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      <div class="bg-white rounded-2xl border border-oas-line shadow-sm p-5">
+      <div class="bg-white rounded-lg border border-oas-line shadow-card p-5">
         <div class="flex items-start gap-4">
-          <span class="w-[52px] h-[52px] rounded-[14px] bg-oas-accent-bg text-oas-accent flex items-center justify-center flex-shrink-0">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          <span class="w-11 h-11 rounded-lg bg-oas-accent-bg text-oas-accent flex items-center justify-center flex-shrink-0">
+            <svg lucideAlertTriangle class="w-6 h-6"></svg>
           </span>
           <div>
-            <p class="text-[13.5px] text-oas-muted font-semibold">Total alertes</p>
-            <p class="text-[32px] font-extrabold text-oas-ink leading-none mt-1 tracking-tight">{{ alertes.length }}</p>
+            <p class="text-sm text-oas-muted">Total alertes</p>
+            <p class="text-3xl font-bold text-oas-ink leading-none mt-1">{{ alertes.length }}</p>
           </div>
         </div>
       </div>
-      <div class="bg-white rounded-2xl border border-oas-line shadow-sm p-5">
+      <div class="bg-white rounded-lg border border-oas-line shadow-card p-5">
         <div class="flex items-start gap-4">
-          <span class="w-[52px] h-[52px] rounded-[14px] bg-oas-bad-bg text-oas-bad flex items-center justify-center flex-shrink-0">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+          <span class="w-11 h-11 rounded-lg bg-oas-bad-bg text-oas-bad flex items-center justify-center flex-shrink-0">
+            <svg lucideXCircle class="w-6 h-6"></svg>
           </span>
           <div>
-            <p class="text-[13.5px] text-oas-bad font-semibold">Ruptures</p>
-            <p class="text-[32px] font-extrabold text-oas-bad leading-none mt-1 tracking-tight">{{ ruptures.length }}</p>
+            <p class="text-sm text-oas-bad">Ruptures</p>
+            <p class="text-3xl font-bold text-oas-bad leading-none mt-1">{{ ruptures.length }}</p>
           </div>
         </div>
         <a routerLink="/stock" class="flex items-center gap-1 mt-4 text-xs text-oas-bad font-bold">Gérer →</a>
       </div>
-      <div class="bg-white rounded-2xl border border-oas-line shadow-sm p-5">
+      <div class="bg-white rounded-lg border border-oas-line shadow-card p-5">
         <div class="flex items-start gap-4">
-          <span class="w-[52px] h-[52px] rounded-[14px] bg-oas-warn-bg text-oas-warn flex items-center justify-center flex-shrink-0">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+          <span class="w-11 h-11 rounded-lg bg-oas-warn-bg text-oas-warn flex items-center justify-center flex-shrink-0">
+            <svg lucidePackage class="w-6 h-6"></svg>
           </span>
           <div>
-            <p class="text-[13.5px] text-oas-warn font-semibold">Stocks faibles</p>
-            <p class="text-[32px] font-extrabold text-oas-warn leading-none mt-1 tracking-tight">{{ stocksFaibles.length }}</p>
+            <p class="text-sm text-oas-warn">Stocks faibles</p>
+            <p class="text-3xl font-bold text-oas-warn leading-none mt-1">{{ stocksFaibles.length }}</p>
           </div>
         </div>
       </div>
-      <div class="bg-white rounded-2xl border border-oas-line shadow-sm p-5">
+      <div class="bg-white rounded-lg border border-oas-line shadow-card p-5">
         <div class="flex items-start gap-4">
-          <span class="w-[52px] h-[52px] rounded-[14px] bg-oas-info-bg text-oas-info flex items-center justify-center flex-shrink-0">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          <span class="w-11 h-11 rounded-lg bg-oas-info-bg text-oas-info flex items-center justify-center flex-shrink-0">
+            <svg lucideClipboardList class="w-6 h-6"></svg>
           </span>
           <div>
-            <p class="text-[13.5px] text-oas-muted font-semibold">Bons en attente</p>
-            <p class="text-[32px] font-extrabold text-oas-ink leading-none mt-1 tracking-tight">{{ bonsEnAttente.length }}</p>
+            <p class="text-sm text-oas-muted">Bons en attente</p>
+            <p class="text-3xl font-bold text-oas-ink leading-none mt-1">{{ bonsEnAttente.length }}</p>
           </div>
         </div>
         <a routerLink="/bons-de-sortie" class="flex items-center gap-1 mt-4 text-xs text-oas-accent font-bold">Voir →</a>
@@ -367,7 +365,7 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-      <div class="bg-white rounded-2xl border border-oas-line shadow-sm overflow-hidden">
+      <div class="bg-white rounded-lg border border-oas-line overflow-hidden">
         <div class="flex items-center justify-between px-5 py-4 border-b border-oas-line">
           <h3 class="font-bold text-oas-ink text-sm">Ruptures de stock</h3>
           <a routerLink="/stock" class="text-xs text-oas-bad font-semibold">Faire une entrée</a>
@@ -379,14 +377,14 @@
                 <p class="text-sm font-semibold text-oas-ink">{{ a.reference }}</p>
                 <p class="text-xs text-oas-muted">{{ a.categorie }}</p>
               </div>
-              <span class="text-sm font-extrabold text-oas-bad">0</span>
+              <span class="text-sm font-bold text-oas-bad">0</span>
             </li>
           } @empty {
             <li class="px-5 py-8 text-center text-oas-ok text-sm font-semibold">Aucune rupture</li>
           }
         </ul>
       </div>
-      <div class="bg-white rounded-2xl border border-oas-line shadow-sm overflow-hidden">
+      <div class="bg-white rounded-lg border border-oas-line overflow-hidden">
         <div class="flex items-center justify-between px-5 py-4 border-b border-oas-line">
           <h3 class="font-bold text-oas-ink text-sm">Stocks faibles</h3>
           <a routerLink="/inventaire" class="text-xs text-oas-accent font-semibold">Inventaire</a>
@@ -398,7 +396,7 @@
                 <p class="text-sm font-semibold text-oas-ink">{{ a.reference }}</p>
                 <p class="text-xs text-oas-muted">Seuil : {{ a.seuilApplique }}</p>
               </div>
-              <span class="text-sm font-extrabold text-oas-warn">{{ a.stockMagasin }}</span>
+              <span class="text-sm font-bold text-oas-warn">{{ a.stockMagasin }}</span>
             </li>
           } @empty {
             <li class="px-5 py-8 text-center text-oas-ok text-sm font-semibold">Aucun stock faible</li>

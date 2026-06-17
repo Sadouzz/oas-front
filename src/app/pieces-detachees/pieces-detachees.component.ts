@@ -5,11 +5,12 @@ import { PieceDetacheeService, PieceDetache } from '../services/piece-detachee.s
 import { AuthService } from '../auth/services/auth.service';
 import { AlertComponent } from '../shared/components/alert/alert.component';
 import { PaginationComponent } from '../shared/components/pagination/pagination.component';
+import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideArchive, LucideArchiveRestore, LucideLoader2 } from '@lucide/angular';
 
 @Component({
   selector: 'app-pieces-detachees',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, NgClass, AlertComponent, PaginationComponent],
+  imports: [ReactiveFormsModule, DecimalPipe, NgClass, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideArchive, LucideArchiveRestore, LucideLoader2],
   templateUrl: './pieces-detachees.component.html',
 })
 export class PiecesDetacheesComponent implements OnInit {

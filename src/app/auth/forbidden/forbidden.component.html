@@ -1,5 +1,5 @@
-<div class="min-h-screen flex items-center justify-center p-6" style="background: linear-gradient(160deg, #0c2742 0%, #0a1f36 100%);">
-  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-10 flex flex-col items-center text-center">
+﻿<div class="min-h-screen flex items-center justify-center p-6" style="background: linear-gradient(160deg, #0c2742 0%, #0a1f36 100%);">
+  <div class="bg-white rounded-lg shadow-2xl w-full max-w-md p-10 flex flex-col items-center text-center">
 
     <!-- Logo OAS -->
     <div class="flex items-center gap-3 mb-8">
@@ -14,9 +14,7 @@
 
     <!-- Icône cadenas -->
     <div class="w-20 h-20 bg-oas-bad-bg rounded-full flex items-center justify-center mb-6">
-      <svg class="w-10 h-10 text-oas-bad" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-      </svg>
+      <svg lucideLock class="w-10 h-10 text-oas-bad"></svg>
     </div>
 
     <!-- Code erreur -->
@@ -34,7 +32,7 @@
     <!-- Bouton retour -->
     <button
       (click)="goBack()"
-      class="w-full bg-oas-accent hover:bg-oas-accent-dark text-white font-bold py-3 rounded-xl transition text-sm cursor-pointer shadow-lg shadow-oas-accent/30"
+      class="w-full bg-oas-accent hover:bg-oas-accent-dark text-white font-bold py-3 rounded-lg transition text-sm cursor-pointer shadow-lg shadow-oas-accent/30"
     >
       Retour au tableau de bord
     </button>

@@ -7,11 +7,12 @@ import { VehiculeService, VehiculeModel } from '../services/vehicule.service';
 import { MecanicienService, Mecanicien } from '../services/mecanicien.service';
 import { AlertComponent } from '../shared/components/alert/alert.component';
 import { PaginationComponent } from '../shared/components/pagination/pagination.component';
+import { LucideSearch, LucidePlus, LucideX, LucideCheck, LucideTrash2, LucideWrench, LucideAlertTriangle, LucideClipboardList, LucideUser, LucideLoader2 } from '@lucide/angular';
 
 @Component({
   selector: 'app-fiches-atelier',
   standalone: true,
-  imports: [ReactiveFormsModule, NgClass, AlertComponent, PaginationComponent],
+  imports: [ReactiveFormsModule, NgClass, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucideX, LucideCheck, LucideTrash2, LucideWrench, LucideAlertTriangle, LucideClipboardList, LucideUser, LucideLoader2],
   templateUrl: './fiches-atelier.component.html',
 })
 export class FichesAtelierComponent implements OnInit {

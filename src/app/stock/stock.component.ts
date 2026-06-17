@@ -5,13 +5,14 @@ import { StockService, StockMouvement } from '../services/stock.service';
 import { PieceDetacheeService, PieceDetache, AlerteStock } from '../services/piece-detachee.service';
 import { AlertComponent } from '../shared/components/alert/alert.component';
 import { PaginationComponent } from '../shared/components/pagination/pagination.component';
+import { LucideSearch, LucidePlus, LucideX, LucideAlertTriangle, LucidePackage, LucideArrowRight, LucideRefreshCw, LucideDownload } from '@lucide/angular';
 
 type ModalType = 'entree' | 'sortie' | 'ajustement' | null;
 
 @Component({
   selector: 'app-stock',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, AlertComponent, PaginationComponent],
+  imports: [ReactiveFormsModule, RouterLink, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucideX, LucideAlertTriangle, LucidePackage, LucideArrowRight, LucideRefreshCw, LucideDownload],
   templateUrl: './stock.component.html',
 })
 export class StockComponent implements OnInit {

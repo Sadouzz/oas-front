@@ -19,20 +19,16 @@
 
       <!-- Dashboard -->
       <a routerLink="/dashboard" routerLinkActive="oas-nav-active"
-         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
-        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-        </svg>
+         class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+        <svg lucideHouse class="w-4 h-4 flex-shrink-0" [strokeWidth]="2"></svg>
         Tableau de bord
       </a>
 
       <!-- Clients — Agent + Super Agent -->
       @if (isAgent() || isSuperAgent()) {
         <a routerLink="/clients" routerLinkActive="oas-nav-active"
-           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
-          <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-          </svg>
+           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+          <svg lucideUsers class="w-4 h-4 flex-shrink-0" [strokeWidth]="2"></svg>
           Clients
         </a>
       }
@@ -40,25 +36,18 @@
       <!-- Véhicules — tous sauf Magasinier -->
       @if (!isMagasinier()) {
         <a routerLink="/vehicules" routerLinkActive="oas-nav-active"
-           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
-          <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/>
-          </svg>
+           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+          <svg lucideCar class="w-4 h-4 flex-shrink-0" [strokeWidth]="2"></svg>
           Véhicules
         </a>
       }
 
       <!-- ── Gestion de stock — tous les rôles ── -->
       <button (click)="toggleSection('stock')"
-              class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
-        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
-        </svg>
+              class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+        <svg lucidePackage class="w-4 h-4 flex-shrink-0" [strokeWidth]="2"></svg>
         <span class="flex-1 text-left">Gestion de stock</span>
-        <svg class="w-3.5 h-3.5 transition-transform" [class.rotate-180]="openSection === 'stock'"
-             fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-        </svg>
+        <svg lucideChevronDown class="w-3.5 h-3.5 transition-transform" [class.rotate-180]="openSection === 'stock'" [strokeWidth]="2.5"></svg>
       </button>
       @if (openSection === 'stock') {
         <div class="ml-3 pl-3 border-l border-white/10 space-y-0.5">
@@ -90,15 +79,10 @@
       <!-- ── Facture TTC — Agent + Super Agent ── -->
       @if (isAgent() || isSuperAgent()) {
         <button (click)="toggleSection('facture-ttc')"
-                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
-          <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/>
-          </svg>
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+          <svg lucideReceipt class="w-4 h-4 flex-shrink-0" [strokeWidth]="2"></svg>
           <span class="flex-1 text-left">Facture TTC</span>
-          <svg class="w-3.5 h-3.5 transition-transform" [class.rotate-180]="openSection === 'facture-ttc'"
-               fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-          </svg>
+          <svg lucideChevronDown class="w-3.5 h-3.5 transition-transform" [class.rotate-180]="openSection === 'facture-ttc'" [strokeWidth]="2.5"></svg>
         </button>
         @if (openSection === 'facture-ttc') {
           <div class="ml-3 pl-3 border-l border-white/10 space-y-0.5">
@@ -129,15 +113,10 @@
       <!-- ── Facture HT — Agent + Super + Chef Atelier ── -->
       @if (isAgent() || isSuperAgent() || isChefAtelier()) {
         <button (click)="toggleSection('facture-ht')"
-                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
-          <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-          </svg>
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+          <svg lucideFileText class="w-4 h-4 flex-shrink-0" [strokeWidth]="2"></svg>
           <span class="flex-1 text-left">Facture HT</span>
-          <svg class="w-3.5 h-3.5 transition-transform" [class.rotate-180]="openSection === 'facture-ht'"
-               fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-          </svg>
+          <svg lucideChevronDown class="w-3.5 h-3.5 transition-transform" [class.rotate-180]="openSection === 'facture-ht'" [strokeWidth]="2.5"></svg>
         </button>
         @if (openSection === 'facture-ht') {
           <div class="ml-3 pl-3 border-l border-white/10 space-y-0.5">
@@ -162,10 +141,8 @@
       <!-- Gestion TVA — Agent + Super -->
       @if (isAgent() || isSuperAgent()) {
         <a routerLink="/gestion-tva" routerLinkActive="oas-nav-active"
-           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
-          <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/>
-          </svg>
+           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+          <svg lucideReceipt class="w-4 h-4 flex-shrink-0" [strokeWidth]="2"></svg>
           Gestion TVA
         </a>
       }
@@ -173,10 +150,8 @@
       <!-- Gestion reçu — Agent + Super -->
       @if (isAgent() || isSuperAgent()) {
         <a routerLink="/gestion-recu" routerLinkActive="oas-nav-active"
-           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
-          <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-          </svg>
+           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+          <svg lucideFileText class="w-4 h-4 flex-shrink-0" [strokeWidth]="2"></svg>
           Gestion reçu
         </a>
       }
@@ -184,10 +159,8 @@
       <!-- Main d'œuvre — Super Agent uniquement -->
       @if (isSuperAgent()) {
         <a routerLink="/admin/main-doeuvre" routerLinkActive="oas-nav-active"
-           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
-          <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z"/>
-          </svg>
+           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+          <svg lucideWrench class="w-4 h-4 flex-shrink-0" [strokeWidth]="2"></svg>
           Main d'œuvre
         </a>
       }
@@ -195,16 +168,10 @@
       <!-- ── Atelier — Chef Atelier + Super Agent ── -->
       @if (isChefAtelier() || isSuperAgent()) {
         <button (click)="toggleSection('atelier')"
-                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
-          <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-          </svg>
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+          <svg lucideSettings class="w-4 h-4 flex-shrink-0" [strokeWidth]="2"></svg>
           <span class="flex-1 text-left">Atelier</span>
-          <svg class="w-3.5 h-3.5 transition-transform" [class.rotate-180]="openSection === 'atelier'"
-               fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-          </svg>
+          <svg lucideChevronDown class="w-3.5 h-3.5 transition-transform" [class.rotate-180]="openSection === 'atelier'" [strokeWidth]="2.5"></svg>
         </button>
         @if (openSection === 'atelier') {
           <div class="ml-3 pl-3 border-l border-white/10 space-y-0.5">
@@ -223,16 +190,10 @@
       <!-- ── Administration — Super Agent uniquement ── -->
       @if (isSuperAgent()) {
         <button (click)="toggleSection('admin')"
-                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
-          <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-          </svg>
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+          <svg lucideSettings class="w-4 h-4 flex-shrink-0" [strokeWidth]="2"></svg>
           <span class="flex-1 text-left">Administration</span>
-          <svg class="w-3.5 h-3.5 transition-transform" [class.rotate-180]="openSection === 'admin'"
-               fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-          </svg>
+          <svg lucideChevronDown class="w-3.5 h-3.5 transition-transform" [class.rotate-180]="openSection === 'admin'" [strokeWidth]="2.5"></svg>
         </button>
         @if (openSection === 'admin') {
           <div class="ml-3 pl-3 border-l border-white/10 space-y-0.5">
@@ -262,10 +223,8 @@
         </div>
       </div>
       <button (click)="logout()"
-              class="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm cursor-pointer">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-        </svg>
+              class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm cursor-pointer">
+        <svg lucideLogOut class="w-4 h-4" [strokeWidth]="2"></svg>
         Déconnexion
       </button>
     </div>
@@ -279,49 +238,20 @@
     <header class="h-[72px] bg-white border-b border-oas-line flex items-center gap-4 px-7 flex-shrink-0 shadow-sm">
 
       <!-- Breadcrumb left -->
-      <div class="flex items-center gap-2 text-sm flex-1 min-w-0">
-        <span class="text-oas-faint font-semibold hidden sm:block">OAS</span>
-        <svg class="w-3.5 h-3.5 text-oas-faint hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/>
-        </svg>
-        <span class="font-semibold text-oas-ink truncate capitalize text-sm">{{ today }}</span>
-      </div>
+      <nav class="flex items-center gap-1.5 text-sm flex-1 min-w-0" aria-label="Fil d'ariane">
+        <svg lucideHouse class="w-4 h-4 text-oas-faint flex-shrink-0" [strokeWidth]="2"></svg>
+        @for (crumb of breadcrumb; track crumb.label; let last = $last) {
+          <span class="text-oas-faint">/</span>
+          @if (crumb.link && !last) {
+            <a [routerLink]="crumb.link" class="text-oas-muted hover:text-oas-ink transition truncate">{{ crumb.label }}</a>
+          } @else if (!last) {
+            <span class="text-oas-muted truncate">{{ crumb.label }}</span>
+          } @else {
+            <span class="text-oas-ink font-medium truncate">{{ crumb.label }}</span>
+          }
+        }
+      </nav>
 
-      <!-- Search bar (décoratif) -->
-      <div class="hidden md:flex items-center gap-2.5 bg-oas-bg border border-oas-line rounded-xl px-4 h-[42px] w-72 text-oas-muted flex-shrink-0 cursor-text">
-        <svg class="w-[18px] h-[18px] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-        </svg>
-        <span class="text-sm select-none">Rechercher…</span>
-      </div>
-
-      <!-- Actions right -->
-      <div class="flex items-center gap-3 flex-shrink-0">
-
-        <!-- Cloche notification -->
-        <button class="relative w-[42px] h-[42px] rounded-xl border border-oas-line bg-white flex items-center justify-center text-oas-ink2 hover:bg-oas-bg transition cursor-pointer">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-          </svg>
-          <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-oas-accent text-white text-[10px] font-bold flex items-center justify-center border-2 border-white">3</span>
-        </button>
-
-        <!-- Profil utilisateur -->
-        <div class="flex items-center gap-2.5 cursor-pointer pl-1">
-          <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
-               style="background:#13355c; border:2px solid #ef6c1a;">
-            {{ initials }}
-          </div>
-          <div class="hidden sm:block leading-tight">
-            <p class="text-sm font-bold text-oas-ink">{{ fullName }}</p>
-            <p class="text-xs text-oas-muted">{{ roleLabel }}</p>
-          </div>
-          <svg class="w-4 h-4 text-oas-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-          </svg>
-        </div>
-
-      </div>
     </header>
 
     <main class="flex-1 overflow-auto p-7 bg-oas-bg">

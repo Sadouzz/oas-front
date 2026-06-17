@@ -2,11 +2,12 @@ import { Component, inject, OnInit } from '@angular/core';
 import { HistoryService } from '../../services/history.service';
 import { ConnectionHistoryModel } from '../../shared/models';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
+import { LucideSearch, LucideX, LucideClock, LucideUser, LucideCheck, LucideAlertCircle } from '@lucide/angular';
 
 @Component({
   selector: 'app-history',
   standalone: true,
-  imports: [PaginationComponent],
+  imports: [PaginationComponent, LucideSearch, LucideX, LucideClock, LucideUser, LucideCheck, LucideAlertCircle],
   templateUrl: './history.component.html',
 })
 export class HistoryComponent implements OnInit {

@@ -6,11 +6,12 @@ import { VehiculeService, VehiculeModel } from '../services/vehicule.service';
 import { StockService } from '../services/stock.service';
 import { PieceDetacheeService, AlerteStock } from '../services/piece-detachee.service';
 import { BonDeSortieService, BonDeSortie } from '../services/bon-de-sortie.service';
+import { LucidePlus, LucideUsers, LucideCar, LucideAlertTriangle, LucideClock, LucidePackage, LucideArrowRight, LucideCheckCircle } from '@lucide/angular';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, LucidePlus, LucideUsers, LucideCar, LucideAlertTriangle, LucideClock, LucidePackage, LucideArrowRight, LucideCheckCircle],
   templateUrl: './dashboard.component.html',
 })
 export class DashboardComponent implements OnInit {

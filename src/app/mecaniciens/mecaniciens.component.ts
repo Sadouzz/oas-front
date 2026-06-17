@@ -4,11 +4,12 @@ import { MecanicienService } from '../services/mecanicien.service';
 import { Mecanicien } from '../shared/models';
 import { AlertComponent } from '../shared/components/alert/alert.component';
 import { PaginationComponent } from '../shared/components/pagination/pagination.component';
+import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideUser, LucideWrench } from '@lucide/angular';
 
 @Component({
   selector: 'app-mecaniciens',
   standalone: true,
-  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent],
+  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideUser, LucideWrench],
   templateUrl: './mecaniciens.component.html',
 })
 export class MecaniciensComponent implements OnInit {

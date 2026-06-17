@@ -1,9 +1,10 @@
 import { Component } from '@angular/core';
+import { LucideFileText } from '@lucide/angular';
 
 @Component({
   selector: 'app-gestion-recu',
   standalone: true,
-  imports: [],
+  imports: [LucideFileText],
   template: `
     <div class="flex flex-col items-center justify-center min-h-[60vh] gap-6">
       <svg class="w-16 h-16 text-oas-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">

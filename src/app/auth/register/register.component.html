@@ -34,7 +34,7 @@
               type="text"
               formControlName="matricule"
               placeholder="MAT-001"
-              class="w-full px-4 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
+              class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
               [class.border-oas-bad]="f('matricule')?.invalid && f('matricule')?.touched"
             />
             @if (f('matricule')?.invalid && f('matricule')?.touched) {
@@ -48,7 +48,7 @@
               type="tel"
               formControlName="phone"
               placeholder="+221 77 000 00 00"
-              class="w-full px-4 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
+              class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
               [class.border-oas-bad]="f('phone')?.invalid && f('phone')?.touched"
             />
             @if (f('phone')?.invalid && f('phone')?.touched) {
@@ -62,7 +62,7 @@
               type="text"
               formControlName="login"
               placeholder="nom_utilisateur"
-              class="w-full px-4 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
+              class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
               [class.border-oas-bad]="f('login')?.invalid && f('login')?.touched"
             />
             @if (f('login')?.invalid && f('login')?.touched) {
@@ -76,7 +76,7 @@
               type="text"
               formControlName="firstName"
               placeholder="Jean"
-              class="w-full px-4 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
+              class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
               [class.border-oas-bad]="f('firstName')?.invalid && f('firstName')?.touched"
             />
             @if (f('firstName')?.invalid && f('firstName')?.touched) {
@@ -90,7 +90,7 @@
               type="text"
               formControlName="lastName"
               placeholder="Dupont"
-              class="w-full px-4 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
+              class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
               [class.border-oas-bad]="f('lastName')?.invalid && f('lastName')?.touched"
             />
             @if (f('lastName')?.invalid && f('lastName')?.touched) {
@@ -104,7 +104,7 @@
               type="email"
               formControlName="email"
               placeholder="exemple@email.com"
-              class="w-full px-4 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
+              class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
               [class.border-oas-bad]="f('email')?.invalid && f('email')?.touched"
             />
             @if (f('email')?.invalid && f('email')?.touched) {
@@ -122,7 +122,7 @@
                 [type]="showPassword ? 'text' : 'password'"
                 formControlName="password"
                 placeholder="••••••••"
-                class="w-full px-4 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint pr-10"
+                class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint pr-10"
                 [class.border-oas-bad]="f('password')?.invalid && f('password')?.touched"
               />
               <button
@@ -131,14 +131,9 @@
                 class="absolute right-3 top-1/2 -translate-y-1/2 text-oas-muted hover:text-oas-ink transition"
               >
                 @if (showPassword) {
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                  </svg>
+                  <svg lucideEyeOff class="h-5 w-5" [strokeWidth]="2"></svg>
                 } @else {
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
+                  <svg lucideEye class="h-5 w-5" [strokeWidth]="2"></svg>
                 }
               </button>
             </div>
@@ -154,7 +149,7 @@
             <label class="block text-sm font-semibold text-oas-ink mb-1.5">Type d'utilisateur</label>
             <select
               formControlName="type"
-              class="w-full px-4 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition text-oas-ink"
+              class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition text-oas-ink"
               [class.border-oas-bad]="f('type')?.invalid && f('type')?.touched"
             >
               <option value="" disabled selected>Sélectionner un type</option>
@@ -171,7 +166,7 @@
             <label class="block text-sm font-semibold text-oas-ink mb-1.5">Rôle</label>
             <select
               formControlName="role"
-              class="w-full px-4 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition text-oas-ink"
+              class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition text-oas-ink"
               [class.border-oas-bad]="f('role')?.invalid && f('role')?.touched"
             >
               <option value="" disabled selected>Sélectionner un rôle</option>
@@ -187,13 +182,13 @@
         </div>
 
         @if (errorMessage) {
-          <div class="bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-sm px-4 py-3 rounded-xl">
+          <div class="bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-sm px-4 py-3 rounded-lg">
             {{ errorMessage }}
           </div>
         }
 
         @if (successMessage) {
-          <div class="bg-oas-ok-bg border border-oas-ok/30 text-oas-ok text-sm px-4 py-3 rounded-xl">
+          <div class="bg-oas-ok-bg border border-oas-ok/30 text-oas-ok text-sm px-4 py-3 rounded-lg">
             {{ successMessage }}
           </div>
         }
@@ -201,13 +196,10 @@
         <button
           type="submit"
           [disabled]="loading"
-          class="w-full bg-oas-accent hover:bg-oas-accent-dark disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition text-sm mt-2 cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-oas-accent/30"
+          class="w-full bg-oas-accent hover:bg-oas-accent-dark disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-3 rounded-lg transition text-sm mt-2 cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-oas-accent/30"
         >
           @if (loading) {
-            <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-            </svg>
+            <svg lucideLoader2 class="animate-spin h-4 w-4" [strokeWidth]="2"></svg>
           }
           {{ loading ? 'Création...' : 'Créer le compte' }}
         </button>

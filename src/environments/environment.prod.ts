@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.oas.sn',
+  apiUrl: 'https://oas-test.de',
 };
