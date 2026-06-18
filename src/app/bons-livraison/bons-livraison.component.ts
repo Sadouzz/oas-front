@@ -71,7 +71,7 @@ export class BonsLivraisonComponent implements OnInit {
   }
 
   openDetail(bon: BonDeLivraison) { this.selectedBon = bon; }
-  closeDetail() { this.selectedBon = null; }}
+  closeDetail() { this.selectedBon = null; }
 
   delete(id: number) {
     if (!confirm('Supprimer ce bon de livraison ?')) return;
@@ -140,3 +140,7 @@ export class BonsLivraisonComponent implements OnInit {
     setTimeout(() => this.errorMessage = '', 3500);
   }
 }
+
+
+
+
