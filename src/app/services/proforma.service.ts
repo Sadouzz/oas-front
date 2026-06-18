@@ -44,6 +44,7 @@ export interface Proforma {
   modele: string | null;
   annee: number | null;
   numeroBonDeCommande: string | null;
+  statut?: string;
   lignesPieces: LignePiece[];
   lignesMainDoeuvres: LigneMD[];
 }

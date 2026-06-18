@@ -22,6 +22,8 @@ export interface LignePiece {
   quantite: number;
   stockDisponible: number;
   manquant: number;
+  aSortirMagasin?: number;
+  stockAtelier?: number;
 }
 
 export interface LigneMO {
@@ -30,12 +32,12 @@ export interface LigneMO {
 }
 
 const STATUT_STEPS: { statut: StatutReparation | 'EN_ATTENTE_PROFORMA'; label: string }[] = [
-  { statut: 'A_FAIRE',       label: 'Réception'   },
-  { statut: 'EN_DIAGNOSTIC', label: 'Diagnostic'  },
-  { statut: 'EN_ATTENTE_PROFORMA', label: 'Proforma' },
-  { statut: 'EN_COURS',      label: 'Réparation'  },
-  { statut: 'TERMINE',       label: 'Terminé'     },
-  { statut: 'LIVRE',         label: 'Livré'       },
+  { statut: 'A_FAIRE',            label: 'Réception'   },
+  { statut: 'EN_DIAGNOSTIC',      label: 'Diagnostic'  },
+  { statut: 'EN_ATTENTE_PROFORMA', label: 'Proforma'   },
+  { statut: 'EN_COURS',           label: 'Bon sortie'  },
+  { statut: 'TERMINE',            label: 'Réparation'  },
+  { statut: 'LIVRE',              label: 'Livraison'   },
 ];
 
 @Component({
@@ -180,6 +182,26 @@ export class FichesAtelierComponent implements OnInit {
   moAjouter: number | null = null;
   qteAjouterMO = 1;
 
+  // ─── Recherche pièces / MO ────────────────────────────
+  pieceSearch = '';
+  moSearch = '';
+  get piecesFiltrees(): PieceDetache[] {
+    const q = this.pieceSearch.toLowerCase();
+    if (!q) return this.allPieces;
+    return this.allPieces.filter(p =>
+      p.reference.toLowerCase().includes(q) ||
+      (p.categorie ?? '').toLowerCase().includes(q) ||
+      (p.numeroDeSerie ?? '').toLowerCase().includes(q)
+    );
+  }
+  get moFiltrees(): MainDoeuvreModel[] {
+    const q = this.moSearch.toLowerCase();
+    if (!q) return this.allMO;
+    return this.allMO.filter(m =>
+      m.categorie.nom.toLowerCase().includes(q)
+    );
+  }
+
   // ─── Popup Bon de Commande ─────────────────────────────
   showBDCModal = false;
   bdcFournisseurId: number | null = null;
@@ -284,19 +306,54 @@ export class FichesAtelierComponent implements OnInit {
       dateSortie:   f.dateSortie ? f.dateSortie.substring(0, 10) : '',
     });
     
-    // Si la fiche est en attente de proforma, récupérer le proforma lié
-    if (f.statut === 'EN_ATTENTE_PROFORMA' as any) {
+    // Charger le proforma pour toute fiche qui en a un (step 3+)
+    const needsProforma = ['EN_ATTENTE_PROFORMA', 'EN_COURS', 'TERMINE', 'LIVRE'].includes(f.statut as string);
+    if (needsProforma) {
       this.proformaService.getByFicheAtelierId(f.id).subscribe({
         next: (p) => {
           this.currentProforma = p;
+          // Reconstituer les lignes pièces depuis le proforma
+          this.lignesPieces = p.lignesPieces
+            .map(lp => {
+              const piece = this.allPieces.find(pp => pp.id === lp.pieceId);
+              if (!piece) return null;
+              const stockAtelier = piece.stockAtelier ?? 0;
+              const stockMagasin = piece.stockMagasin ?? 0;
+              const manquantAtelier = Math.max(0, lp.quantite - stockAtelier);
+              const aSortirMagasin = Math.min(manquantAtelier, stockMagasin);
+              const manquantGlobal = Math.max(0, manquantAtelier - stockMagasin);
+              
+              return { 
+                piece, 
+                quantite: lp.quantite, 
+                stockDisponible: stockAtelier + stockMagasin, 
+                manquant: manquantGlobal,
+                aSortirMagasin: aSortirMagasin,
+                stockAtelier: stockAtelier
+              } as LignePiece;
+            })
+            .filter((l) => l !== null) as LignePiece[];
+          // Reconstituer les lignes MO depuis le proforma
+          this.lignesMO = p.lignesMainDoeuvres
+            .map(lmd => {
+              const mo = this.allMO.find(m => m.id === lmd.mainDoeuvreId);
+              if (!mo) return null;
+              return { mo, quantite: lmd.nbreHeure };
+            })
+            .filter((l): l is LigneMO => l !== null);
         },
-        error: () => this.currentProforma = null
+        error: () => {
+          this.currentProforma = null;
+          this.lignesPieces = [];
+          this.lignesMO = [];
+        }
       });
     } else {
       this.currentProforma = null;
+      this.lignesPieces = [];
+      this.lignesMO = [];
     }
 
-    // Restaurer le véhicule dans le sélecteur
     if (f.vehicule) {
       const v = this.vehicules.find(vv => vv.id === f.vehicule!.id);
       if (v) {
@@ -380,15 +437,12 @@ export class FichesAtelierComponent implements OnInit {
         this.saving    = false;
         this.editingId = f.id;
         this.isNew     = false;
-        if (wasNew) {
-          // Création : fermer le modal, fiche en attente de diagnostic
-          this.closeWorkflow();
-          this.load();
-          this.notify('Fiche créée ! Le diagnostic sera effectué lors de la prochaine étape.');
-        } else {
-          // Édition : avancer au diagnostic
-          this.advanceStatutTo('EN_DIAGNOSTIC', () => { this.currentStep = 2; this.load(); });
-        }
+        // Toujours avancer au diagnostic (step 2), que ce soit une création ou une édition
+        this.advanceStatutTo('EN_DIAGNOSTIC', () => { 
+          this.currentStep = 2; 
+          this.load(); 
+          if (wasNew) this.notify('Fiche créée. Complétez le diagnostic.'); 
+        });
       },
       error: (err) => { 
         console.error('SAVE STEP 1 ERROR:', JSON.stringify(err.error));
@@ -412,8 +466,12 @@ export class FichesAtelierComponent implements OnInit {
     }).subscribe({
       next: () => {
         this.saving = false;
-        this.currentStep = 3; 
-        this.load();
+        // Avancer le statut à EN_ATTENTE_PROFORMA pour que le stepper soit correct au retour
+        this.advanceStatutTo('EN_ATTENTE_PROFORMA' as StatutReparation, () => {
+          this.closeWorkflow();
+          this.load();
+          this.notify('Diagnostic enregistré. La fiche est désormais en attente de proforma.');
+        });
       },
       error: (err) => { 
         console.error('SAVE STEP 2 ERROR:', JSON.stringify(err.error));
@@ -452,8 +510,8 @@ export class FichesAtelierComponent implements OnInit {
         this.proformaService.create({
           ficheAtelierId: this.editingId!,
           clientId,
-          vehiculeId: fiche.vehicule.id,
-          kilometrage: 0,
+          vehiculeId: fiche.vehicule!.id,
+          kilometrage: fiche.vehicule!.kilometrage ?? 0,
           lignesPieces: this.lignesPieces.map(l => ({ pieceId: l.piece.id, quantite: l.quantite, prix: l.piece.prix ?? 0 })),
           lignesMainDoeuvres: this.lignesMO.map(l => ({ mainDoeuvreId: l.mo.id, nbreHeure: l.quantite, tarifHoraire: l.mo.prix ?? 0 }))
         }).subscribe({
@@ -494,11 +552,74 @@ export class FichesAtelierComponent implements OnInit {
     });
   }
 
-  // ─── Affectation (Étape 4) ───────────────────────────
-  checkStockThenGoNext() {
+  // ─── Proforma validé → Bon de Sortie (Étape 4) ───────
+  goToBonDeSortie() {
+    // Après validation du proforma, passer à l'étape Bon de Sortie
+    this.currentStep = 4;
+  }
+
+  // ─── Bon de Sortie & Affectation (Étape 4) → Réparation (Étape 5) ─────────────
+  checkStockAndStartReparation() {
+    if (this.selectedMecs.length === 0) {
+      this.notifyError('Veuillez affecter au moins un mécanicien.');
+      return;
+    }
+
     const ruptures = this.lignesPieces.filter(l => l.manquant > 0);
-    if (ruptures.length > 0) { this.showBDCModal = true; }
-    else { this.currentStep = 5; } // Step 5 = Terminé
+    if (ruptures.length > 0) { 
+      this.showBDCModal = true; 
+      return;
+    }
+
+    const aSortir = this.lignesPieces.filter(l => (l.aSortirMagasin || 0) > 0);
+    if (aSortir.length > 0) {
+      this.createBonDeSortie(aSortir);
+    } else {
+      this.startReparation();
+    }
+  }
+
+  createBonDeSortie(lignes: LignePiece[]) {
+    const fiche = this.fiches.find(f => f.id === this.editingId);
+    if (!fiche?.vehicule) return;
+    const clientId = fiche.vehicule.client?.id;
+    if (!clientId) { this.notifyError('Aucun client associé au véhicule.'); return; }
+
+    this.bdsCreating = true;
+    this.bdsService.creer({
+      clientId,
+      vehiculeId:         fiche.vehicule!.id,
+      lignesPieces:       lignes.map(l => ({ pieceId: l.piece.id, quantite: l.aSortirMagasin!, prix: l.piece.prix ?? null })),
+      lignesMainDoeuvres: [],
+      remarque:           `Bon de sortie automatique pour réparation FA-${this.editingId}`,
+    }).subscribe({
+      next: () => {
+        this.bdsCreating = false;
+        this.notify('Bon de sortie créé. Début de la réparation.');
+        this.startReparation();
+      },
+      error: (err: any) => {
+        this.bdsCreating = false;
+        this.notifyError(err.error?.message || 'Erreur création bon de sortie.');
+      }
+    });
+  }
+
+  startReparation() {
+    this.advanceStatutTo('TERMINE', () => {
+      this.currentStep = 5;
+      this.load();
+    });
+  }
+
+  terminerReparation() {
+    this.saving = true;
+    this.advanceStatutTo('LIVRE', () => {
+      this.saving = false;
+      this.currentStep = 6;
+      this.notify('Réparation terminée. Fiche prête pour livraison.');
+      this.load();
+    });
   }
 
   private advanceStatutTo(statut: StatutReparation, cb: () => void) {
@@ -605,13 +726,29 @@ export class FichesAtelierComponent implements OnInit {
     if (!this.pieceAjouter || this.qteAjouter < 1) return;
     const piece = this.allPieces.find(p => p.id === Number(this.pieceAjouter));
     if (!piece) return;
+    
+    const stockAtelier = piece.stockAtelier ?? 0;
+    const stockMagasin = piece.stockMagasin ?? 0;
+    
     const existing = this.lignesPieces.find(l => l.piece.id === piece.id);
     if (existing) {
       existing.quantite += this.qteAjouter;
-      existing.manquant = Math.max(0, existing.quantite - existing.stockDisponible);
+      const manquantAtelier = Math.max(0, existing.quantite - stockAtelier);
+      existing.aSortirMagasin = Math.min(manquantAtelier, stockMagasin);
+      existing.manquant = Math.max(0, manquantAtelier - stockMagasin);
     } else {
-      const stock = (piece.stockAtelier ?? 0) + (piece.stockMagasin ?? 0);
-      this.lignesPieces.push({ piece, quantite: this.qteAjouter, stockDisponible: stock, manquant: Math.max(0, this.qteAjouter - stock) });
+      const manquantAtelier = Math.max(0, this.qteAjouter - stockAtelier);
+      const aSortirMagasin = Math.min(manquantAtelier, stockMagasin);
+      const manquantGlobal = Math.max(0, manquantAtelier - stockMagasin);
+      
+      this.lignesPieces.push({ 
+        piece, 
+        quantite: this.qteAjouter, 
+        stockDisponible: stockAtelier + stockMagasin, 
+        manquant: manquantGlobal,
+        aSortirMagasin,
+        stockAtelier
+      });
     }
     this.pieceAjouter = null; this.qteAjouter = 1;
   }
@@ -621,7 +758,12 @@ export class FichesAtelierComponent implements OnInit {
   updateQtePiece(idx: number, qte: number) {
     const l = this.lignesPieces[idx];
     l.quantite = Math.max(1, qte);
-    l.manquant = Math.max(0, l.quantite - l.stockDisponible);
+    
+    const stockAtelier = l.stockAtelier ?? 0;
+    const stockMagasin = l.piece.stockMagasin ?? 0;
+    const manquantAtelier = Math.max(0, l.quantite - stockAtelier);
+    l.aSortirMagasin = Math.min(manquantAtelier, stockMagasin);
+    l.manquant = Math.max(0, manquantAtelier - stockMagasin);
   }
 
   // ─── Main d'œuvre ─────────────────────────────────────
@@ -680,27 +822,7 @@ export class FichesAtelierComponent implements OnInit {
     });
   }
 
-  // ─── Bon de Sortie ────────────────────────────────────
-  createBonDeSortie() {
-    const fiche = this.fiches.find(f => f.id === this.editingId);
-    if (!fiche?.vehicule) return;
-    const clientId = fiche.vehicule.client?.id;
-    if (!clientId) { this.notifyError('Aucun client associé au véhicule.'); return; }
-    this.bdsCreating = true;
-    this.bdsService.creer({
-      clientId,
-      vehiculeId:         fiche.vehicule.id,
-      lignesPieces:       this.lignesPieces.map(l => ({ pieceId: l.piece.id, quantite: l.quantite, prix: l.piece.prix ?? null })),
-      lignesMainDoeuvres: this.lignesMO.map(l => ({ mainDoeuvreId: l.mo.id, quantite: l.quantite })),
-      remarque:           `Bon de sortie — Fiche ${fiche.numero}`,
-    }).subscribe({
-      next: () => {
-        this.bdsCreating = false;
-        this.advanceStatutTo('TERMINE', () => { this.currentStep = 5; this.load(); this.notify('Bon de sortie créé !'); });
-      },
-      error: () => { this.bdsCreating = false; this.notifyError('Erreur lors de la création du bon de sortie.'); },
-    });
-  }
+
 
   // ─── Livraison ───────────────────────────────────────
   marquerLivre() {
@@ -737,6 +859,11 @@ export class FichesAtelierComponent implements OnInit {
       A_FAIRE: 1, EN_DIAGNOSTIC: 2, EN_ATTENTE_PROFORMA: 3, EN_COURS: 4, TERMINE: 5, LIVRE: 6,
     };
     return map[s] ?? 1;
+  }
+
+  // Raccourci : peut-on créer le bon de sortie ?
+  get canCreateBDS(): boolean {
+    return this.lignesPieces.length > 0 || this.lignesMO.length > 0;
   }
 
   // ─── Pagination ──────────────────────────────────────

@@ -15,6 +15,7 @@ export interface FicheAtelier {
     immatriculation: string;
     marque: string;
     modele: string;
+    kilometrage?: number | null;
     client?: { id: number; firstName: string; lastName: string; phone?: string } | null;
   } | null;
   mecaniciens: { id: number; nom: string }[];

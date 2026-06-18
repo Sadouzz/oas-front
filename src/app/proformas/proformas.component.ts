@@ -53,6 +53,7 @@ export class ProformasComponent implements OnInit {
   page = 1;
   readonly pageSize = 10;
   searchTerm = '';
+  statutFilter = '';
   successMessage = '';
   errorMessage = '';
 
@@ -106,18 +107,29 @@ export class ProformasComponent implements OnInit {
   }
 
   applyFilter() {
-    if (!this.searchTerm) { this.filtered = this.proformas; this.page = 1; return; }
-    const kw = this.searchTerm.toLowerCase();
-    this.filtered = this.proformas.filter(p =>
-      p.numero.toLowerCase().includes(kw) ||
-      p.clientNom.toLowerCase().includes(kw) ||
-      (p.immatriculation ?? '').toLowerCase().includes(kw)
-    );
+    let list = this.proformas;
+    if (this.searchTerm) {
+      const kw = this.searchTerm.toLowerCase();
+      list = list.filter(p =>
+        p.numero.toLowerCase().includes(kw) ||
+        p.clientNom.toLowerCase().includes(kw) ||
+        (p.immatriculation ?? '').toLowerCase().includes(kw)
+      );
+    }
+    if (this.statutFilter) {
+      list = list.filter(p => p.statut === this.statutFilter);
+    }
+    this.filtered = list;
     this.page = 1;
   }
 
   onSearch(e: Event) {
     this.searchTerm = (e.target as HTMLInputElement).value.toLowerCase().trim();
+    this.applyFilter();
+  }
+
+  onStatutFilterChange(e: Event) {
+    this.statutFilter = (e.target as HTMLSelectElement).value;
     this.applyFilter();
   }
 
@@ -376,6 +388,20 @@ export class ProformasComponent implements OnInit {
     this.service.convertToFacture(id).subscribe({
       next: () => { this.load(); this.closeDetail(); this.notify('Proforma converti en facture.'); },
       error: () => this.notifyError('Erreur lors de la conversion.'),
+    });
+  }
+
+  validerProforma(id: number) {
+    if (!confirm('Valider ce proforma ? L\'accord client a-t-il été obtenu ?')) return;
+    this.service.valider(id).subscribe({
+      next: () => { 
+        this.load(); 
+        if (this.selectedProforma && this.selectedProforma.id === id) {
+          this.selectedProforma.statut = 'ACCEPTE';
+        }
+        this.notify('Proforma validé.'); 
+      },
+      error: (err) => this.notifyError(err.error?.message || 'Erreur lors de la validation du proforma.'),
     });
   }
 
