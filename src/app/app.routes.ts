@@ -75,6 +75,12 @@ export const routes: Routes = [
           import('./mecaniciens/mecaniciens.component').then(m => m.MecaniciensComponent),
       },
       {
+        path: 'rendezvous',
+        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_CHEF_ATELIER'])],
+        loadComponent: () =>
+          import('./rendezvous/rendezvous.component').then(m => m.RendezVousComponent),
+      },
+      {
         path: 'devis-previsionnels',
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_CHEF_ATELIER'])],
         loadComponent: () =>

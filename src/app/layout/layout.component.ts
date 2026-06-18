@@ -56,6 +56,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
     '/admin/main-doeuvre': { label: "Main d'œuvre" },
     '/fiches-atelier': { label: 'Fiches atelier', section: 'Atelier' },
     '/mecaniciens': { label: 'Mécaniciens', section: 'Atelier' },
+    '/rendezvous': { label: 'Rendez-vous', section: 'Atelier' },
     '/admin/users': { label: 'Utilisateurs', section: 'Administration' },
     '/admin/history': { label: 'Historique connexions', section: 'Administration' },
   };
@@ -114,7 +115,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
       this.openSection = 'facture-ttc';
     } else if (['/notes-prix', '/devis-previsionnels', '/avoirs-ht'].some(p => url.startsWith(p))) {
       this.openSection = 'facture-ht';
-    } else if (['/fiches-atelier', '/mecaniciens'].some(p => url.startsWith(p))) {
+    } else if (['/fiches-atelier', '/mecaniciens', '/rendezvous'].some(p => url.startsWith(p))) {
       this.openSection = 'atelier';
     } else if (url.startsWith('/admin')) {
       this.openSection = 'admin';

@@ -70,7 +70,7 @@ export class BonsCommandeComponent implements OnInit {
     if (!id) return '';
     const f = this.fournisseurs.find(x => x.id === Number(id));
     return f ? (f.nomEntreprise || f.nom) : '';
-  }
+  }a
 
   get filteredFournisseurs(): FournisseurModel[] {
     if (!this.fournisseurFilter) return this.fournisseurs;
