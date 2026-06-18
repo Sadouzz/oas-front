@@ -141,7 +141,7 @@ export class BonsDeSortieComponent implements OnInit {
   loadBons() {
     this.loading = true;
     this.bonService.getAll().subscribe({
-      next: (d) => { this.bons = d; this.applyFilter(); this.loading = false; },
+      next: (d) => { this.bons = d.sort((a: any, b: any) => b.id - a.id); this.applyFilter(); this.loading = false; },
       error: () => { this.loading = false; }
     });
   }

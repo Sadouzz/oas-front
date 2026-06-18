@@ -21,7 +21,7 @@ export interface BonDeSortie {
   vehicule: { id: number; immatriculation: string; marque: string; modele: string } | null;
   agentEmetteur: { id: number; username: string; firstName: string; lastName: string } | null;
   agentValidateur?: { id: number; username: string; firstName: string; lastName: string };
-  lignes: LigneBonDeSortie[] | null;
+  lignesBonDeSortiePieces: LigneBonDeSortie[] | null;
   lignesBonDeSortieMainDoeuvres?: LigneBonDeSortieMainDoeuvre[] | null;
 }
 

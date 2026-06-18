@@ -102,7 +102,7 @@ export class VehiculesComponent implements OnInit {
   loadVehicules() {
     this.loading = true;
     this.vehiculeService.getAll().subscribe({
-      next: (data) => { this.vehicules = data; this.applyFilter(); this.loading = false; },
+      next: (data) => { this.vehicules = data.sort((a:any, b:any) => b.id - a.id); this.applyFilter(); this.loading = false; },
       error: () => {
         this.loading = false;
         this.errorMessage = 'Impossible de charger les véhicules. Vérifiez que le serveur est démarré.';

@@ -71,7 +71,7 @@
                 </td>
                 <td class="px-5 py-4 text-xs text-oas-ink2">{{ bon.vehicule?.immatriculation }}</td>
                 <td class="px-5 py-4 text-center">
-                  <span class="text-xs font-bold text-oas-ink">{{ bon.lignes?.length ?? 0 }}</span>
+                  <span class="text-xs font-bold text-oas-ink">{{ bon.lignesBonDeSortiePieces?.length ?? 0 }}</span>
                 </td>
                 <td class="px-5 py-4 text-center">
                   <span class="text-xs font-bold text-oas-ink">{{ bon.lignesBonDeSortieMainDoeuvres?.length ?? 0 }}</span>
@@ -501,9 +501,9 @@
         }
 
         <!-- Pièces -->
-        @if ((selectedBon.lignes?.length ?? 0) > 0) {
+        @if ((selectedBon.lignesBonDeSortiePieces?.length ?? 0) > 0) {
           <div>
-            <p class="text-sm font-bold text-oas-ink mb-2">Pièces ({{ selectedBon.lignes?.length }} ligne(s))</p>
+            <p class="text-sm font-bold text-oas-ink mb-2">Pièces ({{ selectedBon.lignesBonDeSortiePieces?.length }} ligne(s))</p>
             <div class="border border-oas-line rounded-xl overflow-hidden">
               <table class="w-full text-sm">
                 <thead>
@@ -513,7 +513,7 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-oas-line">
-                  @for (l of selectedBon.lignes; track l.id) {
+                  @for (l of selectedBon.lignesBonDeSortiePieces; track l.id) {
                     <tr class="hover:bg-oas-bg">
                       <td class="px-3 py-2 text-oas-ink text-xs font-medium">{{ l.piece?.reference }}</td>
                       <td class="px-3 py-2 text-right font-bold text-oas-ink">{{ l.quantite }}</td>
@@ -557,7 +557,7 @@
           </div>
         }
 
-        @if ((selectedBon.lignes?.length ?? 0) === 0 && (selectedBon.lignesBonDeSortieMainDoeuvres?.length ?? 0) === 0) {
+        @if ((selectedBon.lignesBonDeSortiePieces?.length ?? 0) === 0 && (selectedBon.lignesBonDeSortieMainDoeuvres?.length ?? 0) === 0) {
           <p class="text-center text-oas-muted text-sm py-4">Aucune ligne sur ce bon.</p>
         }
 

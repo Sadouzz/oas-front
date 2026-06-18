@@ -53,7 +53,7 @@ export class DevisPrevisionnelsComponent implements OnInit {
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: data => { this.devis = data; this.applyFilter(); this.loading = false; },
+      next: data => { this.devis = data.sort((a:any, b:any) => b.id - a.id); this.applyFilter(); this.loading = false; },
       error: () => this.loading = false,
     });
   }

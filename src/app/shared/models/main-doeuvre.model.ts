@@ -5,6 +5,7 @@ export type CategorieMainDoeuvre = string; // For backward compatibility if need
 export interface MainDoeuvreModel {
   id: number;
   prix: number;
+  description: string;
   categorie: CategorieMainDoeuvreModel;
   nbreHeure: number;
   isArchived: boolean;
@@ -12,6 +13,7 @@ export interface MainDoeuvreModel {
 
 export interface MainDoeuvreRequest {
   prix: number;
+  description?: string;
   categorieId: number;
   nbreHeure: number;
 }

@@ -40,7 +40,7 @@ export class InventaireComponent implements OnInit {
   ngOnInit() {
     this.loading = true;
     this.pieceService.getAll({ type: 'PDP', statut: 'ACTIF' }).subscribe({
-      next: (d) => { this.pdps = d; this.applyFilter(); this.loading = false; },
+      next: (d) => { this.pdps = d.sort((a:any, b:any) => b.id - a.id); this.applyFilter(); this.loading = false; },
       error: () => { this.loading = false; }
     });
   }

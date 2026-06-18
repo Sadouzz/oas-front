@@ -16,6 +16,7 @@ import { FournisseurService, FournisseurModel } from '../services/fournisseur.se
 import { ClientService, UserModel } from '../services/client.service';
 import { AlertComponent } from '../shared/components/alert/alert.component';
 import { PaginationComponent } from '../shared/components/pagination/pagination.component';
+import { SearchableSelectComponent } from '../shared/components/searchable-select/searchable-select.component';
 
 export interface LignePiece {
   piece: PieceDetache;
@@ -35,6 +36,7 @@ const STATUT_STEPS: { statut: StatutReparation | 'EN_ATTENTE_PROFORMA'; label: s
   { statut: 'A_FAIRE',            label: 'Réception'   },
   { statut: 'EN_DIAGNOSTIC',      label: 'Diagnostic'  },
   { statut: 'EN_ATTENTE_PROFORMA', label: 'Proforma'   },
+  { statut: 'EN_ATTENTE_COMMANDE', label: 'Attente Pièces'},
   { statut: 'EN_COURS',           label: 'Bon sortie'  },
   { statut: 'TERMINE',            label: 'Réparation'  },
   { statut: 'LIVRE',              label: 'Livraison'   },
@@ -43,7 +45,7 @@ const STATUT_STEPS: { statut: StatutReparation | 'EN_ATTENTE_PROFORMA'; label: s
 @Component({
   selector: 'app-fiches-atelier',
   standalone: true,
-  imports: [ReactiveFormsModule, FormsModule, NgClass, NgStyle, AlertComponent, PaginationComponent],
+  imports: [ReactiveFormsModule, FormsModule, NgClass, NgStyle, AlertComponent, PaginationComponent, SearchableSelectComponent],
   templateUrl: './fiches-atelier.component.html',
 })
 export class FichesAtelierComponent implements OnInit {
@@ -87,7 +89,7 @@ export class FichesAtelierComponent implements OnInit {
 
   // Étape 1 — Réception
   step1Form: FormGroup = this.fb.group({
-    numero:             ['', Validators.required],
+    numero:             [''],
     vehiculeId:         [null, Validators.required],
     listeReception:     [''],
     descriptionTravaux: ['', Validators.required],
@@ -214,6 +216,11 @@ export class FichesAtelierComponent implements OnInit {
   // ─── Bon de Sortie ─────────────────────────────────────
   bdsCreating = false;
 
+  get editingFicheStatus(): string | null {
+    const f = this.fiches.find(x => x.id === this.editingId);
+    return f ? f.statut : null;
+  }
+
   ngOnInit() {
     this.load();
     this.loadReferentiels();
@@ -242,10 +249,7 @@ export class FichesAtelierComponent implements OnInit {
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: data => {
-        this.fiches   = data;
-        this.applyFilter();
-        this.loading  = false;
+      next: (data) => { this.fiches = data.sort((a,b) => b.id - a.id); this.applyFilter(); this.loading = false;
         if (this.selectedFiche) {
           this.selectedFiche = data.find(f => f.id === this.selectedFiche!.id) ?? null;
         }
@@ -307,7 +311,7 @@ export class FichesAtelierComponent implements OnInit {
     });
     
     // Charger le proforma pour toute fiche qui en a un (step 3+)
-    const needsProforma = ['EN_ATTENTE_PROFORMA', 'EN_COURS', 'TERMINE', 'LIVRE'].includes(f.statut as string);
+    const needsProforma = ['EN_ATTENTE_PROFORMA', 'EN_ATTENTE_COMMANDE', 'EN_COURS', 'TERMINE', 'LIVRE'].includes(f.statut as string);
     if (needsProforma) {
       this.proformaService.getByFicheAtelierId(f.id).subscribe({
         next: (p) => {
@@ -452,7 +456,22 @@ export class FichesAtelierComponent implements OnInit {
     });
   }
 
-  // ─── Étape 2 ─────────────────────────────────────────
+  formatFournisseur(f: any): string {
+    if (!f) return '';
+    return f.nomEntreprise || (f.nom + ' ' + f.prenom);
+  }
+
+  formatPiece = (p: any) => {
+    if (!p) return '';
+    return p.reference + ' — ' + (p.categorie || '') + ' (' + ((p.stockAtelier ?? 0) + (p.stockMagasin ?? 0)) + ' en stock)';
+  };
+
+  formatMO = (m: any) => {
+    if (!m) return '';
+    return (m.description || m.categorie?.nom || '') + ' (' + m.nbreHeure + 'h - ' + this.formatPrice(m.prix) + ')';
+  };
+
+  // ── UTILITAIRES UI ─────────────────────────────────────────
   private saveStep2ThenGoNext() {
     const raw = this.step2Form.value;
     this.saving = true;
@@ -590,13 +609,23 @@ export class FichesAtelierComponent implements OnInit {
       clientId,
       vehiculeId:         fiche.vehicule!.id,
       lignesPieces:       lignes.map(l => ({ pieceId: l.piece.id, quantite: l.aSortirMagasin!, prix: l.piece.prix ?? null })),
-      lignesMainDoeuvres: [],
+      lignesMainDoeuvres: this.lignesMO.map(l => ({ mainDoeuvreId: l.mo.id, quantite: l.quantite })),
       remarque:           `Bon de sortie automatique pour réparation FA-${this.editingId}`,
     }).subscribe({
-      next: () => {
-        this.bdsCreating = false;
-        this.notify('Bon de sortie créé. Début de la réparation.');
-        this.startReparation();
+      next: (bds: any) => {
+        // Auto-valider le bon de sortie
+        this.bdsService.valider(bds.id).subscribe({
+          next: () => {
+            this.bdsCreating = false;
+            this.notify('Bon de sortie créé et validé automatiquement.');
+            this.startReparation();
+          },
+          error: (err: any) => {
+            this.bdsCreating = false;
+            this.notifyError('Bon de sortie créé mais erreur lors de la validation: ' + (err.error?.message || 'Erreur inconnue'));
+            this.startReparation(); // On continue quand même la réparation
+          }
+        });
       },
       error: (err: any) => {
         this.bdsCreating = false;
@@ -606,7 +635,7 @@ export class FichesAtelierComponent implements OnInit {
   }
 
   startReparation() {
-    this.advanceStatutTo('TERMINE', () => {
+    this.advanceStatutTo('EN_COURS', () => {
       this.currentStep = 5;
       this.load();
     });
@@ -614,7 +643,7 @@ export class FichesAtelierComponent implements OnInit {
 
   terminerReparation() {
     this.saving = true;
-    this.advanceStatutTo('LIVRE', () => {
+    this.advanceStatutTo('TERMINE', () => {
       this.saving = false;
       this.currentStep = 6;
       this.notify('Réparation terminée. Fiche prête pour livraison.');
@@ -817,7 +846,15 @@ export class FichesAtelierComponent implements OnInit {
     };
     this.bdcSaving = true;
     this.bdcService.create(payload).subscribe({
-      next: () => { this.bdcSaving = false; this.showBDCModal = false; this.notify('Bon de commande créé !'); this.currentStep = 4; },
+      next: () => { 
+        this.bdcSaving = false; 
+        this.showBDCModal = false; 
+        this.notify('Bon de commande créé !');
+        this.advanceStatutTo('EN_ATTENTE_COMMANDE', () => {
+          this.currentStep = 4;
+          this.load();
+        });
+      },
       error: () => { this.bdcSaving = false; this.notifyError('Erreur lors de la création du bon de commande.'); },
     });
   }
@@ -849,14 +886,14 @@ export class FichesAtelierComponent implements OnInit {
 
   statutColor(s: StatutReparation): string {
     const map: Record<StatutReparation | string, string> = {
-      A_FAIRE: '#6b7280', EN_DIAGNOSTIC: '#f59e0b', EN_ATTENTE_PROFORMA: '#8b5cf6', EN_COURS: '#3b82f6', TERMINE: '#10b981', LIVRE: '#22c55e',
+      A_FAIRE: '#6b7280', EN_DIAGNOSTIC: '#f59e0b', EN_ATTENTE_PROFORMA: '#8b5cf6', EN_ATTENTE_COMMANDE: '#ec4899', EN_COURS: '#3b82f6', TERMINE: '#10b981', LIVRE: '#22c55e',
     };
     return map[s] ?? '#6b7280';
   }
 
   private statutToStep(s: StatutReparation | string): number {
     const map: Record<string, number> = {
-      A_FAIRE: 1, EN_DIAGNOSTIC: 2, EN_ATTENTE_PROFORMA: 3, EN_COURS: 4, TERMINE: 5, LIVRE: 6,
+      A_FAIRE: 1, EN_DIAGNOSTIC: 2, EN_ATTENTE_PROFORMA: 3, EN_ATTENTE_COMMANDE: 4, EN_COURS: 4, TERMINE: 5, LIVRE: 6,
     };
     return map[s] ?? 1;
   }

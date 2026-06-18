@@ -1,4 +1,4 @@
-export type StatutReparation = 'A_FAIRE' | 'EN_DIAGNOSTIC' | 'EN_COURS' | 'TERMINE' | 'LIVRE';
+export type StatutReparation = 'A_FAIRE' | 'EN_DIAGNOSTIC' | 'EN_ATTENTE_PROFORMA' | 'EN_ATTENTE_COMMANDE' | 'EN_COURS' | 'TERMINE' | 'LIVRE';
 
 export interface FicheAtelier {
   id: number;

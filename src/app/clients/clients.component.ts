@@ -93,7 +93,7 @@ export class ClientsComponent implements OnInit {
     this.loading = true;
     this.clientService.getAll().subscribe({
       next: (clients) => {
-        this.clients = clients;
+        this.clients = clients.sort((a:any, b:any) => b.id - a.id);
         this.applyFilter();
         this.loading = false;
         // Refresh selected client data if one is selected

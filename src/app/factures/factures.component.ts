@@ -88,7 +88,7 @@ export class FacturesComponent implements OnInit {
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: data => { this.factures = data; this.applyFilter(); this.loading = false; },
+      next: data => { this.factures = data.sort((a:any, b:any) => b.id - a.id); this.applyFilter(); this.loading = false; },
       error: () => this.loading = false,
     });
   }

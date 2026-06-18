@@ -46,6 +46,7 @@ export class MainDoeuvreComponent implements OnInit {
 
   form = this.fb.group({
     categorieId: [null as number | null, Validators.required],
+    description: [''],
     prix:      [null as number | null, [Validators.required, Validators.min(0)]],
     nbreHeure: [null as number | null, [Validators.required, Validators.min(1)]],
   });
@@ -74,7 +75,7 @@ export class MainDoeuvreComponent implements OnInit {
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: (data) => { this.items = data; this.applyFilter(); this.loading = false; },
+      next: (data) => { this.items = data.sort((a:any, b:any) => b.id - a.id); this.applyFilter(); this.loading = false; },
       error: ()    => { this.loading = false; }
     });
   }
@@ -132,7 +133,7 @@ export class MainDoeuvreComponent implements OnInit {
 
   openEdit(item: MainDoeuvreModel) {
     this.isNew = false; this.editingId = item.id;
-    this.form.patchValue({ categorieId: item.categorie?.id, prix: item.prix, nbreHeure: item.nbreHeure });
+    this.form.patchValue({ categorieId: item.categorie?.id, description: item.description, prix: item.prix, nbreHeure: item.nbreHeure });
     this.errorMessage = '';
     this.showModal = true;
   }
@@ -142,8 +143,8 @@ export class MainDoeuvreComponent implements OnInit {
   save() {
     if (this.form.invalid || this.saving) { this.form.markAllAsTouched(); return; }
     this.saving = true;
-    const { categorieId, prix, nbreHeure } = this.form.getRawValue();
-    const payload: MainDoeuvreRequest = { categorieId: categorieId!, prix: prix!, nbreHeure: nbreHeure! };
+    const { categorieId, description, prix, nbreHeure } = this.form.getRawValue();
+    const payload: MainDoeuvreRequest = { categorieId: categorieId!, description: description!, prix: prix!, nbreHeure: nbreHeure! };
     const obs = this.isNew
       ? this.service.create(payload)
       : this.service.update(this.editingId!, payload);

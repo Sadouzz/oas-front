@@ -80,7 +80,7 @@ export class PiecesDetacheesComponent implements OnInit {
     this.loading = true;
     this.service.getAll().subscribe({
       next: (data) => {
-        this.pieces = data;
+        this.pieces = data.sort((a:any, b:any) => b.id - a.id);
         this.categories = [...new Set(data.map(p => p.categorie).filter(c => !!c))].sort();
         this.applyFilters();
         this.loading = false;
