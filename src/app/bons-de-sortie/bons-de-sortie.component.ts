@@ -287,7 +287,11 @@ export class BonsDeSortieComponent implements OnInit {
     this.saving = true;
     this.bonService.valider(bon.id).subscribe({
       next: () => { this.saving = false; this.showSuccess(`Bon ${bon.reference} valide !`); this.loadBons(); this.closeDetail(); },
-      error: (err: any) => { this.saving = false; this.errorMessage = err.error?.message || 'Erreur lors de la validation.'; }
+      error: (err: any) => { 
+        this.saving = false; 
+        const msg = err.error?.message ?? (typeof err.error === 'string' ? err.error : '');
+        this.errorMessage = msg || 'Erreur lors de la validation.'; 
+      }
     });
   }
 

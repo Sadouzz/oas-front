@@ -50,6 +50,7 @@ export interface Proforma {
 
 export interface ProformaRequest {
   clientId: number;
+  ficheAtelierId?: number | null;
   vehiculeId?: number | null;
   kilometrage: number;
   immatriculation?: string;
@@ -79,6 +80,10 @@ export class ProformaService {
     return this.http.get<Proforma>(`${this.api}/${id}`);
   }
 
+  getByFicheAtelierId(ficheAtelierId: number): Observable<Proforma> {
+    return this.http.get<Proforma>(`${this.api}/fiche-atelier/${ficheAtelierId}`);
+  }
+
   search(keyword: string): Observable<Proforma[]> {
     return this.http.get<Proforma[]>(`${this.api}/search`, { params: { keyword } });
   }
@@ -97,6 +102,10 @@ export class ProformaService {
 
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.api}/${id}`);
+  }
+
+  valider(id: number): Observable<Proforma> {
+    return this.http.put<Proforma>(`${this.api}/${id}/valider`, {});
   }
 
   convertToFacture(id: number): Observable<any> {

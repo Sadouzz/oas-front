@@ -25,7 +25,7 @@ export class ClientService {
   }
 
   create(data: any): Observable<any> {
-    return this.http.post(`${environment.apiUrl}/api/admin/users/create`, data, { responseType: 'text' as 'json' });
+    return this.http.post(`${this.api}/create`, data, { responseType: 'text' as 'json' });
   }
 
   update(id: number, data: UserUpdatePayload): Observable<UserModel> {

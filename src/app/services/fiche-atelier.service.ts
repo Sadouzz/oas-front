@@ -2,9 +2,9 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { FicheAtelier, FicheAtelierRequest } from '../shared/models';
+import { FicheAtelier, FicheAtelierRequest, StatutReparation } from '../shared/models';
 
-export type { FicheAtelier, FicheAtelierRequest };
+export type { FicheAtelier, FicheAtelierRequest, StatutReparation };
 
 @Injectable({ providedIn: 'root' })
 export class FicheAtelierService {
@@ -37,5 +37,9 @@ export class FicheAtelierService {
 
   removeMecanicien(ficheId: number, mecId: number): Observable<any> {
     return this.http.delete(`${this.api}/${ficheId}/mecaniciens/${mecId}`, { responseType: 'text' as 'json' });
+  }
+
+  updateStatut(ficheId: number, statut: StatutReparation): Observable<FicheAtelier> {
+    return this.http.patch<FicheAtelier>(`${this.api}/${ficheId}/statut`, null, { params: { statut } });
   }
 }

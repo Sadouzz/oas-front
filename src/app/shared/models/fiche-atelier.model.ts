@@ -1,3 +1,5 @@
+export type StatutReparation = 'A_FAIRE' | 'EN_DIAGNOSTIC' | 'EN_COURS' | 'TERMINE' | 'LIVRE';
+
 export interface FicheAtelier {
   id: number;
   numero: string;
@@ -5,9 +7,18 @@ export interface FicheAtelier {
   listeReception: string | null;
   listeDefauts: string | null;
   dateCreation: string;
+  updatedAt: string;
   dateSortie: string | null;
-  vehicule: { id: number; immatriculation: string; marque: string; modele: string } | null;
+  statut: StatutReparation;
+  vehicule: {
+    id: number;
+    immatriculation: string;
+    marque: string;
+    modele: string;
+    client?: { id: number; firstName: string; lastName: string; phone?: string } | null;
+  } | null;
   mecaniciens: { id: number; nom: string }[];
+  bonDeSortie?: { id: number; reference: string; statut: string } | null;
 }
 
 export interface FicheAtelierRequest {
@@ -17,4 +28,5 @@ export interface FicheAtelierRequest {
   listeDefauts?: string;
   dateSortie?: string;
   vehiculeId: number;
+  statut?: StatutReparation;
 }
