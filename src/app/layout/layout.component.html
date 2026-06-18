@@ -108,12 +108,39 @@
                class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
               Inventaire
             </a>
+          }
+        </div>
+      }
+
+      <!-- ── Réapprovisionnement ── -->
+      @if (isAgent() || isSuperAgent() || isMagasinier()) {
+        <button (click)="toggleSection('reappro')"
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+          <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+          </svg>
+          <span class="flex-1 text-left">Réapprovisionnement</span>
+          <svg class="w-3.5 h-3.5 transition-transform" [class.rotate-180]="openSection === 'reappro'"
+               fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+        @if (openSection === 'reappro') {
+          <div class="ml-3 pl-3 border-l border-white/10 space-y-0.5">
+            <a routerLink="/bons-commande" routerLinkActive="oas-sub-active"
+               class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
+              BC — Bon de commande
+            </a>
+            <a routerLink="/bons-livraison" routerLinkActive="oas-sub-active"
+               class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
+              BL — Bon de livraison
+            </a>
             <a routerLink="/fournisseurs" routerLinkActive="oas-sub-active"
                class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
               Fournisseurs
             </a>
-          }
-        </div>
+          </div>
+        }
       }
 
       <!-- ── Facture TTC — Agent + Super Agent ── -->
@@ -134,14 +161,6 @@
             <a routerLink="/factures" routerLinkActive="oas-sub-active"
                class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
               Facture
-            </a>
-            <a routerLink="/bons-livraison" routerLinkActive="oas-sub-active"
-               class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
-              BL — Bon de livraison
-            </a>
-            <a routerLink="/bons-commande" routerLinkActive="oas-sub-active"
-               class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
-              BC — Bon de commande
             </a>
             <a routerLink="/proformas" routerLinkActive="oas-sub-active"
                class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">

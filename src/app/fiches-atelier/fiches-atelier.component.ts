@@ -32,11 +32,50 @@ export interface LigneMO {
   quantite: number;
 }
 
+// ─── Constantes Checkboxes ──────────────────────────────
+export const TRAVAUX_FREQUENTS = [
+  'Vidange moteur',
+  'Vidange boîte de vitesse',
+  'Changement plaquettes de frein',
+  'Changement disques de frein',
+  'Changement courroie de distribution',
+  'Diagnostic électronique',
+  'Climatisation',
+  'Parallélisme / géométrie',
+  'Révision générale',
+  'Changement pneus',
+];
+
+export const ELEMENTS_RECUS_FREQUENTS = [
+  'Clé de contact',
+  'Carte grise',
+  'Documents du véhicule',
+  'Cric',
+  'Roue de secours',
+  'Gilet de sécurité',
+  'Triangle de signalisation',
+  'Tapis de sol',
+  'Antenne radio',
+];
+
+export const PANNES_FREQUENTES = [
+  'Fuite d\'huile moteur',
+  'Fuite liquide de refroidissement',
+  'Bruit suspension',
+  'Vibration au freinage',
+  'Surchauffe moteur',
+  'Voyant moteur allumé',
+  'Batterie faible',
+  'Problème démarrage',
+  'Usure pneus',
+  'Jeu dans la direction',
+];
+
 const STATUT_STEPS: { statut: StatutReparation | 'EN_ATTENTE_PROFORMA'; label: string }[] = [
   { statut: 'A_FAIRE',            label: 'Réception'   },
   { statut: 'EN_DIAGNOSTIC',      label: 'Diagnostic'  },
   { statut: 'EN_ATTENTE_PROFORMA', label: 'Proforma'   },
-  { statut: 'EN_ATTENTE_COMMANDE', label: 'Attente Pièces'},
+  { statut: 'EN_ATTENTE_COMMANDE', label: 'Approv.'},
   { statut: 'EN_COURS',           label: 'Bon sortie'  },
   { statut: 'TERMINE',            label: 'Réparation'  },
   { statut: 'LIVRE',              label: 'Livraison'   },
@@ -87,19 +126,44 @@ export class FichesAtelierComponent implements OnInit {
   saving = false;
   statutSteps = STATUT_STEPS;
 
+  // ─── Constantes Checkboxes ────────────────────────────
+  travauxFrequents = TRAVAUX_FREQUENTS;
+  elementsRecusFrequents = ELEMENTS_RECUS_FREQUENTS;
+  pannesFrequentes = PANNES_FREQUENTES;
+
+  // ─── Checkbox sélections ──────────────────────────────
+  selectedTravaux: string[] = [];
+  autreTravaux = '';
+  showAutreTravaux = false;
+
+  selectedReception: string[] = [];
+  autreReception = '';
+  showAutreReception = false;
+
+  selectedPannes: string[] = [];
+  autrePannes = '';
+  showAutrePannes = false;
+
   // Étape 1 — Réception
   step1Form: FormGroup = this.fb.group({
     numero:             [''],
     vehiculeId:         [null, Validators.required],
     listeReception:     [''],
-    descriptionTravaux: ['', Validators.required],
+    descriptionTravaux: [''],
   });
 
   // Étape 2 — Diagnostic
   step2Form: FormGroup = this.fb.group({
     listeDefauts: [''],
-    dateSortie:   [''],
   });
+
+  // Étape 4 — Date de sortie estimée
+  dateSortieEstimee = '';
+
+  // ─── Filtres avancés ──────────────────────────────────
+  filterStatut = '';
+  filterDateDebut = '';
+  filterDateFin = '';
 
   // ─── Sélecteur véhicule full-UX ───────────────────────
   vehiculeSearch = '';
@@ -258,18 +322,37 @@ export class FichesAtelierComponent implements OnInit {
     });
   }
 
-  // ─── Recherche ───────────────────────────────────────
+  // ─── Recherche & Filtres ────────────────────────────────
   searchKw = '';
   applyFilter() {
     const kw = this.searchKw.toLowerCase();
-    this.filtered = kw
-      ? this.fiches.filter(f =>
-          f.numero.toLowerCase().includes(kw) ||
-          (f.vehicule?.immatriculation ?? '').toLowerCase().includes(kw) ||
-          f.descriptionTravaux.toLowerCase().includes(kw) ||
-          (f.statut ?? '').toLowerCase().includes(kw)
-        )
-      : [...this.fiches];
+    let result = this.fiches;
+
+    if (kw) {
+      result = result.filter(f =>
+        f.numero.toLowerCase().includes(kw) ||
+        (f.vehicule?.immatriculation ?? '').toLowerCase().includes(kw) ||
+        f.descriptionTravaux.toLowerCase().includes(kw) ||
+        (f.statut ?? '').toLowerCase().includes(kw)
+      );
+    }
+
+    if (this.filterStatut) {
+      result = result.filter(f => f.statut === this.filterStatut);
+    }
+
+    if (this.filterDateDebut) {
+      const debut = new Date(this.filterDateDebut);
+      result = result.filter(f => new Date(f.dateCreation) >= debut);
+    }
+
+    if (this.filterDateFin) {
+      const fin = new Date(this.filterDateFin);
+      fin.setHours(23, 59, 59);
+      result = result.filter(f => new Date(f.dateCreation) <= fin);
+    }
+
+    this.filtered = result;
     this.page = 1;
   }
 
@@ -278,12 +361,49 @@ export class FichesAtelierComponent implements OnInit {
     this.applyFilter();
   }
 
+  onFilterStatut(e: Event) {
+    this.filterStatut = (e.target as HTMLSelectElement).value;
+    this.applyFilter();
+  }
+
+  // ─── Checkbox Toggles ──────────────────────────────────
+  toggleTravaux(item: string) {
+    const idx = this.selectedTravaux.indexOf(item);
+    if (idx >= 0) this.selectedTravaux.splice(idx, 1);
+    else this.selectedTravaux.push(item);
+  }
+
+  toggleReception(item: string) {
+    const idx = this.selectedReception.indexOf(item);
+    if (idx >= 0) this.selectedReception.splice(idx, 1);
+    else this.selectedReception.push(item);
+  }
+
+  togglePannes(item: string) {
+    const idx = this.selectedPannes.indexOf(item);
+    if (idx >= 0) this.selectedPannes.splice(idx, 1);
+    else this.selectedPannes.push(item);
+  }
+
+  private composeFromCheckboxes(selected: string[], autre: string): string {
+    const parts = [...selected];
+    if (autre.trim()) parts.push(autre.trim());
+    return parts.join(', ');
+  }
+
+  private decomposeToCheckboxes(text: string, frequentList: string[]): { selected: string[], autre: string } {
+    if (!text) return { selected: [], autre: '' };
+    const items = text.split(',').map(s => s.trim()).filter(s => s.length > 0);
+    const selected: string[] = [];
+    const others: string[] = [];
+    for (const item of items) {
+      if (frequentList.includes(item)) selected.push(item);
+      else others.push(item);
+    }
+    return { selected, autre: others.join(', ') };
+  }
+
   // ─── Ouverture Workflow ───────────────────────────────
-  /**
-   * CRÉATION : on ouvre seulement l'étape 1 (Réception).
-   * On ne montre pas le stepper complet — la fiche est sauvegardée
-   * à la fin de l'étape 1, et le diagnostic se fait ultérieurement.
-   */
   openNew() {
     this.isNew       = true;
     this.editingId   = null;
@@ -292,9 +412,6 @@ export class FichesAtelierComponent implements OnInit {
     this.showWorkflow = true;
   }
 
-  /**
-   * ÉDITION : on ouvre le stepper complet depuis l'étape du statut actuel.
-   */
   openEdit(f: FicheAtelier) {
     this.isNew     = false;
     this.editingId = f.id;
@@ -305,10 +422,28 @@ export class FichesAtelierComponent implements OnInit {
       listeReception:     f.listeReception ?? '',
       descriptionTravaux: f.descriptionTravaux,
     });
+
+    // Décomposer les checkboxes depuis les textes existants
+    const travauxDecomp = this.decomposeToCheckboxes(f.descriptionTravaux, TRAVAUX_FREQUENTS);
+    this.selectedTravaux = travauxDecomp.selected;
+    this.autreTravaux = travauxDecomp.autre;
+    this.showAutreTravaux = this.autreTravaux.length > 0;
+
+    const receptionDecomp = this.decomposeToCheckboxes(f.listeReception ?? '', ELEMENTS_RECUS_FREQUENTS);
+    this.selectedReception = receptionDecomp.selected;
+    this.autreReception = receptionDecomp.autre;
+    this.showAutreReception = this.autreReception.length > 0;
+
+    const pannesDecomp = this.decomposeToCheckboxes(f.listeDefauts ?? '', PANNES_FREQUENTES);
+    this.selectedPannes = pannesDecomp.selected;
+    this.autrePannes = pannesDecomp.autre;
+    this.showAutrePannes = this.autrePannes.length > 0;
+
     this.step2Form.patchValue({
       listeDefauts: f.listeDefauts ?? '',
-      dateSortie:   f.dateSortie ? f.dateSortie.substring(0, 10) : '',
     });
+
+    this.dateSortieEstimee = f.dateSortie ? f.dateSortie.substring(0, 10) : '';
     
     // Charger le proforma pour toute fiche qui en a un (step 3+)
     const needsProforma = ['EN_ATTENTE_PROFORMA', 'EN_ATTENTE_COMMANDE', 'EN_COURS', 'TERMINE', 'LIVRE'].includes(f.statut as string);
@@ -318,7 +453,7 @@ export class FichesAtelierComponent implements OnInit {
           this.currentProforma = p;
           // Reconstituer les lignes pièces depuis le proforma
           this.lignesPieces = p.lignesPieces
-            .map(lp => {
+            .map((lp: any) => {
               const piece = this.allPieces.find(pp => pp.id === lp.pieceId);
               if (!piece) return null;
               const stockAtelier = piece.stockAtelier ?? 0;
@@ -336,15 +471,15 @@ export class FichesAtelierComponent implements OnInit {
                 stockAtelier: stockAtelier
               } as LignePiece;
             })
-            .filter((l) => l !== null) as LignePiece[];
+            .filter((l: any) => l !== null) as LignePiece[];
           // Reconstituer les lignes MO depuis le proforma
           this.lignesMO = p.lignesMainDoeuvres
-            .map(lmd => {
+            .map((lmd: any) => {
               const mo = this.allMO.find(m => m.id === lmd.mainDoeuvreId);
               if (!mo) return null;
               return { mo, quantite: lmd.nbreHeure };
             })
-            .filter((l): l is LigneMO => l !== null);
+            .filter((l: any): l is LigneMO => l !== null);
         },
         error: () => {
           this.currentProforma = null;
@@ -366,8 +501,6 @@ export class FichesAtelierComponent implements OnInit {
       }
     }
     this.selectedMecs = f.mecaniciens.map(m => m.id);
-    this.lignesPieces = [];
-    this.lignesMO     = [];
     this.showWorkflow = true;
   }
 
@@ -386,6 +519,17 @@ export class FichesAtelierComponent implements OnInit {
     this.vehiculeForm.reset();
     this.selectedVehiculeClient = null;
     this.vehiculeClientSearch   = '';
+    this.selectedTravaux = [];
+    this.autreTravaux = '';
+    this.showAutreTravaux = false;
+    this.selectedReception = [];
+    this.autreReception = '';
+    this.showAutreReception = false;
+    this.selectedPannes = [];
+    this.autrePannes = '';
+    this.showAutrePannes = false;
+    this.dateSortieEstimee = '';
+    this.currentProforma = null;
   }
 
   closeWorkflow() {
@@ -395,11 +539,14 @@ export class FichesAtelierComponent implements OnInit {
 
   // ─── Étapes : max steps selon mode ───────────────────
   get maxStep(): number {
-    return this.isNew ? 1 : 6;
+    return this.isNew ? 1 : 7;
   }
 
   get canNext(): boolean {
-    if (this.currentStep === 1) return this.step1Form.valid;
+    if (this.currentStep === 1) {
+      return this.step1Form.get('vehiculeId')?.valid === true
+        && (this.selectedTravaux.length > 0 || this.autreTravaux.trim().length > 0);
+    }
     return true;
   }
 
@@ -407,8 +554,7 @@ export class FichesAtelierComponent implements OnInit {
     if (!this.canNext) { this.step1Form.markAllAsTouched(); return; }
     if (this.currentStep === 1) { this.saveStep1ThenGoNext(); return; }
     if (this.currentStep === 2) { this.saveStep2ThenGoNext(); return; }
-    // if (this.currentStep === 3) { this.checkStockThenGoNext(); return; } // Removed, Proforma created manually
-    if (this.currentStep < 6) this.currentStep++;
+    if (this.currentStep < 7) this.currentStep++;
   }
 
   prevStep() {
@@ -421,12 +567,19 @@ export class FichesAtelierComponent implements OnInit {
 
   // ─── Étape 1 ─────────────────────────────────────────
   private saveStep1ThenGoNext() {
-    if (this.step1Form.invalid) { this.step1Form.markAllAsTouched(); return; }
+    const descriptionTravaux = this.composeFromCheckboxes(this.selectedTravaux, this.autreTravaux);
+    const listeReception = this.composeFromCheckboxes(this.selectedReception, this.autreReception);
+
+    if (!descriptionTravaux) {
+      this.notifyError('Veuillez sélectionner au moins un travail demandé.');
+      return;
+    }
+
     const raw = this.step1Form.value;
     const payload = {
       numero:             raw.numero,
-      descriptionTravaux: raw.descriptionTravaux,
-      listeReception:     raw.listeReception || undefined,
+      descriptionTravaux: descriptionTravaux,
+      listeReception:     listeReception || undefined,
       vehiculeId:         Number(raw.vehiculeId),
       statut:             'A_FAIRE' as StatutReparation,
     };
@@ -441,12 +594,12 @@ export class FichesAtelierComponent implements OnInit {
         this.saving    = false;
         this.editingId = f.id;
         this.isNew     = false;
-        // Toujours avancer au diagnostic (step 2), que ce soit une création ou une édition
-        this.advanceStatutTo('EN_DIAGNOSTIC', () => { 
-          this.currentStep = 2; 
-          this.load(); 
-          if (wasNew) this.notify('Fiche créée. Complétez le diagnostic.'); 
-        });
+        // Mettre à jour le numéro dans le formulaire
+        this.step1Form.patchValue({ numero: f.numero });
+        // Avancer au step 2 (mécaniciens) mais rester en A_FAIRE
+        this.currentStep = 2; 
+        this.load(); 
+        if (wasNew) this.notify('Fiche créée. Affectez les mécaniciens.'); 
       },
       error: (err) => { 
         console.error('SAVE STEP 1 ERROR:', JSON.stringify(err.error));
@@ -471,33 +624,27 @@ export class FichesAtelierComponent implements OnInit {
     return (m.description || m.categorie?.nom || '') + ' (' + m.nbreHeure + 'h - ' + this.formatPrice(m.prix) + ')';
   };
 
-  // ── UTILITAIRES UI ─────────────────────────────────────────
   private saveStep2ThenGoNext() {
-    const raw = this.step2Form.value;
+    if (this.selectedMecs.length === 0) {
+      this.notifyError('Veuillez affecter au moins un mécanicien pour le diagnostic.');
+      return;
+    }
+    
     this.saving = true;
-    this.service.update(this.editingId!, {
-      numero:             this.step1Form.value.numero,
-      descriptionTravaux: this.step1Form.value.descriptionTravaux,
-      listeReception:     this.step1Form.value.listeReception || undefined,
-      vehiculeId:         Number(this.step1Form.value.vehiculeId),
-      listeDefauts:       raw.listeDefauts || undefined,
-      dateSortie:         raw.dateSortie ? (raw.dateSortie.includes('T') ? raw.dateSortie : raw.dateSortie + 'T00:00:00') : undefined,
-    }).subscribe({
-      next: () => {
+    if (this.editingFicheStatus === 'A_FAIRE') {
+      this.advanceStatutTo('EN_DIAGNOSTIC' as StatutReparation, () => {
         this.saving = false;
-        // Avancer le statut à EN_ATTENTE_PROFORMA pour que le stepper soit correct au retour
-        this.advanceStatutTo('EN_ATTENTE_PROFORMA' as StatutReparation, () => {
-          this.closeWorkflow();
-          this.load();
-          this.notify('Diagnostic enregistré. La fiche est désormais en attente de proforma.');
-        });
-      },
-      error: (err) => { 
-        console.error('SAVE STEP 2 ERROR:', JSON.stringify(err.error));
-        this.saving = false; 
-        this.notifyError(err.error?.message || 'Erreur lors de la sauvegarde.'); 
-      },
-    });
+        this.notify('Diagnostic en cours. Remplissez les pannes une fois terminé.');
+        this.load();
+      });
+    } else {
+      this.advanceStatutTo('EN_ATTENTE_PROFORMA' as StatutReparation, () => {
+        this.saving = false;
+        this.currentStep = 3;
+        this.notify('Diagnostic terminé. Veuillez générer le proforma.');
+        this.load();
+      });
+    }
   }
 
   // ─── Proforma (Nouvelle Étape 3) ──────────────────────
@@ -514,18 +661,18 @@ export class FichesAtelierComponent implements OnInit {
 
     this.proformaSaving = true;
 
-    // Enregistrer les pannes et défauts d'abord
-    const raw = this.step2Form.value;
+    const listeDefauts = this.composeFromCheckboxes(this.selectedPannes, this.autrePannes);
+    const descriptionTravaux = this.composeFromCheckboxes(this.selectedTravaux, this.autreTravaux);
+    const listeReception = this.composeFromCheckboxes(this.selectedReception, this.autreReception);
+
     this.service.update(this.editingId!, {
       numero:             this.step1Form.value.numero,
-      descriptionTravaux: this.step1Form.value.descriptionTravaux,
-      listeReception:     this.step1Form.value.listeReception || undefined,
+      descriptionTravaux: descriptionTravaux,
+      listeReception:     listeReception || undefined,
       vehiculeId:         Number(this.step1Form.value.vehiculeId),
-      listeDefauts:       raw.listeDefauts || undefined,
-      dateSortie:         raw.dateSortie ? (raw.dateSortie.includes('T') ? raw.dateSortie : raw.dateSortie + 'T00:00:00') : undefined,
+      listeDefauts:       listeDefauts || undefined,
     }).subscribe({
       next: () => {
-        // Ensuite on crée le proforma
         this.proformaService.create({
           ficheAtelierId: this.editingId!,
           clientId,
@@ -560,8 +707,8 @@ export class FichesAtelierComponent implements OnInit {
     this.proformaService.valider(this.currentProforma.id).subscribe({
       next: () => {
         this.proformaSaving = false;
-        this.notify('Proforma validé par le client. Début des réparations.');
-        this.currentStep = 4; // Passe à l'étape réparation
+        this.notify('Proforma validé par le client.');
+        this.currentStep = 4; // Passe à l'étape approvisionnement
         this.load();
       },
       error: (err) => {
@@ -571,13 +718,26 @@ export class FichesAtelierComponent implements OnInit {
     });
   }
 
-  // ─── Proforma validé → Bon de Sortie (Étape 4) ───────
-  goToBonDeSortie() {
-    // Après validation du proforma, passer à l'étape Bon de Sortie
-    this.currentStep = 4;
+  // ─── Step 4 — Approvisionnement ────────────────────────
+  get allPiecesDisponibles(): boolean {
+    return this.lignesPieces.every(l => l.manquant === 0);
   }
 
-  // ─── Bon de Sortie & Affectation (Étape 4) → Réparation (Étape 5) ─────────────
+  saveDateSortieEstimee() {
+    if (!this.editingId || !this.dateSortieEstimee) return;
+    this.saving = true;
+    this.service.update(this.editingId, {
+      numero:             this.step1Form.value.numero,
+      descriptionTravaux: this.composeFromCheckboxes(this.selectedTravaux, this.autreTravaux),
+      vehiculeId:         Number(this.step1Form.value.vehiculeId),
+      dateSortie:         this.dateSortieEstimee + 'T00:00:00',
+    }).subscribe({
+      next: () => { this.saving = false; this.notify('Date de sortie estimée enregistrée.'); this.load(); },
+      error: () => { this.saving = false; this.notifyError('Erreur lors de la sauvegarde.'); }
+    });
+  }
+
+  // ─── Bon de Sortie & Affectation (Étape 5) → Réparation (Étape 6) ─────────────
   checkStockAndStartReparation() {
     if (this.selectedMecs.length === 0) {
       this.notifyError('Veuillez affecter au moins un mécanicien.');
@@ -636,7 +796,7 @@ export class FichesAtelierComponent implements OnInit {
 
   startReparation() {
     this.advanceStatutTo('EN_COURS', () => {
-      this.currentStep = 5;
+      this.currentStep = 6;
       this.load();
     });
   }
@@ -645,7 +805,7 @@ export class FichesAtelierComponent implements OnInit {
     this.saving = true;
     this.advanceStatutTo('TERMINE', () => {
       this.saving = false;
-      this.currentStep = 6;
+      this.currentStep = 7;
       this.notify('Réparation terminée. Fiche prête pour livraison.');
       this.load();
     });
@@ -831,14 +991,14 @@ export class FichesAtelierComponent implements OnInit {
     });
   }
 
-  // ─── Bon de Commande ──────────────────────────────────
+  // ─── Bon de Commande (sans fournisseur) ───────────────
   closeBDCModal() { this.showBDCModal = false; }
 
   createBonDeCommande() {
-    if (!this.bdcFournisseurId || !this.editingId) return;
+    if (!this.editingId) return;
     const fiche = this.fiches.find(f => f.id === this.editingId);
     const payload: BonDeCommandeRequest = {
-      fournisseurId: Number(this.bdcFournisseurId),
+      fournisseurId: null, // Pas de fournisseur — sera assigné plus tard
       vehiculeId:    fiche?.vehicule?.id,
       tvaApplicable: false,
       observation:   `Commande liée à la fiche atelier #${this.step1Form.value.numero}`,
@@ -849,7 +1009,7 @@ export class FichesAtelierComponent implements OnInit {
       next: () => { 
         this.bdcSaving = false; 
         this.showBDCModal = false; 
-        this.notify('Bon de commande créé !');
+        this.notify('Bon de commande créé en attente. Allez dans « Bons de commande » pour assigner un fournisseur.');
         this.advanceStatutTo('EN_ATTENTE_COMMANDE', () => {
           this.currentStep = 4;
           this.load();
@@ -858,8 +1018,6 @@ export class FichesAtelierComponent implements OnInit {
       error: () => { this.bdcSaving = false; this.notifyError('Erreur lors de la création du bon de commande.'); },
     });
   }
-
-
 
   // ─── Livraison ───────────────────────────────────────
   marquerLivre() {
@@ -893,7 +1051,7 @@ export class FichesAtelierComponent implements OnInit {
 
   private statutToStep(s: StatutReparation | string): number {
     const map: Record<string, number> = {
-      A_FAIRE: 1, EN_DIAGNOSTIC: 2, EN_ATTENTE_PROFORMA: 3, EN_ATTENTE_COMMANDE: 4, EN_COURS: 4, TERMINE: 5, LIVRE: 6,
+      A_FAIRE: 1, EN_DIAGNOSTIC: 2, EN_ATTENTE_PROFORMA: 3, EN_ATTENTE_COMMANDE: 4, EN_COURS: 5, TERMINE: 6, LIVRE: 7,
     };
     return map[s] ?? 1;
   }

@@ -23,16 +23,33 @@
 
     <app-alert [success]="successMessage" [error]="errorMessage" />
 
-    <!-- Search -->
+    <!-- Filtres -->
     <div class="bg-white rounded-2xl border border-oas-line p-3 mb-4 shadow-sm">
-      <div class="relative">
-        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-oas-muted">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-          </svg>
-        </span>
-        <input (input)="onSearch($event)" placeholder="Rechercher par numéro, véhicule, statut..."
-               class="w-full pl-9 pr-4 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
+      <div class="flex flex-wrap gap-3">
+        <div class="relative flex-1 min-w-48">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-oas-muted">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </span>
+          <input (input)="onSearch($event)" placeholder="Rechercher par numéro, véhicule, statut..."
+                 class="w-full pl-9 pr-4 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
+        </div>
+        <select (change)="onFilterStatut($event)"
+                class="px-3 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
+          <option value="">Tous les statuts</option>
+          <option value="A_FAIRE">Réception</option>
+          <option value="EN_DIAGNOSTIC">Diagnostic</option>
+          <option value="EN_ATTENTE_PROFORMA">Proforma</option>
+          <option value="EN_ATTENTE_COMMANDE">Approv.</option>
+          <option value="EN_COURS">Bon sortie</option>
+          <option value="TERMINE">Réparation</option>
+          <option value="LIVRE">Livré</option>
+        </select>
+        <input type="date" [(ngModel)]="filterDateDebut" (change)="applyFilter()" placeholder="Depuis"
+               class="px-3 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink"/>
+        <input type="date" [(ngModel)]="filterDateFin" (change)="applyFilter()" placeholder="Jusqu'à"
+               class="px-3 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink"/>
       </div>
     </div>
 
@@ -187,7 +204,6 @@
       </div>
 
       <div class="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-
         <div class="grid grid-cols-2 gap-3">
           <div class="bg-oas-bg rounded-xl p-3">
             <p class="text-[10px] text-oas-muted font-semibold uppercase tracking-wide mb-1">Ouverture</p>
@@ -302,7 +318,7 @@
             {{ isNew ? 'Nouvelle fiche — Réception' : 'Réparation · ' + step1Form.value.numero }}
           </h2>
           <p class="text-xs text-oas-muted mt-0.5">
-            {{ isNew ? 'Enregistrez la réception du véhicule. Le diagnostic sera effectué ultérieurement.' : 'Étape ' + currentStep + ' sur 5' }}
+            {{ isNew ? 'Enregistrez la réception du véhicule.' : 'Étape ' + currentStep + ' sur 7' }}
           </p>
         </div>
         <button (click)="closeWorkflow()" class="p-1.5 rounded-lg hover:bg-oas-bg text-oas-muted cursor-pointer transition">
@@ -358,6 +374,13 @@
         @if (currentStep === 1) {
           <form [formGroup]="step1Form" class="space-y-5">
 
+            <!-- Numéro de fiche (visible always) -->
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1.5">Numéro de fiche</label>
+              <input [value]="step1Form.value.numero || 'Généré automatiquement'" disabled
+                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-gray-100 text-sm text-oas-ink font-mono font-bold cursor-not-allowed"/>
+            </div>
+
             <!-- ─── Sélecteur Véhicule full-UX ─── -->
             <div>
               <div class="flex items-center justify-between mb-1.5">
@@ -395,7 +418,6 @@
                     </div>
                   </div>
 
-                  <!-- Dropdown résultats -->
                   @if (showVehiculeDropdown && vehiculesFiltres.length > 0) {
                     <div class="absolute z-20 w-full mt-1 bg-white border border-oas-line rounded-xl shadow-xl overflow-hidden max-h-56 overflow-y-auto">
                       @for (v of vehiculesFiltres; track v.id) {
@@ -431,7 +453,6 @@
                   }
                 </div>
 
-                <!-- Véhicule sélectionné — aperçu -->
                 @if (selectedVehicule) {
                   <div class="mt-2 flex items-center gap-3 px-3 py-2 bg-green-50 border border-oas-ok/30 rounded-xl">
                     <svg class="w-4 h-4 text-oas-ok flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -575,30 +596,68 @@
               }
             </div>
 
-            <!-- Motif / Travaux -->
+            <!-- Travaux demandés (Checkboxes) -->
             <div>
-              <label class="block text-sm font-semibold text-oas-ink mb-1.5">Motif d'entrée / Travaux demandés *</label>
-              <textarea formControlName="descriptionTravaux" rows="3"
-                        placeholder="Décrivez les travaux demandés par le client..."
-                        class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition resize-none"
-                        [class.border-oas-bad]="step1Form.get('descriptionTravaux')?.invalid && step1Form.get('descriptionTravaux')?.touched"></textarea>
+              <label class="block text-sm font-semibold text-oas-ink mb-2">Travaux demandés *</label>
+              <div class="grid grid-cols-2 gap-2">
+                @for (t of travauxFrequents; track t) {
+                  <label class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs cursor-pointer transition"
+                         [ngClass]="selectedTravaux.includes(t) ? 'bg-oas-accent/10 text-oas-accent font-semibold border border-oas-accent/30' : 'bg-oas-bg text-oas-ink2 border border-transparent hover:bg-oas-line'">
+                    <input type="checkbox" [checked]="selectedTravaux.includes(t)" (change)="toggleTravaux(t)"
+                           class="w-4 h-4 accent-oas-accent rounded"/>
+                    {{ t }}
+                  </label>
+                }
+              </div>
+              <div class="mt-2">
+                <label class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs cursor-pointer transition"
+                       [ngClass]="showAutreTravaux ? 'bg-amber-50 text-amber-700 font-semibold border border-amber-200' : 'bg-oas-bg text-oas-ink2 border border-transparent hover:bg-oas-line'">
+                  <input type="checkbox" [checked]="showAutreTravaux" (change)="showAutreTravaux = !showAutreTravaux"
+                         class="w-4 h-4 accent-amber-500 rounded"/>
+                  Autre
+                </label>
+                @if (showAutreTravaux) {
+                  <textarea [(ngModel)]="autreTravaux" [ngModelOptions]="{standalone: true}" rows="2"
+                            placeholder="Décrivez les travaux supplémentaires..."
+                            class="w-full mt-2 px-3 py-2 rounded-xl border border-amber-200 bg-amber-50/50 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/40 transition resize-none"></textarea>
+                }
+              </div>
             </div>
 
-            <!-- Liste réception -->
+            <!-- Éléments reçus (Checkboxes) -->
             <div>
-              <label class="block text-sm font-semibold text-oas-ink mb-1.5">Éléments reçus avec le véhicule</label>
-              <textarea formControlName="listeReception" rows="2"
-                        placeholder="Clé de contact, documentation, cric, roue de secours..."
-                        class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition resize-none"></textarea>
+              <label class="block text-sm font-semibold text-oas-ink mb-2">Éléments reçus avec le véhicule</label>
+              <div class="grid grid-cols-3 gap-2">
+                @for (e of elementsRecusFrequents; track e) {
+                  <label class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs cursor-pointer transition"
+                         [ngClass]="selectedReception.includes(e) ? 'bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200' : 'bg-oas-bg text-oas-ink2 border border-transparent hover:bg-oas-line'">
+                    <input type="checkbox" [checked]="selectedReception.includes(e)" (change)="toggleReception(e)"
+                           class="w-4 h-4 accent-emerald-500 rounded"/>
+                    {{ e }}
+                  </label>
+                }
+              </div>
+              <div class="mt-2">
+                <label class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs cursor-pointer transition"
+                       [ngClass]="showAutreReception ? 'bg-amber-50 text-amber-700 font-semibold border border-amber-200' : 'bg-oas-bg text-oas-ink2 border border-transparent hover:bg-oas-line'">
+                  <input type="checkbox" [checked]="showAutreReception" (change)="showAutreReception = !showAutreReception"
+                         class="w-4 h-4 accent-amber-500 rounded"/>
+                  Autre
+                </label>
+                @if (showAutreReception) {
+                  <input [(ngModel)]="autreReception" [ngModelOptions]="{standalone: true}"
+                         placeholder="Autres éléments reçus..."
+                         class="w-full mt-2 px-3 py-2 rounded-xl border border-amber-200 bg-amber-50/50 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/40 transition"/>
+                }
+              </div>
             </div>
 
-            <!-- Info mode création -->
             @if (isNew) {
               <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 flex gap-2">
                 <svg class="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                <p class="text-xs text-amber-700">La fiche sera créée en statut <strong>«&nbsp;À faire&nbsp;»</strong>. Revenez dessus pour lancer le diagnostic dès que le mécanicien est disponible.</p>
+                <p class="text-xs text-amber-700">La fiche sera créée en statut <strong>«&nbsp;À faire&nbsp;»</strong>. Le numéro sera généré automatiquement.</p>
               </div>
             }
           </form>
@@ -608,20 +667,9 @@
         <!-- ÉTAPE 2 — DIAGNOSTIC                         -->
         <!-- ═════════════════════════════════════════════ -->
         @if (currentStep === 2) {
-          <form [formGroup]="step2Form" class="space-y-5">
-            
+          <div class="space-y-5">
 
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-semibold text-oas-ink mb-1.5">Date de sortie estimée</label>
-                <input formControlName="dateSortie" type="date"
-                       class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/40 transition"/>
-              </div>
-              <div class="bg-amber-50 border border-amber-200 rounded-xl p-3">
-                <p class="text-xs text-amber-700">La date sera communiquée au client. Elle peut être mise à jour.</p>
-              </div>
-            </div>
-
+            <!-- Mécaniciens -->
             <div>
               <label class="block text-sm font-semibold text-oas-ink mb-2">Mécaniciens affectés au diagnostic</label>
               <div class="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
@@ -638,7 +686,7 @@
                 }
               </div>
             </div>
-          </form>
+          </div>
         }
 
         <!-- ═════════════════════════════════════════════ -->
@@ -647,7 +695,6 @@
         @if (currentStep === 3) {
           <div class="space-y-6">
             @if (currentProforma) {
-              <!-- Vue Attente Proforma -->
               <div class="bg-purple-50 border border-purple-200 rounded-xl p-4 flex flex-col items-center justify-center space-y-4 text-center">
                 <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center">
                   <svg class="w-8 h-8 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -656,22 +703,48 @@
                 </div>
                 <div>
                   <h3 class="text-lg font-extrabold text-purple-900">Proforma {{ currentProforma.numero }} généré</h3>
-                  <p class="text-sm text-purple-700 mt-1">Le proforma a été créé avec un total de <strong>{{ formatPrice(currentProforma.montantTotal) }}</strong>.</p>
+                  <p class="text-sm text-purple-700 mt-1">Total : <strong>{{ formatPrice(currentProforma.montantTotal) }}</strong></p>
                   <p class="text-xs text-purple-600 mt-2">La fiche est bloquée jusqu'à l'accord du client.</p>
                 </div>
                 <button (click)="validerProforma()" [disabled]="proformaSaving"
                         class="px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm shadow-lg shadow-purple-600/30 transition cursor-pointer disabled:opacity-60 flex items-center gap-2 mt-2">
-                  @if (proformaSaving) { <span>Validation...</span> } @else { <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> <span>Valider l'accord du client</span> }
+                  @if (proformaSaving) { <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> <span>Validation...</span> } @else { <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> <span>Valider l'accord du client</span> }
                 </button>
               </div>
             } @else {
-              <!-- Alert rupture -->
+              <!-- Pannes détectées (Checkboxes) -->
+              <div>
+                <label class="block text-sm font-semibold text-oas-ink mb-2">Pannes et défauts détectés</label>
+                <div class="grid grid-cols-2 gap-2">
+                  @for (p of pannesFrequentes; track p) {
+                    <label class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs cursor-pointer transition"
+                           [ngClass]="selectedPannes.includes(p) ? 'bg-red-50 text-red-700 font-semibold border border-red-200' : 'bg-oas-bg text-oas-ink2 border border-transparent hover:bg-oas-line'">
+                      <input type="checkbox" [checked]="selectedPannes.includes(p)" (change)="togglePannes(p)"
+                             class="w-4 h-4 accent-red-500 rounded"/>
+                      {{ p }}
+                    </label>
+                  }
+                </div>
+                <div class="mt-2">
+                  <label class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs cursor-pointer transition"
+                         [ngClass]="showAutrePannes ? 'bg-amber-50 text-amber-700 font-semibold border border-amber-200' : 'bg-oas-bg text-oas-ink2 border border-transparent hover:bg-oas-line'">
+                    <input type="checkbox" [checked]="showAutrePannes" (change)="showAutrePannes = !showAutrePannes"
+                           class="w-4 h-4 accent-amber-500 rounded"/>
+                    Autre
+                  </label>
+                  @if (showAutrePannes) {
+                    <textarea [(ngModel)]="autrePannes" [ngModelOptions]="{standalone: true}" rows="3"
+                              placeholder="Décrivez les pannes détectées..."
+                              class="w-full mt-2 px-3 py-2.5 rounded-xl border border-amber-200 bg-amber-50/50 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/40 transition resize-none"></textarea>
+                  }
+                </div>
+              </div>
               @if (hasRupture) {
                 <div class="bg-red-50 border border-red-200 rounded-xl p-3 flex items-center gap-3">
                   <svg class="w-5 h-5 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
                   </svg>
-                  <p class="text-sm text-red-700 font-semibold">Stock insuffisant — un bon de commande sera nécessaire si le proforma est validé.</p>
+                  <p class="text-sm text-red-700 font-semibold">Stock insuffisant — un bon de commande sera nécessaire.</p>
                 </div>
               }
 
@@ -682,128 +755,68 @@
                   </svg>
                 </div>
                 <div>
-                  <p class="font-bold text-oas-ink text-sm">Diagnostic et Génération du Proforma</p>
-                  <p class="text-xs text-oas-muted">Consignez les pannes et sélectionnez les pièces/MO pour le devis</p>
+                  <p class="font-bold text-oas-ink text-sm">Génération du Proforma</p>
+                  <p class="text-xs text-oas-muted">Sélectionnez les pièces/MO pour le devis</p>
                 </div>
               </div>
 
-              <!-- Ajout Pannes et Defauts -->
-              <div [formGroup]="step2Form">
-                <label class="block text-sm font-semibold text-oas-ink mb-1.5">Pannes et défauts détectés</label>
-                <textarea formControlName="listeDefauts" rows="4"
-                  placeholder="Décrivez précisément les pannes détectées lors du diagnostic..."
-                  class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-purple-400/40 transition resize-none"></textarea>
+              <!-- Pièces -->
+              <div>
+                <p class="text-sm font-bold text-oas-ink mb-2">Pièces détachées</p>
+                <div class="flex gap-2 mb-3">
+                  <app-searchable-select class="flex-1" [(ngModel)]="pieceAjouter" [options]="piecesFiltrees" bindValue="id" [bindLabel]="formatPiece" placeholder="— Rechercher une pièce —"></app-searchable-select>
+                  <input type="number" [(ngModel)]="qteAjouter" min="1" class="w-16 px-2 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm text-center focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+                  <button type="button" (click)="addPiece()" class="px-3 py-2 rounded-lg bg-oas-accent text-white text-xs font-bold hover:bg-oas-accent-dark transition cursor-pointer">+ Ajouter</button>
+                </div>
+                @if (lignesPieces.length > 0) {
+                  <div class="rounded-xl border border-oas-line overflow-hidden">
+                    <table class="w-full text-xs">
+                      <thead class="bg-oas-bg"><tr><th class="text-left px-3 py-2 font-bold text-oas-muted">Pièce</th><th class="text-center px-3 py-2 font-bold text-oas-muted">Qté</th><th class="text-center px-3 py-2 font-bold text-oas-muted">Stock</th><th class="text-right px-3 py-2 font-bold text-oas-muted">Prix</th><th class="px-2 py-2"></th></tr></thead>
+                      <tbody>
+                        @for (l of lignesPieces; track l.piece.id; let i = $index) {
+                          <tr class="border-b border-oas-line last:border-0">
+                            <td class="px-3 py-2">
+                              <p class="font-semibold text-oas-ink">{{ l.piece.reference }}</p>
+                              <p class="text-oas-muted text-[10px]">{{ l.piece.categorie }}</p>
+                            </td>
+                            <td class="px-3 py-2 text-center"><input type="number" [ngModel]="l.quantite" (ngModelChange)="updateQtePiece(i, $event)" min="1" class="w-12 text-center border border-oas-line rounded px-1 py-0.5 text-xs"/></td>
+                            <td class="px-3 py-2 text-center"><span [ngClass]="l.manquant > 0 ? 'text-red-500 font-bold' : 'text-oas-ok'">{{ l.stockDisponible }}</span></td>
+                            <td class="px-3 py-2 text-right font-semibold">{{ formatPrice((l.piece.prix ?? 0) * l.quantite) }}</td>
+                            <td class="px-2 py-2"><button (click)="removePiece(i)" class="text-oas-muted hover:text-oas-bad cursor-pointer"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                }
               </div>
 
-
-
-            <!-- Pièces -->
-            <div>
-              <p class="text-sm font-bold text-oas-ink mb-2">Pièces détachées</p>
-              <!-- Searchable select + qty + add -->
-              <div class="flex gap-2 mb-3">
-                <div class="relative flex-1">
-                  <app-searchable-select
-                    [(ngModel)]="pieceAjouter"
-                    [ngModelOptions]="{standalone: true}"
-                    [options]="allPieces"
-                    bindValue="id"
-                    [bindLabel]="formatPiece"
-                    placeholder="Rechercher une pièce (réf., catégorie)...">
-                  </app-searchable-select>
+              <!-- MO -->
+              <div>
+                <p class="text-sm font-bold text-oas-ink mb-2">Main d'œuvre</p>
+                <div class="flex gap-2 mb-3">
+                  <app-searchable-select class="flex-1" [(ngModel)]="moAjouter" [options]="moFiltrees" bindValue="id" [bindLabel]="formatMO" placeholder="— Rechercher une MO —"></app-searchable-select>
+                  <input type="number" [(ngModel)]="qteAjouterMO" min="1" class="w-16 px-2 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm text-center focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+                  <button type="button" (click)="addMO()" class="px-3 py-2 rounded-lg bg-oas-accent text-white text-xs font-bold hover:bg-oas-accent-dark transition cursor-pointer">+ Ajouter</button>
                 </div>
-                <input type="number" [(ngModel)]="qteAjouter" min="1" [ngModelOptions]="{standalone: true}"
-                       class="w-20 px-2 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-400/40 transition"/>
-                <button type="button" (click)="addPiece(); pieceSearch = ''" [disabled]="!pieceAjouter"
-                        class="px-4 py-2 rounded-xl bg-blue-500 text-white text-sm font-bold hover:bg-blue-600 disabled:opacity-50 transition cursor-pointer">+</button>
+                @if (lignesMO.length > 0) {
+                  <div class="rounded-xl border border-oas-line overflow-hidden">
+                    <table class="w-full text-xs">
+                      <thead class="bg-oas-bg"><tr><th class="text-left px-3 py-2 font-bold text-oas-muted">MO</th><th class="text-center px-3 py-2 font-bold text-oas-muted">Qté</th><th class="text-right px-3 py-2 font-bold text-oas-muted">Prix</th><th class="px-2 py-2"></th></tr></thead>
+                      <tbody>
+                        @for (l of lignesMO; track l.mo.id; let i = $index) {
+                          <tr class="border-b border-oas-line last:border-0">
+                            <td class="px-3 py-2 font-semibold text-oas-ink">{{ l.mo.categorie.nom }} ({{ l.mo.nbreHeure }}h)</td>
+                            <td class="px-3 py-2 text-center">× {{ l.quantite }}</td>
+                            <td class="px-3 py-2 text-right font-semibold">{{ formatPrice(l.mo.prix * l.quantite) }}</td>
+                            <td class="px-2 py-2"><button (click)="removeMO(i)" class="text-oas-muted hover:text-oas-bad cursor-pointer"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                }
               </div>
-              @if (lignesPieces.length > 0) {
-                <div class="rounded-xl border border-oas-line overflow-hidden">
-                  <table class="w-full text-xs">
-                    <thead class="bg-oas-bg">
-                      <tr>
-                        <th class="text-left px-3 py-2 font-semibold text-oas-muted">Pièce</th>
-                        <th class="text-center px-3 py-2 font-semibold text-oas-muted">Stock</th>
-                        <th class="text-center px-3 py-2 font-semibold text-oas-muted">Qté</th>
-                        <th class="text-center px-3 py-2 font-semibold text-oas-muted">Statut</th>
-                        <th class="px-2 py-2"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      @for (l of lignesPieces; track l.piece.id; let i = $index) {
-                        <tr class="border-t border-oas-line" [ngClass]="l.manquant > 0 ? 'bg-red-50' : ''">
-                          <td class="px-3 py-2">
-                            <p class="font-semibold text-oas-ink">{{ l.piece.reference }}</p>
-                            <p class="text-oas-muted text-[10px]">{{ l.piece.categorie }}</p>
-                          </td>
-                          <td class="px-3 py-2 text-center font-mono text-oas-muted">{{ l.stockDisponible }}</td>
-                          <td class="px-3 py-2 text-center">
-                            <input type="number" [value]="l.quantite" (change)="updateQtePiece(i, +$any($event.target).value)" min="1"
-                                   class="w-12 px-1 py-1 rounded-lg border border-oas-line text-center text-xs focus:outline-none focus:ring-2 focus:ring-blue-400/40"/>
-                          </td>
-                          <td class="px-3 py-2 text-center">
-                            @if (l.manquant > 0) {
-                              <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-600">⚠ -{{ l.manquant }}</span>
-                            } @else {
-                              <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-600">✓ OK</span>
-                            }
-                          </td>
-                          <td class="px-2 py-2">
-                            <button (click)="removePiece(i)" class="text-oas-bad cursor-pointer">✕</button>
-                          </td>
-                        </tr>
-                      }
-                    </tbody>
-                  </table>
-                </div>
-              } @else {
-                <p class="text-xs text-oas-muted italic text-center py-3 bg-oas-bg rounded-xl">Aucune pièce ajoutée</p>
-              }
-            </div>
-
-            <!-- Main d'œuvre -->
-            <div>
-              <p class="text-sm font-bold text-oas-ink mb-2">Main d'œuvre</p>
-              <!-- Searchable select MO -->
-              <div class="flex gap-2 mb-3">
-                <div class="relative flex-1">
-                  <app-searchable-select
-                    [(ngModel)]="moAjouter"
-                    [ngModelOptions]="{standalone: true}"
-                    [options]="allMO"
-                    bindValue="id"
-                    [bindLabel]="formatMO"
-                    placeholder="Rechercher une main d'œuvre...">
-                  </app-searchable-select>
-                </div>
-                <input type="number" [(ngModel)]="qteAjouterMO" min="1" [ngModelOptions]="{standalone: true}"
-                       class="w-20 px-2 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-400/40 transition"/>
-                <button type="button" (click)="addMO(); moSearch = ''" [disabled]="!moAjouter"
-                        class="px-4 py-2 rounded-xl bg-blue-500 text-white text-sm font-bold hover:bg-blue-600 disabled:opacity-50 transition cursor-pointer">+</button>
-              </div>
-              @if (lignesMO.length > 0) {
-                <div class="rounded-xl border border-oas-line overflow-hidden">
-                  <table class="w-full text-xs">
-                    <thead class="bg-oas-bg"><tr>
-                      <th class="text-left px-3 py-2 font-semibold text-oas-muted">Type</th>
-                      <th class="text-center px-3 py-2 font-semibold text-oas-muted">Qté</th>
-                      <th class="text-center px-3 py-2 font-semibold text-oas-muted">Montant</th>
-                      <th class="px-2 py-2"></th>
-                    </tr></thead>
-                    <tbody>
-                      @for (l of lignesMO; track l.mo.id; let i = $index) {
-                        <tr class="border-t border-oas-line">
-                          <td class="px-3 py-2 font-semibold text-oas-ink">{{ l.mo.categorie }} ({{ l.mo.nbreHeure }}h)</td>
-                          <td class="px-3 py-2 text-center">{{ l.quantite }}</td>
-                          <td class="px-3 py-2 text-center font-mono text-oas-muted">{{ formatPrice(l.mo.prix * l.quantite) }}</td>
-                          <td class="px-2 py-2"><button (click)="removeMO(i)" class="text-oas-bad cursor-pointer">✕</button></td>
-                        </tr>
-                      }
-                    </tbody>
-                  </table>
-                </div>
-              }
-            </div>
 
             @if (grandTotal > 0) {
               <div class="bg-oas-bg rounded-xl p-4 border border-oas-line flex items-center justify-between">
@@ -819,9 +832,89 @@
         }
 
         <!-- ═════════════════════════════════════════════ -->
-        <!-- ÉTAPE 4 — BON DE SORTIE (stock magasin → atelier) -->
+        <!-- ÉTAPE 4 — APPROVISIONNEMENT                   -->
         <!-- ═════════════════════════════════════════════ -->
         @if (currentStep === 4) {
+          <div class="space-y-6">
+            <div class="flex items-center gap-3 mb-2">
+              <div class="w-9 h-9 rounded-xl bg-pink-100 flex items-center justify-center">
+                <svg class="w-4 h-4 text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                </svg>
+              </div>
+              <div>
+                <p class="font-bold text-oas-ink text-sm">Approvisionnement & Planification</p>
+                <p class="text-xs text-oas-muted">Vérifiez la disponibilité des pièces et planifiez la sortie</p>
+              </div>
+            </div>
+
+            <!-- Disponibilité pièces -->
+            @if (lignesPieces.length > 0) {
+              <div>
+                <p class="text-sm font-bold text-oas-ink mb-2">Disponibilité des pièces</p>
+                <div class="rounded-xl border border-oas-line overflow-hidden">
+                  @for (l of lignesPieces; track l.piece.id) {
+                    <div class="flex items-center justify-between px-4 py-2.5 border-b border-oas-line last:border-0">
+                      <div class="flex items-center gap-2">
+                        @if (l.manquant === 0) {
+                          <span class="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center"><svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></span>
+                        } @else {
+                          <span class="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center"><svg class="w-3.5 h-3.5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></span>
+                        }
+                        <div>
+                          <p class="text-sm font-semibold text-oas-ink">{{ l.piece.reference }}</p>
+                          <p class="text-xs text-oas-muted">Requis: {{ l.quantite }} | Stock: {{ l.stockDisponible }}</p>
+                        </div>
+                      </div>
+                      @if (l.manquant > 0) {
+                        <span class="text-xs font-bold text-red-500 bg-red-50 px-2 py-1 rounded-md">Manquant: {{ l.manquant }}</span>
+                      } @else {
+                        <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">Disponible</span>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- Date estimée de sortie -->
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1.5">Date de sortie estimée</label>
+              <div class="flex gap-2">
+                <input type="date" [(ngModel)]="dateSortieEstimee"
+                       class="flex-1 px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-pink-400/40 transition"/>
+                <button (click)="saveDateSortieEstimee()" [disabled]="saving || !dateSortieEstimee"
+                        class="px-4 py-2.5 rounded-xl bg-pink-500 hover:bg-pink-600 text-white text-xs font-bold transition cursor-pointer disabled:opacity-60 flex items-center gap-2">
+                  @if (saving) { <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> }
+                  {{ saving ? 'En cours...' : 'Enregistrer' }}
+                </button>
+              </div>
+            </div>
+
+            @if (editingFicheStatus === 'EN_ATTENTE_COMMANDE' && hasRupture) {
+              <div class="bg-pink-50 border border-pink-200 rounded-xl p-4 text-pink-700 text-sm mb-4">
+                <p class="font-bold mb-1">En attente de pièces</p>
+                <p>Un bon de commande a été généré. Allez dans la page « Bons de commande » pour assigner un fournisseur et suivre la livraison.</p>
+              </div>
+            } @else if (hasRupture) {
+              <button (click)="showBDCModal = true"
+                      class="w-full py-3 rounded-xl font-bold text-sm bg-pink-500 hover:bg-pink-600 text-white shadow-lg shadow-pink-500/30 transition cursor-pointer flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                Générer un bon de commande
+              </button>
+            } @else if (allPiecesDisponibles || lignesPieces.length === 0) {
+              <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-emerald-800 text-sm">
+                <p class="font-bold">✓ Toutes les pièces sont disponibles</p>
+                <p class="text-xs mt-1">Passez à l'étape suivante pour créer le bon de sortie et démarrer la réparation.</p>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- ═════════════════════════════════════════════ -->
+        <!-- ÉTAPE 5 — BON DE SORTIE                       -->
+        <!-- ═════════════════════════════════════════════ -->
+        @if (currentStep === 5) {
           <div class="space-y-6">
             <div class="flex items-center gap-3 mb-2">
               <div class="w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center">
@@ -831,11 +924,10 @@
               </div>
               <div>
                 <p class="font-bold text-oas-ink text-sm">Bon de Sortie & Affectation</p>
-                <p class="text-xs text-oas-muted">Affectez les mécaniciens. Un bon de sortie sera automatiquement créé si le stock magasin est requis.</p>
+                <p class="text-xs text-oas-muted">Affectez les mécaniciens et sortez les pièces du magasin.</p>
               </div>
             </div>
 
-            <!-- Mécaniciens -->
             <div>
               <p class="text-sm font-bold text-oas-ink mb-2">Mécaniciens assignés à la réparation</p>
               <div class="grid grid-cols-3 gap-2">
@@ -882,38 +974,19 @@
               </div>
             }
 
-            @if (editingFicheStatus === 'EN_ATTENTE_COMMANDE' && hasRupture) {
-              <div class="bg-pink-50 border border-pink-200 rounded-xl p-4 text-pink-700 text-sm mb-4">
-                <p class="font-bold mb-1">En attente de pièces</p>
-                <p>Un bon de commande a été généré pour les pièces manquantes. Dès la réception de la commande, le stock sera mis à jour et vous pourrez démarrer la réparation.</p>
-              </div>
-              <button disabled class="w-full py-3 rounded-xl font-bold text-sm bg-gray-300 text-gray-500 cursor-not-allowed flex items-center justify-center gap-2">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                <span>En attente réception commande</span>
-              </button>
-            } @else {
-              @if (editingFicheStatus === 'EN_ATTENTE_COMMANDE' && !hasRupture) {
-                <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-emerald-800 text-sm mb-4">
-                  <p class="font-bold mb-1">Pièces reçues !</p>
-                  <p>Le stock a été réapprovisionné. Vous pouvez maintenant vérifier les quantités à sortir du magasin et démarrer la réparation.</p>
-                </div>
-              }
-              <button (click)="checkStockAndStartReparation()" [disabled]="bdsCreating"
-                      class="w-full py-3 rounded-xl font-bold text-sm text-white shadow-lg transition cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2"
-                      [ngClass]="hasRupture ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/30' : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/30'">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-                @if (bdsCreating) { <span>Traitement...</span> } 
-                @else if (hasRupture) { <span>Générer un bon de commande</span> }
-                @else { <span>{{ editingFicheStatus === 'EN_ATTENTE_COMMANDE' ? 'Générer le bon de sortie et démarrer' : 'Démarrer la réparation' }}</span> }
-              </button>
-            }
+            <button (click)="checkStockAndStartReparation()" [disabled]="bdsCreating"
+                    class="w-full py-3 rounded-xl font-bold text-sm text-white shadow-lg transition cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/30">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+              @if (bdsCreating) { <span>Traitement...</span> }
+              @else { <span>Démarrer la réparation</span> }
+            </button>
           </div>
         }
 
         <!-- ═════════════════════════════════════════════ -->
-        <!-- ÉTAPE 5 — RÉPARATION EN COURS                   -->
+        <!-- ÉTAPE 6 — RÉPARATION EN COURS                   -->
         <!-- ═════════════════════════════════════════════ -->
-        @if (currentStep === 5) {
+        @if (currentStep === 6) {
           <div class="space-y-6">
             <div class="flex items-center gap-3 mb-2">
               <div class="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center">
@@ -929,7 +1002,7 @@
             </div>
 
             <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-700">
-              Cliquez sur « Terminer la réparation » quand les travaux sont effectivement complétés. La fiche passera alors à l'étape de livraison.
+              Cliquez sur « Terminer la réparation » quand les travaux sont effectivement complétés.
             </div>
 
             <button (click)="terminerReparation()" [disabled]="saving"
@@ -943,12 +1016,10 @@
           </div>
         }
 
-
-
         <!-- ═════════════════════════════════════════════ -->
-        <!-- ÉTAPE 6 — LIVRAISON                          -->
+        <!-- ÉTAPE 7 — LIVRAISON                          -->
         <!-- ═════════════════════════════════════════════ -->
-        @if (currentStep === 6) {
+        @if (currentStep === 7) {
           <div class="text-center py-8 space-y-6">
             <div class="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto">
               <svg class="w-10 h-10 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -957,7 +1028,7 @@
             </div>
             <div>
               <p class="font-extrabold text-oas-ink text-2xl">Prêt pour la livraison !</p>
-              <p class="text-sm text-oas-muted mt-2">La réparation est terminée. Confirmez la remise du véhicule au client.</p>
+              <p class="text-sm text-oas-muted mt-2">Confirmez la remise du véhicule au client.</p>
             </div>
             <div class="bg-oas-bg rounded-xl p-4 text-sm grid grid-cols-2 gap-3 text-left">
               <div><p class="text-oas-muted text-xs">Fiche</p><p class="font-bold text-oas-ink">{{ step1Form.value.numero }}</p></div>
@@ -972,7 +1043,7 @@
 
       </div>
 
-      <!-- Footer navigation unique (toujours visible) -->
+      <!-- Footer navigation unique -->
       <div class="flex items-center justify-between px-6 py-4 border-t border-oas-line flex-shrink-0 bg-white">
         <button (click)="currentStep === 1 ? closeWorkflow() : prevStep()"
                 class="flex items-center gap-2 px-4 h-10 rounded-xl border border-oas-line bg-white hover:bg-oas-bg text-oas-ink font-semibold text-sm transition cursor-pointer">
@@ -996,19 +1067,28 @@
         @if (currentStep === 1 || currentStep === 2) {
           <button (click)="nextStep()" [disabled]="saving || !canNext"
                   class="flex items-center gap-2 px-4 h-10 rounded-xl bg-oas-accent hover:bg-oas-accent-dark text-white font-bold text-sm transition cursor-pointer disabled:opacity-60">
-            @if (saving) { <span>En cours...</span> }
+            @if (saving) { <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> <span>En cours...</span> }
             @else if (currentStep === 1) {
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
               <span>Suivant</span>
+            } @else if (editingFicheStatus === 'A_FAIRE') {
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <span>Commencer le diagnostic</span>
             } @else {
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-              <span>Commencer le diagnostic</span>
+              <span>Terminer le diagnostic</span>
             }
           </button>
         } @else if (currentStep === 3 && !currentProforma) {
           <button (click)="createProforma()" [disabled]="proformaSaving"
                   class="flex items-center gap-2 px-4 h-10 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm transition cursor-pointer disabled:opacity-60">
-            @if (proformaSaving) { <span>Création...</span> } @else { <span>Créer Proforma</span> <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg> }
+            @if (proformaSaving) { <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> <span>Création...</span> } @else { <span>Créer Proforma</span> <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg> }
+          </button>
+        } @else if (currentStep === 4 && !hasRupture) {
+          <button (click)="currentStep = 5"
+                  class="flex items-center gap-2 px-4 h-10 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm transition cursor-pointer">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            <span>Bon de sortie</span>
           </button>
         } @else { <div class="w-24"></div> }
       </div>
@@ -1019,16 +1099,16 @@
 
 
 <!-- ═══════════════════════════════════════════════════════════ -->
-<!--  POPUP BON DE COMMANDE                                      -->
+<!--  POPUP BON DE COMMANDE (sans fournisseur)                   -->
 <!-- ═══════════════════════════════════════════════════════════ -->
 @if (showBDCModal) {
   <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
 
-      <div class="bg-red-500 px-6 py-4 flex items-center justify-between">
+      <div class="bg-pink-500 px-6 py-4 flex items-center justify-between">
         <div>
-          <h3 class="font-extrabold text-white text-sm">⚠ Stock insuffisant</h3>
-          <p class="text-red-100 text-xs">Commandez les pièces manquantes avant de continuer</p>
+          <h3 class="font-extrabold text-white text-sm">⚠ Pièces manquantes</h3>
+          <p class="text-pink-100 text-xs">Un bon de commande sera créé en attente</p>
         </div>
         <button (click)="closeBDCModal()" class="p-1 rounded-lg hover:bg-white/20 text-white cursor-pointer">
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -1038,34 +1118,30 @@
       </div>
 
       <div class="px-6 py-5 space-y-4">
-        <div class="rounded-xl border border-red-200 bg-red-50 overflow-hidden">
+        <div class="rounded-xl border border-pink-200 bg-pink-50 overflow-hidden">
           @for (l of rupturesOnly; track l.piece.id) {
-            <div class="flex items-center justify-between px-4 py-2.5 border-b border-red-100 last:border-0">
+            <div class="flex items-center justify-between px-4 py-2.5 border-b border-pink-100 last:border-0">
               <div><p class="text-sm font-semibold text-oas-ink">{{ l.piece.reference }}</p><p class="text-xs text-oas-muted">{{ l.piece.categorie }}</p></div>
-              <span class="text-sm font-bold text-red-600">{{ l.manquant }} à commander</span>
+              <span class="text-sm font-bold text-pink-600">{{ l.manquant }} à commander</span>
             </div>
           }
         </div>
 
-        <div>
-          <label class="block text-sm font-semibold text-oas-ink mb-1.5">Fournisseur *</label>
-          <app-searchable-select
-            [(ngModel)]="bdcFournisseurId"
-            [options]="fournisseurs"
-            bindValue="id"
-            [bindLabel]="formatFournisseur"
-            placeholder="— Rechercher un fournisseur —">
-          </app-searchable-select>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 flex gap-2">
+          <svg class="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <p class="text-xs text-amber-700">Le bon sera créé <strong>sans fournisseur</strong>. Vous pourrez l'assigner et envoyer la commande depuis la page « Bons de commande ».</p>
         </div>
 
         <div class="flex gap-3">
-          <button (click)="closeBDCModal(); currentStep = 4"
+          <button (click)="closeBDCModal()"
                   class="flex-1 py-2.5 rounded-xl border border-oas-line text-oas-ink font-semibold text-sm hover:bg-oas-bg transition cursor-pointer">
-            Continuer sans commander
+            Annuler
           </button>
-          <button (click)="createBonDeCommande()" [disabled]="!bdcFournisseurId || bdcSaving"
-                  class="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-sm disabled:opacity-50 transition cursor-pointer">
-            {{ bdcSaving ? 'Commande...' : 'Commander les pièces' }}
+          <button (click)="createBonDeCommande()" [disabled]="bdcSaving"
+                  class="flex-1 py-2.5 rounded-xl bg-pink-500 hover:bg-pink-600 text-white font-bold text-sm disabled:opacity-50 transition cursor-pointer">
+            {{ bdcSaving ? 'Commande...' : 'Créer le bon de commande' }}
           </button>
         </div>
       </div>

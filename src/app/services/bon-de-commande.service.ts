@@ -43,11 +43,20 @@ export interface LigneBonDeCommandeRequest {
 }
 
 export interface BonDeCommandeRequest {
-  fournisseurId: number;
+  fournisseurId?: number | null;
   vehiculeId?: number | null;
   tvaApplicable: boolean;
   observation?: string;
   lignes: LigneBonDeCommandeRequest[];
+}
+
+export interface BonDeLivraisonLigne {
+  ligneId: number;
+  quantiteRecue: number;
+}
+
+export interface BonDeLivraisonRequest {
+  lignes: BonDeLivraisonLigne[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -93,6 +102,14 @@ export class BonDeCommandeService {
 
   annuler(id: number): Observable<BonDeCommande> {
     return this.http.post<BonDeCommande>(`${this.api}/${id}/annuler`, {});
+  }
+
+  assignerFournisseur(id: number, fournisseurId: number): Observable<BonDeCommande> {
+    return this.http.post<BonDeCommande>(`${this.api}/${id}/assigner-fournisseur`, {}, { params: { fournisseurId } });
+  }
+
+  receptionnerAvecLivraison(id: number, data: BonDeLivraisonRequest): Observable<BonDeCommande> {
+    return this.http.post<BonDeCommande>(`${this.api}/${id}/receptionner-livraison`, data);
   }
 
   downloadPdf(id: number): Observable<Blob> {

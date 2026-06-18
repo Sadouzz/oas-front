@@ -1,18 +1,19 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
-import { BonDeCommandeService, BonDeCommande, StatutBonCommande } from '../services/bon-de-commande.service';
+import { BonDeCommandeService, BonDeCommande, StatutBonCommande, BonDeLivraisonRequest, BonDeLivraisonLigne } from '../services/bon-de-commande.service';
 import { FournisseurService } from '../services/fournisseur.service';
 import { VehiculeService } from '../services/vehicule.service';
 import { PieceDetacheeService } from '../services/piece-detachee.service';
 import { ClientService, UserModel } from '../services/client.service';
 import { NgClass } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { FournisseurModel, VehiculeModel, PieceDetache } from '../shared/models';
 
 @Component({
   selector: 'app-bons-commande',
   standalone: true,
-  imports: [ReactiveFormsModule, NgClass],
+  imports: [ReactiveFormsModule, FormsModule, NgClass],
   templateUrl: './bons-commande.component.html',
 })
 export class BonsCommandeComponent implements OnInit {
@@ -46,6 +47,16 @@ export class BonsCommandeComponent implements OnInit {
   selectedBon: BonDeCommande | null = null;
   actioning = false;
 
+  // Bon de Livraison popup
+  showLivraisonModal = false;
+  livraisonLignes: { ligneId: number; designationPiece: string; reference: string; quantiteCommandee: number; quantiteRecue: number; }[] = [];
+  livraisonSaving = false;
+
+  // Assigner fournisseur popup
+  showAssignFournisseur = false;
+  assignFournisseurId: number | null = null;
+  assigningFournisseur = false;
+
   page = 1;
   readonly pageSize = 10;
   searchTerm = '';
@@ -54,7 +65,7 @@ export class BonsCommandeComponent implements OnInit {
   errorMessage = '';
 
   form: FormGroup = this.fb.group({
-    fournisseurId: [null, Validators.required],
+    fournisseurId: [null],
     clientId: [null],
     vehiculeId: [null],
     tvaApplicable: [false],
@@ -261,8 +272,8 @@ export class BonsCommandeComponent implements OnInit {
   closeDetail() { this.selectedBon = null; }
 
   save() {
-    if (this.form.get('fournisseurId')?.invalid || this.lignesArray.length === 0) {
-      this.form.markAllAsTouched();
+    if (this.lignesArray.length === 0) {
+      this.notifyError('Veuillez ajouter au moins une ligne de commande.');
       return;
     }
     const lignesRaw = this.form.value.lignes as any[];
@@ -318,6 +329,19 @@ export class BonsCommandeComponent implements OnInit {
 
   action(type: 'envoyer' | 'receptionner' | 'annuler') {
     if (!this.selectedBon || this.actioning) return;
+
+    // Intercepter "envoyer" si pas de fournisseur
+    if (type === 'envoyer' && !this.selectedBon.fournisseurId) {
+      this.showAssignFournisseur = true;
+      return;
+    }
+
+    // Intercepter "receptionner" pour ouvrir le popup bon de livraison
+    if (type === 'receptionner') {
+      this.openLivraisonPopup();
+      return;
+    }
+
     this.actioning = true;
     this.service[type](this.selectedBon.id).subscribe({
       next: updated => {
@@ -328,7 +352,68 @@ export class BonsCommandeComponent implements OnInit {
         this.actioning = false;
         this.notify('Statut mis à jour.');
       },
-      error: () => { this.actioning = false; this.notifyError('Erreur lors de la mise à jour.'); },
+      error: (err: any) => { this.actioning = false; this.notifyError(err?.error?.message || 'Erreur lors de la mise à jour.'); },
+    });
+  }
+
+  // ─── Assigner Fournisseur ─────────────────────────────
+  saveAssignFournisseur() {
+    if (!this.selectedBon || !this.assignFournisseurId) return;
+    this.assigningFournisseur = true;
+    this.service.assignerFournisseur(this.selectedBon.id, Number(this.assignFournisseurId)).subscribe({
+      next: (updated) => {
+        this.selectedBon = updated;
+        const idx = this.bons.findIndex(b => b.id === updated.id);
+        if (idx !== -1) this.bons[idx] = updated;
+        this.applyFilter();
+        this.assigningFournisseur = false;
+        this.showAssignFournisseur = false;
+        this.assignFournisseurId = null;
+        this.notify('Fournisseur assigné. Vous pouvez maintenant envoyer la commande.');
+      },
+      error: (err: any) => {
+        this.assigningFournisseur = false;
+        this.notifyError(err?.error?.message || 'Erreur assignation fournisseur.');
+      },
+    });
+  }
+
+  // ─── Bon de Livraison ─────────────────────────────────
+  openLivraisonPopup() {
+    if (!this.selectedBon) return;
+    this.livraisonLignes = this.selectedBon.lignes.map(l => ({
+      ligneId:            l.id,
+      designationPiece:   l.designationPiece || l.reference || '',
+      reference:          l.reference || '',
+      quantiteCommandee:  l.quantite,
+      quantiteRecue:      l.quantite, // Pré-rempli avec la qté commandée
+    }));
+    this.showLivraisonModal = true;
+  }
+
+  saveLivraison() {
+    if (!this.selectedBon) return;
+    this.livraisonSaving = true;
+    const request: BonDeLivraisonRequest = {
+      lignes: this.livraisonLignes.map(l => ({
+        ligneId: l.ligneId,
+        quantiteRecue: l.quantiteRecue,
+      }))
+    };
+    this.service.receptionnerAvecLivraison(this.selectedBon.id, request).subscribe({
+      next: (updated) => {
+        this.selectedBon = updated;
+        const idx = this.bons.findIndex(b => b.id === updated.id);
+        if (idx !== -1) this.bons[idx] = updated;
+        this.applyFilter();
+        this.livraisonSaving = false;
+        this.showLivraisonModal = false;
+        this.notify('Bon de livraison enregistré. Les pièces ont été ajoutées au stock.');
+      },
+      error: (err: any) => {
+        this.livraisonSaving = false;
+        this.notifyError(err?.error?.message || 'Erreur réception livraison.');
+      },
     });
   }
 

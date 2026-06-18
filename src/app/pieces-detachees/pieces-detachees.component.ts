@@ -173,6 +173,8 @@ export class PiecesDetacheesComponent implements OnInit {
       delete payload.stockAtelier;
       delete payload.prix;
       delete payload.seuilMinimum;
+    } else {
+      payload.stockAtelier = payload.stockAtelier || 0;
     }
 
     if (this.isNew) {

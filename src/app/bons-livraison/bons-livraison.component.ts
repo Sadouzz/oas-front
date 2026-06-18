@@ -11,30 +11,20 @@ import { PieceDetache, MainDoeuvreModel, VehiculeModel } from '../shared/models'
 
 @Component({
   selector: 'app-bons-livraison',
-  standalone: true,
-  imports: [ReactiveFormsModule, NgClass],
+  imports: [NgClass],
   templateUrl: './bons-livraison.component.html',
 })
 export class BonsLivraisonComponent implements OnInit {
   private service = inject(BonDeLivraisonService);
   private bcService = inject(BonDeCommandeService);
-  private pieceService = inject(PieceDetacheeService);
-  private mdService = inject(MainDoeuvreService);
   private vehiculeService = inject(VehiculeService);
-  private fb = inject(FormBuilder);
 
   bons: BonDeLivraison[] = [];
   filtered: BonDeLivraison[] = [];
   bonsCommande: BonDeCommande[] = [];
-  pieces: PieceDetache[] = [];
-  mainsDoeuvre: MainDoeuvreModel[] = [];
   allVehicules: VehiculeModel[] = [];
 
   loading = true;
-  saving = false;
-  showModal = false;
-  isNew = true;
-  editingId: number | null = null;
   selectedBon: BonDeLivraison | null = null;
 
   page = 1;
@@ -43,30 +33,14 @@ export class BonsLivraisonComponent implements OnInit {
   successMessage = '';
   errorMessage = '';
 
-  form: FormGroup = this.fb.group({
-    bonDeCommandeId: [null],
-    kilometrage: [null, [Validators.required, Validators.min(0)]],
-    remarque: [''],
-    paye: [false],
-    lignesPieces: this.fb.array([]),
-    lignesMainDoeuvres: this.fb.array([]),
-  });
-
-  get lignesPiecesArray(): FormArray { return this.form.get('lignesPieces') as FormArray; }
-  get lignesMDArray(): FormArray { return this.form.get('lignesMainDoeuvres') as FormArray; }
-
   ngOnInit() {
     this.load();
     forkJoin({
       bonsCommande: this.bcService.getAll(),
-      pieces: this.pieceService.getAll(),
-      mds: this.mdService.getAll(),
       vehicules: this.vehiculeService.getAll(),
     }).subscribe({
-      next: ({ bonsCommande, pieces, mds, vehicules }) => {
+      next: ({ bonsCommande, vehicules }) => {
         this.bonsCommande = bonsCommande;
-        this.pieces = pieces;
-        this.mainsDoeuvre = mds.filter(m => !m.isArchived);
         this.allVehicules = vehicules;
       },
     });
@@ -96,109 +70,8 @@ export class BonsLivraisonComponent implements OnInit {
     this.applyFilter();
   }
 
-  private makeLignePiece(): FormGroup {
-    return this.fb.group({
-      pieceId: [null, Validators.required],
-      quantite: [1, [Validators.required, Validators.min(1)]],
-      prix: [0, [Validators.required, Validators.min(0)]],
-    });
-  }
-
-  private makeLigneMD(): FormGroup {
-    return this.fb.group({
-      mainDoeuvreId: [null, Validators.required],
-      nbreHeure: [1, [Validators.required, Validators.min(1)]],
-      tarifHoraire: [0, [Validators.required, Validators.min(0)]],
-    });
-  }
-
-  addPiece() { this.lignesPiecesArray.push(this.makeLignePiece()); }
-  removePiece(i: number) { this.lignesPiecesArray.removeAt(i); }
-  addMD() { this.lignesMDArray.push(this.makeLigneMD()); }
-  removeMD(i: number) { this.lignesMDArray.removeAt(i); }
-
-  onPieceChange(i: number) {
-    const ctrl = this.lignesPiecesArray.at(i);
-    const pieceId = Number(ctrl.get('pieceId')?.value);
-    const piece = this.pieces.find(p => p.id === pieceId);
-    if (piece?.prix) ctrl.patchValue({ prix: piece.prix });
-  }
-
-  onMDChange(i: number) {
-    const ctrl = this.lignesMDArray.at(i);
-    const mdId = Number(ctrl.get('mainDoeuvreId')?.value);
-    const md = this.mainsDoeuvre.find(m => m.id === mdId);
-    if (md) ctrl.patchValue({ tarifHoraire: md.prix, nbreHeure: md.nbreHeure });
-  }
-
-  openNew() {
-    this.isNew = true;
-    this.editingId = null;
-    this.form.reset({ paye: false, remarque: '' });
-    while (this.lignesPiecesArray.length) this.lignesPiecesArray.removeAt(0);
-    while (this.lignesMDArray.length) this.lignesMDArray.removeAt(0);
-    this.showModal = true;
-  }
-
-  openEdit(bon: BonDeLivraison) {
-    this.isNew = false;
-    this.editingId = bon.id;
-    this.form.patchValue({
-      bonDeCommandeId: bon.bonDeCommandeId ?? null,
-      kilometrage: bon.kilometrage,
-      remarque: bon.remarque ?? '',
-      paye: bon.paye,
-    });
-    while (this.lignesPiecesArray.length) this.lignesPiecesArray.removeAt(0);
-    for (const l of bon.lignesPieces) {
-      this.lignesPiecesArray.push(this.fb.group({
-        pieceId: [l.pieceId, Validators.required],
-        quantite: [l.quantite, [Validators.required, Validators.min(1)]],
-        prix: [l.prix, [Validators.required, Validators.min(0)]],
-      }));
-    }
-    while (this.lignesMDArray.length) this.lignesMDArray.removeAt(0);
-    for (const l of bon.lignesMainDoeuvres) {
-      this.lignesMDArray.push(this.fb.group({
-        mainDoeuvreId: [l.mainDoeuvreId, Validators.required],
-        nbreHeure: [l.nbreHeure, [Validators.required, Validators.min(1)]],
-        tarifHoraire: [l.tarifHoraire, [Validators.required, Validators.min(0)]],
-      }));
-    }
-    this.showModal = true;
-  }
-
   openDetail(bon: BonDeLivraison) { this.selectedBon = bon; }
-  closeDetail() { this.selectedBon = null; }
-
-  save() {
-    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
-    this.saving = true;
-    const raw = this.form.value;
-    const payload = {
-      bonDeCommandeId: raw.bonDeCommandeId ? Number(raw.bonDeCommandeId) : null,
-      kilometrage: Number(raw.kilometrage),
-      remarque: raw.remarque || undefined,
-      paye: !!raw.paye,
-      lignesPieces: raw.lignesPieces.map((l: any) => ({
-        pieceId: Number(l.pieceId),
-        quantite: Number(l.quantite),
-        prix: Number(l.prix),
-      })),
-      lignesMainDoeuvres: raw.lignesMainDoeuvres.map((l: any) => ({
-        mainDoeuvreId: Number(l.mainDoeuvreId),
-        nbreHeure: Number(l.nbreHeure),
-        tarifHoraire: Number(l.tarifHoraire),
-      })),
-    };
-    const req$ = this.isNew
-      ? this.service.create(payload)
-      : this.service.update(this.editingId!, payload);
-    req$.subscribe({
-      next: () => { this.showModal = false; this.load(); this.notify('Bon de livraison enregistré.'); },
-      error: () => { this.saving = false; this.notifyError('Erreur lors de la sauvegarde.'); },
-    });
-  }
+  closeDetail() { this.selectedBon = null; }}
 
   delete(id: number) {
     if (!confirm('Supprimer ce bon de livraison ?')) return;
@@ -219,21 +92,9 @@ export class BonsLivraisonComponent implements OnInit {
     });
   }
 
-  get totalPieces(): number {
-    return this.lignesPiecesArray.controls.reduce((s, c) =>
-      s + (Number(c.get('quantite')?.value) || 0) * (Number(c.get('prix')?.value) || 0), 0);
-  }
 
-  get totalMD(): number {
-    return this.lignesMDArray.controls.reduce((s, c) =>
-      s + (Number(c.get('nbreHeure')?.value) || 0) * (Number(c.get('tarifHoraire')?.value) || 0), 0);
-  }
 
-  get montantBonCommande(): number {
-    const id = this.form.get('bonDeCommandeId')?.value;
-    if (!id) return 0;
-    return this.bonsCommande.find(b => b.id === Number(id))?.montantTTC ?? 0;
-  }
+
 
   totalAvecBC(bon: BonDeLivraison): number {
     const bcAmount = bon.bonDeCommandeId
@@ -258,15 +119,7 @@ export class BonsLivraisonComponent implements OnInit {
     return this.bonsCommande.find(b => b.id === this.selectedBon!.bonDeCommandeId)?.montantTTC ?? 0;
   }
 
-  getPieceName(id: any): string {
-    const p = this.pieces.find(x => x.id === Number(id));
-    return p ? `${p.reference} — ${p.numeroDeSerie}` : '';
-  }
 
-  getMDName(id: any): string {
-    const m = this.mainsDoeuvre.find(x => x.id === Number(id));
-    return m ? `${m.categorie}` : '';
-  }
 
   formatDate(d: string): string { return new Date(d).toLocaleDateString('fr-FR'); }
   fmt(n: number): string { return new Intl.NumberFormat('fr-FR').format(n ?? 0); }
@@ -279,11 +132,11 @@ export class BonsLivraisonComponent implements OnInit {
   nextPage() { if (this.page < this.totalPages) this.page++; }
 
   private notify(msg: string) {
-    this.saving = false; this.successMessage = msg;
+    this.successMessage = msg;
     setTimeout(() => this.successMessage = '', 3500);
   }
   private notifyError(msg: string) {
-    this.saving = false; this.errorMessage = msg;
+    this.errorMessage = msg;
     setTimeout(() => this.errorMessage = '', 3500);
   }
 }
