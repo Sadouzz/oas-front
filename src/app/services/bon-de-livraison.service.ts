@@ -33,7 +33,6 @@ export interface BonDeLivraison {
   agentNom: string;
   remarque: string | null;
   kilometrage: number;
-  paye: boolean;
   bonDeCommandeId: number | null;
   bonDeCommandeNumero: string | null;
   lignesPieces: LigneFacturationPiece[];
@@ -44,7 +43,6 @@ export interface BonDeLivraisonRequest {
   bonDeCommandeId?: number | null;
   kilometrage: number;
   remarque?: string;
-  paye?: boolean;
   lignesPieces: { pieceId: number; quantite: number; prix: number }[];
   lignesMainDoeuvres: { mainDoeuvreId: number; nbreHeure: number; tarifHoraire: number }[];
 }

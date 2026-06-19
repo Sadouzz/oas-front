@@ -1,4 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { BonDeCommandeService, BonDeCommande, StatutBonCommande, BonDeLivraisonRequest, BonDeLivraisonLigne } from '../services/bon-de-commande.service';
@@ -24,6 +25,7 @@ export class BonsCommandeComponent implements OnInit {
   private pieceService = inject(PieceDetacheeService);
   private clientService = inject(ClientService);
   private fb = inject(FormBuilder);
+  private route = inject(ActivatedRoute);
 
   bons: BonDeCommande[] = [];
   filtered: BonDeCommande[] = [];
@@ -44,6 +46,7 @@ export class BonsCommandeComponent implements OnInit {
   saving = false;
   showModal = false;
   isNew = true;
+  isReplenishment = false;
   editingId: number | null = null;
   selectedBon: BonDeCommande | null = null;
   actioning = false;
@@ -163,6 +166,14 @@ export class BonsCommandeComponent implements OnInit {
         this.vehicules = vehicules;
         this.pieces = pieces;
         this.clients = clients.filter(c => c.enabled);
+
+        // Pre-fill BDC if query parameter pieceId is present
+        this.route.queryParams.subscribe(params => {
+          const pieceId = params['pieceId'];
+          if (pieceId) {
+            this.openNewWithPiece(Number(pieceId));
+          }
+        });
       },
     });
   }
@@ -221,6 +232,7 @@ export class BonsCommandeComponent implements OnInit {
 
   openNew() {
     this.isNew = true;
+    this.isReplenishment = false;
     this.editingId = null;
     this.selectedClientId = null;
     this.clientOpen = false;
@@ -236,8 +248,23 @@ export class BonsCommandeComponent implements OnInit {
     this.showModal = true;
   }
 
+  openNewWithPiece(pieceId: number) {
+    this.openNew();
+    this.isReplenishment = true;
+    const piece = this.pieces.find(p => p.id === pieceId);
+    if (piece) {
+      const ctrl = this.lignesArray.at(0);
+      ctrl.patchValue({
+        pieceDetacheeId: piece.id,
+        prixUnitaire: piece.prix ?? 0,
+        quantite: piece.seuilMinimum ? Math.max(1, piece.seuilMinimum - (piece.qteReelle ?? 0)) : 10
+      });
+    }
+  }
+
   openEdit(bon: BonDeCommande) {
     this.isNew = false;
+    this.isReplenishment = false;
     this.editingId = bon.id;
     this.selectedClientId = null;
     this.clientOpen = false;
@@ -291,7 +318,7 @@ export class BonsCommandeComponent implements OnInit {
     this.saving = true;
     const raw = this.form.value;
     const payload = {
-      fournisseurId: Number(raw.fournisseurId),
+      fournisseurId: raw.fournisseurId ? Number(raw.fournisseurId) : null,
       vehiculeId: raw.vehiculeId ? Number(raw.vehiculeId) : null,
       tvaApplicable: !!raw.tvaApplicable,
       observation: raw.observation || undefined,

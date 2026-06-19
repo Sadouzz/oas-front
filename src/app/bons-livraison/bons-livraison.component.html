@@ -51,7 +51,6 @@
                 @if (!selectedBon) {
                   <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Agent</th>
                   <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">BC lié</th>
-                  <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Payé</th>
                   @if (!selectedBon) {
                     <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Date</th>
                   }
@@ -69,11 +68,6 @@
                     <td class="px-5 py-4 text-oas-ink text-sm">{{ bon.agentNom || '—' }}</td>
                     <td class="px-5 py-4 text-oas-muted text-xs font-mono">{{ bon.bonDeCommandeNumero ?? '—' }}</td>
                   }
-                  <td class="px-5 py-4">
-                    <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-bold {{ bon.paye ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700' }}">
-                      {{ bon.paye ? 'Payé' : 'En attente' }}
-                    </span>
-                  </td>
                   @if (!selectedBon) {
                     <td class="px-5 py-4 text-xs text-oas-muted">{{ formatDate(bon.dateCreation) }}</td>
                   }

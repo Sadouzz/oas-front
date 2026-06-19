@@ -1,22 +1,24 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { DecimalPipe, NgClass } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { PieceDetacheeService, PieceDetache } from '../services/piece-detachee.service';
 import { AuthService } from '../auth/services/auth.service';
 import { AlertComponent } from '../shared/components/alert/alert.component';
 import { PaginationComponent } from '../shared/components/pagination/pagination.component';
-import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideArchive, LucideArchiveRestore, LucideLoader2 } from '@lucide/angular';
+import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideArchive, LucideArchiveRestore, LucideLoader2, LucideShoppingCart } from '@lucide/angular';
 
 @Component({
   selector: 'app-pieces-detachees',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, NgClass, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideArchive, LucideArchiveRestore, LucideLoader2],
+  imports: [ReactiveFormsModule, DecimalPipe, NgClass, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideArchive, LucideArchiveRestore, LucideLoader2, LucideShoppingCart],
   templateUrl: './pieces-detachees.component.html',
 })
 export class PiecesDetacheesComponent implements OnInit {
   private fb = inject(FormBuilder);
   private service = inject(PieceDetacheeService);
   private authService = inject(AuthService);
+  private router = inject(Router);
 
   pieces: PieceDetache[] = [];
   filtered: PieceDetache[] = [];
@@ -96,6 +98,10 @@ export class PiecesDetacheesComponent implements OnInit {
       p.seuilMinimum != null &&
       (p.qteReelle ?? 0) <= p.seuilMinimum
     );
+  }
+
+  commanderPiece(p: PieceDetache) {
+    this.router.navigate(['/bons-commande'], { queryParams: { pieceId: p.id } });
   }
 
   onSearch(event: Event) {
