@@ -1,11 +1,12 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { AvoirHTService, AvoirHT } from '../services/avoir-ht.service';
 import { NgClass } from '@angular/common';
+import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload } from '@lucide/angular';
 
 @Component({
   selector: 'app-avoirs-ht',
   standalone: true,
-  imports: [NgClass],
+  imports: [NgClass, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload],
   templateUrl: './avoirs-ht.component.html',
 })
 export class AvoirsHTComponent implements OnInit {

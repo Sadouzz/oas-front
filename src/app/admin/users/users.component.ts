@@ -4,6 +4,7 @@ import { UserManagementService } from '../../services/user-management.service';
 import { UserModel } from '../../shared/models';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
+import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideUser, LucideCheck, LucideArchive } from '@lucide/angular';
 
 const ROLES = ['SUPER_AGENT', 'AGENT', 'CHEF_ATELIER', 'AGENT_MAGASIN'] as const;
 
@@ -17,7 +18,7 @@ const ROLE_PREFIX: Record<string, string> = {
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent],
+  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideUser, LucideCheck, LucideArchive],
   templateUrl: './users.component.html',
 })
 export class UsersComponent implements OnInit {

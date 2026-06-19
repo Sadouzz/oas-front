@@ -2,11 +2,12 @@ import { Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { LucideUser, LucideLock, LucideEye, LucideEyeOff, LucideCheck, LucideLoader2 } from '@lucide/angular';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RouterLink, LucideUser, LucideLock, LucideEye, LucideEyeOff, LucideCheck, LucideLoader2],
   templateUrl: './login.component.html',
 })
 export class LoginComponent {

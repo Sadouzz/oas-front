@@ -9,11 +9,12 @@ import { VehiculeService, VehiculeModel } from '../services/vehicule.service';
 import { BonDeCommandeService, BonDeCommande } from '../services/bon-de-commande.service';
 import { PieceDetacheeService, PieceDetache } from '../services/piece-detachee.service';
 import { MainDoeuvreService, MainDoeuvreModel } from '../services/main-doeuvre.service';
+import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideReceipt, LucideEye, LucidePrinter } from '@lucide/angular';
 
 @Component({
   selector: 'app-factures',
   standalone: true,
-  imports: [NgClass, ReactiveFormsModule],
+  imports: [NgClass, ReactiveFormsModule, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideReceipt, LucideEye, LucidePrinter],
   templateUrl: './factures.component.html',
 })
 export class FacturesComponent implements OnInit {

@@ -1,0 +1,127 @@
+<div class="space-y-6">
+
+  <!-- Header -->
+  <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4 flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-oas-ink">Garages</h1>
+      <p class="text-sm text-oas-muted mt-1">{{ filtered.length }} garage(s)</p>
+    </div>
+    <button (click)="openNew()"
+            class="flex items-center gap-2 bg-oas-accent hover:bg-oas-accent-dark text-white px-4 py-2.5 rounded-lg text-sm font-bold transition cursor-pointer">
+      <svg lucidePlus class="w-4 h-4"></svg>
+      Nouveau garage
+    </button>
+  </div>
+
+  <app-alert [success]="successMessage" [error]="errorMessage" />
+
+  <!-- Search -->
+  <div class="bg-white rounded-lg border border-oas-line p-3 shadow-sm">
+    <div class="relative">
+      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-oas-muted">
+        <svg lucideSearch class="w-4 h-4"></svg>
+      </span>
+      <input (input)="onSearch($event)" placeholder="Rechercher par libellé, ville ou adresse..."
+             class="w-full pl-9 pr-4 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="bg-white rounded-lg border border-oas-line shadow-card overflow-hidden">
+    @if (loading) {
+      <div class="flex items-center justify-center py-16">
+        <div class="w-6 h-6 border-2 border-oas-accent border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    } @else if (paged.length === 0) {
+      <div class="text-center py-16 text-oas-muted text-sm">Aucun garage trouvé.</div>
+    } @else {
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-oas-line">
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Libellé</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Ville</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Adresse</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Contact</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Créé le</th>
+            <th class="px-5 py-3"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (g of paged; track g.id) {
+            <tr class="hover:bg-oas-bg transition border-b border-oas-line">
+              <td class="px-5 py-4 font-semibold text-oas-ink">{{ g.libelle }}</td>
+              <td class="px-5 py-4 text-sm text-oas-ink2">{{ g.ville }}</td>
+              <td class="px-5 py-4 text-sm text-oas-muted">{{ g.adresse || '—' }}</td>
+              <td class="px-5 py-4 text-sm text-oas-muted">{{ g.contact || '—' }}</td>
+              <td class="px-5 py-4 text-xs text-oas-muted">{{ formatDate(g.createdAt) }}</td>
+              <td class="px-5 py-4">
+                <div class="flex items-center gap-1 justify-end">
+                  <button (click)="openEdit(g)"
+                          class="p-1.5 rounded-lg hover:bg-oas-info-bg text-oas-muted hover:text-oas-info transition cursor-pointer">
+                    <svg lucidePencil class="w-4 h-4"></svg>
+                  </button>
+                  <button (click)="delete(g.id)"
+                          class="p-1.5 rounded-lg hover:bg-oas-bad-bg text-oas-muted hover:text-oas-bad transition cursor-pointer">
+                    <svg lucideTrash2 class="w-4 h-4"></svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <app-pagination [page]="page" [totalPages]="totalPages" [total]="filtered.length" [pageSize]="pageSize" (prev)="prevPage()" (next)="nextPage()" />
+    }
+  </div>
+</div>
+
+<!-- Modal -->
+@if (showModal) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div class="bg-white rounded-lg shadow-2xl w-full max-w-md mx-4">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line">
+        <h2 class="text-base font-bold text-oas-ink">
+          {{ isNew ? 'Nouveau garage' : 'Modifier le garage' }}
+        </h2>
+        <button (click)="showModal = false" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted cursor-pointer">
+          <svg lucideX class="w-5 h-5"></svg>
+        </button>
+      </div>
+      <form [formGroup]="form" (ngSubmit)="save()" class="px-6 py-5 space-y-4">
+        <div>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Libellé *</label>
+          <input formControlName="libelle" placeholder="Nom du garage"
+                 class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"
+                 [class.border-oas-bad]="form.get('libelle')?.invalid && form.get('libelle')?.touched"/>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Ville *</label>
+          <input formControlName="ville" placeholder="Dakar"
+                 class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"
+                 [class.border-oas-bad]="form.get('ville')?.invalid && form.get('ville')?.touched"/>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Adresse</label>
+          <input formControlName="adresse" placeholder="Rue, quartier..."
+                 class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Contact</label>
+          <input formControlName="contact" placeholder="Téléphone ou email"
+                 class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
+        </div>
+        <div class="flex justify-end gap-3 pt-2">
+          <button type="button" (click)="showModal = false"
+                  class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-lg border border-oas-line flex items-center transition cursor-pointer text-sm">
+            Annuler
+          </button>
+          <button type="submit" [disabled]="saving"
+                  class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-10 rounded-lg flex items-center transition cursor-pointer disabled:opacity-60 text-sm">
+            {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

@@ -2,11 +2,14 @@ import { Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { LucideEye, LucideEyeOff, LucideLoader2 } from '@lucide/angular';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink,
+    LucideEye, LucideEyeOff, LucideLoader2,
+  ],
   templateUrl: './register.component.html',
 })
 export class RegisterComponent {

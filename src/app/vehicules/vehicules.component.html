@@ -1,13 +1,13 @@
-<div>
+﻿<div>
 
   <!-- Header -->
-  <div class="flex items-center justify-between mb-6">
+  <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4 mb-6 flex items-center justify-between">
     <div>
-      <h1 class="text-[25px] font-extrabold text-oas-ink tracking-tight">Véhicules</h1>
+      <h1 class="text-2xl font-bold text-oas-ink">Véhicules</h1>
       <p class="text-sm text-oas-muted mt-1">{{ filtered.length }} véhicule(s) affiché(s)</p>
     </div>
     <button (click)="openCreate()"
-            class="flex items-center gap-2 bg-oas-accent hover:bg-oas-accent-dark text-white text-sm font-bold px-4 h-11 rounded-xl transition cursor-pointer shadow-lg shadow-oas-accent/25">
+            class="flex items-center gap-2 bg-oas-accent hover:bg-oas-accent-dark text-white text-sm font-bold px-4 h-11 rounded-lg transition cursor-pointer">
       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
       </svg>
@@ -18,7 +18,7 @@
   <app-alert [success]="successMessage" [error]="errorMessage" />
 
   <!-- Search + filtres -->
-  <div class="bg-white rounded-2xl border border-oas-line p-3 mb-4 shadow-sm flex flex-col sm:flex-row gap-3">
+  <div class="bg-white rounded-lg border border-oas-line p-3 mb-4 shadow-sm flex flex-col sm:flex-row gap-3">
     <div class="relative flex-1">
       <span class="absolute left-3 top-1/2 -translate-y-1/2 text-oas-muted">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -27,11 +27,11 @@
       </span>
       <input type="text" (input)="onSearch($event)"
              placeholder="Rechercher par immatriculation, marque, modèle ou client..."
-             class="w-full pl-9 pr-4 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
+             class="w-full pl-9 pr-4 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
     </div>
     <!-- Filtre marque -->
     <select (change)="onMarqueFilter($event)"
-            class="px-3 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink min-w-[160px]">
+            class="px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink min-w-[160px]">
       <option value="">Toutes les marques</option>
       @for (m of marques; track m) {
         <option [value]="m">{{ m }}</option>
@@ -39,7 +39,7 @@
     </select>
     <!-- Filtre client -->
     <select (change)="onClientFilter($event)"
-            class="px-3 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink min-w-[180px]">
+            class="px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink min-w-[180px]">
       <option value="">Tous les clients</option>
       @for (c of clients; track c.id) {
         <option [value]="c.id">{{ c.firstName }} {{ c.lastName }}</option>
@@ -48,17 +48,17 @@
   </div>
 
   <!-- Table -->
-  <div class="bg-white rounded-2xl border border-oas-line shadow-sm overflow-hidden">
+  <div class="bg-white rounded-lg border border-oas-line shadow-card overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-oas-line">
-            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Immatriculation</th>
-            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Marque / Modèle</th>
-            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Année</th>
-            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Kilométrage</th>
-            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Client</th>
-            <th class="text-right text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Actions</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Immatriculation</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Marque / Modèle</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Année</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Kilométrage</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Client</th>
+            <th class="text-right text-xs text-oas-muted px-5 py-3">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -129,7 +129,7 @@
 <!-- ── Modal Création (2 étapes) ── -->
 @if (showModal && isNew) {
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+    <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg">
 
       <!-- Header stepper -->
       <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line">
@@ -161,13 +161,13 @@
       @if (createStep === 1) {
         <form [formGroup]="infoForm" (ngSubmit)="nextStep()" class="px-6 py-5 space-y-4">
           @if (errorMessage) {
-            <div class="px-3 py-2 bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-xs rounded-xl">{{ errorMessage }}</div>
+            <div class="px-3 py-2 bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-xs rounded-lg">{{ errorMessage }}</div>
           }
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-semibold text-oas-ink mb-1">Immatriculation *</label>
               <input type="text" formControlName="immatriculation" placeholder="AA-123-BB"
-                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                     class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
                      [class.border-oas-bad]="fInfo['immatriculation'].invalid && fInfo['immatriculation'].touched"/>
               @if (fInfo['immatriculation'].invalid && fInfo['immatriculation'].touched) {
                 <p class="text-oas-bad text-xs mt-1">Requis</p>
@@ -176,14 +176,14 @@
             <div>
               <label class="block text-sm font-semibold text-oas-ink mb-1">N° Châssis</label>
               <input type="text" formControlName="numeroChassis"
-                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+                     class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
             </div>
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-semibold text-oas-ink mb-1">Marque *</label>
               <input type="text" formControlName="marque" placeholder="Toyota"
-                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                     class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
                      [class.border-oas-bad]="fInfo['marque'].invalid && fInfo['marque'].touched"/>
               @if (fInfo['marque'].invalid && fInfo['marque'].touched) {
                 <p class="text-oas-bad text-xs mt-1">Requis</p>
@@ -192,7 +192,7 @@
             <div>
               <label class="block text-sm font-semibold text-oas-ink mb-1">Modèle *</label>
               <input type="text" formControlName="modele" placeholder="Corolla"
-                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                     class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
                      [class.border-oas-bad]="fInfo['modele'].invalid && fInfo['modele'].touched"/>
               @if (fInfo['modele'].invalid && fInfo['modele'].touched) {
                 <p class="text-oas-bad text-xs mt-1">Requis</p>
@@ -203,21 +203,21 @@
             <div>
               <label class="block text-sm font-semibold text-oas-ink mb-1">Année</label>
               <input type="number" formControlName="annee" placeholder="2020" min="1900" max="2099"
-                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+                     class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
             </div>
             <div>
               <label class="block text-sm font-semibold text-oas-ink mb-1">Kilométrage</label>
               <input type="number" formControlName="kilometrage" placeholder="50000" min="0"
-                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+                     class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
             </div>
           </div>
           <div class="flex justify-end gap-2 pt-2">
             <button type="button" (click)="closeModal()"
-                    class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-xl border border-oas-line flex items-center transition cursor-pointer text-sm">
+                    class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-lg border border-oas-line flex items-center transition cursor-pointer text-sm">
               Annuler
             </button>
             <button type="submit"
-                    class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-10 rounded-xl flex items-center gap-2 transition cursor-pointer text-sm">
+                    class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-10 rounded-lg flex items-center gap-2 transition cursor-pointer text-sm">
               Suivant
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
@@ -231,11 +231,11 @@
       @if (createStep === 2) {
         <div class="px-6 py-5">
           @if (errorMessage) {
-            <div class="px-3 py-2 bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-xs rounded-xl mb-4">{{ errorMessage }}</div>
+            <div class="px-3 py-2 bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-xs rounded-lg mb-4">{{ errorMessage }}</div>
           }
 
           <!-- Récap véhicule -->
-          <div class="bg-oas-bg rounded-xl p-3 mb-5 flex items-center gap-3">
+          <div class="bg-oas-bg rounded-lg p-3 mb-5 flex items-center gap-3">
             <div class="w-9 h-9 rounded-lg bg-oas-accent/10 flex items-center justify-center flex-shrink-0">
               <svg class="w-5 h-5 text-oas-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/>
@@ -257,10 +257,10 @@
                        (focus)="clientOpen = true; clientFilter = ''"
                        (input)="clientFilter = $any($event.target).value"
                        placeholder="Rechercher un client..."
-                       class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                       class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
                        [class.border-oas-bad]="fClient['clientId'].invalid && fClient['clientId'].touched"/>
                 @if (clientOpen) {
-                  <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-oas-line rounded-xl shadow-xl z-[10] max-h-52 overflow-y-auto"
+                  <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-oas-line rounded-lg shadow-xl z-[10] max-h-52 overflow-y-auto"
                        (click)="$event.stopPropagation()">
                     @for (c of filteredClients; track c.id) {
                       <div (click)="selectClient(c)"
@@ -281,14 +281,14 @@
             </div>
             <div class="flex justify-between gap-2 pt-2">
               <button type="button" (click)="prevStep()"
-                      class="flex items-center gap-2 bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-xl border border-oas-line transition cursor-pointer text-sm">
+                      class="flex items-center gap-2 bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-lg border border-oas-line transition cursor-pointer text-sm">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
                 </svg>
                 Retour
               </button>
               <button type="submit" [disabled]="saving"
-                      class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-10 rounded-xl flex items-center transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm">
+                      class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-10 rounded-lg flex items-center transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm">
                 {{ saving ? 'Création...' : 'Créer le véhicule' }}
               </button>
             </div>
@@ -303,7 +303,7 @@
 <!-- ── Modal Édition ── -->
 @if (showModal && !isNew) {
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+    <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg">
       <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line">
         <h3 class="font-bold text-oas-ink">Modifier le véhicule</h3>
         <button (click)="closeModal()" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted transition cursor-pointer">
@@ -314,32 +314,32 @@
       </div>
       <form [formGroup]="editForm" (ngSubmit)="save()" class="px-6 py-5 space-y-4">
         @if (errorMessage) {
-          <div class="px-3 py-2 bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-xs rounded-xl">{{ errorMessage }}</div>
+          <div class="px-3 py-2 bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-xs rounded-lg">{{ errorMessage }}</div>
         }
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-semibold text-oas-ink mb-1">Immatriculation *</label>
             <input type="text" formControlName="immatriculation"
-                   class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                   class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
                    [class.border-oas-bad]="fEdit['immatriculation'].invalid && fEdit['immatriculation'].touched"/>
           </div>
           <div>
             <label class="block text-sm font-semibold text-oas-ink mb-1">N° Châssis</label>
             <input type="text" formControlName="numeroChassis"
-                   class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+                   class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
           </div>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-semibold text-oas-ink mb-1">Marque *</label>
             <input type="text" formControlName="marque"
-                   class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                   class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
                    [class.border-oas-bad]="fEdit['marque'].invalid && fEdit['marque'].touched"/>
           </div>
           <div>
             <label class="block text-sm font-semibold text-oas-ink mb-1">Modèle *</label>
             <input type="text" formControlName="modele"
-                   class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                   class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
                    [class.border-oas-bad]="fEdit['modele'].invalid && fEdit['modele'].touched"/>
           </div>
         </div>
@@ -347,17 +347,17 @@
           <div>
             <label class="block text-sm font-semibold text-oas-ink mb-1">Année</label>
             <input type="number" formControlName="annee" min="1900" max="2099"
-                   class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+                   class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
           </div>
           <div>
             <label class="block text-sm font-semibold text-oas-ink mb-1">Kilométrage</label>
             <input type="number" formControlName="kilometrage" min="0"
-                   class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+                   class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
           </div>
         </div>
         <div>
           <label class="block text-sm font-semibold text-oas-ink mb-1">Client</label>
-          <div class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm text-oas-ink">
+          <div class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm text-oas-ink">
             @if (editingClient) {
               <span class="font-semibold">{{ editingClient.firstName }} {{ editingClient.lastName }}</span>
               <span class="text-oas-muted ml-2">({{ editingClient.phone }})</span>
@@ -368,11 +368,11 @@
         </div>
         <div class="flex justify-end gap-2 pt-2">
           <button type="button" (click)="closeModal()"
-                  class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-xl border border-oas-line flex items-center transition cursor-pointer text-sm">
+                  class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-lg border border-oas-line flex items-center transition cursor-pointer text-sm">
             Annuler
           </button>
           <button type="submit" [disabled]="saving"
-                  class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-10 rounded-xl flex items-center transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm">
+                  class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-10 rounded-lg flex items-center transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm">
             {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
           </button>
         </div>

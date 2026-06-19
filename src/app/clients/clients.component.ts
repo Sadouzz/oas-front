@@ -9,11 +9,12 @@ import { FactureService, FactureModel } from '../services/facture.service';
 import { UserModel, VehiculeModel } from '../shared/models';
 import { AlertComponent } from '../shared/components/alert/alert.component';
 import { PaginationComponent } from '../shared/components/pagination/pagination.component';
+import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, LucideArchiveRestore, LucideX, LucideCheck, LucideUser, LucideArrowRight } from '@lucide/angular';
 
 @Component({
   selector: 'app-clients',
   standalone: true,
-  imports: [ReactiveFormsModule, NgClass, DatePipe, DecimalPipe, AlertComponent, PaginationComponent],
+  imports: [ReactiveFormsModule, NgClass, DatePipe, DecimalPipe, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, LucideArchiveRestore, LucideX, LucideCheck, LucideUser, LucideArrowRight],
   templateUrl: './clients.component.html',
 })
 export class ClientsComponent implements OnInit {

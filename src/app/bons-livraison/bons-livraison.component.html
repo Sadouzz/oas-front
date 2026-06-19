@@ -1,9 +1,9 @@
 <div class="space-y-6">
 
   <!-- Header -->
-  <div class="flex items-center justify-between">
+  <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4 flex items-center justify-between">
     <div>
-      <h1 class="text-[25px] font-extrabold text-oas-ink tracking-tight">Bons de livraison</h1>
+      <h1 class="text-2xl font-bold text-oas-ink">Bons de livraison</h1>
       <p class="text-sm text-oas-muted mt-1">{{ filtered.length }} bon(s)</p>
     </div>
     <div class="flex items-center gap-3">
@@ -19,7 +19,7 @@
   }
 
   <!-- Search -->
-  <div class="bg-white rounded-2xl border border-oas-line p-3 shadow-sm">
+  <div class="bg-white rounded-lg border border-oas-line p-3 shadow-sm">
     <div class="relative">
       <span class="absolute left-3 top-1/2 -translate-y-1/2 text-oas-muted">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -27,7 +27,7 @@
         </svg>
       </span>
       <input (input)="onSearch($event)" placeholder="N°, agent, bon de commande..."
-             class="w-full pl-9 pr-4 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
+             class="w-full pl-9 pr-4 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
     </div>
   </div>
 
@@ -35,7 +35,7 @@
   <div class="flex gap-5">
 
     <!-- Table -->
-    <div class="bg-white rounded-2xl border border-oas-line shadow-sm overflow-hidden" [class.flex-1]="selectedBon" [class.w-full]="!selectedBon">
+    <div class="bg-white rounded-lg border border-oas-line shadow-card overflow-hidden" [class.flex-1]="selectedBon" [class.w-full]="!selectedBon">
       @if (loading) {
         <div class="flex items-center justify-center py-16">
           <div class="w-6 h-6 border-2 border-oas-accent border-t-transparent rounded-full animate-spin"></div>
@@ -47,7 +47,7 @@
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-oas-line">
-                <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">N°</th>
+                <th class="text-left text-xs text-oas-muted px-5 py-3">N°</th>
                 @if (!selectedBon) {
                   <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Agent</th>
                   <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">BC lié</th>
@@ -108,7 +108,7 @@
 
     <!-- Detail panel -->
     @if (selectedBon) {
-      <div class="w-96 flex-shrink-0 bg-white rounded-2xl border border-oas-line shadow-sm flex flex-col overflow-hidden">
+      <div class="w-96 flex-shrink-0 bg-white rounded-lg border border-oas-line shadow-card flex flex-col overflow-hidden">
         <div class="flex items-center justify-between px-5 py-4 border-b border-oas-line">
           <div>
             <p class="font-mono font-bold text-oas-accent text-sm">{{ selectedBon.numero }}</p>
@@ -127,7 +127,7 @@
           @if (detailClient || detailVehicule) {
             <div class="grid grid-cols-2 gap-3 text-sm">
               @if (detailClient) {
-                <div class="bg-oas-bg rounded-xl p-3">
+                <div class="bg-oas-bg rounded-lg p-3">
                   <p class="text-oas-muted text-xs font-semibold uppercase tracking-wide mb-1">Client</p>
                   <p class="font-semibold text-oas-ink">{{ detailClient.firstName }} {{ detailClient.lastName }}</p>
                   @if (detailClient.phone) {
@@ -136,7 +136,7 @@
                 </div>
               }
               @if (detailVehicule) {
-                <div class="bg-oas-bg rounded-xl p-3">
+                <div class="bg-oas-bg rounded-lg p-3">
                   <p class="text-oas-muted text-xs font-semibold uppercase tracking-wide mb-1">Véhicule</p>
                   <p class="font-semibold text-oas-ink">{{ detailVehicule.immatriculation }}</p>
                   <p class="text-xs text-oas-muted">{{ detailVehicule.marque }} {{ detailVehicule.modele }}</p>
@@ -169,7 +169,7 @@
           @if (selectedBon.lignesPieces.length > 0) {
             <div>
               <p class="text-xs font-bold text-oas-muted uppercase tracking-wide mb-2">Pièces ({{ selectedBon.lignesPieces.length }})</p>
-              <div class="border border-oas-line rounded-xl overflow-hidden">
+              <div class="border border-oas-line rounded-lg overflow-hidden">
                 <table class="w-full text-xs">
                   <thead class="bg-oas-bg">
                     <tr>
@@ -196,7 +196,7 @@
           @if (selectedBon.lignesMainDoeuvres.length > 0) {
             <div>
               <p class="text-xs font-bold text-oas-muted uppercase tracking-wide mb-2">Main d'œuvre ({{ selectedBon.lignesMainDoeuvres.length }})</p>
-              <div class="border border-oas-line rounded-xl overflow-hidden">
+              <div class="border border-oas-line rounded-lg overflow-hidden">
                 <table class="w-full text-xs">
                   <thead class="bg-oas-bg">
                     <tr>
@@ -220,7 +220,7 @@
           }
 
           <!-- Totaux -->
-          <div class="bg-oas-bg rounded-xl p-4 space-y-1.5 text-sm">
+          <div class="bg-oas-bg rounded-lg p-4 space-y-1.5 text-sm">
             @if (montantBCDetail > 0) {
               <div class="flex justify-between">
                 <span class="text-oas-muted">Bon de commande</span>
@@ -241,14 +241,14 @@
             </div>
             <div class="flex justify-between pt-1.5 border-t border-oas-line">
               <span class="font-bold text-oas-ink">Total</span>
-              <span class="font-extrabold text-oas-accent text-base">{{ fmt(totalAvecBC(selectedBon)) }} FCFA</span>
+              <span class="font-bold text-oas-accent text-base">{{ fmt(totalAvecBC(selectedBon)) }} FCFA</span>
             </div>
           </div>
 
           <!-- Actions -->
           <div class="space-y-2">
             <button (click)="downloadPdf(selectedBon.id)"
-                    class="w-full bg-white hover:bg-oas-bg border border-oas-line text-oas-ink font-semibold py-2.5 rounded-xl transition text-sm cursor-pointer flex items-center justify-center gap-2">
+                    class="w-full bg-white hover:bg-oas-bg border border-oas-line text-oas-ink font-semibold py-2.5 rounded-lg transition text-sm cursor-pointer flex items-center justify-center gap-2">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
               </svg>
@@ -261,4 +261,5 @@
     }
   </div>
 </div>
+
 

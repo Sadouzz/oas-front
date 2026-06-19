@@ -1,7 +1,7 @@
 <div>
   <div class="flex items-center justify-between mb-6">
     <div>
-      <h1 class="text-[25px] font-extrabold text-oas-ink tracking-tight">Inventaire physique</h1>
+      <h1 class="text-2xl font-bold text-oas-ink">Inventaire physique</h1>
       <p class="text-sm text-oas-muted mt-1">{{ filtered.length }} pièce(s) PDP active(s)</p>
     </div>
   </div>
@@ -9,43 +9,38 @@
   <app-alert [success]="successMessage" />
 
   <!-- Search -->
-  <div class="bg-white rounded-2xl border border-oas-line p-3 mb-4 shadow-sm">
+  <div class="bg-white rounded-lg border border-oas-line p-3 mb-4 shadow-sm">
     <div class="relative">
       <span class="absolute left-3 top-1/2 -translate-y-1/2 text-oas-muted">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-        </svg>
+        <svg lucideSearch class="w-4 h-4"></svg>
       </span>
       <input type="text" (input)="onSearch($event)"
              placeholder="Rechercher par référence, N° série ou catégorie..."
-             class="w-full pl-9 pr-4 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
+             class="w-full pl-9 pr-4 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
     </div>
   </div>
 
   <!-- Table -->
-  <div class="bg-white rounded-2xl border border-oas-line shadow-sm overflow-hidden">
+  <div class="bg-white rounded-lg border border-oas-line shadow-card overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-oas-line">
-            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Référence</th>
-            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">N° Série</th>
-            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Catégorie</th>
-            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Stock magasin</th>
-            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Stock atelier</th>
-            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Qté réelle</th>
-            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Seuil min.</th>
-            <th class="text-right text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Action</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Référence</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">N° Série</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Catégorie</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Stock magasin</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Stock atelier</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Qté réelle</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Seuil min.</th>
+            <th class="text-right text-xs text-oas-muted px-5 py-3">Action</th>
           </tr>
         </thead>
         <tbody>
           @if (loading) {
             <tr>
               <td colspan="8" class="text-center py-14 text-oas-muted">
-                <svg class="animate-spin h-5 w-5 mx-auto mb-2 text-oas-accent" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-                </svg>
+                <svg lucideLoader2 class="animate-spin h-5 w-5 mx-auto mb-2 text-oas-accent"></svg>
                 Chargement...
               </td>
             </tr>
@@ -86,53 +81,48 @@
 <!-- Modal inventaire -->
 @if (showModal && selectedPiece) {
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+    <div class="bg-white rounded-lg shadow-2xl w-full max-w-md">
       <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line">
         <div>
           <h3 class="font-bold text-oas-ink">Inventaire — {{ selectedPiece.reference }}</h3>
           <p class="text-xs text-oas-muted mt-1">Mag: {{ selectedPiece.stockMagasin ?? 0 }} | Ate: {{ selectedPiece.stockAtelier ?? 0 }}</p>
         </div>
         <button (click)="closeModal()" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted cursor-pointer">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
+          <svg lucideX class="w-5 h-5"></svg>
         </button>
       </div>
 
       @if (!result) {
         <form [formGroup]="form" (ngSubmit)="submit()" class="px-6 py-5 space-y-4">
           @if (errorMessage) {
-            <div class="px-3 py-2 bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-xs rounded-xl">{{ errorMessage }}</div>
+            <div class="px-3 py-2 bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-xs rounded-lg">{{ errorMessage }}</div>
           }
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-semibold text-oas-ink mb-1">Stock magasin physique *</label>
               <input type="number" formControlName="stockMagasinPhysique" min="0"
-                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                     class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
                      [class.border-oas-bad]="f['stockMagasinPhysique'].invalid && f['stockMagasinPhysique'].touched"/>
             </div>
             <div>
               <label class="block text-sm font-semibold text-oas-ink mb-1">Stock atelier physique *</label>
               <input type="number" formControlName="stockAtelierPhysique" min="0"
-                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                     class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
                      [class.border-oas-bad]="f['stockAtelierPhysique'].invalid && f['stockAtelierPhysique'].touched"/>
             </div>
           </div>
           <div>
             <label class="block text-sm font-semibold text-oas-ink mb-1">Motif / Observation</label>
             <input type="text" formControlName="motif" placeholder="Ex: Comptage mensuel"
-                   class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+                   class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
           </div>
           <div class="flex justify-end gap-2 pt-2">
             <button type="button" (click)="closeModal()"
-                    class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-xl border border-oas-line flex items-center transition cursor-pointer text-sm">Annuler</button>
+                    class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-lg border border-oas-line flex items-center transition cursor-pointer text-sm">Annuler</button>
             <button type="submit" [disabled]="submitting"
-                    class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-10 rounded-xl flex items-center gap-2 transition cursor-pointer disabled:opacity-60 text-sm">
+                    class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-10 rounded-lg flex items-center gap-2 transition cursor-pointer disabled:opacity-60 text-sm">
               @if (submitting) {
-                <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-                </svg>
+                <svg lucideLoader2 class="animate-spin h-4 w-4"></svg>
               }
               {{ submitting ? 'Traitement...' : 'Valider le comptage' }}
             </button>
@@ -143,9 +133,7 @@
           <div class="flex items-center gap-3 mb-5">
             @if (result.ajuste) {
               <div class="w-10 h-10 rounded-full bg-oas-warn-bg flex items-center justify-center flex-shrink-0">
-                <svg class="w-5 h-5 text-oas-warn" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                </svg>
+                <svg lucideAlertTriangle class="w-5 h-5 text-oas-warn"></svg>
               </div>
               <div>
                 <p class="font-bold text-oas-ink">Écart détecté — Stock corrigé</p>
@@ -153,9 +141,7 @@
               </div>
             } @else {
               <div class="w-10 h-10 rounded-full bg-oas-ok-bg flex items-center justify-center flex-shrink-0">
-                <svg class="w-5 h-5 text-oas-ok" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                </svg>
+                <svg lucideCheck class="w-5 h-5 text-oas-ok"></svg>
               </div>
               <div>
                 <p class="font-bold text-oas-ink">Aucun écart</p>
@@ -164,7 +150,7 @@
             }
           </div>
           <div class="grid grid-cols-2 gap-3 mb-5">
-            <div class="bg-oas-bg rounded-xl p-3">
+            <div class="bg-oas-bg rounded-lg p-3">
               <p class="text-xs font-bold text-oas-muted uppercase tracking-wider mb-2">Magasin</p>
               <div class="flex justify-between text-xs mb-1"><span class="text-oas-muted">Théorique</span><span class="font-semibold text-oas-ink">{{ result.stockMagasinTheorique }}</span></div>
               <div class="flex justify-between text-xs mb-1"><span class="text-oas-muted">Physique</span><span class="font-semibold text-oas-ink">{{ result.stockMagasinPhysique }}</span></div>
@@ -173,7 +159,7 @@
                 <span class="font-bold {{ result.ecartMagasin !== 0 ? 'text-oas-warn' : 'text-oas-ok' }}">{{ result.ecartMagasin > 0 ? '+' : '' }}{{ result.ecartMagasin }}</span>
               </div>
             </div>
-            <div class="bg-oas-bg rounded-xl p-3">
+            <div class="bg-oas-bg rounded-lg p-3">
               <p class="text-xs font-bold text-oas-muted uppercase tracking-wider mb-2">Atelier</p>
               <div class="flex justify-between text-xs mb-1"><span class="text-oas-muted">Théorique</span><span class="font-semibold text-oas-ink">{{ result.stockAtelierTheorique }}</span></div>
               <div class="flex justify-between text-xs mb-1"><span class="text-oas-muted">Physique</span><span class="font-semibold text-oas-ink">{{ result.stockAtelierPhysique }}</span></div>
@@ -184,7 +170,7 @@
             </div>
           </div>
           <button (click)="closeModal()"
-                  class="w-full bg-white hover:bg-oas-bg text-oas-ink font-semibold border border-oas-line py-2.5 rounded-xl transition text-sm cursor-pointer">
+                  class="w-full bg-white hover:bg-oas-bg text-oas-ink font-semibold border border-oas-line py-2.5 rounded-lg transition text-sm cursor-pointer">
             Fermer
           </button>
         </div>

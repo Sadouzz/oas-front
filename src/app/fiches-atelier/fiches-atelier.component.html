@@ -7,9 +7,9 @@
   <div class="flex-1 min-w-0 flex flex-col">
 
     <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
+    <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4 mb-6 flex items-center justify-between">
       <div>
-        <h1 class="text-[25px] font-extrabold text-oas-ink tracking-tight">Fiches Atelier</h1>
+        <h1 class="text-2xl font-bold text-oas-ink">Fiches Atelier</h1>
         <p class="text-sm text-oas-muted mt-1">{{ filtered.length }} fiche(s)</p>
       </div>
       <button id="btn-nouvelle-fiche" (click)="openNew()"
@@ -205,11 +205,11 @@
 
       <div class="flex-1 overflow-y-auto px-5 py-4 space-y-4">
         <div class="grid grid-cols-2 gap-3">
-          <div class="bg-oas-bg rounded-xl p-3">
+          <div class="bg-oas-bg rounded-lg p-3">
             <p class="text-[10px] text-oas-muted font-semibold uppercase tracking-wide mb-1">Ouverture</p>
             <p class="text-sm font-bold text-oas-ink">{{ formatDate(selectedFiche.dateCreation) }}</p>
           </div>
-          <div class="bg-oas-bg rounded-xl p-3">
+          <div class="bg-oas-bg rounded-lg p-3">
             <p class="text-[10px] text-oas-muted font-semibold uppercase tracking-wide mb-1">Sortie prévue</p>
             <p class="text-sm font-bold" [ngClass]="selectedFiche.dateSortie ? 'text-oas-ok' : 'text-oas-faint'">
               {{ selectedFiche.dateSortie ? formatDate(selectedFiche.dateSortie) : 'Non définie' }}

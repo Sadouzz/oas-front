@@ -1,23 +1,23 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MecanicienService } from '../services/mecanicien.service';
-import { Mecanicien } from '../shared/models';
-import { AlertComponent } from '../shared/components/alert/alert.component';
-import { PaginationComponent } from '../shared/components/pagination/pagination.component';
-import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideUser, LucideWrench } from '@lucide/angular';
+import { GarageService } from '../../services/garage.service';
+import { Garage } from '../../shared/models';
+import { AlertComponent } from '../../shared/components/alert/alert.component';
+import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
+import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideBuilding2 } from '@lucide/angular';
 
 @Component({
-  selector: 'app-mecaniciens',
+  selector: 'app-garages',
   standalone: true,
-  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideUser, LucideWrench],
-  templateUrl: './mecaniciens.component.html',
+  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideBuilding2],
+  templateUrl: './garages.component.html',
 })
-export class MecaniciensComponent implements OnInit {
-  private service = inject(MecanicienService);
+export class GaragesComponent implements OnInit {
+  private service = inject(GarageService);
   private fb = inject(FormBuilder);
 
-  mecaniciens: Mecanicien[] = [];
-  filtered: Mecanicien[] = [];
+  garages: Garage[] = [];
+  filtered: Garage[] = [];
   loading = true;
   saving = false;
   showModal = false;
@@ -29,24 +29,29 @@ export class MecaniciensComponent implements OnInit {
   errorMessage = '';
 
   form: FormGroup = this.fb.group({
-    nom: ['', Validators.required],
+    libelle: ['', Validators.required],
+    ville: ['', Validators.required],
+    adresse: [''],
+    contact: [''],
   });
 
-  ngOnInit() {
-    this.load();
-  }
+  ngOnInit() { this.load(); }
 
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: data => { this.mecaniciens = data; this.filtered = data; this.loading = false; },
+      next: data => { this.garages = data; this.filtered = data; this.loading = false; },
       error: () => this.loading = false,
     });
   }
 
   onSearch(e: Event) {
     const kw = (e.target as HTMLInputElement).value.toLowerCase();
-    this.filtered = this.mecaniciens.filter(m => m.nom.toLowerCase().includes(kw));
+    this.filtered = this.garages.filter(g =>
+      g.libelle.toLowerCase().includes(kw) ||
+      g.ville.toLowerCase().includes(kw) ||
+      (g.adresse ?? '').toLowerCase().includes(kw)
+    );
     this.page = 1;
   }
 
@@ -57,36 +62,35 @@ export class MecaniciensComponent implements OnInit {
     this.showModal = true;
   }
 
-  openEdit(m: Mecanicien) {
+  openEdit(g: Garage) {
     this.isNew = false;
-    this.editingId = m.id;
-    this.form.patchValue({ nom: m.nom });
+    this.editingId = g.id;
+    this.form.patchValue({ libelle: g.libelle, ville: g.ville, adresse: g.adresse, contact: g.contact });
     this.showModal = true;
   }
 
   save() {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.saving = true;
-    const raw = this.form.value;
-    const payload = { nom: raw.nom };
+    const payload = this.form.value;
     const req$ = this.isNew
       ? this.service.create(payload)
       : this.service.update(this.editingId!, payload);
     req$.subscribe({
-      next: () => { this.showModal = false; this.load(); this.notify('Mécanicien enregistré.'); },
+      next: () => { this.showModal = false; this.load(); this.notify('Garage enregistré.'); },
       error: () => { this.saving = false; this.notifyError('Erreur lors de la sauvegarde.'); },
     });
   }
 
   delete(id: number) {
-    if (!confirm('Supprimer ce mécanicien ?')) return;
+    if (!confirm('Supprimer ce garage ?')) return;
     this.service.delete(id).subscribe({
-      next: () => { this.load(); this.notify('Mécanicien supprimé.'); },
+      next: () => { this.load(); this.notify('Garage supprimé.'); },
       error: () => this.notifyError('Erreur lors de la suppression.'),
     });
   }
 
-  get paged(): Mecanicien[] {
+  get paged(): Garage[] {
     return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
   }
   get totalPages(): number { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }

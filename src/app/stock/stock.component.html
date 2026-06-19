@@ -1,28 +1,28 @@
-<div>
+﻿<div>
 
   <!-- Header -->
-  <div class="flex items-start justify-between mb-6">
+  <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4 mb-6 flex items-start justify-between">
     <div>
-      <h1 class="text-[25px] font-extrabold text-oas-ink tracking-tight">Gestion du stock</h1>
+      <h1 class="text-2xl font-bold text-oas-ink">Gestion du stock</h1>
       <p class="text-sm text-oas-muted mt-1">{{ alertes.length }} alerte(s) active(s) — mouvements 30 derniers jours</p>
     </div>
     <div class="flex gap-2">
       <button (click)="openModal('entree')"
-              class="flex items-center gap-2 bg-oas-ok hover:bg-oas-ok/90 text-white text-sm font-bold px-4 h-11 rounded-xl transition cursor-pointer shadow-md shadow-oas-ok/20">
+              class="flex items-center gap-2 bg-oas-ok hover:bg-oas-ok/90 text-white text-sm font-bold px-4 h-11 rounded-lg transition cursor-pointer">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
         </svg>
         Entrée
       </button>
       <button (click)="openModal('sortie')"
-              class="flex items-center gap-2 bg-oas-bad hover:bg-oas-bad/90 text-white text-sm font-bold px-4 h-11 rounded-xl transition cursor-pointer shadow-md shadow-oas-bad/20">
+              class="flex items-center gap-2 bg-oas-bad hover:bg-oas-bad/90 text-white text-sm font-bold px-4 h-11 rounded-lg transition cursor-pointer">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4"/>
         </svg>
         Sortie
       </button>
       <button (click)="openModal('ajustement')"
-              class="flex items-center gap-2 bg-oas-accent hover:bg-oas-accent-dark text-white text-sm font-bold px-4 h-11 rounded-xl transition cursor-pointer shadow-lg shadow-oas-accent/25">
+              class="flex items-center gap-2 bg-oas-accent hover:bg-oas-accent-dark text-white text-sm font-bold px-4 h-11 rounded-lg transition cursor-pointer">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
         </svg>
@@ -35,7 +35,7 @@
 
   <!-- KPI chips 52×52 -->
   <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-    <div class="bg-white rounded-2xl border border-oas-line shadow-sm p-5">
+    <div class="bg-white rounded-lg border border-oas-line shadow-card p-5">
       <div class="flex items-start gap-4">
         <span class="w-[52px] h-[52px] rounded-[14px] bg-oas-accent-bg text-oas-accent flex items-center justify-center flex-shrink-0">
           <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -48,7 +48,7 @@
         </div>
       </div>
     </div>
-    <div class="bg-white rounded-2xl border border-oas-line shadow-sm p-5">
+    <div class="bg-white rounded-lg border border-oas-line shadow-card p-5">
       <div class="flex items-start gap-4">
         <span class="w-[52px] h-[52px] rounded-[14px] bg-oas-bad-bg text-oas-bad flex items-center justify-center flex-shrink-0">
           <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -61,7 +61,7 @@
         </div>
       </div>
     </div>
-    <div class="bg-white rounded-2xl border border-oas-line shadow-sm p-5">
+    <div class="bg-white rounded-lg border border-oas-line shadow-card p-5">
       <div class="flex items-start gap-4">
         <span class="w-[52px] h-[52px] rounded-[14px] bg-oas-warn-bg text-oas-warn flex items-center justify-center flex-shrink-0">
           <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -80,7 +80,7 @@
   <div class="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-5">
 
     <!-- Alertes table (main) -->
-    <div class="bg-white rounded-2xl border border-oas-line shadow-sm overflow-hidden">
+    <div class="bg-white rounded-lg border border-oas-line shadow-card overflow-hidden">
       <div class="px-5 py-4 border-b border-oas-line flex items-center justify-between">
         <div class="flex items-center gap-2">
           <svg class="w-[18px] h-[18px] text-oas-bad" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -100,11 +100,11 @@
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-oas-line">
-                <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Pièce</th>
-                <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Catégorie</th>
-                <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Mag.</th>
-                <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Seuil</th>
-                <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Alerte</th>
+                <th class="text-left text-xs text-oas-muted px-5 py-3">Pièce</th>
+                <th class="text-left text-xs text-oas-muted px-5 py-3">Catégorie</th>
+                <th class="text-left text-xs text-oas-muted px-5 py-3">Mag.</th>
+                <th class="text-left text-xs text-oas-muted px-5 py-3">Seuil</th>
+                <th class="text-left text-xs text-oas-muted px-5 py-3">Alerte</th>
               </tr>
             </thead>
             <tbody>
@@ -138,7 +138,7 @@
     </div>
 
     <!-- Mouvements récents (right sidebar) -->
-    <div class="bg-white rounded-2xl border border-oas-line shadow-sm overflow-hidden flex flex-col">
+    <div class="bg-white rounded-lg border border-oas-line shadow-card overflow-hidden flex flex-col">
       <div class="px-5 py-4 border-b border-oas-line flex-shrink-0">
         <h3 class="font-bold text-oas-ink text-sm">Mouvements récents</h3>
         <p class="text-xs text-oas-muted mt-0.5">30 derniers jours</p>
@@ -176,7 +176,7 @@
 <!-- Modal Entrée / Sortie -->
 @if (modalType === 'entree' || modalType === 'sortie') {
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+    <div class="bg-white rounded-lg shadow-2xl w-full max-w-md">
       <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line">
         <h3 class="font-bold text-oas-ink">{{ modalType === 'entree' ? 'Entrée de stock' : 'Sortie de stock' }}</h3>
         <button (click)="closeModal()" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted cursor-pointer">
@@ -187,12 +187,12 @@
       </div>
       <form [formGroup]="mouvementForm" (ngSubmit)="submitMouvement()" class="px-6 py-5 space-y-4">
         @if (errorMessage) {
-          <div class="px-3 py-2 bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-xs rounded-xl">{{ errorMessage }}</div>
+          <div class="px-3 py-2 bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-xs rounded-lg">{{ errorMessage }}</div>
         }
         <div>
           <label class="block text-sm font-semibold text-oas-ink mb-1">Pièce (PDP) *</label>
           <select formControlName="pieceId"
-                  class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink"
+                  class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink"
                   [class.border-oas-bad]="fm['pieceId'].invalid && fm['pieceId'].touched">
             <option [value]="null">-- Sélectionner --</option>
             @for (p of pdps; track p.id) {
@@ -203,19 +203,19 @@
         <div>
           <label class="block text-sm font-semibold text-oas-ink mb-1">Quantité *</label>
           <input type="number" formControlName="quantite" min="1"
-                 class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                 class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
                  [class.border-oas-bad]="fm['quantite'].invalid && fm['quantite'].touched"/>
         </div>
         <div>
           <label class="block text-sm font-semibold text-oas-ink mb-1">Motif</label>
           <input type="text" formControlName="motif"
-                 class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+                 class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
         </div>
         <div class="flex justify-end gap-2 pt-2">
           <button type="button" (click)="closeModal()"
-                  class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-xl border border-oas-line flex items-center transition cursor-pointer text-sm">Annuler</button>
+                  class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-lg border border-oas-line flex items-center transition cursor-pointer text-sm">Annuler</button>
           <button type="submit" [disabled]="saving"
-                  class="px-4 h-10 text-sm text-white rounded-xl cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed font-bold transition flex items-center {{ modalType === 'entree' ? 'bg-oas-ok hover:bg-oas-ok/90' : 'bg-oas-bad hover:bg-oas-bad/90' }}">
+                  class="px-4 h-10 text-sm text-white rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed font-bold transition flex items-center {{ modalType === 'entree' ? 'bg-oas-ok hover:bg-oas-ok/90' : 'bg-oas-bad hover:bg-oas-bad/90' }}">
             {{ saving ? 'Enregistrement...' : (modalType === 'entree' ? 'Enregistrer l\'entrée' : 'Enregistrer la sortie') }}
           </button>
         </div>
@@ -227,7 +227,7 @@
 <!-- Modal Ajustement -->
 @if (modalType === 'ajustement') {
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+    <div class="bg-white rounded-lg shadow-2xl w-full max-w-md">
       <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line">
         <h3 class="font-bold text-oas-ink">Ajustement de stock</h3>
         <button (click)="closeModal()" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted cursor-pointer">
@@ -238,12 +238,12 @@
       </div>
       <form [formGroup]="ajustementForm" (ngSubmit)="submitAjustement()" class="px-6 py-5 space-y-4">
         @if (errorMessage) {
-          <div class="px-3 py-2 bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-xs rounded-xl">{{ errorMessage }}</div>
+          <div class="px-3 py-2 bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-xs rounded-lg">{{ errorMessage }}</div>
         }
         <div>
           <label class="block text-sm font-semibold text-oas-ink mb-1">Pièce (PDP) *</label>
           <select formControlName="pieceId"
-                  class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
+                  class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
             <option [value]="null">-- Sélectionner --</option>
             @for (p of pdps; track p.id) {
               <option [value]="p.id">{{ p.reference }} (mag: {{ p.stockMagasin }}, ate: {{ p.stockAtelier }})</option>
@@ -254,24 +254,24 @@
           <div>
             <label class="block text-sm font-semibold text-oas-ink mb-1">Stock magasin *</label>
             <input type="number" formControlName="stockMagasin" min="0"
-                   class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+                   class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
           </div>
           <div>
             <label class="block text-sm font-semibold text-oas-ink mb-1">Stock atelier *</label>
             <input type="number" formControlName="stockAtelier" min="0"
-                   class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+                   class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
           </div>
         </div>
         <div>
           <label class="block text-sm font-semibold text-oas-ink mb-1">Motif</label>
           <input type="text" formControlName="motif"
-                 class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+                 class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
         </div>
         <div class="flex justify-end gap-2 pt-2">
           <button type="button" (click)="closeModal()"
-                  class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-xl border border-oas-line flex items-center transition cursor-pointer text-sm">Annuler</button>
+                  class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-lg border border-oas-line flex items-center transition cursor-pointer text-sm">Annuler</button>
           <button type="submit" [disabled]="saving"
-                  class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-10 rounded-xl flex items-center transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm">{{ saving ? 'Enregistrement...' : 'Enregistrer l\'ajustement' }}</button>
+                  class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-10 rounded-lg flex items-center transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm">{{ saving ? 'Enregistrement...' : 'Enregistrer l\'ajustement' }}</button>
         </div>
       </form>
     </div>

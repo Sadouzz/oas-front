@@ -9,11 +9,12 @@ import { MainDoeuvreService, MainDoeuvreModel } from '../services/main-doeuvre.s
 import { AuthService } from '../auth/services/auth.service';
 import { AlertComponent } from '../shared/components/alert/alert.component';
 import { PaginationComponent } from '../shared/components/pagination/pagination.component';
+import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideCheck, LucideAlertTriangle, LucideDownload, LucideLoader2, LucideArchive } from '@lucide/angular';
 
 @Component({
   selector: 'app-bons-de-sortie',
   standalone: true,
-  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent],
+  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideCheck, LucideAlertTriangle, LucideDownload, LucideLoader2, LucideArchive],
   templateUrl: './bons-de-sortie.component.html',
 })
 export class BonsDeSortieComponent implements OnInit {

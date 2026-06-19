@@ -1,11 +1,12 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { AvoirTTCService, AvoirTTC } from '../services/avoir-ttc.service';
 import { NgClass } from '@angular/common';
+import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload } from '@lucide/angular';
 
 @Component({
   selector: 'app-avoirs-ttc',
   standalone: true,
-  imports: [NgClass],
+  imports: [NgClass, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload],
   templateUrl: './avoirs-ttc.component.html',
 })
 export class AvoirsTTCComponent implements OnInit {

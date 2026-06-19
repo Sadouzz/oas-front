@@ -8,6 +8,7 @@ import { MainDoeuvreService } from '../services/main-doeuvre.service';
 import { VehiculeService } from '../services/vehicule.service';
 import { NgClass } from '@angular/common';
 import { PieceDetache, MainDoeuvreModel, VehiculeModel } from '../shared/models';
+import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideTruck } from '@lucide/angular';
 
 @Component({
   selector: 'app-bons-livraison',

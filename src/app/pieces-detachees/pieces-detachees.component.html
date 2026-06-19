@@ -1,15 +1,15 @@
-<div class="flex gap-5 min-h-0">
+﻿<div class="flex gap-5 min-h-0">
 
   <!-- Colonne principale -->
   <div class="flex-1 min-w-0">
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-[25px] font-extrabold text-oas-ink tracking-tight">Catalogue des pièces détachées</h1>
+        <h1 class="text-2xl font-bold text-oas-ink">Catalogue des pièces détachées</h1>
         <p class="text-sm text-oas-muted mt-1">{{ filtered.length }} pièce(s) affichée(s)</p>
       </div>
       @if (canEdit) {
         <button (click)="openCreate()"
-                class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-11 rounded-xl flex items-center gap-2 transition cursor-pointer shadow-lg shadow-oas-accent/25">
+                class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-11 rounded-lg flex items-center gap-2 transition cursor-pointer">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
           </svg>
@@ -22,9 +22,9 @@
 
     <!-- KPI cards -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
-      <div class="bg-white rounded-2xl border border-oas-line p-4 shadow-sm">
+      <div class="bg-white rounded-lg border border-oas-line p-4 shadow-sm">
         <div class="flex items-center gap-3 mb-2">
-          <div class="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+          <div class="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
             <svg class="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
             </svg>
@@ -35,9 +35,9 @@
         <p class="text-[10px] text-oas-faint mt-0.5">Pièces PDP actives</p>
       </div>
 
-      <div class="bg-white rounded-2xl border border-oas-line p-4 shadow-sm">
+      <div class="bg-white rounded-lg border border-oas-line p-4 shadow-sm">
         <div class="flex items-center gap-3 mb-2">
-          <div class="w-9 h-9 rounded-xl bg-green-50 flex items-center justify-center flex-shrink-0">
+          <div class="w-9 h-9 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
             <svg class="w-5 h-5 text-oas-ok" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
             </svg>
@@ -48,9 +48,9 @@
         <p class="text-[10px] text-oas-faint mt-0.5">FCFA — valeur totale magasin</p>
       </div>
 
-      <div class="bg-white rounded-2xl border border-oas-line p-4 shadow-sm">
+      <div class="bg-white rounded-lg border border-oas-line p-4 shadow-sm">
         <div class="flex items-center gap-3 mb-2">
-          <div class="w-9 h-9 rounded-xl bg-oas-warn-bg flex items-center justify-center flex-shrink-0">
+          <div class="w-9 h-9 rounded-lg bg-oas-warn-bg flex items-center justify-center flex-shrink-0">
             <svg class="w-5 h-5 text-oas-warn" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
             </svg>
@@ -61,9 +61,9 @@
         <p class="text-[10px] text-oas-faint mt-0.5">Articles sous le seuil d'alerte</p>
       </div>
 
-      <div class="bg-white rounded-2xl border border-oas-line p-4 shadow-sm">
+      <div class="bg-white rounded-lg border border-oas-line p-4 shadow-sm">
         <div class="flex items-center gap-3 mb-2">
-          <div class="w-9 h-9 rounded-xl bg-oas-bad-bg flex items-center justify-center flex-shrink-0">
+          <div class="w-9 h-9 rounded-lg bg-oas-bad-bg flex items-center justify-center flex-shrink-0">
             <svg class="w-5 h-5 text-oas-bad" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
             </svg>
@@ -79,13 +79,13 @@
     @if (categories.length > 0) {
       <div class="flex flex-wrap gap-2 mb-4">
         <button (click)="setFilterCategorie('')"
-                class="px-3 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer"
+                class="px-3 py-1.5 rounded-lg text-xs font-bold border transition cursor-pointer"
                 [ngClass]="filterCategorie === '' ? 'bg-oas-accent text-white border-oas-accent' : 'bg-white text-oas-muted border-oas-line hover:border-oas-accent hover:text-oas-accent'">
           Toutes
         </button>
         @for (cat of categories; track cat) {
           <button (click)="setFilterCategorie(cat)"
-                  class="px-3 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer"
+                  class="px-3 py-1.5 rounded-lg text-xs font-bold border transition cursor-pointer"
                   [ngClass]="filterCategorie === cat ? 'bg-oas-accent text-white border-oas-accent' : 'bg-white text-oas-muted border-oas-line hover:border-oas-accent hover:text-oas-accent'">
             {{ cat }}
           </button>
@@ -94,7 +94,7 @@
     }
 
     <!-- Filtres -->
-    <div class="bg-white rounded-2xl border border-oas-line p-3 mb-4 shadow-sm flex gap-3 flex-wrap">
+    <div class="bg-white rounded-lg border border-oas-line p-3 mb-4 shadow-sm flex gap-3 flex-wrap">
       <div class="relative flex-1 min-w-48">
         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-oas-muted">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -102,39 +102,39 @@
           </svg>
         </span>
         <input type="text" (input)="onSearch($event)" placeholder="Rechercher par référence, n° série, catégorie..."
-               class="w-full pl-9 pr-4 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
+               class="w-full pl-9 pr-4 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
       </div>
       <select (change)="onTypeFilter($event)"
-              class="px-3 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
+              class="px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
         <option value="">Tous types</option>
         <option value="PDP">PDP</option>
         <option value="PDG">PDG</option>
         <option value="PDS">PDS</option>
       </select>
       <select (change)="onStatutFilter($event)"
-              class="px-3 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
+              class="px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
         <option value="">Tous statuts</option>
         <option value="ACTIF">Actif</option>
         <option value="INACTIF">Inactif</option>
       </select>
     </div>
 
-    <div class="bg-white rounded-2xl border border-oas-line shadow-sm overflow-hidden">
+    <div class="bg-white rounded-lg border border-oas-line shadow-card overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b border-oas-line">
-              <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Type</th>
-              <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Référence</th>
-              <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">N° Série</th>
-              <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Catégorie</th>
-              <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Stock magasin</th>
-              <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Stock atelier</th>
-              <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Qté réelle</th>
-              <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Prix</th>
-              <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Statut</th>
+              <th class="text-left text-xs text-oas-muted px-5 py-3">Type</th>
+              <th class="text-left text-xs text-oas-muted px-5 py-3">Référence</th>
+              <th class="text-left text-xs text-oas-muted px-5 py-3">N° Série</th>
+              <th class="text-left text-xs text-oas-muted px-5 py-3">Catégorie</th>
+              <th class="text-left text-xs text-oas-muted px-5 py-3">Stock magasin</th>
+              <th class="text-left text-xs text-oas-muted px-5 py-3">Stock atelier</th>
+              <th class="text-left text-xs text-oas-muted px-5 py-3">Qté réelle</th>
+              <th class="text-left text-xs text-oas-muted px-5 py-3">Prix</th>
+              <th class="text-left text-xs text-oas-muted px-5 py-3">Statut</th>
               @if (canEdit) {
-                <th class="text-right text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Actions</th>
+                <th class="text-right text-xs text-oas-muted px-5 py-3">Actions</th>
               }
             </tr>
           </thead>
@@ -218,7 +218,7 @@
 
   <!-- Panneau lateral : Alertes stock faible -->
   <div class="w-72 flex-shrink-0">
-    <div class="bg-white rounded-2xl border border-oas-line shadow-sm overflow-hidden sticky top-0">
+    <div class="bg-white rounded-lg border border-oas-line shadow-card overflow-hidden sticky top-0">
       <!-- Header panneau -->
       <div class="px-4 py-3 border-b border-oas-line flex items-center gap-2">
         <div class="w-7 h-7 rounded-lg bg-oas-warn-bg flex items-center justify-center flex-shrink-0">
@@ -288,7 +288,7 @@
 
 @if (showModal) {
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+    <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line sticky top-0 bg-white">
         <h3 class="font-bold text-oas-ink">{{ isNew ? 'Ajouter une pièce' : 'Modifier la pièce' }}</h3>
         <button (click)="closeModal()" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted cursor-pointer">
@@ -303,14 +303,14 @@
           <div>
             <label class="block text-sm font-semibold text-oas-ink mb-1">Type *</label>
             <select formControlName="type"
-                    class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
+                    class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
               @for (t of types; track t) { <option [value]="t">{{ t }}</option> }
             </select>
           </div>
           <div>
             <label class="block text-sm font-semibold text-oas-ink mb-1">Statut</label>
             <select formControlName="statut"
-                    class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
+                    class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
               <option value="ACTIF">Actif</option>
               <option value="INACTIF">Inactif</option>
             </select>
@@ -321,13 +321,13 @@
           <div>
             <label class="block text-sm font-semibold text-oas-ink mb-1">Référence *</label>
             <input type="text" formControlName="reference"
-                   class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                   class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
                    [class.border-oas-bad]="f['reference'].invalid && f['reference'].touched"/>
           </div>
           <div>
             <label class="block text-sm font-semibold text-oas-ink mb-1">N° de série *</label>
             <input type="text" formControlName="numeroDeSerie"
-                   class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                   class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
                    [class.border-oas-bad]="f['numeroDeSerie'].invalid && f['numeroDeSerie'].touched"/>
           </div>
         </div>
@@ -336,12 +336,12 @@
           <div>
             <label class="block text-sm font-semibold text-oas-ink mb-1">Catégorie *</label>
             <input type="text" formControlName="categorie"
-                   class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+                   class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
           </div>
           <div>
             <label class="block text-sm font-semibold text-oas-ink mb-1">Pourcentage (%)</label>
             <input type="number" formControlName="pourcentage" min="0" max="100"
-                   class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+                   class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
           </div>
         </div>
 
@@ -353,7 +353,7 @@
                 <div>
                   <label class="block text-sm font-semibold text-oas-ink mb-1">Stock magasin initial</label>
                   <input type="number" formControlName="stockMagasin" min="0"
-                         class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+                         class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
                 </div>
               </div>
             }
@@ -361,12 +361,12 @@
               <div>
                 <label class="block text-sm font-semibold text-oas-ink mb-1">Prix (FCFA)</label>
                 <input type="number" formControlName="prix" min="0"
-                       class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+                       class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
               </div>
               <div>
                 <label class="block text-sm font-semibold text-oas-ink mb-1">Seuil min.</label>
                 <input type="number" formControlName="seuilMinimum" min="0"
-                       class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+                       class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
               </div>
             </div>
           </div>
@@ -374,9 +374,9 @@
 
         <div class="flex justify-end gap-2 pt-2">
           <button type="button" (click)="closeModal()"
-                  class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-xl border border-oas-line flex items-center transition cursor-pointer text-sm">Annuler</button>
+                  class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-lg border border-oas-line flex items-center transition cursor-pointer text-sm">Annuler</button>
           <button type="submit" [disabled]="saving"
-                  class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-10 rounded-xl flex items-center transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm">{{ saving ? 'Enregistrement...' : (isNew ? 'Créer' : 'Enregistrer') }}</button>
+                  class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-10 rounded-lg flex items-center transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm">{{ saving ? 'Enregistrement...' : (isNew ? 'Créer' : 'Enregistrer') }}</button>
         </div>
       </form>
     </div>

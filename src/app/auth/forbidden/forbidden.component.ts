@@ -1,10 +1,12 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { LucideShieldCheck, LucideArrowLeft } from '@lucide/angular';
 
 @Component({
   selector: 'app-forbidden',
   standalone: true,
+  imports: [LucideShieldCheck, LucideArrowLeft],
   templateUrl: './forbidden.component.html',
 })
 export class ForbiddenComponent implements OnInit {

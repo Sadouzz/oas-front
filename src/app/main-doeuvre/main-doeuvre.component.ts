@@ -5,6 +5,7 @@ import { MainDoeuvreService, MainDoeuvreModel, MainDoeuvreRequest } from '../ser
 import { CategorieMainDoeuvreService, CategorieMainDoeuvreModel } from '../services/categorie-main-doeuvre.service';
 import { AlertComponent } from '../shared/components/alert/alert.component';
 import { PaginationComponent } from '../shared/components/pagination/pagination.component';
+import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideArchive, LucideArchiveRestore, LucideLoader2 } from '@lucide/angular';
 
 // Pipe inline pour compter par catégorie dans le template
 @Pipe({ name: 'categorieCount', standalone: true, pure: false })

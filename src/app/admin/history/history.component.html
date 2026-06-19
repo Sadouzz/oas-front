@@ -2,45 +2,40 @@
 
   <!-- Header -->
   <div class="mb-6">
-    <h1 class="text-[25px] font-extrabold text-oas-ink tracking-tight">Historique des connexions</h1>
+    <h1 class="text-2xl font-bold text-oas-ink">Historique des connexions</h1>
     <p class="text-sm text-oas-muted mt-1">{{ filtered.length }} entrée(s) affichée(s)</p>
   </div>
 
   <!-- Search -->
-  <div class="bg-white rounded-2xl border border-oas-line p-3 mb-4 shadow-sm">
+  <div class="bg-white rounded-lg border border-oas-line p-3 mb-4 shadow-sm">
     <div class="relative">
       <span class="absolute left-3 top-1/2 -translate-y-1/2 text-oas-muted">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-        </svg>
+        <svg lucideSearch class="w-4 h-4"></svg>
       </span>
       <input type="text" (input)="onSearch($event)"
              placeholder="Filtrer par utilisateur, adresse IP ou statut..."
-             class="w-full pl-9 pr-4 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
+             class="w-full pl-9 pr-4 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
     </div>
   </div>
 
   <!-- Table -->
-  <div class="bg-white rounded-2xl border border-oas-line shadow-sm overflow-hidden">
+  <div class="bg-white rounded-lg border border-oas-line shadow-card overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-oas-line">
-            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">#</th>
-            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Utilisateur</th>
-            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Adresse IP</th>
-            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Statut</th>
-            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Date et heure</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">#</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Utilisateur</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Adresse IP</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Statut</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Date et heure</th>
           </tr>
         </thead>
         <tbody>
           @if (loading) {
             <tr>
               <td colspan="5" class="text-center py-14 text-oas-muted">
-                <svg class="animate-spin h-5 w-5 mx-auto mb-2 text-oas-accent" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-                </svg>
+                <svg lucideLoader2 class="animate-spin h-5 w-5 mx-auto mb-2 text-oas-accent"></svg>
                 Chargement...
               </td>
             </tr>
@@ -67,9 +62,7 @@
             } @empty {
               <tr>
                 <td colspan="5" class="text-center py-14">
-                  <svg class="w-10 h-10 text-oas-line mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>
+                  <svg lucideClock class="w-10 h-10 text-oas-line mx-auto mb-3"></svg>
                   <p class="text-oas-muted text-sm">Aucun historique disponible</p>
                 </td>
               </tr>

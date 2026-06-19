@@ -9,11 +9,12 @@ import { PieceDetacheeService } from '../services/piece-detachee.service';
 import { MainDoeuvreService } from '../services/main-doeuvre.service';
 import { NgClass } from '@angular/common';
 import { UserModel, VehiculeModel, PieceDetache, MainDoeuvreModel } from '../shared/models';
+import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideArrowRight } from '@lucide/angular';
 
 @Component({
   selector: 'app-proformas',
   standalone: true,
-  imports: [ReactiveFormsModule, NgClass],
+  imports: [ReactiveFormsModule, NgClass, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideArrowRight],
   templateUrl: './proformas.component.html',
 })
 export class ProformasComponent implements OnInit {

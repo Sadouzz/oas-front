@@ -4,11 +4,12 @@ import { StockService, InventaireResponse } from '../services/stock.service';
 import { PieceDetacheeService, PieceDetache } from '../services/piece-detachee.service';
 import { AlertComponent } from '../shared/components/alert/alert.component';
 import { PaginationComponent } from '../shared/components/pagination/pagination.component';
+import { LucideSearch, LucideRefreshCw, LucideDownload, LucidePackage, LucideAlertTriangle, LucidePlus, LucideX } from '@lucide/angular';
 
 @Component({
   selector: 'app-inventaire',
   standalone: true,
-  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent],
+  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent, LucideSearch, LucideRefreshCw, LucideDownload, LucidePackage, LucideAlertTriangle, LucidePlus, LucideX],
   templateUrl: './inventaire.component.html',
 })
 export class InventaireComponent implements OnInit {

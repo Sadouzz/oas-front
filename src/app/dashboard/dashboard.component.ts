@@ -1,5 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { LucidePlus, LucideUsers, LucideCar, LucideAlertTriangle, LucideClock, LucidePackage, LucideArrowRight, LucideCheckCircle } from '@lucide/angular';
 import { AuthService } from '../auth/services/auth.service';
 import { ClientService, UserModel } from '../services/client.service';
 import { VehiculeService, VehiculeModel } from '../services/vehicule.service';
@@ -10,7 +11,7 @@ import { FicheAtelierService } from '../services/fiche-atelier.service';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, LucidePlus, LucideUsers, LucideCar, LucideAlertTriangle, LucideClock, LucidePackage, LucideArrowRight, LucideCheckCircle],
   templateUrl: './dashboard.component.html',
 })
 export class DashboardComponent implements OnInit {

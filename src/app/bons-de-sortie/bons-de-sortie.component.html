@@ -1,15 +1,13 @@
 <div>
   <div class="flex items-center justify-between mb-6">
     <div>
-      <h1 class="text-[25px] font-extrabold text-oas-ink tracking-tight">Bons de sortie</h1>
+      <h1 class="text-2xl font-bold text-oas-ink">Bons de sortie</h1>
       <p class="text-sm text-oas-muted mt-1">{{ filtered.length }} bon(s) affiché(s)</p>
     </div>
     @if (canCreate) {
       <button (click)="openCreate()"
-              class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-11 rounded-xl flex items-center gap-2 transition cursor-pointer shadow-lg shadow-oas-accent/25">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-        </svg>
+              class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-11 rounded-lg flex items-center gap-2 transition cursor-pointer">
+        <svg lucidePlus class="w-4 h-4"></svg>
         Nouveau bon
       </button>
     }
@@ -18,19 +16,17 @@
   <app-alert [success]="successMessage" [error]="errorMessage" />
 
   <!-- Filtres -->
-  <div class="bg-white rounded-2xl border border-oas-line p-3 mb-4 shadow-sm flex flex-col sm:flex-row gap-3">
+  <div class="bg-white rounded-lg border border-oas-line p-3 mb-4 shadow-sm flex flex-col sm:flex-row gap-3">
     <div class="relative flex-1">
       <span class="absolute left-3 top-1/2 -translate-y-1/2 text-oas-muted">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-        </svg>
+        <svg lucideSearch class="w-4 h-4"></svg>
       </span>
       <input type="text" (input)="onSearch($event)"
              placeholder="Référence, client ou immatriculation..."
-             class="w-full pl-9 pr-4 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
+             class="w-full pl-9 pr-4 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
     </div>
     <select (change)="onStatutFilter($event)"
-            class="px-3 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink min-w-[160px]">
+            class="px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink min-w-[160px]">
       <option value="">Tous les statuts</option>
       <option value="EN_ATTENTE">En attente</option>
       <option value="VALIDE">Validé</option>
@@ -38,28 +34,25 @@
   </div>
 
   <!-- Table -->
-  <div class="bg-white rounded-2xl border border-oas-line shadow-sm overflow-hidden">
+  <div class="bg-white rounded-lg border border-oas-line shadow-card overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-oas-line">
-            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Référence</th>
-            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Date</th>
-            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Client</th>
-            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Véhicule</th>
-            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Pièces</th>
-            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">M.O.</th>
-            <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Statut</th>
-            <th class="text-right text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Actions</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Référence</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Date</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Client</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Véhicule</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Pièces</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">M.O.</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Statut</th>
+            <th class="text-right text-xs text-oas-muted px-5 py-3">Actions</th>
           </tr>
         </thead>
         <tbody>
           @if (loading) {
             <tr><td colspan="8" class="text-center py-14 text-oas-muted">
-              <svg class="animate-spin h-5 w-5 mx-auto mb-2 text-oas-accent" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-              </svg>Chargement...
+              <svg lucideLoader2 class="animate-spin h-5 w-5 mx-auto mb-2 text-oas-accent"></svg>Chargement...
             </td></tr>
           } @else {
             @for (bon of paged; track bon.id) {
@@ -86,17 +79,12 @@
                   <div class="flex items-center justify-end gap-1">
                     <button (click)="openDetail(bon)" title="Voir le détail"
                             class="p-1.5 rounded-lg hover:bg-oas-info-bg text-oas-muted hover:text-oas-info transition cursor-pointer">
-                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                      </svg>
+                      <svg lucideSearch class="w-4 h-4"></svg>
                     </button>
                     @if (canValidate && bon.statut === 'EN_ATTENTE') {
                       <button (click)="valider(bon)" title="Valider"
                               class="p-1.5 rounded-lg hover:bg-oas-ok-bg text-oas-muted hover:text-oas-ok transition cursor-pointer">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
+                        <svg lucideCheckCircle class="w-4 h-4"></svg>
                       </button>
                     }
                   </div>
@@ -118,16 +106,14 @@
      ═══════════════════════════════════════════════════════ -->
 @if (showCreateModal) {
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col">
+    <div class="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col">
 
       <!-- Header + stepper -->
       <div class="px-6 py-4 border-b border-oas-line flex-shrink-0">
         <div class="flex items-center justify-between mb-4">
           <h3 class="font-bold text-oas-ink">Nouveau bon de sortie</h3>
           <button (click)="closeCreate()" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted cursor-pointer">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
+            <svg lucideX class="w-5 h-5"></svg>
           </button>
         </div>
         <!-- Stepper -->
@@ -141,9 +127,7 @@
                      [class.bg-oas-line]="createStep < step"
                      [class.text-oas-muted]="createStep < step">
                   @if (createStep > step) {
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-                    </svg>
+                    <svg lucideCheck class="w-4 h-4"></svg>
                   } @else {
                     {{ step }}
                   }
@@ -167,7 +151,7 @@
       <!-- Body scrollable -->
       <div class="overflow-y-auto flex-1 px-6 py-5">
         @if (errorMessage) {
-          <div class="px-3 py-2 bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-xs rounded-xl mb-4">{{ errorMessage }}</div>
+          <div class="px-3 py-2 bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-xs rounded-lg mb-4">{{ errorMessage }}</div>
         }
 
         <!-- ── ÉTAPE 1 : Client & Véhicule ── -->
@@ -189,10 +173,10 @@
                          (focus)="clientOpen = true; clientFilter = ''"
                          (input)="clientFilter = $any($event.target).value"
                          placeholder="Rechercher un client..."
-                         class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                         class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
                          [class.border-oas-bad]="form.get('clientId')!.invalid && form.get('clientId')!.touched"/>
                   @if (clientOpen) {
-                    <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-oas-line rounded-xl shadow-xl z-[10] max-h-52 overflow-y-auto"
+                    <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-oas-line rounded-lg shadow-xl z-[10] max-h-52 overflow-y-auto"
                          (click)="$event.stopPropagation()">
                       @for (c of filteredClients; track c.id) {
                         <div (click)="selectClient(c)"
@@ -225,10 +209,10 @@
                          (input)="vehiculeFilter = $any($event.target).value"
                          [placeholder]="form.get('clientId')?.value ? 'Rechercher un vehicule...' : 'Choisissez d\'abord un client'"
                          [disabled]="!form.get('clientId')?.value"
-                         class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition disabled:opacity-50"
+                         class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition disabled:opacity-50"
                          [class.border-oas-bad]="form.get('vehiculeId')!.invalid && form.get('vehiculeId')!.touched"/>
                     @if (vehiculeOpen && form.get('clientId')?.value) {
-                      <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-oas-line rounded-xl shadow-xl z-[10] max-h-52 overflow-y-auto"
+                      <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-oas-line rounded-lg shadow-xl z-[10] max-h-52 overflow-y-auto"
                            (click)="$event.stopPropagation()">
                         @for (v of filteredVehicules; track v.id) {
                           <div (click)="selectVehicule(v)"
@@ -252,7 +236,7 @@
             <div>
               <label class="block text-sm font-semibold text-oas-ink mb-1">Remarque</label>
               <input type="text" formControlName="remarque" placeholder="Optionnel..."
-                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
+                     class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
             </div>
           </form>
         }
@@ -267,9 +251,7 @@
               </div>
               <button type="button" (click)="addPiece()"
                       class="text-xs font-semibold text-oas-accent hover:text-oas-accent-dark flex items-center gap-1 cursor-pointer transition">
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-                </svg>
+                <svg lucidePlus class="w-3.5 h-3.5"></svg>
                 Ajouter une pièce
               </button>
             </div>
@@ -285,7 +267,7 @@
 
               <div formArrayName="lignesPieces">
                 @for (ligne of fPieces; track $index) {
-                  <div [formGroupName]="$index" class="grid grid-cols-[1fr_7rem_5rem_2.5rem] gap-2 items-center bg-oas-bg rounded-xl p-3 border border-oas-line">
+                  <div [formGroupName]="$index" class="grid grid-cols-[1fr_7rem_5rem_2.5rem] gap-2 items-center bg-oas-bg rounded-lg p-3 border border-oas-line">
                     <!-- Saisie pièce avec autocomplete -->
                     <div>
                       <input type="text"
@@ -294,7 +276,7 @@
                              (input)="onPieceInput($index, $event)"
                              placeholder="Référence ou saisir..."
                              autocomplete="off"
-                             class="w-full px-3 py-2 rounded-xl border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+                             class="w-full px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
                       <datalist [id]="'pdp-' + $index">
                         @for (p of pdps; track p.id) {
                           <option [value]="p.reference">stock: {{ p.stockMagasin }}</option>
@@ -306,17 +288,15 @@
                     </div>
                     <!-- Prix unitaire -->
                     <input type="number" formControlName="prix" placeholder="—" min="0"
-                           class="w-full px-3 py-2 rounded-xl border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-right"/>
+                           class="w-full px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-right"/>
                     <!-- Quantité -->
                     <input type="number" formControlName="quantite" min="1" placeholder="Qté"
-                           class="w-full px-3 py-2 rounded-xl border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-center"/>
+                           class="w-full px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-center"/>
                     <!-- Supprimer -->
                     <button type="button" (click)="removePiece($index)"
                             [disabled]="fPieces.length === 1"
                             class="p-1.5 text-oas-muted hover:text-oas-bad cursor-pointer flex-shrink-0 transition disabled:opacity-30 disabled:cursor-not-allowed">
-                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                      </svg>
+                      <svg lucideTrash2 class="w-4 h-4"></svg>
                     </button>
                   </div>
                 }
@@ -325,9 +305,7 @@
 
             @if (fPieces.length === 0) {
               <div class="text-center py-8 text-oas-muted text-sm">
-                <svg class="w-10 h-10 mx-auto mb-2 text-oas-line" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                </svg>
+                <svg lucidePackage class="w-10 h-10 mx-auto mb-2 text-oas-line"></svg>
                 Aucune pièce ajoutée. Vous pouvez en ajouter ou passer à l'étape suivante (main d'œuvre).
               </div>
             }
@@ -344,9 +322,7 @@
               </div>
               <button type="button" (click)="addMainDoeuvre()"
                       class="text-xs font-semibold text-oas-accent hover:text-oas-accent-dark flex items-center gap-1 cursor-pointer transition">
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-                </svg>
+                <svg lucidePlus class="w-3.5 h-3.5"></svg>
                 Ajouter une prestation
               </button>
             </div>
@@ -354,10 +330,10 @@
             <div class="space-y-2" [formGroup]="form">
               <div formArrayName="lignesMainDoeuvres">
                 @for (ligne of fMd; track $index) {
-                  <div [formGroupName]="$index" class="flex gap-2 items-start bg-oas-bg rounded-xl p-3 border border-oas-line">
+                  <div [formGroupName]="$index" class="flex gap-2 items-start bg-oas-bg rounded-lg p-3 border border-oas-line">
                     <div class="flex-1">
                       <select formControlName="mainDoeuvreId"
-                              class="w-full px-3 py-2 rounded-xl border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                              class="w-full px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
                               [class.border-oas-bad]="$any(ligne).get('mainDoeuvreId').invalid && $any(ligne).get('mainDoeuvreId').touched">
                         <option [value]="null">-- Sélectionner --</option>
                         @for (m of mainDoeuvres; track m.id) {
@@ -367,13 +343,11 @@
                     </div>
                     <div class="w-24 flex-shrink-0">
                       <input type="number" formControlName="quantite" min="1" placeholder="Qté"
-                             class="w-full px-3 py-2 rounded-xl border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-center"/>
+                             class="w-full px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-center"/>
                     </div>
                     <button type="button" (click)="removeMainDoeuvre($index)"
                             class="p-2 text-oas-muted hover:text-oas-bad cursor-pointer flex-shrink-0 transition">
-                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                      </svg>
+                      <svg lucideTrash2 class="w-4 h-4"></svg>
                     </button>
                   </div>
                 }
@@ -382,9 +356,7 @@
 
             @if (fMd.length === 0) {
               <div class="text-center py-8 text-oas-muted text-sm">
-                <svg class="w-10 h-10 mx-auto mb-2 text-oas-line" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l5.653-4.655m0 0l2.496-3.03c.317-.384.74-.626 1.208-.766m0 0l3.83-4.664c.455-.556.927-1.093 1.408-1.618"/>
-                </svg>
+                <svg lucideWrench class="w-10 h-10 mx-auto mb-2 text-oas-line"></svg>
                 Aucune main d'œuvre. Le bon peut être créé sans prestation.
               </div>
             }
@@ -404,7 +376,7 @@
             </div>
 
             <!-- Récap avant soumission -->
-            <div class="mt-3 bg-oas-bg rounded-xl p-4 border border-oas-line text-sm space-y-1">
+            <div class="mt-3 bg-oas-bg rounded-lg p-4 border border-oas-line text-sm space-y-1">
               <p class="font-bold text-oas-ink text-xs uppercase tracking-wide mb-2">Recapitulatif</p>
               <p class="text-oas-ink2"><span class="font-semibold text-oas-ink">Pieces :</span> {{ fPieces.length }} ligne(s)</p>
               <p class="text-oas-ink2"><span class="font-semibold text-oas-ink">Main d'oeuvre :</span> {{ fMd.length }} ligne(s)</p>
@@ -418,31 +390,25 @@
         <div>
           @if (createStep > 1) {
             <button type="button" (click)="goStep(createStep - 1)"
-                    class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-xl border border-oas-line flex items-center gap-1.5 transition cursor-pointer text-sm">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
-              </svg>
+                    class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-lg border border-oas-line flex items-center gap-1.5 transition cursor-pointer text-sm">
+              <svg lucideSearch class="w-4 h-4"></svg>
               Retour
             </button>
           }
         </div>
         <div class="flex gap-2">
           <button type="button" (click)="closeCreate()"
-                  class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-xl border border-oas-line transition cursor-pointer text-sm">Annuler</button>
+                  class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-lg border border-oas-line transition cursor-pointer text-sm">Annuler</button>
           @if (createStep < 3) {
             <button type="button" (click)="goStep(createStep + 1)"
-                    class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-10 rounded-xl flex items-center gap-1.5 transition cursor-pointer text-sm">
+                    class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-10 rounded-lg flex items-center gap-1.5 transition cursor-pointer text-sm">
               Suivant
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-              </svg>
+              <svg lucideSearch class="w-4 h-4"></svg>
             </button>
           } @else {
             <button type="button" (click)="save()" [disabled]="saving"
-                    class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-5 h-10 rounded-xl flex items-center gap-2 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-              </svg>
+                    class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-5 h-10 rounded-lg flex items-center gap-2 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm">
+              <svg lucideCheck class="w-4 h-4"></svg>
               {{ saving ? 'Création...' : 'Créer le bon' }}
             </button>
           }
@@ -457,35 +423,33 @@
      ═══════════════════════════════════════════════════════ -->
 @if (showDetailModal && selectedBon) {
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+    <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
       <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line flex-shrink-0">
         <div>
           <h3 class="font-bold text-oas-ink">{{ selectedBon.reference }}</h3>
           <p class="text-xs text-oas-muted">{{ formatDate(selectedBon.date) }}</p>
         </div>
         <button (click)="closeDetail()" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted cursor-pointer">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
+          <svg lucideX class="w-5 h-5"></svg>
         </button>
       </div>
       <div class="overflow-y-auto flex-1 px-6 py-5 space-y-4">
 
         <div class="grid grid-cols-2 gap-3 text-sm">
-          <div class="bg-oas-bg rounded-xl p-3">
+          <div class="bg-oas-bg rounded-lg p-3">
             <p class="text-oas-muted text-xs font-semibold uppercase tracking-wide mb-1">Client</p>
             <p class="font-semibold text-oas-ink">{{ selectedBon.client?.firstName }} {{ selectedBon.client?.lastName }}</p>
           </div>
-          <div class="bg-oas-bg rounded-xl p-3">
+          <div class="bg-oas-bg rounded-lg p-3">
             <p class="text-oas-muted text-xs font-semibold uppercase tracking-wide mb-1">Véhicule</p>
             <p class="font-semibold text-oas-ink">{{ selectedBon.vehicule?.immatriculation }}</p>
             <p class="text-xs text-oas-muted">{{ selectedBon.vehicule?.marque }} {{ selectedBon.vehicule?.modele }}</p>
           </div>
-          <div class="bg-oas-bg rounded-xl p-3">
+          <div class="bg-oas-bg rounded-lg p-3">
             <p class="text-oas-muted text-xs font-semibold uppercase tracking-wide mb-1">Agent émetteur</p>
             <p class="font-semibold text-oas-ink">{{ selectedBon.agentEmetteur?.firstName }} {{ selectedBon.agentEmetteur?.lastName }}</p>
           </div>
-          <div class="bg-oas-bg rounded-xl p-3">
+          <div class="bg-oas-bg rounded-lg p-3">
             <p class="text-oas-muted text-xs font-semibold uppercase tracking-wide mb-1">Statut</p>
             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold {{ statutClass(selectedBon.statut) }}">
               <span class="w-1.5 h-1.5 rounded-full {{ selectedBon.statut === 'VALIDE' ? 'bg-oas-ok' : 'bg-oas-warn' }}"></span>
@@ -495,7 +459,7 @@
         </div>
 
         @if (selectedBon.remarque) {
-          <div class="bg-oas-bg rounded-xl p-3 text-sm text-oas-ink2">
+          <div class="bg-oas-bg rounded-lg p-3 text-sm text-oas-ink2">
             <span class="font-semibold text-oas-ink">Remarque : </span>{{ selectedBon.remarque }}
           </div>
         }
@@ -505,6 +469,7 @@
           <div>
             <p class="text-sm font-bold text-oas-ink mb-2">Pièces ({{ selectedBon.lignesBonDeSortiePieces?.length }} ligne(s))</p>
             <div class="border border-oas-line rounded-xl overflow-hidden">
+
               <table class="w-full text-sm">
                 <thead>
                   <tr class="border-b border-oas-line bg-oas-bg">
@@ -529,7 +494,7 @@
         @if ((selectedBon.lignesBonDeSortieMainDoeuvres?.length ?? 0) > 0) {
           <div>
             <p class="text-sm font-bold text-oas-ink mb-2">Main d'œuvre ({{ selectedBon.lignesBonDeSortieMainDoeuvres?.length }} ligne(s))</p>
-            <div class="border border-oas-line rounded-xl overflow-hidden">
+            <div class="border border-oas-line rounded-lg overflow-hidden">
               <table class="w-full text-sm">
                 <thead>
                   <tr class="border-b border-oas-line bg-oas-bg">
@@ -563,10 +528,8 @@
 
         @if (canValidate && selectedBon.statut === 'EN_ATTENTE') {
           <button (click)="valider(selectedBon)" [disabled]="saving"
-                  class="w-full flex items-center justify-center gap-2 bg-oas-ok hover:bg-oas-ok/90 text-white font-bold py-3 rounded-xl transition text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
+                  class="w-full flex items-center justify-center gap-2 bg-oas-ok hover:bg-oas-ok/90 text-white font-bold py-3 rounded-lg transition text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+            <svg lucideCheckCircle class="w-4 h-4"></svg>
             {{ saving ? 'Validation en cours...' : 'Valider ce bon (déduire du stock)' }}
           </button>
         }

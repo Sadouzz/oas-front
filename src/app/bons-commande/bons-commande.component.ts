@@ -9,6 +9,7 @@ import { ClientService, UserModel } from '../services/client.service';
 import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FournisseurModel, VehiculeModel, PieceDetache } from '../shared/models';
+import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideArrowRight } from '@lucide/angular';
 
 @Component({
   selector: 'app-bons-commande',

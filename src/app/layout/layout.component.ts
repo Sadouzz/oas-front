@@ -2,11 +2,29 @@ import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet, NavigationEnd } from '@angular/router';
 import { AuthService } from '../auth/services/auth.service';
 import { filter, Subscription } from 'rxjs';
+import {
+  LucideHouse,
+  LucideUsers,
+  LucideCar,
+  LucidePackage,
+  LucideReceipt,
+  LucideFileText,
+  LucideSettings,
+  LucideLogOut,
+  LucideChevronDown,
+  LucideWrench,
+  LucideClipboardList,
+  LucidePercent,
+} from '@lucide/angular';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive,
+    LucideHouse, LucideUsers, LucideCar, LucidePackage, LucideReceipt,
+    LucideFileText, LucideSettings, LucideLogOut, LucideChevronDown,
+    LucideWrench, LucideClipboardList, LucidePercent,
+  ],
   templateUrl: './layout.component.html',
 })
 export class LayoutComponent implements OnInit, OnDestroy {
@@ -14,11 +32,50 @@ export class LayoutComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private routerSub?: Subscription;
 
-  today = new Date().toLocaleDateString('fr-FR', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-  });
-
   openSection: string | null = null;
+
+  private readonly routeLabels: Record<string, { label: string; section?: string }> = {
+    '/dashboard': { label: 'Tableau de bord' },
+    '/clients': { label: 'Clients' },
+    '/vehicules': { label: 'Véhicules' },
+    '/bons-de-sortie': { label: 'Bon de sortie', section: 'Gestion de stock' },
+    '/pieces-detachees': { label: 'Pièce détachée', section: 'Gestion de stock' },
+    '/stock': { label: 'Historique', section: 'Gestion de stock' },
+    '/inventaire': { label: 'Inventaire', section: 'Gestion de stock' },
+    '/fournisseurs': { label: 'Fournisseurs', section: 'Gestion de stock' },
+    '/factures': { label: 'Facture', section: 'Facture TTC' },
+    '/bons-livraison': { label: 'Bon de livraison', section: 'Facture TTC' },
+    '/bons-commande': { label: 'Bon de commande', section: 'Facture TTC' },
+    '/proformas': { label: 'Proforma', section: 'Facture TTC' },
+    '/avoirs-ttc': { label: 'Avoir TTC', section: 'Facture TTC' },
+    '/notes-prix': { label: 'Note de prix', section: 'Facture HT' },
+    '/devis-previsionnels': { label: 'Devis prévisionnel', section: 'Facture HT' },
+    '/avoirs-ht': { label: 'Avoir Note de prix', section: 'Facture HT' },
+    '/gestion-tva': { label: 'Gestion TVA' },
+    '/gestion-recu': { label: 'Gestion reçu' },
+    '/admin/main-doeuvre': { label: "Main d'œuvre" },
+    '/fiches-atelier': { label: 'Fiches atelier', section: 'Atelier' },
+    '/mecaniciens': { label: 'Mécaniciens', section: 'Atelier' },
+    '/rendezvous': { label: 'Rendez-vous', section: 'Atelier' },
+    '/admin/users': { label: 'Utilisateurs', section: 'Administration' },
+    '/admin/history': { label: 'Historique connexions', section: 'Administration' },
+  };
+
+  get breadcrumb(): { label: string; link?: string }[] {
+    const url = this.router.url.split('?')[0];
+    if (url === '/dashboard' || !this.routeLabels[url]) {
+      return [{ label: 'Tableau de bord' }];
+    }
+    const entry = this.routeLabels[url];
+    const crumbs: { label: string; link?: string }[] = [{ label: 'Tableau de bord', link: '/dashboard' }];
+    if (entry.section) crumbs.push({ label: entry.section });
+    crumbs.push({ label: entry.label });
+    return crumbs;
+  }
+
+  get today(): string {
+    return new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
+  }
 
   get fullName(): string {
     return this.authService.getUsername() ?? '';
@@ -62,7 +119,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
       this.openSection = 'facture-ttc';
     } else if (['/notes-prix', '/devis-previsionnels', '/avoirs-ht'].some(p => url.startsWith(p))) {
       this.openSection = 'facture-ht';
-    } else if (['/fiches-atelier', '/mecaniciens'].some(p => url.startsWith(p))) {
+    } else if (['/fiches-atelier', '/mecaniciens', '/rendezvous'].some(p => url.startsWith(p))) {
       this.openSection = 'atelier';
     } else if (url.startsWith('/admin')) {
       this.openSection = 'admin';

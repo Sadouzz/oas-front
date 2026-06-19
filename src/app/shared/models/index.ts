@@ -11,3 +11,4 @@ export * from './main-doeuvre.model';
 export * from './stock.model';
 export * from './history.model';
 export * from './facture.model';
+export * from './rendezvous.model';

@@ -4,11 +4,12 @@ import { FournisseurService } from '../services/fournisseur.service';
 import { FournisseurModel } from '../shared/models';
 import { AlertComponent } from '../shared/components/alert/alert.component';
 import { PaginationComponent } from '../shared/components/pagination/pagination.component';
+import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideBuilding2, LucidePhone, LucideMail } from '@lucide/angular';
 
 @Component({
   selector: 'app-fournisseurs',
   standalone: true,
-  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent],
+  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideBuilding2, LucidePhone, LucideMail],
   templateUrl: './fournisseurs.component.html',
 })
 export class FournisseursComponent implements OnInit {

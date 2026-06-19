@@ -6,11 +6,12 @@ import { ClientService } from '../services/client.service';
 import { UserModel, VehiculeModel } from '../shared/models';
 import { AlertComponent } from '../shared/components/alert/alert.component';
 import { PaginationComponent } from '../shared/components/pagination/pagination.component';
+import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, LucideArchiveRestore, LucideX, LucideCar } from '@lucide/angular';
 
 @Component({
   selector: 'app-vehicules',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, AlertComponent, PaginationComponent],
+  imports: [ReactiveFormsModule, DecimalPipe, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, LucideArchiveRestore, LucideX, LucideCar],
   templateUrl: './vehicules.component.html',
 })
 export class VehiculesComponent implements OnInit {
