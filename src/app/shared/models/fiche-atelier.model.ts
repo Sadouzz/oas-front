@@ -1,4 +1,4 @@
-export type StatutReparation = 'A_FAIRE' | 'EN_DIAGNOSTIC' | 'EN_ATTENTE_PROFORMA' | 'EN_ATTENTE_COMMANDE' | 'EN_COURS' | 'TERMINE' | 'LIVRE';
+export type StatutReparation = 'A_FAIRE' | 'EN_DIAGNOSTIC' | 'EN_ATTENTE_PROFORMA' | 'PROFORMA_VALIDE' | 'EN_ATTENTE_COMMANDE' | 'EN_ATTENTE_SORTIE' | 'EN_COURS' | 'EN_ATTENTE_PAIEMENT' | 'TERMINE' | 'LIVRE';
 
 export interface FicheAtelier {
   id: number;
@@ -20,6 +20,18 @@ export interface FicheAtelier {
   } | null;
   mecaniciens: { id: number; nom: string }[];
   bonDeSortie?: { id: number; reference: string; statut: string } | null;
+  lignesFicheAtelierPieces?: {
+    id: number;
+    piece: { id: number; reference: string; prix?: number };
+    quantite: number;
+    prix: number;
+  }[];
+  lignesFicheAtelierMainDoeuvres?: {
+    id: number;
+    mainDoeuvre: { id: number; prix: number; nbreHeure: number; categorie?: { nom: string } };
+    nbreHeure: number;
+    prix: number;
+  }[];
 }
 
 export interface FicheAtelierRequest {
@@ -30,4 +42,6 @@ export interface FicheAtelierRequest {
   dateSortie?: string;
   vehiculeId: number;
   statut?: StatutReparation;
+  lignesPieces?: { pieceId: number; quantite: number; prix?: number | null }[];
+  lignesMainDoeuvres?: { mainDoeuvreId: number; nbreHeure: number; prix?: number | null }[];
 }

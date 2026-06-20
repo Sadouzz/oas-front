@@ -9,7 +9,7 @@ import { LucideSearch, LucideRefreshCw, LucideDownload, LucidePackage, LucideAle
 @Component({
   selector: 'app-inventaire',
   standalone: true,
-  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent, LucideSearch, LucideRefreshCw, LucideDownload, LucidePackage, LucideAlertTriangle, LucidePlus, LucideX],
+  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent, LucideSearch, LucideAlertTriangle, LucideX],
   templateUrl: './inventaire.component.html',
 })
 export class InventaireComponent implements OnInit {

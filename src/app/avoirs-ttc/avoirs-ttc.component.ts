@@ -6,7 +6,7 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDo
 @Component({
   selector: 'app-avoirs-ttc',
   standalone: true,
-  imports: [NgClass, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload],
+  imports: [NgClass, LucideSearch, LucideTrash2, LucideX, LucideDownload],
   templateUrl: './avoirs-ttc.component.html',
 })
 export class AvoirsTTCComponent implements OnInit {

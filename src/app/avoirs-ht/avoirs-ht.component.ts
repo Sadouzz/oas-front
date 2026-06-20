@@ -6,7 +6,7 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDo
 @Component({
   selector: 'app-avoirs-ht',
   standalone: true,
-  imports: [NgClass, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload],
+  imports: [NgClass, LucideSearch, LucideTrash2, LucideX, LucideDownload],
   templateUrl: './avoirs-ht.component.html',
 })
 export class AvoirsHTComponent implements OnInit {

@@ -9,7 +9,7 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideUs
 @Component({
   selector: 'app-mecaniciens',
   standalone: true,
-  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideUser, LucideWrench],
+  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX],
   templateUrl: './mecaniciens.component.html',
 })
 export class MecaniciensComponent implements OnInit {

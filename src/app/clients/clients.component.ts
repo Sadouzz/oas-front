@@ -14,7 +14,7 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, Lu
 @Component({
   selector: 'app-clients',
   standalone: true,
-  imports: [ReactiveFormsModule, NgClass, DatePipe, DecimalPipe, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, LucideArchiveRestore, LucideX, LucideCheck, LucideUser, LucideArrowRight],
+  imports: [ReactiveFormsModule, NgClass, DatePipe, DecimalPipe, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, LucideArchiveRestore, LucideX, LucideCheck, LucideUser],
   templateUrl: './clients.component.html',
 })
 export class ClientsComponent implements OnInit {

@@ -28,7 +28,6 @@ export class BonDeSortieService {
       clientId: data.clientId,
       vehiculeId: data.vehiculeId,
       lignesPieces: data.lignesPieces,
-      lignesMainDoeuvres: data.lignesMainDoeuvres,
       remarque: data.remarque,
     });
   }

@@ -35,6 +35,12 @@ export class FactureService {
     return this.http.post<FactureModel>(`${this.api}/creer`, data);
   }
 
+  payFacture(id: number, montant: number, methodePaiement: string): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/api/admin/portal/factures/${id}/payer`, null, {
+      params: { montant: montant.toString(), methodePaiement }
+    });
+  }
+
   downloadPdf(id: number): Observable<Blob> {
     return this.http.get(`${this.api}/${id}/pdf`, { responseType: 'blob' });
   }

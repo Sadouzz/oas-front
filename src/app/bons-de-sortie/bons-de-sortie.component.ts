@@ -5,7 +5,6 @@ import { BonDeSortieService, BonDeSortie } from '../services/bon-de-sortie.servi
 import { ClientService, UserModel } from '../services/client.service';
 import { VehiculeService, VehiculeModel } from '../services/vehicule.service';
 import { PieceDetacheeService, PieceDetache } from '../services/piece-detachee.service';
-import { MainDoeuvreService, MainDoeuvreModel } from '../services/main-doeuvre.service';
 import { AuthService } from '../auth/services/auth.service';
 import { AlertComponent } from '../shared/components/alert/alert.component';
 import { PaginationComponent } from '../shared/components/pagination/pagination.component';
@@ -14,7 +13,7 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideCh
 @Component({
   selector: 'app-bons-de-sortie',
   standalone: true,
-  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideCheck, LucideAlertTriangle, LucideDownload, LucideLoader2, LucideArchive],
+  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucideTrash2, LucideX, LucideCheck, LucideAlertTriangle, LucideLoader2],
   templateUrl: './bons-de-sortie.component.html',
 })
 export class BonsDeSortieComponent implements OnInit {
@@ -23,7 +22,6 @@ export class BonsDeSortieComponent implements OnInit {
   private clientService = inject(ClientService);
   private vehiculeService = inject(VehiculeService);
   private pieceService = inject(PieceDetacheeService);
-  private mainDoeuvreService = inject(MainDoeuvreService);
   private authService = inject(AuthService);
 
   bons: BonDeSortie[] = [];
@@ -35,7 +33,6 @@ export class BonsDeSortieComponent implements OnInit {
   allVehicules: VehiculeModel[] = [];
   vehiculesFiltres: VehiculeModel[] = [];
   pdps: PieceDetache[] = [];
-  mainDoeuvres: MainDoeuvreModel[] = [];
 
   loading = false;
   saving = false;
@@ -63,11 +60,9 @@ export class BonsDeSortieComponent implements OnInit {
     appliquerTVA: [false],
     appliquerTimbre: [false],
     lignesPieces: this.fb.array([]),
-    lignesMainDoeuvres: this.fb.array([]),
   });
 
   get lignesPieces(): FormArray { return this.form.get('lignesPieces') as FormArray; }
-  get lignesMainDoeuvres(): FormArray { return this.form.get('lignesMainDoeuvres') as FormArray; }
 
   get role(): string { return this.authService.getRole() ?? ''; }
   get canCreate(): boolean { return ['ROLE_SUPER_AGENT', 'ROLE_AGENT', 'ROLE_AGENT_MAGASIN'].includes(this.role); }
@@ -127,14 +122,12 @@ export class BonsDeSortieComponent implements OnInit {
     forkJoin({
       clients: this.clientService.getAll(),
       vehicules: this.vehiculeService.getAll(),
-      pdps: this.pieceService.getAll({ type: 'PDP' }),
-      mainDoeuvres: this.mainDoeuvreService.getAll(),
+      pdps: this.pieceService.getAll({ type: 'PDP' })
     }).subscribe({
-      next: ({ clients, vehicules, pdps, mainDoeuvres }) => {
+      next: ({ clients, vehicules, pdps }) => {
         this.clients = clients.filter(c => c.enabled);
         this.allVehicules = vehicules;
         this.pdps = pdps.filter(p => p.statut === 'ACTIF');
-        this.mainDoeuvres = mainDoeuvres.filter(m => !m.isArchived);
       },
     });
   }
@@ -182,7 +175,6 @@ export class BonsDeSortieComponent implements OnInit {
   openCreate() {
     this.form.reset({ remarque: '', appliquerTVA: false, appliquerTimbre: false });
     while (this.lignesPieces.length) this.lignesPieces.removeAt(0);
-    while (this.lignesMainDoeuvres.length) this.lignesMainDoeuvres.removeAt(0);
     this.addPiece();
     this.vehiculesFiltres = [];
     this.clientOpen = false;
@@ -233,26 +225,14 @@ export class BonsDeSortieComponent implements OnInit {
     }
   }
 
-  // ── Lignes main d'oeuvre ──
-
-  addMainDoeuvre() {
-    this.lignesMainDoeuvres.push(this.fb.group({
-      mainDoeuvreId: [null as number | null, Validators.required],
-      quantite: [1, [Validators.required, Validators.min(1)]],
-    }));
-  }
-
-  removeMainDoeuvre(i: number) { this.lignesMainDoeuvres.removeAt(i); }
-
   save() {
     const val = this.form.value as any;
     const lignesPieces = (val.lignesPieces ?? [])
       .filter((l: any) => l.pieceId)
       .map((l: any) => ({ pieceId: l.pieceId, quantite: l.quantite, prix: l.prix }));
-    const lignesMainDoeuvres = (val.lignesMainDoeuvres ?? []).filter((l: any) => l.mainDoeuvreId);
 
-    if (lignesPieces.length === 0 && lignesMainDoeuvres.length === 0) {
-      this.errorMessage = 'Ajoutez au moins une piece ou une main d\'oeuvre.';
+    if (lignesPieces.length === 0) {
+      this.errorMessage = 'Ajoutez au moins une piece.';
       return;
     }
     if (this.form.get('clientId')!.invalid || this.form.get('vehiculeId')!.invalid || this.saving) {
@@ -267,8 +247,7 @@ export class BonsDeSortieComponent implements OnInit {
       remarque: val.remarque,
       appliquerTVA: !!val.appliquerTVA,
       appliquerTimbre: !!val.appliquerTimbre,
-      lignesPieces,
-      lignesMainDoeuvres,
+      lignesPieces
     } as any).subscribe({
       next: () => { this.saving = false; this.showSuccess('Bon de sortie cree !'); this.closeCreate(); this.loadBons(); },
       error: (err: any) => {
@@ -302,16 +281,10 @@ export class BonsDeSortieComponent implements OnInit {
 
   formatDate(d: string): string { return new Date(d).toLocaleString('fr-FR'); }
 
-  mainDoeuvreLabel(item: MainDoeuvreModel): string {
-    const cat = (item as any).categorie?.nom ?? '';
-    return cat ? `${cat} — ${item.nbreHeure}h (${item.prix?.toLocaleString('fr-FR')} FCFA)` : `${item.nbreHeure}h — ${item.prix?.toLocaleString('fr-FR')} FCFA`;
-  }
-
   private showSuccess(msg: string) {
     this.successMessage = msg; this.errorMessage = '';
     setTimeout(() => this.successMessage = '', 3500);
   }
 
   get fPieces() { return this.lignesPieces.controls; }
-  get fMd() { return this.lignesMainDoeuvres.controls; }
 }

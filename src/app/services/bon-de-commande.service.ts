@@ -3,15 +3,16 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
-export type StatutBonCommande = 'EN_ATTENTE' | 'ENVOYE' | 'RECU' | 'ANNULE';
+export type StatutBonCommande = 'EN_ATTENTE' | 'ENVOYE' | 'INCOMPLET' | 'RECU' | 'ANNULE';
 
 export interface LigneBonDeCommande {
-  id: number;
-  pieceDetacheeId: number;
-  designationPiece: string;
-  reference: string;
-  categorie: string;
+  id?: number;
+  pieceDetacheeId?: number;
+  designationPiece?: string;
+  reference?: string;
+  categorie?: string;
   quantite: number;
+  quantiteRecue?: number;
   prixUnitaire: number;
   montant: number;
 }

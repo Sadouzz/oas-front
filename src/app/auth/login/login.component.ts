@@ -7,7 +7,7 @@ import { LucideUser, LucideLock, LucideEye, LucideEyeOff, LucideCheck, LucideLoa
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, LucideUser, LucideLock, LucideEye, LucideEyeOff, LucideCheck, LucideLoader2],
+  imports: [ReactiveFormsModule, LucideUser, LucideLock, LucideEye, LucideEyeOff, LucideCheck, LucideLoader2],
   templateUrl: './login.component.html',
 })
 export class LoginComponent {

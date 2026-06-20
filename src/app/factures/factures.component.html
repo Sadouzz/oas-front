@@ -37,28 +37,36 @@
 
     <!-- Table -->
     <div class="bg-white rounded-lg border border-oas-line shadow-card overflow-hidden" [class.flex-1]="selectedFacture" [class.w-full]="!selectedFacture">
-      @if (loading) {
-        <div class="flex items-center justify-center py-16">
-          <div class="w-6 h-6 border-2 border-oas-accent border-t-transparent rounded-full animate-spin"></div>
-        </div>
-      } @else if (paged.length === 0) {
-        <div class="text-center py-16 text-oas-muted text-sm">Aucune facture.</div>
-      } @else {
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="border-b border-oas-line">
-                <th class="text-left text-xs text-oas-muted px-5 py-3">N</th>
-                @if (!selectedFacture) {
-                  <th class="text-left text-xs text-oas-muted px-5 py-3">Client</th>
-                  <th class="text-left text-xs text-oas-muted px-5 py-3">Immat.</th>
-                  <th class="text-right text-xs text-oas-muted px-5 py-3">Total TTC</th>
-                }
-                <th class="text-left text-xs text-oas-muted px-5 py-3">Date</th>
-                <th class="px-5 py-3"></th>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-oas-line">
+              <th class="text-left text-xs text-oas-muted px-5 py-3">N</th>
+              @if (!selectedFacture) {
+                <th class="text-left text-xs text-oas-muted px-5 py-3">Client</th>
+                <th class="text-left text-xs text-oas-muted px-5 py-3">Immat.</th>
+                <th class="text-right text-xs text-oas-muted px-5 py-3">Total TTC</th>
+              }
+              <th class="text-left text-xs text-oas-muted px-5 py-3">Date</th>
+              <th class="px-5 py-3"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (loading) {
+              <tr>
+                <td colspan="6" class="text-center py-14 text-oas-muted">
+                  <svg class="animate-spin h-5 w-5 mx-auto mb-2 text-oas-accent" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                  </svg>
+                  Chargement...
+                </td>
               </tr>
-            </thead>
-            <tbody>
+            } @else if (paged.length === 0) {
+              <tr>
+                <td colspan="6" class="text-center py-16 text-oas-muted text-sm">Aucune facture.</td>
+              </tr>
+            } @else {
               @for (f of paged; track f.id) {
                 <tr class="hover:bg-oas-bg transition border-b border-oas-line cursor-pointer"
                     [ngClass]="{'bg-orange-50': selectedFacture?.id === f.id}"
@@ -72,6 +80,12 @@
                   <td class="px-5 py-4 text-xs text-oas-muted">{{ formatDate(f.dateCreation) }}</td>
                   <td class="px-5 py-4" (click)="$event.stopPropagation()">
                     <div class="flex items-center gap-1 justify-end">
+                      @if (f.resteAPayer > 0) {
+                        <button (click)="openPayModal(f)"
+                                class="p-1.5 rounded-lg hover:bg-emerald-50 text-emerald-600 hover:text-emerald-700 transition cursor-pointer" title="Encaisser paiement">
+                          <svg lucideReceipt class="w-4 h-4"></svg>
+                        </button>
+                      }
                       <button (click)="downloadPdf(f.id)"
                               class="p-1.5 rounded-lg hover:bg-oas-info-bg text-oas-muted hover:text-oas-info transition cursor-pointer">
                         <svg lucideDownload class="w-4 h-4"></svg>
@@ -84,21 +98,11 @@
                   </td>
                 </tr>
               }
-            </tbody>
-          </table>
-        </div>
-        @if (totalPages > 1) {
-          <div class="flex items-center justify-between px-5 py-3 border-t border-oas-line text-sm text-oas-muted">
-            <span>Page {{ page }} / {{ totalPages }}</span>
-            <div class="flex gap-2">
-              <button (click)="prevPage()" [disabled]="page === 1"
-                      class="px-3 py-1 rounded border border-oas-line disabled:opacity-40 hover:bg-oas-bg transition">&lsaquo;</button>
-              <button (click)="nextPage()" [disabled]="page === totalPages"
-                      class="px-3 py-1 rounded border border-oas-line disabled:opacity-40 hover:bg-oas-bg transition">&rsaquo;</button>
-            </div>
-          </div>
-        }
-      }
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-pagination [page]="page" [totalPages]="totalPages" [total]="filtered.length" [pageSize]="pageSize" (prev)="prevPage()" (next)="nextPage()" />
     </div>
 
     <!-- Detail panel -->
@@ -240,6 +244,13 @@
 
           <!-- Actions -->
           <div class="space-y-2">
+            @if (selectedFacture.resteAPayer > 0) {
+              <button (click)="openPayModal(selectedFacture)"
+                      class="w-full bg-emerald-500 hover:bg-emerald-600 border border-transparent text-white font-semibold py-2.5 rounded-lg transition text-sm cursor-pointer flex items-center justify-center gap-2">
+                <svg lucideReceipt class="w-4 h-4"></svg>
+                Encaisser Paiement
+              </button>
+            }
             <button (click)="downloadPdf(selectedFacture.id)"
                     class="w-full bg-white hover:bg-oas-bg border border-oas-line text-oas-ink font-semibold py-2.5 rounded-lg transition text-sm cursor-pointer flex items-center justify-center gap-2">
               <svg lucideDownload class="w-4 h-4"></svg>
@@ -266,7 +277,7 @@
       <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line">
         <div>
           <h2 class="text-base font-bold text-oas-ink">Creer une facture</h2>
-          <p class="text-xs text-oas-muted mt-0.5">Etape {{ createStep }} / 3</p>
+          <p class="text-xs text-oas-muted mt-0.5">Etape {{ createStep }} / 2</p>
         </div>
         <button (click)="closeCreate()" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted cursor-pointer">
           <svg lucideX class="w-5 h-5"></svg>
@@ -275,7 +286,7 @@
 
       <!-- Step indicators -->
       <div class="flex items-center px-6 py-3 border-b border-oas-line gap-2">
-        @for (s of [1, 2, 3]; track s) {
+        @for (s of [1, 2]; track s) {
           <div class="flex items-center gap-2 text-xs font-semibold"
                [class.text-oas-accent]="createStep === s"
                [class.text-oas-muted]="createStep !== s">
@@ -292,10 +303,9 @@
               } @else { {{ s }} }
             </span>
             @if (s === 1) { Client &amp; Vehicule }
-            @if (s === 2) { Bon de commande }
-            @if (s === 3) { Lignes &amp; Paiement }
+            @if (s === 2) { Fiche &amp; Paiement }
           </div>
-          @if (s < 3) {
+          @if (s < 2) {
             <span class="flex-1 h-px bg-oas-line"></span>
           }
         }
@@ -402,111 +412,49 @@
         <!-- STEP 2 -->
         @if (createStep === 2) {
           <div class="space-y-4">
-            <p class="text-sm text-oas-muted">Associez un bon de commande a cette facture (optionnel).</p>
+            <p class="text-sm text-oas-muted">Selectionnez la fiche atelier liee a cette facture.</p>
             <div>
-              <label class="block text-sm font-semibold text-oas-ink mb-1">Bon de commande</label>
-              <select formControlName="bonDeCommandeId"
-                      class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
-                <option [ngValue]="null">Aucun bon de commande</option>
-                @for (bon of bonsDeCommande; track bon.id) {
-                  <option [value]="bon.id">{{ bon.numero }} - {{ bon.fournisseurNom }} ({{ bon.statut }})</option>
+              <label class="block text-sm font-semibold text-oas-ink mb-1">Fiche Atelier *</label>
+              @if (ficheOpen) {
+                <div class="fixed inset-0 z-[5]" (click)="ficheOpen = false"></div>
+              }
+              <div class="relative z-[10]">
+                <input type="text"
+                       [value]="ficheOpen ? ficheFilter : ficheAtelierLabel"
+                       (focus)="ficheOpen = true; ficheFilter = ''"
+                       (input)="ficheFilter = $any($event.target).value"
+                       [placeholder]="fichesFiltrees.length > 0 ? 'Rechercher une fiche...' : 'Aucune fiche disponible'"
+                       [disabled]="fichesFiltrees.length === 0"
+                       class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition disabled:opacity-50"
+                       [class.border-oas-bad]="form.get('ficheAtelierId')?.invalid && form.get('ficheAtelierId')?.touched"/>
+                @if (ficheOpen && fichesFiltrees.length > 0) {
+                  <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-oas-line rounded-lg shadow-xl z-[10] max-h-52 overflow-y-auto"
+                       (click)="$event.stopPropagation()">
+                    @for (fiche of filteredFiches; track fiche.id) {
+                      <div (click)="selectFiche(fiche)"
+                           class="px-3 py-2.5 hover:bg-oas-bg cursor-pointer text-sm text-oas-ink border-b border-oas-line last:border-0">
+                        <span class="font-medium font-mono">Fiche #{{ fiche.numero }}</span>
+                        <span class="text-oas-muted ml-2">{{ fiche.statut }}</span>
+                      </div>
+                    }
+                    @if (filteredFiches.length === 0) {
+                      <div class="px-3 py-3 text-sm text-oas-muted text-center">Aucune fiche trouvée</div>
+                    }
+                  </div>
                 }
-              </select>
+              </div>
+              @if (form.get('ficheAtelierId')?.invalid && form.get('ficheAtelierId')?.touched) {
+                <p class="text-xs text-oas-bad mt-1">Fiche Atelier requise.</p>
+              }
             </div>
-            @if (bonsDeCommande.length === 0) {
-              <p class="text-xs text-oas-muted text-center py-4">Aucun bon de commande disponible.</p>
+            @if (fichesFiltrees.length === 0) {
+              <p class="text-xs text-oas-muted text-center py-4">Aucune fiche atelier pour ce vehicule.</p>
+            } @else if (availableFiches.length === 0) {
+              <p class="text-xs text-oas-muted text-center py-4">Toutes les fiches de ce véhicule ont déjà une facture.</p>
             }
-          </div>
-        }
-
-        <!-- STEP 3 -->
-        @if (createStep === 3) {
-          <div class="space-y-5">
-
-            <!-- Pieces PDP -->
-            <div formArrayName="lignesPieces">
-              <div class="flex items-center justify-between mb-2">
-                <label class="text-sm font-bold text-oas-ink">Pieces detachees (PDP)</label>
-                <button type="button" (click)="addPiece()"
-                        class="text-xs font-bold text-oas-accent hover:text-oas-accent-dark flex items-center gap-1 cursor-pointer">
-                  <svg lucidePlus class="w-3.5 h-3.5"></svg>
-                  Ajouter
-                </button>
-              </div>
-
-              <div class="space-y-2">
-                @for (ligne of lignesPieces.controls; track $index) {
-                  <div [formGroupName]="$index" class="flex items-center gap-2 bg-oas-bg rounded-lg p-3">
-                    <select formControlName="pieceId"
-                            class="flex-1 px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
-                      <option [ngValue]="null">Selectionner une piece...</option>
-                      @for (p of filteredPdps; track p.id) {
-                        <option [value]="p.id">{{ p.reference }} - {{ p.numeroDeSerie }}{{ p.prix ? ' (' + fmt(p.prix) + ' FCFA)' : '' }}</option>
-                      }
-                    </select>
-                    <input formControlName="quantite" type="number" min="1" placeholder="Qte"
-                           class="w-20 px-3 py-2 rounded-lg border border-oas-line bg-white text-sm text-center focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
-                    <span class="text-xs font-semibold text-oas-ink w-28 text-right whitespace-nowrap">
-                      {{ fmt(getPrixPDP(ligne.get('pieceId')?.value) * (ligne.get('quantite')?.value || 0)) }} F
-                    </span>
-                    <button type="button" (click)="removePiece($index)"
-                            class="p-1.5 rounded-lg hover:bg-red-50 text-oas-muted hover:text-red-500 transition cursor-pointer flex-shrink-0">
-                      <svg lucideX class="w-4 h-4"></svg>
-                    </button>
-                  </div>
-                }
-                @if (lignesPieces.length === 0) {
-                  <p class="text-xs text-oas-muted text-center py-3 border border-dashed border-oas-line rounded-lg">
-                    Aucune piece ajoutee (optionnel).
-                  </p>
-                }
-              </div>
-            </div>
-
-            <!-- Main d'oeuvre -->
-            <div formArrayName="lignesMainDoeuvres">
-              <div class="flex items-center justify-between mb-2">
-                <label class="text-sm font-bold text-oas-ink">Main d'oeuvre</label>
-                <button type="button" (click)="addMainDoeuvre()"
-                        class="text-xs font-bold text-oas-accent hover:text-oas-accent-dark flex items-center gap-1 cursor-pointer">
-                  <svg lucidePlus class="w-3.5 h-3.5"></svg>
-                  Ajouter
-                </button>
-              </div>
-              <div class="space-y-2">
-                @for (ligne of lignesMainDoeuvres.controls; track $index) {
-                  <div [formGroupName]="$index" class="flex items-center gap-2 bg-oas-bg rounded-lg p-3">
-                    <select formControlName="mainDoeuvreId"
-                            class="flex-1 px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
-                      <option [ngValue]="null">Selectionner...</option>
-                      @for (mo of mainDoeuvres; track mo.id) {
-                        <option [value]="mo.id">{{ moLabel(mo) }}</option>
-                      }
-                    </select>
-                    <div class="flex items-center gap-1 flex-shrink-0">
-                      <input formControlName="nbreHeure" type="number" min="1" placeholder="H"
-                             class="w-16 px-2 py-2 rounded-lg border border-oas-line bg-white text-sm text-center focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
-                      <span class="text-xs text-oas-muted">h</span>
-                    </div>
-                    <span class="text-xs font-semibold text-oas-ink w-28 text-right whitespace-nowrap">
-                      {{ fmt(getPrixMO(ligne.get('mainDoeuvreId')?.value) * (ligne.get('nbreHeure')?.value || 0)) }} F
-                    </span>
-                    <button type="button" (click)="removeMainDoeuvre($index)"
-                            class="p-1.5 rounded-lg hover:bg-red-50 text-oas-muted hover:text-red-500 transition cursor-pointer flex-shrink-0">
-                      <svg lucideX class="w-4 h-4"></svg>
-                    </button>
-                  </div>
-                }
-                @if (lignesMainDoeuvres.length === 0) {
-                  <p class="text-xs text-oas-muted text-center py-3 border border-dashed border-oas-line rounded-lg">
-                    Aucune main d'oeuvre ajoutee (optionnel).
-                  </p>
-                }
-              </div>
-            </div>
 
             <!-- TVA + Timbre -->
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-2 gap-4 mt-4">
               <div class="flex items-center gap-3">
                 <input type="checkbox" formControlName="appliquerTVA" id="tva"
                        class="w-4 h-4 accent-oas-accent rounded cursor-pointer"/>
@@ -520,7 +468,7 @@
             </div>
 
             <!-- Mode de paiement -->
-            <div>
+            <div class="mt-4">
               <label class="block text-sm font-semibold text-oas-ink mb-1">Mode de paiement *</label>
               <select formControlName="modePaiement"
                       class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink"
@@ -529,34 +477,6 @@
                 <option value="CHEQUE">Cheque</option>
                 <option value="HORS_TAXE">Hors taxe</option>
               </select>
-            </div>
-
-            <!-- Recapitulatif -->
-            <div class="bg-oas-bg rounded-lg p-4 space-y-1.5 text-sm">
-              <div class="flex justify-between">
-                <span class="text-oas-muted">Montant HT</span>
-                <span class="font-semibold">{{ fmt(montantHTForm) }} FCFA</span>
-              </div>
-              @if (form.get('appliquerTVA')?.value) {
-                <div class="flex justify-between">
-                  <span class="text-oas-muted">TVA (18%)</span>
-                  <span class="font-semibold">{{ fmt(montantTVAForm) }} FCFA</span>
-                </div>
-              }
-              <div class="flex justify-between">
-                <span class="text-oas-muted">Montant TTC</span>
-                <span class="font-semibold">{{ fmt(montantTTCForm) }} FCFA</span>
-              </div>
-              @if (form.get('appliquerTimbre')?.value) {
-                <div class="flex justify-between">
-                  <span class="text-oas-muted">Timbre</span>
-                  <span class="font-semibold">200 FCFA</span>
-                </div>
-              }
-              <div class="flex justify-between pt-1.5 border-t border-oas-line">
-                <span class="font-bold text-oas-ink">Total</span>
-                <span class="font-bold text-oas-accent text-base">{{ fmt(montantTotalForm) }} FCFA</span>
-              </div>
             </div>
           </div>
         }
@@ -578,13 +498,13 @@
                   class="bg-white hover:bg-oas-bg text-oas-muted font-semibold px-4 h-10 rounded-lg border border-oas-line transition cursor-pointer text-sm">
             Annuler
           </button>
-          @if (createStep < 3) {
+          @if (createStep < 2) {
             <button type="button" (click)="goStep(createStep + 1)"
                     class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-5 h-10 rounded-lg transition cursor-pointer text-sm">
               Suivant &rarr;
             </button>
           }
-          @if (createStep === 3) {
+          @if (createStep === 2) {
             <button type="button" (click)="save()" [disabled]="saving"
                     class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-5 h-10 rounded-lg flex items-center gap-2 transition cursor-pointer disabled:opacity-60 text-sm">
               @if (saving) { <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> }
@@ -592,6 +512,69 @@
             </button>
           }
         </div>
+      </div>
+
+    </div>
+  </div>
+}
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- MODAL PAIEMENT                                              -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+@if (showPayModal && factureToPay) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      
+      <!-- Header -->
+      <div class="px-6 py-4 border-b border-oas-line flex justify-between items-center bg-oas-bg/50">
+        <div>
+          <h2 class="text-lg font-bold text-oas-ink">Encaisser Paiement</h2>
+          <p class="text-xs text-oas-muted mt-0.5">Facture {{ factureToPay.numero }}</p>
+        </div>
+        <button (click)="closePayModal()" class="text-oas-muted hover:text-oas-ink transition p-1 cursor-pointer">
+          <svg lucideX class="w-5 h-5"></svg>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="p-6 space-y-5 flex-1 overflow-y-auto">
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-semibold text-blue-700">Reste à payer</span>
+            <span class="text-lg font-extrabold text-blue-800">{{ fmt(factureToPay.resteAPayer) }} FCFA</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-oas-ink mb-1">Montant du paiement (FCFA)</label>
+          <input type="number" [(ngModel)]="payMontant" min="1" [max]="factureToPay.resteAPayer"
+                 class="w-full px-4 py-3 rounded-xl bg-white border border-oas-line text-oas-ink font-semibold focus:outline-none focus:border-oas-accent focus:ring-1 focus:ring-oas-accent transition"/>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-oas-ink mb-1">Méthode de paiement</label>
+          <select [(ngModel)]="payMethode" class="w-full px-4 py-3 rounded-xl bg-white border border-oas-line text-oas-ink focus:outline-none focus:border-oas-accent focus:ring-1 focus:ring-oas-accent transition">
+            <option value="ESPECE">Espèces</option>
+            <option value="CHEQUE">Chèque</option>
+            <option value="VIREMENT">Virement</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="px-6 py-4 border-t border-oas-line flex justify-end gap-3 bg-oas-bg/50">
+        <button (click)="closePayModal()" class="px-5 py-2.5 rounded-xl font-semibold text-sm text-oas-ink hover:bg-oas-line transition cursor-pointer">
+          Annuler
+        </button>
+        <button (click)="submitPayment()" [disabled]="paySaving"
+                class="px-5 py-2.5 rounded-xl font-bold text-sm bg-emerald-500 hover:bg-emerald-600 text-white shadow-md transition cursor-pointer disabled:opacity-60 flex items-center gap-2">
+          @if (paySaving) {
+            <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <span>Traitement...</span>
+          } @else {
+            <span>Encaisser</span>
+          }
+        </button>
       </div>
 
     </div>

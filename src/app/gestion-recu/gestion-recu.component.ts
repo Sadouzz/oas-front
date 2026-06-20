@@ -1,20 +1,81 @@
-import { Component } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
+import { RecuModel } from '../shared/models/recu.model';
+import { RecuService } from '../services/recu.service';
+import { NgClass } from '@angular/common';
+import { LucideSearch, LucideReceipt, LucideDownload } from '@lucide/angular';
+import { PaginationComponent } from '../shared/components/pagination/pagination.component';
 
 @Component({
   selector: 'app-gestion-recu',
   standalone: true,
-  imports: [],
-  template: `
-    <div class="flex flex-col items-center justify-center min-h-[60vh] gap-6">
-      <svg class="w-16 h-16 text-oas-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-      </svg>
-      <div class="text-center">
-        <h2 class="text-xl font-bold text-oas-ink mb-2">Gestion des reçus</h2>
-        <p class="text-oas-muted">Cette fonctionnalité est en cours de développement.</p>
-        <p class="text-sm text-oas-faint mt-1">En attente d'implémentation backend.</p>
-      </div>
-    </div>
-  `,
+  imports: [NgClass, LucideSearch, LucideReceipt, PaginationComponent],
+  templateUrl: './gestion-recu.component.html'
 })
-export class GestionRecuComponent {}
+export class GestionRecuComponent implements OnInit {
+  private recuService = inject(RecuService);
+
+  recus: RecuModel[] = [];
+  filtered: RecuModel[] = [];
+  loading = true;
+
+  page = 1;
+  readonly pageSize = 10;
+  searchTerm = '';
+
+  ngOnInit() {
+    this.load();
+  }
+
+  load() {
+    this.loading = true;
+    this.recuService.getAll().subscribe({
+      next: (data) => {
+        this.recus = data;
+        this.applyFilter();
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+      }
+    });
+  }
+
+  applyFilter() {
+    if (!this.searchTerm) {
+      this.filtered = [...this.recus];
+    } else {
+      const term = this.searchTerm.toLowerCase();
+      this.filtered = this.recus.filter(r => 
+        (r.numero?.toLowerCase().includes(term)) ||
+        (r.numeroFacture?.toLowerCase().includes(term)) ||
+        (r.clientNom?.toLowerCase().includes(term)) ||
+        (r.numeroFicheAtelier?.toLowerCase().includes(term))
+      );
+    }
+    this.page = 1;
+  }
+
+  onSearch(e: Event) {
+    this.searchTerm = (e.target as HTMLInputElement).value;
+    this.applyFilter();
+  }
+
+  get paged(): RecuModel[] {
+    return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
+  }
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.filtered.length / this.pageSize));
+  }
+
+  prevPage() { if (this.page > 1) this.page--; }
+  nextPage() { if (this.page < this.totalPages) this.page++; }
+
+  formatDate(d: string): string { return new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+  fmt(n: number): string { return new Intl.NumberFormat('fr-FR').format(n ?? 0); }
+  
+  modePaiementLabel(mp: string | null | undefined): string {
+    const m: Record<string, string> = { CHEQUE: 'Chèque', ESPECE: 'Espèces', VIREMENT: 'Virement' };
+    return m[mp ?? ''] ?? mp ?? '—';
+  }
+}

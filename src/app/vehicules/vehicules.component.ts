@@ -11,7 +11,7 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, Lu
 @Component({
   selector: 'app-vehicules',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, LucideArchiveRestore, LucideX, LucideCar],
+  imports: [ReactiveFormsModule, DecimalPipe, AlertComponent, PaginationComponent],
   templateUrl: './vehicules.component.html',
 })
 export class VehiculesComponent implements OnInit {

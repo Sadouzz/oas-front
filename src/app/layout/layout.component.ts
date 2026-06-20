@@ -20,11 +20,7 @@ import {
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive,
-    LucideHouse, LucideUsers, LucideCar, LucidePackage, LucideReceipt,
-    LucideFileText, LucideSettings, LucideLogOut, LucideChevronDown,
-    LucideWrench, LucideClipboardList, LucidePercent,
-  ],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './layout.component.html',
 })
 export class LayoutComponent implements OnInit, OnDestroy {
@@ -42,10 +38,10 @@ export class LayoutComponent implements OnInit, OnDestroy {
     '/pieces-detachees': { label: 'Pièce détachée', section: 'Gestion de stock' },
     '/stock': { label: 'Historique', section: 'Gestion de stock' },
     '/inventaire': { label: 'Inventaire', section: 'Gestion de stock' },
-    '/fournisseurs': { label: 'Fournisseurs', section: 'Gestion de stock' },
+    '/fournisseurs': { label: 'Fournisseurs', section: 'Réapprovisionnement' },
     '/factures': { label: 'Facture', section: 'Facture TTC' },
-    '/bons-livraison': { label: 'Bon de livraison', section: 'Facture TTC' },
-    '/bons-commande': { label: 'Bon de commande', section: 'Facture TTC' },
+    '/bons-livraison': { label: 'Bon de livraison', section: 'Réapprovisionnement' },
+    '/bons-commande': { label: 'Bon de commande', section: 'Réapprovisionnement' },
     '/proformas': { label: 'Proforma', section: 'Facture TTC' },
     '/avoirs-ttc': { label: 'Avoir TTC', section: 'Facture TTC' },
     '/notes-prix': { label: 'Note de prix', section: 'Facture HT' },
@@ -54,9 +50,9 @@ export class LayoutComponent implements OnInit, OnDestroy {
     '/gestion-tva': { label: 'Gestion TVA' },
     '/gestion-recu': { label: 'Gestion reçu' },
     '/admin/main-doeuvre': { label: "Main d'œuvre" },
-    '/fiches-atelier': { label: 'Fiches atelier', section: 'Atelier' },
-    '/mecaniciens': { label: 'Mécaniciens', section: 'Atelier' },
-    '/rendezvous': { label: 'Rendez-vous', section: 'Atelier' },
+    '/fiches-atelier': { label: 'Fiches atelier', section: 'Processus de réparation' },
+    '/mecaniciens': { label: 'Mécaniciens', section: 'Processus de réparation' },
+    '/rendezvous': { label: 'Rendez-vous' },
     '/admin/users': { label: 'Utilisateurs', section: 'Administration' },
     '/admin/history': { label: 'Historique connexions', section: 'Administration' },
   };
@@ -113,16 +109,20 @@ export class LayoutComponent implements OnInit, OnDestroy {
   ngOnDestroy() { this.routerSub?.unsubscribe(); }
 
   private syncSection(url: string) {
-    if (['/bons-de-sortie', '/pieces-detachees', '/stock', '/inventaire', '/fournisseurs'].some(p => url.startsWith(p))) {
+    if (['/bons-de-sortie', '/pieces-detachees', '/stock', '/inventaire'].some(p => url.startsWith(p))) {
       this.openSection = 'stock';
-    } else if (['/factures', '/bons-livraison', '/bons-commande', '/proformas', '/avoirs-ttc'].some(p => url.startsWith(p))) {
+    } else if (['/bons-commande', '/bons-livraison', '/fournisseurs'].some(p => url.startsWith(p))) {
+      this.openSection = 'reappro';
+    } else if (['/factures', '/proformas', '/avoirs-ttc'].some(p => url.startsWith(p))) {
       this.openSection = 'facture-ttc';
     } else if (['/notes-prix', '/devis-previsionnels', '/avoirs-ht'].some(p => url.startsWith(p))) {
       this.openSection = 'facture-ht';
-    } else if (['/fiches-atelier', '/mecaniciens', '/rendezvous'].some(p => url.startsWith(p))) {
+    } else if (['/fiches-atelier', '/mecaniciens'].some(p => url.startsWith(p))) {
       this.openSection = 'atelier';
-    } else if (url.startsWith('/admin')) {
+    } else if (url.startsWith('/admin') && !url.startsWith('/admin/main-doeuvre')) {
       this.openSection = 'admin';
+    } else {
+      this.openSection = null;
     }
   }
 

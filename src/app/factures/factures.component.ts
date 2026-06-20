@@ -1,20 +1,21 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
-import { NgClass } from '@angular/common';
+import { CommonModule, DecimalPipe, DatePipe, NgClass } from '@angular/common';
 import { FactureService } from '../services/facture.service';
 import { FactureModel, FactureCreateRequest } from '../shared/models/facture.model';
 import { ClientService, UserModel } from '../services/client.service';
 import { VehiculeService, VehiculeModel } from '../services/vehicule.service';
-import { BonDeCommandeService, BonDeCommande } from '../services/bon-de-commande.service';
-import { PieceDetacheeService, PieceDetache } from '../services/piece-detachee.service';
-import { MainDoeuvreService, MainDoeuvreModel } from '../services/main-doeuvre.service';
+import { FicheAtelierService, FicheAtelier } from '../services/fiche-atelier.service';
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideReceipt, LucideEye, LucidePrinter } from '@lucide/angular';
+import { PaginationComponent } from '../shared/components/pagination/pagination.component';
+import { AlertComponent } from '../shared/components/alert/alert.component';
+import { SearchableSelectComponent } from '../shared/components/searchable-select/searchable-select.component';
 
 @Component({
   selector: 'app-factures',
   standalone: true,
-  imports: [NgClass, ReactiveFormsModule, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideReceipt, LucideEye, LucidePrinter],
+  imports: [ReactiveFormsModule, FormsModule, NgClass, PaginationComponent, LucideSearch, LucidePlus, LucideTrash2, LucideX, LucideDownload, LucideReceipt],
   templateUrl: './factures.component.html',
 })
 export class FacturesComponent implements OnInit {
@@ -22,9 +23,7 @@ export class FacturesComponent implements OnInit {
   private fb = inject(FormBuilder);
   private clientService = inject(ClientService);
   private vehiculeService = inject(VehiculeService);
-  private bonDeCommandeService = inject(BonDeCommandeService);
-  private pieceService = inject(PieceDetacheeService);
-  private mainDoeuvreService = inject(MainDoeuvreService);
+  private ficheService = inject(FicheAtelierService);
 
   factures: FactureModel[] = [];
   filtered: FactureModel[] = [];
@@ -34,16 +33,23 @@ export class FacturesComponent implements OnInit {
   showCreateModal = false;
   createStep = 1;
 
+  showPayModal = false;
+  factureToPay: FactureModel | null = null;
+  payMontant = 0;
+  payMethode = 'ESPECE';
+  paySaving = false;
+
   clients: UserModel[] = [];
   vehiculesFiltres: VehiculeModel[] = [];
-  bonsDeCommande: BonDeCommande[] = [];
-  pdps: PieceDetache[] = [];
-  mainDoeuvres: MainDoeuvreModel[] = [];
+  fichesAtelier: FicheAtelier[] = [];
+  fichesFiltrees: FicheAtelier[] = [];
 
   clientOpen = false;
   vehiculeOpen = false;
+  ficheOpen = false;
   clientFilter = '';
   vehiculeFilter = '';
+  ficheFilter = '';
 
 
   page = 1;
@@ -55,34 +61,23 @@ export class FacturesComponent implements OnInit {
   form = this.fb.group({
     clientId: [null as number | null, Validators.required],
     vehiculeId: [null as number | null, Validators.required],
-    kilometrage: [null as number | null],
+    ficheAtelierId: [null as number | null, Validators.required],
     remarque: [''],
-    bonDeCommandeId: [null as number | null],
     appliquerTVA: [false],
     appliquerTimbre: [false],
     modePaiement: ['ESPECE', Validators.required],
-    lignesPieces: this.fb.array([]),
-    lignesMainDoeuvres: this.fb.array([]),
   });
-
-  get lignesPieces(): FormArray { return this.form.get('lignesPieces') as FormArray; }
-  get lignesMainDoeuvres(): FormArray { return this.form.get('lignesMainDoeuvres') as FormArray; }
 
   ngOnInit() {
     this.load();
     forkJoin({
       clients: this.clientService.getAll(),
-      bons: this.bonDeCommandeService.getAll(),
-      mainDoeuvres: this.mainDoeuvreService.getAll(),
+      fiches: this.ficheService.getAll(),
     }).subscribe({
-      next: ({ clients, bons, mainDoeuvres }) => {
+      next: ({ clients, fiches }) => {
         this.clients = clients.filter(c => c.enabled);
-        this.bonsDeCommande = bons.filter(b => b.statut !== 'ANNULE');
-        this.mainDoeuvres = mainDoeuvres.filter(m => !m.isArchived);
+        this.fichesAtelier = fiches;
       },
-    });
-    this.pieceService.getAll({ type: 'PDP' }).subscribe({
-      next: (d) => { this.pdps = d.filter(p => p.statut === 'ACTIF'); },
     });
   }
 
@@ -114,8 +109,6 @@ export class FacturesComponent implements OnInit {
 
   openCreate() {
     this.form.reset({ remarque: '', appliquerTVA: false, appliquerTimbre: false, modePaiement: 'ESPECE' });
-    while (this.lignesPieces.length) this.lignesPieces.removeAt(0);
-    while (this.lignesMainDoeuvres.length) this.lignesMainDoeuvres.removeAt(0);
     this.vehiculesFiltres = [];
     this.clientOpen = false;
     this.vehiculeOpen = false;
@@ -143,6 +136,7 @@ export class FacturesComponent implements OnInit {
         this.errorMessage = 'Veuillez sélectionner un client et un véhicule.';
         return;
       }
+      this.fichesFiltrees = this.fichesAtelier.filter(f => f.vehicule?.id === Number(vehiculeCtrl.value));
     }
     this.createStep = n;
   }
@@ -172,12 +166,21 @@ export class FacturesComponent implements OnInit {
     );
   }
 
-  get filteredVehicules(): VehiculeModel[] {
-    if (!this.vehiculeFilter) return this.vehiculesFiltres;
-    const kw = this.vehiculeFilter.toLowerCase();
+  get filteredVehicules() {
     return this.vehiculesFiltres.filter(v =>
-      v.immatriculation.toLowerCase().includes(kw) ||
-      `${v.marque} ${v.modele}`.toLowerCase().includes(kw)
+      (v.immatriculation?.toLowerCase() || '').includes(this.vehiculeFilter.toLowerCase()) ||
+      (v.marque?.toLowerCase() || '').includes(this.vehiculeFilter.toLowerCase())
+    );
+  }
+
+  get availableFiches() {
+    return this.fichesFiltrees;
+  }
+
+  get filteredFiches() {
+    const kw = this.ficheFilter.toLowerCase();
+    return this.availableFiches.filter(f =>
+      (f.numero?.toLowerCase() || '').includes(kw)
     );
   }
 
@@ -192,69 +195,26 @@ export class FacturesComponent implements OnInit {
   }
 
   selectVehicule(v: VehiculeModel) {
-    this.form.patchValue({ vehiculeId: v.id });
+    this.form.patchValue({ vehiculeId: v.id, ficheAtelierId: null });
     this.vehiculeFilter = '';
     this.vehiculeOpen = false;
+    this.fichesFiltrees = this.fichesAtelier.filter(f => f.vehicule?.id === v.id);
   }
 
-  // ── Step 3 helpers ─────────────────────────────────────────────
+  // ── Step 2 helpers ─────────────────────────────────────────────
 
-  get filteredPdps(): PieceDetache[] {
-    return this.pdps;
+  get ficheAtelierLabel(): string {
+    const id = this.form.get('ficheAtelierId')?.value;
+    if (!id) return '';
+    const f = this.fichesFiltrees.find(x => x.id === Number(id));
+    return f ? `Fiche #${f.numero}` : '';
   }
 
-  addPiece() {
-    this.lignesPieces.push(this.fb.group({
-      pieceId: [null as number | null],
-      quantite: [1, [Validators.required, Validators.min(1)]],
-    }));
+  selectFiche(f: FicheAtelier) {
+    this.form.patchValue({ ficheAtelierId: f.id });
+    this.ficheOpen = false;
+    this.ficheFilter = '';
   }
-
-  removePiece(i: number) { this.lignesPieces.removeAt(i); }
-
-  addMainDoeuvre() {
-    this.lignesMainDoeuvres.push(this.fb.group({
-      mainDoeuvreId: [null as number | null],
-      nbreHeure: [1, [Validators.required, Validators.min(1)]],
-    }));
-  }
-
-  removeMainDoeuvre(i: number) { this.lignesMainDoeuvres.removeAt(i); }
-
-  moLabel(mo: MainDoeuvreModel): string {
-    return `${mo.categorie} — ${mo.nbreHeure}h — ${this.fmt(mo.prix)} FCFA/h`;
-  }
-
-  getPrixPDP(pieceId: number | null): number {
-    if (!pieceId) return 0;
-    return this.pdps.find(p => p.id === Number(pieceId))?.prix ?? 0;
-  }
-
-  getPrixMO(moId: number | null): number {
-    if (!moId) return 0;
-    return this.mainDoeuvres.find(m => m.id === Number(moId))?.prix ?? 0;
-  }
-
-  get montantHTForm(): number {
-    const pieces = this.lignesPieces.controls.reduce((sum, c) => {
-      return sum + this.getPrixPDP(c.get('pieceId')?.value) * (Number(c.get('quantite')?.value) || 0);
-    }, 0);
-    const mos = this.lignesMainDoeuvres.controls.reduce((sum, c) => {
-      return sum + this.getPrixMO(c.get('mainDoeuvreId')?.value) * (Number(c.get('nbreHeure')?.value) || 0);
-    }, 0);
-    return pieces + mos;
-  }
-
-  get montantTVAForm(): number {
-    return this.form.get('appliquerTVA')?.value ? Math.round(this.montantHTForm * 0.18) : 0;
-  }
-
-  get montantTimbreForm(): number {
-    return this.form.get('appliquerTimbre')?.value ? 200 : 0;
-  }
-
-  get montantTTCForm(): number { return this.montantHTForm + this.montantTVAForm; }
-  get montantTotalForm(): number { return this.montantTTCForm + this.montantTimbreForm; }
 
   // ── Save ────────────────────────────────────────────────────────
 
@@ -262,19 +222,11 @@ export class FacturesComponent implements OnInit {
     if (this.saving) return;
     const val = this.form.value as any;
 
-    if (!val.modePaiement) {
-      this.form.get('modePaiement')!.markAsTouched();
-      this.errorMessage = 'Veuillez choisir un mode de paiement.';
+    if (!val.modePaiement || !val.ficheAtelierId) {
+      this.form.markAllAsTouched();
+      this.errorMessage = 'Veuillez remplir tous les champs obligatoires.';
       return;
     }
-
-    const lignesPieces = (val.lignesPieces ?? [])
-      .filter((l: any) => l.pieceId)
-      .map((l: any) => ({ pieceId: Number(l.pieceId), quantite: Number(l.quantite) }));
-
-    const lignesMainDoeuvres = (val.lignesMainDoeuvres ?? [])
-      .filter((l: any) => l.mainDoeuvreId)
-      .map((l: any) => ({ mainDoeuvreId: Number(l.mainDoeuvreId), nbreHeure: Number(l.nbreHeure) }));
 
     this.saving = true;
     this.errorMessage = '';
@@ -282,11 +234,8 @@ export class FacturesComponent implements OnInit {
     const request: FactureCreateRequest = {
       clientId: Number(val.clientId),
       vehiculeId: Number(val.vehiculeId),
-      kilometrage: val.kilometrage ?? 0,
+      ficheAtelierId: Number(val.ficheAtelierId),
       remarque: val.remarque || null,
-      bonDeCommandeId: val.bonDeCommandeId ? Number(val.bonDeCommandeId) : null,
-      lignesPieces,
-      lignesMainDoeuvres,
       appliquerTVA: !!val.appliquerTVA,
       appliquerTimbre: !!val.appliquerTimbre,
       modePaiement: val.modePaiement,
@@ -317,6 +266,51 @@ export class FacturesComponent implements OnInit {
     this.service.delete(id).subscribe({
       next: () => { this.load(); this.closeDetail(); this.notify('Facture supprimée.'); },
       error: () => this.notifyError('Erreur lors de la suppression.'),
+    });
+  }
+
+  // ── Payment ─────────────────────────────────────────────────────
+
+  openPayModal(f: FactureModel) {
+    this.factureToPay = f;
+    this.payMontant = f.resteAPayer;
+    this.payMethode = 'ESPECE';
+    this.showPayModal = true;
+  }
+
+  closePayModal() {
+    this.showPayModal = false;
+    this.factureToPay = null;
+    this.paySaving = false;
+  }
+
+  submitPayment() {
+    if (!this.factureToPay || this.paySaving) return;
+    if (this.payMontant <= 0 || this.payMontant > this.factureToPay.resteAPayer) {
+      this.notifyError('Montant invalide');
+      return;
+    }
+
+    this.paySaving = true;
+    this.service.payFacture(this.factureToPay.id, this.payMontant, this.payMethode).subscribe({
+      next: () => {
+        this.paySaving = false;
+        this.closePayModal();
+        this.load();
+        this.notify('Paiement enregistré avec succès !');
+        // Si c'était un détail ouvert, on recharge le détail
+        if (this.selectedFacture?.id === this.factureToPay?.id) {
+          this.service.getAll().subscribe(res => {
+            const updated = res.find(f => f.id === this.selectedFacture!.id);
+            if (updated) this.selectedFacture = updated;
+          });
+        }
+      },
+      error: (err: any) => {
+        this.paySaving = false;
+        const msg = err.error?.message ?? (typeof err.error === 'string' ? err.error : '');
+        this.notifyError(msg || 'Erreur lors du paiement.');
+      }
     });
   }
 

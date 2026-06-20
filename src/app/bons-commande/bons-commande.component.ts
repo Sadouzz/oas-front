@@ -34,6 +34,9 @@ export class BonsCommandeComponent implements OnInit {
   pieces: PieceDetache[] = [];
   clients: UserModel[] = [];
 
+  page = 1;
+  readonly pageSize = 10;
+
   selectedClientId: number | null = null;
   clientOpen = false;
   vehiculeOpen = false;
@@ -61,8 +64,6 @@ export class BonsCommandeComponent implements OnInit {
   assignFournisseurId: number | null = null;
   assigningFournisseur = false;
 
-  page = 1;
-  readonly pageSize = 10;
   searchTerm = '';
   filterStatut = '';
   successMessage = '';
@@ -385,6 +386,12 @@ export class BonsCommandeComponent implements OnInit {
   }
 
   // ─── Assigner Fournisseur ─────────────────────────────
+  getAssignFournisseurName(): string {
+    if (!this.assignFournisseurId) return '';
+    const f = this.fournisseurs.find(x => x.id === this.assignFournisseurId);
+    return f ? (f.nomEntreprise || f.nom || '') : '';
+  }
+
   saveAssignFournisseur() {
     if (!this.selectedBon || !this.assignFournisseurId) return;
     this.assigningFournisseur = true;
@@ -409,13 +416,18 @@ export class BonsCommandeComponent implements OnInit {
   // ─── Bon de Livraison ─────────────────────────────────
   openLivraisonPopup() {
     if (!this.selectedBon) return;
-    this.livraisonLignes = this.selectedBon.lignes.map(l => ({
-      ligneId:            l.id,
-      designationPiece:   l.designationPiece || l.reference || '',
-      reference:          l.reference || '',
-      quantiteCommandee:  l.quantite,
-      quantiteRecue:      l.quantite, // Pré-rempli avec la qté commandée
-    }));
+    this.livraisonLignes = this.selectedBon.lignes
+      .map(l => {
+        const restante = l.quantite - (l.quantiteRecue || 0);
+        return {
+          ligneId:            l.id!,
+          designationPiece:   l.designationPiece || l.reference || '',
+          reference:          l.reference || '',
+          quantiteCommandee:  restante,
+          quantiteRecue:      restante,
+        };
+      })
+      .filter(l => l.quantiteCommandee > 0);
     this.showLivraisonModal = true;
   }
 
@@ -477,6 +489,7 @@ export class BonsCommandeComponent implements OnInit {
     const m: Record<StatutBonCommande, string> = {
       EN_ATTENTE: 'bg-yellow-100 text-yellow-700',
       ENVOYE: 'bg-blue-100 text-blue-700',
+      INCOMPLET: 'bg-orange-100 text-orange-700',
       RECU: 'bg-green-100 text-green-700',
       ANNULE: 'bg-red-100 text-red-700',
     };
@@ -485,7 +498,7 @@ export class BonsCommandeComponent implements OnInit {
 
   statutLabel(s: StatutBonCommande): string {
     const m: Record<StatutBonCommande, string> = {
-      EN_ATTENTE: 'En attente', ENVOYE: 'Envoyé', RECU: 'Réceptionné', ANNULE: 'Annulé',
+      EN_ATTENTE: 'En attente', ENVOYE: 'Envoyé', INCOMPLET: 'Incomplet', RECU: 'Réceptionné', ANNULE: 'Annulé',
     };
     return m[s] ?? s;
   }

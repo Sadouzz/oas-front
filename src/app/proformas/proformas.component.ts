@@ -14,7 +14,7 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDo
 @Component({
   selector: 'app-proformas',
   standalone: true,
-  imports: [ReactiveFormsModule, NgClass, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideArrowRight],
+  imports: [ReactiveFormsModule, NgClass, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX],
   templateUrl: './proformas.component.html',
 })
 export class ProformasComponent implements OnInit {

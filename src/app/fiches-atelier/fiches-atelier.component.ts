@@ -71,14 +71,17 @@ export const PANNES_FREQUENTES = [
   'Jeu dans la direction',
 ];
 
-const STATUT_STEPS: { statut: StatutReparation | 'EN_ATTENTE_PROFORMA'; label: string }[] = [
-  { statut: 'A_FAIRE',            label: 'Réception'   },
-  { statut: 'EN_DIAGNOSTIC',      label: 'Diagnostic'  },
-  { statut: 'EN_ATTENTE_PROFORMA', label: 'Proforma'   },
-  { statut: 'EN_ATTENTE_COMMANDE', label: 'Approv.'},
-  { statut: 'EN_COURS',           label: 'Bon sortie'  },
-  { statut: 'TERMINE',            label: 'Réparation'  },
-  { statut: 'LIVRE',              label: 'Livraison'   },
+const STATUT_STEPS: { statut: StatutReparation; label: string }[] = [
+  { statut: 'A_FAIRE',             label: 'Réception'   },
+  { statut: 'EN_DIAGNOSTIC',       label: 'Diagnostic'  },
+  { statut: 'EN_ATTENTE_PROFORMA', label: 'Pièces & MO' },
+  { statut: 'PROFORMA_VALIDE',     label: 'Proforma'    },
+  { statut: 'EN_ATTENTE_COMMANDE', label: 'Approv.'     },
+  { statut: 'EN_ATTENTE_SORTIE',   label: 'Attente BS'  },
+  { statut: 'EN_COURS',            label: 'Réparation'  },
+  { statut: 'EN_ATTENTE_PAIEMENT', label: 'Paiement'    },
+  { statut: 'TERMINE',             label: 'Prêt'        },
+  { statut: 'LIVRE',               label: 'Livraison'   },
 ];
 
 @Component({
@@ -318,11 +321,11 @@ export class FichesAtelierComponent implements OnInit {
           this.selectedFiche = data.find(f => f.id === this.selectedFiche!.id) ?? null;
         }
       },
-      error: () => this.loading = false,
+      error: () => this.notifyError('Erreur de validation')
     });
   }
 
-  // ─── Recherche & Filtres ────────────────────────────────
+  // ─── Diagnostic (Étape 2) ────────────────────────────────
   searchKw = '';
   applyFilter() {
     const kw = this.searchKw.toLowerCase();
@@ -445,53 +448,36 @@ export class FichesAtelierComponent implements OnInit {
 
     this.dateSortieEstimee = f.dateSortie ? f.dateSortie.substring(0, 10) : '';
     
-    // Charger le proforma pour toute fiche qui en a un (step 3+)
-    const needsProforma = ['EN_ATTENTE_PROFORMA', 'EN_ATTENTE_COMMANDE', 'EN_COURS', 'TERMINE', 'LIVRE'].includes(f.statut as string);
-    if (needsProforma) {
-      this.proformaService.getByFicheAtelierId(f.id).subscribe({
-        next: (p) => {
-          this.currentProforma = p;
-          // Reconstituer les lignes pièces depuis le proforma
-          this.lignesPieces = p.lignesPieces
-            .map((lp: any) => {
-              const piece = this.allPieces.find(pp => pp.id === lp.pieceId);
-              if (!piece) return null;
-              const stockAtelier = piece.stockAtelier ?? 0;
-              const stockMagasin = piece.stockMagasin ?? 0;
-              const manquantAtelier = Math.max(0, lp.quantite - stockAtelier);
-              const aSortirMagasin = Math.min(manquantAtelier, stockMagasin);
-              const manquantGlobal = Math.max(0, manquantAtelier - stockMagasin);
-              
-              return { 
-                piece, 
-                quantite: lp.quantite, 
-                stockDisponible: stockAtelier + stockMagasin, 
-                manquant: manquantGlobal,
-                aSortirMagasin: aSortirMagasin,
-                stockAtelier: stockAtelier
-              } as LignePiece;
-            })
-            .filter((l: any) => l !== null) as LignePiece[];
-          // Reconstituer les lignes MO depuis le proforma
-          this.lignesMO = p.lignesMainDoeuvres
-            .map((lmd: any) => {
-              const mo = this.allMO.find(m => m.id === lmd.mainDoeuvreId);
-              if (!mo) return null;
-              return { mo, quantite: lmd.nbreHeure };
-            })
-            .filter((l: any): l is LigneMO => l !== null);
-        },
-        error: () => {
-          this.currentProforma = null;
-          this.lignesPieces = [];
-          this.lignesMO = [];
-        }
-      });
-    } else {
-      this.currentProforma = null;
-      this.lignesPieces = [];
-      this.lignesMO = [];
-    }
+    // Reconstituer les lignes pièces depuis la fiche atelier
+    this.lignesPieces = (f.lignesFicheAtelierPieces || [])
+      .map((lp: any) => {
+        const piece = this.allPieces.find(pp => pp.id === lp.piece?.id);
+        if (!piece) return null;
+        const stockAtelier = piece.stockAtelier ?? 0;
+        const stockMagasin = piece.stockMagasin ?? 0;
+        const manquantAtelier = Math.max(0, lp.quantite - stockAtelier);
+        const aSortirMagasin = Math.min(manquantAtelier, stockMagasin);
+        const manquantGlobal = Math.max(0, manquantAtelier - stockMagasin);
+        
+        return { 
+          piece, 
+          quantite: lp.quantite, 
+          stockDisponible: stockAtelier + stockMagasin, 
+          manquant: manquantGlobal,
+          aSortirMagasin: aSortirMagasin,
+          stockAtelier: stockAtelier
+        } as LignePiece;
+      })
+      .filter((l: any) => l !== null) as LignePiece[];
+
+    // Reconstituer les lignes MO depuis la fiche atelier
+    this.lignesMO = (f.lignesFicheAtelierMainDoeuvres || [])
+      .map((lmd: any) => {
+        const mo = this.allMO.find(m => m.id === lmd.mainDoeuvre?.id);
+        if (!mo) return null;
+        return { mo, quantite: lmd.nbreHeure };
+      })
+      .filter((l: any): l is LigneMO => l !== null);
 
     if (f.vehicule) {
       const v = this.vehicules.find(vv => vv.id === f.vehicule!.id);
@@ -539,7 +525,7 @@ export class FichesAtelierComponent implements OnInit {
 
   // ─── Étapes : max steps selon mode ───────────────────
   get maxStep(): number {
-    return this.isNew ? 1 : 7;
+    return 10;
   }
 
   get canNext(): boolean {
@@ -554,7 +540,7 @@ export class FichesAtelierComponent implements OnInit {
     if (!this.canNext) { this.step1Form.markAllAsTouched(); return; }
     if (this.currentStep === 1) { this.saveStep1ThenGoNext(); return; }
     if (this.currentStep === 2) { this.saveStep2ThenGoNext(); return; }
-    if (this.currentStep < 7) this.currentStep++;
+    if (this.currentStep < 10) this.currentStep++;
   }
 
   prevStep() {
@@ -634,31 +620,27 @@ export class FichesAtelierComponent implements OnInit {
     if (this.editingFicheStatus === 'A_FAIRE') {
       this.advanceStatutTo('EN_DIAGNOSTIC' as StatutReparation, () => {
         this.saving = false;
-        this.notify('Diagnostic en cours. Remplissez les pannes une fois terminé.');
+        this.notify('Diagnostic commencé.');
         this.load();
       });
     } else {
-      this.advanceStatutTo('EN_ATTENTE_PROFORMA' as StatutReparation, () => {
-        this.saving = false;
-        this.currentStep = 3;
-        this.notify('Diagnostic terminé. Veuillez générer le proforma.');
-        this.load();
-      });
+      this.service.updateStatut(this.editingId!, 'EN_ATTENTE_PROFORMA')
+        .subscribe(() => {
+          this.proformaSaving = false;
+          this.notify('Diagnostic terminé. Veuillez sélectionner les pièces et main d\'œuvre.');
+          this.currentStep = 3;
+          this.load();
+        });
     }
   }
 
-  // ─── Proforma (Nouvelle Étape 3) ──────────────────────
-  createProforma() {
+  // ─── Pièces & Main d'œuvre (Nouvelle Étape 3) ──────────────────────
+  savePiecesEtMo() {
     if (this.lignesPieces.length === 0 && this.lignesMO.length === 0) {
       this.notifyError('Veuillez ajouter au moins une pièce ou une main d\'œuvre.');
       return;
     }
     
-    const fiche = this.fiches.find(f => f.id === this.editingId);
-    if (!fiche?.vehicule) return;
-    const clientId = fiche.vehicule.client?.id;
-    if (!clientId) { this.notifyError('Aucun client associé au véhicule.'); return; }
-
     this.proformaSaving = true;
 
     const listeDefauts = this.composeFromCheckboxes(this.selectedPannes, this.autrePannes);
@@ -667,54 +649,36 @@ export class FichesAtelierComponent implements OnInit {
 
     this.service.update(this.editingId!, {
       numero:             this.step1Form.value.numero,
-      descriptionTravaux: descriptionTravaux,
+      descriptionTravaux: descriptionTravaux || '',
       listeReception:     listeReception || undefined,
-      vehiculeId:         Number(this.step1Form.value.vehiculeId),
       listeDefauts:       listeDefauts || undefined,
+      vehiculeId:         Number(this.step1Form.value.vehiculeId),
+      lignesPieces:       this.lignesPieces.map(l => ({ pieceId: l.piece.id, quantite: l.quantite, prix: l.piece.prix ?? null })),
+      lignesMainDoeuvres: this.lignesMO.map(l => ({ mainDoeuvreId: l.mo.id, nbreHeure: l.quantite, prix: l.mo.prix ?? null }))
     }).subscribe({
       next: () => {
-        this.proformaService.create({
-          ficheAtelierId: this.editingId!,
-          clientId,
-          vehiculeId: fiche.vehicule!.id,
-          kilometrage: fiche.vehicule!.kilometrage ?? 0,
-          lignesPieces: this.lignesPieces.map(l => ({ pieceId: l.piece.id, quantite: l.quantite, prix: l.piece.prix ?? 0 })),
-          lignesMainDoeuvres: this.lignesMO.map(l => ({ mainDoeuvreId: l.mo.id, nbreHeure: l.quantite, tarifHoraire: l.mo.prix ?? 0 }))
-        }).subscribe({
-          next: (p) => {
-            this.proformaSaving = false;
-            this.currentProforma = p;
-            this.notify('Proforma créé et assigné au client.');
-            this.currentStep = 3;
-            this.load();
-          },
-          error: (err) => {
-            this.proformaSaving = false;
-            this.notifyError(err.error?.message || 'Erreur lors de la création du proforma.');
-          }
-        });
+        this.proformaSaving = false;
+        this.notify('Pièces et main d\'œuvre enregistrées dans la fiche atelier.');
+        this.currentStep = 4; // PROFORMA_VALIDE validation step
+        this.load();
       },
       error: (err) => {
         this.proformaSaving = false;
-        this.notifyError('Erreur lors de la sauvegarde des pannes : ' + (err.error?.message || ''));
+        this.notifyError('Erreur lors de la sauvegarde : ' + (err.error?.message || ''));
       }
     });
   }
 
   validerProforma() {
-    if (!this.currentProforma) return;
-    this.proformaSaving = true;
-    this.proformaService.valider(this.currentProforma.id).subscribe({
-      next: () => {
-        this.proformaSaving = false;
-        this.notify('Proforma validé par le client.');
-        this.currentStep = 4; // Passe à l'étape approvisionnement
-        this.load();
-      },
-      error: (err) => {
-        this.proformaSaving = false;
-        this.notifyError(err.error?.message || 'Erreur lors de la validation du proforma.');
-      }
+    // Legacy function, skip
+    this.currentStep = 4;
+    this.load();
+  }
+
+  advanceToApprov() {
+    this.advanceStatutTo('EN_ATTENTE_COMMANDE', () => {
+      this.currentStep = 5;
+      this.load();
     });
   }
 
@@ -769,22 +733,14 @@ export class FichesAtelierComponent implements OnInit {
       clientId,
       vehiculeId:         fiche.vehicule!.id,
       lignesPieces:       lignes.map(l => ({ pieceId: l.piece.id, quantite: l.aSortirMagasin!, prix: l.piece.prix ?? null })),
-      lignesMainDoeuvres: this.lignesMO.map(l => ({ mainDoeuvreId: l.mo.id, quantite: l.quantite })),
       remarque:           `Bon de sortie automatique pour réparation FA-${this.editingId}`,
     }).subscribe({
       next: (bds: any) => {
-        // Auto-valider le bon de sortie
-        this.bdsService.valider(bds.id).subscribe({
-          next: () => {
-            this.bdsCreating = false;
-            this.notify('Bon de sortie créé et validé automatiquement.');
-            this.startReparation();
-          },
-          error: (err: any) => {
-            this.bdsCreating = false;
-            this.notifyError('Bon de sortie créé mais erreur lors de la validation: ' + (err.error?.message || 'Erreur inconnue'));
-            this.startReparation(); // On continue quand même la réparation
-          }
+        this.bdsCreating = false;
+        this.notify('Bon de sortie créé. En attente de validation par le magasinier.');
+        this.advanceStatutTo('EN_ATTENTE_SORTIE', () => {
+          this.currentStep = 6; // Attente BS
+          this.load();
         });
       },
       error: (err: any) => {
@@ -796,27 +752,27 @@ export class FichesAtelierComponent implements OnInit {
 
   startReparation() {
     this.advanceStatutTo('EN_COURS', () => {
-      this.currentStep = 6;
+      this.currentStep = 7;
       this.load();
     });
   }
 
   terminerReparation() {
     this.saving = true;
-    this.advanceStatutTo('TERMINE', () => {
+    this.advanceStatutTo('EN_ATTENTE_PAIEMENT', () => {
       this.saving = false;
-      this.currentStep = 7;
-      this.notify('Réparation terminée. Fiche prête pour livraison.');
+      this.currentStep = 8;
+      this.notify('Réparation terminée. Veuillez procéder au paiement.');
       this.load();
     });
   }
 
   private advanceStatutTo(statut: StatutReparation, cb: () => void) {
     if (!this.editingId) { cb(); return; }
-    this.service.updateStatut(this.editingId, statut).subscribe({ 
-      next: () => cb(), 
+    this.service.updateStatut(this.editingId, statut).subscribe({
+      next: () => cb(),
       error: (err) => {
-        console.error('PATCH STATUT ERROR:', JSON.stringify(err.error));
+        console.error('PATCH STATUT ERROR:', err);
         cb();
       }
     });
@@ -1042,18 +998,18 @@ export class FichesAtelierComponent implements OnInit {
     return STATUT_STEPS.findIndex(st => st.statut === s);
   }
 
-  statutColor(s: StatutReparation): string {
-    const map: Record<StatutReparation | string, string> = {
-      A_FAIRE: '#6b7280', EN_DIAGNOSTIC: '#f59e0b', EN_ATTENTE_PROFORMA: '#8b5cf6', EN_ATTENTE_COMMANDE: '#ec4899', EN_COURS: '#3b82f6', TERMINE: '#10b981', LIVRE: '#22c55e',
+  statutColor(s: StatutReparation | string): string {
+    const map: Record<string, string> = {
+      A_FAIRE: '#6b7280', EN_DIAGNOSTIC: '#f59e0b', EN_ATTENTE_PROFORMA: '#8b5cf6', 
+      PROFORMA_VALIDE: '#a855f7', EN_ATTENTE_COMMANDE: '#ec4899', EN_ATTENTE_SORTIE: '#eab308',
+      EN_COURS: '#3b82f6', EN_ATTENTE_PAIEMENT: '#ef4444', TERMINE: '#10b981', LIVRE: '#22c55e',
     };
-    return map[s] ?? '#6b7280';
+    return map[s as string] ?? '#6b7280';
   }
 
   private statutToStep(s: StatutReparation | string): number {
-    const map: Record<string, number> = {
-      A_FAIRE: 1, EN_DIAGNOSTIC: 2, EN_ATTENTE_PROFORMA: 3, EN_ATTENTE_COMMANDE: 4, EN_COURS: 5, TERMINE: 6, LIVRE: 7,
-    };
-    return map[s] ?? 1;
+    const idx = STATUT_STEPS.findIndex(x => x.statut === s);
+    return idx >= 0 ? idx + 1 : 1;
   }
 
   // Raccourci : peut-on créer le bon de sortie ?

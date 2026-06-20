@@ -26,12 +26,26 @@ export class DashboardComponent implements OnInit {
   recentVehicules: VehiculeModel[] = [];
   alertes: AlerteStock[] = [];
   bonsEnAttente: BonDeSortie[] = [];
+  recentFiches: any[] = [];
 
   private ficheService = inject(FicheAtelierService);
-  ficheStats = { aFaire: 0, diagnostic: 0, proforma: 0, attentePieces: 0, enCours: 0, termine: 0, totalActives: 0 };
+  ficheStats = { 
+    aFaire: 0, 
+    diagnostic: 0, 
+    attenteProforma: 0, 
+    proformaValide: 0,
+    attentePieces: 0, 
+    attenteSortie: 0,
+    enCours: 0, 
+    attentePaiement: 0,
+    termine: 0, 
+    livre: 0,
+    totalActives: 0 
+  };
   totalClients = 0;
   totalVehicules = 0;
   loading = true;
+  loadingFiches = true;
 
   get role(): string { return this.authService.getRole() ?? ''; }
   get username(): string { return this.authService.getUsername() ?? ''; }
@@ -51,14 +65,24 @@ export class DashboardComponent implements OnInit {
         next: (data) => {
           this.ficheStats.aFaire = data.filter(f => f.statut === 'A_FAIRE').length;
           this.ficheStats.diagnostic = data.filter(f => f.statut === 'EN_DIAGNOSTIC').length;
-          this.ficheStats.proforma = data.filter(f => f.statut === 'EN_ATTENTE_PROFORMA' as any).length;
-          this.ficheStats.attentePieces = data.filter(f => f.statut === 'EN_ATTENTE_COMMANDE' as any).length;
+          this.ficheStats.attenteProforma = data.filter(f => f.statut === 'EN_ATTENTE_PROFORMA').length;
+          this.ficheStats.proformaValide = data.filter(f => f.statut === 'PROFORMA_VALIDE').length;
+          this.ficheStats.attentePieces = data.filter(f => f.statut === 'EN_ATTENTE_COMMANDE').length;
+          this.ficheStats.attenteSortie = data.filter(f => f.statut === 'EN_ATTENTE_SORTIE').length;
           this.ficheStats.enCours = data.filter(f => f.statut === 'EN_COURS').length;
+          this.ficheStats.attentePaiement = data.filter(f => f.statut === 'EN_ATTENTE_PAIEMENT').length;
           this.ficheStats.termine = data.filter(f => f.statut === 'TERMINE').length;
-          this.ficheStats.totalActives = this.ficheStats.aFaire + this.ficheStats.diagnostic + this.ficheStats.proforma + this.ficheStats.attentePieces + this.ficheStats.enCours + this.ficheStats.termine;
+          this.ficheStats.livre = data.filter(f => f.statut === 'LIVRE').length;
+          
+          this.ficheStats.totalActives = data.filter(f => f.statut !== 'LIVRE' && f.statut !== 'A_FAIRE').length;
+          this.recentFiches = [...data].sort((a, b) => new Date(b.dateCreation).getTime() - new Date(a.dateCreation).getTime()).slice(0, 5);
+          this.loadingFiches = false;
           this.done();
         },
-        error: () => this.done()
+        error: () => {
+          this.loadingFiches = false;
+          this.done();
+        }
       });
     }
     if (this.isSuperAgent || this.isMagasinier) {

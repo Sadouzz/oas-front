@@ -44,7 +44,6 @@
             <th class="text-left text-xs text-oas-muted px-5 py-3">Client</th>
             <th class="text-left text-xs text-oas-muted px-5 py-3">Véhicule</th>
             <th class="text-left text-xs text-oas-muted px-5 py-3">Pièces</th>
-            <th class="text-left text-xs text-oas-muted px-5 py-3">M.O.</th>
             <th class="text-left text-xs text-oas-muted px-5 py-3">Statut</th>
             <th class="text-right text-xs text-oas-muted px-5 py-3">Actions</th>
           </tr>
@@ -65,9 +64,6 @@
                 <td class="px-5 py-4 text-xs text-oas-ink2">{{ bon.vehicule?.immatriculation }}</td>
                 <td class="px-5 py-4 text-center">
                   <span class="text-xs font-bold text-oas-ink">{{ bon.lignesBonDeSortiePieces?.length ?? 0 }}</span>
-                </td>
-                <td class="px-5 py-4 text-center">
-                  <span class="text-xs font-bold text-oas-ink">{{ bon.lignesBonDeSortieMainDoeuvres?.length ?? 0 }}</span>
                 </td>
                 <td class="px-5 py-4">
                   <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold {{ statutClass(bon.statut) }}">
@@ -118,8 +114,8 @@
         </div>
         <!-- Stepper -->
         <div class="flex items-center gap-0">
-          @for (step of [1,2,3]; track step) {
-            <div class="flex items-center" [class.flex-1]="step < 3">
+          @for (step of [1,2]; track step) {
+            <div class="flex items-center" [class.flex-1]="step < 2">
               <div class="flex flex-col items-center gap-1">
                 <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all"
                      [class.bg-oas-accent]="createStep >= step"
@@ -135,10 +131,10 @@
                 <span class="text-[10px] font-semibold whitespace-nowrap"
                       [class.text-oas-accent]="createStep === step"
                       [class.text-oas-muted]="createStep !== step">
-                  {{ step === 1 ? 'Client & Véhicule' : step === 2 ? 'Pièces détachées' : 'Main d\'œuvre' }}
+                  {{ step === 1 ? 'Client & Véhicule' : 'Pièces détachées' }}
                 </span>
               </div>
-              @if (step < 3) {
+              @if (step < 2) {
                 <div class="flex-1 h-px mx-2 mb-4"
                      [class.bg-oas-accent]="createStep > step"
                      [class.bg-oas-line]="createStep <= step"></div>
@@ -306,63 +302,12 @@
             @if (fPieces.length === 0) {
               <div class="text-center py-8 text-oas-muted text-sm">
                 <svg lucidePackage class="w-10 h-10 mx-auto mb-2 text-oas-line"></svg>
-                Aucune pièce ajoutée. Vous pouvez en ajouter ou passer à l'étape suivante (main d'œuvre).
-              </div>
-            }
-          </div>
-        }
-
-        <!-- ── ÉTAPE 3 : Main d'œuvre ── -->
-        @if (createStep === 3) {
-          <div>
-            <div class="flex items-center justify-between mb-3">
-              <div>
-                <p class="font-semibold text-oas-ink text-sm">Main d'œuvre</p>
-                <p class="text-xs text-oas-muted">Ajoutez les prestations (optionnel).</p>
-              </div>
-              <button type="button" (click)="addMainDoeuvre()"
-                      class="text-xs font-semibold text-oas-accent hover:text-oas-accent-dark flex items-center gap-1 cursor-pointer transition">
-                <svg lucidePlus class="w-3.5 h-3.5"></svg>
-                Ajouter une prestation
-              </button>
-            </div>
-
-            <div class="space-y-2" [formGroup]="form">
-              <div formArrayName="lignesMainDoeuvres">
-                @for (ligne of fMd; track $index) {
-                  <div [formGroupName]="$index" class="flex gap-2 items-start bg-oas-bg rounded-lg p-3 border border-oas-line">
-                    <div class="flex-1">
-                      <select formControlName="mainDoeuvreId"
-                              class="w-full px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
-                              [class.border-oas-bad]="$any(ligne).get('mainDoeuvreId').invalid && $any(ligne).get('mainDoeuvreId').touched">
-                        <option [value]="null">-- Sélectionner --</option>
-                        @for (m of mainDoeuvres; track m.id) {
-                          <option [value]="m.id">{{ mainDoeuvreLabel(m) }}</option>
-                        }
-                      </select>
-                    </div>
-                    <div class="w-24 flex-shrink-0">
-                      <input type="number" formControlName="quantite" min="1" placeholder="Qté"
-                             class="w-full px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-center"/>
-                    </div>
-                    <button type="button" (click)="removeMainDoeuvre($index)"
-                            class="p-2 text-oas-muted hover:text-oas-bad cursor-pointer flex-shrink-0 transition">
-                      <svg lucideTrash2 class="w-4 h-4"></svg>
-                    </button>
-                  </div>
-                }
-              </div>
-            </div>
-
-            @if (fMd.length === 0) {
-              <div class="text-center py-8 text-oas-muted text-sm">
-                <svg lucideWrench class="w-10 h-10 mx-auto mb-2 text-oas-line"></svg>
-                Aucune main d'œuvre. Le bon peut être créé sans prestation.
+                Aucune pièce ajoutée.
               </div>
             }
 
             <!-- TVA + Timbre -->
-            <div [formGroup]="form" class="grid grid-cols-2 gap-4 mt-2">
+            <div [formGroup]="form" class="grid grid-cols-2 gap-4 mt-4">
               <div class="flex items-center gap-3">
                 <input type="checkbox" formControlName="appliquerTVA" id="bds-tva"
                        class="w-4 h-4 accent-oas-accent rounded cursor-pointer"/>
@@ -376,10 +321,9 @@
             </div>
 
             <!-- Récap avant soumission -->
-            <div class="mt-3 bg-oas-bg rounded-lg p-4 border border-oas-line text-sm space-y-1">
+            <div class="mt-4 bg-oas-bg rounded-lg p-4 border border-oas-line text-sm space-y-1">
               <p class="font-bold text-oas-ink text-xs uppercase tracking-wide mb-2">Recapitulatif</p>
               <p class="text-oas-ink2"><span class="font-semibold text-oas-ink">Pieces :</span> {{ fPieces.length }} ligne(s)</p>
-              <p class="text-oas-ink2"><span class="font-semibold text-oas-ink">Main d'oeuvre :</span> {{ fMd.length }} ligne(s)</p>
             </div>
           </div>
         }
@@ -399,7 +343,7 @@
         <div class="flex gap-2">
           <button type="button" (click)="closeCreate()"
                   class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-lg border border-oas-line transition cursor-pointer text-sm">Annuler</button>
-          @if (createStep < 3) {
+          @if (createStep < 2) {
             <button type="button" (click)="goStep(createStep + 1)"
                     class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-10 rounded-lg flex items-center gap-1.5 transition cursor-pointer text-sm">
               Suivant
@@ -490,39 +434,7 @@
           </div>
         }
 
-        <!-- Main d'œuvre -->
-        @if ((selectedBon.lignesBonDeSortieMainDoeuvres?.length ?? 0) > 0) {
-          <div>
-            <p class="text-sm font-bold text-oas-ink mb-2">Main d'œuvre ({{ selectedBon.lignesBonDeSortieMainDoeuvres?.length }} ligne(s))</p>
-            <div class="border border-oas-line rounded-lg overflow-hidden">
-              <table class="w-full text-sm">
-                <thead>
-                  <tr class="border-b border-oas-line bg-oas-bg">
-                    <th class="text-left px-3 py-2 text-xs font-bold text-oas-muted uppercase tracking-wide">Prestation</th>
-                    <th class="text-right px-3 py-2 text-xs font-bold text-oas-muted uppercase tracking-wide">Qté</th>
-                    <th class="text-right px-3 py-2 text-xs font-bold text-oas-muted uppercase tracking-wide">Prix unit.</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-oas-line">
-                  @for (l of selectedBon.lignesBonDeSortieMainDoeuvres; track l.id) {
-                    <tr class="hover:bg-oas-bg">
-                      <td class="px-3 py-2 text-oas-ink text-xs font-medium">
-                        @if (l.mainDoeuvre?.categorie?.nom) {
-                          <span class="text-oas-muted">{{ l.mainDoeuvre?.categorie?.nom }} — </span>
-                        }
-                        {{ l.mainDoeuvre?.nbreHeure }}h
-                      </td>
-                      <td class="px-3 py-2 text-right font-bold text-oas-ink">{{ l.quantite }}</td>
-                      <td class="px-3 py-2 text-right text-oas-muted text-xs">{{ l.mainDoeuvre?.prix?.toLocaleString('fr-FR') }} FCFA</td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          </div>
-        }
-
-        @if ((selectedBon.lignesBonDeSortiePieces?.length ?? 0) === 0 && (selectedBon.lignesBonDeSortieMainDoeuvres?.length ?? 0) === 0) {
+        @if ((selectedBon.lignesBonDeSortiePieces?.length ?? 0) === 0) {
           <p class="text-center text-oas-muted text-sm py-4">Aucune ligne sur ce bon.</p>
         }
 

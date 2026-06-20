@@ -25,16 +25,18 @@ export interface FactureModel {
   modePaiement?: string | null;
   lignesPieces: { id: number; pieceId: number; designationPiece: string; quantite: number; prix: number; montantTotal: number }[];
   lignesMainDoeuvres: { id: number; mainDoeuvreId: number; descriptionMainDoeuvre: string; nbreHeure: number; tarifHoraire: number; montantTotal: number }[];
+  montantPaye: number;
+  resteAPayer: number;
+  statutPaiement: 'NON_PAYE' | 'PARTIEL' | 'PAYE';
+  recus: import('./recu.model').RecuModel[];
 }
 
 export interface FactureCreateRequest {
   clientId: number;
   vehiculeId: number;
+  ficheAtelierId: number;
   kilometrage?: number | null;
   remarque?: string | null;
-  bonDeCommandeId?: number | null;
-  lignesPieces: { pieceId: number; quantite: number }[];
-  lignesMainDoeuvres: { mainDoeuvreId: number; nbreHeure: number }[];
   appliquerTVA: boolean;
   appliquerTimbre: boolean;
   modePaiement: string;

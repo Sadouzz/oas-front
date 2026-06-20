@@ -11,7 +11,7 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDo
 @Component({
   selector: 'app-devis-previsionnels',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideArrowRight],
+  imports: [ReactiveFormsModule, DecimalPipe, AlertComponent, PaginationComponent, LucidePlus],
   templateUrl: './devis-previsionnels.component.html',
 })
 export class DevisPrevisionnelsComponent implements OnInit {

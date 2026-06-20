@@ -14,8 +14,7 @@ import {
   standalone: true,
   imports: [
     ReactiveFormsModule, AlertComponent, PaginationComponent,
-    LucideSearch, LucideX, LucideCalendar, LucideCheck, LucidePencil, LucideUser,
-  ],
+    LucideSearch, LucideX, LucideCheck, LucidePencil],
   templateUrl: './rendezvous.component.html',
 })
 export class RendezVousComponent implements OnInit {

@@ -18,7 +18,7 @@ const ROLE_PREFIX: Record<string, string> = {
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideUser, LucideCheck, LucideArchive],
+  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideArchive],
   templateUrl: './users.component.html',
 })
 export class UsersComponent implements OnInit {
