@@ -290,16 +290,16 @@
         }
 
         <!-- Show linked Proforma number if available -->
-        @if (currentProforma) {
+        @if (proformaChargee) {
           <div class="bg-oas-bg rounded-xl p-3 border border-oas-line">
             <p class="text-xs font-bold text-oas-ink mb-1">Proforma liée</p>
             <div class="flex items-center justify-between">
               <div>
-                <p class="font-semibold">{{ currentProforma.numero || ('DK-' + currentProforma.id) }}</p>
-                <p class="text-xs text-oas-muted">Montant: {{ formatPrice(currentProforma.montantTTC || currentProforma.montantTotal || 0) }}</p>
+                <p class="font-semibold">{{ proformaChargee.numero || proformaChargee.code || ('DK-' + proformaChargee.id) }}</p>
+                <p class="text-xs text-oas-muted">Montant: {{ formatPrice(proformaChargee.montantTTC || proformaChargee.montantTotal || 0) }}</p>
               </div>
               <div>
-                <button (click)="createFactureFromFiche()" class="px-3 py-1.5 rounded-lg bg-oas-accent text-white text-xs font-bold hover:bg-oas-accent-dark">Créer facture</button>
+                <button *ngIf="!invoiceCreated" (click)="createFactureFromFiche()" class="px-3 py-1.5 rounded-lg bg-oas-accent text-white text-xs font-bold hover:bg-oas-accent-dark">Créer facture</button>
               </div>
             </div>
           </div>
@@ -714,6 +714,16 @@
                 }
               </div>
             </div>
+            <div class="flex gap-2">
+              <button type="button" (click)="startDiagnostic()" [disabled]="diagnosticStarted || saving"
+                      class="px-3 py-2 rounded-lg bg-oas-accent text-white text-xs font-bold hover:bg-oas-accent-dark transition cursor-pointer disabled:opacity-60">
+                {{ diagnosticStarted ? 'Diagnostic commencé' : 'Commencer le diagnostic' }}
+              </button>
+              <button type="button" (click)="finishDiagnostic()" [disabled]="!diagnosticStarted || diagnosticFinished"
+                      class="px-3 py-2 rounded-lg bg-emerald-500 text-white text-xs font-bold hover:bg-emerald-600 transition cursor-pointer disabled:opacity-60">
+                {{ diagnosticFinished ? 'Diagnostic terminé' : 'Terminer le diagnostic' }}
+              </button>
+            </div>
           </div>
         }
 
@@ -855,7 +865,9 @@
               <div>
                 <p class="font-bold text-oas-ink text-sm">Validation de la Proforma</p>
                 <!-- Show the proforma number from the selected fiche when available -->
-                <p *ngIf="selectedFicheProforma" class="text-xs text-oas-muted">Proforma : <span class="font-semibold">{{ selectedFicheProforma?.numero || selectedFicheProforma?.code }}</span></p>
+                <p *ngIf="proformaChargee || selectedFicheProforma" class="text-xs text-oas-muted">Proforma : <span class="font-semibold">{{ (proformaChargee?.numero || selectedFicheProforma?.numero || proformaChargee?.code || selectedFicheProforma?.code) }}</span></p>
+                <!-- Prominent display of proforma number for clarity -->
+                <p *ngIf="proformaChargee || selectedFicheProforma" class="mt-1 text-sm font-mono font-bold text-oas-ink">N° Proforma: {{ (proformaChargee?.numero || selectedFicheProforma?.numero || proformaChargee?.code || selectedFicheProforma?.code) }}</p>
                 <p class="text-xs text-oas-muted">En attente de la validation du client</p>
               </div>
             </div>
@@ -1083,12 +1095,14 @@
               La facture peut être générée directement d'ici pour valider le paiement.
             </div>
             <!-- Success box after invoice created -->
-            <div *ngIf="invoiceCreated" class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-sm text-emerald-800">
+            <div *ngIf="createdFacture" class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-sm text-emerald-800">
               <p class="font-bold">Facture générée</p>
-              <p class="text-xs">La facture <span class="font-semibold">{{ createdFacture?.numero || ('FACT-' + createdFacture?.id) }}</span> a été créée et le paiement peut être enregistré.</p>
+              <p class="text-xs">La facture <span class="font-semibold">{{ createdFacture?.numero || ('FACT-' + createdFacture?.id) }}</span> a été créée.
+                <span *ngIf="invoiceIsPaid" class="ml-2 bg-emerald-600 text-white px-2 py-0.5 rounded text-xs font-semibold">Payée</span>
+              </p>
             </div>
-            <!-- Button to generate invoice directly from the fiche (added per workflow request) -->
-            <div class="pt-3">
+            <!-- Button to generate invoice directly from the fiche (hidden when invoice exists) -->
+            <div class="pt-3" *ngIf="!invoiceCreated">
               <button (click)="createFactureFromFiche()" [disabled]="saving"
                       class="w-full py-3 rounded-xl font-bold text-sm bg-oas-accent hover:bg-oas-accent-dark text-white shadow-lg transition cursor-pointer disabled:opacity-60">
                 {{ saving ? 'Traitement...' : 'Générer la facture automatiquement' }}
@@ -1146,7 +1160,7 @@
         </div>
 
         @if (currentStep === 1 || currentStep === 2) {
-          <button (click)="nextStep()" [disabled]="saving || !canNext"
+          <button (click)="handleNextForStep1Or2()" [disabled]="saving || !canNext"
                   class="flex items-center gap-2 px-4 h-10 rounded-xl bg-oas-accent hover:bg-oas-accent-dark text-white font-bold text-sm transition cursor-pointer disabled:opacity-60">
             @if (saving) { <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> <span>En cours...</span> }
             @else if (currentStep === 1) {
