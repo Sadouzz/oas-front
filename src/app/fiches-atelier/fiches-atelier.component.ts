@@ -279,7 +279,7 @@ export class FichesAtelierComponent implements OnInit {
   bdcSaving = false;
 
   // ─── Proforma ───────────────────────────────────────────
-  currentProforma: any = null;
+  proformaChargee: any = null;
   proformaSaving = false;
 
   // ─── Bon de Sortie ─────────────────────────────────────
@@ -294,8 +294,61 @@ export class FichesAtelierComponent implements OnInit {
     // prefer explicit proforma attached to the selected fiche, else fallback to the one fetched via service
     try {
       const pf = (this.selectedFiche as any)?.proforma;
-      return pf ?? this.currentProforma ?? null;
-    } catch (e) { return this.currentProforma ?? null; }
+      return pf ?? this.proformaChargee ?? null;
+    } catch (e) { return this.proformaChargee ?? null; }
+  }
+
+  // Invoice accessor (either created in this session or attached to the selected fiche)
+  get selectedFicheInvoice(): any | null {
+    try {
+      const inv = (this.selectedFiche as any)?.facture;
+      return inv ?? this.createdFacture ?? null;
+    } catch (e) { return this.createdFacture ?? null; }
+  }
+
+  get invoiceIsPaid(): boolean {
+    const inv = this.selectedFicheInvoice ?? this.createdFacture;
+    if (!inv) return false;
+    if (inv.statutPaiement && (inv.statutPaiement === 'PAYE' || inv.statutPaiement === 'SOLDEE')) return true;
+    if (inv.resteAPayer != null) {
+      const reste = Number(inv.resteAPayer);
+      return !isNaN(reste) && reste <= 0;
+    }
+    return false;
+  }
+
+  // Diagnostic control flags
+  diagnosticStarted = false;
+  diagnosticFinished = false;
+
+  startDiagnostic() {
+    if (!this.editingId) { this.notifyError('Aucune fiche sélectionnée.'); return; }
+    if (this.diagnosticStarted) return;
+    // Advance status to EN_DIAGNOSTIC
+    this.saving = true;
+    this.advanceStatutTo('EN_DIAGNOSTIC', () => {
+      this.saving = false;
+      this.diagnosticStarted = true;
+      this.diagnosticFinished = false;
+      this.notify('Diagnostic commencé.');
+      this.load();
+    });
+  }
+
+  finishDiagnostic() {
+    if (!this.diagnosticStarted) { this.notifyError('Démarrez d\'abord le diagnostic.'); return; }
+    this.diagnosticFinished = true;
+    this.notify('Diagnostic terminé localement. Cliquez sur Suivant pour valider et enregistrer.');
+  }
+
+  handleNextForStep1Or2() {
+    if (this.currentStep === 1) { this.nextStep(); return; }
+    // If diagnostic not started, start it
+    if (!this.diagnosticStarted) { this.startDiagnostic(); return; }
+    // If started but not finished, finish it
+    if (this.diagnosticStarted && !this.diagnosticFinished) { this.finishDiagnostic(); return; }
+    // Otherwise proceed with normal nextStep flow (this will call saveStep2ThenGoNext)
+    this.nextStep();
   }
 
   get editingFicheStatus(): string | null {
@@ -503,11 +556,34 @@ export class FichesAtelierComponent implements OnInit {
     }
     this.selectedMecs = f.mecaniciens.map(m => m.id);
     this.showWorkflow = true;
-    // Try to fetch any existing proforma attached to this fiche atelier
+    // Try to fetch any existing proforma attached to this fiche atelier and any facture linked to it
+    this.proformaChargee = null;
+    this.invoiceCreated = false;
+    this.createdFacture = null;
     try {
       this.proformaService.getByFicheAtelierId(f.id).subscribe({
-        next: (p) => { this.currentProforma = p; },
-        error: () => { /* ignore if none or endpoint not available */ }
+        next: (p) => { this.proformaChargee = p; },
+        error: () => { this.proformaChargee = null; }
+      });
+    } catch (e) { this.proformaChargee = null; }
+
+    // Fetch invoices and try to find one linked to this fiche atelier
+    try {
+      this.factureService.getAll().subscribe({
+        next: (list: any[]) => {
+          if (!list || !list.length) return;
+          const inv = list.find(it => (it.ficheAtelierId && it.ficheAtelierId === f.id) || (it.ficheAtelier && it.ficheAtelier.id === f.id));
+          if (inv) {
+            this.createdFacture = inv;
+            // mark as created so UI hides generation buttons
+            this.invoiceCreated = true;
+            // if invoice is paid or fully settled, ensure canNext will allow progression
+            if (inv.statutPaiement === 'PAYE' || inv.statutPaiement === 'SOLDEE' || (inv.resteAPayer != null && Number(inv.resteAPayer) <= 0)) {
+              // nothing else to do — canNext() uses createdFacture to allow next
+            }
+          }
+        },
+        error: () => { /* ignore */ }
       });
     } catch (e) { /* ignore */ }
   }
@@ -537,7 +613,7 @@ export class FichesAtelierComponent implements OnInit {
     this.autrePannes = '';
     this.showAutrePannes = false;
     this.dateSortieEstimee = '';
-    this.currentProforma = null;
+    this.proformaChargee = null;
   }
 
   closeWorkflow() {
@@ -555,6 +631,22 @@ export class FichesAtelierComponent implements OnInit {
       return this.step1Form.get('vehiculeId')?.valid === true
         && (this.selectedTravaux.length > 0 || this.autreTravaux.trim().length > 0);
     }
+
+    // Step 2: only allow next when diagnostic is finished via explicit action
+    if (this.currentStep === 2) return this.diagnosticFinished === true;
+
+    // Step 8: only allow next if an invoice exists and is fully paid
+    if (this.currentStep === 8) {
+      const inv = this.selectedFicheInvoice;
+      if (!inv) return false;
+      // prefer statutPaiement if available, else check resteAPayer
+      if ((inv.statutPaiement && (inv.statutPaiement === 'PAYE' || inv.statutPaiement === 'SOLDEE'))
+        || (inv.resteAPayer != null && Number(inv.resteAPayer) <= 0)) {
+        return true;
+      }
+      return false;
+    }
+
     return true;
   }
 
@@ -830,7 +922,7 @@ export class FichesAtelierComponent implements OnInit {
           // refresh lists
           this.load();
           // advance to next step to reflect payment/validation
-          try { this.nextStep(); } catch (e) { this.currentStep = Math.min(this.currentStep + 1, this.maxStep); }
+          // Do NOT advance automatically — business rule: remain on payment step until invoice is paid.
         },
         error: (err: any) => {
           this.saving = false;
@@ -961,7 +1053,8 @@ export class FichesAtelierComponent implements OnInit {
         stockAtelier
       });
     }
-    this.pieceAjouter = null; this.qteAjouter = 1;
+    this.pieceAjouter = null;
+    this.qteAjouter = 1;
   }
 
   removePiece(idx: number) { this.lignesPieces.splice(idx, 1); }
