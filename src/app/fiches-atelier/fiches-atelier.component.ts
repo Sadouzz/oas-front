@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, HostListener, ElementRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
-import { NgClass, NgStyle } from '@angular/common';
+import { CommonModule, NgClass, NgStyle } from '@angular/common';
 import { forkJoin } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Subject } from 'rxjs';
@@ -12,6 +12,7 @@ import { MainDoeuvreService, MainDoeuvreModel } from '../services/main-doeuvre.s
 import { BonDeSortieService } from '../services/bon-de-sortie.service';
 import { BonDeCommandeService, BonDeCommandeRequest } from '../services/bon-de-commande.service';
 import { ProformaService } from '../services/proforma.service';
+import { FactureService } from '../services/facture.service';
 import { FournisseurService, FournisseurModel } from '../services/fournisseur.service';
 import { ClientService, UserModel } from '../services/client.service';
 import { AlertComponent } from '../shared/components/alert/alert.component';
@@ -87,7 +88,7 @@ const STATUT_STEPS: { statut: StatutReparation; label: string }[] = [
 @Component({
   selector: 'app-fiches-atelier',
   standalone: true,
-  imports: [ReactiveFormsModule, FormsModule, NgClass, NgStyle, AlertComponent, PaginationComponent, SearchableSelectComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, NgClass, NgStyle, AlertComponent, PaginationComponent, SearchableSelectComponent],
   templateUrl: './fiches-atelier.component.html',
 })
 export class FichesAtelierComponent implements OnInit {
@@ -99,6 +100,7 @@ export class FichesAtelierComponent implements OnInit {
   private bdcService      = inject(BonDeCommandeService);
   private bdsService      = inject(BonDeSortieService);
   private proformaService = inject(ProformaService);
+  private factureService  = inject(FactureService);
   private fournisseurSvc  = inject(FournisseurService);
   private clientService   = inject(ClientService);
   private fb              = inject(FormBuilder);
@@ -282,6 +284,19 @@ export class FichesAtelierComponent implements OnInit {
 
   // ─── Bon de Sortie ─────────────────────────────────────
   bdsCreating = false;
+
+  // Track invoice creation from this fiche
+  invoiceCreated = false;
+  createdFacture: any = null;
+
+  // Expose a safe proforma accessor for template (selectedFiche may not include proforma in the model)
+  get selectedFicheProforma(): any | null {
+    // prefer explicit proforma attached to the selected fiche, else fallback to the one fetched via service
+    try {
+      const pf = (this.selectedFiche as any)?.proforma;
+      return pf ?? this.currentProforma ?? null;
+    } catch (e) { return this.currentProforma ?? null; }
+  }
 
   get editingFicheStatus(): string | null {
     const f = this.fiches.find(x => x.id === this.editingId);
@@ -488,6 +503,13 @@ export class FichesAtelierComponent implements OnInit {
     }
     this.selectedMecs = f.mecaniciens.map(m => m.id);
     this.showWorkflow = true;
+    // Try to fetch any existing proforma attached to this fiche atelier
+    try {
+      this.proformaService.getByFicheAtelierId(f.id).subscribe({
+        next: (p) => { this.currentProforma = p; },
+        error: () => { /* ignore if none or endpoint not available */ }
+      });
+    } catch (e) { /* ignore */ }
   }
 
   private resetForms() {
@@ -776,6 +798,50 @@ export class FichesAtelierComponent implements OnInit {
         cb();
       }
     });
+  }
+
+  // ─── Création de facture depuis la fiche atelier ─────────────────
+  createFactureFromFiche() {
+    if (!this.editingId) { this.notifyError('Fiche non sélectionnée.'); return; }
+    const fiche = this.fiches.find(x => x.id === this.editingId);
+    if (!fiche) { this.notifyError('Fiche introuvable.'); return; }
+    const vehId = fiche.vehicule?.id;
+    const clientId = fiche.vehicule?.client?.id;
+    if (!clientId || !vehId) { this.notifyError('Données client ou véhicule manquantes sur cette fiche.'); return; }
+
+    const payload = {
+      clientId: Number(clientId),
+      vehiculeId: Number(vehId),
+      ficheAtelierId: Number(this.editingId),
+      appliquerTVA: true,
+      appliquerTimbre: true,
+      modePaiement: 'ESPECE'
+    };
+
+    this.saving = true;
+    // use FactureService.create
+    try {
+      this.factureService.create(payload).subscribe({
+        next: (res: any) => {
+          this.saving = false;
+          this.invoiceCreated = true;
+          this.createdFacture = res;
+          this.notify('Facture créée depuis la fiche atelier.');
+          // refresh lists
+          this.load();
+          // advance to next step to reflect payment/validation
+          try { this.nextStep(); } catch (e) { this.currentStep = Math.min(this.currentStep + 1, this.maxStep); }
+        },
+        error: (err: any) => {
+          this.saving = false;
+          const msg = err?.error?.message || 'Erreur lors de la création de la facture.';
+          this.notifyError(msg);
+        }
+      });
+    } catch (e) {
+      this.saving = false;
+      this.notifyError('Impossible de créer la facture : service indisponible.');
+    }
   }
 
   // ─── Création Client inline ───────────────────────────
