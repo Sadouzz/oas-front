@@ -18,7 +18,9 @@
       </button>
     </div>
 
-    <app-alert [success]="successMessage" [error]="errorMessage" />
+    @if (!showWorkflow) {
+      <app-alert [success]="successMessage" [error]="errorMessage" />
+    }
 
     <!-- Filtres -->
     <div class="bg-white rounded-2xl border border-oas-line p-3 shadow-sm">
@@ -148,10 +150,19 @@
     </div>
 
     <!-- ── Panneau détail ──────────────────────────────────── -->
-    @if (selectedFiche) {
+    @if (selectedFiche || detailLoading) {
       <div class="w-[360px] flex-shrink-0 bg-white rounded-2xl border border-oas-line shadow-sm flex flex-col overflow-hidden sticky top-6 max-h-[calc(100vh-2rem)]">
 
-        <div class="px-5 py-4 border-b border-oas-line flex items-start justify-between">
+        @if (detailLoading) {
+          <div class="p-12 flex flex-col items-center justify-center h-full text-oas-muted min-h-[300px]">
+            <svg class="w-8 h-8 animate-spin text-oas-accent mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="text-sm font-semibold">Chargement des détails...</p>
+          </div>
+        } @else if (selectedFiche) {
+          <div class="px-5 py-4 border-b border-oas-line flex items-start justify-between">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm text-white flex-shrink-0"
                [ngStyle]="{'background': statutColor(selectedFiche.statut)}">
@@ -240,7 +251,7 @@
           </div>
         }
 
-        @if (selectedFiche.mecaniciens.length) {
+        @if (selectedFiche.mecaniciens && selectedFiche.mecaniciens.length) {
           <div>
             <p class="text-xs font-bold text-oas-ink mb-2">Mécaniciens</p>
             <div class="flex flex-wrap gap-1.5">
@@ -305,6 +316,25 @@
           </div>
         }
 
+        <!-- Show linked Facture number if available -->
+        @if (createdFacture) {
+          <div class="bg-oas-bg rounded-xl p-3 border border-oas-line">
+            <p class="text-xs font-bold text-oas-ink mb-1">Facture liée</p>
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-semibold">{{ createdFacture.numero }}</p>
+                <p class="text-xs text-oas-muted">Reste à payer: {{ formatPrice(createdFacture.resteAPayer || 0) }}</p>
+              </div>
+              <div>
+                <span class="px-2 py-1 rounded text-[10px] font-bold"
+                      [ngClass]="(createdFacture.resteAPayer || 0) <= 0 ? 'bg-oas-ok/20 text-oas-ok' : 'bg-amber-100 text-amber-700'">
+                  {{ (createdFacture.resteAPayer || 0) <= 0 ? 'Payée' : 'En attente' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        }
+
         <div class="flex gap-2 pt-1">
           <button (click)="openEdit(selectedFiche)"
                   class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold bg-oas-accent text-white hover:bg-oas-accent-dark transition cursor-pointer">
@@ -319,18 +349,19 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
             </svg>
           </button>
-          <button *ngIf="editingFicheStatus === 'EN_ATTENTE_PAIEMENT' || currentStep === 8" (click)="createFactureFromFiche()"
+          <!-- <button *ngIf="editingFicheStatus === 'EN_ATTENTE_PAIEMENT' || currentStep === 8" (click)="createFactureFromFiche()"
                   class="flex items-center justify-center px-3 py-2.5 rounded-xl bg-amber-500 text-white text-xs font-bold hover:bg-amber-600 transition cursor-pointer">
             Générer facture
-          </button>
+          </button> -->
         </div>
 
-      </div>
-    </div>
-  }
+      </div> <!-- closes flex-1 -->
+    } <!-- closes @else if -->
+  </div> <!-- closes w-[360px] -->
+} <!-- closes @if -->
 
-  </div>
-</div>
+  </div> <!-- closes layout flex row -->
+</div> <!-- closes outer page container -->
 <!-- ═══════════════════════════════════════════════════════════ -->
 <!--  MODAL WORKFLOW                                             -->
 <!-- ═══════════════════════════════════════════════════════════ -->
@@ -395,6 +426,8 @@
 
       <!-- Contenu étapes -->
       <div class="flex-1 overflow-y-auto px-6 py-5">
+        
+        <app-alert [success]="successMessage" [error]="errorMessage" />
 
         <!-- ═════════════════════════════════════════════ -->
         <!-- ÉTAPE 1 — RÉCEPTION                          -->
@@ -872,8 +905,9 @@
               </div>
             </div>
             
-            <button (click)="advanceToApprov()"
-                    class="w-full py-3 rounded-xl font-bold text-sm bg-purple-500 hover:bg-purple-600 text-white shadow-lg transition cursor-pointer">
+            <button (click)="validerProforma()" [disabled]="proformaSaving"
+                    class="w-full py-3 rounded-xl font-bold text-sm bg-purple-500 hover:bg-purple-600 text-white shadow-lg transition cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2">
+              @if (proformaSaving) { <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> }
               Valider la proforma et passer à l'approvisionnement
             </button>
           </div>
@@ -940,8 +974,13 @@
             } @else if (allPiecesDisponibles || lignesPieces.length === 0) {
               <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-emerald-800 text-sm">
                 <p class="font-bold">✓ Toutes les pièces sont disponibles</p>
-                <p class="text-xs mt-1">Passez à l'étape suivante pour créer le bon de sortie et démarrer la réparation.</p>
+                <p class="text-xs mt-1">Passez à l'étape suivante pour créer le bon de sortie et affecter les mécaniciens.</p>
               </div>
+              <button (click)="currentStep = 6"
+                      class="w-full mt-4 py-3 rounded-xl font-bold text-sm bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg transition cursor-pointer flex items-center justify-center gap-2">
+                Continuer vers l'affectation
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+              </button>
             }
           </div>
         }
@@ -968,6 +1007,10 @@
                 <p class="font-bold text-base mb-1">Bon de sortie en attente de validation</p>
                 <p>Le bon de sortie a été créé avec succès et est en attente de validation par le magasinier. Veuillez vous rendre dans l'onglet « Bons de Sortie » pour le valider.</p>
                 <p class="mt-2 text-xs opacity-80">La réparation commencera automatiquement dès que le bon sera validé.</p>
+                <button (click)="checkBonDeSortieValid()" [disabled]="saving" class="mt-3 px-4 py-2 bg-emerald-500 text-white font-bold rounded-lg hover:bg-emerald-600 transition disabled:opacity-60 flex items-center justify-center gap-2">
+                  @if (saving) { <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> }
+                  Vérifier le statut
+                </button>
               </div>
             } @else {
               <!-- Date estimée de sortie (déplacé ici) -->

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, HostListener, ElementRef } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, HostListener, ElementRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { CommonModule, NgClass, NgStyle } from '@angular/common';
 import { forkJoin } from 'rxjs';
@@ -91,7 +91,7 @@ const STATUT_STEPS: { statut: StatutReparation; label: string }[] = [
   imports: [CommonModule, ReactiveFormsModule, FormsModule, NgClass, NgStyle, AlertComponent, PaginationComponent, SearchableSelectComponent],
   templateUrl: './fiches-atelier.component.html',
 })
-export class FichesAtelierComponent implements OnInit {
+export class FichesAtelierComponent implements OnInit, OnDestroy {
   private service         = inject(FicheAtelierService);
   private vehiculeService = inject(VehiculeService);
   private mecService      = inject(MecanicienService);
@@ -127,9 +127,12 @@ export class FichesAtelierComponent implements OnInit {
   showWorkflow = false;
   isNew = true;
   editingId: number | null = null;
+  editingFicheStatus: string | null = null;
   currentStep = 1;
   saving = false;
+  detailLoading = false;
   statutSteps = STATUT_STEPS;
+  pollInterval: any;
 
   // ─── Constantes Checkboxes ────────────────────────────
   travauxFrequents = TRAVAUX_FREQUENTS;
@@ -351,17 +354,23 @@ export class FichesAtelierComponent implements OnInit {
     this.nextStep();
   }
 
-  get editingFicheStatus(): string | null {
-    const f = this.fiches.find(x => x.id === this.editingId);
-    return f ? f.statut : null;
-  }
-
   ngOnInit() {
     this.load();
-    this.loadReferentiels();
   }
 
-  private loadReferentiels() {
+  ngOnDestroy() {
+    if (this.pollInterval) {
+      clearInterval(this.pollInterval);
+    }
+  }
+
+  private referentielsLoaded = false;
+  private loadReferentiels(callback: () => void) {
+    if (this.referentielsLoaded) {
+      callback();
+      return;
+    }
+    this.loading = true;
     forkJoin({
       vehicules:    this.vehiculeService.getAll(),
       mecaniciens:  this.mecService.getAll(),
@@ -377,7 +386,14 @@ export class FichesAtelierComponent implements OnInit {
         this.allMO          = mo.filter(m => !m.isArchived);
         this.fournisseurs   = fournisseurs.filter(f => !f.archived);
         this.allClients     = clients;
+        this.referentielsLoaded = true;
+        this.loading = false;
+        callback();
       },
+      error: () => {
+        this.loading = false;
+        this.notifyError('Erreur de chargement des référentiels');
+      }
     });
   }
 
@@ -476,116 +492,129 @@ export class FichesAtelierComponent implements OnInit {
 
   // ─── Ouverture Workflow ───────────────────────────────
   openNew() {
-    this.isNew       = true;
-    this.editingId   = null;
-    this.currentStep = 1;
-    this.resetForms();
-    this.showWorkflow = true;
+    this.loadReferentiels(() => {
+      this.isNew       = true;
+      this.editingId   = null;
+      this.currentStep = 1;
+      this.resetForms();
+      this.showWorkflow = true;
+    });
   }
 
   openEdit(f: FicheAtelier) {
+    this.loadReferentiels(() => {
+      if (this.pollInterval) clearInterval(this.pollInterval);
+      this.pollInterval = setInterval(() => { this.pollStatus(); }, 7000);
+
+    const isSame = this.editingId === f.id;
     this.isNew     = false;
     this.editingId = f.id;
-    this.currentStep = this.statutToStep(f.statut);
-    this.step1Form.patchValue({
-      numero:             f.numero,
-      vehiculeId:         f.vehicule?.id ?? null,
-      listeReception:     f.listeReception ?? '',
-      descriptionTravaux: f.descriptionTravaux,
-    });
-
-    // Décomposer les checkboxes depuis les textes existants
-    const travauxDecomp = this.decomposeToCheckboxes(f.descriptionTravaux, TRAVAUX_FREQUENTS);
-    this.selectedTravaux = travauxDecomp.selected;
-    this.autreTravaux = travauxDecomp.autre;
-    this.showAutreTravaux = this.autreTravaux.length > 0;
-
-    const receptionDecomp = this.decomposeToCheckboxes(f.listeReception ?? '', ELEMENTS_RECUS_FREQUENTS);
-    this.selectedReception = receptionDecomp.selected;
-    this.autreReception = receptionDecomp.autre;
-    this.showAutreReception = this.autreReception.length > 0;
-
-    const pannesDecomp = this.decomposeToCheckboxes(f.listeDefauts ?? '', PANNES_FREQUENTES);
-    this.selectedPannes = pannesDecomp.selected;
-    this.autrePannes = pannesDecomp.autre;
-    this.showAutrePannes = this.autrePannes.length > 0;
-
-    this.step2Form.patchValue({
-      listeDefauts: f.listeDefauts ?? '',
-    });
-
-    this.dateSortieEstimee = f.dateSortie ? f.dateSortie.substring(0, 10) : '';
+    this.editingFicheStatus = f.statut;
+    const trueStep = this.statutToStep(f.statut);
     
-    // Reconstituer les lignes pièces depuis la fiche atelier
-    this.lignesPieces = (f.lignesFicheAtelierPieces || [])
-      .map((lp: any) => {
-        const piece = this.allPieces.find(pp => pp.id === lp.piece?.id);
-        if (!piece) return null;
-        const stockAtelier = piece.stockAtelier ?? 0;
-        const stockMagasin = piece.stockMagasin ?? 0;
-        const manquantAtelier = Math.max(0, lp.quantite - stockAtelier);
-        const aSortirMagasin = Math.min(manquantAtelier, stockMagasin);
-        const manquantGlobal = Math.max(0, manquantAtelier - stockMagasin);
-        
-        return { 
-          piece, 
-          quantite: lp.quantite, 
-          stockDisponible: stockAtelier + stockMagasin, 
-          manquant: manquantGlobal,
-          aSortirMagasin: aSortirMagasin,
-          stockAtelier: stockAtelier
-        } as LignePiece;
-      })
-      .filter((l: any) => l !== null) as LignePiece[];
-
-    // Reconstituer les lignes MO depuis la fiche atelier
-    this.lignesMO = (f.lignesFicheAtelierMainDoeuvres || [])
-      .map((lmd: any) => {
-        const mo = this.allMO.find(m => m.id === lmd.mainDoeuvre?.id);
-        if (!mo) return null;
-        return { mo, quantite: lmd.nbreHeure };
-      })
-      .filter((l: any): l is LigneMO => l !== null);
-
-    if (f.vehicule) {
-      const v = this.vehicules.find(vv => vv.id === f.vehicule!.id);
-      if (v) {
-        this.selectedVehicule = v;
-        this.vehiculeSearch   = v.immatriculation + ' — ' + v.marque + ' ' + v.modele;
-      }
+    if (!isSame || trueStep > this.currentStep) {
+      this.currentStep = trueStep;
     }
-    this.selectedMecs = f.mecaniciens.map(m => m.id);
-    this.showWorkflow = true;
-    // Try to fetch any existing proforma attached to this fiche atelier and any facture linked to it
-    this.proformaChargee = null;
-    this.invoiceCreated = false;
-    this.createdFacture = null;
-    try {
-      this.proformaService.getByFicheAtelierId(f.id).subscribe({
-        next: (p) => { this.proformaChargee = p; },
-        error: () => { this.proformaChargee = null; }
-      });
-    } catch (e) { this.proformaChargee = null; }
 
-    // Fetch invoices and try to find one linked to this fiche atelier
-    try {
-      this.factureService.getAll().subscribe({
-        next: (list: any[]) => {
-          if (!list || !list.length) return;
-          const inv = list.find(it => (it.ficheAtelierId && it.ficheAtelierId === f.id) || (it.ficheAtelier && it.ficheAtelier.id === f.id));
-          if (inv) {
-            this.createdFacture = inv;
-            // mark as created so UI hides generation buttons
-            this.invoiceCreated = true;
-            // if invoice is paid or fully settled, ensure canNext will allow progression
-            if (inv.statutPaiement === 'PAYE' || inv.statutPaiement === 'SOLDEE' || (inv.resteAPayer != null && Number(inv.resteAPayer) <= 0)) {
-              // nothing else to do — canNext() uses createdFacture to allow next
-            }
-          }
-        },
-        error: () => { /* ignore */ }
+    if (!isSame) {
+      this.resetForms();
+      this.step1Form.patchValue({
+        numero:             f.numero,
+        vehiculeId:         f.vehicule?.id ?? null,
+        listeReception:     f.listeReception ?? '',
+        descriptionTravaux: f.descriptionTravaux,
       });
-    } catch (e) { /* ignore */ }
+
+      // Décomposer les checkboxes depuis les textes existants
+      const travauxDecomp = this.decomposeToCheckboxes(f.descriptionTravaux, TRAVAUX_FREQUENTS);
+      this.selectedTravaux = travauxDecomp.selected;
+      this.autreTravaux = travauxDecomp.autre;
+      this.showAutreTravaux = this.autreTravaux.length > 0;
+
+      const receptionDecomp = this.decomposeToCheckboxes(f.listeReception ?? '', ELEMENTS_RECUS_FREQUENTS);
+      this.selectedReception = receptionDecomp.selected;
+      this.autreReception = receptionDecomp.autre;
+      this.showAutreReception = this.autreReception.length > 0;
+
+      const pannesDecomp = this.decomposeToCheckboxes(f.listeDefauts ?? '', PANNES_FREQUENTES);
+      this.selectedPannes = pannesDecomp.selected;
+      this.autrePannes = pannesDecomp.autre;
+      this.showAutrePannes = this.autrePannes.length > 0;
+
+      this.step2Form.patchValue({
+        listeDefauts: f.listeDefauts ?? '',
+      });
+
+      this.dateSortieEstimee = f.dateSortie ? f.dateSortie.substring(0, 10) : '';
+      
+      // Reconstituer les lignes pièces depuis la fiche atelier
+      this.lignesPieces = (f.lignesFicheAtelierPieces || [])
+        .map((lp: any) => {
+          const piece = this.allPieces.find(pp => pp.id === lp.piece?.id);
+          if (!piece) return null;
+          const stockAtelier = piece.stockAtelier ?? 0;
+          const stockMagasin = piece.stockMagasin ?? 0;
+          const manquantAtelier = Math.max(0, lp.quantite - stockAtelier);
+          const aSortirMagasin = Math.min(manquantAtelier, stockMagasin);
+          const manquantGlobal = Math.max(0, manquantAtelier - stockMagasin);
+          
+          return { 
+            piece, 
+            quantite: lp.quantite, 
+            stockDisponible: stockAtelier + stockMagasin, 
+            manquant: manquantGlobal,
+            aSortirMagasin: aSortirMagasin,
+            stockAtelier: stockAtelier
+          } as LignePiece;
+        })
+        .filter((l: any) => l !== null) as LignePiece[];
+
+      // Reconstituer les lignes MO depuis la fiche atelier
+      this.lignesMO = (f.lignesFicheAtelierMainDoeuvres || [])
+        .map((lmd: any) => {
+          const mo = this.allMO.find(m => m.id === lmd.mainDoeuvre?.id);
+          if (!mo) return null;
+          return { mo, quantite: lmd.nbreHeure };
+        })
+        .filter((l: any): l is LigneMO => l !== null);
+
+      if (f.vehicule) {
+        const v = this.vehicules.find(vv => vv.id === f.vehicule!.id);
+        if (v) {
+          this.selectedVehicule = v;
+          this.vehiculeSearch   = v.immatriculation + ' — ' + v.marque + ' ' + v.modele;
+        }
+      }
+      this.selectedMecs = f.mecaniciens.map(m => m.id);
+    }
+    
+    this.showWorkflow = true;
+      // Try to fetch any existing proforma attached to this fiche atelier and any facture linked to it
+      this.proformaChargee = null;
+      this.invoiceCreated = false;
+      this.createdFacture = null;
+      try {
+        this.proformaService.getByFicheAtelierId(f.id).subscribe({
+          next: (p) => { this.proformaChargee = p; },
+          error: () => { this.proformaChargee = null; }
+        });
+      } catch (e) { this.proformaChargee = null; }
+
+      // Fetch invoices and try to find one linked to this fiche atelier
+      try {
+        this.factureService.getAll().subscribe({
+          next: (list: any[]) => {
+            if (!list || !list.length) return;
+            const inv = list.find(it => (it.ficheAtelierId && it.ficheAtelierId === f.id) || (it.ficheAtelier && it.ficheAtelier.id === f.id));
+            if (inv) {
+              this.createdFacture = inv;
+              this.invoiceCreated = true;
+            }
+          },
+          error: () => { /* ignore */ }
+        });
+      } catch (e) { /* ignore */ }
+    });
   }
 
   private resetForms() {
@@ -617,8 +646,26 @@ export class FichesAtelierComponent implements OnInit {
   }
 
   closeWorkflow() {
+    if (this.pollInterval) clearInterval(this.pollInterval);
     this.showWorkflow = false;
     this.showBDCModal = false;
+  }
+
+  pollStatus() {
+    if (!this.editingId || !this.showWorkflow) return;
+    this.service.getById(this.editingId).subscribe({
+      next: (f: FicheAtelier) => {
+        if (f.statut !== this.editingFicheStatus) {
+           this.editingFicheStatus = f.statut;
+           const trueStep = this.statutToStep(f.statut);
+           if (trueStep > this.currentStep) {
+             this.currentStep = trueStep;
+             this.notify('Le statut de la fiche a été mis à jour en arrière-plan.');
+             this.load();
+           }
+        }
+      }
+    });
   }
 
   // ─── Étapes : max steps selon mode ───────────────────
@@ -772,7 +819,16 @@ export class FichesAtelierComponent implements OnInit {
     }).subscribe({
       next: () => {
         this.proformaSaving = false;
-        this.notify('Pièces et main d\'œuvre enregistrées dans la fiche atelier.');
+        this.proformaService.getByFicheAtelierId(this.editingId!).subscribe({
+          next: (p: any) => {
+            this.proformaChargee = p;
+            const num = p.numero || p.code || ('DK-' + p.id);
+            this.notify(`Pièces et main d'œuvre enregistrées. Proforma ${num} généré.`);
+          },
+          error: () => {
+            this.notify('Pièces et main d\'œuvre enregistrées dans la fiche atelier.');
+          }
+        });
         this.currentStep = 4; // PROFORMA_VALIDE validation step
         this.load();
       },
@@ -784,9 +840,20 @@ export class FichesAtelierComponent implements OnInit {
   }
 
   validerProforma() {
-    // Legacy function, skip
-    this.currentStep = 4;
-    this.load();
+    if (!this.proformaChargee) { this.notifyError("Aucun proforma à valider."); return; }
+    this.proformaSaving = true;
+    this.proformaService.valider(this.proformaChargee.id).subscribe({
+      next: () => {
+         this.proformaSaving = false;
+         this.notify('Proforma validé par le client.');
+         this.currentStep = 4;
+         this.load();
+      },
+      error: (err) => {
+         this.proformaSaving = false;
+         this.notifyError('Erreur lors de la validation du proforma.');
+      }
+    });
   }
 
   advanceToApprov() {
@@ -868,6 +935,25 @@ export class FichesAtelierComponent implements OnInit {
     this.advanceStatutTo('EN_COURS', () => {
       this.currentStep = 7;
       this.load();
+    });
+  }
+
+  checkBonDeSortieValid() {
+    if (!this.editingId) return;
+    this.saving = true;
+    this.service.getById(this.editingId).subscribe({
+      next: (f: FicheAtelier) => {
+        this.saving = false;
+        if (f.statut !== 'EN_ATTENTE_SORTIE') {
+           this.editingFicheStatus = f.statut;
+           this.currentStep = this.statutToStep(f.statut);
+           this.notify('Le statut a été mis à jour.');
+           this.load();
+        } else {
+           this.notifyError('Le bon de sortie n\'est toujours pas validé par le magasinier.');
+        }
+      },
+      error: () => { this.saving = false; this.notifyError('Impossible de vérifier le statut.'); }
     });
   }
 
@@ -1142,7 +1228,24 @@ export class FichesAtelierComponent implements OnInit {
   }
 
   // ─── Panneau détail ───────────────────────────────────
-  selectFiche(f: FicheAtelier) { this.selectedFiche = f === this.selectedFiche ? null : f; }
+  selectFiche(f: FicheAtelier) {
+    if (this.selectedFiche && this.selectedFiche.id === f.id) {
+      this.selectedFiche = null;
+      return;
+    }
+    this.detailLoading = true;
+    this.selectedFiche = null; // Hide current while loading
+    this.service.getById(f.id).subscribe({
+      next: (fullFiche: FicheAtelier) => {
+        this.selectedFiche = fullFiche;
+        this.detailLoading = false;
+      },
+      error: () => {
+        this.detailLoading = false;
+        this.notifyError('Erreur de chargement des détails de la fiche');
+      }
+    });
+  }
   closeDetail() { this.selectedFiche = null; }
 
   ficheInitials(f: FicheAtelier): string {

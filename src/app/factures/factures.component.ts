@@ -108,13 +108,15 @@ export class FacturesComponent implements OnInit {
   // ── Wizard ─────────────────────────────────────────────────────
 
   openCreate() {
-    this.form.reset({ remarque: '', appliquerTVA: false, appliquerTimbre: false, modePaiement: 'ESPECE' });
-    this.vehiculesFiltres = [];
+    if (!this.form.get('clientId')?.value) {
+      this.form.reset({ remarque: '', appliquerTVA: false, appliquerTimbre: false, modePaiement: 'ESPECE' });
+      this.vehiculesFiltres = [];
+      this.clientFilter = '';
+      this.vehiculeFilter = '';
+      this.createStep = 1;
+    }
     this.clientOpen = false;
     this.vehiculeOpen = false;
-    this.clientFilter = '';
-    this.vehiculeFilter = '';
-    this.createStep = 1;
     this.errorMessage = '';
     this.showCreateModal = true;
   }
@@ -122,7 +124,6 @@ export class FacturesComponent implements OnInit {
   closeCreate() {
     this.showCreateModal = false;
     this.errorMessage = '';
-    this.createStep = 1;
   }
 
   goStep(n: number) {
@@ -242,11 +243,13 @@ export class FacturesComponent implements OnInit {
     };
 
     this.service.create(request).subscribe({
-      next: () => {
+      next: (res: any) => {
         this.saving = false;
         this.closeCreate();
+        this.form.reset({ remarque: '', appliquerTVA: false, appliquerTimbre: false, modePaiement: 'ESPECE' });
+        this.createStep = 1;
         this.load();
-        this.notify('Facture créée avec succès !');
+        this.notify('Facture ' + res.numero + ' créée avec succès !');
       },
       error: (err: any) => {
         this.saving = false;
