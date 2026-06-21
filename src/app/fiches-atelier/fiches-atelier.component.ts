@@ -1064,7 +1064,14 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
   private advanceStatutTo(statut: StatutFiche, cb: () => void) {
     if (!this.editingId) { cb(); return; }
     this.service.updateStatut(this.editingId, statut).subscribe({
-      next: () => cb(),
+      next: (f) => {
+        if (f && f.statut) {
+          this.editingFicheStatus = f.statut;
+        } else {
+          this.editingFicheStatus = statut;
+        }
+        cb();
+      },
       error: (err) => {
         console.error('PATCH STATUT ERROR:', err);
         cb();
@@ -1315,11 +1322,12 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     this.bdcSaving = true;
     this.bdcService.create(payload).subscribe({
       next: () => {
-        this.bdcSaving = false;
         this.showBDCModal = false;
         this.notify('Bon de commande créé en attente. Allez dans « Bons de commande » pour assigner un fournisseur.');
         this.advanceStatutTo('EN_ATTENTE_COMMANDE', () => {
+          this.editingFicheStatus = 'EN_ATTENTE_COMMANDE';
           this.currentStep = 5;
+          this.bdcSaving = false;
           this.load();
         });
       },

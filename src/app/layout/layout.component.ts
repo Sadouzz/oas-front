@@ -31,6 +31,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
   private notificationService = inject(AgentNotificationService);
   private router = inject(Router);
   private routerSub?: Subscription;
+  private notificationInterval: any;
 
   openSection: string | null = null;
   notificationsOpen = false;
@@ -116,6 +117,14 @@ export class LayoutComponent implements OnInit, OnDestroy {
       .subscribe((e: any) => this.syncSection(e.url));
       
     this.loadNotifications();
+    this.notificationInterval = setInterval(() => {
+      this.loadNotifications();
+    }, 10000);
+  }
+
+  ngOnDestroy() {
+    if (this.routerSub) this.routerSub.unsubscribe();
+    if (this.notificationInterval) clearInterval(this.notificationInterval);
   }
 
   loadNotifications() {
@@ -147,8 +156,6 @@ export class LayoutComponent implements OnInit, OnDestroy {
       }
     });
   }
-
-  ngOnDestroy() { this.routerSub?.unsubscribe(); }
 
   private syncSection(url: string) {
     if (['/bons-de-sortie', '/pieces-detachees', '/stock', '/inventaire'].some(p => url.startsWith(p))) {
