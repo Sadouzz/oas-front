@@ -2,9 +2,9 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { FicheAtelier, FicheAtelierRequest, StatutReparation } from '../shared/models';
+import { FicheAtelier, FicheAtelierRequest, StatutFiche } from '../shared/models';
 
-export type { FicheAtelier, FicheAtelierRequest, StatutReparation };
+export type { FicheAtelier, FicheAtelierRequest, StatutFiche };
 
 @Injectable({ providedIn: 'root' })
 export class FicheAtelierService {
@@ -39,7 +39,15 @@ export class FicheAtelierService {
     return this.http.delete(`${this.api}/${ficheId}/mecaniciens/${mecId}`, { responseType: 'text' as 'json' });
   }
 
-  updateStatut(ficheId: number, statut: StatutReparation): Observable<FicheAtelier> {
+  assignMecanicienReparation(ficheId: number, mecId: number): Observable<any> {
+    return this.http.post(`${this.api}/${ficheId}/mecaniciens-reparation/${mecId}`, {}, { responseType: 'text' as 'json' });
+  }
+
+  removeMecanicienReparation(ficheId: number, mecId: number): Observable<any> {
+    return this.http.delete(`${this.api}/${ficheId}/mecaniciens-reparation/${mecId}`, { responseType: 'text' as 'json' });
+  }
+
+  updateStatut(ficheId: number, statut: StatutFiche): Observable<FicheAtelier> {
     return this.http.patch<FicheAtelier>(`${this.api}/${ficheId}/statut`, null, { params: { statut } });
   }
 }

@@ -27,6 +27,7 @@ export class BonDeSortieService {
     return this.http.post<BonDeSortie>(`${this.api}/creer`, {
       clientId: data.clientId,
       vehiculeId: data.vehiculeId,
+      ficheAtelierId: data.ficheAtelierId,
       lignesPieces: data.lignesPieces,
       remarque: data.remarque,
     });

@@ -4,7 +4,7 @@ import { CommonModule, NgClass, NgStyle } from '@angular/common';
 import { forkJoin } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Subject } from 'rxjs';
-import { FicheAtelierService, FicheAtelier, StatutReparation } from '../services/fiche-atelier.service';
+import { FicheAtelierService, FicheAtelier, StatutFiche } from '../services/fiche-atelier.service';
 import { VehiculeService, VehiculeModel } from '../services/vehicule.service';
 import { MecanicienService, Mecanicien } from '../services/mecanicien.service';
 import { PieceDetacheeService, PieceDetache } from '../services/piece-detachee.service';
@@ -72,17 +72,18 @@ export const PANNES_FREQUENTES = [
   'Jeu dans la direction',
 ];
 
-const STATUT_STEPS: { statut: StatutReparation; label: string }[] = [
-  { statut: 'A_FAIRE',             label: 'Réception'   },
-  { statut: 'EN_DIAGNOSTIC',       label: 'Diagnostic'  },
+const STATUT_STEPS: { statut: StatutFiche; label: string }[] = [
+  { statut: 'A_FAIRE', label: 'Réception' },
+  { statut: 'EN_DIAGNOSTIC', label: 'Diagnostic' },
   { statut: 'EN_ATTENTE_PROFORMA', label: 'Pièces & MO' },
-  { statut: 'PROFORMA_VALIDE',     label: 'Proforma'    },
-  { statut: 'EN_ATTENTE_COMMANDE', label: 'Approv.'     },
-  { statut: 'EN_ATTENTE_SORTIE',   label: 'Attente BS'  },
-  { statut: 'EN_COURS',            label: 'Réparation'  },
-  { statut: 'EN_ATTENTE_PAIEMENT', label: 'Paiement'    },
-  { statut: 'TERMINE',             label: 'Prêt'        },
-  { statut: 'LIVRE',               label: 'Livraison'   },
+  { statut: 'PROFORMA_VALIDE', label: 'Proforma' },
+  { statut: 'EN_ATTENTE_COMMANDE', label: 'Approv.' },
+  { statut: 'EN_ATTENTE_SORTIE', label: 'Attente BS' },
+  { statut: 'EN_ATTENTE_MECANICIEN', label: 'Assign. Méc.' },
+  { statut: 'EN_COURS', label: 'Réparation' },
+  { statut: 'EN_ATTENTE_PAIEMENT', label: 'Paiement' },
+  { statut: 'TERMINE', label: 'Prêt' },
+  { statut: 'LIVRE', label: 'Livré' },
 ];
 
 @Component({
@@ -92,21 +93,22 @@ const STATUT_STEPS: { statut: StatutReparation; label: string }[] = [
   templateUrl: './fiches-atelier.component.html',
 })
 export class FichesAtelierComponent implements OnInit, OnDestroy {
-  private service         = inject(FicheAtelierService);
+  private service = inject(FicheAtelierService);
   private vehiculeService = inject(VehiculeService);
-  private mecService      = inject(MecanicienService);
-  private pieceService    = inject(PieceDetacheeService);
-  private moService       = inject(MainDoeuvreService);
-  private bdcService      = inject(BonDeCommandeService);
-  private bdsService      = inject(BonDeSortieService);
+  private mecService = inject(MecanicienService);
+  private pieceService = inject(PieceDetacheeService);
+  private moService = inject(MainDoeuvreService);
+  private bdcService = inject(BonDeCommandeService);
+  private bdsService = inject(BonDeSortieService);
   private proformaService = inject(ProformaService);
-  private factureService  = inject(FactureService);
-  private fournisseurSvc  = inject(FournisseurService);
-  private clientService   = inject(ClientService);
-  private fb              = inject(FormBuilder);
+  private factureService = inject(FactureService);
+  private fournisseurSvc = inject(FournisseurService);
+  private clientService = inject(ClientService);
+  private fb = inject(FormBuilder);
 
   // ─── Liste ───────────────────────────────────────────
   fiches: FicheAtelier[] = [];
+  loadedFiche: FicheAtelier | null = null;
   filtered: FicheAtelier[] = [];
   loading = true;
   page = 1;
@@ -154,9 +156,9 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
 
   // Étape 1 — Réception
   step1Form: FormGroup = this.fb.group({
-    numero:             [''],
-    vehiculeId:         [null, Validators.required],
-    listeReception:     [''],
+    numero: [''],
+    vehiculeId: [null, Validators.required],
+    listeReception: [''],
     descriptionTravaux: [''],
   });
 
@@ -190,14 +192,14 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
 
   selectVehicule(v: VehiculeModel) {
     this.selectedVehicule = v;
-    this.vehiculeSearch   = v.immatriculation + ' — ' + v.marque + ' ' + v.modele;
+    this.vehiculeSearch = v.immatriculation + ' — ' + v.marque + ' ' + v.modele;
     this.showVehiculeDropdown = false;
     this.step1Form.patchValue({ vehiculeId: v.id });
   }
 
   clearVehicule() {
     this.selectedVehicule = null;
-    this.vehiculeSearch   = '';
+    this.vehiculeSearch = '';
     this.showVehiculeDropdown = false;
     this.step1Form.patchValue({ vehiculeId: null });
   }
@@ -207,11 +209,11 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
   creatingClient = false;
   clientForm: FormGroup = this.fb.group({
     firstName: ['', Validators.required],
-    lastName:  ['', Validators.required],
-    phone:     ['', Validators.required],
-    email:     [''],
-    username:  ['', Validators.required],
-    password:  ['', Validators.required],
+    lastName: ['', Validators.required],
+    phone: ['', Validators.required],
+    email: [''],
+    username: ['', Validators.required],
+    password: ['', Validators.required],
     matricule: [''],
   });
 
@@ -220,12 +222,12 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
   creatingVehicule = false;
   vehiculeForm: FormGroup = this.fb.group({
     immatriculation: ['', Validators.required],
-    marque:          ['', Validators.required],
-    modele:          ['', Validators.required],
-    annee:           [null],
-    kilometrage:     [null, Validators.required],
-    numeroChassis:   [''],
-    clientId:        [null],
+    marque: ['', Validators.required],
+    modele: ['', Validators.required],
+    annee: [null],
+    kilometrage: [null, Validators.required],
+    numeroChassis: [''],
+    clientId: [null],
   });
   vehiculeClientSearch = '';
   showVehiculeClientDropdown = false;
@@ -240,8 +242,8 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     ).slice(0, 20);
   }
   selectClientForVehicule(c: UserModel) {
-    this.selectedVehiculeClient   = c;
-    this.vehiculeClientSearch     = c.firstName + ' ' + c.lastName;
+    this.selectedVehiculeClient = c;
+    this.vehiculeClientSearch = c.firstName + ' ' + c.lastName;
     this.showVehiculeClientDropdown = false;
     this.vehiculeForm.patchValue({ clientId: c.id });
   }
@@ -341,7 +343,7 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
   finishDiagnostic() {
     if (!this.diagnosticStarted) { this.notifyError('Démarrez d\'abord le diagnostic.'); return; }
     this.diagnosticFinished = true;
-    this.notify('Diagnostic terminé localement. Cliquez sur Suivant pour valider et enregistrer.');
+    this.saveStep2ThenGoNext();
   }
 
   handleNextForStep1Or2() {
@@ -372,20 +374,20 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     }
     this.loading = true;
     forkJoin({
-      vehicules:    this.vehiculeService.getAll(),
-      mecaniciens:  this.mecService.getAll(),
-      pieces:       this.pieceService.getAll(),
-      mo:           this.moService.getAll(),
+      vehicules: this.vehiculeService.getAll(),
+      mecaniciens: this.mecService.getAll(),
+      pieces: this.pieceService.getAll(),
+      mo: this.moService.getAll(),
       fournisseurs: this.fournisseurSvc.getAll(),
-      clients:      this.clientService.getAll(),
+      clients: this.clientService.getAll(),
     }).subscribe({
       next: ({ vehicules, mecaniciens, pieces, mo, fournisseurs, clients }) => {
-        this.vehicules      = vehicules;
+        this.vehicules = vehicules;
         this.allMecaniciens = mecaniciens;
-        this.allPieces      = pieces.filter(p => p.statut === 'ACTIF');
-        this.allMO          = mo.filter(m => !m.isArchived);
-        this.fournisseurs   = fournisseurs.filter(f => !f.archived);
-        this.allClients     = clients;
+        this.allPieces = pieces.filter(p => p.statut === 'ACTIF');
+        this.allMO = mo.filter(m => !m.isArchived);
+        this.fournisseurs = fournisseurs.filter(f => !f.archived);
+        this.allClients = clients;
         this.referentielsLoaded = true;
         this.loading = false;
         callback();
@@ -400,12 +402,19 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: (data) => { this.fiches = data.sort((a,b) => b.id - a.id); this.applyFilter(); this.loading = false;
+      next: (data) => {
+        this.fiches = data.sort((a, b) => b.id - a.id);
+        this.applyFilter();
+        this.loading = false;
+
         if (this.selectedFiche) {
           this.selectedFiche = data.find(f => f.id === this.selectedFiche!.id) ?? null;
+          if (this.selectedFiche) {
+            this.editingFicheStatus = this.selectedFiche.statut;
+          }
         }
       },
-      error: () => this.notifyError('Erreur de validation')
+      error: () => this.notifyError('Erreur de chargement')
     });
   }
 
@@ -493,8 +502,8 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
   // ─── Ouverture Workflow ───────────────────────────────
   openNew() {
     this.loadReferentiels(() => {
-      this.isNew       = true;
-      this.editingId   = null;
+      this.isNew = true;
+      this.editingId = null;
       this.currentStep = 1;
       this.resetForms();
       this.showWorkflow = true;
@@ -506,89 +515,118 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
       if (this.pollInterval) clearInterval(this.pollInterval);
       this.pollInterval = setInterval(() => { this.pollStatus(); }, 7000);
 
-    const isSame = this.editingId === f.id;
-    this.isNew     = false;
-    this.editingId = f.id;
-    this.editingFicheStatus = f.statut;
-    const trueStep = this.statutToStep(f.statut);
-    
-    if (!isSame || trueStep > this.currentStep) {
-      this.currentStep = trueStep;
-    }
+      const isSame = this.editingId === f.id;
+      this.isNew = false;
+      this.editingId = f.id;
+      this.editingFicheStatus = f.statut;
+      const trueStep = this.statutToStep(f.statut);
 
-    if (!isSame) {
-      this.resetForms();
-      this.step1Form.patchValue({
-        numero:             f.numero,
-        vehiculeId:         f.vehicule?.id ?? null,
-        listeReception:     f.listeReception ?? '',
-        descriptionTravaux: f.descriptionTravaux,
-      });
+      if (!isSame || trueStep > this.currentStep) {
+        this.currentStep = trueStep;
+      }
 
-      // Décomposer les checkboxes depuis les textes existants
-      const travauxDecomp = this.decomposeToCheckboxes(f.descriptionTravaux, TRAVAUX_FREQUENTS);
-      this.selectedTravaux = travauxDecomp.selected;
-      this.autreTravaux = travauxDecomp.autre;
-      this.showAutreTravaux = this.autreTravaux.length > 0;
+      if (!isSame) {
+        this.resetForms();
+        this.step1Form.patchValue({
+          numero: f.numero,
+          vehiculeId: f.vehicule?.id ?? null,
+          listeReception: f.listeReception ?? '',
+          descriptionTravaux: f.descriptionTravaux,
+        });
 
-      const receptionDecomp = this.decomposeToCheckboxes(f.listeReception ?? '', ELEMENTS_RECUS_FREQUENTS);
-      this.selectedReception = receptionDecomp.selected;
-      this.autreReception = receptionDecomp.autre;
-      this.showAutreReception = this.autreReception.length > 0;
+        // Décomposer les checkboxes depuis les textes existants
+        const travauxDecomp = this.decomposeToCheckboxes(f.descriptionTravaux, TRAVAUX_FREQUENTS);
+        this.selectedTravaux = travauxDecomp.selected;
+        this.autreTravaux = travauxDecomp.autre;
+        this.showAutreTravaux = this.autreTravaux.length > 0;
 
-      const pannesDecomp = this.decomposeToCheckboxes(f.listeDefauts ?? '', PANNES_FREQUENTES);
-      this.selectedPannes = pannesDecomp.selected;
-      this.autrePannes = pannesDecomp.autre;
-      this.showAutrePannes = this.autrePannes.length > 0;
+        const receptionDecomp = this.decomposeToCheckboxes(f.listeReception ?? '', ELEMENTS_RECUS_FREQUENTS);
+        this.selectedReception = receptionDecomp.selected;
+        this.autreReception = receptionDecomp.autre;
+        this.showAutreReception = this.autreReception.length > 0;
 
-      this.step2Form.patchValue({
-        listeDefauts: f.listeDefauts ?? '',
-      });
+        const pannesDecomp = this.decomposeToCheckboxes(f.listeDefauts ?? '', PANNES_FREQUENTES);
+        this.selectedPannes = pannesDecomp.selected;
+        this.autrePannes = pannesDecomp.autre;
+        this.showAutrePannes = this.autrePannes.length > 0;
 
-      this.dateSortieEstimee = f.dateSortie ? f.dateSortie.substring(0, 10) : '';
-      
-      // Reconstituer les lignes pièces depuis la fiche atelier
-      this.lignesPieces = (f.lignesFicheAtelierPieces || [])
-        .map((lp: any) => {
-          const piece = this.allPieces.find(pp => pp.id === lp.piece?.id);
-          if (!piece) return null;
-          const stockAtelier = piece.stockAtelier ?? 0;
-          const stockMagasin = piece.stockMagasin ?? 0;
-          const manquantAtelier = Math.max(0, lp.quantite - stockAtelier);
-          const aSortirMagasin = Math.min(manquantAtelier, stockMagasin);
-          const manquantGlobal = Math.max(0, manquantAtelier - stockMagasin);
-          
-          return { 
-            piece, 
-            quantite: lp.quantite, 
-            stockDisponible: stockAtelier + stockMagasin, 
-            manquant: manquantGlobal,
-            aSortirMagasin: aSortirMagasin,
-            stockAtelier: stockAtelier
-          } as LignePiece;
-        })
-        .filter((l: any) => l !== null) as LignePiece[];
+        this.step2Form.patchValue({
+          listeDefauts: f.listeDefauts ?? '',
+        });
 
-      // Reconstituer les lignes MO depuis la fiche atelier
-      this.lignesMO = (f.lignesFicheAtelierMainDoeuvres || [])
-        .map((lmd: any) => {
-          const mo = this.allMO.find(m => m.id === lmd.mainDoeuvre?.id);
-          if (!mo) return null;
-          return { mo, quantite: lmd.nbreHeure };
-        })
-        .filter((l: any): l is LigneMO => l !== null);
+        this.dateSortieEstimee = f.dateSortie ? f.dateSortie.substring(0, 10) : '';
 
-      if (f.vehicule) {
-        const v = this.vehicules.find(vv => vv.id === f.vehicule!.id);
-        if (v) {
-          this.selectedVehicule = v;
-          this.vehiculeSearch   = v.immatriculation + ' — ' + v.marque + ' ' + v.modele;
+        // Reconstituer les lignes pièces depuis la fiche atelier
+        this.lignesPieces = (f.lignesFicheAtelierPieces || [])
+          .map((lp: any) => {
+            const piece = this.allPieces.find(pp => pp.id === lp.piece?.id);
+            if (!piece) return null;
+            const stockAtelier = piece.stockAtelier ?? 0;
+            const stockMagasin = piece.stockMagasin ?? 0;
+            const manquantAtelier = Math.max(0, lp.quantite - stockAtelier);
+            const aSortirMagasin = Math.min(manquantAtelier, stockMagasin);
+            const manquantGlobal = Math.max(0, manquantAtelier - stockMagasin);
+
+            return {
+              piece,
+              quantite: lp.quantite,
+              stockDisponible: stockAtelier + stockMagasin,
+              manquant: manquantGlobal,
+              aSortirMagasin: aSortirMagasin,
+              stockAtelier: stockAtelier
+            } as LignePiece;
+          })
+          .filter((l: any) => l !== null) as LignePiece[];
+
+        // Reconstituer les lignes MO depuis la fiche atelier
+        this.lignesMO = (f.lignesFicheAtelierMainDoeuvres || [])
+          .map((lmd: any) => {
+            const mo = this.allMO.find(m => m.id === lmd.mainDoeuvre?.id);
+            if (!mo) return null;
+            return { mo, quantite: lmd.nbreHeure };
+          })
+          .filter((l: any): l is LigneMO => l !== null);
+
+        if (f.vehicule) {
+          const v = this.vehicules.find(vv => vv.id === f.vehicule!.id);
+          if (v) {
+            this.selectedVehicule = v;
+            this.vehiculeSearch = v.immatriculation + ' — ' + v.marque + ' ' + v.modele;
+          }
+        }
+        
+        if (trueStep >= 7) {
+          if (f.mecaniciensReparation && f.mecaniciensReparation.length > 0) {
+            this.selectedMecs = f.mecaniciensReparation.map(m => m.id);
+          } else {
+            // Default to diagnostic mechanics if no reparation mechanics yet
+            this.selectedMecs = f.mecaniciens ? f.mecaniciens.map(m => m.id) : [];
+          }
+        } else {
+          this.selectedMecs = f.mecaniciens ? f.mecaniciens.map(m => m.id) : [];
+        }
+
+        // Restore local state for diagnostic
+        if (f.statut === 'EN_DIAGNOSTIC') {
+          this.diagnosticStarted = true;
+          this.diagnosticFinished = false;
+        } else if (trueStep >= 3) {
+          this.diagnosticStarted = true;
+          this.diagnosticFinished = true;
+        } else {
+          this.diagnosticStarted = false;
+          this.diagnosticFinished = false;
         }
       }
-      this.selectedMecs = f.mecaniciens.map(m => m.id);
-    }
-    
-    this.showWorkflow = true;
+
+      this.showWorkflow = true;
+
+      // Load the full fiche to get relations like bonDeSortie
+      this.service.getById(f.id).subscribe({
+        next: (full) => { this.loadedFiche = full; },
+        error: () => { }
+      });
+
       // Try to fetch any existing proforma attached to this fiche atelier and any facture linked to it
       this.proformaChargee = null;
       this.invoiceCreated = false;
@@ -621,17 +659,17 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     this.step1Form.reset();
     this.step2Form.reset();
     this.lignesPieces = [];
-    this.lignesMO     = [];
+    this.lignesMO = [];
     this.selectedMecs = [];
     this.selectedVehicule = null;
-    this.vehiculeSearch   = '';
+    this.vehiculeSearch = '';
     this.showVehiculeDropdown = false;
-    this.showCreateClient  = false;
+    this.showCreateClient = false;
     this.showCreateVehicule = false;
     this.clientForm.reset();
     this.vehiculeForm.reset();
     this.selectedVehiculeClient = null;
-    this.vehiculeClientSearch   = '';
+    this.vehiculeClientSearch = '';
     this.selectedTravaux = [];
     this.autreTravaux = '';
     this.showAutreTravaux = false;
@@ -655,14 +693,15 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     if (!this.editingId || !this.showWorkflow) return;
     this.service.getById(this.editingId).subscribe({
       next: (f: FicheAtelier) => {
+        this.loadedFiche = f;
         if (f.statut !== this.editingFicheStatus) {
-           this.editingFicheStatus = f.statut;
-           const trueStep = this.statutToStep(f.statut);
-           if (trueStep > this.currentStep) {
-             this.currentStep = trueStep;
-             this.notify('Le statut de la fiche a été mis à jour en arrière-plan.');
-             this.load();
-           }
+          this.editingFicheStatus = f.statut;
+          const trueStep = this.statutToStep(f.statut);
+          if (trueStep > this.currentStep) {
+            this.currentStep = trueStep;
+            this.notify('Le statut de la fiche a été mis à jour en arrière-plan.');
+            this.load();
+          }
         }
       }
     });
@@ -670,7 +709,7 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
 
   // ─── Étapes : max steps selon mode ───────────────────
   get maxStep(): number {
-    return 10;
+    return 11;
   }
 
   get canNext(): boolean {
@@ -682,8 +721,8 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     // Step 2: only allow next when diagnostic is finished via explicit action
     if (this.currentStep === 2) return this.diagnosticFinished === true;
 
-    // Step 8: only allow next if an invoice exists and is fully paid
-    if (this.currentStep === 8) {
+    // Step 9: only allow next if an invoice exists and is fully paid
+    if (this.currentStep === 9) {
       const inv = this.selectedFicheInvoice;
       if (!inv) return false;
       // prefer statutPaiement if available, else check resteAPayer
@@ -701,7 +740,7 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     if (!this.canNext) { this.step1Form.markAllAsTouched(); return; }
     if (this.currentStep === 1) { this.saveStep1ThenGoNext(); return; }
     if (this.currentStep === 2) { this.saveStep2ThenGoNext(); return; }
-    if (this.currentStep < 10) this.currentStep++;
+    if (this.currentStep < 11) this.currentStep++;
   }
 
   prevStep() {
@@ -724,11 +763,11 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
 
     const raw = this.step1Form.value;
     const payload = {
-      numero:             raw.numero,
+      numero: raw.numero,
       descriptionTravaux: descriptionTravaux,
-      listeReception:     listeReception || undefined,
-      vehiculeId:         Number(raw.vehiculeId),
-      statut:             'A_FAIRE' as StatutReparation,
+      listeReception: listeReception || undefined,
+      vehiculeId: Number(raw.vehiculeId),
+      statut: 'A_FAIRE' as StatutFiche,
     };
     this.saving = true;
     const wasNew = this.isNew;
@@ -738,20 +777,20 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
 
     req$.subscribe({
       next: (f) => {
-        this.saving    = false;
+        this.saving = false;
         this.editingId = f.id;
-        this.isNew     = false;
+        this.isNew = false;
         // Mettre à jour le numéro dans le formulaire
         this.step1Form.patchValue({ numero: f.numero });
         // Avancer au step 2 (mécaniciens) mais rester en A_FAIRE
-        this.currentStep = 2; 
-        this.load(); 
-        if (wasNew) this.notify('Fiche créée. Affectez les mécaniciens.'); 
+        this.currentStep = 2;
+        this.load();
+        if (wasNew) this.notify('Fiche créée. Affectez les mécaniciens.');
       },
-      error: (err) => { 
+      error: (err) => {
         console.error('SAVE STEP 1 ERROR:', JSON.stringify(err.error));
-        this.saving = false; 
-        this.notifyError(err.error?.message || 'Erreur lors de la sauvegarde.'); 
+        this.saving = false;
+        this.notifyError(err.error?.message || 'Erreur lors de la sauvegarde.');
       },
     });
   }
@@ -763,7 +802,7 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
 
   formatPiece = (p: any) => {
     if (!p) return '';
-    return p.reference + ' — ' + (p.categorie || '') + ' (' + ((p.stockAtelier ?? 0) + (p.stockMagasin ?? 0)) + ' en stock)';
+    return p.reference + ' — ' + (p.categorie || '') + ' (Atelier: ' + (p.stockAtelier ?? 0) + ' | Magasin: ' + (p.stockMagasin ?? 0) + ')';
   };
 
   formatMO = (m: any) => {
@@ -776,10 +815,10 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
       this.notifyError('Veuillez affecter au moins un mécanicien pour le diagnostic.');
       return;
     }
-    
+
     this.saving = true;
     if (this.editingFicheStatus === 'A_FAIRE') {
-      this.advanceStatutTo('EN_DIAGNOSTIC' as StatutReparation, () => {
+      this.advanceStatutTo('EN_DIAGNOSTIC' as StatutFiche, () => {
         this.saving = false;
         this.notify('Diagnostic commencé.');
         this.load();
@@ -801,7 +840,7 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
       this.notifyError('Veuillez ajouter au moins une pièce ou une main d\'œuvre.');
       return;
     }
-    
+
     this.proformaSaving = true;
 
     const listeDefauts = this.composeFromCheckboxes(this.selectedPannes, this.autrePannes);
@@ -809,12 +848,12 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     const listeReception = this.composeFromCheckboxes(this.selectedReception, this.autreReception);
 
     this.service.update(this.editingId!, {
-      numero:             this.step1Form.value.numero,
+      numero: this.step1Form.value.numero,
       descriptionTravaux: descriptionTravaux || '',
-      listeReception:     listeReception || undefined,
-      listeDefauts:       listeDefauts || undefined,
-      vehiculeId:         Number(this.step1Form.value.vehiculeId),
-      lignesPieces:       this.lignesPieces.map(l => ({ pieceId: l.piece.id, quantite: l.quantite, prix: l.piece.prix ?? null })),
+      listeReception: listeReception || undefined,
+      listeDefauts: listeDefauts || undefined,
+      vehiculeId: Number(this.step1Form.value.vehiculeId),
+      lignesPieces: this.lignesPieces.map(l => ({ pieceId: l.piece.id, quantite: l.quantite, prix: l.piece.prix ?? null })),
       lignesMainDoeuvres: this.lignesMO.map(l => ({ mainDoeuvreId: l.mo.id, nbreHeure: l.quantite, prix: l.mo.prix ?? null }))
     }).subscribe({
       next: () => {
@@ -839,19 +878,25 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     });
   }
 
-  validerProforma() {
-    if (!this.proformaChargee) { this.notifyError("Aucun proforma à valider."); return; }
+  // La proforma est validée par un autre acteur (client/secrétaire), le chef d'atelier attend le changement de statut.
+  checkProformaValid() {
+    if (!this.editingId) return;
     this.proformaSaving = true;
-    this.proformaService.valider(this.proformaChargee.id).subscribe({
-      next: () => {
-         this.proformaSaving = false;
-         this.notify('Proforma validé par le client.');
-         this.currentStep = 4;
-         this.load();
+    this.service.getById(this.editingId).subscribe({
+      next: (f: FicheAtelier) => {
+        this.proformaSaving = false;
+        if (f.statut !== 'EN_ATTENTE_PROFORMA') {
+          this.editingFicheStatus = f.statut;
+          this.currentStep = this.statutToStep(f.statut);
+          this.notify('Le statut a été mis à jour.');
+          this.load();
+        } else {
+          this.notifyError('Le proforma n\'est toujours pas validé par le client.');
+        }
       },
-      error: (err) => {
-         this.proformaSaving = false;
-         this.notifyError('Erreur lors de la validation du proforma.');
+      error: () => {
+        this.proformaSaving = false;
+        this.notifyError('Erreur lors de la vérification.');
       }
     });
   }
@@ -872,10 +917,10 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     if (!this.editingId || !this.dateSortieEstimee) return;
     this.saving = true;
     this.service.update(this.editingId, {
-      numero:             this.step1Form.value.numero,
+      numero: this.step1Form.value.numero,
       descriptionTravaux: this.composeFromCheckboxes(this.selectedTravaux, this.autreTravaux),
-      vehiculeId:         Number(this.step1Form.value.vehiculeId),
-      dateSortie:         this.dateSortieEstimee + 'T00:00:00',
+      vehiculeId: Number(this.step1Form.value.vehiculeId),
+      dateSortie: this.dateSortieEstimee + 'T00:00:00',
     }).subscribe({
       next: () => { this.saving = false; this.notify('Date de sortie estimée enregistrée.'); this.load(); },
       error: () => { this.saving = false; this.notifyError('Erreur lors de la sauvegarde.'); }
@@ -883,15 +928,10 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
   }
 
   // ─── Bon de Sortie & Affectation (Étape 5) → Réparation (Étape 6) ─────────────
-  checkStockAndStartReparation() {
-    if (this.selectedMecs.length === 0) {
-      this.notifyError('Veuillez affecter au moins un mécanicien.');
-      return;
-    }
-
+  generateBonDeSortie() {
     const ruptures = this.lignesPieces.filter(l => l.manquant > 0);
-    if (ruptures.length > 0) { 
-      this.showBDCModal = true; 
+    if (ruptures.length > 0) {
+      this.showBDCModal = true;
       return;
     }
 
@@ -899,7 +939,11 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     if (aSortir.length > 0) {
       this.createBonDeSortie(aSortir);
     } else {
-      this.startReparation();
+      // If nothing to pull from store, advance to assigning mechanics
+      this.advanceStatutTo('EN_ATTENTE_MECANICIEN', () => {
+        this.currentStep = 7;
+        this.load();
+      });
     }
   }
 
@@ -912,13 +956,14 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     this.bdsCreating = true;
     this.bdsService.creer({
       clientId,
-      vehiculeId:         fiche.vehicule!.id,
-      lignesPieces:       lignes.map(l => ({ pieceId: l.piece.id, quantite: l.aSortirMagasin!, prix: l.piece.prix ?? null })),
-      remarque:           `Bon de sortie automatique pour réparation FA-${this.editingId}`,
+      vehiculeId: fiche.vehicule!.id,
+      ficheAtelierId: fiche.id,
+      lignesPieces: lignes.map(l => ({ pieceId: l.piece.id, quantite: l.aSortirMagasin!, prix: l.piece.prix ?? null })),
+      remarque: `Bon de sortie automatique pour réparation FA-${this.editingId}`,
     }).subscribe({
       next: (bds: any) => {
         this.bdsCreating = false;
-        this.notify('Bon de sortie créé. En attente de validation par le magasinier.');
+        this.notify(`Bon de sortie ${bds.reference || ''} créé. En attente de validation par le magasinier.`);
         this.advanceStatutTo('EN_ATTENTE_SORTIE', () => {
           this.currentStep = 6; // Attente BS
           this.load();
@@ -931,10 +976,40 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     });
   }
 
+  checkAndStartReparation() {
+    if (this.selectedMecs.length === 0) {
+      this.notifyError('Veuillez affecter au moins un mécanicien.');
+      return;
+    }
+    this.startReparation();
+  }
+
   startReparation() {
     this.advanceStatutTo('EN_COURS', () => {
-      this.currentStep = 7;
+      this.currentStep = 8;
       this.load();
+    });
+  }
+
+  checkCommandeValid() {
+    if (!this.editingId) return;
+    this.saving = true;
+    this.service.getById(this.editingId).subscribe({
+      next: (f: FicheAtelier) => {
+        this.saving = false;
+        if (f.statut !== 'EN_ATTENTE_COMMANDE') {
+          this.editingFicheStatus = f.statut;
+          this.currentStep = this.statutToStep(f.statut);
+          this.notify('Le statut a été mis à jour.');
+          this.load();
+        } else {
+          this.notifyError('La commande n\'est pas encore validée ou réceptionnée.');
+        }
+      },
+      error: () => {
+        this.saving = false;
+        this.notifyError('Erreur de vérification.');
+      }
     });
   }
 
@@ -945,12 +1020,31 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
       next: (f: FicheAtelier) => {
         this.saving = false;
         if (f.statut !== 'EN_ATTENTE_SORTIE') {
-           this.editingFicheStatus = f.statut;
-           this.currentStep = this.statutToStep(f.statut);
-           this.notify('Le statut a été mis à jour.');
-           this.load();
+          this.editingFicheStatus = f.statut;
+          this.currentStep = this.statutToStep(f.statut);
+          this.notify('Le statut a été mis à jour.');
+          this.load();
         } else {
-           this.notifyError('Le bon de sortie n\'est toujours pas validé par le magasinier.');
+          this.notifyError('Le bon de sortie n\'est toujours pas validé par le magasinier.');
+        }
+      },
+      error: () => { this.saving = false; this.notifyError('Impossible de vérifier le statut.'); }
+    });
+  }
+
+  checkPaiementValid() {
+    if (!this.editingId) return;
+    this.saving = true;
+    this.service.getById(this.editingId).subscribe({
+      next: (f: FicheAtelier) => {
+        this.saving = false;
+        if (f.statut !== 'EN_ATTENTE_PAIEMENT') {
+          this.editingFicheStatus = f.statut;
+          this.currentStep = this.statutToStep(f.statut);
+          this.notify('Le statut a été mis à jour.');
+          this.load();
+        } else {
+          this.notifyError('La facture n\'est toujours pas payée.');
         }
       },
       error: () => { this.saving = false; this.notifyError('Impossible de vérifier le statut.'); }
@@ -961,13 +1055,13 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     this.saving = true;
     this.advanceStatutTo('EN_ATTENTE_PAIEMENT', () => {
       this.saving = false;
-      this.currentStep = 8;
+      this.currentStep = 9;
       this.notify('Réparation terminée. Veuillez procéder au paiement.');
       this.load();
     });
   }
 
-  private advanceStatutTo(statut: StatutReparation, cb: () => void) {
+  private advanceStatutTo(statut: StatutFiche, cb: () => void) {
     if (!this.editingId) { cb(); return; }
     this.service.updateStatut(this.editingId, statut).subscribe({
       next: () => cb(),
@@ -1034,20 +1128,20 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     const v = this.clientForm.value;
     const payload = {
       firstName: v.firstName,
-      lastName:  v.lastName,
-      phone:     v.phone,
-      email:     v.email || v.username + '@oas.sn',
-      username:  v.username,
-      password:  v.password,
+      lastName: v.lastName,
+      phone: v.phone,
+      email: v.email || v.username + '@oas.sn',
+      username: v.username,
+      password: v.password,
       matricule: v.matricule || 'CLI-' + Date.now(),
-      type:      'CLIENT'
+      type: 'CLIENT'
     };
     this.clientService.create(payload).subscribe({
       next: () => {
         this.clientService.getAll().subscribe(clients => {
           this.allClients = clients;
-          this.creatingClient    = false;
-          this.showCreateClient  = false;
+          this.creatingClient = false;
+          this.showCreateClient = false;
           const newClient = clients.find(c => c.username === payload.username);
           if (newClient) {
             this.selectClientForVehicule(newClient);
@@ -1056,10 +1150,10 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
           this.notify('Client créé et sélectionné avec succès !');
         });
       },
-      error: (err) => { 
-        this.creatingClient = false; 
+      error: (err) => {
+        this.creatingClient = false;
         const msg = err.error?.message || err.error || 'Erreur lors de la création du client.';
-        this.notifyError(msg); 
+        this.notifyError(msg);
       },
     });
   }
@@ -1070,7 +1164,7 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     if (this.showCreateVehicule) {
       this.vehiculeForm.reset();
       this.selectedVehiculeClient = null;
-      this.vehiculeClientSearch   = '';
+      this.vehiculeClientSearch = '';
     }
   }
 
@@ -1084,28 +1178,28 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     this.creatingVehicule = true;
     this.vehiculeService.create({
       immatriculation: v.immatriculation,
-      marque:          v.marque,
-      modele:          v.modele,
-      annee:           v.annee   || null,
-      kilometrage:     v.kilometrage || null,
-      numeroChassis:   v.numeroChassis || '',
-      clientId:        v.clientId || null,
+      marque: v.marque,
+      modele: v.modele,
+      annee: v.annee || null,
+      kilometrage: v.kilometrage || null,
+      numeroChassis: v.numeroChassis || '',
+      clientId: v.clientId || null,
     }).subscribe({
       next: (newV) => {
         this.vehiculeService.getAll().subscribe(vehicules => {
           this.vehicules = vehicules;
-          this.creatingVehicule    = false;
-          this.showCreateVehicule  = false;
+          this.creatingVehicule = false;
+          this.showCreateVehicule = false;
           this.vehiculeForm.reset();
           // Auto-sélectionner le nouveau véhicule
           this.selectVehicule(newV);
           this.notify('Véhicule créé et sélectionné !');
         });
       },
-      error: (err) => { 
-        this.creatingVehicule = false; 
+      error: (err) => {
+        this.creatingVehicule = false;
         const msg = err.error?.message || err.error || 'Erreur lors de la création du véhicule.';
-        this.notifyError(msg); 
+        this.notifyError(msg);
       },
     });
   }
@@ -1115,10 +1209,10 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     if (!this.pieceAjouter || this.qteAjouter < 1) return;
     const piece = this.allPieces.find(p => p.id === Number(this.pieceAjouter));
     if (!piece) return;
-    
+
     const stockAtelier = piece.stockAtelier ?? 0;
     const stockMagasin = piece.stockMagasin ?? 0;
-    
+
     const existing = this.lignesPieces.find(l => l.piece.id === piece.id);
     if (existing) {
       existing.quantite += this.qteAjouter;
@@ -1129,11 +1223,11 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
       const manquantAtelier = Math.max(0, this.qteAjouter - stockAtelier);
       const aSortirMagasin = Math.min(manquantAtelier, stockMagasin);
       const manquantGlobal = Math.max(0, manquantAtelier - stockMagasin);
-      
-      this.lignesPieces.push({ 
-        piece, 
-        quantite: this.qteAjouter, 
-        stockDisponible: stockAtelier + stockMagasin, 
+
+      this.lignesPieces.push({
+        piece,
+        quantite: this.qteAjouter,
+        stockDisponible: stockAtelier + stockMagasin,
         manquant: manquantGlobal,
         aSortirMagasin,
         stockAtelier
@@ -1148,7 +1242,7 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
   updateQtePiece(idx: number, qte: number) {
     const l = this.lignesPieces[idx];
     l.quantite = Math.max(1, qte);
-    
+
     const stockAtelier = l.stockAtelier ?? 0;
     const stockMagasin = l.piece.stockMagasin ?? 0;
     const manquantAtelier = Math.max(0, l.quantite - stockAtelier);
@@ -1171,6 +1265,10 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
 
   get hasRupture(): boolean { return this.lignesPieces.some(l => l.manquant > 0); }
   get rupturesOnly(): LignePiece[] { return this.lignesPieces.filter(l => l.manquant > 0); }
+  
+  getTotalASortir(): number {
+    return this.lignesPieces.reduce((acc, l) => acc + (l.aSortirMagasin || 0), 0);
+  }
 
   // ─── Mécaniciens ─────────────────────────────────────
   isMecSelected(id: number): boolean { return this.selectedMecs.includes(id); }
@@ -1179,13 +1277,22 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     if (!this.editingId || this.mecToggling !== null) return;
     this.mecToggling = mec.id;
     const assigned = this.isMecSelected(mec.id);
-    const req$ = assigned
-      ? this.service.removeMecanicien(this.editingId, mec.id)
-      : this.service.assignMecanicien(this.editingId, mec.id);
+    
+    let req$;
+    if (this.currentStep === 7) {
+      req$ = assigned
+        ? this.service.removeMecanicienReparation(this.editingId, mec.id)
+        : this.service.assignMecanicienReparation(this.editingId, mec.id);
+    } else {
+      req$ = assigned
+        ? this.service.removeMecanicien(this.editingId, mec.id)
+        : this.service.assignMecanicien(this.editingId, mec.id);
+    }
+
     req$.subscribe({
       next: () => {
         if (assigned) this.selectedMecs = this.selectedMecs.filter(id => id !== mec.id);
-        else          this.selectedMecs  = [...this.selectedMecs, mec.id];
+        else this.selectedMecs = [...this.selectedMecs, mec.id];
         this.mecToggling = null;
       },
       error: () => { this.mecToggling = null; },
@@ -1200,19 +1307,19 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     const fiche = this.fiches.find(f => f.id === this.editingId);
     const payload: BonDeCommandeRequest = {
       fournisseurId: null, // Pas de fournisseur — sera assigné plus tard
-      vehiculeId:    fiche?.vehicule?.id,
+      vehiculeId: fiche?.vehicule?.id,
       tvaApplicable: false,
-      observation:   `Commande liée à la fiche atelier #${this.step1Form.value.numero}`,
+      observation: `Commande liée à la fiche atelier #${this.step1Form.value.numero}`,
       lignes: this.rupturesOnly.map(l => ({ pieceDetacheeId: l.piece.id, quantite: l.manquant, prixUnitaire: l.piece.prix ?? 0 })),
     };
     this.bdcSaving = true;
     this.bdcService.create(payload).subscribe({
-      next: () => { 
-        this.bdcSaving = false; 
-        this.showBDCModal = false; 
+      next: () => {
+        this.bdcSaving = false;
+        this.showBDCModal = false;
         this.notify('Bon de commande créé en attente. Allez dans « Bons de commande » pour assigner un fournisseur.');
         this.advanceStatutTo('EN_ATTENTE_COMMANDE', () => {
-          this.currentStep = 4;
+          this.currentStep = 5;
           this.load();
         });
       },
@@ -1252,24 +1359,30 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     return (f.vehicule?.immatriculation ?? 'FA').slice(0, 2).toUpperCase();
   }
 
-  statutLabel(s: StatutReparation): string {
+  statutLabel(s: StatutFiche): string {
     return STATUT_STEPS.find(st => st.statut === s)?.label ?? s;
   }
 
-  statutStepIndex(s: StatutReparation): number {
+  statutStepIndex(s: StatutFiche): number {
     return STATUT_STEPS.findIndex(st => st.statut === s);
   }
 
-  statutColor(s: StatutReparation | string): string {
+  statutColor(s: StatutFiche | string): string {
     const map: Record<string, string> = {
-      A_FAIRE: '#6b7280', EN_DIAGNOSTIC: '#f59e0b', EN_ATTENTE_PROFORMA: '#8b5cf6', 
+      A_FAIRE: '#6b7280', EN_DIAGNOSTIC: '#f59e0b', EN_ATTENTE_PROFORMA: '#8b5cf6',
       PROFORMA_VALIDE: '#a855f7', EN_ATTENTE_COMMANDE: '#ec4899', EN_ATTENTE_SORTIE: '#eab308',
       EN_COURS: '#3b82f6', EN_ATTENTE_PAIEMENT: '#ef4444', TERMINE: '#10b981', LIVRE: '#22c55e',
     };
     return map[s as string] ?? '#6b7280';
   }
 
-  private statutToStep(s: StatutReparation | string): number {
+  private statutToStep(s: StatutFiche | string): number {
+    if (s === 'EN_ATTENTE_PROFORMA') {
+      if (this.proformaChargee || this.selectedFicheProforma) return 4;
+      return 3;
+    }
+    if (s === 'PROFORMA_VALIDE') return 5;
+
     const idx = STATUT_STEPS.findIndex(x => x.statut === s);
     return idx >= 0 ? idx + 1 : 1;
   }

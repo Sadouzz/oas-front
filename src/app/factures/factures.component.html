@@ -46,6 +46,7 @@
                 <th class="text-left text-xs text-oas-muted px-5 py-3">Client</th>
                 <th class="text-left text-xs text-oas-muted px-5 py-3">Immat.</th>
                 <th class="text-right text-xs text-oas-muted px-5 py-3">Total TTC</th>
+                <th class="text-left text-xs text-oas-muted px-5 py-3">Statut</th>
               }
               <th class="text-left text-xs text-oas-muted px-5 py-3">Date</th>
               <th class="px-5 py-3"></th>
@@ -54,7 +55,7 @@
           <tbody>
             @if (loading) {
               <tr>
-                <td colspan="6" class="text-center py-14 text-oas-muted">
+                <td colspan="7" class="text-center py-14 text-oas-muted">
                   <svg class="animate-spin h-5 w-5 mx-auto mb-2 text-oas-accent" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
@@ -64,7 +65,7 @@
               </tr>
             } @else if (paged.length === 0) {
               <tr>
-                <td colspan="6" class="text-center py-16 text-oas-muted text-sm">Aucune facture.</td>
+                <td colspan="7" class="text-center py-16 text-oas-muted text-sm">Aucune facture.</td>
               </tr>
             } @else {
               @for (f of paged; track f.id) {
@@ -76,6 +77,15 @@
                     <td class="px-5 py-4 text-oas-ink text-sm">{{ f.clientNom }}</td>
                     <td class="px-5 py-4 text-oas-muted text-xs">{{ f.immatriculation ?? '&mdash;' }}</td>
                     <td class="px-5 py-4 text-right font-semibold text-oas-ink">{{ fmt(f.montantTotal) }} FCFA</td>
+                    <td class="px-5 py-4">
+                      @if (f.statutPaiement === 'PAYE') {
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">Payé</span>
+                      } @else if (f.statutPaiement === 'PARTIEL') {
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-800">Partiel</span>
+                      } @else {
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-800">Non payé</span>
+                      }
+                    </td>
                   }
                   <td class="px-5 py-4 text-xs text-oas-muted">{{ formatDate(f.dateCreation) }}</td>
                   <td class="px-5 py-4" (click)="$event.stopPropagation()">

@@ -23,6 +23,7 @@ export interface BonDeSortie {
 export interface BonDeSortieRequest {
   clientId: number;
   vehiculeId: number;
+  ficheAtelierId?: number;
   lignesPieces: { pieceId: number; quantite: number; prix?: number | null }[];
   remarque?: string;
 }

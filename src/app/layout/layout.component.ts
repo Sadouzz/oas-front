@@ -1,6 +1,9 @@
 import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet, NavigationEnd } from '@angular/router';
+import { CommonModule } from '@angular/common';
 import { AuthService } from '../auth/services/auth.service';
+import { AgentNotificationService } from '../core/services/agent-notification.service';
+import { AgentNotification } from '../shared/models/agent-notification.model';
 import { filter, Subscription } from 'rxjs';
 import {
   LucideHouse,
@@ -20,15 +23,22 @@ import {
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './layout.component.html',
 })
 export class LayoutComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
+  private notificationService = inject(AgentNotificationService);
   private router = inject(Router);
   private routerSub?: Subscription;
 
   openSection: string | null = null;
+  notificationsOpen = false;
+  notifications: AgentNotification[] = [];
+  
+  get unreadCount(): number {
+    return this.notifications.filter(n => !n.lu).length;
+  }
 
   private readonly routeLabels: Record<string, { label: string; section?: string }> = {
     '/dashboard': { label: 'Tableau de bord' },
@@ -104,6 +114,38 @@ export class LayoutComponent implements OnInit, OnDestroy {
     this.routerSub = this.router.events
       .pipe(filter(e => e instanceof NavigationEnd))
       .subscribe((e: any) => this.syncSection(e.url));
+      
+    this.loadNotifications();
+  }
+
+  loadNotifications() {
+    this.notificationService.getNotifications().subscribe({
+      next: (notifs) => {
+        this.notifications = notifs;
+      },
+      error: (err) => console.error('Erreur chargement notifications', err)
+    });
+  }
+
+  toggleNotifications() {
+    this.notificationsOpen = !this.notificationsOpen;
+  }
+
+  markAsRead(notification: AgentNotification) {
+    if (notification.lu) return;
+    this.notificationService.markAsRead(notification.id).subscribe({
+      next: () => {
+        notification.lu = true;
+      }
+    });
+  }
+
+  markAllAsRead() {
+    this.notificationService.markAllAsRead().subscribe({
+      next: () => {
+        this.notifications.forEach(n => n.lu = true);
+      }
+    });
   }
 
   ngOnDestroy() { this.routerSub?.unsubscribe(); }

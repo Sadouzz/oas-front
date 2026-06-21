@@ -330,12 +330,51 @@
       <div class="flex items-center gap-3 flex-shrink-0">
 
         <!-- Cloche notification -->
-        <button class="relative w-[42px] h-[42px] rounded-xl border border-oas-line bg-white flex items-center justify-center text-oas-ink2 hover:bg-oas-bg transition cursor-pointer">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-          </svg>
-          <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-oas-accent text-white text-[10px] font-bold flex items-center justify-center border-2 border-white">3</span>
-        </button>
+        <div class="relative">
+          <button (click)="toggleNotifications()" class="relative w-[42px] h-[42px] rounded-xl border border-oas-line bg-white flex items-center justify-center text-oas-ink2 hover:bg-oas-bg transition cursor-pointer">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+            </svg>
+            @if (unreadCount > 0) {
+              <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-oas-accent text-white text-[10px] font-bold flex items-center justify-center border-2 border-white">
+                {{ unreadCount > 99 ? '99+' : unreadCount }}
+              </span>
+            }
+          </button>
+
+          <!-- Notification Dropdown -->
+          @if (notificationsOpen) {
+            <div class="absolute right-0 mt-2 w-80 bg-white border border-oas-line rounded-xl shadow-lg z-50 overflow-hidden flex flex-col max-h-[400px]">
+              <div class="p-3 border-b border-oas-line flex items-center justify-between bg-gray-50 flex-shrink-0">
+                <span class="font-bold text-sm text-oas-ink">Notifications</span>
+                @if (unreadCount > 0) {
+                  <button (click)="markAllAsRead()" class="text-xs text-oas-accent hover:underline font-medium">Tout marquer comme lu</button>
+                }
+              </div>
+              <div class="overflow-y-auto flex-1 p-2 space-y-1">
+                @if (notifications.length === 0) {
+                  <div class="text-center p-4 text-sm text-oas-muted">Aucune notification</div>
+                }
+                @for (notif of notifications; track notif.id) {
+                  <div (click)="markAsRead(notif)"
+                       class="p-3 rounded-lg cursor-pointer transition-colors border"
+                       [class.bg-white]="notif.lu" [class.bg-blue-50]="!notif.lu"
+                       [class.border-transparent]="notif.lu" [class.border-blue-100]="!notif.lu"
+                       [class.hover:bg-gray-50]="notif.lu" [class.hover:bg-blue-100]="!notif.lu">
+                    <div class="flex items-start justify-between mb-1">
+                      <span class="font-semibold text-sm" [class.text-oas-ink]="notif.lu" [class.text-blue-900]="!notif.lu">{{ notif.titre }}</span>
+                      @if (!notif.lu) {
+                        <span class="w-2 h-2 rounded-full bg-oas-accent mt-1.5 flex-shrink-0"></span>
+                      }
+                    </div>
+                    <p class="text-xs text-oas-muted leading-snug">{{ notif.message }}</p>
+                    <p class="text-[10px] text-gray-400 mt-2">{{ notif.dateCreation | date:'dd/MM/yyyy HH:mm' }}</p>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
 
         <!-- Profil utilisateur -->
         <div class="flex items-center gap-2.5 cursor-pointer pl-1">

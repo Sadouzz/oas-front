@@ -1,4 +1,4 @@
-export type StatutReparation = 'A_FAIRE' | 'EN_DIAGNOSTIC' | 'EN_ATTENTE_PROFORMA' | 'PROFORMA_VALIDE' | 'EN_ATTENTE_COMMANDE' | 'EN_ATTENTE_SORTIE' | 'EN_COURS' | 'EN_ATTENTE_PAIEMENT' | 'TERMINE' | 'LIVRE';
+export type StatutFiche = 'A_FAIRE' | 'EN_DIAGNOSTIC' | 'EN_ATTENTE_PROFORMA' | 'PROFORMA_VALIDE' | 'EN_ATTENTE_COMMANDE' | 'EN_ATTENTE_SORTIE' | 'EN_ATTENTE_MECANICIEN' | 'EN_COURS' | 'EN_ATTENTE_PAIEMENT' | 'TERMINE' | 'LIVRE';
 
 export interface FicheAtelier {
   id: number;
@@ -9,7 +9,7 @@ export interface FicheAtelier {
   dateCreation: string;
   updatedAt: string;
   dateSortie: string | null;
-  statut: StatutReparation;
+  statut: StatutFiche;
   vehicule: {
     id: number;
     immatriculation: string;
@@ -19,6 +19,7 @@ export interface FicheAtelier {
     client?: { id: number; firstName: string; lastName: string; phone?: string } | null;
   } | null;
   mecaniciens: { id: number; nom: string }[];
+  mecaniciensReparation: { id: number; nom: string }[];
   bonDeSortie?: { id: number; reference: string; statut: string } | null;
   lignesFicheAtelierPieces?: {
     id: number;
@@ -41,7 +42,7 @@ export interface FicheAtelierRequest {
   listeDefauts?: string;
   dateSortie?: string;
   vehiculeId: number;
-  statut?: StatutReparation;
+  statut?: StatutFiche;
   lignesPieces?: { pieceId: number; quantite: number; prix?: number | null }[];
   lignesMainDoeuvres?: { mainDoeuvreId: number; nbreHeure: number; prix?: number | null }[];
 }

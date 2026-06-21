@@ -1,5 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { FormBuilder, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormArray, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { BonDeSortieService, BonDeSortie } from '../services/bon-de-sortie.service';
 import { ClientService, UserModel } from '../services/client.service';
@@ -8,12 +9,13 @@ import { PieceDetacheeService, PieceDetache } from '../services/piece-detachee.s
 import { AuthService } from '../auth/services/auth.service';
 import { AlertComponent } from '../shared/components/alert/alert.component';
 import { PaginationComponent } from '../shared/components/pagination/pagination.component';
-import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideCheck, LucideAlertTriangle, LucideDownload, LucideLoader2, LucideArchive } from '@lucide/angular';
+import { LucidePlus, LucideSearch, LucidePackage, LucideTrash2, LucideX, LucideCheck, LucideCheckCircle, LucideLoader2 } from '@lucide/angular';
 
 @Component({
   selector: 'app-bons-de-sortie',
   standalone: true,
-  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucideTrash2, LucideX, LucideCheck, LucideAlertTriangle, LucideLoader2],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, PaginationComponent, AlertComponent,
+    LucidePlus, LucideSearch, LucidePackage, LucideTrash2, LucideX, LucideCheck, LucideCheckCircle, LucideLoader2],
   templateUrl: './bons-de-sortie.component.html',
 })
 export class BonsDeSortieComponent implements OnInit {
@@ -66,7 +68,7 @@ export class BonsDeSortieComponent implements OnInit {
 
   get role(): string { return this.authService.getRole() ?? ''; }
   get canCreate(): boolean { return ['ROLE_SUPER_AGENT', 'ROLE_AGENT', 'ROLE_AGENT_MAGASIN'].includes(this.role); }
-  get canValidate(): boolean { return ['ROLE_SUPER_AGENT', 'ROLE_CHEF_ATELIER'].includes(this.role); }
+  get canValidate(): boolean { return ['ROLE_SUPER_AGENT', 'ROLE_AGENT_MAGASIN'].includes(this.role); }
 
   // ── Searchable selects ──────────────────────────────────────────
 
