@@ -1294,25 +1294,32 @@
       </div>
 
       <!-- Neutral guidance text when invoice not yet created -->
-      <div *ngIf="!selectedFicheInvoice" class="bg-oas-bg rounded-xl border border-oas-line p-4 text-sm text-oas-muted">
+      <div *ngIf="!(selectedFicheInvoice || createdFacture)" class="bg-oas-bg rounded-xl border border-oas-line p-4 text-sm text-oas-muted">
         La facture peut être générée directement d'ici pour valider le paiement.
       </div>
       <!-- Success box after invoice created -->
-      <div *ngIf="selectedFicheInvoice"
+      <div *ngIf="(selectedFicheInvoice || createdFacture) as inv"
         class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-sm text-emerald-800">
         <p class="font-bold">Facture générée</p>
-        <p class="text-xs">La facture <span class="font-semibold">{{ selectedFicheInvoice?.numero ||
-            selectedFicheInvoice?.reference || selectedFicheInvoice?.code || ('FACT-' + selectedFicheInvoice?.id)
+        <p class="text-xs">La facture <span class="font-semibold">{{ inv.numero ||
+            inv.reference || inv.code || ('FACT-' + inv.id)
             }}</span> a été créée.
           <span *ngIf="invoiceIsPaid"
             class="ml-2 bg-emerald-600 text-white px-2 py-0.5 rounded text-xs font-semibold">Payée</span>
         </p>
       </div>
       <!-- Button to generate invoice directly from the fiche (hidden when invoice exists) -->
-      <div class="pt-3" *ngIf="!selectedFicheInvoice">
-        <button (click)="createFactureFromFiche()" [disabled]="saving"
-          class="w-full py-3 rounded-xl font-bold text-sm bg-oas-accent hover:bg-oas-accent-dark text-white shadow-lg transition cursor-pointer disabled:opacity-60">
-          {{ saving ? 'Traitement...' : 'Générer la facture automatiquement' }}
+      <div class="pt-3" *ngIf="!(selectedFicheInvoice || createdFacture)">
+        <button (click)="createFactureFromFiche()" [disabled]="saving || isLoadingFacture"
+          class="w-full py-3 rounded-xl font-bold text-sm bg-oas-accent hover:bg-oas-accent-dark text-white shadow-lg transition cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2">
+          @if (isLoadingFacture) {
+            <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <span>Vérification...</span>
+          } @else if (saving) {
+            <span>Traitement...</span>
+          } @else {
+            <span>Générer la facture automatiquement</span>
+          }
         </button>
       </div>
 

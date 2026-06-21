@@ -217,6 +217,9 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     matricule: [''],
   });
 
+  isLoadingFacture = false;
+  isLoadingProforma = false;
+
   // ─── Créer véhicule inline ────────────────────────────
   showCreateVehicule = false;
   creatingVehicule = false;
@@ -631,27 +634,33 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
       this.proformaChargee = null;
       this.invoiceCreated = false;
       this.createdFacture = null;
+      this.isLoadingProforma = true;
       try {
         this.proformaService.getByFicheAtelierId(f.id).subscribe({
-          next: (p) => { this.proformaChargee = p; },
-          error: () => { this.proformaChargee = null; }
+          next: (p) => { this.proformaChargee = p; this.isLoadingProforma = false; },
+          error: () => { this.proformaChargee = null; this.isLoadingProforma = false; }
         });
-      } catch (e) { this.proformaChargee = null; }
+      } catch (e) { this.proformaChargee = null; this.isLoadingProforma = false; }
 
       // Fetch invoices and try to find one linked to this fiche atelier
+      this.isLoadingFacture = true;
       try {
         this.factureService.getAll().subscribe({
           next: (list: any[]) => {
+            this.isLoadingFacture = false;
             if (!list || !list.length) return;
-            const inv = list.find(it => (it.ficheAtelierId && it.ficheAtelierId === f.id) || (it.ficheAtelier && it.ficheAtelier.id === f.id));
+            const inv = list.find(it => 
+              (it.ficheAtelierId && Number(it.ficheAtelierId) === Number(f.id)) || 
+              (it.ficheAtelier && Number(it.ficheAtelier.id) === Number(f.id))
+            );
             if (inv) {
               this.createdFacture = inv;
               this.invoiceCreated = true;
             }
           },
-          error: () => { /* ignore */ }
+          error: () => { this.isLoadingFacture = false; }
         });
-      } catch (e) { /* ignore */ }
+      } catch (e) { this.isLoadingFacture = false; }
     });
   }
 
