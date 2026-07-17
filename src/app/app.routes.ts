@@ -109,12 +109,12 @@ export const routes: Routes = [
       {
         path: 'avoirs-ttc',
         loadComponent: () =>
-          import('./avoirs-ttc/avoirs-ttc.component').then(m => m.AvoirsTTCComponent),
+          import('./avoirs-ttc/avoirs-ttc').then(m => m.AvoirsTtc),
       },
       {
         path: 'avoirs-ht',
         loadComponent: () =>
-          import('./avoirs-ht/avoirs-ht.component').then(m => m.AvoirsHTComponent),
+          import('./avoirs-ht/avoirs-ht').then(m => m.AvoirsHt),
       },
       {
         path: 'notes-prix',
