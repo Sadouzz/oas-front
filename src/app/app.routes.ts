@@ -9,7 +9,21 @@ import { multiRoleGuard } from './core/guards/multi-role.guard';
 import { noAuthGuard } from './core/guards/no-auth.guard';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
+  {
+    path: '',
+    loadComponent: () => import('./public/layout/public-layout/public-layout').then(m => m.PublicLayout),
+    children: [
+      { path: '', loadComponent: () => import('./public/home/home').then(m => m.Home) },
+      { path: 'services', loadComponent: () => import('./public/services/services').then(m => m.Services) },
+      { path: 'realisations', loadComponent: () => import('./public/realisations/realisations').then(m => m.Realisations) },
+      { path: 'blog', loadComponent: () => import('./public/blog/blog').then(m => m.Blog) },
+      { path: 'a-propos', loadComponent: () => import('./public/about/about').then(m => m.About) },
+      { path: 'devis', loadComponent: () => import('./public/devis/devis').then(m => m.Devis) },
+      { path: 'contact', loadComponent: () => import('./public/contact/contact').then(m => m.Contact) },
+      { path: 'rdv', loadComponent: () => import('./public/rdv/rdv').then(m => m.Rdv) },
+      { path: 'partenaires', loadComponent: () => import('./public/partenaires/partenaires').then(m => m.Partenaires) },
+    ]
+  },
   { path: 'login', component: LoginComponent, canActivate: [noAuthGuard] },
   { path: 'register', component: RegisterComponent, canActivate: [noAuthGuard] },
   { path: 'forbidden', component: ForbiddenComponent },
