@@ -1,4 +1,268 @@
-<div class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-  <h2 class="text-3xl font-extrabold text-slate-900 sm:text-4xl">Nos Partenaires</h2>
-  <p class="mt-4 text-xl text-slate-500 max-w-2xl mx-auto">Nous travaillons avec les meilleures marques et équipementiers pour garantir votre sécurité.</p>
-</div>
+<section class="partners-page">
+
+    <!-- HERO -->
+
+    <section class="hero">
+
+        <div class="hero-overlay"></div>
+
+        <div class="container">
+
+            <div class="hero-content" data-aos="fade-up">
+
+                <span class="hero-badge">
+                    <app-icon name="handshake" [size]="18"></app-icon>
+                    Nos partenaires automobiles
+                </span>
+
+                <h1>
+                    Les plus grandes marques
+                    <span>nous font confiance.</span>
+                </h1>
+
+                <p>
+                    Orient Auto Service accompagne les propriétaires de véhicules
+                    allemands et européens grâce à une expertise reconnue,
+                    des équipements modernes et une équipe qualifiée.
+                </p>
+
+                <div class="hero-buttons">
+
+                    <a routerLink="/rdv" class="btn-primary">
+                        <app-icon name="calendar-check" [size]="18"></app-icon>
+                        Prendre rendez-vous
+                    </a>
+
+                    <a routerLink="/devis" class="btn-outline">
+                        <app-icon name="file-check" [size]="18"></app-icon>
+                        Demander un devis
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- MARQUES -->
+
+    <section class="brands-section">
+
+        <div class="container">
+
+            <div class="section-header">
+
+                <span>Marques prises en charge</span>
+
+                <h2>Les marques entretenues chez OAS</h2>
+
+                <p>
+                    Nous assurons l'entretien, le diagnostic et la réparation
+                    des véhicules des plus grands constructeurs automobiles.
+                </p>
+
+            </div>
+
+            <div
+                class="brands-carousel"
+                (mouseenter)="stopAutoplay()"
+                (mouseleave)="startAutoplay()">
+
+                <button
+                    type="button"
+                    class="carousel-btn carousel-btn-prev"
+                    (click)="prev()"
+                    aria-label="Marque précédente">
+                    <app-icon name="chevron-left" [size]="20"></app-icon>
+                </button>
+
+                <div
+                    class="brands-track"
+                    #brandsTrack
+                    (scroll)="onCarouselScroll()">
+
+                    <div
+                        class="brand-card"
+                        *ngFor="let marque of marques"
+                        data-aos="zoom-in">
+
+                        <div class="brand-image">
+
+                            <img
+                                [src]="marque.image"
+                                [alt]="marque.nom">
+
+                            <div class="brand-logo">
+
+                                <img
+                                    [src]="marque.logo"
+                                    [alt]="marque.nom">
+
+                            </div>
+
+                        </div>
+
+                        <div class="brand-content">
+
+                            <span class="brand-tag">
+                                <app-icon name="check-circle" [size]="13"></app-icon>
+                                Prise en charge
+                            </span>
+
+                            <h3>{{ marque.nom }}</h3>
+
+                            <p>{{ marque.description }}</p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <button
+                    type="button"
+                    class="carousel-btn carousel-btn-next"
+                    (click)="next()"
+                    aria-label="Marque suivante">
+                    <app-icon name="chevron-right" [size]="20"></app-icon>
+                </button>
+
+            </div>
+
+            <div class="carousel-dots">
+                <button
+                    type="button"
+                    *ngFor="let marque of marques; let i = index"
+                    class="carousel-dot"
+                    [class.active]="i === activeSlide"
+                    (click)="goToSlide(i)"
+                    [attr.aria-label]="'Aller à ' + marque.nom">
+                </button>
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- EXPERTISE -->
+
+    <section class="expertise-section">
+
+        <div class="container">
+
+            <div class="section-header">
+
+                <span>Notre savoir-faire</span>
+
+                <h2>Nos domaines d'expertise</h2>
+
+            </div>
+
+            <div class="expertise-grid">
+
+                <div
+                    class="expertise-card"
+                    *ngFor="let expertise of expertises"
+                    data-aos="fade-up">
+
+                    <div class="icon">
+
+                        <app-icon [name]="expertise.icone" [size]="32"></app-icon>
+
+                    </div>
+
+                    <h3>{{ expertise.titre }}</h3>
+
+                    <p>{{ expertise.texte }}</p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- AVANTAGES -->
+
+    <section class="advantages-section">
+
+        <div class="container">
+
+            <div class="section-header">
+
+                <span>Pourquoi OAS ?</span>
+
+                <h2>Pourquoi choisir notre garage ?</h2>
+
+            </div>
+
+            <div class="advantages-grid">
+
+                <div
+                    class="advantage-card"
+                    *ngFor="let avantage of avantages"
+                    data-aos="flip-left">
+
+                    <div class="advantage-icon-wrap">
+                        <app-icon [name]="avantage.icone" [size]="30"></app-icon>
+                    </div>
+
+                    <h3>{{ avantage.titre }}</h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- CTA -->
+
+    <section class="cta-section">
+
+        <div class="container">
+
+            <div class="cta-card">
+
+                <div>
+
+                    <span>Orient Auto Service</span>
+
+                    <h2>
+                        Confiez votre véhicule à des spécialistes.
+                    </h2>
+
+                    <p>
+                        Notre équipe met son expérience au service
+                        de votre véhicule, quelle que soit sa marque.
+                    </p>
+
+                </div>
+
+                <div class="cta-buttons">
+
+                    <a routerLink="/rdv" class="btn-primary">
+
+                        Prendre rendez-vous
+
+                    </a>
+
+                    <a routerLink="/contact" class="btn-outline">
+
+                        Nous contacter
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</section>

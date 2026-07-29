@@ -1,7 +1,447 @@
-<div class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-  <h2 class="text-3xl font-extrabold text-slate-900 sm:text-4xl">Prendre Rendez-Vous</h2>
-  <p class="mt-4 text-xl text-slate-500 max-w-2xl mx-auto">Planifiez votre visite dans notre atelier en quelques clics.</p>
-  <div class="mt-12 bg-white max-w-lg mx-auto rounded-xl shadow-sm border border-slate-100 p-8 text-left">
-    <p class="text-slate-500 italic mb-4">Le calendrier de réservation en ligne sera bientôt disponible ici.</p>
-  </div>
-</div>
+<section class="rdv-page">
+
+    <!-- HERO -->
+    <section class="hero">
+
+        <div class="hero-overlay"></div>
+
+        <div class="container">
+
+            <div class="hero-content">
+
+                <span class="hero-badge">
+                    <i class="fa-solid fa-calendar-days"></i>
+                    Réservation en ligne
+                </span>
+
+                <h1>
+                    Prenez rendez-vous
+                    <span>en toute simplicité.</span>
+                </h1>
+
+                <p>
+                    Prenez rendez-vous avec nos techniciens en quelques clics.
+                    Connectez-vous à votre espace client ou créez gratuitement
+                    votre compte afin de suivre toutes vos interventions.
+                </p>
+
+                <div class="hero-buttons">
+                    <button class="btn-primary" (click)="openRegisterModal()">
+                        Créer un compte
+                    </button>
+
+                    <button class="btn-outline" (click)="openLoginModal()">
+                        Se connecter
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ETAPES -->
+    <section class="steps-section">
+        <div class="container">
+
+            <div class="section-header">
+                <span>Réservation</span>
+                <h2>Comment ça fonctionne ?</h2>
+            </div>
+
+            <div class="steps">
+
+                <div class="step" data-aos="fade-up">
+                    <div class="step-icon">
+                        <app-icon name="user-plus" [size]="34"></app-icon>
+                    </div>
+                    <h3>Créer un compte</h3>
+                    <p>
+                        Inscrivez-vous gratuitement
+                        afin d'accéder à votre espace client.
+                    </p>
+                </div>
+
+                <div class="step-line"></div>
+
+                <div class="step" data-aos="fade-up" data-aos-delay="100">
+                    <div class="step-icon">
+                        <app-icon name="calendar-check" [size]="34"></app-icon>
+                    </div>
+                    <h3>Choisir un créneau</h3>
+                    <p>
+                        Sélectionnez la date,
+                        le service et l'heure
+                        qui vous conviennent.
+                    </p>
+                </div>
+
+                <div class="step-line"></div>
+
+                <div class="step" data-aos="fade-up" data-aos-delay="200">
+                    <div class="step-icon">
+                        <app-icon name="check-circle" [size]="34"></app-icon>
+                    </div>
+                    <h3>Confirmation</h3>
+                    <p>
+                        Recevez immédiatement
+                        la confirmation
+                        de votre réservation.
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- POURQUOI CHOISIR OAS -->
+    <section class="advantages-section">
+        <div class="advantages-bg"></div>
+        <div class="container">
+
+            <div class="section-header">
+                <span>Pourquoi OAS ?</span>
+                <h2>Votre véhicule mérite une expertise de qualité</h2>
+                <p>
+                    Chez Orient Auto Service, nous mettons tout en œuvre
+                    pour offrir un service rapide, fiable et transparent.
+                </p>
+            </div>
+
+            <div class="advantages-grid">
+                <div class="advantage-card" *ngFor="let service of services" data-aos="fade-up">
+                    <div class="advantage-icon">
+                        <app-icon [name]="service.icone" [size]="32"></app-icon>
+                    </div>
+                    <h3>{{service.titre}}</h3>
+                    <p>{{service.description}}</p>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ESPACE CLIENT -->
+    <section class="benefits-section">
+        <div class="benefits-bg"></div>
+        <div class="container">
+
+            <div class="section-header">
+                <span>Espace client</span>
+                <h2>Pourquoi créer un compte ?</h2>
+            </div>
+
+            <div class="benefits-grid">
+                <div class="benefit-card" *ngFor="let avantage of avantages" data-aos="fade-up">
+                    <div class="benefit-icon">
+                        <app-icon [name]="avantage.icone" [size]="26"></app-icon>
+                    </div>
+                    <div>
+                        <h3>{{avantage.titre}}</h3>
+                        <p>{{avantage.description}}</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- STATISTIQUES -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-card" *ngFor="let stat of statistiques">
+                    <h2>{{stat.valeur}}</h2>
+                    <p>{{stat.label}}</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- APPEL A L'ACTION -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-card">
+
+                <div>
+                    <span>Réservez maintenant</span>
+                    <h2>
+                        Votre prochain entretien
+                        n'est qu'à quelques clics.
+                    </h2>
+                    <p>
+                        Créez votre compte gratuitement
+                        ou connectez-vous afin de choisir
+                        votre créneau.
+                    </p>
+                </div>
+
+                <div class="cta-buttons">
+                    <button class="btn-primary" (click)="openRegisterModal()">
+                        Créer un compte
+                    </button>
+
+                    <button class="btn-outline" (click)="openLoginModal()">
+                        Se connecter
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+</section>
+
+@if(showModal){
+    <div class="modal-overlay" (click)="closeModal()">
+        <div class="auth-modal" (click)="$event.stopPropagation()">
+
+            <button class="close-modal" (click)="closeModal()" aria-label="Fermer">×</button>
+
+            <div class="auth-tabs">
+                <button
+                    type="button"
+                    class="auth-tab"
+                    [class.active]="activeTab === 'login'"
+                    (click)="switchTab('login')">
+                    Connexion
+                </button>
+                <button
+                    type="button"
+                    class="auth-tab"
+                    [class.active]="activeTab === 'register'"
+                    (click)="switchTab('register')">
+                    Inscription
+                </button>
+            </div>
+
+            <!-- Messages -->
+            @if(errorMessage){
+                <div class="form-banner form-banner-error">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    {{ errorMessage }}
+                </div>
+            }
+            @if(successMessage){
+                <div class="form-banner form-banner-success">
+                    <i class="fa-solid fa-circle-check"></i>
+                    {{ successMessage }}
+                </div>
+            }
+
+            <!-- ===================== CONNEXION ===================== -->
+            @if(activeTab === 'login'){
+
+                <form class="auth-form" [formGroup]="loginForm" (ngSubmit)="onSubmitLogin()" novalidate>
+
+                    <h2>Ravi de vous revoir</h2>
+                    <p class="auth-subtitle">Connectez-vous à votre espace client OAS.</p>
+
+                    <div class="form-group">
+                        <label for="login-email">Adresse e-mail</label>
+                        <div class="input-icon">
+                            <i class="fa-solid fa-envelope"></i>
+                            <input
+                                id="login-email"
+                                type="email"
+                                formControlName="email"
+                                placeholder="vous@exemple.com"
+                                [class.is-invalid]="lf['email'].invalid && lf['email'].touched">
+                        </div>
+                        @if(lf['email'].invalid && lf['email'].touched){
+                            <span class="form-error">
+                                @if(lf['email'].errors?.['required']){ L'adresse e-mail est requise. }
+                                @if(lf['email'].errors?.['email']){ Veuillez saisir une adresse e-mail valide. }
+                            </span>
+                        }
+                    </div>
+
+                    <div class="form-group">
+                        <label for="login-password">Mot de passe</label>
+                        <div class="input-icon">
+                            <i class="fa-solid fa-lock"></i>
+                            <input
+                                id="login-password"
+                                [type]="showLoginPassword ? 'text' : 'password'"
+                                formControlName="motDePasse"
+                                placeholder="••••••••"
+                                [class.is-invalid]="lf['motDePasse'].invalid && lf['motDePasse'].touched">
+                            <button type="button" class="toggle-visibility" (click)="showLoginPassword = !showLoginPassword" aria-label="Afficher le mot de passe">
+                                <i class="fa-solid" [class.fa-eye]="!showLoginPassword" [class.fa-eye-slash]="showLoginPassword"></i>
+                            </button>
+                        </div>
+                        @if(lf['motDePasse'].invalid && lf['motDePasse'].touched){
+                            <span class="form-error">
+                                @if(lf['motDePasse'].errors?.['required']){ Le mot de passe est requis. }
+                                @if(lf['motDePasse'].errors?.['minlength']){ 6 caractères minimum. }
+                            </span>
+                        }
+                    </div>
+
+                    <div class="form-row-between">
+                        <label class="form-checkbox">
+                            <input type="checkbox" formControlName="seSouvenir">
+                            <span>Se souvenir de moi</span>
+                        </label>
+                        <a href="javascript:void(0)" class="form-link">Mot de passe oublié ?</a>
+                    </div>
+
+                    <button type="submit" class="btn-primary btn-block" [disabled]="isSubmitting">
+                        @if(!isSubmitting){ Se connecter }
+                        @if(isSubmitting){ <i class="fa-solid fa-spinner fa-spin"></i> Connexion... }
+                    </button>
+
+                    <p class="auth-switch">
+                        Pas encore de compte ?
+                        <a href="javascript:void(0)" (click)="switchTab('register')">Créer un compte</a>
+                    </p>
+
+                </form>
+
+            }
+
+            <!-- ===================== INSCRIPTION ===================== -->
+            @if(activeTab === 'register'){
+
+                <form class="auth-form" [formGroup]="registerForm" (ngSubmit)="onSubmitRegister()" novalidate>
+
+                    <h2>Créer votre compte</h2>
+                    <p class="auth-subtitle">Rejoignez l'espace client OAS en 1 minute.</p>
+
+                    <div class="form-grid-2">
+
+                        <div class="form-group">
+                            <label for="register-prenom">Prénom</label>
+                            <div class="input-icon">
+                                <i class="fa-solid fa-user"></i>
+                                <input
+                                    id="register-prenom"
+                                    type="text"
+                                    formControlName="prenom"
+                                    placeholder="Jean"
+                                    [class.is-invalid]="rf['prenom'].invalid && rf['prenom'].touched">
+                            </div>
+                            @if(rf['prenom'].invalid && rf['prenom'].touched){
+                                <span class="form-error">Prénom requis (2 caractères min.)</span>
+                            }
+                        </div>
+
+                        <div class="form-group">
+                            <label for="register-nom">Nom</label>
+                            <div class="input-icon">
+                                <i class="fa-solid fa-user"></i>
+                                <input
+                                    id="register-nom"
+                                    type="text"
+                                    formControlName="nom"
+                                    placeholder="Dupont"
+                                    [class.is-invalid]="rf['nom'].invalid && rf['nom'].touched">
+                            </div>
+                            @if(rf['nom'].invalid && rf['nom'].touched){
+                                <span class="form-error">Nom requis (2 caractères min.)</span>
+                            }
+                        </div>
+
+                    </div>
+
+                    <div class="form-group">
+                        <label for="register-email">Adresse e-mail</label>
+                        <div class="input-icon">
+                            <i class="fa-solid fa-envelope"></i>
+                            <input
+                                id="register-email"
+                                type="email"
+                                formControlName="email"
+                                placeholder="vous@exemple.com"
+                                [class.is-invalid]="rf['email'].invalid && rf['email'].touched">
+                        </div>
+                        @if(rf['email'].invalid && rf['email'].touched){
+                            <span class="form-error">
+                                @if(rf['email'].errors?.['required']){ L'adresse e-mail est requise. }
+                                @if(rf['email'].errors?.['email']){ Veuillez saisir une adresse e-mail valide. }
+                            </span>
+                        }
+                    </div>
+
+                    <div class="form-group">
+                        <label for="register-tel">Téléphone</label>
+                        <div class="input-icon">
+                            <i class="fa-solid fa-phone"></i>
+                            <input
+                                id="register-tel"
+                                type="tel"
+                                formControlName="telephone"
+                                placeholder="+221 77 000 00 00"
+                                [class.is-invalid]="rf['telephone'].invalid && rf['telephone'].touched">
+                        </div>
+                        @if(rf['telephone'].invalid && rf['telephone'].touched){
+                            <span class="form-error">Numéro de téléphone invalide.</span>
+                        }
+                    </div>
+
+                    <div class="form-grid-2">
+
+                        <div class="form-group">
+                            <label for="register-password">Mot de passe</label>
+                            <div class="input-icon">
+                                <i class="fa-solid fa-lock"></i>
+                                <input
+                                    id="register-password"
+                                    [type]="showRegisterPassword ? 'text' : 'password'"
+                                    formControlName="motDePasse"
+                                    placeholder="••••••••"
+                                    [class.is-invalid]="rf['motDePasse'].invalid && rf['motDePasse'].touched">
+                                <button type="button" class="toggle-visibility" (click)="showRegisterPassword = !showRegisterPassword" aria-label="Afficher le mot de passe">
+                                    <i class="fa-solid" [class.fa-eye]="!showRegisterPassword" [class.fa-eye-slash]="showRegisterPassword"></i>
+                                </button>
+                            </div>
+                            @if(rf['motDePasse'].invalid && rf['motDePasse'].touched){
+                                <span class="form-error">6 caractères minimum.</span>
+                            }
+                        </div>
+
+                        <div class="form-group">
+                            <label for="register-confirmation">Confirmation</label>
+                            <div class="input-icon">
+                                <i class="fa-solid fa-lock"></i>
+                                <input
+                                    id="register-confirmation"
+                                    [type]="showRegisterConfirmation ? 'text' : 'password'"
+                                    formControlName="confirmation"
+                                    placeholder="••••••••"
+                                    [class.is-invalid]="motsDePassesDifferents">
+                                <button type="button" class="toggle-visibility" (click)="showRegisterConfirmation = !showRegisterConfirmation" aria-label="Afficher le mot de passe">
+                                    <i class="fa-solid" [class.fa-eye]="!showRegisterConfirmation" [class.fa-eye-slash]="showRegisterConfirmation"></i>
+                                </button>
+                            </div>
+                            @if(motsDePassesDifferents){
+                                <span class="form-error">Les mots de passe ne correspondent pas.</span>
+                            }
+                        </div>
+
+                    </div>
+
+                    <label class="form-checkbox form-checkbox-cgu">
+                        <input type="checkbox" formControlName="cgu">
+                        <span>J'accepte les <a href="javascript:void(0)">conditions générales</a> d'utilisation.</span>
+                    </label>
+                    @if(rf['cgu'].invalid && rf['cgu'].touched){
+                        <span class="form-error">Vous devez accepter les conditions.</span>
+                    }
+
+                    <button type="submit" class="btn-primary btn-block" [disabled]="isSubmitting">
+                        @if(!isSubmitting){ Créer mon compte }
+                        @if(isSubmitting){ <i class="fa-solid fa-spinner fa-spin"></i> Création... }
+                    </button>
+
+                    <p class="auth-switch">
+                        Déjà un compte ?
+                        <a href="javascript:void(0)" (click)="switchTab('login')">Se connecter</a>
+                    </p>
+
+                </form>
+
+            }
+
+        </div>
+    </div>
+}

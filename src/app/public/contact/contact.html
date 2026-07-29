@@ -1,4 +1,470 @@
-<div class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-  <h2 class="text-3xl font-extrabold text-slate-900 sm:text-4xl">Nous Contacter</h2>
-  <p class="mt-4 text-xl text-slate-500 max-w-2xl mx-auto">Une question ? Un besoin spécifique ? Notre équipe est à votre écoute.</p>
-</div>
+<section class="contact-page">
+
+    <!-- HERO -->
+
+    <section class="hero">
+
+        <div class="hero-overlay"></div>
+
+        <div class="container">
+
+            <div class="hero-content" data-aos="fade-up">
+
+                <span class="hero-badge">
+
+                    <app-icon name="headphones" [size]="20"></app-icon>
+
+                    Nous sommes à votre écoute
+
+                </span>
+
+                <h1>
+
+                    Contactez
+
+                    <span>Orient Auto Service</span>
+
+                </h1>
+
+                <p>
+
+                    Une question, une demande de devis ou un besoin d'information ?
+                    Notre équipe est disponible pour vous accompagner et répondre à toutes vos demandes.
+
+                </p>
+
+                <div class="hero-buttons">
+
+                    <a href="tel:+221770000000" class="btn-primary">
+
+                        <app-icon name="phone" [size]="18"></app-icon>
+
+                        Nous appeler
+
+                    </a>
+
+                    <a href="https://wa.me/221770000000" target="_blank" class="btn-outline">
+
+                        <app-icon name="whatsapp" [size]="18"></app-icon>
+
+                        Discuter sur WhatsApp
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- COORDONNÉES -->
+
+    <section class="contact-info-section">
+
+        <div class="container">
+
+            <div class="section-header">
+
+                <span>Nos coordonnées</span>
+
+                <h2>
+
+                    Nous contacter facilement
+
+                </h2>
+
+            </div>
+
+            <div class="contact-grid">
+
+                <ng-container *ngFor="let info of informations">
+
+                    <a
+                        *ngIf="info.lien; else sansLien"
+                        [href]="info.lien"
+                        [target]="info.cible"
+                        class="contact-card"
+                        data-aos="fade-up">
+
+                        <div class="contact-icon">
+
+                            <app-icon [name]="info.icone" [size]="26"></app-icon>
+
+                        </div>
+
+                        <h3>
+
+                            {{ info.titre }}
+
+                        </h3>
+
+                        <p>
+
+                            {{ info.valeur }}
+
+                        </p>
+
+                    </a>
+
+                    <ng-template #sansLien>
+
+                        <div class="contact-card contact-card-static" data-aos="fade-up">
+
+                            <div class="contact-icon">
+
+                                <app-icon [name]="info.icone" [size]="26"></app-icon>
+
+                            </div>
+
+                            <h3>
+
+                                {{ info.titre }}
+
+                            </h3>
+
+                            <p>
+
+                                {{ info.valeur }}
+
+                            </p>
+
+                        </div>
+
+                    </ng-template>
+
+                </ng-container>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- FORMULAIRE -->
+
+    <section class="form-section">
+
+        <div class="container">
+
+            <div class="form-wrapper">
+
+                <div
+                    class="form-card"
+                    data-aos="fade-right">
+
+                    <div class="section-header left">
+
+                        <span>Envoyez-nous un message</span>
+
+                        <h2>
+
+                            Nous vous répondrons rapidement
+
+                        </h2>
+
+                    </div>
+
+                    <form [formGroup]="formulaire" (ngSubmit)="onSubmit()">
+
+                        <div class="row">
+
+                            <div class="field">
+
+                                <input
+                                    type="text"
+                                    formControlName="nom"
+                                    placeholder="Nom"
+                                    [class.invalide]="f['nom'].invalid && f['nom'].touched">
+
+                            </div>
+
+                            <div class="field">
+
+                                <input
+                                    type="text"
+                                    formControlName="prenom"
+                                    placeholder="Prénom"
+                                    [class.invalide]="f['prenom'].invalid && f['prenom'].touched">
+
+                            </div>
+
+                        </div>
+
+                        <div class="row">
+
+                            <div class="field">
+
+                                <input
+                                    type="email"
+                                    formControlName="email"
+                                    placeholder="Adresse email"
+                                    [class.invalide]="f['email'].invalid && f['email'].touched">
+
+                            </div>
+
+                            <div class="field">
+
+                                <input
+                                    type="tel"
+                                    formControlName="telephone"
+                                    placeholder="Téléphone"
+                                    [class.invalide]="f['telephone'].invalid && f['telephone'].touched">
+
+                            </div>
+
+                        </div>
+
+                        <div class="field">
+
+                            <input
+                                type="text"
+                                formControlName="sujet"
+                                placeholder="Sujet"
+                                [class.invalide]="f['sujet'].invalid && f['sujet'].touched">
+
+                        </div>
+
+                        <div class="field">
+
+                            <textarea
+                                rows="7"
+                                formControlName="message"
+                                placeholder="Votre message..."
+                                [class.invalide]="f['message'].invalid && f['message'].touched"></textarea>
+
+                        </div>
+
+                        <button
+                            type="submit"
+                            class="btn-primary"
+                            [disabled]="envoiEnCours">
+
+                            <app-icon name="paper-plane" [size]="18" *ngIf="!envoiEnCours"></app-icon>
+
+                            <app-icon name="spinner" [size]="18" class="spin" *ngIf="envoiEnCours"></app-icon>
+
+                            {{ envoiEnCours ? 'Envoi en cours...' : 'Envoyer le message' }}
+
+                        </button>
+
+                        <p class="form-success" *ngIf="messageEnvoye">
+
+                            <app-icon name="check-circle" [size]="18"></app-icon>
+
+                            Votre message a bien été envoyé, merci !
+
+                        </p>
+
+                    </form>
+
+                </div>
+
+                <div
+                    class="contact-side"
+                    data-aos="fade-left">
+
+                    <h2>
+
+                        Pourquoi nous contacter ?
+
+                    </h2>
+
+                    <p>
+
+                        Notre équipe vous accompagne pour :
+
+                    </p>
+
+                    <ul>
+
+                        <li>
+
+                            <app-icon name="check-circle" [size]="18"></app-icon>
+
+                            Demander un devis
+
+                        </li>
+
+                        <li>
+
+                            <app-icon name="check-circle" [size]="18"></app-icon>
+
+                            Obtenir des informations
+
+                        </li>
+
+                        <li>
+
+                            <app-icon name="check-circle" [size]="18"></app-icon>
+
+                            Planifier une intervention
+
+                        </li>
+
+                        <li>
+
+                            <app-icon name="check-circle" [size]="18"></app-icon>
+
+                            Suivre votre véhicule
+
+                        </li>
+
+                    </ul>
+
+                    <div class="contact-side-quick">
+
+                        <a href="tel:+221770000000">
+
+                            <app-icon name="phone" [size]="18"></app-icon>
+
+                            +221 77 000 00 00
+
+                        </a>
+
+                        <a href="https://wa.me/221770000000" target="_blank">
+
+                            <app-icon name="whatsapp" [size]="18"></app-icon>
+
+                            Discuter sur WhatsApp
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- LOCALISATION -->
+
+    <section class="map-section">
+
+        <div class="container">
+
+            <div class="section-header">
+
+                <span>Localisation</span>
+
+                <h2>
+
+                    Retrouvez-nous
+
+                </h2>
+
+            </div>
+
+            <div class="map">
+
+                <iframe
+                    src="https://www.google.com/maps?q=14.6860774,-17.4375216&z=16&output=embed"
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"
+                    title="Localisation Orient Auto Service">
+                </iframe>
+
+            </div>
+
+            <a
+                class="map-link"
+                href="https://www.google.com/maps/dir/?api=1&destination=14.6860774,-17.4375216"
+                target="_blank">
+
+                <app-icon name="location-arrow" [size]="16"></app-icon>
+
+                Obtenir l'itinéraire
+
+            </a>
+
+        </div>
+
+    </section>
+
+    <!-- FAQ -->
+
+    <section class="faq-section">
+
+        <div class="container">
+
+            <div class="section-header">
+
+                <span>FAQ</span>
+
+                <h2>
+
+                    Questions fréquentes
+
+                </h2>
+
+            </div>
+
+            <div
+                class="faq-card"
+                *ngFor="let question of questions">
+
+                <h3>
+
+                    {{ question.question }}
+
+                </h3>
+
+                <p>
+
+                    {{ question.reponse }}
+
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- CTA -->
+
+    <section class="cta-section">
+
+        <div class="container">
+
+            <div class="cta-card">
+
+                <div>
+
+                    <span>
+
+                        Orient Auto Service
+
+                    </span>
+
+                    <h2>
+
+                        Votre satisfaction est notre priorité.
+
+                    </h2>
+
+                    <p>
+
+                        Prenez rendez-vous ou contactez-nous dès aujourd'hui.
+
+                    </p>
+
+                </div>
+
+                <a href="tel:+221770000000" class="btn-primary">
+
+                    Prendre rendez-vous
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</section>
