@@ -1,4 +1,3 @@
-
 .rdv-page{
     background:var(--color-oas-bg);
 }
@@ -23,15 +22,22 @@
     align-items:center;
     overflow:hidden;
 
-    /* Superposition de dégradés marine/orange + une image d'ambiance atelier.
-       Remplacez le chemin ci-dessous par votre visuel (ex: garage, technicien, véhicule). */
-    background-image:
-        linear-gradient(120deg, rgba(12,39,66,.94) 0%, rgba(10,31,54,.90) 45%, rgba(239,108,26,.55) 100%),
-        url('/assets/images/hero-atelier.jpg');
+    /* Image de repli (poster / navigateurs sans vidéo / avant chargement) */
+    background-color:var(--color-oas-navy);
+    background-image:url('/assets/images/partenaires/hero1.jpg');
     background-size:cover;
     background-position:center;
     background-repeat:no-repeat;
-    background-color:var(--color-oas-navy);
+}
+
+/* Vidéo de fond, sous le voile et sous le motif à points */
+.hero-video{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    z-index:0;
 }
 
 /* motif technique discret pour renforcer l'ambiance "atelier" même sans image */
@@ -39,19 +45,26 @@
     content:"";
     position:absolute;
     inset:0;
+    z-index:2;
     background-image:radial-gradient(rgba(255,255,255,.10) 1.5px, transparent 1.5px);
     background-size:26px 26px;
-    opacity:.5;
+    opacity:.4;
     pointer-events:none;
 }
 
+/* Léger voile sombre uniquement, plus de couleur/dégradé : la vidéo doit rester visible.
+   Fort à gauche (texte), presque transparent à droite (on voit la vidéo). */
 .hero-overlay{
-    display:none;
+    display:block;
+    position:absolute;
+    inset:0;
+    z-index:1;
+    background-image:linear-gradient(90deg, rgba(4,10,18,.68) 0%, rgba(4,10,18,.4) 55%, rgba(4,10,18,.18) 100%);
 }
 
 .hero-content{
     position:relative;
-    z-index:1;
+    z-index:3;
     max-width:650px;
     padding:90px 0;
 }
@@ -477,11 +490,48 @@
 ==========================================================*/
 
 .stats-section{
-    background:linear-gradient(120deg, var(--color-oas-navy) 0%, var(--color-oas-navy-mid) 100%);
-    padding:90px 0;
+    background:var(--color-oas-bg);
+    padding:60px 0;
+}
+
+.stats-card{
+    position:relative;
+    overflow:hidden;
+    border-radius:28px;
+    padding:70px 50px;
+    background:linear-gradient(135deg, var(--color-oas-navy) 0%, var(--color-oas-navy-mid) 55%, var(--color-oas-navy-dark) 100%);
+    box-shadow:0 25px 55px rgba(12,39,66,.28);
+}
+
+/* motif à points, cohérent avec le hero */
+.stats-card::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:0;
+    background-image:radial-gradient(rgba(255,255,255,.10) 1.5px, transparent 1.5px);
+    background-size:26px 26px;
+    opacity:.6;
+    pointer-events:none;
+}
+
+/* halo orange discret dans un coin, pour casser le bloc uni */
+.stats-card::after{
+    content:"";
+    position:absolute;
+    top:-90px;
+    right:-70px;
+    width:320px;
+    height:320px;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(239,108,26,.35) 0%, transparent 70%);
+    z-index:0;
+    pointer-events:none;
 }
 
 .stats-grid{
+    position:relative;
+    z-index:1;
     display:flex;
     flex-wrap:wrap;
     justify-content:space-around;
@@ -489,9 +539,22 @@
 }
 
 .stat-card{
+    position:relative;
     text-align:center;
     color:white;
     min-width:140px;
+    padding:0 25px;
+}
+
+/* séparateurs verticaux fins entre chaque statistique */
+.stat-card:not(:first-child)::before{
+    content:"";
+    position:absolute;
+    left:-13px;
+    top:8%;
+    height:84%;
+    width:1px;
+    background:linear-gradient(180deg, transparent, rgba(255,255,255,.22), transparent);
 }
 
 .stat-card h2{
@@ -499,6 +562,7 @@
     margin-bottom:10px;
     font-weight:800;
     color:var(--color-oas-accent);
+    text-shadow:0 2px 18px rgba(239,108,26,.35);
 }
 
 .stat-card p{
@@ -855,6 +919,11 @@
     .hero{
         text-align:center;
     }
+    /* La vidéo de fond est coupée sur mobile pour économiser la data :
+       l'image de repli définie sur .hero (background-image) prend le relais. */
+    .hero-video{
+        display:none;
+    }
     .hero-buttons{
         justify-content:center;
     }
@@ -867,6 +936,19 @@
     .cta-card{
         padding:35px;
     }
+    .stats-card{
+        padding:45px 25px;
+        border-radius:22px;
+    }
+    .stat-card{
+        min-width:auto;
+        width:45%;
+        padding:0;
+        margin-bottom:10px;
+    }
+    .stat-card:not(:first-child)::before{
+        display:none;
+    }
     .form-grid-2{
         grid-template-columns:1fr;
         gap:0;
@@ -874,4 +956,20 @@
     .auth-modal{
         padding:30px 24px;
     }
+}
+:global(body.no-scroll){
+    overflow:hidden;
+    height:100%;
+}
+.auth-modal{
+    position:relative;
+    background:white;
+    border-radius:22px;
+    padding:42px;
+    width:100%;
+    max-width:560px;   /* était 460px */
+    max-height:92vh;
+    overflow-y:auto;
+    box-shadow:0 25px 60px rgba(10,20,35,.35);
+    animation:slideUp .25s ease-out;
 }

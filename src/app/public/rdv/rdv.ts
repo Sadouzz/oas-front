@@ -48,10 +48,7 @@ type OngletAuth = 'login' | 'register';
 })
 export class RdvComponent implements OnInit {
 
-  /**
-   * Ces tableaux sont temporaires.
-   * Ils seront remplacés par les données provenant du backend.
-   */
+  
   statistiques: any[] = [];
   avantages: any[] = [];
   services: any[] = [];
@@ -185,14 +182,16 @@ export class RdvComponent implements OnInit {
   }
 
   openLoginModal(): void {
-    this.activeTab = 'login';
-    this.showModal = true;
-    this.resetMessages();
-  }
+        this.activeTab = 'login';
+        this.showModal = true;
+        document.body.classList.add('no-scroll');
+        this.resetMessages();
+    }
 
   openRegisterModal(): void {
     this.activeTab = 'register';
     this.showModal = true;
+    document.body.classList.add('no-scroll');
     this.resetMessages();
   }
 
@@ -203,6 +202,7 @@ export class RdvComponent implements OnInit {
 
   closeModal(): void {
     this.showModal = false;
+    document.body.classList.add('no-scroll');
     this.isSubmitting = false;
     this.resetMessages();
   }

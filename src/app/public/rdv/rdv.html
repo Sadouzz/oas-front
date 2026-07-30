@@ -2,6 +2,19 @@
 
     <!-- HERO -->
     <section class="hero">
+ 
+        <!-- Vidéo de fond (visible en desktop/tablette, masquée sur mobile via le CSS) -->
+        <video
+            class="hero-video"
+            autoplay
+            muted
+            loop
+            playsinline
+            poster="/assets/images/partenaires/hero1.jpg">
+ 
+            <source src="/assets/videos/rdv-hero.mp4" type="video/mp4">
+ 
+        </video>
 
         <div class="hero-overlay"></div>
 
@@ -148,10 +161,12 @@
     <!-- STATISTIQUES -->
     <section class="stats-section">
         <div class="container">
-            <div class="stats-grid">
-                <div class="stat-card" *ngFor="let stat of statistiques">
-                    <h2>{{stat.valeur}}</h2>
-                    <p>{{stat.label}}</p>
+            <div class="stats-card">
+                <div class="stats-grid">
+                    <div class="stat-card" *ngFor="let stat of statistiques">
+                        <h2>{{stat.valeur}}</h2>
+                        <p>{{stat.label}}</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -343,24 +358,44 @@
 
                     </div>
 
-                    <div class="form-group">
-                        <label for="register-email">Adresse e-mail</label>
-                        <div class="input-icon">
-                            <i class="fa-solid fa-envelope"></i>
-                            <input
-                                id="register-email"
-                                type="email"
-                                formControlName="email"
-                                placeholder="vous@exemple.com"
-                                [class.is-invalid]="rf['email'].invalid && rf['email'].touched">
-                        </div>
-                        @if(rf['email'].invalid && rf['email'].touched){
-                            <span class="form-error">
-                                @if(rf['email'].errors?.['required']){ L'adresse e-mail est requise. }
-                                @if(rf['email'].errors?.['email']){ Veuillez saisir une adresse e-mail valide. }
-                            </span>
-                        }
-                    </div>
+                    <div class="form-grid-2">
+
+    <div class="form-group">
+        <label for="register-email">Adresse e-mail</label>
+        <div class="input-icon">
+            <i class="fa-solid fa-envelope"></i>
+            <input
+                id="register-email"
+                type="email"
+                formControlName="email"
+                placeholder="vous@exemple.com"
+                [class.is-invalid]="rf['email'].invalid && rf['email'].touched">
+        </div>
+        @if(rf['email'].invalid && rf['email'].touched){
+            <span class="form-error">
+                @if(rf['email'].errors?.['required']){ L'adresse e-mail est requise. }
+                @if(rf['email'].errors?.['email']){ Veuillez saisir une adresse e-mail valide. }
+            </span>
+        }
+    </div>
+
+    <div class="form-group">
+        <label for="register-tel">Téléphone</label>
+        <div class="input-icon">
+            <i class="fa-solid fa-phone"></i>
+            <input
+                id="register-tel"
+                type="tel"
+                formControlName="telephone"
+                placeholder="+221 77 000 00 00"
+                [class.is-invalid]="rf['telephone'].invalid && rf['telephone'].touched">
+        </div>
+        @if(rf['telephone'].invalid && rf['telephone'].touched){
+            <span class="form-error">Numéro de téléphone invalide.</span>
+        }
+    </div>
+
+</div>
 
                     <div class="form-group">
                         <label for="register-tel">Téléphone</label>
