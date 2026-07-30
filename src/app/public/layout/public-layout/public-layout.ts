@@ -12,6 +12,8 @@ import { CommonModule } from '@angular/common';
 export class PublicLayout implements AfterViewInit {
   @ViewChild('footer') footerRef!: ElementRef;
   footerHeight = 0;
+  isCurtain = true;
+  isMenuOpen = false;
 
   headerLeftLinks: { label: string, path: string, exact?: boolean }[] = [
     { label: 'Le garage', path: '/a-propos' },
@@ -98,14 +100,16 @@ export class PublicLayout implements AfterViewInit {
   }
 
   updateFooterHeight() {
-    if (window.innerWidth < 768) {
+    if (!this.footerRef) return;
+    const height = this.footerRef.nativeElement.offsetHeight;
+    
+    if (window.innerWidth < 1024 || height > window.innerHeight * 0.8) {
+      this.isCurtain = false;
       this.footerHeight = 0;
-      this.cdr.detectChanges();
-      return;
+    } else {
+      this.isCurtain = true;
+      this.footerHeight = height;
     }
-    if (this.footerRef) {
-      this.footerHeight = this.footerRef.nativeElement.offsetHeight;
-      this.cdr.detectChanges();
-    }
+    this.cdr.detectChanges();
   }
 }

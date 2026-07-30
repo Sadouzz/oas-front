@@ -2,9 +2,6 @@ import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SectionTitle } from '../../shared/components/section-title/section-title';
 import { MagneticCarouselComponent, MagneticItem } from '../../shared/components/magnetic-carousel/magnetic-carousel';
-import { InteractiveServicesListComponent } from '../../shared/components/interactive-services-list/interactive-services-list';
-import { BentoServicesComponent } from '../../shared/components/bento-services/bento-services';
-import { ButtonCarouselComponent } from '../../shared/components/button-carousel/button-carousel';
 import { register } from 'swiper/element/bundle';
 
 register();
@@ -29,10 +26,7 @@ interface Partner {
   imports: [
     RouterLink, 
     SectionTitle, 
-    MagneticCarouselComponent, 
-    InteractiveServicesListComponent, 
-    BentoServicesComponent, 
-    ButtonCarouselComponent
+    MagneticCarouselComponent
   ],
   templateUrl: './home.html',
   styleUrl: './home.css',

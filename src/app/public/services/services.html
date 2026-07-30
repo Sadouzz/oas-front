@@ -51,8 +51,7 @@
           <div class="flex-1 flex flex-col justify-start relative pb-8 mt-8 lg:mt-12">
             <p class="service-number">{{ activeService.number }} — Service OAS</p>
             <h2>{{ activeService.title }}</h2>
-            <img *ngIf="activeService.image" [src]="activeService.image" [alt]="activeService.title" class="w-full h-48 md:h-64 object-cover rounded-none my-6 shadow-xl" />
-            <p class="service-summary">{{ activeService.summary }}</p>
+            <p class="service-summary mt-6">{{ activeService.summary }}</p>
             <div>
               <a [routerLink]="['/services', activeService.slug]">Découvrir le service <span>→</span></a>
             </div>
@@ -79,7 +78,7 @@
   </div>
 </section>
 
-<section class="py-40 bg-oas-accent text-white text-center relative overflow-hidden" appScrollReveal>
+<section class="py-24 lg:py-40 bg-oas-accent text-white text-center relative overflow-hidden" appScrollReveal>
   <div class="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
     <h1 class="text-[20vw] font-black tracking-tighter whitespace-nowrap">RÉVISION</h1>
   </div>
@@ -136,7 +135,7 @@
       ></app-section-title>
       <p>Nous plaçons la confiance au centre de chaque intervention : un conseil compréhensible, une solution adaptée et un suivi attentif.</p>
     </div>
-    <div class="trust-points">
+    <div class="trust-points lg:mt-12 lg:pt-8">
       <p *ngFor="let point of trustPoints; let i = index" appScrollReveal [appScrollRevealDelay]="(i + 1) * 80">
         <b>{{ point.step }}</b>
         <span><strong>{{ point.title }}</strong>{{ point.desc }}</span>
@@ -145,7 +144,7 @@
   </div>
 </section>
 
-<section class="py-40 bg-white text-center relative overflow-hidden">
+<section class="py-24 lg:py-40 bg-white text-center relative overflow-hidden">
   <div class="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
     <h1 class="text-[12vw] font-black tracking-tighter whitespace-nowrap text-oas-navy-dark">VOUS NE SAVEZ PAS</h1>
   </div>

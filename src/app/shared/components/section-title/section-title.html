@@ -4,7 +4,7 @@
        'text-left items-start': align === 'left',
        'text-right items-end': align === 'right'
      }">
-    <h2 class="uppercase font-extrabold text-balance text-3xl lg:text-6xl block tracking-tighter"
+    <h2 class="uppercase font-extrabold text-balance text-3xl md:text-5xl lg:text-6xl block tracking-tighter"
         [ngClass]="theme === 'light' ? 'text-oas-navy-dark' : 'text-white'">
         {{ mainTitle }}<em *ngIf="highlightedText" class="not-italic" [ngClass]="theme === 'accent' ? 'text-white' : 'text-oas-accent'"> {{ highlightedText }}</em>
     </h2>

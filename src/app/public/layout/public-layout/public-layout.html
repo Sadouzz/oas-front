@@ -31,7 +31,7 @@
 
       <!-- MENU MOBILE (Droite) -->
       <div class="flex lg:hidden w-[50%] md:w-[50%] h-full items-center px-4 justify-center bg-transparent transition-colors duration-300">
-        <button class="flex items-center gap-2 bg-transparent border-0 cursor-pointer font-bold tracking-widest text-xs uppercase text-oas-navy-dark" aria-label="Ouvrir le menu">
+        <button (click)="isMenuOpen = true" class="flex items-center gap-2 bg-transparent border-0 cursor-pointer font-bold tracking-widest text-xs uppercase text-oas-navy-dark" aria-label="Ouvrir le menu">
           <span>MENU</span>
           <svg width="20" height="14" viewBox="0 0 20 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
             <line x1="0" y1="1" x2="20" y2="1" />
@@ -55,6 +55,18 @@
     </nav>
   </header>
 
+  <!-- Mobile Menu Overlay -->
+  <div *ngIf="isMenuOpen" class="fixed inset-0 z-[2000] bg-white flex flex-col pt-24 px-6 pb-6 overflow-y-auto animate-slide-in-right">
+    <button (click)="isMenuOpen = false" class="absolute top-6 right-6 p-2 text-oas-navy-dark cursor-pointer">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <div class="flex flex-col gap-6 text-xl md:text-2xl font-bold uppercase tracking-widest mt-8">
+      <a *ngFor="let link of headerLeftLinks" [routerLink]="link.path" (click)="isMenuOpen = false" class="text-oas-navy-dark hover:text-oas-accent">{{ link.label }}</a>
+      <hr class="border-oas-line/50 my-2" />
+      <a *ngFor="let link of headerRightLinks" [routerLink]="link.path" (click)="isMenuOpen = false" class="text-oas-navy-dark hover:text-oas-accent">{{ link.label }}</a>
+    </div>
+  </div>
+
   <!-- Main Content -->
   <main class="flex-grow">
     <router-outlet></router-outlet>
@@ -75,7 +87,7 @@
 
   <!-- Footer -->
   <!-- Footer (Sibiri Layout, Curtain Effect) -->
-  <footer #footer class="relative md:fixed md:bottom-0 md:left-0 w-full z-0 bg-white">
+  <footer #footer [ngClass]="isCurtain ? 'lg:fixed lg:bottom-0 lg:left-0' : 'relative'" class="w-full z-0 bg-white">
     <div class="bg-oas-navy-dark text-white p-6 md:p-8 lg:p-6 lg:pb-4 flex flex-col justify-between relative overflow-hidden">
         
         <!-- TOP ROW -->
