@@ -230,22 +230,7 @@
 
             <button class="close-modal" (click)="closeModal()" aria-label="Fermer">×</button>
 
-            <div class="auth-tabs">
-                <button
-                    type="button"
-                    class="auth-tab"
-                    [class.active]="activeTab === 'login'"
-                    (click)="switchTab('login')">
-                    Connexion
-                </button>
-                <button
-                    type="button"
-                    class="auth-tab"
-                    [class.active]="activeTab === 'register'"
-                    (click)="switchTab('register')">
-                    Inscription
-                </button>
-            </div>
+
 
             <!-- Messages -->
             @if(errorMessage){
