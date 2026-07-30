@@ -1,11 +1,105 @@
-import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  OnDestroy,
+  ViewChild,
+} from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { SERVICES, Service } from './services.data';
+import { ScrollRevealDirective } from '../shared/scroll-reveal.directive';
 
 @Component({
   selector: 'app-services',
-  imports: [],
+  standalone: true,
+  imports: [CommonModule, RouterLink, ScrollRevealDirective],
   templateUrl: './services.html',
   styleUrl: './services.css',
 })
-export class Services {
+export class Services implements AfterViewInit, OnDestroy {
+  private static readonly WHEEL_ANGLE_STEP = Math.PI / 2;
+  private static readonly WHEEL_RADIUS_X = 260;
+  private static readonly WHEEL_RADIUS_Y = 220;
+  private static readonly WHEEL_CENTER_Y = 250;
 
+  @ViewChild('journey') journey?: ElementRef<HTMLElement>;
+
+  readonly services = SERVICES;
+  activeIndex = 0;
+
+  private resizeObserver?: ResizeObserver;
+  private scrollFrameRequested = false;
+
+  get activeService(): Service {
+    return this.services[this.activeIndex];
+  }
+
+  ngAfterViewInit(): void {
+    const journeyElement = this.journey?.nativeElement;
+    if (!journeyElement) return;
+
+    journeyElement.addEventListener('scroll', this.onJourneyScroll, { passive: true });
+    this.resizeObserver = new ResizeObserver(() => this.updateActiveService());
+    this.resizeObserver.observe(journeyElement);
+    this.updateActiveService();
+  }
+
+  ngOnDestroy(): void {
+    this.journey?.nativeElement.removeEventListener('scroll', this.onJourneyScroll);
+    this.resizeObserver?.disconnect();
+  }
+
+  private readonly onJourneyScroll = (): void => {
+    if (this.scrollFrameRequested) return;
+
+    this.scrollFrameRequested = true;
+    requestAnimationFrame(() => {
+      this.updateActiveService();
+      this.scrollFrameRequested = false;
+    });
+  };
+
+  selectService(index: number): void {
+    const journeyElement = this.journey?.nativeElement;
+    if (!journeyElement) return;
+
+    journeyElement.scrollTo({ top: index * journeyElement.clientHeight, behavior: 'smooth' });
+  }
+
+  bubbleX(index: number): number {
+    return Services.WHEEL_RADIUS_X * Math.cos(this.bubbleAngle(index));
+  }
+
+  bubbleY(index: number): number {
+    return Services.WHEEL_CENTER_Y + Services.WHEEL_RADIUS_Y * Math.sin(this.bubbleAngle(index));
+  }
+
+  bubbleOpacity(index: number): number {
+    const distance = Math.abs(index - this.activeIndex);
+    if (distance === 0) return 1;
+    if (distance === 1) return 0.72;
+    return 0;
+  }
+
+  isBubbleVisible(index: number): boolean {
+    return Math.abs(index - this.activeIndex) <= 1;
+  }
+
+  private bubbleAngle(index: number): number {
+    const offset = index - this.activeIndex;
+    const parkedOffset = Math.max(-2, Math.min(2, offset));
+    return parkedOffset * Services.WHEEL_ANGLE_STEP;
+  }
+
+  private updateActiveService(): void {
+    const journeyElement = this.journey?.nativeElement;
+    if (!journeyElement || window.innerWidth < 900) return;
+
+    const scrollableDistance = Math.max(journeyElement.scrollHeight - journeyElement.clientHeight, 1);
+    const progress = Math.min(1, Math.max(0, journeyElement.scrollTop / scrollableDistance));
+    const nextIndex = Math.min(this.services.length - 1, Math.round(progress * (this.services.length - 1)));
+
+    if (nextIndex !== this.activeIndex) this.activeIndex = nextIndex;
+  }
 }

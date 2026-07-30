@@ -1,0 +1,33 @@
+<ng-container *ngIf="service() as current; else missing">
+  <section class="detail-hero">
+    <div>
+      <p class="hero-in" style="animation-delay:.05s">{{ current.number }} — SERVICE OAS</p>
+      <h1 class="hero-in" style="animation-delay:.15s">{{ current.title }}</h1>
+      <div class="detail-intro hero-in" style="animation-delay:.3s">
+        <p>{{ current.description }}</p>
+        <a routerLink="/rdv">Prendre rendez-vous <span>→</span></a>
+      </div>
+    </div>
+  </section>
+
+  <main class="detail-main">
+    <section class="detail-grid" appScrollReveal>
+      <div><p class="eyebrow">Ce que nous prenons en charge</p><h2>Une réponse adaptée à votre véhicule.</h2></div>
+      <ul><li *ngFor="let item of current.includes; let i = index" appScrollReveal [appScrollRevealDelay]="i * 70">{{ item }}</li></ul>
+    </section>
+    <section class="detail-alert" appScrollReveal>
+      <div><p class="eyebrow">Les signes qui doivent alerter</p><h2>N’attendez pas que le problème s’aggrave.</h2></div>
+      <div><p *ngFor="let item of current.alert; let i = index" appScrollReveal [appScrollRevealDelay]="i * 70"><b>•</b>{{ item }}</p></div>
+    </section>
+    <section class="detail-process">
+      <p class="eyebrow" appScrollReveal>L’intervention OAS</p>
+      <div>
+        <article appScrollReveal [appScrollRevealDelay]="0"><span>01</span><h3>Contrôle</h3><p>Nous vérifions les éléments concernés.</p></article>
+        <article appScrollReveal [appScrollRevealDelay]="90"><span>02</span><h3>Explication</h3><p>Vous recevez un diagnostic et un devis clair.</p></article>
+        <article appScrollReveal [appScrollRevealDelay]="180"><span>03</span><h3>Intervention</h3><p>Nous intervenons après votre validation.</p></article>
+      </div>
+    </section>
+    <section class="detail-cta" appScrollReveal><p>Besoin d’un conseil ?</p><h2>Parlons de votre véhicule.</h2><a routerLink="/devis">Demander un devis <span>→</span></a></section>
+  </main>
+</ng-container>
+<ng-template #missing><section class="missing"><h1>Service introuvable</h1><a routerLink="/services">Retour aux services</a></section></ng-template>

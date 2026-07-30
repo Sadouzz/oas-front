@@ -15,6 +15,7 @@ export const routes: Routes = [
     children: [
       { path: '', loadComponent: () => import('./public/home/home').then(m => m.Home) },
       { path: 'services', loadComponent: () => import('./public/services/services').then(m => m.Services) },
+      { path: 'services/:slug', loadComponent: () => import('./public/services/service-detail').then(m => m.ServiceDetail) },
       { path: 'realisations', loadComponent: () => import('./public/realisations/realisations').then(m => m.Realisations) },
       { path: 'blog', loadComponent: () => import('./public/blog/blog').then(m => m.Blog) },
       { path: 'a-propos', loadComponent: () => import('./public/about/about').then(m => m.About) },
