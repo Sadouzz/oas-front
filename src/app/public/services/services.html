@@ -1,7 +1,12 @@
 <section class="services-hero">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
-    <p class="eyebrow hero-in" style="animation-delay:.05s">L’expertise OAS</p>
-    <h1 class="hero-in" style="animation-delay:.15s">Chaque besoin mérite<br><span>la bonne intervention.</span></h1>
+    <app-section-title 
+        mainTitle="Chaque besoin mérite"
+        highlightedText="la bonne intervention."
+        subtitle="L’expertise OAS"
+        align="left"
+        theme="dark"
+    ></app-section-title>
     <p class="hero-in" style="animation-delay:.28s">De l’entretien courant à l’assistance, nos équipes prennent soin de votre véhicule avec rigueur et clarté.</p>
     <div class="hero-actions hero-in" style="animation-delay:.4s">
       <a routerLink="/rdv">Prendre rendez-vous</a>
@@ -13,12 +18,9 @@
 <section #journey class="service-journey">
   <div class="journey-sticky">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 journey-content">
-      <div class="journey-intro">
-        <p class="eyebrow">Nos domaines d’intervention</p>
-        <p>Faites défiler pour explorer nos services</p>
-      </div>
 
-      <div class="journey-layout">
+
+      <div class="journey-layout relative">
         <div class="bubble-track" aria-label="Liste des services">
           <button
             *ngFor="let service of services; let index = index"
@@ -37,11 +39,25 @@
         </div>
 
         <article class="service-copy" aria-live="polite">
-          <p class="service-number">{{ activeService.number }} — Service OAS</p>
-          <h2>{{ activeService.title }}</h2>
-          <p class="service-summary">{{ activeService.summary }}</p>
-          <a [routerLink]="['/services', activeService.slug]">Découvrir le service <span>→</span></a>
-          <div class="journey-counter"><b>{{ activeIndex + 1 }}</b><span>/ {{ services.length }}</span></div>
+          <div class="transform origin-top-left scale-[0.65] lg:scale-[0.7] hidden md:block mt-2">
+            <app-section-title 
+                mainTitle="Une solution pour"
+                highlightedText="chaque besoin."
+                subtitle="Nos domaines d’intervention"
+                align="left"
+                theme="light"
+            ></app-section-title>
+          </div>
+          <div class="flex-1 flex flex-col justify-start relative pb-8 mt-8 lg:mt-12">
+            <p class="service-number">{{ activeService.number }} — Service OAS</p>
+            <h2>{{ activeService.title }}</h2>
+            <img *ngIf="activeService.image" [src]="activeService.image" [alt]="activeService.title" class="w-full h-48 md:h-64 object-cover rounded-none my-6 shadow-xl" />
+            <p class="service-summary">{{ activeService.summary }}</p>
+            <div>
+              <a [routerLink]="['/services', activeService.slug]">Découvrir le service <span>→</span></a>
+            </div>
+            <div class="journey-counter absolute right-0 bottom-4"><b>{{ activeIndex + 1 }}</b><span>/ {{ services.length }}</span></div>
+          </div>
         </article>
       </div>
     </div>
@@ -63,43 +79,92 @@
   </div>
 </section>
 
-<section class="revision-section" appScrollReveal>
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div>
-      <p class="eyebrow">Révision constructeur</p>
-      <h2>Préservez les performances<br>et la valeur de votre véhicule.</h2>
-      <p>Nous adaptons l’entretien aux préconisations de votre constructeur, pour un suivi complet et serein.</p>
+<section class="py-40 bg-oas-accent text-white text-center relative overflow-hidden" appScrollReveal>
+  <div class="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+    <h1 class="text-[20vw] font-black tracking-tighter whitespace-nowrap">RÉVISION</h1>
+  </div>
+  <div class="relative z-10 max-w-4xl mx-auto px-6">
+    <app-section-title 
+      align="center"
+      theme="accent"
+      mainTitle="PRÉSERVEZ LES PERFORMANCES" 
+      highlightedText="ET LA VALEUR DE VOTRE VÉHICULE." 
+      subtitle="Révision constructeur">
+    </app-section-title>
+    <p class="mt-8 text-white/90 text-lg max-w-2xl mx-auto">
+      Nous adaptons l’entretien aux préconisations de votre constructeur, pour un suivi complet et serein.
+    </p>
+    <div class="mt-12">
+      <a routerLink="/services/entretien-vidange" class="inline-flex items-center gap-4 px-10 py-5 bg-oas-navy-dark text-white hover:bg-white hover:text-oas-navy-dark transition-colors duration-300 text-sm font-bold tracking-[0.2em] uppercase shadow-2xl group rounded-none">
+        Découvrir la révision
+        <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </a>
     </div>
-    <a routerLink="/services/entretien-vidange">Découvrir la révision <span>→</span></a>
   </div>
 </section>
 
 <section class="process-section max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-  <div class="section-title" appScrollReveal><p class="eyebrow">Notre méthode</p><h2>Une intervention claire, à chaque étape.</h2></div>
+  <div class="section-title" appScrollReveal>
+    <app-section-title 
+        mainTitle="Une intervention claire,"
+        highlightedText="à chaque étape."
+        subtitle="Notre méthode"
+        align="left"
+        theme="light"
+    ></app-section-title>
+  </div>
   <div class="process-list">
-    <article appScrollReveal [appScrollRevealDelay]="0"><span>01</span><h3>Vous nous expliquez votre besoin</h3><p>Par téléphone, en ligne ou directement à l’atelier.</p></article>
-    <article appScrollReveal [appScrollRevealDelay]="90"><span>02</span><h3>Nous réalisons le contrôle</h3><p>Un diagnostic précis pour comprendre la situation.</p></article>
-    <article appScrollReveal [appScrollRevealDelay]="180"><span>03</span><h3>Vous recevez un devis clair</h3><p>Nous expliquons l’intervention avant toute décision.</p></article>
-    <article appScrollReveal [appScrollRevealDelay]="270"><span>04</span><h3>Nous intervenons après validation</h3><p>Votre véhicule est contrôlé avant sa restitution.</p></article>
+    <article *ngFor="let step of processSteps; let i = index" appScrollReveal [appScrollRevealDelay]="i * 90">
+      <span>{{ step.step }}</span>
+      <h3>{{ step.title }}</h3>
+      <p>{{ step.desc }}</p>
+    </article>
   </div>
 </section>
 
 <section class="trust-section">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="trust-copy" appScrollReveal><p class="eyebrow">Pourquoi OAS ?</p><h2>Un atelier qui vous parle simplement.</h2><p>Nous plaçons la confiance au centre de chaque intervention : un conseil compréhensible, une solution adaptée et un suivi attentif.</p></div>
+    <div class="trust-copy" appScrollReveal>
+      <app-section-title 
+          mainTitle="Un atelier qui vous"
+          highlightedText="parle simplement."
+          subtitle="Pourquoi OAS ?"
+          align="left"
+          theme="dark"
+      ></app-section-title>
+      <p>Nous plaçons la confiance au centre de chaque intervention : un conseil compréhensible, une solution adaptée et un suivi attentif.</p>
+    </div>
     <div class="trust-points">
-      <p appScrollReveal [appScrollRevealDelay]="80"><b>01</b><span><strong>Des explications claires</strong>Vous savez ce qui est fait sur votre véhicule.</span></p>
-      <p appScrollReveal [appScrollRevealDelay]="160"><b>02</b><span><strong>Des pièces adaptées</strong>Des solutions pensées pour votre sécurité et votre budget.</span></p>
-      <p appScrollReveal [appScrollRevealDelay]="240"><b>03</b><span><strong>Un suivi personnalisé</strong>Une équipe disponible à chaque étape.</span></p>
+      <p *ngFor="let point of trustPoints; let i = index" appScrollReveal [appScrollRevealDelay]="(i + 1) * 80">
+        <b>{{ point.step }}</b>
+        <span><strong>{{ point.title }}</strong>{{ point.desc }}</span>
+      </p>
     </div>
   </div>
 </section>
 
-<section class="services-cta">
-  <div appScrollReveal>
-    <p class="eyebrow">Besoin d’être orienté ?</p>
-    <h2>Vous ne savez pas quel service choisir ?</h2>
-    <p>Expliquez-nous simplement votre situation : nous vous guidons vers la bonne intervention.</p>
-    <a routerLink="/contact">Demander conseil <span>→</span></a>
+<section class="py-40 bg-white text-center relative overflow-hidden">
+  <div class="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
+    <h1 class="text-[12vw] font-black tracking-tighter whitespace-nowrap text-oas-navy-dark">VOUS NE SAVEZ PAS</h1>
+  </div>
+  <div class="relative z-10 max-w-3xl mx-auto px-6" appScrollReveal>
+    <app-section-title 
+      align="center"
+      theme="light"
+      mainTitle="QUEL SERVICE" 
+      highlightedText="CHOISIR ?" 
+      subtitle="Besoin d’être orienté ?">
+    </app-section-title>
+    <p class="mt-6 text-oas-navy-dark/80 text-lg">Expliquez-nous simplement votre situation : nous vous guidons vers la bonne intervention.</p>
+    <div class="mt-12">
+      <a routerLink="/contact" class="inline-flex items-center gap-4 px-10 py-5 bg-oas-navy-dark text-white hover:bg-oas-accent hover:text-white transition-colors duration-300 text-sm font-bold tracking-[0.2em] uppercase shadow-2xl group rounded-none">
+        Demander conseil
+        <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </a>
+    </div>
   </div>
 </section>

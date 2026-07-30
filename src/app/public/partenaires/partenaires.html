@@ -10,15 +10,13 @@
 
             <div class="hero-content" data-aos="fade-up">
 
-                <span class="hero-badge">
-                    <app-icon name="handshake" [size]="18"></app-icon>
-                    Nos partenaires automobiles
-                </span>
-
-                <h1>
-                    Les plus grandes marques
-                    <span>nous font confiance.</span>
-                </h1>
+                <app-section-title 
+                    mainTitle="Les plus grandes marques"
+                    highlightedText="nous font confiance."
+                    subtitle="Nos partenaires automobiles"
+                    align="left"
+                    theme="dark"
+                ></app-section-title>
 
                 <p>
                     Orient Auto Service accompagne les propriétaires de véhicules
@@ -52,31 +50,25 @@
 
         <div class="container">
 
-            <div class="section-header">
-
-                <span>Marques prises en charge</span>
-
-                <h2>Les marques entretenues chez OAS</h2>
-
-                <p>
+            <div class="mb-12">
+                <app-section-title 
+                    mainTitle="Les marques"
+                    highlightedText="entretenues chez OAS"
+                    subtitle="Marques prises en charge"
+                    align="center"
+                    theme="light"
+                ></app-section-title>
+                <p class="text-center text-oas-muted mt-4">
                     Nous assurons l'entretien, le diagnostic et la réparation
                     des véhicules des plus grands constructeurs automobiles.
                 </p>
-
             </div>
 
             <div
-                class="brands-carousel"
+                class="brands-carousel relative"
+                style="-webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent); mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);"
                 (mouseenter)="stopAutoplay()"
                 (mouseleave)="startAutoplay()">
-
-                <button
-                    type="button"
-                    class="carousel-btn carousel-btn-prev"
-                    (click)="prev()"
-                    aria-label="Marque précédente">
-                    <app-icon name="chevron-left" [size]="20"></app-icon>
-                </button>
 
                 <div
                     class="brands-track"
@@ -121,13 +113,7 @@
 
                 </div>
 
-                <button
-                    type="button"
-                    class="carousel-btn carousel-btn-next"
-                    (click)="next()"
-                    aria-label="Marque suivante">
-                    <app-icon name="chevron-right" [size]="20"></app-icon>
-                </button>
+
 
             </div>
 
@@ -152,12 +138,14 @@
 
         <div class="container">
 
-            <div class="section-header">
-
-                <span>Notre savoir-faire</span>
-
-                <h2>Nos domaines d'expertise</h2>
-
+            <div class="mb-12">
+                <app-section-title 
+                    mainTitle="Nos domaines"
+                    highlightedText="d'expertise"
+                    subtitle="Notre savoir-faire"
+                    align="center"
+                    theme="light"
+                ></app-section-title>
             </div>
 
             <div class="expertise-grid">
@@ -191,12 +179,14 @@
 
         <div class="container">
 
-            <div class="section-header">
-
-                <span>Pourquoi OAS ?</span>
-
-                <h2>Pourquoi choisir notre garage ?</h2>
-
+            <div class="mb-12">
+                <app-section-title 
+                    mainTitle="Pourquoi choisir"
+                    highlightedText="notre garage ?"
+                    subtitle="Pourquoi OAS ?"
+                    align="center"
+                    theme="light"
+                ></app-section-title>
             </div>
 
             <div class="advantages-grid">
@@ -221,48 +211,38 @@
     </section>
 
     <!-- CTA -->
-
-    <section class="cta-section">
-
-        <div class="container">
-
-            <div class="cta-card">
-
-                <div>
-
-                    <span>Orient Auto Service</span>
-
-                    <h2>
-                        Confiez votre véhicule à des spécialistes.
-                    </h2>
-
-                    <p>
-                        Notre équipe met son expérience au service
-                        de votre véhicule, quelle que soit sa marque.
-                    </p>
-
-                </div>
-
-                <div class="cta-buttons">
-
-                    <a routerLink="/rdv" class="btn-primary">
-
-                        Prendre rendez-vous
-
-                    </a>
-
-                    <a routerLink="/contact" class="btn-outline">
-
-                        Nous contacter
-
-                    </a>
-
-                </div>
-
-            </div>
-
+    <section class="py-40 bg-oas-accent text-white text-center relative overflow-hidden">
+        <div class="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+            <h1 class="text-[25vw] font-black tracking-tighter whitespace-nowrap">CONTACT</h1>
         </div>
+        <div class="relative z-10 max-w-3xl mx-auto px-6">
+            <app-section-title 
+                align="center"
+                theme="accent"
+                mainTitle="Confiez votre véhicule à"
+                highlightedText="des spécialistes."
+                subtitle="Orient Auto Service"
+            ></app-section-title>
 
+            <div class="mt-12">
+                <p class="text-white/90 text-lg mb-8">
+                    Notre équipe met son expérience au service de votre véhicule, quelle que soit sa marque.
+                </p>
+
+                <div class="flex justify-center gap-4">
+                    <a routerLink="/rdv" class="inline-flex items-center gap-4 px-10 py-5 bg-oas-navy-dark text-white hover:bg-white hover:text-oas-navy-dark transition-colors duration-300 text-sm font-bold tracking-[0.2em] uppercase shadow-2xl group">
+                        Prendre rendez-vous
+                        <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                        </svg>
+                    </a>
+
+                    <a routerLink="/contact" class="inline-flex items-center gap-4 px-10 py-5 border-2 border-white text-white hover:bg-white hover:text-oas-navy-dark transition-colors duration-300 text-sm font-bold tracking-[0.2em] uppercase shadow-2xl group">
+                        Nous contacter
+                    </a>
+                </div>
+            </div>
+        </div>
     </section>
 
 </section>

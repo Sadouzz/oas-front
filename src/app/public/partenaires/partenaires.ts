@@ -4,11 +4,12 @@ import { RouterModule } from '@angular/router';
 import AOS from 'aos';
 
 import { IconComponent } from '../../shared/icon/icon';
+import { SectionTitle } from '../../shared/components/section-title/section-title';
 
 @Component({
   selector: 'app-partenaires',
   standalone: true,
-  imports: [CommonModule, RouterModule, IconComponent],
+  imports: [CommonModule, RouterModule, IconComponent, SectionTitle],
   templateUrl: './partenaires.html',
   styleUrls: ['./partenaires.css']
 })

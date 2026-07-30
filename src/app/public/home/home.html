@@ -100,26 +100,25 @@
     <div class="px-6 md:px-12 lg:px-24 mx-auto max-w-[1400px]">
       <app-section-title 
         align="left"
-        mainTitle="NOTRE EXPERTISE." 
-        highlightedText="(Magnétique)" 
-        subtitle="Style 01">
+        mainTitle="DÉCOUVREZ NOS" 
+        highlightedText="SERVICES." 
+        subtitle="Nos prestations">
       </app-section-title>
     </div>
 
     <!-- Carousel (full bleed) -->
-    <div class="mt-12 h-[500px] md:h-[600px] w-full border-t border-oas-line/50 pt-12 overflow-hidden relative">
-      <app-magnetic-carousel [items]="servicesImages"></app-magnetic-carousel>
+    <div class="mt-4 h-[400px] md:h-[500px] w-full pt-4 overflow-hidden relative" style="-webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent); mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);">
+      <app-magnetic-carousel 
+        [items]="servicesImages"
+        [collapsedWidth]="220"
+        [hoverWidth]="380"
+        [gap]="8"
+        [influence]="250">
+      </app-magnetic-carousel>
     </div>
   </section>
 
-  <!-- STYLE 02: Awwwards Interactive List -->
-  <app-interactive-services-list [items]="servicesImages"></app-interactive-services-list>
 
-  <!-- STYLE 03: Apple Bento Grid -->
-  <app-bento-services [items]="servicesImages"></app-bento-services>
-
-  <!-- STYLE 04: Klarna Button Carousel -->
-  <app-button-carousel [items]="servicesImages"></app-button-carousel>
 
   <!-- TESTIMONIALS (MINIMAL GRID) -->
   <section class="py-12 bg-white text-oas-navy-dark">

@@ -5,11 +5,12 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { SERVICES } from './services.data';
 import { ScrollRevealDirective } from '../shared/scroll-reveal.directive';
+import { SectionTitle } from '../../shared/components/section-title/section-title';
 
 @Component({
   selector: 'app-service-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, ScrollRevealDirective],
+  imports: [CommonModule, RouterLink, ScrollRevealDirective, SectionTitle],
   templateUrl: './service-detail.html',
   styleUrl: './service-detail.css',
 })

@@ -34,14 +34,16 @@ function passwordsMatchValidator(): ValidatorFn {
 
 type OngletAuth = 'login' | 'register';
 
+import { SectionTitle } from '../../shared/components/section-title/section-title';
+
 @Component({
   selector: 'app-rdv',
   standalone: true,
   imports: [
     CommonModule,
-    RouterLink,
     ReactiveFormsModule,
-    IconComponent
+    IconComponent,
+    SectionTitle
   ],
   templateUrl: './rdv.html',
   styleUrl: './rdv.css'

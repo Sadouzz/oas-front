@@ -6,25 +6,17 @@
 
         <div class="hero-overlay"></div>
 
-        <div class="container">
+        <div class="container flex justify-start">
 
-            <div class="hero-content" data-aos="fade-up">
+            <div class="hero-content flex flex-col items-start text-left" data-aos="fade-up">
 
-                <span class="hero-badge">
-
-                    <app-icon name="headphones" [size]="20"></app-icon>
-
-                    Nous sommes à votre écoute
-
-                </span>
-
-                <h1>
-
-                    Contactez
-
-                    <span>Orient Auto Service</span>
-
-                </h1>
+                <app-section-title 
+                    mainTitle="Contactez"
+                    highlightedText="Orient Auto Service"
+                    subtitle="Nous sommes à votre écoute"
+                    align="left"
+                    theme="dark"
+                ></app-section-title>
 
                 <p>
 
@@ -33,7 +25,7 @@
 
                 </p>
 
-                <div class="hero-buttons">
+                <div class="hero-buttons justify-start w-full">
 
                     <a href="tel:+221770000000" class="btn-primary">
 
@@ -65,16 +57,14 @@
 
         <div class="container">
 
-            <div class="section-header">
-
-                <span>Nos coordonnées</span>
-
-                <h2>
-
-                    Nous contacter facilement
-
-                </h2>
-
+            <div class="mb-12">
+                <app-section-title 
+                    mainTitle="Nous contacter"
+                    highlightedText="facilement"
+                    subtitle="Nos coordonnées"
+                    align="center"
+                    theme="light"
+                ></app-section-title>
             </div>
 
             <div class="contact-grid">
@@ -154,16 +144,14 @@
                     class="form-card"
                     data-aos="fade-right">
 
-                    <div class="section-header left">
-
-                        <span>Envoyez-nous un message</span>
-
-                        <h2>
-
-                            Nous vous répondrons rapidement
-
-                        </h2>
-
+                    <div class="mb-8">
+                        <app-section-title 
+                            mainTitle="Nous vous répondrons"
+                            highlightedText="rapidement"
+                            subtitle="Envoyez-nous un message"
+                            align="left"
+                            theme="light"
+                        ></app-section-title>
                     </div>
 
                     <form [formGroup]="formulaire" (ngSubmit)="onSubmit()">
@@ -278,39 +266,10 @@
                     </p>
 
                     <ul>
-
-                        <li>
-
+                        <li *ngFor="let raison of raisonsContact">
                             <app-icon name="check-circle" [size]="18"></app-icon>
-
-                            Demander un devis
-
+                            {{ raison }}
                         </li>
-
-                        <li>
-
-                            <app-icon name="check-circle" [size]="18"></app-icon>
-
-                            Obtenir des informations
-
-                        </li>
-
-                        <li>
-
-                            <app-icon name="check-circle" [size]="18"></app-icon>
-
-                            Planifier une intervention
-
-                        </li>
-
-                        <li>
-
-                            <app-icon name="check-circle" [size]="18"></app-icon>
-
-                            Suivre votre véhicule
-
-                        </li>
-
                     </ul>
 
                     <div class="contact-side-quick">
@@ -347,16 +306,14 @@
 
         <div class="container">
 
-            <div class="section-header">
-
-                <span>Localisation</span>
-
-                <h2>
-
-                    Retrouvez-nous
-
-                </h2>
-
+            <div class="mb-12">
+                <app-section-title 
+                    mainTitle="Retrouvez-nous"
+                    highlightedText=""
+                    subtitle="Localisation"
+                    align="center"
+                    theme="light"
+                ></app-section-title>
             </div>
 
             <div class="map">
@@ -391,34 +348,27 @@
 
         <div class="container">
 
-            <div class="section-header">
-
-                <span>FAQ</span>
-
-                <h2>
-
-                    Questions fréquentes
-
-                </h2>
-
+            <div class="mb-12">
+                <app-section-title 
+                    mainTitle="Questions"
+                    highlightedText="fréquentes"
+                    subtitle="FAQ"
+                    align="center"
+                    theme="light"
+                ></app-section-title>
             </div>
 
             <div
-                class="faq-card"
-                *ngFor="let question of questions">
-
-                <h3>
-
-                    {{ question.question }}
-
-                </h3>
-
-                <p>
-
-                    {{ question.reponse }}
-
-                </p>
-
+                class="faq-card cursor-pointer mb-4 border border-oas-line bg-white shadow-sm hover:shadow-md transition-shadow"
+                *ngFor="let question of questions; let i = index"
+                (click)="toggleFaq(i)">
+                <div class="flex justify-between items-center px-8 py-6">
+                    <h3 class="!mb-0 text-lg font-bold text-oas-navy m-0">{{ question.question }}</h3>
+                    <app-icon name="chevron-down" [size]="20" class="text-oas-accent transition-transform duration-300" [class.rotate-180]="activeFaqIndex === i"></app-icon>
+                </div>
+                <div class="faq-answer overflow-hidden transition-all duration-300 px-8" [style.max-height]="activeFaqIndex === i ? '500px' : '0px'" [style.padding-bottom]="activeFaqIndex === i ? '24px' : '0px'">
+                    <p class="text-oas-ink2 m-0">{{ question.reponse }}</p>
+                </div>
             </div>
 
         </div>
@@ -427,44 +377,27 @@
 
     <!-- CTA -->
 
-    <section class="cta-section">
-
-        <div class="container">
-
-            <div class="cta-card">
-
-                <div>
-
-                    <span>
-
-                        Orient Auto Service
-
-                    </span>
-
-                    <h2>
-
-                        Votre satisfaction est notre priorité.
-
-                    </h2>
-
-                    <p>
-
-                        Prenez rendez-vous ou contactez-nous dès aujourd'hui.
-
-                    </p>
-
-                </div>
-
-                <a href="tel:+221770000000" class="btn-primary">
-
-                    Prendre rendez-vous
-
-                </a>
-
-            </div>
-
-        </div>
-
-    </section>
+  <section class="py-40 bg-oas-accent text-white text-center relative overflow-hidden">
+    <div class="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+      <h1 class="text-[30vw] font-black tracking-tighter whitespace-nowrap">CONTACT</h1>
+    </div>
+    <div class="relative z-10 max-w-3xl mx-auto px-6">
+      <app-section-title 
+        align="center"
+        theme="accent"
+        mainTitle="VOTRE SATISFACTION" 
+        highlightedText="EST NOTRE PRIORITÉ." 
+        subtitle="Orient Auto Service">
+      </app-section-title>
+      <div class="mt-12">
+        <a routerLink="/rdv" class="inline-flex items-center gap-4 px-10 py-5 bg-oas-navy-dark text-white hover:bg-white hover:text-oas-navy-dark transition-colors duration-300 text-sm font-bold tracking-[0.2em] uppercase shadow-2xl group">
+          Prendre rendez-vous
+          <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
 
 </section>

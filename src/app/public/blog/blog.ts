@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { SectionTitle } from '../../shared/components/section-title/section-title';
 
 type Category = 'Tous' | 'Conseils automobiles' | 'Entretien' | 'Sécurité' | 'Actualités';
 
@@ -17,7 +18,7 @@ interface Article {
 @Component({
   selector: 'app-blog',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SectionTitle],
   templateUrl: './blog.html',
   styleUrl: './blog.css',
 })
@@ -25,6 +26,21 @@ export class Blog {
   readonly categories: Category[] = ['Tous', 'Conseils automobiles', 'Entretien', 'Sécurité', 'Actualités'];
   selectedCategory: Category = 'Tous';
   searchTerm = '';
+
+  readonly pageText = {
+    featuredEyebrow: 'À la une',
+    featuredTitle: 'Les dernières publications',
+    featuredSubtitle: 'Nos conseils les plus récents',
+    allArticlesEyebrow: 'Toutes nos publications',
+    allArticlesTitle: 'Explorez nos articles',
+    allArticlesSubtitleSuffix: 'à découvrir',
+    noResultsTitle: 'Aucun article trouvé.',
+    noResultsDesc: 'Essayez un autre mot-clé ou une autre rubrique.',
+    newsletterEyebrow: 'Le conseil du mois, directement dans votre boîte mail',
+    newsletterTitleMain: 'Restez au courant,',
+    newsletterTitleHighlight: 'roulez l’esprit tranquille.',
+    newsletterButton: 'Recevoir les conseils OAS'
+  };
 
   readonly articles: Article[] = [
     { title: 'Les 6 vérifications à faire avant un long trajet', excerpt: 'Les contrôles simples qui préparent votre véhicule aux longues distances.', category: 'Conseils automobiles', date: '18 juillet 2026', readTime: '6 min de lecture', cover: 'road', featured: true },

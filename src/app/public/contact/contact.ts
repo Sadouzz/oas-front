@@ -1,16 +1,20 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import AOS from 'aos';
 import { IconComponent } from '../../shared/icon/icon';
+import { SectionTitle } from '../../shared/components/section-title/section-title';
 
 @Component({
   selector: 'app-contact',
   standalone: true,
   imports: [
     CommonModule,
+    RouterModule,
     ReactiveFormsModule,
-    IconComponent
+    IconComponent,
+    SectionTitle
   ],
   templateUrl: './contact.html',
   styleUrl: './contact.css'
@@ -18,13 +22,24 @@ import { IconComponent } from '../../shared/icon/icon';
 export class ContactComponent implements OnInit {
 
   informations: any[] = [];
-
   questions: any[] = [];
-
+  raisonsContact: string[] = [
+    'Demander un devis',
+    'Obtenir des informations',
+    'Planifier une intervention',
+    'Suivre votre véhicule'
+  ];
+  
   formulaire!: FormGroup;
 
   envoiEnCours = false;
   messageEnvoye = false;
+  
+  activeFaqIndex: number | null = null;
+
+  toggleFaq(index: number) {
+    this.activeFaqIndex = this.activeFaqIndex === index ? null : index;
+  }
 
   constructor(private fb: FormBuilder) {}
 

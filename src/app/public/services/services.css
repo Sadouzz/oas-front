@@ -65,7 +65,7 @@ h1,h2,h3 {
 
 .hero-actions a {
   padding:.85rem 1.15rem;
-  border-radius:.75rem;
+  border-radius:0;
   font-size:.85rem;
   font-weight:800;
   transition:transform .25s cubic-bezier(.22,.8,.25,1),box-shadow .25s,background .25s
@@ -93,16 +93,12 @@ h1,h2,h3 {
 }
 
 .service-journey {
-  height:100vh;
-  overflow-y:auto;
-  scroll-snap-type:y mandatory;
-  background:#fff
+  background:#fff;
+  position:relative
 }
 
 .journey-snap-point {
   height:100vh;
-  scroll-snap-align:start;
-  scroll-snap-stop:always
 }
 
 .journey-sticky {
@@ -110,11 +106,9 @@ h1,h2,h3 {
   top:0;
   height:100vh;
   overflow:hidden;
-  scroll-snap-align:start
 }
 
 @media(prefers-reduced-motion:reduce) {
-  .service-journey { scroll-snap-type:none }
 }
 
 .journey-content {
@@ -124,19 +118,12 @@ h1,h2,h3 {
   align-items:center
 }
 
-.journey-intro {
-  display:none
-}
 
-.journey-intro>p:last-child {
-  font-size:.8rem;
-  color:var(--color-oas-muted)
-}
 
 .journey-layout {
   width:100%;
   display:grid;
-  grid-template-columns:42% 58%;
+  grid-template-columns:35% 65%;
   gap:0;
   align-items:center
 }
@@ -195,11 +182,11 @@ h1,h2,h3 {
 }
 
 .service-copy {
-  min-height:22rem;
+  min-height:31rem;
   position:relative;
   display:flex;
   flex-direction:column;
-  justify-content:center
+  align-self:stretch;
 }
 
 .service-number {
@@ -214,7 +201,8 @@ h1,h2,h3 {
   font-size:clamp(2.5rem,4.8vw,4.4rem);
   line-height:1;
   font-weight:800;
-  margin-top:1rem
+  margin-top:1rem;
+  white-space:nowrap
 }
 
 .service-summary {
@@ -282,7 +270,7 @@ h1,h2,h3 {
   align-items:center;
   padding:1.35rem 1rem;
   margin:0 -1rem;
-  border-radius:.75rem;
+  border-radius:0;
   border-bottom:1px solid var(--color-oas-line);
   transition:background .25s
 }
@@ -354,7 +342,7 @@ h1,h2,h3 {
 .revision-section a {
   flex:none;
   background:#fff;
-  border-radius:.75rem;
+  border-radius:0;
   color:#0c2742;
   font-size:.85rem;
   font-weight:800;
@@ -429,7 +417,8 @@ h1,h2,h3 {
   padding-bottom:6rem;
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:8vw
+  gap:8vw;
+  align-items:start
 }
 
 .trust-section .eyebrow {
@@ -511,7 +500,7 @@ h1,h2,h3 {
 
 .services-cta a {
   display:inline-block;
-  border-radius:.75rem;
+  border-radius:0;
   background:var(--color-oas-navy);
   color:#fff;
   padding:1rem 1.3rem;

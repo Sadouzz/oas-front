@@ -1,13 +1,18 @@
 <section class="blog-hero">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
-    <p class="blog-eyebrow">Le journal OAS</p>
-    <h1>Les bons réflexes<br><span>pour mieux rouler.</span></h1>
+    <app-section-title 
+        mainTitle="Les bons réflexes"
+        highlightedText="pour mieux rouler."
+        subtitle="Le journal OAS"
+        align="left"
+        theme="dark"
+    ></app-section-title>
     <p class="blog-lead">Conseils d’experts, entretien et actualités pour prendre soin de votre véhicule, au quotidien comme sur la route.</p>
   </div>
 </section>
 
 <main class="blog-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
-  <div class="section-heading"><div><p class="blog-eyebrow">À la une</p><h2>Les dernières publications</h2></div><span>Nos conseils les plus récents</span></div>
+  <div class="section-heading"><div><p class="blog-eyebrow">{{ pageText.featuredEyebrow }}</p><h2>{{ pageText.featuredTitle }}</h2></div><span>{{ pageText.featuredSubtitle }}</span></div>
 
   <section class="recent-grid" aria-label="Articles récents">
     <article class="featured-card" [class]="'featured-card cover-' + articles[0].cover">
@@ -33,15 +38,36 @@
       <label class="search-field"><span class="sr-only">Rechercher un article</span><input type="search" [(ngModel)]="searchTerm" placeholder="Rechercher un article"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="6"></circle><path d="m16 16 4 4"></path></svg></label>
     </div>
 
-    <div class="articles-intro"><div><p class="blog-eyebrow">Toutes nos publications</p><h2>Explorez nos articles</h2></div><p>{{ filteredArticles.length }} article{{ filteredArticles.length > 1 ? 's' : '' }} à découvrir</p></div>
+    <div class="articles-intro"><div><p class="blog-eyebrow">{{ pageText.allArticlesEyebrow }}</p><h2>{{ pageText.allArticlesTitle }}</h2></div><p>{{ filteredArticles.length }} article{{ filteredArticles.length > 1 ? 's' : '' }} {{ pageText.allArticlesSubtitleSuffix }}</p></div>
     <div *ngIf="filteredArticles.length; else noResults" class="article-grid">
       <article *ngFor="let article of filteredArticles; trackBy: trackArticle" class="article-card">
         <div class="article-cover" [class]="'article-cover cover-' + article.cover"><span>{{ article.category }}</span></div>
         <div class="article-body"><div class="article-meta plain"><time>{{ article.date }}</time><span>{{ article.readTime }}</span></div><h3>{{ article.title }}</h3><p>{{ article.excerpt }}</p><a href="#articles">Lire l’article <b>→</b></a></div>
       </article>
     </div>
-    <ng-template #noResults><div class="no-results"><strong>Aucun article trouvé.</strong><p>Essayez un autre mot-clé ou une autre rubrique.</p></div></ng-template>
+    <ng-template #noResults><div class="no-results"><strong>{{ pageText.noResultsTitle }}</strong><p>{{ pageText.noResultsDesc }}</p></div></ng-template>
   </section>
-
-  <section class="newsletter"><div><p class="blog-eyebrow">Le conseil du mois, directement dans votre boîte mail</p><h2>Restez au courant,<br>roulez l’esprit tranquille.</h2></div><a href="mailto:contact@oas-atelier.sn?subject=Inscription%20newsletter" class="newsletter-link">Recevoir les conseils OAS <span>→</span></a></section>
 </main>
+
+<section class="py-40 bg-oas-accent text-white text-center relative overflow-hidden">
+  <div class="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+    <h1 class="text-[25vw] font-black tracking-tighter whitespace-nowrap">NEWSLETTER</h1>
+  </div>
+  <div class="relative z-10 max-w-3xl mx-auto px-6">
+    <app-section-title 
+      align="center"
+      theme="accent"
+      [mainTitle]="pageText.newsletterTitleMain" 
+      [highlightedText]="pageText.newsletterTitleHighlight" 
+      [subtitle]="pageText.newsletterEyebrow">
+    </app-section-title>
+    <div class="mt-12">
+      <a href="mailto:contact@oas-atelier.sn?subject=Inscription%20newsletter" class="inline-flex items-center gap-4 px-10 py-5 bg-oas-navy-dark text-white hover:bg-white hover:text-oas-navy-dark transition-colors duration-300 text-sm font-bold tracking-[0.2em] uppercase shadow-2xl group">
+        {{ pageText.newsletterButton }}
+        <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </a>
+    </div>
+  </div>
+</section>

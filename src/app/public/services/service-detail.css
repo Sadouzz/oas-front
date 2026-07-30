@@ -8,7 +8,7 @@
 .detail-hero h1 { font-size: clamp(2.7rem, 6vw, 5rem); line-height: 1.02; font-weight: 800; margin-top: 1rem; }
 .detail-intro { display: flex; justify-content: space-between; gap: 2rem; align-items: end; margin-top: 2rem; }
 .detail-intro p { max-width: 39rem; color: #c5d1df; line-height: 1.75; }
-.detail-intro a, .detail-cta a { background: #ef6c1a; color: #fff; padding: 1rem 1.2rem; border-radius: .75rem; font-size: .85rem; font-weight: 800; white-space: nowrap; display: inline-flex; align-items: center; gap: .5rem; transition: transform .25s cubic-bezier(.22,.8,.25,1), box-shadow .25s; }
+.detail-intro a, .detail-cta a { background: #ef6c1a; color: #fff; padding: 1rem 1.2rem; border-radius: 0; font-size: .85rem; font-weight: 800; white-space: nowrap; display: inline-flex; align-items: center; gap: .5rem; transition: transform .25s cubic-bezier(.22,.8,.25,1), box-shadow .25s; }
 .detail-intro a:hover, .detail-cta a:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(239,108,26,.35); }
 .detail-intro a span, .detail-cta a span { transition: transform .25s cubic-bezier(.22,.8,.25,1); }
 .detail-intro a:hover span, .detail-cta a:hover span { transform: translateX(4px); }

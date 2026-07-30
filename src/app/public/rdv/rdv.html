@@ -22,15 +22,13 @@
 
             <div class="hero-content">
 
-                <span class="hero-badge">
-                    <i class="fa-solid fa-calendar-days"></i>
-                    Réservation en ligne
-                </span>
-
-                <h1>
-                    Prenez rendez-vous
-                    <span>en toute simplicité.</span>
-                </h1>
+                <app-section-title 
+                    mainTitle="Prenez rendez-vous"
+                    highlightedText="en toute simplicité."
+                    subtitle="Réservation en ligne"
+                    align="left"
+                    theme="dark"
+                ></app-section-title>
 
                 <p>
                     Prenez rendez-vous avec nos techniciens en quelques clics.
@@ -56,9 +54,14 @@
     <section class="steps-section">
         <div class="container">
 
-            <div class="section-header">
-                <span>Réservation</span>
-                <h2>Comment ça fonctionne ?</h2>
+            <div class="mb-12">
+                <app-section-title 
+                    mainTitle="Comment ça"
+                    highlightedText="fonctionne ?"
+                    subtitle="Réservation"
+                    align="center"
+                    theme="light"
+                ></app-section-title>
             </div>
 
             <div class="steps">
@@ -111,10 +114,15 @@
         <div class="advantages-bg"></div>
         <div class="container">
 
-            <div class="section-header">
-                <span>Pourquoi OAS ?</span>
-                <h2>Votre véhicule mérite une expertise de qualité</h2>
-                <p>
+            <div class="mb-12 max-w-3xl mx-auto text-center">
+                <app-section-title 
+                    mainTitle="Votre véhicule mérite une expertise"
+                    highlightedText="de qualité"
+                    subtitle="Pourquoi OAS ?"
+                    align="center"
+                    theme="light"
+                ></app-section-title>
+                <p class="mt-4 text-oas-ink2">
                     Chez Orient Auto Service, nous mettons tout en œuvre
                     pour offrir un service rapide, fiable et transparent.
                 </p>
@@ -138,9 +146,14 @@
         <div class="benefits-bg"></div>
         <div class="container">
 
-            <div class="section-header">
-                <span>Espace client</span>
-                <h2>Pourquoi créer un compte ?</h2>
+            <div class="mb-12">
+                <app-section-title 
+                    mainTitle="Pourquoi créer"
+                    highlightedText="un compte ?"
+                    subtitle="Espace client"
+                    align="center"
+                    theme="light"
+                ></app-section-title>
             </div>
 
             <div class="benefits-grid">
@@ -159,47 +172,52 @@
     </section>
 
     <!-- STATISTIQUES -->
-    <section class="stats-section">
-        <div class="container">
-            <div class="stats-card">
-                <div class="stats-grid">
-                    <div class="stat-card" *ngFor="let stat of statistiques">
-                        <h2>{{stat.valeur}}</h2>
-                        <p>{{stat.label}}</p>
-                    </div>
+    <section class="py-24 bg-oas-navy-dark text-white relative overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="mb-16 text-center" data-aos="fade-up">
+                <app-section-title 
+                    mainTitle="Des chiffres qui"
+                    highlightedText="parlent d'eux-mêmes."
+                    subtitle="Notre engagement"
+                    align="center"
+                    theme="dark"
+                ></app-section-title>
+                <p class="mt-4 text-white/80 text-lg max-w-2xl mx-auto">
+                    Découvrez l'impact de notre expertise et la confiance que nous accordent nos clients chaque jour.
+                </p>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
+                <div *ngFor="let stat of statistiques" data-aos="fade-up">
+                    <h2 class="text-5xl lg:text-6xl font-black text-oas-accent mb-3">{{stat.valeur}}</h2>
+                    <p class="text-sm uppercase tracking-widest text-white/80 font-bold">{{stat.label}}</p>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- APPEL A L'ACTION -->
-    <section class="cta-section">
-        <div class="container">
-            <div class="cta-card">
-
-                <div>
-                    <span>Réservez maintenant</span>
-                    <h2>
-                        Votre prochain entretien
-                        n'est qu'à quelques clics.
-                    </h2>
-                    <p>
-                        Créez votre compte gratuitement
-                        ou connectez-vous afin de choisir
-                        votre créneau.
-                    </p>
-                </div>
-
-                <div class="cta-buttons">
-                    <button class="btn-primary" (click)="openRegisterModal()">
-                        Créer un compte
-                    </button>
-
-                    <button class="btn-outline" (click)="openLoginModal()">
-                        Se connecter
-                    </button>
-                </div>
-
+    <section class="py-40 bg-white text-center relative overflow-hidden">
+        <div class="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
+            <h1 class="text-[15vw] font-black tracking-tighter whitespace-nowrap text-oas-navy-dark">RÉSERVEZ</h1>
+        </div>
+        <div class="relative z-10 max-w-3xl mx-auto px-6" data-aos="fade-up">
+            <app-section-title 
+                align="center"
+                theme="light"
+                mainTitle="VOTRE PROCHAIN ENTRETIEN" 
+                highlightedText="N'EST QU'À QUELQUES CLICS." 
+                subtitle="Réservez maintenant">
+            </app-section-title>
+            <p class="mt-6 text-oas-navy-dark/80 text-lg">
+                Créez votre compte gratuitement ou connectez-vous afin de choisir votre créneau.
+            </p>
+            <div class="mt-12 flex flex-col sm:flex-row justify-center gap-6">
+                <button (click)="openRegisterModal()" class="inline-flex items-center justify-center gap-4 px-10 py-5 bg-oas-navy-dark text-white hover:bg-oas-accent transition-colors duration-300 text-sm font-bold tracking-[0.2em] uppercase shadow-2xl rounded-none">
+                    Créer un compte
+                </button>
+                <button (click)="openLoginModal()" class="inline-flex items-center justify-center gap-4 px-10 py-5 bg-transparent text-oas-navy-dark border-2 border-oas-line hover:border-oas-navy-dark hover:bg-oas-navy-dark hover:text-white transition-colors duration-300 text-sm font-bold tracking-[0.2em] uppercase rounded-none">
+                    Se connecter
+                </button>
             </div>
         </div>
     </section>

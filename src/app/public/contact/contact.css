@@ -1,14 +1,8 @@
 :root {
     --shadow: 0 15px 40px rgba(12,39,66,.08);
-    --radius: 22px;
-    --radius-lg: 28px;
-    --radius-sm: 14px;
-}
-
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
+    --radius: 0px;
+    --radius-lg: 0px;
+    --radius-sm: 0px;
 }
 
 .contact-page{
@@ -60,7 +54,7 @@
     background:rgba(255,255,255,.12);
     border:1px solid rgba(255,255,255,.18);
     padding:.7rem 1.2rem;
-    border-radius:999px;
+    border-radius:0px;
     margin-bottom:20px;
     backdrop-filter:blur(10px);
     font-weight:600;
@@ -103,7 +97,7 @@
     text-decoration:none;
     border:none;
     padding:15px 30px;
-    border-radius:999px;
+    border-radius:0px;
     cursor:pointer;
     transition:.3s;
     font-weight:700;
@@ -133,7 +127,7 @@
     text-decoration:none;
     border:2px solid rgba(255,255,255,.5);
     padding:15px 30px;
-    border-radius:999px;
+    border-radius:0px;
     cursor:pointer;
     font-weight:700;
     transition:.3s;
@@ -271,7 +265,7 @@ textarea{
     width:100%;
     padding:18px 20px;
     border:1px solid var(--color-oas-line);
-    border-radius:16px;
+    border-radius:0px;
     font-size:1rem;
     font-family:inherit;
     outline:none;

@@ -124,8 +124,8 @@
     gap:10px;
     padding:15px 34px;
     border:none;
-    border-radius:14px;
-    background:linear-gradient(90deg, var(--color-oas-accent) 0%, #f0853f 100%);
+    border-radius:0px;
+    background:var(--color-oas-accent);
     color:white;
     font-weight:700;
     font-family:inherit;
@@ -137,7 +137,7 @@
 }
 
 .btn-primary:hover{
-    background:linear-gradient(90deg, var(--color-oas-accent-dark) 0%, var(--color-oas-accent) 100%);
+    background:var(--color-oas-accent-dark);
     transform:translateY(-3px);
     box-shadow:0 12px 26px rgba(239,108,26,.35);
 }
@@ -154,7 +154,7 @@
     align-items:center;
     padding:15px 34px;
     border:none;
-    border-radius:14px;
+    border-radius:0px;
     background:var(--color-oas-navy);
     color:white;
     font-weight:700;
@@ -174,7 +174,7 @@
     align-items:center;
     padding:15px 34px;
     border:1px solid rgba(255,255,255,.35);
-    border-radius:14px;
+    border-radius:0px;
     color:#fff;
     background:rgba(255,255,255,.06);
     text-decoration:none;
@@ -350,7 +350,7 @@
 
 .advantage-card{
     background:#F8F9FB;
-    border-radius:22px;
+    border-radius:0px;
     padding:35px;
     text-align:center;
     transition:.35s;
@@ -366,7 +366,7 @@
     width:84px;
     height:84px;
     margin:auto auto 25px;
-    border-radius:50%;
+    border-radius:0px;
     background:var(--color-oas-accent-bg);
     display:flex;
     justify-content:center;
@@ -435,7 +435,7 @@
 
 .benefit-card{
     background:white;
-    border-radius:20px;
+    border-radius:0px;
     padding:30px;
     display:flex;
     gap:20px;
@@ -453,7 +453,7 @@
     flex-shrink:0;
     width:68px;
     height:68px;
-    border-radius:50%;
+    border-radius:0px;
     background:var(--color-oas-accent-bg);
     display:flex;
     justify-content:center;

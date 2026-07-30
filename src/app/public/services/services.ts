@@ -10,10 +10,12 @@ import { RouterLink } from '@angular/router';
 import { SERVICES, Service } from './services.data';
 import { ScrollRevealDirective } from '../shared/scroll-reveal.directive';
 
+import { SectionTitle } from '../../shared/components/section-title/section-title';
+
 @Component({
   selector: 'app-services',
   standalone: true,
-  imports: [CommonModule, RouterLink, ScrollRevealDirective],
+  imports: [CommonModule, RouterLink, ScrollRevealDirective, SectionTitle],
   templateUrl: './services.html',
   styleUrl: './services.css',
 })
@@ -28,6 +30,19 @@ export class Services implements AfterViewInit, OnDestroy {
   readonly services = SERVICES;
   activeIndex = 0;
 
+  processSteps = [
+    { step: '01', title: 'Vous nous expliquez votre besoin', desc: 'Par téléphone, en ligne ou directement à l’atelier.' },
+    { step: '02', title: 'Nous réalisons le contrôle', desc: 'Un diagnostic précis pour comprendre la situation.' },
+    { step: '03', title: 'Vous recevez un devis clair', desc: 'Nous expliquons l’intervention avant toute décision.' },
+    { step: '04', title: 'Nous intervenons après validation', desc: 'Votre véhicule est contrôlé avant sa restitution.' }
+  ];
+
+  trustPoints = [
+    { step: '01', title: 'Des explications claires', desc: 'Vous savez ce qui est fait sur votre véhicule.' },
+    { step: '02', title: 'Des pièces adaptées', desc: 'Des solutions pensées pour votre sécurité et votre budget.' },
+    { step: '03', title: 'Un suivi personnalisé', desc: 'Une équipe disponible à chaque étape.' }
+  ];
+
   private resizeObserver?: ResizeObserver;
   private scrollFrameRequested = false;
 
@@ -39,14 +54,14 @@ export class Services implements AfterViewInit, OnDestroy {
     const journeyElement = this.journey?.nativeElement;
     if (!journeyElement) return;
 
-    journeyElement.addEventListener('scroll', this.onJourneyScroll, { passive: true });
+    window.addEventListener('scroll', this.onJourneyScroll, { passive: true });
     this.resizeObserver = new ResizeObserver(() => this.updateActiveService());
     this.resizeObserver.observe(journeyElement);
     this.updateActiveService();
   }
 
   ngOnDestroy(): void {
-    this.journey?.nativeElement.removeEventListener('scroll', this.onJourneyScroll);
+    window.removeEventListener('scroll', this.onJourneyScroll);
     this.resizeObserver?.disconnect();
   }
 
@@ -64,7 +79,11 @@ export class Services implements AfterViewInit, OnDestroy {
     const journeyElement = this.journey?.nativeElement;
     if (!journeyElement) return;
 
-    journeyElement.scrollTo({ top: index * journeyElement.clientHeight, behavior: 'smooth' });
+    const rect = journeyElement.getBoundingClientRect();
+    const absoluteTop = window.scrollY + rect.top;
+    
+    const targetScroll = absoluteTop + (index * window.innerHeight);
+    window.scrollTo({ top: targetScroll, behavior: 'smooth' });
   }
 
   bubbleX(index: number): number {
@@ -96,8 +115,12 @@ export class Services implements AfterViewInit, OnDestroy {
     const journeyElement = this.journey?.nativeElement;
     if (!journeyElement || window.innerWidth < 900) return;
 
-    const scrollableDistance = Math.max(journeyElement.scrollHeight - journeyElement.clientHeight, 1);
-    const progress = Math.min(1, Math.max(0, journeyElement.scrollTop / scrollableDistance));
+    const rect = journeyElement.getBoundingClientRect();
+    const scrolled = -rect.top;
+    
+    const scrollableDistance = Math.max(rect.height - window.innerHeight, 1);
+    
+    const progress = Math.min(1, Math.max(0, scrolled / scrollableDistance));
     const nextIndex = Math.min(this.services.length - 1, Math.round(progress * (this.services.length - 1)));
 
     if (nextIndex !== this.activeIndex) this.activeIndex = nextIndex;

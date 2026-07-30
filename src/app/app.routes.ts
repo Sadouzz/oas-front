@@ -31,6 +31,9 @@ export const routes: Routes = [
       import('./public/rdv/rdv').then(m => m.RdvComponent),
   },
       { path: 'partenaires', loadComponent: () => import('./public/partenaires/partenaires').then(m => m.Partenaires) },
+      { path: 'mentions-legales', loadComponent: () => import('./public/legal/mentions-legales').then(m => m.MentionsLegalesComponent) },
+      { path: 'confidentialite', loadComponent: () => import('./public/legal/confidentialite').then(m => m.ConfidentialiteComponent) },
+      { path: 'cookies', loadComponent: () => import('./public/legal/cookies').then(m => m.CookiesComponent) },
     ]
   },
   { path: 'login', component: LoginComponent, canActivate: [noAuthGuard] },
