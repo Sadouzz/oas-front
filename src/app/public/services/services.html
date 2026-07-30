@@ -1,20 +1,105 @@
-<div class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-  <div class="text-center">
-    <h2 class="text-3xl font-extrabold text-slate-900 sm:text-4xl">Nos Services</h2>
-    <p class="mt-4 text-xl text-slate-500">Découvrez l'étendue de notre expertise pour l'entretien de votre véhicule.</p>
-  </div>
-  <div class="mt-12 grid gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-    <div class="bg-white rounded-lg shadow-sm border border-slate-100 p-6">
-      <h3 class="text-lg font-bold text-slate-900 mb-2">Révision & Entretien</h3>
-      <p class="text-slate-600">Vidange, filtres, bougies, courroie de distribution... L'entretien courant essentiel.</p>
-    </div>
-    <div class="bg-white rounded-lg shadow-sm border border-slate-100 p-6">
-      <h3 class="text-lg font-bold text-slate-900 mb-2">Freinage</h3>
-      <p class="text-slate-600">Remplacement de plaquettes, disques, liquide de frein pour une sécurité optimale.</p>
-    </div>
-    <div class="bg-white rounded-lg shadow-sm border border-slate-100 p-6">
-      <h3 class="text-lg font-bold text-slate-900 mb-2">Diagnostic Électronique</h3>
-      <p class="text-slate-600">Lecture des codes défauts, réinitialisation, recherche de pannes complexes.</p>
+<section class="services-hero">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+    <p class="eyebrow hero-in" style="animation-delay:.05s">L’expertise OAS</p>
+    <h1 class="hero-in" style="animation-delay:.15s">Chaque besoin mérite<br><span>la bonne intervention.</span></h1>
+    <p class="hero-in" style="animation-delay:.28s">De l’entretien courant à l’assistance, nos équipes prennent soin de votre véhicule avec rigueur et clarté.</p>
+    <div class="hero-actions hero-in" style="animation-delay:.4s">
+      <a routerLink="/rdv">Prendre rendez-vous</a>
+      <a routerLink="/devis">Demander un devis</a>
     </div>
   </div>
-</div>
+</section>
+
+<section #journey class="service-journey">
+  <div class="journey-sticky">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 journey-content">
+      <div class="journey-intro">
+        <p class="eyebrow">Nos domaines d’intervention</p>
+        <p>Faites défiler pour explorer nos services</p>
+      </div>
+
+      <div class="journey-layout">
+        <div class="bubble-track" aria-label="Liste des services">
+          <button
+            *ngFor="let service of services; let index = index"
+            type="button"
+            class="service-bubble"
+            [class.active]="activeIndex === index"
+            [class.visible]="isBubbleVisible(index)"
+            [attr.aria-current]="activeIndex === index ? 'true' : null"
+            [attr.tabindex]="isBubbleVisible(index) ? 0 : -1"
+            [style.--x]="bubbleX(index) + 'px'"
+            [style.--y]="bubbleY(index) + 'px'"
+            [style.opacity]="bubbleOpacity(index)"
+            (click)="selectService(index)">
+            <span>{{ service.number }}</span>{{ service.shortTitle }}
+          </button>
+        </div>
+
+        <article class="service-copy" aria-live="polite">
+          <p class="service-number">{{ activeService.number }} — Service OAS</p>
+          <h2>{{ activeService.title }}</h2>
+          <p class="service-summary">{{ activeService.summary }}</p>
+          <a [routerLink]="['/services', activeService.slug]">Découvrir le service <span>→</span></a>
+          <div class="journey-counter"><b>{{ activeIndex + 1 }}</b><span>/ {{ services.length }}</span></div>
+        </article>
+      </div>
+    </div>
+  </div>
+  <div class="journey-snap-point" *ngFor="let service of services.slice(1)"></div>
+</section>
+
+<section class="mobile-services">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <p class="eyebrow">Nos domaines d’intervention</p>
+    <h2>Une solution pour chaque besoin.</h2>
+    <div class="mobile-service-list">
+      <a *ngFor="let service of services; let i = index" [routerLink]="['/services', service.slug]" appScrollReveal [appScrollRevealDelay]="i * 60">
+        <span>{{ service.number }}</span>
+        <div><h3>{{ service.title }}</h3><p>{{ service.summary }}</p></div>
+        <b>→</b>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="revision-section" appScrollReveal>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div>
+      <p class="eyebrow">Révision constructeur</p>
+      <h2>Préservez les performances<br>et la valeur de votre véhicule.</h2>
+      <p>Nous adaptons l’entretien aux préconisations de votre constructeur, pour un suivi complet et serein.</p>
+    </div>
+    <a routerLink="/services/entretien-vidange">Découvrir la révision <span>→</span></a>
+  </div>
+</section>
+
+<section class="process-section max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="section-title" appScrollReveal><p class="eyebrow">Notre méthode</p><h2>Une intervention claire, à chaque étape.</h2></div>
+  <div class="process-list">
+    <article appScrollReveal [appScrollRevealDelay]="0"><span>01</span><h3>Vous nous expliquez votre besoin</h3><p>Par téléphone, en ligne ou directement à l’atelier.</p></article>
+    <article appScrollReveal [appScrollRevealDelay]="90"><span>02</span><h3>Nous réalisons le contrôle</h3><p>Un diagnostic précis pour comprendre la situation.</p></article>
+    <article appScrollReveal [appScrollRevealDelay]="180"><span>03</span><h3>Vous recevez un devis clair</h3><p>Nous expliquons l’intervention avant toute décision.</p></article>
+    <article appScrollReveal [appScrollRevealDelay]="270"><span>04</span><h3>Nous intervenons après validation</h3><p>Votre véhicule est contrôlé avant sa restitution.</p></article>
+  </div>
+</section>
+
+<section class="trust-section">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="trust-copy" appScrollReveal><p class="eyebrow">Pourquoi OAS ?</p><h2>Un atelier qui vous parle simplement.</h2><p>Nous plaçons la confiance au centre de chaque intervention : un conseil compréhensible, une solution adaptée et un suivi attentif.</p></div>
+    <div class="trust-points">
+      <p appScrollReveal [appScrollRevealDelay]="80"><b>01</b><span><strong>Des explications claires</strong>Vous savez ce qui est fait sur votre véhicule.</span></p>
+      <p appScrollReveal [appScrollRevealDelay]="160"><b>02</b><span><strong>Des pièces adaptées</strong>Des solutions pensées pour votre sécurité et votre budget.</span></p>
+      <p appScrollReveal [appScrollRevealDelay]="240"><b>03</b><span><strong>Un suivi personnalisé</strong>Une équipe disponible à chaque étape.</span></p>
+    </div>
+  </div>
+</section>
+
+<section class="services-cta">
+  <div appScrollReveal>
+    <p class="eyebrow">Besoin d’être orienté ?</p>
+    <h2>Vous ne savez pas quel service choisir ?</h2>
+    <p>Expliquez-nous simplement votre situation : nous vous guidons vers la bonne intervention.</p>
+    <a routerLink="/contact">Demander conseil <span>→</span></a>
+  </div>
+</section>
