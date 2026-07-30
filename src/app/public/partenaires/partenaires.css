@@ -1,0 +1,562 @@
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+.partners-page{
+    background:var(--color-oas-bg);
+}
+
+.container{
+    width:min(1200px,90%);
+    margin:auto;
+}
+
+/* ================= HERO ================= */
+
+.hero{
+    position:relative;
+    min-height:75vh;
+    display:flex;
+    align-items:center;
+    overflow:hidden;
+    background-image:url('/assets/images/partenaires/hero1.jpg');
+    background-size:cover;
+    background-position:center;
+    background-color:var(--color-oas-navy);
+    animation: slider 20s infinite;
+}
+
+.hero::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(180deg, rgba(12,39,66,.80), rgba(12,39,66,.45));
+    z-index:0;
+}
+
+.hero-overlay{
+    display:none;
+}
+
+.hero-content{
+    position:relative;
+    color:white;
+    max-width:700px;
+    padding:120px 0;
+}
+
+.hero-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:.6rem;
+    padding:10px 18px;
+    background:rgba(255,255,255,.15);
+    border-radius:50px;
+    backdrop-filter:blur(10px);
+    margin-bottom:25px;
+    font-weight:600;
+    font-size:14px;
+}
+
+.hero h1{
+    font-size:3.4rem;
+    line-height:1.15;
+    margin-bottom:25px;
+    font-weight:800;
+}
+
+.hero h1 span{
+    color:var(--color-oas-accent);
+}
+
+.hero p{
+    line-height:1.9;
+    margin-bottom:40px;
+    font-size:1.05rem;
+    color:#dbe3ee;
+}
+
+.hero-buttons{
+    display:flex;
+    gap:20px;
+    flex-wrap:wrap;
+}
+
+/* ================= BOUTONS ================= */
+
+.btn-primary,
+.btn-outline{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    padding:15px 30px;
+    border-radius:50px;
+    text-decoration:none;
+    font-weight:700;
+    transition:.3s;
+}
+
+.btn-primary{
+    background:linear-gradient(90deg, var(--color-oas-accent) 0%, #f0853f 100%);
+    color:white;
+    box-shadow:0 10px 24px rgba(239,108,26,.30);
+}
+
+.btn-primary:hover{
+    background:linear-gradient(90deg, var(--color-oas-accent-dark) 0%, var(--color-oas-accent) 100%);
+    transform:translateY(-4px);
+}
+
+.btn-outline{
+    border:2px solid rgba(255,255,255,.55);
+    color:white;
+}
+
+.btn-outline:hover{
+    background:white;
+    color:var(--color-oas-navy);
+    border-color:white;
+}
+
+/* variante claire du bouton outline sur fond clair (CTA) */
+.cta-section .btn-outline{
+    border-color:rgba(255,255,255,.6);
+    color:white;
+}
+
+.cta-section .btn-outline:hover{
+    background:white;
+    color:var(--color-oas-navy);
+}
+
+/* ================= TITRES ================= */
+
+.section-header{
+    text-align:center;
+    margin-bottom:70px;
+}
+
+.section-header span{
+    color:var(--color-oas-accent);
+    text-transform:uppercase;
+    letter-spacing:2px;
+    font-weight:700;
+    font-size:13px;
+}
+
+.section-header h2{
+    margin:15px 0;
+    color:var(--color-oas-ink);
+    font-size:2.5rem;
+    font-weight:800;
+}
+
+.section-header p{
+    max-width:700px;
+    margin:auto;
+    color:var(--color-oas-muted);
+    line-height:1.8;
+}
+
+/* ================= MARQUES ================= */
+
+.brands-section{
+    padding:100px 0;
+}
+
+/* ---------- Carrousel : conteneur + flèches ---------- */
+
+.brands-carousel{
+    position:relative;
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+
+.brands-track{
+    flex:1;
+    display:flex;
+    gap:30px;
+    overflow-x:auto;
+    scroll-snap-type:x mandatory;
+    scroll-behavior:smooth;
+    padding:10px 4px 30px;
+    -webkit-overflow-scrolling:touch;
+}
+
+/* on masque la scrollbar tout en gardant le scroll tactile/souris fonctionnel */
+.brands-track{
+    scrollbar-width:none;
+    -ms-overflow-style:none;
+}
+.brands-track::-webkit-scrollbar{
+    display:none;
+}
+
+.carousel-btn{
+    flex-shrink:0;
+    width:48px;
+    height:48px;
+    border-radius:50%;
+    border:none;
+    background:white;
+    color:var(--color-oas-navy);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    box-shadow:0 10px 24px rgba(12,39,66,.14);
+    transition:.25s;
+    z-index:2;
+}
+
+.carousel-btn:hover{
+    background:var(--color-oas-accent);
+    color:white;
+    transform:scale(1.08);
+}
+
+/* ---------- Dots ---------- */
+
+.carousel-dots{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    margin-top:10px;
+}
+
+.carousel-dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    border:none;
+    background:var(--color-oas-line);
+    cursor:pointer;
+    padding:0;
+    transition:.25s;
+}
+
+.carousel-dot.active{
+    width:26px;
+    border-radius:5px;
+    background:var(--color-oas-accent);
+}
+
+.carousel-dot:hover{
+    background:var(--color-oas-faint);
+}
+
+.brand-card{
+    flex:0 0 clamp(270px, 30vw, 340px);
+    scroll-snap-align:start;
+    background:white;
+    border-radius:20px;
+    overflow:hidden;
+    box-shadow:0 15px 35px rgba(12,39,66,.08);
+    transition:.35s;
+}
+
+.brand-card:hover{
+    transform:translateY(-8px);
+    box-shadow:0 22px 45px rgba(12,39,66,.14);
+}
+
+.brand-image{
+    position:relative;
+    overflow:hidden;
+}
+
+.brand-image>img{
+    width:100%;
+    height:220px;
+    object-fit:cover;
+    transition:.5s;
+    display:block;
+}
+
+.brand-card:hover .brand-image>img{
+    transform:scale(1.08);
+}
+
+.brand-logo{
+    position:absolute;
+    bottom:-35px;
+    left:50%;
+    transform:translateX(-50%);
+    width:90px;
+    height:90px;
+    border-radius:50%;
+    background:white;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 12px 28px rgba(12,39,66,.18);
+    border:4px solid white;
+}
+
+.brand-logo img{
+    width:56px;
+}
+
+.brand-content{
+    padding:55px 30px 35px;
+    text-align:center;
+}
+
+/* badge "Prise en charge" — répond à la demande Logos / Descriptions / Marques prises en charge */
+.brand-tag{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:5px 14px;
+    border-radius:999px;
+    background:var(--color-oas-accent-bg);
+    color:var(--color-oas-accent-dark);
+    font-size:12px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+    margin-bottom:16px;
+}
+
+.brand-content h3{
+    color:var(--color-oas-navy);
+    margin-bottom:12px;
+    font-size:1.3rem;
+    font-weight:800;
+}
+
+.brand-content p{
+    line-height:1.8;
+    color:var(--color-oas-muted);
+    font-size:14.5px;
+}
+
+/* ================= EXPERTISE ================= */
+
+.expertise-section{
+    padding:100px 0;
+    background:white;
+}
+
+.expertise-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:30px;
+}
+
+.expertise-card{
+    text-align:center;
+    background:var(--color-oas-bg);
+    border-radius:20px;
+    padding:40px 30px;
+    transition:.3s;
+}
+
+.expertise-card:hover{
+    background:var(--color-oas-navy);
+    color:white;
+}
+
+.expertise-card .icon{
+    width:80px;
+    height:80px;
+    margin:auto;
+    border-radius:50%;
+    background:var(--color-oas-accent-bg);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--color-oas-accent);
+    margin-bottom:25px;
+    box-shadow:0 0 0 6px white, 0 0 0 8px var(--color-oas-line);
+    transition:.3s;
+}
+
+.expertise-card:hover .icon{
+    background:rgba(255,255,255,.16);
+    color:white;
+    box-shadow:0 0 0 6px rgba(255,255,255,.10), 0 0 0 8px rgba(255,255,255,.06);
+}
+
+.expertise-card h3{
+    margin-bottom:15px;
+    font-size:1.2rem;
+}
+
+.expertise-card p{
+    line-height:1.7;
+    font-size:14.5px;
+    opacity:.9;
+}
+
+/* ================= AVANTAGES ================= */
+
+.advantages-section{
+    padding:100px 0;
+}
+
+.advantages-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:30px;
+}
+
+.advantage-card{
+    background:white;
+    border-radius:20px;
+    text-align:center;
+    padding:45px 20px;
+    box-shadow:0 15px 35px rgba(12,39,66,.08);
+    transition:.35s;
+}
+
+.advantage-card:hover{
+    background:var(--color-oas-navy);
+    color:white;
+    transform:translateY(-8px);
+    box-shadow:0 22px 45px rgba(12,39,66,.16);
+}
+
+.advantage-icon-wrap{
+    width:72px;
+    height:72px;
+    margin:0 auto 20px;
+    border-radius:50%;
+    background:var(--color-oas-accent-bg);
+    color:var(--color-oas-accent);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 0 0 6px white, 0 0 0 8px var(--color-oas-line);
+    transition:.3s;
+}
+
+.advantage-card:hover .advantage-icon-wrap{
+    background:rgba(255,255,255,.16);
+    color:white;
+    box-shadow:0 0 0 6px rgba(255,255,255,.10), 0 0 0 8px rgba(255,255,255,.06);
+}
+
+.advantage-card h3{
+    font-size:1.05rem;
+    font-weight:700;
+}
+
+/* ================= CTA ================= */
+
+.cta-section{
+    padding:100px 0;
+}
+
+.cta-card{
+    background:linear-gradient(135deg, var(--color-oas-navy) 0%, var(--color-oas-navy-mid) 55%, var(--color-oas-accent) 130%);
+    border-radius:25px;
+    color:white;
+    padding:60px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:40px;
+    flex-wrap:wrap;
+}
+
+.cta-card span{
+    text-transform:uppercase;
+    letter-spacing:2px;
+    font-weight:700;
+    font-size:13px;
+    color:#ffd8b3;
+}
+
+.cta-card h2{
+    margin:15px 0;
+    font-size:2.3rem;
+    font-weight:800;
+}
+
+.cta-card p{
+    max-width:600px;
+    line-height:1.8;
+    color:#dbe3ee;
+}
+
+.cta-buttons{
+    display:flex;
+    gap:15px;
+    flex-wrap:wrap;
+}
+
+.cta-buttons .btn-primary{
+    background:white;
+    color:var(--color-oas-navy);
+    box-shadow:0 10px 24px rgba(0,0,0,.18);
+}
+
+.cta-buttons .btn-primary:hover{
+    background:var(--color-oas-accent-bg);
+    color:var(--color-oas-accent-dark);
+    transform:translateY(-4px);
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media(max-width:992px){
+
+    .hero h1{
+        font-size:2.7rem;
+    }
+
+    .cta-card{
+        justify-content:center;
+        text-align:center;
+    }
+
+}
+
+@media(max-width:768px){
+
+    .hero{
+        min-height:60vh;
+    }
+
+    .hero-content{
+        text-align:center;
+    }
+
+    .hero-buttons{
+        justify-content:center;
+    }
+
+    .section-header h2{
+        font-size:2rem;
+    }
+
+    .hero h1{
+        font-size:2.2rem;
+    }
+
+}
+
+@keyframes slider{
+
+    0%,20%{
+        background-image:url('/assets/images/partenaires/hero1.jpg');
+    }
+
+    25%,45%{
+        background-image:url('/assets/images/partenaires/hero2.jpg');
+    }
+
+    50%,70%{
+        background-image:url('/assets/images/partenaires/hero3.jpg');
+    }
+
+    75%,100%{
+        background-image:url('/assets/images/partenaires/hero4.jpg');
+    }
+
+}

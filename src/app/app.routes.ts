@@ -19,8 +19,16 @@ export const routes: Routes = [
       { path: 'blog', loadComponent: () => import('./public/blog/blog').then(m => m.Blog) },
       { path: 'a-propos', loadComponent: () => import('./public/about/about').then(m => m.About) },
       { path: 'devis', loadComponent: () => import('./public/devis/devis').then(m => m.Devis) },
-      { path: 'contact', loadComponent: () => import('./public/contact/contact').then(m => m.Contact) },
-      { path: 'rdv', loadComponent: () => import('./public/rdv/rdv').then(m => m.Rdv) },
+      {
+  path: 'contact',
+  loadComponent: () =>
+    import('./public/contact/contact').then(m => m.ContactComponent),
+},
+      {
+    path: 'rdv',
+    loadComponent: () =>
+      import('./public/rdv/rdv').then(m => m.RdvComponent),
+  },
       { path: 'partenaires', loadComponent: () => import('./public/partenaires/partenaires').then(m => m.Partenaires) },
     ]
   },
