@@ -5,6 +5,10 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Poppins', 'system-ui', 'sans-serif'],
+        serif: ['Playfair Display', 'Georgia', 'serif'],
+      },
       colors: {
         'oas-accent': 'var(--color-oas-accent)',
         'oas-accent-dark': 'var(--color-oas-accent-dark)',
@@ -26,6 +30,25 @@ module.exports = {
         'oas-warn-bg': 'var(--color-oas-warn-bg)',
         'oas-bad': 'var(--color-oas-bad)',
         'oas-bad-bg': 'var(--color-oas-bad-bg)'
+      },
+      keyframes: {
+        marquee: {
+          '0%': { transform: 'translateX(0%)' },
+          '100%': { transform: 'translateX(-100%)' }
+        },
+        'fade-in-up': {
+          '0%': { opacity: '0', transform: 'translateY(20px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' }
+        },
+        'reveal': {
+          '0%': { clipPath: 'polygon(0 0, 100% 0, 100% 0, 0 0)' },
+          '100%': { clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)' }
+        }
+      },
+      animation: {
+        marquee: 'marquee 25s linear infinite',
+        'fade-in-up': 'fade-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+        'reveal': 'reveal 1.2s cubic-bezier(0.77, 0, 0.175, 1) forwards'
       }
     },
   },

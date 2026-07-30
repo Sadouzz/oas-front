@@ -1,0 +1,18 @@
+<div class="relative flex w-full flex-col-reverse pt-8 my-12"
+     [ngClass]="{
+       'text-center items-center': align === 'center',
+       'text-left items-start': align === 'left',
+       'text-right items-end': align === 'right'
+     }">
+    <h2 class="uppercase font-extrabold text-balance text-3xl lg:text-6xl block tracking-tighter"
+        [ngClass]="theme === 'light' ? 'text-oas-navy-dark' : 'text-white'">
+        {{ mainTitle }}<em *ngIf="highlightedText" class="not-italic" [ngClass]="theme === 'accent' ? 'text-white' : 'text-oas-accent'"> {{ highlightedText }}</em>
+    </h2>
+    <span *ngIf="subtitle" class="w-full rotate-[-2deg] font-serif italic mb-1 xl:mb-2 text-2xl lg:text-4xl"
+          [ngClass]="[
+             align === 'center' ? 'text-center' : align === 'left' ? 'text-left' : 'text-right',
+             theme === 'accent' ? 'text-white opacity-90' : 'text-oas-accent opacity-80'
+          ]">
+        {{ subtitle }}
+    </span>
+</div>

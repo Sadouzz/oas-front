@@ -1,0 +1,86 @@
+<section class="w-full py-32 bg-white flex flex-col items-center justify-center overflow-hidden border-t border-gray-100">
+  
+  <div class="mb-16 w-full max-w-[1400px] mx-auto">
+    <app-section-title 
+      align="left"
+      theme="light"
+      mainTitle="NOTRE EXPERTISE." 
+      highlightedText="(Klarna)" 
+      subtitle="Style 04">
+    </app-section-title>
+  </div>
+
+  <div class="relative flex flex-col items-center justify-center w-full max-w-4xl mx-auto gap-8" [style.background]="backgroundColor">
+    
+    <!-- Main Display Image -->
+    <div class="relative flex-none rounded-[40px] overflow-hidden shadow-2xl transition-all duration-500 ease-out bg-gray-100"
+         [style.width.px]="imageWidth"
+         [style.height.px]="imageHeight">
+      @for (item of items; track item.id; let i = $index) {
+        <img [src]="item.src" alt="{{ item.title }}"
+             class="absolute inset-0 w-full h-full object-cover transition-all duration-500 ease-in-out"
+             [style.opacity]="i === active ? 1 : 0"
+             [style.transform]="i === active ? 'scale(1)' : (dir > 0 ? 'scale(0.85) translateX(40px)' : 'scale(0.85) translateX(-40px)')"
+             [style.zIndex]="i === active ? 10 : 1"
+             draggable="false" />
+      }
+    </div>
+
+    <!-- Label -->
+    <div class="text-center transition-all duration-300 h-10 flex items-center justify-center">
+      <h4 class="text-3xl font-bold tracking-tight text-gray-900 font-sans">{{ items[active].title }}</h4>
+    </div>
+
+    <!-- Strip of buttons -->
+    <div class="relative w-full overflow-hidden flex-none" [style.height.px]="stripHeight">
+      @for (itemIdx of renderItems; track itemIdx) {
+        @let slot = getVisualSlot(itemIdx);
+        @let st = slotStyle(slot);
+        @let isActive = itemIdx === active;
+        @let item = items[itemIdx];
+        
+        <div class="absolute left-1/2"
+             [style.top.px]="buttonSize * 0.9"
+             [style.marginLeft.px]="-buttonSize / 2"
+             [style.marginTop.px]="-buttonSize / 2"
+             [style.width.px]="buttonSize"
+             [style.height.px]="buttonSize"
+             [style.transform]="'translate(' + st.x + 'px, ' + st.y + 'px) rotate(' + st.deg + 'deg) scale(' + st.scale + ')'"
+             [style.transformOrigin]="'center'"
+             [style.opacity]="st.opacity"
+             [style.zIndex]="st.zIndex"
+             [style.willChange]="'transform, opacity'">
+          
+          <div class="w-full h-full overflow-hidden relative shadow-lg transition-all duration-300"
+               [style.borderRadius.px]="buttonRadius"
+               [style.transform]="'rotate(' + (-st.deg) + 'deg)'"
+               [style.transformOrigin]="'center'"
+               [style.background]="isActive ? '#ffffff' : 'rgba(0,0,0,0.8)'"
+               [style.cursor]="'pointer'"
+               (click)="select(itemIdx)">
+             
+             <!-- Small thumbnail -->
+             <img [src]="item.src" alt="" draggable="false"
+                  class="w-full h-full object-cover block transition-opacity duration-300"
+                  [style.opacity]="isActive ? 1 : 0.4" />
+                  
+             <!-- Active Border/Ring -->
+             <div *ngIf="isActive" class="absolute inset-0 border-[3px] border-oas-accent rounded-full pointer-events-none"></div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Pagination Dots -->
+    <div class="flex items-center justify-center gap-2 mt-4 z-20">
+      @for (item of items; track item.id; let i = $index) {
+        <button 
+          (click)="select(i)"
+          class="w-2.5 h-2.5 rounded-full transition-all duration-300"
+          [ngClass]="i === active ? 'bg-oas-accent scale-150' : 'bg-gray-300 hover:bg-gray-400'"
+          aria-label="Aller au service">
+        </button>
+      }
+    </div>
+  </div>
+</section>

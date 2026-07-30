@@ -1,105 +1,261 @@
-<div class="relative bg-white overflow-hidden">
-  <!-- Hero Section -->
-  <div class="max-w-7xl mx-auto">
-    <div class="relative z-10 pb-8 bg-white sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32 pt-16 lg:pt-24">
-      <main class="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
-        <div class="sm:text-center lg:text-left">
-          <h1 class="text-4xl tracking-tight font-extrabold text-slate-900 sm:text-5xl md:text-6xl">
-            <span class="block xl:inline">L'expertise mécanique</span>
-            <span class="block text-blue-600 xl:inline"> à votre service</span>
-          </h1>
-          <p class="mt-3 text-base text-slate-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
-            Confiez votre véhicule à nos experts. De l'entretien courant à la réparation complexe, OAS Gestion Atelier vous garantit un service rapide, transparent et de haute qualité.
-          </p>
-          <div class="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
-            <div class="rounded-md shadow">
-              <a routerLink="/rdv" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 md:py-4 md:text-lg md:px-10 transition">
-                Prendre rendez-vous
-              </a>
-            </div>
-            <div class="mt-3 sm:mt-0 sm:ml-3">
-              <a routerLink="/devis" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 md:py-4 md:text-lg md:px-10 transition">
-                Demander un devis
-              </a>
-            </div>
-          </div>
-        </div>
-      </main>
+<div class="bg-oas-navy-dark min-h-screen text-white selection:bg-oas-accent selection:text-white font-sans overflow-hidden">
+  
+  <!-- HERO SECTION -->
+  <section class="relative min-h-screen flex items-end pb-4 md:pb-4 px-6 md:px-12 lg:px-24">
+    <!-- Background Video -->
+    <div class="absolute inset-0 z-0">
+      <!-- Vidéo ultra-fiable (sans restriction 403) pour garantir l'affichage -->
+      <video 
+        autoplay 
+        loop 
+        muted 
+        playsinline 
+        poster="https://images.unsplash.com/photo-1469285994282-454ceb49e63c?q=80&w=2071&auto=format&fit=crop"
+        class="w-full h-full object-cover opacity-80"
+      >
+        <source src="https://assets.mixkit.co/videos/preview/mixkit-driving-on-a-highway-in-the-mountains-at-sunset-10020-large.mp4" type="video/mp4">
+      </video>
+      <!-- Subtle overlay just to make text readable -->
+      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/30"></div>
     </div>
-  </div>
-  <div class="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2 bg-slate-100 flex items-center justify-center">
-    <!-- Placeholder for hero image -->
-    <div class="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full bg-slate-200 flex flex-col items-center justify-center text-slate-400 p-8 text-center">
-        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-car mb-4"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>
-        <p>Image d'illustration (Atelier / Mécaniciens)</p>
-    </div>
-  </div>
-</div>
 
-<!-- Features Section -->
-<div class="py-16 bg-slate-50">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center">
-      <h2 class="text-base text-blue-600 font-semibold tracking-wide uppercase">Nos atouts</h2>
-      <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-slate-900 sm:text-4xl">
-        Pourquoi choisir OAS Atelier ?
+    <!-- Content (Bottom Left aligned like the screenshot) -->
+    <div class="relative z-10 w-full flex flex-col md:flex-row justify-between items-end animate-fade-in-up">
+      <!-- Bold Sans-Serif Title & Subtitle (Screenshot Style) -->
+      <div class="flex flex-col mb-1 md:mb-2">
+        <h1 class="font-sans font-black uppercase text-[10vw] md:text-[5vw] lg:text-[4.5vw] leading-[1.05] text-white tracking-tight mb-2 md:mb-4">
+          Vous conduisez. <br class="md:hidden" />Nous réparons.
+        </h1>
+        <p class="font-sans uppercase text-white/90 text-xs md:text-base lg:text-lg tracking-[0.2em] md:tracking-[0.25em] font-medium">
+          Diagnostic, Entretien & Mécanique de précision
+        </p>
+      </div>
+
+      <!-- Optional right side info (like scroll indicator) -->
+      <div class="hidden md:flex flex-col items-end text-white/70 mt-8 md:mt-0">
+        <span class="uppercase tracking-[0.3em] text-xs font-sans font-bold mb-4">Explorer</span>
+        <div class="w-px h-16 bg-white/30 relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-full h-1/2 bg-white animate-[bounce_2s_infinite]"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MARQUEE TEXT -->
+  <!-- <div class="py-12 bg-oas-accent text-white overflow-hidden flex whitespace-nowrap border-y border-white/10">
+    <div class="animate-marquee inline-flex gap-8 items-center">
+      <span class="text-6xl font-extrabold uppercase tracking-tighter">Diagnostic Auto</span>
+      <span class="text-4xl">✦</span>
+      <span class="text-6xl font-extrabold uppercase tracking-tighter opacity-50">Révision Complète</span>
+      <span class="text-4xl">✦</span>
+      <span class="text-6xl font-extrabold uppercase tracking-tighter">Entretien Moteur</span>
+      <span class="text-4xl">✦</span>
+      <span class="text-6xl font-extrabold uppercase tracking-tighter opacity-50">Climatisation</span>
+      <span class="text-4xl">✦</span>
+      <span class="text-6xl font-extrabold uppercase tracking-tighter">Freinage</span>
+      <span class="text-4xl">✦</span>
+      <span class="text-6xl font-extrabold uppercase tracking-tighter opacity-50">Amortisseurs</span>
+      <span class="text-4xl">✦</span>
+      <span class="text-6xl font-extrabold uppercase tracking-tighter">Diagnostic Auto</span>
+      <span class="text-4xl">✦</span>
+      <span class="text-6xl font-extrabold uppercase tracking-tighter opacity-50">Révision Complète</span>
+    </div>
+  </div> -->
+
+  <!-- PORQUOI NOUS (SIBIRI LAYOUT) -->
+  <section class="w-full py-32 px-6 lg:px-12 bg-white text-oas-navy-dark border-b border-oas-line">
+      <div class="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-start">
+          
+          <!-- Title & Image -->
+          <div class="col-span-1">
+              <div class="w-full text-left -ml-12 mb-10">
+                <app-section-title
+                  align="left"
+                  theme="light"
+                  mainTitle="POURQUOI "
+                  highlightedText="OAS?"
+                  subtitle="À Propos de Notre Expertise">
+                </app-section-title>
+              </div>
+              
+              <div class="w-2/3 md:w-3/5 lg:w-1/2">
+                  <img src="mechanic_working.png" alt="Mécanicien OAS" class="w-full h-auto rounded object-cover filter grayscale hover:grayscale-0 transition-all duration-700 shadow-md" />
+              </div>
+          </div>
+
+          <!-- Main Text -->
+          <div class="col-span-1 md:pt-[110px]">
+              <p class="font-sans text-lg md:text-xl lg:text-2xl leading-relaxed text-gray-700 font-medium">
+                  <span class="text-oas-accent font-bold italic mr-1">OAS Atelier</span> 
+                  est conçu pour l'exigence. Nous refusons le compromis, chaque intervention est traitée avec une minutie artisanale et des outils de pointe. Une sélection stricte des meilleurs composants du marché pour une longévité garantie. Des techniciens qui évoluent constamment avec les nouvelles technologies automobiles. Enfin, pas de coûts cachés : une clarté totale avant même d'ouvrir le capot.
+              </p>
+          </div>
+          
+      </div>
+  </section>
+
+  <!-- SERVICES (STYLE 01) -->
+  <section class="py-32 bg-white text-oas-navy-dark">
+    <!-- Title (with padding) -->
+    <div class="px-6 md:px-12 lg:px-24 mx-auto max-w-[1400px]">
+      <app-section-title 
+        align="left"
+        mainTitle="NOTRE EXPERTISE." 
+        highlightedText="(Magnétique)" 
+        subtitle="Style 01">
+      </app-section-title>
+    </div>
+
+    <!-- Carousel (full bleed) -->
+    <div class="mt-12 h-[500px] md:h-[600px] w-full border-t border-oas-line/50 pt-12 overflow-hidden relative">
+      <app-magnetic-carousel [items]="servicesImages"></app-magnetic-carousel>
+    </div>
+  </section>
+
+  <!-- STYLE 02: Awwwards Interactive List -->
+  <app-interactive-services-list [items]="servicesImages"></app-interactive-services-list>
+
+  <!-- STYLE 03: Apple Bento Grid -->
+  <app-bento-services [items]="servicesImages"></app-bento-services>
+
+  <!-- STYLE 04: Klarna Button Carousel -->
+  <app-button-carousel [items]="servicesImages"></app-button-carousel>
+
+  <!-- TESTIMONIALS (MINIMAL GRID) -->
+  <section class="py-12 bg-white text-oas-navy-dark">
+    <div class=" px-6 md:px-12 lg:px-24">
+      <div class="flex flex-col md:flex-row justify-between items-end gap-8">
+        <div class="w-full text-left -ml-12">
+          <app-section-title 
+            align="left"
+            mainTitle="LA VOIX DE NOS" 
+            highlightedText="CLIENTS." 
+            subtitle="Témoignages">
+          </app-section-title>
+        </div>
+      </div>
+
+      <!-- SWIPER CAROUSEL -->
+      <div class="mt-2 mb-16 pb-16 px-4 relative" style="-webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent); mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);">
+        <swiper-container
+          slides-per-view="1.2"
+          space-between="10"
+          loop="false"
+          pagination="true"
+          pagination-clickable="true"
+          mousewheel="true"
+          mousewheel-force-to-axis="true"
+          breakpoints='{"768": {"slidesPerView": 2.2, "spaceBetween": 15}, "1025": {"slidesPerView": 2.7, "spaceBetween": 20}, "1440": {"slidesPerView": 3.2, "spaceBetween": 25}, "1600": {"slidesPerView": 3.7, "spaceBetween": 30}}'
+          class="w-full pt-6 pb-36"
+        >
+          @for (item of testimonialsData; track item.id) {
+          <swiper-slide class="h-auto">
+            <!-- WRAPPER TO PREVENT CLIPPING -->
+            <div class="pt-24 pb-16 h-full">
+              <!-- CARD -->
+              <div class="bg-oas-info-bg rounded-xl px-6 pb-10 pt-20 text-center relative h-full flex flex-col">
+                <!-- Profile Picture -->
+                <img [src]="item.imageSrc" class="w-40 h-40 rounded-full object-cover absolute -top-20 left-1/2 transform -translate-x-1/2 shadow-lg bg-white border-4 border-white z-10">
+                <!-- Quote Icon -->
+                <div class="text-oas-info text-5xl leading-none font-serif mb-4 flex justify-center mt-4">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9.983 3v7.391c0 5.704-3.731 9.57-8.983 10.609l-.995-2.151c2.432-.917 3.995-3.638 3.995-5.849h-4v-10h9.983zm14.017 0v7.391c0 5.704-3.748 9.571-9 10.609l-.996-2.151c2.433-.917 3.996-3.638 3.996-5.849h-3.983v-10h9.983z"/>
+                  </svg>
+                </div>
+                <!-- Name -->
+                <h4 class="text-lg font-bold text-oas-navy-dark mb-1">{{ item.author }}</h4>
+                <!-- Location -->
+                <p class="text-sm font-semibold text-oas-accent mb-4">{{ item.location }}</p>
+                <!-- Text -->
+                <p class="text-oas-muted text-sm leading-relaxed font-light grow">{{ item.text }}</p>
+              </div>
+            </div>
+          </swiper-slide>
+          }
+        </swiper-container>
+      </div>
+    </div>
+  </section>
+
+  <!-- PARTENAIRES -->
+  <section class="bg-oas-navy-dark py-32 text-white border-y border-white/5 overflow-hidden">
+    <div class="relative flex w-full flex-col-reverse text-center mb-8">
+      <h2 class="uppercase font-extrabold text-balance text-4xl md:text-6xl lg:text-7xl block tracking-tighter">
+        Ils nous font <em class="text-oas-accent not-italic">confiance.</em>
+      </h2>
+      <span class="w-full rotate-[-2deg] font-serif italic text-center text-oas-accent mb-2 xl:mb-4 text-2xl lg:text-4xl opacity-80">
+        Nos Partenaires
+      </span>
+    </div>
+    <div class="text-center flex justify-center mb-20">
+      <p class="text-oas-faint max-w-2xl mx-auto text-lg leading-relaxed text-center px-6">
+        Nous collaborons avec les équipementiers les plus prestigieux pour vous garantir une qualité de réparation absolue.
       </p>
     </div>
 
-    <div class="mt-16">
-      <dl class="space-y-10 md:space-y-0 md:grid md:grid-cols-3 md:gap-x-8 md:gap-y-10">
-        <div class="relative bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-          <dt>
-            <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-wrench"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-            </div>
-            <p class="ml-16 text-lg leading-6 font-bold text-slate-900">Mécaniciens certifiés</p>
-          </dt>
-          <dd class="mt-2 ml-16 text-base text-slate-500">
-            Notre équipe est composée de professionnels qualifiés et formés aux dernières technologies automobiles.
-          </dd>
+    <div class="relative w-full overflow-hidden mt-16 pb-8 border-y border-white/10 pt-8 bg-black/20">
+      <div class="flex group">
+        <!-- Première bande -->
+        <div class="flex shrink-0 min-w-full animate-marquee items-center justify-around gap-16 md:gap-32 px-8 group-hover:[animation-play-state:paused]">
+          @for (partner of partners; track partner.name) {
+          <div class="flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity duration-300">
+            <img [src]="partner.logoUrl" [class]="partner.heightClass + ' object-contain'" [alt]="partner.name">
+          </div>
+          }
         </div>
-
-        <div class="relative bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-          <dt>
-            <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
-            </div>
-            <p class="ml-16 text-lg leading-6 font-bold text-slate-900">Pièces de qualité</p>
-          </dt>
-          <dd class="mt-2 ml-16 text-base text-slate-500">
-            Nous utilisons exclusivement des pièces d'origine ou de qualité équivalente pour garantir votre sécurité.
-          </dd>
+        <!-- Deuxième bande identique pour le scroll infini -->
+        <div class="flex shrink-0 min-w-full animate-marquee items-center justify-around gap-16 md:gap-32 px-8 group-hover:[animation-play-state:paused]" aria-hidden="true">
+          @for (partner of partners; track partner.name) {
+          <div class="flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity duration-300">
+            <img [src]="partner.logoUrl" [class]="partner.heightClass + ' object-contain'" [alt]="partner.name">
+          </div>
+          }
         </div>
-
-        <div class="relative bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-          <dt>
-            <div class="absolute flex items-center justify-center h-12 w-12 rounded-md bg-blue-500 text-white">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            </div>
-            <p class="ml-16 text-lg leading-6 font-bold text-slate-900">Intervention rapide</p>
-          </dt>
-          <dd class="mt-2 ml-16 text-base text-slate-500">
-            Nous respectons les délais annoncés et optimisons nos interventions pour immobiliser votre véhicule le moins longtemps possible.
-          </dd>
-        </div>
-      </dl>
+      </div>
     </div>
-  </div>
+
+    <div class="text-center mt-4">
+      <a routerLink="/contact" class="inline-flex items-center gap-4 px-8 py-4 rounded-0 border border-white/20 hover:border-oas-accent hover:text-oas-accent transition-colors text-xs uppercase tracking-[0.2em] font-bold">
+        Vous pouvez aussi y figurer
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- CTA FINAL (FULLSCREEN VIBE) -->
+  <section class="py-40 bg-oas-accent text-white text-center relative overflow-hidden">
+    <div class="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+      <h1 class="text-[30vw] font-black tracking-tighter whitespace-nowrap">CONTACT</h1>
+    </div>
+    <div class="relative z-10 max-w-3xl mx-auto px-6">
+      <app-section-title 
+        align="center"
+        theme="accent"
+        mainTitle="FAITES LE PREMIER PAS VERS L'" 
+        highlightedText="EXCELLENCE." 
+        subtitle="Contactez-nous">
+      </app-section-title>
+      <div class="mt-12">
+        <a routerLink="/rdv" class="inline-flex items-center gap-4 px-10 py-5 bg-oas-navy-dark text-white hover:bg-white hover:text-oas-navy-dark transition-colors duration-300 text-sm font-bold tracking-[0.2em] uppercase shadow-2xl group">
+          Prendre rendez-vous
+          <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
 </div>
 
-<!-- CTA Section -->
-<div class="bg-blue-700">
-  <div class="max-w-2xl mx-auto text-center py-16 px-4 sm:py-20 sm:px-6 lg:px-8">
-    <h2 class="text-3xl font-extrabold text-white sm:text-4xl">
-      <span class="block">Besoin d'un diagnostic ?</span>
-      <span class="block">Contactez-nous aujourd'hui.</span>
-    </h2>
-    <p class="mt-4 text-lg leading-6 text-blue-200">
-      Nos experts sont à votre disposition pour établir un devis clair et sans surprise.
-    </p>
-    <a routerLink="/contact" class="mt-8 w-full inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-blue-600 bg-white hover:bg-blue-50 sm:w-auto transition">
-      Nous contacter
-    </a>
-  </div>
-</div>
+<style>
+/* Custom text stroke effect for tailwind */
+.text-stroke {
+  -webkit-text-stroke: 1px currentColor;
+}
+.text-stroke-oas-accent {
+  -webkit-text-stroke-color: var(--color-oas-accent);
+}
+</style>

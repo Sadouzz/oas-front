@@ -1,0 +1,61 @@
+<div
+  #container
+  class="relative flex items-center justify-start overflow-x-auto overflow-y-hidden w-full h-full px-12 py-12 hide-scrollbar"
+  [style.gap.px]="gap"
+>
+  <!-- Transparent backdrop — click to close when a bar is open. -->
+  <div
+    class="fixed inset-0 z-[1]"
+    [style.pointerEvents]="openIndex !== null ? 'auto' : 'none'"
+    (click)="closeCarousel()"
+  ></div>
+
+  @for (img of items; track img.id; let i = $index) {
+    @let sizes = sizeFor(i);
+    @let blurred = openIndex !== null && i !== openIndex;
+    
+    <div
+      class="flex-none overflow-hidden relative transition-all duration-300"
+      [style.width.px]="sizes.width"
+      [style.height.px]="sizes.height"
+      [style.transition]="getTransitionStyle()"
+      [style.willChange]="'width, height'"
+      [style.zIndex]="openIndex === i ? 3 : 2"
+      [style.filter]="blurred ? 'blur(' + blurAmount + 'px)' : 'none'"
+      [style.opacity]="blurred ? 0.6 : 1"
+      [style.backgroundColor]="img.src ? 'transparent' : 'hsl(' + ((i * 360) / items.length) + ', 70%, 58%)'"
+      [style.backgroundImage]="img.src ? 'url(' + img.src + ')' : 'none'"
+      [style.backgroundSize]="'cover'"
+      [style.backgroundPosition]="'center'"
+      [style.backgroundRepeat]="'no-repeat'"
+      (click)="onItemClick($event, i)"
+      [style.cursor]="openIndex === i ? 'default' : 'pointer'"
+    >
+      <!-- Title Overlay -->
+      @if (img.title) {
+        <div 
+           class="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/95 via-black/50 to-transparent flex flex-col justify-end transition-opacity duration-500 ease-out h-[50%]"
+           [style.opacity]="openIndex === i || factors[i] > 0.3 ? 1 : 0"
+        >
+           <span class="text-white font-extrabold text-xl md:text-2xl lg:text-3xl leading-tight font-sans tracking-tight mb-2">
+             {{ img.title }}
+           </span>
+           <div 
+             class="h-1 bg-oas-accent w-12 transition-all duration-500"
+             [style.width]="openIndex === i ? '100%' : '3rem'"
+           ></div>
+        </div>
+        
+        <!-- Subtle vertical text when closed to still show what it is -->
+        <div 
+           class="absolute inset-0 flex items-end justify-center pb-8 transition-opacity duration-300 pointer-events-none bg-black/20"
+           [style.opacity]="openIndex === null && factors[i] < 0.2 ? 1 : 0"
+        >
+            <span class="text-white/90 font-bold uppercase tracking-widest text-sm whitespace-nowrap -rotate-90 origin-bottom-left absolute left-[50%] bottom-[10%] translate-x-[-100%]">
+                {{ img.title }}
+            </span>
+        </div>
+      }
+    </div>
+  }
+</div>

@@ -1,0 +1,74 @@
+<section 
+  #container
+  class="relative w-full min-h-screen py-32 bg-oas-navy-dark text-white overflow-hidden flex flex-col justify-center items-start px-6 md:px-12 lg:px-24" 
+  (mousemove)="onMove($event)" 
+  (mouseleave)="onLeaveContainer()"
+>
+  
+  <div class="mb-16 w-full relative z-10">
+    <app-section-title 
+      align="left"
+      theme="dark"
+      mainTitle="NOTRE EXPERTISE." 
+      highlightedText="(Awwwards)" 
+      subtitle="Style 02">
+    </app-section-title>
+  </div>
+
+  <!-- FLOATING IMAGE CONTAINER -->
+  <div 
+    class="absolute left-0 top-0 w-[300px] h-[400px] rounded-2xl overflow-hidden pointer-events-none z-0 transition-opacity duration-500"
+    [style.transform]="'translate3d(' + cursorX + 'px, ' + cursorY + 'px, 0) translate(-50%, -50%)'"
+    [style.opacity]="anyActive ? 1 : 0"
+    [style.willChange]="'transform, opacity'"
+  >
+    <!-- We stack all images absolute and translate them based on hovered index -->
+    @for (item of items; track item.id; let i = $index) {
+      <div 
+        class="absolute inset-0 w-full h-full overflow-hidden transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]"
+        [style.transform]="
+          hoveredIndex === null ? 'translateY(100%)' :
+          i < hoveredIndex ? 'translateY(-100%)' :
+          i > hoveredIndex ? 'translateY(100%)' : 'translateY(0%)'
+        "
+      >
+        <img *ngIf="item.src" [src]="item.src" alt="{{ item.title }}" class="w-full h-full object-cover block" />
+        <div *ngIf="!item.src" class="w-full h-full bg-gradient-to-br from-gray-800 to-black"></div>
+      </div>
+    }
+  </div>
+
+  <!-- ROLLING TEXT LIST -->
+  <div class="relative z-10 flex flex-col items-start gap-4 md:gap-6 w-full max-w-[1400px] mx-auto">
+    @for (item of items; track item.id; let i = $index) {
+      @let isHovered = hoveredIndex === i;
+      
+      <a [routerLink]="['/services', item.slug]"
+         class="block overflow-hidden cursor-pointer"
+         (mouseenter)="onHover(i)">
+        
+        <div class="relative transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]"
+             [style.transform]="isHovered ? 'translateY(-100%)' : 'translateY(0%)'">
+             
+          <!-- Base Text (Visible when NOT hovered) -->
+          <span 
+            class="block whitespace-nowrap text-4xl md:text-6xl lg:text-[72px] font-extrabold uppercase tracking-tighter leading-[0.9em] font-sans transition-colors duration-300"
+            [style.color]="anyActive ? (isHovered ? 'white' : '#51565A') : 'white'"
+          >
+            {{ item.title }}
+          </span>
+          
+          <!-- Hover Text (Slides up from below) -->
+          <span 
+            aria-hidden="true"
+            class="absolute left-0 top-[100%] w-full block whitespace-nowrap text-4xl md:text-6xl lg:text-[72px] font-extrabold uppercase tracking-tighter leading-[0.9em] font-sans transition-colors duration-300 text-white"
+          >
+            {{ item.title }}
+          </span>
+          
+        </div>
+      </a>
+    }
+  </div>
+  
+</section>
