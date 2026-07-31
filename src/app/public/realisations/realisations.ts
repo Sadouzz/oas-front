@@ -26,13 +26,7 @@ interface BeforeAfterItem {
   after: string;
 }
 
-interface Testimonial {
-  id: number;
-  text: string;
-  author: string;
-  location: string;
-  imageSrc: string;
-}
+import { TESTIMONIALS_DATA, Testimonial } from '../../shared/data/testimonials.data';
 
 interface Stat {
   valeur: string;
@@ -96,29 +90,7 @@ export class Realisations implements OnInit {
     },
   ];
 
-  readonly testimonials: Testimonial[] = [
-    {
-      id: 1,
-      text: 'Un travail minutieux et des explications claires à chaque étape. Ma voiture n’a jamais aussi bien roulé.',
-      author: 'Fatou D.',
-      location: 'Dakar',
-      imageSrc: 'https://images.unsplash.com/photo-1573496527892-904f897eb744?q=80&w=200&auto=format&fit=crop',
-    },
-    {
-      id: 2,
-      text: 'Intervention rapide sur ma boîte de vitesses, devis respecté au centime près. Je recommande sans hésiter.',
-      author: 'Moussa K.',
-      location: 'Dakar',
-      imageSrc: 'https://images.unsplash.com/photo-1543965170-4c01a586684e?q=80&w=200&auto=format&fit=crop',
-    },
-    {
-      id: 3,
-      text: 'Après un accrochage, ma carrosserie est comme neuve. Un travail vraiment soigné, je suis impressionnée.',
-      author: 'Aïcha B.',
-      location: 'Rufisque',
-      imageSrc: 'https://images.unsplash.com/photo-1760552069014-78ff72ee7cac?q=80&w=200&auto=format&fit=crop',
-    },
-  ];
+  readonly testimonials: Testimonial[] = TESTIMONIALS_DATA;
 
   activeFilter: GalleryFilter = 'tout';
 

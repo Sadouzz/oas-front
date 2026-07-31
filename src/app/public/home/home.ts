@@ -8,13 +8,7 @@ import { register } from 'swiper/element/bundle';
 
 register();
 
-interface Testimonial {
-  id: number;
-  text: string;
-  author: string;
-  location: string;
-  imageSrc: string;
-}
+import { TESTIMONIALS_DATA, Testimonial } from '../../shared/data/testimonials.data';
 
 interface Partner {
   name: string;
@@ -48,50 +42,7 @@ export class Home {
     { id: 8, title: 'Pneumatiques', slug: 'pneumatiques', description: 'Montage, équilibrage et réparation de vos pneus toutes saisons.', src: 'https://images.unsplash.com/photo-1600705722908-bab1e61c0b4d?q=80&w=800&auto=format&fit=crop' },
     { id: 9, title: 'Remorquage', slug: 'remorquage', description: 'Service de dépannage et remorquage de votre véhicule en panne.', src: 'https://images.unsplash.com/photo-1520624029259-71ee51a1d137?q=80&w=800&auto=format&fit=crop' }
   ];
-  testimonialsData: Testimonial[] = [
-    {
-        id: 1,
-        text: "I’ve been shopping at this store for a few months now, and I can confidently say it’s one of the best online shopping experiences I've had. From the seamless ordering process to the fast delivery, everything has been top-notch.",
-        author: "Sophia M.",
-        location: "San Francisco, CA",
-        imageSrc: "https://maya-theme-empower.myshopify.com/cdn/shop/files/testimonial_4.webp?v=1746436221&width=400"
-    },
-    {
-        id: 2,
-        text: "I recently ordered a few items from the 'Stay Warm & Stylish' collection, and I couldn’t be happier. The jacket I bought is both warm and trendy, and I’ve received so many compliments! The material is high quality, and it fits just right.",
-        author: "John P.",
-        location: "Austin, TX",
-        imageSrc: "https://maya-theme-empower.myshopify.com/cdn/shop/files/testimonial_6.webp?v=1746436221&width=400"
-    },
-    {
-        id: 3,
-        text: "As someone who is conscious about the environment, I was thrilled to find a clothing brand that offers an eco-friendly collection without sacrificing style. The clothes are beautiful, comfortable.",
-        author: "Emily R.",
-        location: "Miami, FL",
-        imageSrc: "https://maya-theme-empower.myshopify.com/cdn/shop/files/testimonial_1.webp?v=1746436221&width=400"
-    },
-    {
-        id: 4,
-        text: "The whole shopping experience was fantastic. The website is user-friendly, and I found exactly what I was looking for without any hassle. My order arrived in perfect condition, and the clothing fits beautifully.",
-        author: "Olivia T.",
-        location: "Chicago, IL",
-        imageSrc: "https://maya-theme-empower.myshopify.com/cdn/shop/files/testimonial_5.webp?v=1746436222&width=400"
-    },
-    {
-        id: 5,
-        text: "I’ve been a loyal customer for over a year, and I keep coming back because of the excellent quality and stylish designs. Whether I’m looking for casual wear or something a bit dressier, I can always find something that fits my style perfectly.",
-        author: "Liam W.",
-        location: "Los Angeles, CA",
-        imageSrc: "https://maya-theme-empower.myshopify.com/cdn/shop/files/testimonial_7.webp?v=1746436221&width=400"
-    },
-    {
-        id: 6,
-        text: "I recently ordered from the 'Trendy & Comfortable' collection, and I am so impressed with the quality and design. The items are versatile enough to wear for various occasions, from work to weekend outings.",
-        author: "Mark J.",
-        location: "New York, NY",
-        imageSrc: "https://maya-theme-empower.myshopify.com/cdn/shop/files/testimonial_8.webp?v=1746436221&width=400"
-    }
-  ];
+  testimonialsData: Testimonial[] = TESTIMONIALS_DATA;
 
   partners: Partner[] = [
     { name: 'Partner 1', logoUrl: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?q=80&w=400&auto=format&fit=crop', heightClass: 'h-16 rounded-md' },

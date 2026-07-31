@@ -8,9 +8,9 @@
       <!-- GAUCHE (Desktop) -->
       <div class="hidden lg:flex flex-1 h-full items-center justify-start border-r border-oas-line/40 transition-colors duration-300">
         <a *ngFor="let link of headerLeftLinks" 
-           [routerLink]="link.path" 
+           [routerLink]="[link.path]" 
            routerLinkActive="bg-black/5 !text-oas-accent active-link" 
-           [routerLinkActiveOptions]="link.exact ? {exact: true} : {exact: false}" 
+           [routerLinkActiveOptions]="{exact: !!link.exact}" 
            class="group/link relative flex h-full grow items-center justify-center px-2 xl:px-4 font-bold uppercase text-[10px] xl:text-xs tracking-widest transition-all duration-300 border-r border-oas-line/40 last:border-r-0 hover:bg-black/5 text-oas-navy-dark">
           {{ link.label }}
           <div class="absolute bottom-0 left-0 h-[3px] w-full transition-colors duration-300 bg-transparent group-hover/link:bg-oas-accent group-[.active-link]/link:bg-oas-accent"></div>
@@ -42,8 +42,9 @@
       <!-- DROITE (Desktop) -->
       <div class="hidden lg:flex flex-1 h-full items-center justify-end border-l border-oas-line/40 transition-colors duration-300">
         <a *ngFor="let link of headerRightLinks" 
-           [routerLink]="link.path" 
+           [routerLink]="[link.path]" 
            routerLinkActive="bg-black/5 !text-oas-accent active-link" 
+           [routerLinkActiveOptions]="{exact: !!link.exact}" 
            class="group/link relative flex h-full grow items-center justify-center px-2 xl:px-4 font-bold uppercase text-[10px] xl:text-xs tracking-widest transition-all duration-300 border-r border-oas-line/40 last:border-r-0 hover:bg-black/5 text-oas-navy-dark">
           {{ link.label }}
           <div class="absolute bottom-0 left-0 h-[3px] w-full transition-colors duration-300 bg-transparent group-hover/link:bg-oas-accent group-[.active-link]/link:bg-oas-accent"></div>
@@ -59,9 +60,9 @@
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
     </button>
     <div class="flex flex-col gap-6 text-xl md:text-2xl font-bold uppercase tracking-widest mt-8">
-      <a *ngFor="let link of headerLeftLinks" [routerLink]="link.path" (click)="isMenuOpen = false" class="text-oas-navy-dark hover:text-oas-accent">{{ link.label }}</a>
+      <a *ngFor="let link of headerLeftLinks" [routerLink]="[link.path]" (click)="isMenuOpen = false" class="text-oas-navy-dark hover:text-oas-accent">{{ link.label }}</a>
       <hr class="border-oas-line/50 my-2" />
-      <a *ngFor="let link of headerRightLinks" [routerLink]="link.path" (click)="isMenuOpen = false" class="text-oas-navy-dark hover:text-oas-accent">{{ link.label }}</a>
+      <a *ngFor="let link of headerRightLinks" [routerLink]="[link.path]" (click)="isMenuOpen = false" class="text-oas-navy-dark hover:text-oas-accent">{{ link.label }}</a>
     </div>
   </div>
 
@@ -131,7 +132,7 @@
                     <!-- DYNAMIC COLUMNS -->
                     <div *ngFor="let section of footerSections" class="flex flex-col gap-5">
                         <h4 class="text-[11px] tracking-widest uppercase text-white/50 font-sans mb-2">{{ section.title }}</h4>
-                        <a *ngFor="let link of section.links" [routerLink]="link.path" class="text-sm font-sans font-medium opacity-90 hover:opacity-100 hover:text-oas-accent transition-colors">{{ link.label }}</a>
+                        <a *ngFor="let link of section.links" [routerLink]="[link.path]" class="text-sm font-sans font-medium opacity-90 hover:opacity-100 hover:text-oas-accent transition-colors">{{ link.label }}</a>
                     </div>
 
                     <!-- SOCIAL MEDIA -->

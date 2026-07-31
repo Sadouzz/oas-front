@@ -1,11 +1,11 @@
 import { Component, ElementRef, ViewChild, AfterViewInit, HostListener, ChangeDetectorRef } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-public-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterModule],
   templateUrl: './public-layout.html',
   styleUrl: './public-layout.css',
 })
@@ -22,7 +22,7 @@ export class PublicLayout implements AfterViewInit {
     // { label: 'Accueil', path: '/', exact: true }
   ];
   
-  headerRightLinks = [
+  headerRightLinks: { label: string, path: string, exact?: boolean }[] = [
     { label: 'Blog', path: '/blog' },
     { label: 'Devis', path: '/devis' },
     { label: 'RDV', path: '/rdv' },
