@@ -119,6 +119,47 @@
   </section>
 
 
+  <!-- NOS CHIFFRES -->
+  <section class="py-24 bg-oas-navy-dark text-white border-y border-white/5 relative overflow-hidden">
+    <!-- Subtle Background Element -->
+    <div class="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
+      <span class="text-[25vw] font-black tracking-tighter whitespace-nowrap">CHIFFRES</span>
+    </div>
+    
+    <div class="relative z-10 px-6 md:px-12 lg:px-24">
+      <div class="w-full text-center mb-16">
+        <app-section-title 
+          align="center"
+          theme="dark"
+          mainTitle="NOTRE EXPERTISE EN " 
+          highlightedText="CHIFFRES." 
+          subtitle="Impact & Réalisations">
+        </app-section-title>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 max-w-[1200px] mx-auto">
+        @for (stat of stats; track stat.label) {
+          <div class="flex flex-col items-center justify-center text-center group">
+            <span class="text-5xl md:text-6xl lg:text-7xl font-black font-sans text-transparent bg-clip-text bg-gradient-to-br from-white to-white/50 mb-2 transition-transform duration-500 group-hover:scale-110 group-hover:from-oas-accent group-hover:to-oas-accent/50">
+              {{ stat.value }}
+            </span>
+            <div class="w-12 h-1 bg-oas-accent mb-4 transition-all duration-500 group-hover:w-24"></div>
+            <span class="text-sm md:text-base font-bold uppercase tracking-widest text-white/80">
+              {{ stat.label }}
+            </span>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- NOS RÉALISATIONS (GSAP HORIZONTAL GALLERY) -->
+  <app-horizontal-gallery 
+    [items]="realisationsData"
+    title="Nos réalisations"
+    subtitle="En vedette"
+    description="Découvrez nos derniers travaux, nos restaurations complètes et notre savoir-faire au quotidien. Plongez dans l'univers de notre atelier et laissez-vous convaincre par notre expertise technique.">
+  </app-horizontal-gallery>
 
   <!-- TESTIMONIALS (MINIMAL GRID) -->
   <section class="py-12 bg-white text-oas-navy-dark">
@@ -175,6 +216,14 @@
       </div>
     </div>
   </section>
+
+  <!-- BLOG PREVIEW SECTION -->
+  <app-blog-preview 
+    [articles]="blogArticles"
+    [title]="blogTitle"
+    [subtitle]="blogSubtitle"
+    [description]="blogDescription">
+  </app-blog-preview>
 
   <!-- PARTENAIRES -->
   <section class="bg-oas-navy-dark py-32 text-white border-y border-white/5 overflow-hidden">

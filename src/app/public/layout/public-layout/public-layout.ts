@@ -17,14 +17,14 @@ export class PublicLayout implements AfterViewInit {
 
   headerLeftLinks: { label: string, path: string, exact?: boolean }[] = [
     { label: 'Le garage', path: '/a-propos' },
-    { label: 'Blog', path: '/blog' },
     { label: 'Nos Services', path: '/services' },
     { label: 'Réalisations', path: '/realisations' }
     // { label: 'Accueil', path: '/', exact: true }
   ];
-
+  
   headerRightLinks = [
-    { label: 'Devis', path: '/contact' },
+    { label: 'Blog', path: '/blog' },
+    { label: 'Devis', path: '/devis' },
     { label: 'RDV', path: '/rdv' },
     { label: 'Partenaires', path: '/partenaires' }
   ];

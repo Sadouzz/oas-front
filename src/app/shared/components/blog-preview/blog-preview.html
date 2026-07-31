@@ -1,0 +1,67 @@
+<section class="relative flex w-full flex-col items-center justify-around gap-12 overflow-hidden bg-slate-50 px-4 pt-24 lg:px-6 lg:pt-32 pb-24 border-y border-oas-line/30">
+
+  <!-- En-tête : Titres et Description -->
+  <div class="relative flex w-full flex-col items-center justify-center text-center z-10">
+    <div class="absolute inset-0 flex items-center text-oas-accent justify-center opacity-10 pointer-events-none">
+        <h1 class="text-[30vw] font-black tracking-tighter whitespace-nowrap">BLOG</h1>
+    </div>
+      <div class="relative flex w-full flex-col items-center">
+
+          <div class="relative flex w-full flex-col-reverse items-center">
+              <h2 class="uppercase font-black tracking-tighter text-balance text-5xl md:text-6xl lg:text-7xl leading-[0.85] text-oas-navy-dark" [innerHTML]="title">
+              </h2>
+              <span class="block w-full rotate-[-2deg] text-center text-oas-accent font-serif italic mb-4 text-3xl lg:text-4xl">
+                  {{ subtitle }}
+              </span>
+          </div>
+
+          <p class="mt-8 max-w-[600px] text-gray-700 text-base md:text-lg font-medium px-4" [innerHTML]="description">
+          </p>
+
+          <a
+              routerLink="/blog"
+              class="mt-10 bg-oas-navy-dark text-white px-8 py-4 font-bold uppercase tracking-[0.2em] text-xs hover:bg-oas-accent hover:text-white transition-colors duration-300 flex items-center gap-4"
+          >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+              </svg>
+              Lire le blog
+          </a>
+
+      </div>
+  </div>
+
+  <!-- Galerie superposée -->
+  <div class="relative mt-8 flex w-[220%] -translate-x-10 md:w-full md:translate-x-0 justify-center max-w-[1400px] mx-auto">
+
+      @for (article of articles; track article.id; let i = $index) {
+          <a
+              [routerLink]="['/blog', article.id]"
+              class="group relative flex aspect-[4/5] md:aspect-[3/4] flex-1 flex-col items-center overflow-hidden bg-white p-2 md:p-4 shadow-xl border border-black/5 -mx-4 md:-mx-8 transition-all duration-500 hover:scale-110 hover:z-20 cursor-pointer {{ article.rotation }}"
+              [style.zIndex]="i"
+          >
+              <div class="relative h-full w-full overflow-hidden bg-gray-100 flex-grow">
+                  <img
+                      [src]="article.imageSrc"
+                      [alt]="article.alt"
+                      loading="lazy"
+                      class="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110 grayscale group-hover:grayscale-0"
+                  />
+                  <!-- Overlay -->
+                  <div class="absolute inset-0 bg-oas-navy-dark/60 opacity-0 transition-opacity duration-300 group-hover:opacity-100 flex flex-col items-center justify-center text-white gap-3 p-4 text-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                      </svg>
+                      <span class="font-bold tracking-wider text-sm uppercase">{{ article.date }}</span>
+                  </div>
+              </div>
+              <div class="w-full mt-3 text-center px-1">
+                  <h3 class="text-xs md:text-sm font-bold text-oas-navy-dark uppercase tracking-tighter line-clamp-2 leading-tight group-hover:text-oas-accent transition-colors">{{ article.title }}</h3>
+              </div>
+          </a>
+      }
+
+  </div>
+</section>
