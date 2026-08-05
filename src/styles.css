@@ -1,5 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600&display=swap');
 @import 'aos/dist/aos.css';
 @tailwind base;
 @tailwind components;
@@ -32,6 +34,28 @@
 html, body {
   font-family: 'Poppins', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Portail client uniquement : typographie plus sobre + accent orange (au lieu du rouge global),
+   pour ne pas confondre "sélectionné" et "refusé/erreur". Scopé pour ne pas impacter le staff/le site public. */
+.client-portal-scope {
+  font-family: 'Inter', system-ui, sans-serif;
+  --color-oas-accent:      #ef6c1a;
+  --color-oas-accent-dark: #d4590d;
+  --color-oas-accent-bg:   #fdf0e6;
+  /* Bordures plus franches que le gris quasi invisible du reste de l'app (#e7ecf3) */
+  --color-oas-line:        #d6dee8;
+}
+
+.client-portal-scope .font-mono-data {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Photo véhicule "flottante" : fond déjà détouré (PNG transparent), on ajoute juste
+   l'ombre portée douce pour l'effet flottant façon carte "Active Repairs" de référence. */
+.client-portal-scope .vehicle-hero-photo {
+  filter: drop-shadow(0 18px 14px rgb(0 0 0 / 0.16)) drop-shadow(0 4px 6px rgb(0 0 0 / 0.10));
 }
 
 /* Sidebar gradient marine */

@@ -13,13 +13,15 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
     : req;
 
+  const isClientArea = router.url.startsWith('/espace-client');
+
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
       if (error.status === 401) {
         authService.logout();
-        router.navigate(['/login'], { replaceUrl: true });
+        router.navigate([isClientArea ? '/espace-client/connexion' : '/login'], { replaceUrl: true });
       } else if (error.status === 403) {
-        router.navigate(['/forbidden'], { replaceUrl: true });
+        router.navigate([isClientArea ? '/espace-client' : '/forbidden'], { replaceUrl: true });
       }
       return throwError(() => error);
     })

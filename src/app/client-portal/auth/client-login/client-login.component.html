@@ -1,0 +1,128 @@
+<div class="client-portal-scope min-h-screen flex">
+
+  <!-- Panneau gauche branding (~53%) -->
+  <div class="hidden lg:flex flex-col items-center justify-center w-[53%] flex-shrink-0 relative overflow-hidden"
+       style="background: linear-gradient(160deg, #0e2c4b 0%, #0a1e34 100%);">
+
+    <div class="absolute bottom-0 left-0 w-64 h-64 rounded-full opacity-15 pointer-events-none" style="background: #ef6c1a; filter: blur(100px);"></div>
+
+    <div class="relative z-10 flex flex-col items-center text-center px-16 max-w-lg">
+      <div class="w-28 h-28 bg-white rounded-full flex items-center justify-center shadow-2xl mb-6">
+        <img src="/oas-logo.png" alt="OAS" style="width:76px;height:76px;object-fit:contain;">
+      </div>
+
+      <h1 class="text-5xl font-extrabold text-white tracking-tight mb-2">OAS</h1>
+      <p class="text-sm font-bold tracking-[0.2em] uppercase mb-5" style="color:#ef6c1a;">
+        Espace Client
+      </p>
+
+      <p class="text-sm leading-relaxed mb-10" style="color: rgba(255,255,255,0.55);">
+        Suivez votre véhicule et vos échanges avec le garage<br>— rendez-vous, devis, factures, en un seul endroit.
+      </p>
+
+      <div class="w-full space-y-4 text-left">
+        @for (feature of features; track feature) {
+          <div class="flex items-center gap-3">
+            <div class="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center" style="background: rgba(239,108,26,0.25);">
+              <svg lucideCheck class="w-3.5 h-3.5" [strokeWidth]="2.5"></svg>
+            </div>
+            <span class="text-sm font-medium" style="color: rgba(255,255,255,0.75);">{{ feature }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Panneau droit formulaire (~47%) -->
+  <div class="flex-1 flex flex-col bg-white">
+
+    <div class="flex-1 flex flex-col items-center justify-center px-10 py-12">
+      <div class="w-full max-w-sm">
+
+        <div class="flex items-center gap-3 mb-8 lg:hidden">
+          <div class="w-10 h-10 bg-oas-navy rounded-full flex items-center justify-center">
+            <img src="/oas-logo.png" alt="OAS" class="w-7 h-7 object-contain">
+          </div>
+          <span class="font-extrabold text-oas-ink text-lg">OAS</span>
+        </div>
+
+        <h2 class="text-3xl font-extrabold text-oas-ink mb-1">Connexion</h2>
+        <p class="text-oas-muted text-sm mb-8">Accédez à votre espace client</p>
+
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="space-y-5">
+
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1.5">Nom d'utilisateur</label>
+            <div class="relative">
+              <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-oas-faint">
+                <svg lucideUser class="w-4 h-4" stroke-width="2"></svg>
+              </span>
+              <input
+                type="text"
+                formControlName="username"
+                placeholder="Jean Dupond"
+                class="w-full pl-10 pr-4 py-3 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
+                [class.border-oas-bad]="username?.invalid && username?.touched"
+              />
+            </div>
+            @if (username?.invalid && username?.touched) {
+              <p class="text-oas-bad text-xs mt-1">Ce champ est obligatoire.</p>
+            }
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1.5">Mot de passe</label>
+            <div class="relative">
+              <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-oas-faint">
+                <svg lucideLock class="w-4 h-4" stroke-width="2"></svg>
+              </span>
+              <input
+                [type]="showPassword ? 'text' : 'password'"
+                formControlName="password"
+                placeholder="••••••"
+                class="w-full pl-10 pr-10 py-3 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
+                [class.border-oas-bad]="password?.invalid && password?.touched"
+              />
+              <button type="button" (click)="showPassword = !showPassword"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-oas-faint hover:text-oas-ink transition">
+                @if (showPassword) {
+                  <svg lucideEyeOff class="w-4 h-4" stroke-width="2"></svg>
+                } @else {
+                  <svg lucideEye class="w-4 h-4" stroke-width="2"></svg>
+                }
+              </button>
+            </div>
+            @if (password?.invalid && password?.touched) {
+              <p class="text-oas-bad text-xs mt-1">Le mot de passe est obligatoire.</p>
+            }
+          </div>
+
+          @if (errorMessage) {
+            <div class="bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-xs px-4 py-3 rounded-lg">
+              {{ errorMessage }}
+            </div>
+          }
+
+          <button
+            type="submit"
+            [disabled]="loading"
+            class="w-full bg-oas-accent hover:bg-oas-accent-dark disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-lg transition text-sm flex items-center justify-center gap-2 cursor-pointer"
+          >
+            @if (loading) {
+              <svg lucideLoader2 class="animate-spin h-4 w-4" stroke-width="2"></svg>
+            }
+            {{ loading ? 'Connexion...' : 'Se connecter' }}
+          </button>
+
+          <p class="text-center text-sm text-oas-muted pt-1">
+            Pas de compte ?&nbsp;
+            <a [routerLink]="paths.inscription" class="font-semibold transition" style="color:#ef6c1a;">Créer un compte</a>
+          </p>
+
+        </form>
+
+      </div>
+    </div>
+
+  </div>
+</div>

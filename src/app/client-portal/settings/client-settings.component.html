@@ -1,0 +1,45 @@
+<div>
+  <div class="mb-6">
+    <h1 class="text-2xl font-extrabold text-oas-ink">Paramètres</h1>
+    <p class="text-oas-muted text-sm mt-1">Gérez la sécurité de votre compte</p>
+  </div>
+
+  <div class="bg-white rounded-2xl border border-oas-line overflow-hidden max-w-xl">
+    <div class="p-5 border-b border-oas-line">
+      <h2 class="text-sm font-bold text-oas-ink">Mot de passe</h2>
+      <p class="text-xs text-oas-muted mt-0.5">Choisissez un mot de passe d'au moins 6 caractères</p>
+    </div>
+    <form [formGroup]="form" (ngSubmit)="save()" class="p-5 space-y-4">
+      <div>
+        <label class="block text-sm font-semibold text-oas-ink mb-1.5">Mot de passe actuel</label>
+        <input type="password" formControlName="oldPassword"
+          class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-oas-ink mb-1.5">Nouveau mot de passe</label>
+        <input type="password" formControlName="newPassword"
+          class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-oas-ink mb-1.5">Confirmer le nouveau mot de passe</label>
+        <input type="password" formControlName="confirmPassword"
+          class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"
+          [class.border-oas-bad]="mismatch" />
+        @if (mismatch) {
+          <p class="text-oas-bad text-xs mt-1">Les mots de passe ne correspondent pas.</p>
+        }
+      </div>
+
+      <app-alert [success]="successMessage" [error]="errorMessage"></app-alert>
+
+      <div class="pt-2">
+        <button type="submit" [disabled]="saving"
+          class="bg-oas-accent hover:bg-oas-accent-dark disabled:opacity-60 text-white font-bold px-5 py-2.5 rounded-lg text-sm transition cursor-pointer">
+          {{ saving ? 'Modification...' : 'Changer le mot de passe' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

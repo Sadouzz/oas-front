@@ -3,10 +3,10 @@ import { LoginComponent } from './gestion/auth/login/login.component';
 import { RegisterComponent } from './gestion/auth/register/register.component';
 import { ForbiddenComponent } from './gestion/auth/forbidden/forbidden.component';
 import { LayoutComponent } from './gestion/layout/layout.component';
-import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
 import { multiRoleGuard } from './core/guards/multi-role.guard';
 import { noAuthGuard } from './core/guards/no-auth.guard';
+import { staffGuard } from './core/guards/staff.guard';
 
 export const routes: Routes = [
   {
@@ -41,9 +41,14 @@ export const routes: Routes = [
   { path: 'forbidden', component: ForbiddenComponent },
 
   {
+    path: 'espace-client',
+    loadChildren: () => import('./client-portal/client-portal.routes').then(m => m.CLIENT_PORTAL_ROUTES),
+  },
+
+  {
     path: '',
     component: LayoutComponent,
-    canActivate: [authGuard],
+    canActivate: [staffGuard],
     children: [
       {
         path: 'dashboard',

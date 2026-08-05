@@ -1,0 +1,166 @@
+<div class="client-portal-scope min-h-screen flex">
+
+  <div class="hidden lg:flex flex-col items-center justify-center w-[40%] flex-shrink-0 relative"
+       style="background: linear-gradient(160deg, #0e2c4b 0%, #0a1e34 100%);">
+    <div class="absolute top-0 right-0 w-64 h-64 rounded-full opacity-10" style="background: #ef6c1a; filter: blur(80px);"></div>
+    <div class="absolute bottom-0 left-0 w-48 h-48 rounded-full opacity-10" style="background: #ef6c1a; filter: blur(60px);"></div>
+    <div class="relative z-10 flex flex-col items-center text-center px-10">
+      <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-2xl mb-6">
+        <img src="/oas-logo.png" alt="OAS" style="width:60px;height:60px;object-fit:contain;">
+      </div>
+      <h1 class="text-4xl font-extrabold text-white tracking-tight mb-2">OAS</h1>
+      <p class="text-base font-semibold tracking-widest uppercase mb-4" style="color:#ef6c1a;">Espace Client</p>
+      <p class="text-white/55 text-sm leading-relaxed max-w-xs">Créez votre compte pour suivre votre véhicule et vos échanges avec le garage.</p>
+    </div>
+  </div>
+
+  <div class="flex-1 flex items-center justify-center p-8 bg-white overflow-y-auto">
+    <div class="w-full max-w-2xl py-6">
+
+      <div class="mb-8">
+        <h2 class="text-2xl font-extrabold text-oas-ink">Créer un compte client</h2>
+        <p class="text-oas-muted text-sm mt-1">Remplissez le formulaire pour vous inscrire</p>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="space-y-4">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1.5">Téléphone</label>
+            <input
+              type="tel"
+              formControlName="phone"
+              placeholder="+221 77 000 00 00"
+              class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
+              [class.border-oas-bad]="f('phone')?.invalid && f('phone')?.touched"
+            />
+            @if (f('phone')?.invalid && f('phone')?.touched) {
+              <p class="text-oas-bad text-xs mt-1">Le téléphone est obligatoire.</p>
+            }
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1.5">Login</label>
+            <input
+              type="text"
+              formControlName="login"
+              placeholder="nom_utilisateur"
+              class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
+              [class.border-oas-bad]="f('login')?.invalid && f('login')?.touched"
+            />
+            @if (f('login')?.invalid && f('login')?.touched) {
+              <p class="text-oas-bad text-xs mt-1">Le login est obligatoire.</p>
+            }
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1.5">Prénom</label>
+            <input
+              type="text"
+              formControlName="firstName"
+              placeholder="Jean"
+              class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
+              [class.border-oas-bad]="f('firstName')?.invalid && f('firstName')?.touched"
+            />
+            @if (f('firstName')?.invalid && f('firstName')?.touched) {
+              <p class="text-oas-bad text-xs mt-1">Le prénom est obligatoire.</p>
+            }
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1.5">Nom</label>
+            <input
+              type="text"
+              formControlName="lastName"
+              placeholder="Dupont"
+              class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
+              [class.border-oas-bad]="f('lastName')?.invalid && f('lastName')?.touched"
+            />
+            @if (f('lastName')?.invalid && f('lastName')?.touched) {
+              <p class="text-oas-bad text-xs mt-1">Le nom est obligatoire.</p>
+            }
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="block text-sm font-semibold text-oas-ink mb-1.5">Adresse email</label>
+            <input
+              type="email"
+              formControlName="email"
+              placeholder="exemple@email.com"
+              class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
+              [class.border-oas-bad]="f('email')?.invalid && f('email')?.touched"
+            />
+            @if (f('email')?.invalid && f('email')?.touched) {
+              <p class="text-oas-bad text-xs mt-1">
+                @if (f('email')?.errors?.['required']) { L'email est obligatoire. }
+                @else if (f('email')?.errors?.['email']) { Format d'email invalide. }
+              </p>
+            }
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="block text-sm font-semibold text-oas-ink mb-1.5">Mot de passe</label>
+            <div class="relative">
+              <input
+                [type]="showPassword ? 'text' : 'password'"
+                formControlName="password"
+                placeholder="••••••••"
+                class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint pr-10"
+                [class.border-oas-bad]="f('password')?.invalid && f('password')?.touched"
+              />
+              <button
+                type="button"
+                (click)="showPassword = !showPassword"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-oas-muted hover:text-oas-ink transition"
+              >
+                @if (showPassword) {
+                  <svg lucideEyeOff class="h-5 w-5" [strokeWidth]="2"></svg>
+                } @else {
+                  <svg lucideEye class="h-5 w-5" [strokeWidth]="2"></svg>
+                }
+              </button>
+            </div>
+            @if (f('password')?.invalid && f('password')?.touched) {
+              <p class="text-oas-bad text-xs mt-1">
+                @if (f('password')?.errors?.['required']) { Le mot de passe est obligatoire. }
+                @else if (f('password')?.errors?.['minlength']) { Minimum 6 caractères. }
+              </p>
+            }
+          </div>
+
+        </div>
+
+        @if (errorMessage) {
+          <div class="bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-sm px-4 py-3 rounded-lg">
+            {{ errorMessage }}
+          </div>
+        }
+
+        @if (successMessage) {
+          <div class="bg-oas-ok-bg border border-oas-ok/30 text-oas-ok text-sm px-4 py-3 rounded-lg">
+            {{ successMessage }}
+          </div>
+        }
+
+        <button
+          type="submit"
+          [disabled]="loading"
+          class="w-full bg-oas-accent hover:bg-oas-accent-dark disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-3 rounded-lg transition text-sm mt-2 cursor-pointer flex items-center justify-center gap-2"
+        >
+          @if (loading) {
+            <svg lucideLoader2 class="animate-spin h-4 w-4" [strokeWidth]="2"></svg>
+          }
+          {{ loading ? 'Création...' : 'Créer le compte' }}
+        </button>
+
+      </form>
+
+      <p class="text-center text-sm text-oas-muted mt-6">
+        Déjà un compte ?
+        <a [routerLink]="paths.connexion" class="text-oas-accent hover:text-oas-accent-dark font-semibold ml-1 transition">Se connecter</a>
+      </p>
+
+    </div>
+  </div>
+</div>
