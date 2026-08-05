@@ -1,0 +1,90 @@
+:host {
+  display: block;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Fullscreen glassmorphic overlay */
+.loader-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 31, 54, 0.93);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  will-change: opacity;
+}
+
+.loader-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Center Content Container */
+.loader-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+/* Hexagonal Bolt Spinner */
+.bolt-spinner {
+  width: 100px;
+  height: 100px;
+  will-change: transform;
+  /* Rotation mécanique saccadée/dynamique type clé à chocs (impact wrench) */
+  animation: boltImpactSpin 1.6s cubic-bezier(0.76, 0, 0.24, 1) infinite;
+}
+
+.bolt-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  display: block;
+}
+
+/* Mechanical Impact Wrench Spin Animation (Accélérations et décélérations brutales de serrage) */
+@keyframes boltImpactSpin {
+  0% {
+    transform: rotate(0deg) scale(0.95);
+  }
+  25% {
+    transform: rotate(180deg) scale(1.05);
+  }
+  45% {
+    transform: rotate(165deg) scale(0.98); /* Petit retour élastique */
+  }
+  70% {
+    transform: rotate(360deg) scale(1.05);
+  }
+  90% {
+    transform: rotate(345deg) scale(0.98); /* Petit retour élastique */
+  }
+  100% {
+    transform: rotate(360deg) scale(0.95);
+  }
+}
+
+/* Text style matching the theme */
+.loader-text {
+  font-family: 'Courier New', 'Courier', monospace;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.25em;
+  color: #fff;
+  text-align: center;
+  opacity: 0.8;
+  animation: textPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes textPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.95; color: var(--color-oas-accent); }
+}

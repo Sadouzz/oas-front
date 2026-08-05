@@ -19,12 +19,12 @@ export class PublicLayout implements AfterViewInit {
     { label: 'Le garage', path: '/a-propos' },
     { label: 'Nos Services', path: '/services' },
     { label: 'Réalisations', path: '/realisations' }
-    // { label: 'Accueil', path: '/', exact: true }
   ];
   
   headerRightLinks: { label: string, path: string, exact?: boolean }[] = [
     { label: 'Blog', path: '/blog' },
-    { label: 'Devis', path: '/devis' },
+    { label: 'Marketplace', path: '/marketplace' },
+    // { label: 'Devis', path: '/devis' },
     { label: 'RDV', path: '/rdv' },
     { label: 'Partenaires', path: '/partenaires' }
   ];
@@ -35,7 +35,8 @@ export class PublicLayout implements AfterViewInit {
       links: [
         { label: 'Blog', path: '/blog' },
         { label: 'Nos services', path: '/services' },
-        { label: 'Réalisations', path: '/realisations' }
+        { label: 'Réalisations', path: '/realisations' },
+        { label: 'Marketplace', path: '/marketplace' }
       ]
     },
     {
@@ -73,10 +74,10 @@ export class PublicLayout implements AfterViewInit {
   ];
 
   contactInfo = {
-    email: 'contact@oas-atelier.fr',
-    phone: '+33 1 23 45 67 89',
-    addressLine1: '123 Rue de la Mécanique',
-    addressLine2: '75000 Paris',
+    email: 'orientautoservice@gmail.com',
+    phone: '+221 33 821 47 11 / +221 78 596 86 42',
+    addressLine1: 'km 2,5 Bd du Centenaire Rond Point CYRNOS',
+    addressLine2: 'BP : 14092 Dakar - Sénégal',
     hoursDays: 'Lundi - Vendredi',
     hoursTime: '08:00 AM - 18:00 PM'
   };

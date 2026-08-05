@@ -1,0 +1,36 @@
+<div class="sheet-metal-card-container relative overflow-hidden">
+  
+  <!-- Rivets 3D dans les 4 angles principaux -->
+  <div class="rivet top-left"></div>
+  <div class="rivet top-right"></div>
+  <div class="rivet bottom-left"></div>
+  <div class="rivet bottom-right"></div>
+
+  <!-- Rivets intermédiaires pour faire plus plaque de blindage -->
+  <div class="rivet top-mid"></div>
+  <div class="rivet bottom-mid"></div>
+
+  <!-- Traces de graisse et d'usure aux angles -->
+  <div class="grease-stain grease-1"></div>
+  <div class="grease-stain grease-2"></div>
+  <div class="grease-stain grease-3"></div>
+
+  <!-- En-tête de la carte -->
+  <div class="card-header-area" *ngIf="title || subtitle">
+    <span class="metal-subtitle" *ngIf="subtitle">{{ subtitle }}</span>
+    <h4 class="metal-title" *ngIf="title">{{ title }}</h4>
+    
+    <!-- Ligne de soudure texturée en séparateur -->
+    <div class="welding-bead" *ngIf="hasWeld">
+      <div class="weld-drop" *ngFor="let drop of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]"></div>
+    </div>
+  </div>
+
+  <!-- Zone de contenu -->
+  <div class="card-content-area relative z-10">
+    <ng-content></ng-content>
+  </div>
+  
+  <!-- Effet de reflet brossé en diagonale -->
+  <div class="brushed-glare"></div>
+</div>

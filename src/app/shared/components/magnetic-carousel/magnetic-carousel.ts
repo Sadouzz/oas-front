@@ -1,5 +1,6 @@
 import { Component, Input, ElementRef, ViewChild, AfterViewInit, OnDestroy, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { BoltCornersComponent } from '../bolt-corners/bolt-corners';
 
 export interface MagneticItem {
   id: number | string;
@@ -12,7 +13,7 @@ export interface MagneticItem {
 @Component({
   selector: 'app-magnetic-carousel',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, BoltCornersComponent],
   templateUrl: './magnetic-carousel.html',
   styles: [`
     .hide-scrollbar::-webkit-scrollbar {

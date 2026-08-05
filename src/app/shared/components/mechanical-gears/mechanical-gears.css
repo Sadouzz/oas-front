@@ -1,0 +1,52 @@
+:host {
+  display: block;
+  pointer-events: none;
+  user-select: none;
+}
+
+.gears-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.gears-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* Rotation du grand engrenage à 360° sur son axe central (0,0) */
+.gear-spin-main {
+  transform-origin: 0 0;
+  animation: gearSpinClockwise 30s linear infinite;
+  will-change: transform;
+}
+
+/* Rotation du petit engrenage à -360° sur son axe central (0,0) */
+.gear-spin-secondary {
+  transform-origin: 0 0;
+  animation: gearSpinCounterClockwise 20s linear infinite;
+  will-change: transform;
+}
+
+@keyframes gearSpinClockwise {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes gearSpinCounterClockwise {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-360deg);
+  }
+}

@@ -1,0 +1,100 @@
+<div
+  class="tire-track-wrapper"
+  [class.is-visible]="isVisible"
+  [class.horizontal]="variant === 'horizontal'"
+  [class.vertical]="variant === 'vertical'"
+  [class.align-left]="align === 'left'"
+  [class.align-center]="align === 'center'"
+  [class.align-right]="align === 'right'"
+  [class.mode-real]="mode === 'real'"
+  [class.mode-oas]="mode === 'oas'"
+  [style.opacity]="opacity"
+  [style.transform]="'rotate(' + rotation + ')'"
+  aria-hidden="true">
+  
+  <svg viewBox="0 0 1200 60" preserveAspectRatio="none" class="tire-track-svg">
+    <defs>
+      <!-- Gradient Pneu Réel (Gomme / Asphalte) -->
+      <linearGradient [attr.id]="'tireRealGrad_' + instanceId" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#121418" stop-opacity="0.1" />
+        <stop offset="50%" stop-color="#2a2e38" stop-opacity="0.9" />
+        <stop offset="100%" stop-color="#121418" stop-opacity="0.1" />
+      </linearGradient>
+
+      <!-- Gradient Rouge OAS -->
+      <linearGradient [attr.id]="'tireRedGrad_' + instanceId" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="var(--color-oas-accent)" stop-opacity="0.1" />
+        <stop offset="50%" stop-color="var(--color-oas-accent)" stop-opacity="1" />
+        <stop offset="100%" stop-color="var(--color-oas-accent)" stop-opacity="0.1" />
+      </linearGradient>
+
+      <!-- Glow filter discret -->
+      <filter [attr.id]="'tireGlow_' + instanceId" x="-10%" y="-10%" width="120%" height="120%">
+        <feGaussianBlur stdDeviation="2.5" result="blur" />
+        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+      </filter>
+
+      <!-- Motif Vectoriel VRAI PNEU (Gomme Anthracite & Rainures Réelles) -->
+      <pattern [attr.id]="'tireTreadPatternReal_' + instanceId" width="80" height="60" patternUnits="userSpaceOnUse">
+        <!-- Rainures Longitudinales Moteur/Gomme -->
+        <line x1="0" y1="27" x2="80" y2="27" stroke="#1c2027" stroke-width="3" />
+        <line x1="0" y1="33" x2="80" y2="33" stroke="#1c2027" stroke-width="3" />
+
+        <!-- Profil V-Chevrons Gomme Pneu Sport -->
+        <path d="M 0 12 L 20 22 L 40 12 L 60 22 L 80 12" fill="none" stroke="#2e3440" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M 0 48 L 20 38 L 40 48 L 60 38 L 80 48" fill="none" stroke="#2e3440" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+
+        <!-- Lamelles Intérieures de la Gomme -->
+        <path d="M 0 6 L 20 16 L 40 6 L 60 16 L 80 6" fill="none" stroke="#4c566a" stroke-width="2" stroke-dasharray="4 3" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M 0 54 L 20 44 L 40 54 L 60 44 L 80 54" fill="none" stroke="#4c566a" stroke-width="2" stroke-dasharray="4 3" stroke-linecap="round" stroke-linejoin="round" />
+
+        <!-- Épaules Extérieures du Pneu -->
+        <line x1="0" y1="2" x2="80" y2="2" stroke="#181b21" stroke-width="2" stroke-dasharray="8 4" />
+        <line x1="0" y1="58" x2="80" y2="58" stroke="#181b21" stroke-width="2" stroke-dasharray="8 4" />
+      </pattern>
+
+      <!-- Motif Vectoriel Thème OAS -->
+      <pattern [attr.id]="'tireTreadPatternOas_' + instanceId" width="80" height="60" patternUnits="userSpaceOnUse">
+        <line x1="0" y1="27" x2="80" y2="27" stroke="var(--color-oas-accent)" stroke-width="2.5" />
+        <line x1="0" y1="33" x2="80" y2="33" stroke="var(--color-oas-accent)" stroke-width="2.5" />
+        <path d="M 0 12 L 20 22 L 40 12 L 60 22 L 80 12" fill="none" stroke="var(--color-oas-navy-mid)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M 0 48 L 20 38 L 40 48 L 60 38 L 80 48" fill="none" stroke="var(--color-oas-navy-mid)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M 0 6 L 20 16 L 40 6 L 60 16 L 80 6" fill="none" stroke="var(--color-oas-accent)" stroke-width="1.8" stroke-dasharray="4 3" stroke-linecap="round" stroke-linejoin="round" />
+        <path d="M 0 54 L 20 44 L 40 54 L 60 44 L 80 54" fill="none" stroke="var(--color-oas-accent)" stroke-width="1.8" stroke-dasharray="4 3" stroke-linecap="round" stroke-linejoin="round" />
+        <line x1="0" y1="2" x2="80" y2="2" stroke="var(--color-oas-navy-dark)" stroke-width="1.5" stroke-dasharray="8 4" />
+        <line x1="0" y1="58" x2="80" y2="58" stroke="var(--color-oas-navy-dark)" stroke-width="1.5" stroke-dasharray="8 4" />
+      </pattern>
+    </defs>
+
+    <!-- Fond Piste Asphalte -->
+    <rect x="0" y="0" width="1200" height="60" [attr.fill]="mode === 'real' ? 'rgba(20, 24, 30, 0.12)' : 'rgba(10, 31, 54, 0.15)'" />
+
+    <!-- Pattern Tread Fill Rectangle -->
+    <rect
+      x="0"
+      y="0"
+      width="1200"
+      height="60"
+      [attr.fill]="mode === 'real' ? 'url(#tireTreadPatternReal_' + instanceId + ')' : 'url(#tireTreadPatternOas_' + instanceId + ')'"
+      class="tread-rect"
+    />
+
+    <!-- Edge Paths with Glow -->
+    <path
+      d="M 0 2 L 1200 2"
+      fill="none"
+      [attr.stroke]="mode === 'real' ? 'url(#tireRealGrad_' + instanceId + ')' : 'url(#tireRedGrad_' + instanceId + ')'"
+      stroke-width="2.5"
+      class="edge-path top-path"
+      [attr.filter]="'url(#tireGlow_' + instanceId + ')'"
+    />
+    <path
+      d="M 0 58 L 1200 58"
+      fill="none"
+      [attr.stroke]="mode === 'real' ? 'url(#tireRealGrad_' + instanceId + ')' : 'url(#tireRedGrad_' + instanceId + ')'"
+      stroke-width="2.5"
+      class="edge-path bottom-path"
+      [attr.filter]="'url(#tireGlow_' + instanceId + ')'"
+    />
+  </svg>
+</div>

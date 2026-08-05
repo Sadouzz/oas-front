@@ -1,0 +1,124 @@
+/* Base Sheet Metal Card styling */
+.sheet-metal-card-container {
+  background: linear-gradient(135deg, #1f2530 0%, #151921 50%, #0e1217 100%);
+  border: 2px solid #2b3341;
+  border-top-color: #3f4a5f;
+  border-left-color: #3b4558;
+  border-bottom-color: #151920;
+  border-right-color: #1a1e27;
+  border-radius: 0px; /* Pas d'arrondis */
+  box-shadow: 
+    0 15px 35px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 1px 0 0 rgba(255, 255, 255, 0.05);
+  padding: 1.75rem;
+  color: white;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 3D Rivets positioning and look */
+.rivet {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #ffffff 0%, #c5cbcf 25%, #7f8c8d 70%, #2c3e50 100%);
+  box-shadow: 
+    1px 1px 1px rgba(0, 0, 0, 0.9), 
+    inset 0 -1px 1px rgba(0,0,0,0.4);
+  z-index: 10;
+}
+
+.top-left     { top: 10px; left: 10px; }
+.top-right    { top: 10px; right: 10px; }
+.bottom-left  { bottom: 10px; left: 10px; }
+.bottom-right { bottom: 10px; right: 10px; }
+.top-mid      { top: 10px; left: 50%; transform: translateX(-50%); }
+.bottom-mid   { bottom: 10px; left: 50%; transform: translateX(-50%); }
+
+/* Grease and oil stains (industrial dirty look) */
+.grease-stain {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  background: radial-gradient(circle, rgba(18, 14, 10, 0.8) 0%, rgba(10, 8, 6, 0.4) 40%, transparent 80%);
+  filter: blur(8px);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.grease-1 { top: -10px; left: 30px; transform: scale(1.2); }
+.grease-2 { bottom: 15px; right: -10px; opacity: 0.6; }
+.grease-3 { top: 40%; left: -20px; width: 60px; height: 30px; opacity: 0.5; }
+
+/* Header typography */
+.card-header-area {
+  margin-bottom: 1.25rem;
+  position: relative;
+  z-index: 10;
+}
+
+.metal-subtitle {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 9px;
+  font-weight: 900;
+  color: var(--color-oas-accent, #ef1a1a);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.metal-title {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 1.15rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  margin-top: 2px;
+  color: #eef2f7;
+  letter-spacing: 0.02em;
+}
+
+/* Textured welding bead separator */
+.welding-bead {
+  display: flex;
+  height: 5px;
+  overflow: hidden;
+  margin-top: 12px;
+  margin-bottom: 8px;
+  opacity: 0.85;
+}
+
+.weld-drop {
+  flex: 0 0 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 45% 45%, #ffd068 0%, #d46d2b 30%, #5c2f08 70%, #000000 100%);
+  margin-left: -3px;
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.2);
+}
+
+/* Content Area */
+.card-content-area {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.5;
+}
+
+/* Diagonal brushed reflection glint */
+.brushed-glare {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg, 
+    transparent 45%, 
+    rgba(255, 255, 255, 0.02) 48%, 
+    rgba(255, 255, 255, 0.04) 50%, 
+    rgba(255, 255, 255, 0.02) 52%, 
+    transparent 55%
+  );
+  pointer-events: none;
+  z-index: 5;
+}

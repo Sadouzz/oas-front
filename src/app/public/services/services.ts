@@ -11,11 +11,26 @@ import { SERVICES, Service } from './services.data';
 import { ScrollRevealDirective } from '../shared/scroll-reveal.directive';
 
 import { SectionTitle } from '../../shared/components/section-title/section-title';
+import { EnginePistonsComponent } from '../../shared/components/engine-pistons/engine-pistons';
+import { DashboardWarningsComponent } from '../../shared/components/dashboard-warnings/dashboard-warnings';
+import { TireTrackComponent } from '../../shared/components/tire-track/tire-track';
+import { MechanicalGearsComponent } from '../../shared/components/mechanical-gears/mechanical-gears';
+import { BoltCornersComponent } from '../../shared/components/bolt-corners/bolt-corners';
 
 @Component({
   selector: 'app-services',
   standalone: true,
-  imports: [CommonModule, RouterLink, ScrollRevealDirective, SectionTitle],
+  imports: [
+    CommonModule,
+    RouterLink,
+    ScrollRevealDirective,
+    SectionTitle,
+    EnginePistonsComponent,
+    DashboardWarningsComponent,
+    TireTrackComponent,
+    MechanicalGearsComponent,
+    BoltCornersComponent
+  ],
   templateUrl: './services.html',
   styleUrl: './services.css',
 })
@@ -29,6 +44,7 @@ export class Services implements AfterViewInit, OnDestroy {
 
   readonly services = SERVICES;
   activeIndex = 0;
+  wheelRotation = 0;
 
   processSteps = [
     { step: '01', title: 'Vous nous expliquez votre besoin', desc: 'Par téléphone, en ligne ou directement à l’atelier.' },
@@ -75,13 +91,30 @@ export class Services implements AfterViewInit, OnDestroy {
     });
   };
 
+  onWarningSelected(event: { slug: string; index: number }): void {
+    this.selectService(event.index);
+  }
+
   selectService(index: number): void {
+    this.activeIndex = index;
+
+    if (window.innerWidth < 900) {
+      const mobileItems = document.querySelectorAll('.mobile-service-list a');
+      if (mobileItems && mobileItems[index]) {
+        mobileItems[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        const mobileSection = document.querySelector('.mobile-services');
+        mobileSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      return;
+    }
+
     const journeyElement = this.journey?.nativeElement;
     if (!journeyElement) return;
 
     const rect = journeyElement.getBoundingClientRect();
     const absoluteTop = window.scrollY + rect.top;
-    
+
     const targetScroll = absoluteTop + (index * window.innerHeight);
     window.scrollTo({ top: targetScroll, behavior: 'smooth' });
   }
@@ -113,14 +146,18 @@ export class Services implements AfterViewInit, OnDestroy {
 
   private updateActiveService(): void {
     const journeyElement = this.journey?.nativeElement;
-    if (!journeyElement || window.innerWidth < 900) return;
+    if (!journeyElement) return;
 
     const rect = journeyElement.getBoundingClientRect();
     const scrolled = -rect.top;
-    
+
     const scrollableDistance = Math.max(rect.height - window.innerHeight, 1);
-    
+
     const progress = Math.min(1, Math.max(0, scrolled / scrollableDistance));
+    this.wheelRotation = -Math.round(progress * 720); // -720 degrees full rotation
+
+    if (window.innerWidth < 900) return;
+
     const nextIndex = Math.min(this.services.length - 1, Math.round(progress * (this.services.length - 1)));
 
     if (nextIndex !== this.activeIndex) this.activeIndex = nextIndex;

@@ -37,18 +37,19 @@
                 </p>
 
                 <div class="hero-buttons">
-                    <button class="btn-primary" (click)="openRegisterModal()">
-                        Créer un compte
-                    </button>
-
-                    <button class="btn-outline" (click)="openLoginModal()">
-                        Se connecter
+                    <button class="btn-primary" (click)="openLoginModal()">
+                        Demander un rdv
                     </button>
                 </div>
 
             </div>
         </div>
     </section>
+
+    <!-- Tire Track Separator 1 -->
+    <div class="py-4 bg-oas-bg border-t border-oas-line overflow-hidden">
+        <app-tire-track [opacity]="0.45" rotation="-1.5deg" variant="horizontal" align="center"></app-tire-track>
+    </div>
 
     <!-- ETAPES -->
     <section class="steps-section">
@@ -66,7 +67,7 @@
 
             <div class="steps">
 
-                <div class="step" data-aos="fade-up">
+                <div class="step">
                     <div class="step-icon">
                         <app-icon name="user-plus" [size]="34"></app-icon>
                     </div>
@@ -79,7 +80,7 @@
 
                 <div class="step-line"></div>
 
-                <div class="step" data-aos="fade-up" data-aos-delay="100">
+                <div class="step">
                     <div class="step-icon">
                         <app-icon name="calendar-check" [size]="34"></app-icon>
                     </div>
@@ -93,7 +94,7 @@
 
                 <div class="step-line"></div>
 
-                <div class="step" data-aos="fade-up" data-aos-delay="200">
+                <div class="step">
                     <div class="step-icon">
                         <app-icon name="check-circle" [size]="34"></app-icon>
                     </div>
@@ -108,6 +109,11 @@
             </div>
         </div>
     </section>
+
+    <!-- Tire Track Separator 2 -->
+    <div class="py-4 bg-oas-bg border-t border-oas-line overflow-hidden">
+        <app-tire-track [opacity]="0.45" rotation="1.5deg" variant="horizontal" align="center"></app-tire-track>
+    </div>
 
     <!-- POURQUOI CHOISIR OAS -->
     <section class="advantages-section">
@@ -132,17 +138,21 @@
             </div>
 
             <div class="advantages-grid">
-                <div class="advantage-card" *ngFor="let service of services" data-aos="fade-up">
-                    <div class="advantage-icon">
+                <app-sheet-metal-card *ngFor="let service of services" [title]="service.titre" [subtitle]="''" [hasWeld]="true" class="text-left hover:-translate-y-2 transition-transform duration-300 block">
+                    <div class="advantage-icon mb-4">
                         <app-icon [name]="service.icone" [size]="32"></app-icon>
                     </div>
-                    <h3>{{service.titre}}</h3>
-                    <p>{{service.description}}</p>
-                </div>
+                    <p class="text-white/80 leading-relaxed font-light text-sm">{{service.description}}</p>
+                </app-sheet-metal-card>
             </div>
 
         </div>
     </section>
+
+    <!-- Tire Track Separator 3 -->
+    <div class="py-4 bg-oas-bg border-t border-oas-line overflow-hidden">
+        <app-tire-track [opacity]="0.45" rotation="-1.8deg" variant="horizontal" align="center"></app-tire-track>
+    </div>
 
     <!-- ESPACE CLIENT -->
     <section class="benefits-section">
@@ -160,7 +170,8 @@
             </div>
 
             <div class="benefits-grid">
-                <div class="benefit-card" *ngFor="let avantage of avantages" data-aos="fade-up">
+                <div class="benefit-card relative overflow-hidden" *ngFor="let avantage of avantages">
+                    <app-bolt-corners variant="dark" [size]="10" [offset]="4"></app-bolt-corners>
                     <div class="benefit-icon">
                         <app-icon [name]="avantage.icone" [size]="26"></app-icon>
                     </div>
@@ -174,13 +185,18 @@
         </div>
     </section>
 
+    <!-- Tire Track Separator 4 -->
+    <div class="py-4 bg-oas-bg border-t border-oas-line overflow-hidden">
+        <app-tire-track [opacity]="0.45" rotation="1.2deg" variant="horizontal" align="center"></app-tire-track>
+    </div>
+
     <!-- STATISTIQUES -->
     <section class="py-24 bg-oas-navy-dark text-white relative overflow-hidden">
         <div class="absolute inset-0 flex items-center text-oas-accent justify-center opacity-10 pointer-events-none">
             <h1 class="text-[30vw] font-black tracking-tighter whitespace-nowrap">STATISTIQUES</h1>
         </div>
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div class="mb-16 text-center" data-aos="fade-up">
+            <div class="mb-16 text-center">
                 <app-section-title 
                     mainTitle="Des chiffres qui"
                     highlightedText="parlent d'eux-mêmes."
@@ -192,21 +208,31 @@
                     Découvrez l'impact de notre expertise et la confiance que nous accordent nos clients chaque jour.
                 </p>
             </div>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
-                <div *ngFor="let stat of statistiques" data-aos="fade-up">
-                    <h2 class="text-5xl lg:text-6xl font-black text-oas-accent mb-3">{{stat.valeur}}</h2>
-                    <p class="text-sm uppercase tracking-widest text-white/80 font-bold">{{stat.label}}</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-12 text-center">
+                <div *ngFor="let stat of statistiques">
+                    <app-speedometer
+                        [value]="stat.value"
+                        [suffix]="stat.suffix"
+                        [max]="stat.max"
+                        [unit]="stat.unit"
+                        [label]="stat.label"
+                    ></app-speedometer>
                 </div>
             </div>
         </div>
     </section>
+
+    <!-- Tire Track Separator 5 -->
+    <div class="py-4 bg-oas-bg border-t border-oas-line overflow-hidden">
+        <app-tire-track [opacity]="0.45" rotation="-1.6deg" variant="horizontal" align="center"></app-tire-track>
+    </div>
 
     <!-- APPEL A L'ACTION -->
     <section class="py-24 lg:py-40 bg-white text-center relative overflow-hidden">
         <div class="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
             <h1 class="text-[15vw] font-black tracking-tighter whitespace-nowrap text-oas-navy-dark">RÉSERVEZ</h1>
         </div>
-        <div class="relative z-10 max-w-3xl mx-auto px-6" data-aos="fade-up">
+        <div class="relative z-10 max-w-3xl mx-auto px-6">
             <app-section-title 
                 align="center"
                 theme="light"
@@ -215,14 +241,11 @@
                 subtitle="Réservez maintenant">
             </app-section-title>
             <p class="mt-6 text-oas-navy-dark/80 text-lg">
-                Créez votre compte gratuitement ou connectez-vous afin de choisir votre créneau.
+                Demandez un rendez-vous dès maintenant pour votre prochain entretien.
             </p>
             <div class="mt-12 flex flex-col sm:flex-row justify-center gap-6">
-                <button (click)="openRegisterModal()" class="inline-flex items-center justify-center gap-4 px-10 py-5 bg-oas-navy-dark text-white hover:bg-oas-accent transition-colors duration-300 text-sm font-bold tracking-[0.2em] uppercase shadow-2xl rounded-none">
-                    Créer un compte
-                </button>
-                <button (click)="openLoginModal()" class="inline-flex items-center justify-center gap-4 px-10 py-5 bg-transparent text-oas-navy-dark border-2 border-oas-line hover:border-oas-navy-dark hover:bg-oas-navy-dark hover:text-white transition-colors duration-300 text-sm font-bold tracking-[0.2em] uppercase rounded-none">
-                    Se connecter
+                <button (click)="openLoginModal()" class="inline-flex items-center justify-center gap-4 px-10 py-5 bg-oas-navy-dark text-white hover:bg-oas-accent transition-colors duration-300 text-sm font-bold tracking-[0.2em] uppercase shadow-2xl rounded-none">
+                    Demander un rdv
                 </button>
             </div>
         </div>

@@ -1,0 +1,132 @@
+/* Page layout base styles */
+.article-detail-page {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--color-oas-navy-dark, #0a1f36);
+}
+
+/* Back link styling */
+.back-link {
+  transition: all 0.3s ease;
+}
+.back-link:hover {
+  transform: translateX(-4px);
+}
+
+/* Category Badge */
+.category-badge {
+  background-color: var(--color-oas-accent, #ef1a1a);
+  color: white;
+  padding: 0.4rem 1rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+}
+
+/* Prose/content formatting overrides */
+article.prose p {
+  line-height: 1.85;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Loader container */
+.loader-container {
+  min-height: calc(100vh - 100px);
+  background-color: #0c2742;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+/* Rotating Gear Spinner */
+.gear-spinner {
+  width: 80px;
+  height: 80px;
+  animation: spinGear 3s linear infinite;
+}
+
+.loader-text {
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: 800;
+  font-size: 0.8rem;
+  letter-spacing: 0.3em;
+  color: var(--color-oas-accent);
+  animation: pulseText 1.5s ease-in-out infinite;
+}
+
+@keyframes spinGear {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulseText {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* Error page styling */
+.error-container {
+  min-height: 80vh;
+}
+
+/* Likes button styling */
+.like-button {
+  background-color: transparent;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  outline: none;
+  border-radius: 0px; /* Pas d'arrondis comme demandé par l'utilisateur */
+}
+
+.like-button:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: var(--color-oas-accent);
+}
+
+.like-button.liked {
+  background-color: var(--color-oas-accent);
+  border-color: var(--color-oas-accent);
+  color: white;
+}
+
+.like-button.liked svg {
+  transform: rotate(45deg);
+}
+
+/* Comments Form styling */
+.form-input {
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  padding: 0.85rem 1.2rem;
+  font-size: 0.95rem;
+  outline: none;
+  transition: all 0.3s ease;
+  border-radius: 0px; /* Pas d'arrondis */
+  width: 100%;
+}
+
+.form-input:focus {
+  border-color: var(--color-oas-accent);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.submit-button {
+  border-radius: 0px; /* Pas d'arrondis */
+  cursor: pointer;
+}
+
+/* Comments List cards */
+.comment-card {
+  border-radius: 0px; /* Pas d'arrondis */
+  border-left: 3px solid rgba(255, 255, 255, 0.15);
+  transition: border-left-color 0.3s ease;
+}
+
+.comment-card:hover {
+  border-left-color: var(--color-oas-accent);
+}
+

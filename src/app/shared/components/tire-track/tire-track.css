@@ -1,0 +1,62 @@
+:host {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+}
+
+.tire-track-wrapper {
+  position: relative;
+  width: 106%;
+  margin-left: -3%;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(-1.5deg);
+  transform-origin: center center;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  pointer-events: none;
+}
+
+.tire-track-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* Lignes de bordure supérieure et inférieure */
+.edge-path {
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 1200;
+  transition: stroke-dashoffset 1.6s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: stroke-dashoffset;
+}
+
+/* Motif de pneu avec découpage progressif au scroll (clip-path) */
+.tread-rect {
+  clip-path: polygon(0 0, 0% 0, 0% 100%, 0 100%);
+  transition: clip-path 1.6s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: clip-path;
+}
+
+/* Animation au déclenchement du scroll (Viewport) */
+.tire-track-wrapper.is-visible .edge-path {
+  stroke-dashoffset: 0;
+}
+
+.tire-track-wrapper.is-visible .tread-rect {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+
+/* Variantes d'alignement */
+.align-left {
+  justify-content: flex-start;
+}
+
+.align-center {
+  justify-content: center;
+}
+
+.align-right {
+  justify-content: flex-end;
+}

@@ -1,22 +1,64 @@
 <div class="bg-oas-navy-dark min-h-screen text-white font-sans overflow-hidden">
   
-  <!-- HERO SECTION -->
-  <section class="relative min-h-[70vh] flex items-end pb-24 px-6 md:px-12 lg:px-24">
-    <div class="absolute inset-0 z-0">
-      <img src="https://images.unsplash.com/photo-1622322359480-1a7407519192?q=80&w=2070&auto=format&fit=crop" alt="Garage OAS" class="w-full h-full object-cover opacity-20 grayscale mix-blend-overlay">
-      <div class="absolute inset-0 bg-gradient-to-t from-oas-navy-dark via-oas-navy-dark/80 to-transparent"></div>
-    </div>
+  <!-- HERO SECTION SLIDER -->
+  <section class="relative w-full" style="height: 70vh; min-height: 500px;">
+    <swiper-container autoplay-delay="4500" autoplay-disable-on-interaction="false" pagination="true" class="w-full h-full" style="--swiper-navigation-color: #ef1a1a; --swiper-pagination-color: #ef1a1a; height: 100%;">
+      
+      <!-- Slide 1 -->
+      <swiper-slide class="relative w-full h-full flex items-end pb-24 px-6 md:px-12 lg:px-24">
+        <div class="absolute inset-0 z-0">
+          <img src="/assets/images/garage-banner.jpj.jpg" alt="Garage OAS" class="w-full h-full object-cover opacity-20 grayscale mix-blend-overlay">
+          <div class="absolute inset-0 bg-gradient-to-t from-oas-navy-dark via-oas-navy-dark/80 to-transparent"></div>
+        </div>
+        <div class="relative z-10 w-full">
+          <div class="flex items-center gap-2 mb-6 text-xs tracking-[0.2em] uppercase text-oas-muted">
+            <span class="w-1 h-1 rounded-full bg-oas-accent"></span>
+            À Propos de nous
+          </div>
+          <h1 class="text-[8vw] md:text-[6vw] leading-[0.9] font-extrabold tracking-tighter uppercase">
+            L'histoire d'une <br>
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-oas-accent to-[#ff8c42]">passion mécanique</span>
+          </h1>
+        </div>
+      </swiper-slide>
 
-    <div class="relative z-10 w-full animate-fade-in-up">
-      <div class="flex items-center gap-2 mb-6 text-xs tracking-[0.2em] uppercase text-oas-muted">
-        <span class="w-1 h-1 rounded-full bg-oas-accent"></span>
-        À Propos de nous
-      </div>
-      <h1 class="text-[10vw] md:text-[8vw] leading-[0.9] font-extrabold tracking-tighter uppercase">
-        L'histoire d'une <br>
-        <span class="text-transparent bg-clip-text bg-gradient-to-r from-oas-accent to-[#ff8c42]">passion mécanique</span>
-      </h1>
-    </div>
+      <!-- Slide 2 -->
+      <swiper-slide class="relative w-full h-full flex items-end pb-24 px-6 md:px-12 lg:px-24">
+        <div class="absolute inset-0 z-0">
+          <img src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=1200&auto=format&fit=crop" alt="Qualité" class="w-full h-full object-cover opacity-20 grayscale mix-blend-overlay">
+          <div class="absolute inset-0 bg-gradient-to-t from-oas-navy-dark via-oas-navy-dark/80 to-transparent"></div>
+        </div>
+        <div class="relative z-10 w-full">
+          <div class="flex items-center gap-2 mb-6 text-xs tracking-[0.2em] uppercase text-oas-muted">
+            <span class="w-1 h-1 rounded-full bg-oas-accent"></span>
+            Normes & Qualité
+          </div>
+          <h1 class="text-[8vw] md:text-[6vw] leading-[0.9] font-extrabold tracking-tighter uppercase">
+            Un Standard de <br>
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-oas-accent to-[#ff8c42]">classe mondiale</span>
+          </h1>
+        </div>
+      </swiper-slide>
+
+      <!-- Slide 3 -->
+      <swiper-slide class="relative w-full h-full flex items-end pb-24 px-6 md:px-12 lg:px-24">
+        <div class="absolute inset-0 z-0">
+          <img src="https://images.unsplash.com/photo-1486262715619-6708146fb236?q=80&w=1200&auto=format&fit=crop" alt="Expertise" class="w-full h-full object-cover opacity-20 grayscale mix-blend-overlay">
+          <div class="absolute inset-0 bg-gradient-to-t from-oas-navy-dark via-oas-navy-dark/80 to-transparent"></div>
+        </div>
+        <div class="relative z-10 w-full">
+          <div class="flex items-center gap-2 mb-6 text-xs tracking-[0.2em] uppercase text-oas-muted">
+            <span class="w-1 h-1 rounded-full bg-oas-accent"></span>
+            Dakar — Route de Rufisque
+          </div>
+          <h1 class="text-[8vw] md:text-[6vw] leading-[0.9] font-extrabold tracking-tighter uppercase">
+            Votre Partenaire <br>
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-oas-accent to-[#ff8c42]">de confiance</span>
+          </h1>
+        </div>
+      </swiper-slide>
+
+    </swiper-container>
   </section>
 
   <!-- HISTORIQUE (STORYTELLING LAYOUT) -->
@@ -35,7 +77,19 @@
               </div>
               <div class="mt-12 md:mt-16 relative">
                   <div class="absolute inset-0 bg-oas-accent translate-x-4 translate-y-4"></div>
-                  <img src="https://images.unsplash.com/photo-1503375894014-cb1d31df3324?q=80&w=2070&auto=format&fit=crop" alt="Histoire OAS" class="relative z-10 w-full h-auto object-cover filter grayscale hover:grayscale-0 transition-all duration-700 shadow-xl" />
+                  <div class="relative z-10 w-full overflow-hidden shadow-xl">
+                      <swiper-container pagination="true" navigation="true" class="w-full h-auto" style="--swiper-navigation-color: #ef1a1a; --swiper-pagination-color: #ef1a1a;">
+                          <swiper-slide>
+                              <img src="/assets/images/garage1.jpg" alt="Histoire OAS — 2008" class="w-full h-72 object-cover filter grayscale hover:grayscale-0 transition-all duration-700" />
+                          </swiper-slide>
+                          <swiper-slide>
+                              <img src="https://images.unsplash.com/photo-1503376712351-1b2d3c96048c?q=80&w=800&auto=format&fit=crop" alt="Histoire OAS — Evolution" class="w-full h-72 object-cover filter grayscale hover:grayscale-0 transition-all duration-700" />
+                          </swiper-slide>
+                          <swiper-slide>
+                              <img src="https://images.unsplash.com/photo-1560958089-b8a1929cea89?q=80&w=800&auto=format&fit=crop" alt="Histoire OAS — Modernisation" class="w-full h-72 object-cover filter grayscale hover:grayscale-0 transition-all duration-700" />
+                          </swiper-slide>
+                      </swiper-container>
+                  </div>
               </div>
           </div>
 
@@ -44,28 +98,40 @@
               <div class="space-y-16 max-w-4xl">
                   
                   <!-- Chapter 1 -->
-                  <div>
-                      <span class="text-oas-accent font-black tracking-[0.2em] text-xs mb-4 block uppercase border-b border-oas-line pb-4">Chapitre 1 — Fondation (2010)</span>
-                      <p class="font-sans text-2xl md:text-3xl lg:text-4xl leading-[1.3] tracking-tight font-medium text-balance">
-                          L'aventure débute avec une poignée de <span class="font-extrabold text-oas-accent uppercase text-xl md:text-2xl lg:text-3xl">passionnés.</span> Notre idée était simple mais audacieuse : rompre avec les codes classiques et offrir un service premium, où la <span class="italic font-serif">transparence absolue</span> deviendrait la norme pour chaque automobiliste.
-                      </p>
-                  </div>
+                  <app-piston-accordion 
+                    title="Fondation & SARL" 
+                    subtitle="Chapitre 1 — 2008" 
+                    [active]="activeChapter === 1" 
+                    (toggle)="toggleChapter(1)"
+                  >
+                    <p class="font-sans text-xl md:text-2xl leading-[1.4] tracking-tight font-medium text-balance text-oas-navy-dark">
+                      Orient Auto Service a été officiellement créée le <span class="font-extrabold text-oas-accent uppercase">25 avril 2008</span> sous forme de SARL. Née dans un contexte de croissance du parc automobile sénégalais, elle propose une alternative moderne aux garages classiques grâce à des standards professionnels élevés.
+                    </p>
+                  </app-piston-accordion>
 
                   <!-- Chapter 2 -->
-                  <div>
-                      <span class="text-oas-accent font-black tracking-[0.2em] text-xs mb-4 block uppercase border-b border-oas-line pb-4">Chapitre 2 — L'Ère Technologique (2016)</span>
-                      <p class="font-sans text-2xl md:text-3xl lg:text-4xl leading-[1.3] tracking-tight font-medium text-balance">
-                          Le métier évolue, nous aussi. Nous avons fait le pari d'investir massivement dans des <span class="font-extrabold text-black uppercase text-xl md:text-2xl lg:text-3xl">équipements de pointe.</span> Notre équipe est formée sans relâche pour dompter les nouvelles motorisations hybrides et électriques, faisant du garage un véritable laboratoire de précision.
-                      </p>
-                  </div>
+                  <app-piston-accordion 
+                    title="Positionnement Stratégique" 
+                    subtitle="Chapitre 2 — Route de Rufisque" 
+                    [active]="activeChapter === 2" 
+                    (toggle)="toggleChapter(2)"
+                  >
+                    <p class="font-sans text-xl md:text-2xl leading-[1.4] tracking-tight font-medium text-balance text-oas-navy-dark">
+                      Située à Dakar sur l’axe majeur de la <span class="font-extrabold text-oas-navy-dark uppercase">route de Rufisque</span>, OAS profite d’une zone à forte activité économique pour assurer sa visibilité. Nous nous distinguons par un positionnement <span class="italic font-serif text-oas-accent">haut de gamme</span>, la fiabilité des diagnostics et la transparence.
+                    </p>
+                  </app-piston-accordion>
 
                   <!-- Chapter 3 -->
-                  <div>
-                      <span class="text-oas-accent font-black tracking-[0.2em] text-xs mb-4 block uppercase border-b border-oas-line pb-4">Chapitre 3 — L'Excellence (Aujourd'hui)</span>
-                      <p class="font-sans text-2xl md:text-3xl lg:text-4xl leading-[1.3] tracking-tight font-medium text-balance">
-                          OAS n'est plus seulement un garage, c'est devenu <span class="font-extrabold text-black uppercase text-xl md:text-2xl lg:text-3xl">votre partenaire.</span> Qu'il s'agisse de véhicules de particuliers ou de grandes flottes d'entreprises, notre promesse reste intacte : un travail minutieux, artisanal, toujours soutenu par la meilleure technologie.
-                      </p>
-                  </div>
+                  <app-piston-accordion 
+                    title="Une Équipe Structurée" 
+                    subtitle="Chapitre 3 — Aujourd'hui" 
+                    [active]="activeChapter === 3" 
+                    (toggle)="toggleChapter(3)"
+                  >
+                    <p class="font-sans text-xl md:text-2xl leading-[1.4] tracking-tight font-medium text-balance text-oas-navy-dark">
+                      Aujourd’hui, OAS s’appuie sur un organigramme clair et efficace dirigé par un gérant appelé <span class="font-extrabold text-oas-navy-dark uppercase">Super-Agent</span>, un responsable technique ou <span class="font-extrabold text-oas-navy-dark uppercase">Chef-Atelier</span> et un responsable de stock ou <span class="font-extrabold text-oas-navy-dark uppercase">Agent Magasin</span>.
+                    </p>
+                  </app-piston-accordion>
                   
               </div>
           </div>
@@ -73,46 +139,253 @@
       </div>
   </section>
 
+  <!-- Tire Track Separator -->
+  <div class="py-6 bg-oas-bg border-b border-oas-line overflow-hidden">
+    <app-tire-track [opacity]="0.6" rotation="-1.6deg" variant="horizontal" align="center"></app-tire-track>
+  </div>
 
   <!-- MISSION, VISION, VALEURS (STORYTELLING) -->
-  <section class="w-full py-20 lg:py-32 px-6 lg:px-12 bg-oas-bg text-oas-navy-dark border-b border-oas-line">
-      <div class="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
-          
-          <!-- Title & Image -->
-          <div class="lg:col-span-4">
-              <div class="w-full text-left">
-                <app-section-title
+  <section class="w-full py-20 lg:py-32 bg-oas-bg text-oas-navy-dark border-b border-oas-line">
+      <div class="max-w-[1400px] mx-auto px-6 lg:px-12 mb-16 text-center">
+        <app-section-title
+            align="center"
+            mainTitle="NOTRE "
+            highlightedText="ADN."
+            subtitle="Mission & Valeurs">
+        </app-section-title>
+      </div>
+      
+      <div class="max-w-[1400px] mx-auto px-6 lg:px-12 grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-16 items-start mb-24">
+          <div class="bg-white p-10 shadow-xl hover:-translate-y-2 transition-transform duration-300 text-center md:text-left h-full relative">
+              <app-bolt-corners variant="dark" [size]="11" [offset]="5"></app-bolt-corners>
+              <span class="text-oas-accent font-black tracking-[0.2em] text-xs mb-6 block uppercase border-b border-oas-line pb-4">La Mission</span>
+              <p class="font-sans text-xl leading-[1.5] tracking-tight font-medium text-balance">
+                  Offrir des interventions <span class="font-extrabold text-black uppercase">fiables et conformes</span> aux normes techniques. Assurer la sécurité des véhicules tout en garantissant une transparence totale sur les coûts et délais.
+              </p>
+          </div>
+          <div class="bg-white p-10 shadow-xl hover:-translate-y-2 transition-transform duration-300 text-center md:text-left h-full relative">
+              <app-bolt-corners variant="dark" [size]="11" [offset]="5"></app-bolt-corners>
+              <span class="text-oas-accent font-black tracking-[0.2em] text-xs mb-6 block uppercase border-b border-oas-line pb-4">La Vision</span>
+              <p class="font-sans text-xl leading-[1.5] tracking-tight font-medium text-balance">
+                  Contribuer activement à la <span class="font-extrabold text-black uppercase">modernisation du secteur</span> de la réparation au Sénégal en adoptant des standards professionnels élevés et des technologies de gestion de pointe.
+              </p>
+          </div>
+          <div class="bg-white p-10 shadow-xl hover:-translate-y-2 transition-transform duration-300 text-center md:text-left h-full relative">
+              <app-bolt-corners variant="dark" [size]="11" [offset]="5"></app-bolt-corners>
+              <span class="text-oas-accent font-black tracking-[0.2em] text-xs mb-6 block uppercase border-b border-oas-line pb-4">Nos Valeurs</span>
+              <p class="font-sans text-xl leading-[1.5] tracking-tight font-medium text-balance">
+                  La <span class="italic font-serif">Qualité</span> absolue (pièces importées), la <span class="italic font-serif">Transparence</span> (pas de coûts cachés), et la <span class="italic font-serif">Régularité</span> opérationnelle pour bâtir une confiance durable.
+              </p>
+          </div>
+      </div>
+
+  </section>
+
+  <!-- Tire Track Separator -->
+  <div class="py-6 bg-white border-b border-oas-line overflow-hidden">
+    <app-tire-track [opacity]="0.6" rotation="1.4deg" variant="horizontal" align="center"></app-tire-track>
+  </div>
+
+  <!-- MISSIONS ET ACTIVITÉS DETAILED -->
+  <section class="w-full py-20 lg:py-32 px-6 lg:px-12 bg-white text-oas-navy-dark border-b border-oas-line relative">
+      <!-- Background gears -->
+      <app-mechanical-gears [opacity]="0.03" [size]="500" class="absolute -right-24 -top-24 text-oas-navy pointer-events-none"></app-mechanical-gears>
+      
+      <div class="max-w-[1400px] mx-auto">
+          <div class="mb-16 text-left">
+              <app-section-title
                   align="left"
-                  mainTitle="NOTRE "
-                  highlightedText="ADN."
-                  subtitle="Mission & Valeurs">
-                </app-section-title>
+                  mainTitle="NOS MISSIONS & "
+                  highlightedText="ENGAGEMENTS."
+                  subtitle="Une charte d'excellence">
+              </app-section-title>
+              <p class="mt-4 text-oas-muted text-lg max-w-3xl leading-relaxed">
+                  À travers des processus structurés et une éthique professionnelle rigoureuse, nous poursuivons des objectifs clairs pour moderniser la maintenance automobile au Sénégal.
+              </p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <!-- Mission 1 -->
+              <div class="bg-oas-bg p-8 hover:shadow-lg transition-shadow duration-300 relative group border border-oas-line/50">
+                  <app-bolt-corners variant="dark" [size]="8" [offset]="3"></app-bolt-corners>
+                  <div class="w-12 h-12 bg-white rounded flex items-center justify-center text-oas-accent shadow-sm mb-6 group-hover:bg-oas-accent group-hover:text-white transition-colors duration-300">
+                      <app-icon name="check-circle" [size]="24"></app-icon>
+                  </div>
+                  <h3 class="text-xl font-bold text-oas-navy mb-3">Conformité Technique</h3>
+                  <p class="text-oas-ink2 text-sm leading-relaxed">
+                      Fournir des services d’entretien et de réparation fiables, durables et conformes aux normes techniques les plus strictes.
+                  </p>
               </div>
-              <div class="mt-12 md:mt-16 relative">
-                  <div class="absolute inset-0 bg-oas-accent translate-x-4 translate-y-4"></div>
-                  <img src="https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?q=80&w=1974&auto=format&fit=crop" alt="Notre ADN" class="relative z-10 w-full h-auto object-cover filter grayscale hover:grayscale-0 transition-all duration-700 shadow-xl" />
+
+              <!-- Mission 2 -->
+              <div class="bg-oas-bg p-8 hover:shadow-lg transition-shadow duration-300 relative group border border-oas-line/50">
+                  <app-bolt-corners variant="dark" [size]="8" [offset]="3"></app-bolt-corners>
+                  <div class="w-12 h-12 bg-white rounded flex items-center justify-center text-oas-accent shadow-sm mb-6 group-hover:bg-oas-accent group-hover:text-white transition-colors duration-300">
+                      <app-icon name="shield" [size]="24"></app-icon>
+                  </div>
+                  <h3 class="text-xl font-bold text-oas-navy mb-3">Sécurité & Performance</h3>
+                  <p class="text-oas-ink2 text-sm leading-relaxed">
+                      Assurer la sécurité des automobilistes et la performance des véhicules grâce à des processus d'intervention stricts.
+                  </p>
+              </div>
+
+              <!-- Mission 3 -->
+              <div class="bg-oas-bg p-8 hover:shadow-lg transition-shadow duration-300 relative group border border-oas-line/50">
+                  <app-bolt-corners variant="dark" [size]="8" [offset]="3"></app-bolt-corners>
+                  <div class="w-12 h-12 bg-white rounded flex items-center justify-center text-oas-accent shadow-sm mb-6 group-hover:bg-oas-accent group-hover:text-white transition-colors duration-300">
+                      <app-icon name="user-gear" [size]="24"></app-icon>
+                  </div>
+                  <h3 class="text-xl font-bold text-oas-navy mb-3">Service Personnalisé</h3>
+                  <p class="text-oas-ink2 text-sm leading-relaxed">
+                      Placer le client au centre de nos préoccupations en offrant un accueil sur-mesure et une écoute attentive.
+                  </p>
+              </div>
+
+              <!-- Mission 4 -->
+              <div class="bg-oas-bg p-8 hover:shadow-lg transition-shadow duration-300 relative group border border-oas-line/50">
+                  <app-bolt-corners variant="dark" [size]="8" [offset]="3"></app-bolt-corners>
+                  <div class="w-12 h-12 bg-white rounded flex items-center justify-center text-oas-accent shadow-sm mb-6 group-hover:bg-oas-accent group-hover:text-white transition-colors duration-300">
+                      <app-icon name="clipboard-list" [size]="24"></app-icon>
+                  </div>
+                  <h3 class="text-xl font-bold text-oas-navy mb-3">Transparence Totale</h3>
+                  <p class="text-oas-ink2 text-sm leading-relaxed">
+                      Garantir la clarté totale dans nos diagnostics techniques, la tarification détaillée des prestations et les délais de livraison.
+                  </p>
+              </div>
+
+              <!-- Mission 5 -->
+              <div class="bg-oas-bg p-8 hover:shadow-lg transition-shadow duration-300 relative group border border-oas-line/50">
+                  <app-bolt-corners variant="dark" [size]="8" [offset]="3"></app-bolt-corners>
+                  <div class="w-12 h-12 bg-white rounded flex items-center justify-center text-oas-accent shadow-sm mb-6 group-hover:bg-oas-accent group-hover:text-white transition-colors duration-300">
+                      <app-icon name="package" [size]="24"></app-icon>
+                  </div>
+                  <h3 class="text-xl font-bold text-oas-navy mb-3">Composants de Qualité</h3>
+                  <p class="text-oas-ink2 text-sm leading-relaxed">
+                      Utiliser exclusivement des huiles, produits et pièces de rechange d'origine ou premium, importés directement.
+                  </p>
+              </div>
+
+              <!-- Mission 6 -->
+              <div class="bg-oas-bg p-8 hover:shadow-lg transition-shadow duration-300 relative group border border-oas-line/50">
+                  <app-bolt-corners variant="dark" [size]="8" [offset]="3"></app-bolt-corners>
+                  <div class="w-12 h-12 bg-white rounded flex items-center justify-center text-oas-accent shadow-sm mb-6 group-hover:bg-oas-accent group-hover:text-white transition-colors duration-300">
+                      <app-icon name="wrench" [size]="24"></app-icon>
+                  </div>
+                  <h3 class="text-xl font-bold text-oas-navy mb-3">Modernisation Active</h3>
+                  <p class="text-oas-ink2 text-sm leading-relaxed">
+                      Moderniser le secteur de l’entretien automobile au Sénégal grâce à une gestion interne rigoureuse et informatisée.
+                  </p>
+              </div>
+          </div>
+      </div>
+  </section>
+
+  <!-- Tire Track Separator -->
+  <div class="py-6 bg-oas-bg border-b border-oas-line overflow-hidden">
+    <app-tire-track [opacity]="0.6" rotation="-1.2deg" variant="horizontal" align="center"></app-tire-track>
+  </div>
+
+  <!-- ORGANISATION INTERNE & ROLES -->
+  <section class="w-full py-20 lg:py-32 px-6 lg:px-12 bg-oas-bg text-oas-navy-dark border-b border-oas-line">
+      <div class="max-w-[1400px] mx-auto">
+          <div class="mb-16 text-center">
+              <app-section-title
+                  align="center"
+                  mainTitle="NOTRE ORGANISATION "
+                  highlightedText="INTERNE."
+                  subtitle="Structure & Organigramme">
+              </app-section-title>
+              <p class="mt-4 text-oas-muted text-lg max-w-3xl mx-auto leading-relaxed">
+                  L’organisation interne d’OAS repose sur une répartition claire des responsabilités permettant d’assurer la coordination optimale de l’atelier.
+              </p>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-12 items-stretch">
+              <!-- Super-Agent Card -->
+              <div class="bg-white p-8 relative flex flex-col justify-between hover:shadow-xl transition-shadow duration-300 border border-oas-line">
+                  <app-bolt-corners variant="dark" [size]="10" [offset]="4"></app-bolt-corners>
+                  <div>
+                      <div class="flex items-center gap-3 mb-6 pb-4 border-b border-oas-line">
+                          <div class="w-10 h-10 bg-oas-navy text-white rounded flex items-center justify-center font-bold flex-shrink-0">DIR</div>
+                          <div>
+                              <h4 class="font-extrabold text-oas-navy">Super-Agent</h4>
+                              <p class="text-[10px] text-oas-accent font-bold uppercase tracking-wider">Directeur Général / Gérant</p>
+                          </div>
+                      </div>
+                      <p class="text-oas-ink2 text-sm leading-relaxed mb-6">
+                          Responsable de la gestion globale de la SARL, il assure la supervision stratégique, prend les décisions d’investissement technologique et supervise l'ensemble des pôles opérationnels pour asseoir le positionnement haut de gamme d'OAS.
+                      </p>
+                  </div>
+                  <div class="text-xs text-oas-muted border-t border-oas-line pt-4 flex items-center justify-between">
+                      <span>Direction stratégique</span>
+                      <app-icon name="user-gear" [size]="16"></app-icon>
+                  </div>
+              </div>
+
+              <!-- Chef-Atelier Card -->
+              <div class="bg-white p-8 relative flex flex-col justify-between hover:shadow-xl transition-shadow duration-300 border border-oas-line">
+                  <app-bolt-corners variant="dark" [size]="10" [offset]="4"></app-bolt-corners>
+                  <div>
+                      <div class="flex items-center gap-3 mb-6 pb-4 border-b border-oas-line">
+                          <div class="w-10 h-10 bg-oas-navy text-white rounded flex items-center justify-center font-bold flex-shrink-0">TEC</div>
+                          <div>
+                              <h4 class="font-extrabold text-oas-navy">Chef-Atelier</h4>
+                              <p class="text-[10px] text-oas-accent font-bold uppercase tracking-wider">Responsable Technique</p>
+                          </div>
+                      </div>
+                      <p class="text-oas-ink2 text-sm leading-relaxed mb-6">
+                          Coordonne le pôle technique en supervisant l'exécution des fiches d'atelier. Il orchestre le travail des mécaniciens et électriciens, vérifie le respect des standards constructeurs et négocie la commande de matériels auprès des fournisseurs.
+                      </p>
+                  </div>
+                  <div class="text-xs text-oas-muted border-t border-oas-line pt-4 flex items-center justify-between">
+                      <span>Rigueur & Qualité</span>
+                      <app-icon name="wrench" [size]="16"></app-icon>
+                  </div>
+              </div>
+
+              <!-- Agent Magasin Card -->
+              <div class="bg-white p-8 relative flex flex-col justify-between hover:shadow-xl transition-shadow duration-300 border border-oas-line">
+                  <app-bolt-corners variant="dark" [size]="10" [offset]="4"></app-bolt-corners>
+                  <div>
+                      <div class="flex items-center gap-3 mb-6 pb-4 border-b border-oas-line">
+                          <div class="w-10 h-10 bg-oas-navy text-white rounded flex items-center justify-center font-bold flex-shrink-0">STK</div>
+                          <div>
+                              <h4 class="font-extrabold text-oas-navy">Agent Magasin</h4>
+                              <p class="text-[10px] text-oas-accent font-bold uppercase tracking-wider">Responsable de Magasin</p>
+                          </div>
+                      </div>
+                      <p class="text-oas-ink2 text-sm leading-relaxed mb-6">
+                          Gère l'approvisionnement et le suivi rigoureux des pièces détachées d’origine. Il veille à la traçabilité des pièces d'entrée et de sortie, réalise les inventaires de stock et s'assure de l'absence totale de rupture sur les fluides premium.
+                      </p>
+                  </div>
+                  <div class="text-xs text-oas-muted border-t border-oas-line pt-4 flex items-center justify-between">
+                      <span>Traçabilité & Stock</span>
+                      <app-icon name="package" [size]="16"></app-icon>
+                  </div>
               </div>
           </div>
 
-          <!-- Main Text -->
-          <div class="lg:col-span-8 lg:pl-16 lg:pt-8">
-              <div class="space-y-16 max-w-4xl">
-                  <div>
-                      <span class="text-oas-accent font-black tracking-[0.2em] text-xs mb-4 block uppercase border-b border-oas-line pb-4">La Mission</span>
-                      <p class="font-sans text-2xl md:text-3xl lg:text-4xl leading-[1.3] tracking-tight font-medium text-balance">
-                          Notre raison d'être est de <span class="font-extrabold text-black uppercase text-xl md:text-2xl lg:text-3xl">sécuriser votre route.</span> Nous nous engageons à offrir des prestations mécaniques irréprochables, où la tranquillité d'esprit du conducteur reste notre priorité absolue.
-                      </p>
+          <!-- Section Personnel et Receptionnistes -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
+              <div class="bg-white/60 p-6 border border-oas-line/80 relative flex items-start gap-4">
+                  <div class="p-3 bg-oas-accent/10 text-oas-accent rounded">
+                      <app-icon name="users" [size]="24"></app-icon>
                   </div>
                   <div>
-                      <span class="text-oas-accent font-black tracking-[0.2em] text-xs mb-4 block uppercase border-b border-oas-line pb-4">La Vision</span>
-                      <p class="font-sans text-2xl md:text-3xl lg:text-4xl leading-[1.3] tracking-tight font-medium text-balance">
-                          Nous bâtissons l'<span class="font-extrabold text-black uppercase text-xl md:text-2xl lg:text-3xl">atelier de demain.</span> Un espace où la technologie de pointe ne remplace pas l'humain, mais vient sublimer un savoir-faire mécanique traditionnel et authentique.
+                      <h4 class="font-bold text-oas-navy text-lg mb-1">Service Accueil & Réception</h4>
+                      <p class="text-oas-muted text-sm leading-relaxed">
+                          Assure la relation client de A à Z. Les réceptionnistes accueillent les véhicules, enregistrent précisément les réclamations des clients, et assurent le suivi régulier des chantiers avec le Chef d’Atelier.
                       </p>
                   </div>
+              </div>
+              <div class="bg-white/60 p-6 border border-oas-line/80 relative flex items-start gap-4">
+                  <div class="p-3 bg-oas-accent/10 text-oas-accent rounded">
+                      <app-icon name="wrench" [size]="24"></app-icon>
+                  </div>
                   <div>
-                      <span class="text-oas-accent font-black tracking-[0.2em] text-xs mb-4 block uppercase border-b border-oas-line pb-4">Nos Valeurs</span>
-                      <p class="font-sans text-2xl md:text-3xl lg:text-4xl leading-[1.3] tracking-tight font-medium text-balance">
-                          Trois piliers guident nos mains : l'<span class="italic font-serif">Intégrité</span> pour des devis honnêtes, l'<span class="italic font-serif">Excellence</span> pour un travail toujours minutieux, et l'<span class="italic font-serif">Innovation</span> pour rester à la pointe de notre art.
+                      <h4 class="font-bold text-oas-navy text-lg mb-1">Mécaniciens & Électriciens</h4>
+                      <p class="text-oas-muted text-sm leading-relaxed">
+                          La force opérationnelle de l’atelier. Ils mènent les diagnostics électroniques poussés, réalisent la maintenance mécanique et exécutent les travaux complexes de tôlerie/carrosserie avec minutie.
                       </p>
                   </div>
               </div>
@@ -137,7 +410,19 @@
               </div>
               <div class="mt-12 md:mt-16 relative">
                   <div class="absolute inset-0 bg-oas-accent translate-x-4 translate-y-4"></div>
-                  <img src="https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=2070&auto=format&fit=crop" alt="Notre Équipe" class="relative z-10 w-full h-auto object-cover filter grayscale hover:grayscale-0 transition-all duration-700 shadow-xl" />
+                  <div class="relative z-10 w-full overflow-hidden shadow-xl">
+                      <swiper-container pagination="true" navigation="true" class="w-full h-auto" style="--swiper-navigation-color: #ef1a1a; --swiper-pagination-color: #ef1a1a;">
+                          <swiper-slide>
+                              <img src="/assets/images/garage3.jpg" alt="Notre Équipe" class="w-full h-72 object-cover filter grayscale hover:grayscale-0 transition-all duration-700" />
+                          </swiper-slide>
+                          <swiper-slide>
+                              <img src="https://images.unsplash.com/photo-1517524008697-84bbe3c3fd98?q=80&w=800&auto=format&fit=crop" alt="Diagnostic Électronique" class="w-full h-72 object-cover filter grayscale hover:grayscale-0 transition-all duration-700" />
+                          </swiper-slide>
+                          <swiper-slide>
+                              <img src="https://images.unsplash.com/photo-1493238792000-8113da705763?q=80&w=800&auto=format&fit=crop" alt="Mécanique Premium" class="w-full h-72 object-cover filter grayscale hover:grayscale-0 transition-all duration-700" />
+                          </swiper-slide>
+                      </swiper-container>
+                  </div>
               </div>
           </div>
 
@@ -180,46 +465,18 @@
         La confiance se mérite, et l'excellence se prouve. Nous sommes fiers de détenir les normes les plus strictes.
       </p>
 
-      <!-- Infinite Carousel -->
-      <div class="relative w-full overflow-hidden flex group mt-12 py-4">
-        <!-- Left Gradient -->
-        <div class="absolute top-0 bottom-0 left-0 w-16 md:w-48 bg-gradient-to-r from-oas-accent to-transparent z-20 pointer-events-none"></div>
-        <!-- Right Gradient -->
-        <div class="absolute top-0 bottom-0 right-0 w-16 md:w-48 bg-gradient-to-l from-oas-accent to-transparent z-20 pointer-events-none"></div>
-
-        <!-- Track 1 -->
-        <div class="flex gap-6 pr-6 animate-marquee group-hover:[animation-play-state:paused] whitespace-normal min-w-full shrink-0 items-stretch">
-          @for (cert of certifications; track cert.id) {
-          <div class="shrink-0 w-[85vw] md:w-96 bg-white text-oas-navy-dark p-10 text-left relative transition-transform duration-300 shadow-xl">
-            <div class="w-16 h-16 bg-oas-bg flex items-center justify-center rounded-full mb-8 text-oas-accent">
-              @if (cert.icon === 'SHIELD') {
-                <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
-              } @else {
-                <span class="font-black text-xl">{{ cert.icon }}</span>
-              }
-            </div>
-            <h4 class="text-2xl font-extrabold mb-4">{{ cert.title }}</h4>
-            <p class="text-oas-muted leading-relaxed">{{ cert.description }}</p>
-          </div>
-          }
-        </div>
-
-        <!-- Track 2 (Clone for infinite effect) -->
-        <div class="flex gap-6 pr-6 animate-marquee group-hover:[animation-play-state:paused] whitespace-normal min-w-full shrink-0 items-stretch" aria-hidden="true">
-          @for (cert of certifications; track cert.id) {
-          <div class="shrink-0 w-[85vw] md:w-96 bg-white text-oas-navy-dark p-10 text-left relative transition-transform duration-300 shadow-xl">
-            <div class="w-16 h-16 bg-oas-bg flex items-center justify-center rounded-full mb-8 text-oas-accent">
-              @if (cert.icon === 'SHIELD') {
-                <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
-              } @else {
-                <span class="font-black text-xl">{{ cert.icon }}</span>
-              }
-            </div>
-            <h4 class="text-2xl font-extrabold mb-4">{{ cert.title }}</h4>
-            <p class="text-oas-muted leading-relaxed">{{ cert.description }}</p>
-          </div>
-          }
-        </div>
+      <!-- Responsive Grid for Certifications -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-16 relative z-10 max-w-[1400px] mx-auto">
+        @for (cert of certifications; track cert.id) {
+          <app-sheet-metal-card 
+            [title]="cert.title" 
+            [subtitle]="cert.icon" 
+            [hasWeld]="true"
+            class="text-left hover:-translate-y-2 transition-transform duration-300 block"
+          >
+            <p class="text-white/80 leading-relaxed font-light text-sm">{{ cert.description }}</p>
+          </app-sheet-metal-card>
+        }
       </div>
     </div>
   </section>

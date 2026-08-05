@@ -32,7 +32,15 @@
 html, body {
   font-family: 'Poppins', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  /* Curseur natif masqué — remplacé par la clé à molette SVG */
+  cursor: none !important;
 }
+
+/* Assure que les éléments interactifs héritent aussi du curseur masqué */
+a, button, input, select, textarea, label, [role="button"] {
+  cursor: none !important;
+}
+
 
 /* Sidebar gradient marine */
 .oas-sidebar {

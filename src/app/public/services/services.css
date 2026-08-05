@@ -135,6 +135,25 @@ h1,h2,h3 {
   margin-left:0
 }
 
+.wheel-bg-container {
+  position: absolute;
+  top: 250px;
+  left: 0;
+  width: 580px;
+  height: 580px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.18;
+  transition: transform 0.2s cubic-bezier(0.22, 0.8, 0.25, 1);
+}
+
+.wheel-bg-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 24px rgba(12, 39, 66, 0.2));
+}
+
 .service-bubble {
   position:absolute;
   top:0;
@@ -374,18 +393,76 @@ h1,h2,h3 {
 .process-list {
   display:grid;
   grid-template-columns:repeat(4,1fr);
-  gap:1.5rem;
+  gap:2.5rem;
   margin-top:3rem
 }
 
 .process-list article {
-  border-top:2px solid var(--color-oas-accent);
-  padding-top:1rem;
-  transition:transform .3s cubic-bezier(.22,.8,.25,1)
+  position: relative;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 1.25rem 1.1rem;
+  border-top: 3px solid var(--color-oas-accent);
+  box-shadow: 0 12px 30px -10px rgba(12, 39, 66, 0.1);
+  animation: pistonCardStroke 1.8s ease-in-out infinite alternate;
+  will-change: transform;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
+/* Pause de l'animation au survol de la carte */
 .process-list article:hover {
-  transform:translateY(-6px)
+  animation-play-state: paused;
+  box-shadow: 0 20px 40px -10px rgba(239, 26, 26, 0.25), 0 0 0 1px var(--color-oas-accent);
+  cursor: pointer;
+}
+
+/* Pause uniquement du piston SVG correspondant à la carte survolée */
+.process-section:has(.step-piston-1:hover) app-engine-pistons ::ng-deep .cyl-1 .piston-assembly,
+.process-section:has(.step-piston-1:hover) app-engine-pistons ::ng-deep .cyl-1 .connecting-rod,
+.process-section:has(.step-piston-2:hover) app-engine-pistons ::ng-deep .cyl-2 .piston-assembly,
+.process-section:has(.step-piston-2:hover) app-engine-pistons ::ng-deep .cyl-2 .connecting-rod,
+.process-section:has(.step-piston-3:hover) app-engine-pistons ::ng-deep .cyl-3 .piston-assembly,
+.process-section:has(.step-piston-3:hover) app-engine-pistons ::ng-deep .cyl-3 .connecting-rod,
+.process-section:has(.step-piston-4:hover) app-engine-pistons ::ng-deep .cyl-4 .piston-assembly,
+.process-section:has(.step-piston-4:hover) app-engine-pistons ::ng-deep .cyl-4 .connecting-rod {
+  animation-play-state: paused;
+}
+
+.piston-joint {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 10px;
+  background: var(--color-oas-accent);
+  box-shadow: 0 0 8px rgba(239, 26, 26, 0.8);
+}
+
+.step-piston-1 {
+  animation-delay: 0s !important;
+}
+
+.step-piston-2 {
+  animation-delay: 1.35s !important;
+}
+
+.step-piston-3 {
+  animation-delay: 0.45s !important;
+}
+
+.step-piston-4 {
+  animation-delay: 0.9s !important;
+}
+
+@keyframes pistonCardStroke {
+  0% {
+    transform: translateY(0px);
+  }
+  100% {
+    transform: translateY(48px);
+  }
 }
 
 .process-list span {
@@ -585,4 +662,11 @@ h1,h2,h3 {
     display:none
   }
   
+}
+
+.mobile-service-list a.active-mobile-service {
+  border-color: var(--color-oas-accent, #ef1a1a);
+  background: rgba(239, 26, 26, 0.08);
+  box-shadow: 0 0 16px rgba(239, 26, 26, 0.2);
+  transition: all 0.3s ease;
 }

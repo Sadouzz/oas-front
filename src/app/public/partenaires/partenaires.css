@@ -448,7 +448,7 @@
 }
 
 .cta-card{
-    background:linear-gradient(135deg,var(--color-oas-navy),var(--color-oas-accent));
+    background:linear-gradient(135deg, var(--color-oas-navy) 0%, var(--color-oas-navy-dark) 100%);
     color:#fff;
     border-radius:0px;
     padding:60px 0;

@@ -1,21 +1,52 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import AOS from 'aos';
+import { register } from 'swiper/element/bundle';
 
 import { IconComponent } from '../../shared/icon/icon';
 import { SectionTitle } from '../../shared/components/section-title/section-title';
+import { TireTrackComponent } from '../../shared/components/tire-track/tire-track';
+import { SheetMetalCardComponent } from '../../shared/components/sheet-metal-card/sheet-metal-card';
+import { BoltCornersComponent } from '../../shared/components/bolt-corners/bolt-corners';
+import { JerrycanComponent } from '../../shared/components/jerrycan/jerrycan';
+
+register();
 
 @Component({
   selector: 'app-partenaires',
   standalone: true,
-  imports: [CommonModule, RouterModule, IconComponent, SectionTitle],
+  imports: [
+    CommonModule, 
+    RouterModule, 
+    IconComponent, 
+    SectionTitle,
+    TireTrackComponent,
+    SheetMetalCardComponent,
+    BoltCornersComponent,
+    JerrycanComponent
+  ],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './partenaires.html',
   styleUrls: ['./partenaires.css']
 })
 export class Partenaires implements OnInit, AfterViewInit, OnDestroy {
 
-  marques = [
+  partenairesLocaux = [
+    {
+      nom: 'Garage Local 1',
+      image: '/assets/images/garage1.jpg',
+      logo: '/assets/oas-logo.svg',
+      description: 'Partenaire de proximité pour vos besoins rapides.'
+    },
+    {
+      nom: 'Garage Local 2',
+      image: '/assets/images/garage2.jpg',
+      logo: '/assets/oas-logo.svg',
+      description: 'Spécialiste de votre région.'
+    }
+  ];
+
+  partenairesExterieurs = [
     {
       nom: 'Mercedes-Benz',
       image: '/assets/images/garage1.jpg',
@@ -27,36 +58,6 @@ export class Partenaires implements OnInit, AfterViewInit, OnDestroy {
       image: '/assets/images/garage2.jpg',
       logo: '/assets/oas-logo.svg',
       description: 'Maintenance et réparations réalisées dans le respect des exigences des véhicules Porsche.'
-    },
-    {
-      nom: 'Opel',
-      image: '/assets/images/garage3.jpg',
-      logo: '/assets/oas-logo.svg',
-      description: 'Entretien mécanique, électronique et maintenance préventive pour les modèles Opel.'
-    },
-    {
-      nom: 'Land Rover',
-      image: '/assets/images/garage1.jpg',
-      logo: '/assets/oas-logo.svg',
-      description: 'Diagnostic, entretien et réparation des véhicules tout-terrain et SUV Land Rover.'
-    },
-    {
-      nom: 'BMW',
-      image: '/assets/images/garage2.jpg',
-      logo: '/assets/oas-logo.svg',
-      description: 'Interventions sur les véhicules BMW avec des outils de diagnostic adaptés.'
-    },
-    {
-      nom: 'Audi',
-      image: '/assets/images/garage3.jpg',
-      logo: '/assets/oas-logo.svg',
-      description: 'Réparations et entretien pour l’ensemble de la gamme Audi.'
-    },
-    {
-      nom: 'Volkswagen',
-      image: '/assets/images/garage1.jpg',
-      logo: '/assets/oas-logo.svg',
-      description: 'Maintenance complète et suivi technique des véhicules Volkswagen.'
     }
   ];
 
@@ -103,11 +104,6 @@ export class Partenaires implements OnInit, AfterViewInit, OnDestroy {
   ];
 
   ngOnInit(): void {
-    AOS.init({
-      duration: 800,
-      once: true,
-      easing: 'ease-in-out'
-    });
   }
 
   /* ==========================================================

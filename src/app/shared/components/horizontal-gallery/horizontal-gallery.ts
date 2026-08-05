@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { BoltCornersComponent } from '../bolt-corners/bolt-corners';
+
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -21,7 +23,7 @@ export interface RealisationItem {
 @Component({
   selector: 'app-horizontal-gallery',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, BoltCornersComponent],
   templateUrl: './horizontal-gallery.html',
   styles: []
 })

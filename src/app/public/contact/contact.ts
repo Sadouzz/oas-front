@@ -1,10 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { register } from 'swiper/element/bundle';
 import AOS from 'aos';
 import { IconComponent } from '../../shared/icon/icon';
 import { SectionTitle } from '../../shared/components/section-title/section-title';
+import { TireTrackComponent } from '../../shared/components/tire-track/tire-track';
+import { BoltCornersComponent } from '../../shared/components/bolt-corners/bolt-corners';
+
+register();
 
 @Component({
   selector: 'app-contact',
@@ -14,8 +19,11 @@ import { SectionTitle } from '../../shared/components/section-title/section-titl
     RouterModule,
     ReactiveFormsModule,
     IconComponent,
-    SectionTitle
+    SectionTitle,
+    TireTrackComponent,
+    BoltCornersComponent
   ],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './contact.html',
   styleUrl: './contact.css'
 })

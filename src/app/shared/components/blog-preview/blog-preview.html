@@ -41,6 +41,8 @@
               class="group relative flex aspect-[4/5] md:aspect-[3/4] flex-1 flex-col items-center overflow-hidden bg-white p-2 md:p-4 shadow-xl border border-black/5 -mx-4 md:-mx-8 transition-all duration-500 hover:scale-110 hover:z-20 cursor-pointer {{ article.rotation }}"
               [style.zIndex]="i"
           >
+              <!-- Vis cruciformes aux 4 coins de la carte blog -->
+              <app-bolt-corners variant="dark" [size]="10" [offset]="4"></app-bolt-corners>
               <div class="relative h-full w-full overflow-hidden bg-gray-100 flex-grow">
                   <img
                       [src]="article.imageSrc"

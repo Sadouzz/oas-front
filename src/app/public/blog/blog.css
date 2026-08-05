@@ -26,3 +26,43 @@ h1, h2, h3 { letter-spacing: -.045em; }
 .cover-road { background: linear-gradient(135deg, #7396a4 0%, #2e5064 42%, #0b243c 100%); }.cover-road::after { content: ''; position: absolute; background: #d46d2b; width: 50%; height: 140%; transform: rotate(42deg); left: 28%; top: 10%; opacity: .58; }.cover-brakes { background: radial-gradient(circle at 65% 45%, #d6d2c6 0 14%, #5e6361 15% 28%, #142638 29% 100%); }.cover-air { background: linear-gradient(145deg, #bfd6d8, #557b85 48%, #203b51); }.cover-garage { background: linear-gradient(130deg, #d06a27 0 25%, #e5c08e 25% 34%, #315b68 34% 65%, #102b46 65%); }.cover-dashboard { background: radial-gradient(ellipse at center, #d87a36 0 3%, #122c44 4% 45%, #070f19 46%); }.cover-oil { background: linear-gradient(145deg, #e9c15c 0 16%, #192d40 17% 62%, #697e7a 63%); }.cover-tyres { background: repeating-linear-gradient(130deg, #131d28 0 14px, #354455 15px 24px); }.cover-tools { background: linear-gradient(45deg, #182d40 0 42%, #d86f29 42% 50%, #e2a150 50% 56%, #18374f 56%); }
 @media (max-width: 900px) { .recent-grid { grid-template-columns: 1fr; }.recent-stack { grid-template-columns: repeat(3, 1fr); }.compact-card { grid-template-columns: 1fr; }.compact-cover { min-height: 7rem; }.filters-row { align-items: stretch; flex-direction: column; }.search-field { flex-basis: auto; }.article-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 600px) { .section-heading, .articles-intro { align-items: flex-start; flex-direction: column; }.section-heading > span { display: none; }.featured-card { min-height: 27rem; }.recent-stack { grid-template-columns: 1fr; }.compact-card { grid-template-columns: 8rem 1fr; }.compact-cover { min-height: auto; }.article-grid { grid-template-columns: 1fr; }.articles-section { margin-top: 3.5rem; } }
+
+/* Loader de chargement mécanique */
+.loader-container {
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.gear-spinner {
+  width: 80px;
+  height: 80px;
+  animation: spinGear 3s linear infinite;
+}
+
+.loader-text {
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: 800;
+  font-size: 0.8rem;
+  letter-spacing: 0.3em;
+  color: var(--color-oas-accent);
+  animation: pulseText 1.5s ease-in-out infinite;
+}
+
+@keyframes spinGear {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulseText {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* Curseur pointeur pour indiquer que la carte entière est cliquable */
+.featured-card, .article-card {
+  cursor: pointer;
+}

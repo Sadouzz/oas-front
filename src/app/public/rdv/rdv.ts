@@ -11,8 +11,6 @@ import {
   Validators
 } from '@angular/forms';
 
-import AOS from 'aos';
-
 import { IconComponent } from '../../shared/icon/icon';
 
 /**
@@ -35,6 +33,10 @@ function passwordsMatchValidator(): ValidatorFn {
 type OngletAuth = 'login' | 'register';
 
 import { SectionTitle } from '../../shared/components/section-title/section-title';
+import { TireTrackComponent } from '../../shared/components/tire-track/tire-track';
+import { SheetMetalCardComponent } from '../../shared/components/sheet-metal-card/sheet-metal-card';
+import { BoltCornersComponent } from '../../shared/components/bolt-corners/bolt-corners';
+import { SpeedometerComponent } from '../../shared/components/speedometer/speedometer';
 
 @Component({
   selector: 'app-rdv',
@@ -43,7 +45,11 @@ import { SectionTitle } from '../../shared/components/section-title/section-titl
     CommonModule,
     ReactiveFormsModule,
     IconComponent,
-    SectionTitle
+    SectionTitle,
+    TireTrackComponent,
+    SheetMetalCardComponent,
+    BoltCornersComponent,
+    SpeedometerComponent
   ],
   templateUrl: './rdv.html',
   styleUrl: './rdv.css'
@@ -62,13 +68,6 @@ export class RdvComponent implements OnInit {
     this.initialiserDonnees();
     this.initialiserFormulaires();
 
-    AOS.init({
-      duration: 800,
-      once: true,
-      offset: 80,
-      easing: 'ease-in-out'
-    });
-
   }
 
   /**
@@ -78,10 +77,10 @@ export class RdvComponent implements OnInit {
   private initialiserDonnees(): void {
 
     this.statistiques = [
-      { valeur: '5000+', label: 'Rendez-vous réalisés' },
-      { valeur: '98%', label: 'Clients satisfaits' },
-      { valeur: '15+', label: "Années d'expérience" },
-      { valeur: '24/7', label: 'Assistance client' }
+      { value: 5000, max: 6000, suffix: '+', unit: 'RDV', label: 'Rendez-vous réalisés' },
+      { value: 98, max: 100, suffix: '%', unit: '%', label: 'Clients satisfaits' },
+      { value: 15, max: 25, suffix: '+', unit: 'ANS', label: "Années d'expérience" },
+      { value: 24, max: 24, suffix: '/7', unit: 'H', label: 'Assistance client' }
     ];
 
     this.avantages = [
