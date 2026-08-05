@@ -1,0 +1,14 @@
+export const CLIENT_PORTAL_PATHS = {
+  connexion: '/espace-client/connexion',
+  inscription: '/espace-client/inscription',
+  tableauDeBord: '/espace-client/tableau-de-bord',
+  vehicules: '/espace-client/vehicules',
+  rendezVous: '/espace-client/rendez-vous',
+  devis: '/espace-client/devis',
+  proformas: '/espace-client/proformas',
+  factures: '/espace-client/factures',
+  interventions: '/espace-client/interventions',
+  notifications: '/espace-client/notifications',
+  profil: '/espace-client/profil',
+  parametres: '/espace-client/parametres',
+} as const;

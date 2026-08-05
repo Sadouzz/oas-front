@@ -1,0 +1,85 @@
+<!-- Bouton flottant (fermé) -->
+@if (!isOpen) {
+  <button (click)="toggle()" aria-label="Ouvrir la messagerie"
+    class="fixed bottom-6 right-6 lg:bottom-8 lg:right-8 z-50 w-14 h-14 rounded-full bg-oas-accent hover:bg-oas-accent-dark text-white shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 cursor-pointer">
+    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+    </svg>
+    @if (unreadCount > 0) {
+      <span class="absolute -top-1 -right-1 min-w-[20px] h-[20px] px-1 rounded-full bg-oas-bad text-white text-[11px] font-bold flex items-center justify-center border-2 border-white">
+        {{ unreadCount > 99 ? '99+' : unreadCount }}
+      </span>
+    }
+  </button>
+}
+
+<!-- Panneau (ouvert) : plein écran sur mobile, panneau ancré en bas-droite sur desktop -->
+@if (isOpen) {
+  <div class="fixed inset-0 lg:inset-auto lg:bottom-6 lg:right-6 z-50 bg-white flex flex-col shadow-2xl lg:w-96 lg:h-[560px] lg:max-h-[80vh] lg:rounded-2xl overflow-hidden">
+
+    <!-- En-tête -->
+    <div class="flex items-center justify-between px-5 py-4 flex-shrink-0" style="background:#0c2742;">
+      <div>
+        <p class="font-bold text-white text-sm">Messagerie</p>
+        <p class="text-[11px] text-white/60">Échangez avec le garage</p>
+      </div>
+      <button (click)="close()" aria-label="Fermer la messagerie"
+        class="w-9 h-9 rounded-lg flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition cursor-pointer">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <app-alert [error]="errorMessage"></app-alert>
+
+    <!-- Fil de discussion -->
+    <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-oas-bg">
+      @if (loading) {
+        <div class="flex items-center justify-center py-10">
+          <svg class="animate-spin h-6 w-6 text-oas-accent" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+          </svg>
+        </div>
+      } @else if (messages.length === 0) {
+        <div class="h-full flex items-center justify-center text-center px-6">
+          <p class="text-oas-muted text-sm">Aucun message pour le moment. Écrivez au garage ci-dessous pour démarrer la conversation.</p>
+        </div>
+      } @else {
+        @for (m of messages; track m.id) {
+          <div class="flex" [class.justify-end]="isMine(m)">
+            <div class="max-w-[80%] rounded-xl px-3.5 py-2 text-sm"
+                 [class.bg-oas-accent]="isMine(m)" [class.text-white]="isMine(m)"
+                 [class.bg-white]="!isMine(m)" [class.text-oas-ink]="!isMine(m)"
+                 [class.border]="!isMine(m)" [class.border-oas-line]="!isMine(m)">
+              @if (!isMine(m)) {
+                <p class="text-[11px] font-bold mb-0.5 opacity-70">{{ m.expediteurName }}</p>
+              }
+              <p>{{ m.contenu }}</p>
+              <p class="text-[10px] mt-1 opacity-70">{{ m.dateEnvoi | date:'dd/MM HH:mm' }}</p>
+            </div>
+          </div>
+        }
+      }
+    </div>
+
+    <!-- Saisie -->
+    <div class="border-t border-oas-line p-3 flex gap-2 flex-shrink-0 bg-white">
+      <input
+        type="text"
+        [(ngModel)]="draft"
+        (keyup.enter)="send()"
+        placeholder="Écrivez votre message..."
+        class="flex-1 px-3.5 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"
+      />
+      <button (click)="send()" [disabled]="sending || !draft.trim()" aria-label="Envoyer"
+        class="w-10 h-10 flex-shrink-0 bg-oas-accent hover:bg-oas-accent-dark disabled:opacity-60 text-white rounded-lg transition cursor-pointer flex items-center justify-center">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 19V5m0 0l-6 6m6-6l6 6"/>
+        </svg>
+      </button>
+    </div>
+
+  </div>
+}

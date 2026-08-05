@@ -1,0 +1,52 @@
+<div>
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-extrabold text-oas-ink">Notifications</h1>
+      <p class="text-oas-muted text-sm mt-1">Toutes vos notifications du garage</p>
+    </div>
+    @if (unreadCount > 0) {
+      <button (click)="markAllAsRead()" class="text-sm font-semibold text-oas-accent hover:underline cursor-pointer">
+        Tout marquer comme lu
+      </button>
+    }
+  </div>
+
+  <app-alert [error]="errorMessage"></app-alert>
+
+  @if (loading) {
+    <div class="flex items-center justify-center py-10">
+      <svg class="animate-spin h-6 w-6 text-oas-accent" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+      </svg>
+    </div>
+  } @else if (notifications.length === 0) {
+    <div class="bg-white border border-oas-line rounded-xl p-10 text-center">
+      <svg class="w-10 h-10 mx-auto text-oas-faint mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+      </svg>
+      <p class="text-oas-muted text-sm">Aucune notification pour le moment.</p>
+    </div>
+  } @else {
+    <div class="bg-white border border-oas-line rounded-xl divide-y divide-oas-line overflow-hidden">
+      @for (notif of notifications; track notif.id) {
+        <div (click)="markAsRead(notif)"
+             class="p-4 cursor-pointer transition-colors flex items-start gap-3"
+             [class.bg-blue-50]="!notif.lu" [class.hover:bg-oas-bg]="notif.lu" [class.hover:bg-blue-100]="!notif.lu">
+          @if (!notif.lu) {
+            <span class="w-2 h-2 rounded-full bg-oas-accent mt-1.5 flex-shrink-0"></span>
+          } @else {
+            <span class="w-2 h-2 flex-shrink-0"></span>
+          }
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-sm" [class.text-oas-ink]="notif.lu" [class.text-blue-900]="!notif.lu">{{ notif.titre }}</span>
+              <span class="text-[10px] text-gray-400 flex-shrink-0">{{ notif.dateCreation | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+            <p class="text-xs text-oas-muted mt-1">{{ notif.message }}</p>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

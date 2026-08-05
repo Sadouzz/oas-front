@@ -13,9 +13,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
     : req;
 
+  const isClientArea = router.url.startsWith('/espace-client');
+
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      // Liste des préfixes de routes privées de gestion
+      // Liste des préfixes de routes privées de gestion (staff/admin)
       const privateRoutes = [
         '/dashboard', '/clients', '/vehicules', '/pieces-detachees', '/bons-de-sortie',
         '/stock', '/inventaire', '/fournisseurs', '/fiches-atelier', '/mecaniciens',
@@ -26,16 +28,24 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       const isPrivate = privateRoutes.some(route => router.url.startsWith(route));
 
       if (error.status === 401) {
+        // Non authentifié → logout et redirection vers la page de connexion contextuelle
         authService.logout();
-        if (isPrivate) {
+        if (isClientArea) {
+          router.navigate(['/espace-client/connexion'], { replaceUrl: true });
+        } else if (isPrivate) {
           router.navigate(['/login'], { replaceUrl: true });
         }
       } else if (error.status === 403) {
-        if (isPrivate) {
+        // Authentifié mais pas autorisé → page interdite contextuelle
+        if (isClientArea) {
+          router.navigate(['/espace-client'], { replaceUrl: true });
+        } else if (isPrivate) {
           router.navigate(['/forbidden'], { replaceUrl: true });
         }
       }
+
       return throwError(() => error);
     })
   );
 };
+
