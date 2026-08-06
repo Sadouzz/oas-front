@@ -41,7 +41,7 @@ import { TESTIMONIALS_DATA, Testimonial } from '../../shared/data/testimonials.d
 })
 export class Realisations {
   readonly statistiques = [
-    { value: 15, max: 25, suffix: '+', unit: 'ANS', label: "Années d'expérience" },
+    { value: 18, max: 25, suffix: '+', unit: 'ANS', label: "Années d'expérience" },
     { value: 5000, max: 6000, suffix: '+', unit: 'VOITURES', label: 'Véhicules réparés' },
     { value: 98, max: 100, suffix: '%', unit: '%', label: 'Satisfaction client' }
   ];

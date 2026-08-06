@@ -66,7 +66,9 @@ export class Home implements OnInit {
   ];
 
   stats = [
-    { value: 5000, suffix: '+', max: 10000, unit: 'VÉHICULES', label: 'Véhicules réparés' },
+    { value: 18, suffix: '+', max: 25, unit: 'ANS', label: "Années d'expérience" },
+    { value: 5000, suffix: '+', max: 6000, unit: 'VOITURES', label: 'Véhicules réparés' },
+    { value: 98, suffix: '%', max: 100, unit: '%', label: 'Satisfaction client' }
   ];
 
   realisationsData: RealisationItem[] = [
