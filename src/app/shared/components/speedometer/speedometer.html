@@ -1,0 +1,121 @@
+<div class="speedometer-card" [class.is-visible]="isVisible" (mouseenter)="onMouseEnter()">
+  <!-- Vis cruciformes aux 4 coins -->
+  <app-bolt-corners variant="red" [size]="12" [offset]="6"></app-bolt-corners>
+
+  <!-- Speedometer Dial SVG -->
+  <div class="dial-container">
+    <svg viewBox="0 0 200 200" class="speedometer-svg" aria-hidden="true">
+      <defs>
+        <!-- Radial backlight glow -->
+        <radialGradient id="backlightGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ef1a1a" stop-opacity="0.35" />
+          <stop offset="65%" stop-color="#ef1a1a" stop-opacity="0.08" />
+          <stop offset="100%" stop-color="#0c2742" stop-opacity="0" />
+        </radialGradient>
+
+        <!-- Metallic bezel gradient -->
+        <linearGradient id="bezelGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="rgba(255, 255, 255, 0.25)" />
+          <stop offset="50%" stop-color="rgba(255, 255, 255, 0.05)" />
+          <stop offset="100%" stop-color="rgba(239, 26, 26, 0.3)" />
+        </linearGradient>
+
+        <!-- Needle gradient -->
+        <linearGradient id="needleGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+          <stop offset="0%" stop-color="#ef1a1a" />
+          <stop offset="100%" stop-color="#ff5c5c" />
+        </linearGradient>
+
+        <!-- Glow filter for needle and arc -->
+        <filter id="orangeGlow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="3.5" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+      </defs>
+
+      <!-- Background Glow Circle -->
+      <circle cx="100" cy="100" r="92" fill="url(#backlightGlow)" class="glow-circle" />
+
+      <!-- Outer Bezel Ring -->
+      <circle cx="100" cy="100" r="88" fill="none" stroke="url(#bezelGradient)" stroke-width="2" class="bezel-ring" />
+      <circle cx="100" cy="100" r="85" fill="#081b2e" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
+
+      <!-- Gauge Track Arc (-120deg to +120deg -> 240deg sweep) -->
+      <path
+        d="M 39.38 135 A 70 70 0 1 1 160.62 135"
+        fill="none"
+        stroke="rgba(255, 255, 255, 0.12)"
+        stroke-width="6"
+        stroke-linecap="round"
+      />
+
+      <!-- Active Illuminated Arc -->
+      <path
+        d="M 39.38 135 A 70 70 0 1 1 160.62 135"
+        fill="none"
+        stroke="#ef1a1a"
+        stroke-width="6"
+        stroke-linecap="round"
+        class="active-arc"
+        filter="url(#orangeGlow)"
+      />
+
+      <!-- Tick Marks -->
+      <g class="ticks-group">
+        <g *ngFor="let tick of ticks">
+          <line
+            x1="100"
+            y1="34"
+            x2="100"
+            [attr.y2]="tick.isMajor ? 44 : 39"
+            [attr.stroke]="tick.isMajor ? '#ef1a1a' : 'rgba(255,255,255,0.3)'"
+            [attr.stroke-width]="tick.isMajor ? 2.5 : 1.5"
+            [attr.transform]="'rotate(' + tick.angle + ' 100 100)'"
+            class="tick-line"
+          />
+          <text
+            *ngIf="tick.isMajor"
+            [attr.x]="tick.x"
+            [attr.y]="tick.y"
+            text-anchor="middle"
+            dominant-baseline="central"
+            class="tick-label">
+            {{ tick.label }}
+          </text>
+        </g>
+      </g>
+
+      <!-- Center Unit Tag -->
+      <text x="100" y="128" text-anchor="middle" class="unit-label">{{ unit }}</text>
+
+      <!-- Animated Needle -->
+      <g class="needle-group" [style.transform]="'rotate(' + needleAngle + 'deg)'">
+        <!-- Needle Shadow -->
+        <polygon points="98,100 102,100 100,24" fill="rgba(0,0,0,0.5)" transform="translate(2, 2)" />
+        <!-- Main Needle -->
+        <polygon points="97.5,100 102.5,100 100,22" fill="url(#needleGradient)" filter="url(#orangeGlow)" />
+        <!-- Red Tip Dot -->
+        <circle cx="100" cy="24" r="1.5" fill="#ffffff" />
+      </g>
+
+      <!-- Center Hub Cap -->
+      <circle cx="100" cy="100" r="14" fill="#0c2742" stroke="#ef1a1a" stroke-width="2.5" />
+      <circle cx="100" cy="100" r="6" fill="#ef1a1a" />
+    </svg>
+
+    <!-- Digital Display Screen inside/under the hub -->
+    <div class="lcd-display">
+      <span class="lcd-value">
+        <span class="prefix" *ngIf="prefix">{{ prefix }}</span>
+        {{ formatValue(displayedValue) }}
+        <span class="suffix" *ngIf="suffix">{{ suffix }}</span>
+      </span>
+    </div>
+  </div>
+
+  <!-- Stat Label -->
+  <div class="stat-meta">
+    <div class="accent-bar"></div>
+    <span class="stat-label">{{ label }}</span>
+  </div>
+</div>

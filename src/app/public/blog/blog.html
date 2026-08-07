@@ -1,0 +1,87 @@
+<section class="blog-hero">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+    <app-section-title 
+        mainTitle="Les bons réflexes"
+        highlightedText="pour mieux rouler."
+        subtitle="Le journal OAS"
+        align="left"
+        theme="dark"
+    ></app-section-title>
+    <p class="blog-lead">Conseils d’experts, entretien et actualités pour prendre soin de votre véhicule, au quotidien comme sur la route.</p>
+  </div>
+</section>
+
+<!-- Loader de chargement mécanique -->
+<div *ngIf="isLoading" class="loader-container">
+  <div class="gear-spinner">
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <path d="M50 25c-13.8 0-25 11.2-25 25s11.2 25 25 25 25-11.2 25-25-11.2-25-25-25zm0 40c-8.3 0-15-6.7-15-15s6.7-15 15-15 15 6.7 15 15-6.7 15-15 15z" fill="var(--color-oas-accent)"/>
+      <path d="M50 5c-3 0-5.5 2.5-5.5 5.5v4c0 3 2.5 5.5 5.5 5.5s5.5-2.5 5.5-5.5v-4C55.5 7.5 53 5 50 5zm0 70c-3 0-5.5 2.5-5.5 5.5v4c0 3 2.5 5.5 5.5 5.5s5.5-2.5 5.5-5.5v-4c0-3-2.5-5.5-5.5-5.5zM10.5 44.5h4c3 0 5.5-2.5 5.5-5.5s-2.5-5.5-5.5-5.5h-4c-3 0-5.5 2.5-5.5 5.5s2.5 5.5 5.5 5.5zm70 0h4c3 0 5.5-2.5 5.5-5.5s-2.5-5.5-5.5-5.5h-4c-3 0-5.5 2.5-5.5 5.5s2.5 5.5 5.5 5.5z" fill="var(--color-oas-accent)" />
+    </svg>
+  </div>
+  <p class="loader-text">DÉCODAGE DES DONNÉES...</p>
+</div>
+
+<main *ngIf="!isLoading" class="blog-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
+  <div class="section-heading"><div><p class="blog-eyebrow">{{ pageText.featuredEyebrow }}</p><h2>{{ pageText.featuredTitle }}</h2></div><span>{{ pageText.featuredSubtitle }}</span></div>
+ 
+  <section class="recent-grid" aria-label="Articles récents" *ngIf="articles.length">
+    <article class="featured-card" [class]="'featured-card cover-' + articles[0].cover" (click)="navigateToArticle(articles[0].id)">
+      <div class="featured-content">
+        <div class="article-meta"><span>{{ articles[0].category }}</span><time>{{ articles[0].date }}</time></div>
+        <h3>{{ articles[0].title }}</h3><p>{{ articles[0].excerpt }}</p>
+        <div class="card-footer"><span>{{ articles[0].readTime }}</span><a [routerLink]="['/blog', articles[0].id]" (click)="$event.stopPropagation()" aria-label="Lire l'article à la une">Lire l’article <b>↗</b></a></div>
+      </div>
+    </article>
+    <div class="recent-stack">
+      <a *ngFor="let article of recentArticles; trackBy: trackArticle" [routerLink]="['/blog', article.id]" class="compact-card hover:no-underline group">
+        <div class="compact-cover" [class]="'compact-cover cover-' + article.cover"><span>{{ article.category }}</span></div>
+        <div><time>{{ article.date }}</time><h3 class="group-hover:text-oas-accent transition-colors duration-300">{{ article.title }}</h3><p>{{ article.readTime }}</p></div>
+      </a>
+    </div>
+  </section>
+ 
+  <section id="articles" class="articles-section">
+    <div class="filters-row">
+      <div class="category-list" role="tablist" aria-label="Filtrer les articles">
+        <button *ngFor="let category of categories" type="button" (click)="selectCategory(category)" [class.active]="selectedCategory === category">{{ category }}</button>
+      </div>
+      <label class="search-field"><span class="sr-only">Rechercher un article</span><input type="search" [(ngModel)]="searchTerm" placeholder="Rechercher un article"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="6"></circle><path d="m16 16 4 4"></path></svg></label>
+    </div>
+ 
+    <div class="articles-intro"><div><p class="blog-eyebrow">{{ pageText.allArticlesEyebrow }}</p><h2>{{ pageText.allArticlesTitle }}</h2></div><p>{{ filteredArticles.length }} article{{ filteredArticles.length > 1 ? 's' : '' }} {{ pageText.allArticlesSubtitleSuffix }}</p></div>
+    <div *ngIf="filteredArticles.length; else noResults" class="article-grid">
+      <article *ngFor="let article of filteredArticles; trackBy: trackArticle" class="article-card" (click)="navigateToArticle(article.id)">
+        <div class="article-cover" [class]="'article-cover cover-' + article.cover"><span>{{ article.category }}</span></div>
+        <div class="article-body"><div class="article-meta plain"><time>{{ article.date }}</time><span>{{ article.readTime }}</span></div><h3>{{ article.title }}</h3><p>{{ article.excerpt }}</p><a [routerLink]="['/blog', article.id]" (click)="$event.stopPropagation()">Lire l’article <b>→</b></a></div>
+      </article>
+    </div>
+    <ng-template #noResults><div class="no-results"><strong>{{ pageText.noResultsTitle }}</strong><p>{{ pageText.noResultsDesc }}</p></div></ng-template>
+  </section>
+</main>
+
+<section class="py-24 lg:py-40 bg-oas-bg text-oas-navy-dark text-center relative overflow-hidden">
+  <!-- Mechanical gears interactif en filigrane d'arrière-plan (côté gauche) -->
+  <app-mechanical-gears [opacity]="0.15" [size]="480" class="absolute -left-12 -bottom-12 text-oas-navy-dark pointer-events-none"></app-mechanical-gears>
+
+  <div class="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+    <h1 class="text-[25vw] font-black tracking-tighter whitespace-nowrap">NEWSLETTER</h1>
+  </div>
+  <div class="relative z-10 max-w-3xl mx-auto px-6">
+    <app-section-title 
+      align="center"
+      theme="light"
+      [mainTitle]="pageText.newsletterTitleMain" 
+      [highlightedText]="pageText.newsletterTitleHighlight" 
+      [subtitle]="pageText.newsletterEyebrow">
+    </app-section-title>
+    <div class="mt-12">
+      <a href="mailto:contact@oas-atelier.sn?subject=Inscription%20newsletter" class="inline-flex items-center gap-4 px-10 py-5 bg-oas-navy-dark text-white hover:bg-white hover:text-oas-navy-dark transition-colors duration-300 text-sm font-bold tracking-[0.2em] uppercase shadow-2xl group">
+        {{ pageText.newsletterButton }}
+        <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </a>
+    </div>
+  </div>
+</section>

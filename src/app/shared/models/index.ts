@@ -12,3 +12,4 @@ export * from './stock.model';
 export * from './history.model';
 export * from './facture.model';
 export * from './rendezvous.model';
+export * from './partenaire.model';

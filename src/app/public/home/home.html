@@ -1,0 +1,399 @@
+<div class="bg-oas-navy-dark min-h-screen text-white selection:bg-oas-accent selection:text-white font-sans overflow-hidden">
+  
+  <!-- HERO SECTION -->
+  <section class="relative min-h-screen flex items-end pb-4 md:pb-4 px-6 md:px-12 lg:px-24">
+    <!-- Background Video -->
+    <div class="absolute inset-0 z-0">
+      <!-- Vidéo ultra-fiable (sans restriction 403) pour garantir l'affichage -->
+      <video 
+        autoplay 
+        loop 
+        muted 
+        playsinline 
+        poster="https://images.unsplash.com/photo-1469285994282-454ceb49e63c?q=80&w=2071&auto=format&fit=crop"
+        class="w-full h-full object-cover opacity-80"
+      >
+        <source src="https://assets.mixkit.co/videos/preview/mixkit-driving-on-a-highway-in-the-mountains-at-sunset-10020-large.mp4" type="video/mp4">
+      </video>
+      <!-- Subtle overlay just to make text readable -->
+      <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/30"></div>
+    </div>
+
+    <!-- Content (Bottom Left aligned like the screenshot) -->
+    <div class="relative z-10 w-full flex flex-col md:flex-row justify-between items-end animate-fade-in-up">
+      <!-- Bold Sans-Serif Title & Subtitle (Screenshot Style) -->
+      <div class="flex flex-col mb-1 md:mb-2">
+        <h1 class="font-sans font-black uppercase text-[10vw] md:text-[5vw] lg:text-[4.5vw] leading-[1.05] text-white tracking-tight mb-2 md:mb-4">
+          Vous conduisez. <br class="md:hidden" />Nous réparons.
+        </h1>
+        <p class="font-sans uppercase text-white/90 text-xs md:text-base lg:text-lg tracking-[0.2em] md:tracking-[0.25em] font-medium">
+          Diagnostic, Entretien & Mécanique de précision
+        </p>
+      </div>
+
+      <!-- Optional right side info (like scroll indicator) -->
+      <div class="hidden md:flex flex-col items-end text-white/70 mt-8 md:mt-0">
+        <span class="uppercase tracking-[0.3em] text-xs font-sans font-bold mb-4">Explorer</span>
+        <div class="w-px h-16 bg-white/30 relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-full h-1/2 bg-white animate-[bounce_2s_infinite]"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MARQUEE TEXT -->
+  <!-- <div class="py-12 bg-oas-accent text-white overflow-hidden flex whitespace-nowrap border-y border-white/10">
+    <div class="animate-marquee inline-flex gap-8 items-center">
+      <span class="text-6xl font-extrabold uppercase tracking-tighter">Diagnostic Auto</span>
+      <span class="text-4xl">✦</span>
+      <span class="text-6xl font-extrabold uppercase tracking-tighter opacity-50">Révision Complète</span>
+      <span class="text-4xl">✦</span>
+      <span class="text-6xl font-extrabold uppercase tracking-tighter">Entretien Moteur</span>
+      <span class="text-4xl">✦</span>
+      <span class="text-6xl font-extrabold uppercase tracking-tighter opacity-50">Climatisation</span>
+      <span class="text-4xl">✦</span>
+      <span class="text-6xl font-extrabold uppercase tracking-tighter">Freinage</span>
+      <span class="text-4xl">✦</span>
+      <span class="text-6xl font-extrabold uppercase tracking-tighter opacity-50">Amortisseurs</span>
+      <span class="text-4xl">✦</span>
+      <span class="text-6xl font-extrabold uppercase tracking-tighter">Diagnostic Auto</span>
+      <span class="text-4xl">✦</span>
+      <span class="text-6xl font-extrabold uppercase tracking-tighter opacity-50">Révision Complète</span>
+    </div>
+  </div> -->
+
+  <!-- PORQUOI NOUS (SIBIRI LAYOUT) -->
+  <section class="w-full py-20 lg:py-32 px-6 lg:px-12 bg-white text-oas-navy-dark border-b border-oas-line">
+      <div class="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-start">
+          
+          <!-- Title & Image -->
+          <div class="col-span-1">
+              <div class="w-full text-left mb-10">
+                <app-section-title
+                  align="left"
+                  theme="light"
+                  mainTitle="POURQUOI "
+                  highlightedText="OAS?"
+                  subtitle="À Propos de Notre Expertise">
+                </app-section-title>
+              </div>
+              
+              <div class="w-2/3 md:w-3/5 lg:w-1/2">
+                  <img src="mechanic_working.png" alt="Mécanicien OAS" class="w-full h-auto rounded object-cover filter grayscale hover:grayscale-0 transition-all duration-700 shadow-md" />
+              </div>
+          </div>
+
+          <!-- Main Text -->
+          <div class="col-span-1 md:pt-[110px]">
+              <p class="font-sans text-lg md:text-xl lg:text-2xl leading-relaxed text-gray-700 font-medium">
+                  <span class="text-oas-accent font-bold italic mr-1">Orient Auto Service</span> 
+                  est conçu pour l'exigence. Nous refusons le compromis, chaque intervention est traitée avec une minutie artisanale et des outils de pointe. Une sélection stricte des meilleurs composants du marché pour une longévité garantie. Des techniciens qui évoluent constamment avec les nouvelles technologies automobiles. Enfin, pas de coûts cachés : une clarté totale avant même d'ouvrir le capot.
+              </p>
+          </div>
+          
+      </div>
+  </section>
+
+  <!-- Tire Track Separator 1 -->
+  <div class="py-6 bg-white border-y border-oas-line overflow-hidden">
+    <app-tire-track [opacity]="0.65" rotation="-1.8deg" variant="horizontal" align="center"></app-tire-track>
+  </div>
+
+  <!-- SERVICES (STYLE 01) -->
+  <section class="py-32 bg-white text-oas-navy-dark">
+    <!-- Title (with padding) -->
+    <div class="px-4 md:px-8 lg:px-16 ">
+      <app-section-title 
+        align="left"
+        mainTitle="DÉCOUVREZ NOS" 
+        highlightedText="SERVICES." 
+        subtitle="Nos prestations">
+      </app-section-title>
+    </div>
+
+    <!-- Carousel (full bleed) -->
+    <div class="mt-4 h-[400px] md:h-[500px] w-full pt-4 overflow-hidden relative" style="-webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent); mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);">
+      <app-magnetic-carousel 
+        [items]="servicesImages"
+        [collapsedWidth]="220"
+        [hoverWidth]="380"
+        [gap]="8"
+        [influence]="250">
+      </app-magnetic-carousel>
+    </div>
+  </section>
+
+
+  <!-- Tire Track Separator 2 -->
+  <div class="py-4 bg-oas-navy-dark border-t border-white/10 overflow-hidden">
+    <app-tire-track [opacity]="0.4" rotation="1.6deg" variant="horizontal" align="center"></app-tire-track>
+  </div>
+
+  <!-- NOS CHIFFRES -->
+  <section class="py-24 bg-oas-navy-dark text-white border-y border-white/5 relative overflow-hidden">
+    <!-- Subtle Background Element -->
+    <div class="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
+      <span class="text-[25vw] font-black tracking-tighter whitespace-nowrap">CHIFFRES</span>
+    </div>
+    
+    <div class="relative z-10 px-6 md:px-12 lg:px-24">
+      <div class="w-full text-center mb-16">
+        <app-section-title 
+          align="center"
+          theme="dark"
+          mainTitle="NOTRE EXPERTISE EN " 
+          highlightedText="CHIFFRES." 
+          subtitle="Impact & Réalisations">
+        </app-section-title>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 max-w-[1200px] mx-auto">
+        @for (stat of stats; track stat.label) {
+          <app-speedometer
+            [value]="stat.value"
+            [suffix]="stat.suffix"
+            [max]="stat.max"
+            [unit]="stat.unit"
+            [label]="stat.label">
+          </app-speedometer>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- NOS RÉALISATIONS (GSAP HORIZONTAL GALLERY) -->
+  <app-horizontal-gallery 
+    [items]="realisationsData"
+    title="Nos réalisations"
+    subtitle="En vedette"
+    description="Découvrez nos derniers travaux, nos restaurations complètes et notre savoir-faire au quotidien. Plongez dans l'univers de notre atelier et laissez-vous convaincre par notre expertise technique.">
+  </app-horizontal-gallery>
+
+  <!-- TESTIMONIALS (MINIMAL GRID) -->
+  <section class="py-12 bg-white text-oas-navy-dark">
+    <div class=" px-6 md:px-12 lg:px-24">
+      <div class="flex flex-col md:flex-row justify-between items-end gap-8">
+        <div class="w-full text-left">
+          <app-section-title 
+            align="left"
+            mainTitle="LA VOIX DE NOS" 
+            highlightedText="CLIENTS." 
+            subtitle="Témoignages">
+          </app-section-title>
+        </div>
+      </div>
+
+      <!-- SWIPER CAROUSEL -->
+      <div class="mt-2 mb-16 pb-16 px-4 relative" style="-webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent); mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);">
+        <swiper-container
+          slides-per-view="1.2"
+          space-between="10"
+          loop="false"
+          pagination="true"
+          pagination-clickable="true"
+          mousewheel="true"
+          mousewheel-force-to-axis="true"
+          breakpoints='{"768": {"slidesPerView": 2.2, "spaceBetween": 15}, "1025": {"slidesPerView": 2.7, "spaceBetween": 20}, "1440": {"slidesPerView": 3.2, "spaceBetween": 25}, "1600": {"slidesPerView": 3.7, "spaceBetween": 30}}'
+          class="w-full pt-6 pb-36"
+        >
+          @for (item of testimonialsData; track item.id) {
+          <swiper-slide class="h-auto">
+            <!-- WRAPPER TO PREVENT CLIPPING -->
+            <div class="pt-24 pb-16 h-full">
+              <!-- CARD -->
+              <div class="bg-oas-info-bg px-6 pb-10 pt-20 text-center relative h-full flex flex-col">
+                <!-- Vis cruciformes aux 4 coins -->
+                <app-bolt-corners variant="dark" [size]="11" [offset]="5"></app-bolt-corners>
+                <!-- Profile Picture -->
+                <img [src]="item.imageSrc" class="w-40 h-40 rounded-full object-cover absolute -top-20 left-1/2 transform -translate-x-1/2 shadow-lg bg-white border-4 border-white z-10">
+                <!-- Quote Icon -->
+                <div class="text-oas-info text-5xl leading-none font-serif mb-4 flex justify-center mt-4">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9.983 3v7.391c0 5.704-3.731 9.57-8.983 10.609l-.995-2.151c2.432-.917 3.995-3.638 3.995-5.849h-4v-10h9.983zm14.017 0v7.391c0 5.704-3.748 9.571-9 10.609l-.996-2.151c2.433-.917 3.996-3.638 3.996-5.849h-3.983v-10h9.983z"/>
+                  </svg>
+                </div>
+                <!-- Name -->
+                <h4 class="text-lg font-bold text-oas-navy-dark mb-1">{{ item.author }}</h4>
+                <!-- Location -->
+                <p class="text-sm font-semibold text-oas-accent mb-4">{{ item.location }}</p>
+                <!-- Text -->
+                <p class="text-oas-muted text-sm leading-relaxed font-light grow">{{ item.text }}</p>
+              </div>
+            </div>
+          </swiper-slide>
+          }
+        </swiper-container>
+      </div>
+    </div>
+  </section>
+
+  <!-- MARKETPLACE BANNER -->
+  <section class="w-full py-24 px-6 lg:px-12 bg-oas-navy-dark text-white relative overflow-hidden">
+    <div class="absolute inset-0 z-0">
+      <img src="https://images.unsplash.com/photo-1549399542-7e3f8b79c341?q=80&w=2070&auto=format&fit=crop" alt="Marketplace" class="w-full h-full object-cover opacity-10">
+      <div class="absolute inset-0 bg-gradient-to-r from-oas-navy-dark via-oas-navy-dark/90 to-transparent"></div>
+    </div>
+    
+    <div class="max-w-[1400px] mx-auto relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
+      <div class="w-full md:w-2/3">
+        <app-section-title 
+          align="left"
+          theme="dark"
+          mainTitle="DÉCOUVREZ NOTRE " 
+          highlightedText="MARKETPLACE." 
+          subtitle="Véhicules & Pièces d'exception">
+        </app-section-title>
+        <p class="mt-6 text-white/80 text-lg leading-relaxed max-w-xl">
+          Trouvez le véhicule de vos rêves ou la pièce détachée qu'il vous manque. Des produits exclusifs, rigoureusement contrôlés par nos experts.
+        </p>
+      </div>
+      <div class="w-full md:w-1/3 flex justify-start md:justify-end">
+        <a routerLink="/marketplace" class="inline-flex items-center gap-4 px-10 py-5 bg-oas-accent text-white hover:bg-oas-accent-dark transition-colors duration-300 text-sm font-bold tracking-[0.2em] uppercase shadow-2xl group">
+          Visiter la boutique
+          <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- BLOG PREVIEW SECTION -->
+  <app-blog-preview 
+    [articles]="blogArticles"
+    [title]="blogTitle"
+    [subtitle]="blogSubtitle"
+    [description]="blogDescription">
+  </app-blog-preview>
+
+  <!-- Tire Track Separator 3 -->
+  <div class="py-4 bg-oas-navy-dark border-t border-white/10 overflow-hidden">
+    <app-tire-track [opacity]="0.35" rotation="-2.2deg" variant="horizontal" align="center"></app-tire-track>
+  </div>
+
+  <!-- PARTENAIRES -->
+  <section class="bg-oas-navy-dark py-32 text-white border-y border-white/5 overflow-hidden relative">
+    <!-- Jerrycan interactif en filigrane d'arrière-plan (grand format) -->
+    <app-jerrycan [opacity]="0.08" [size]="550" class="absolute -right-24 -bottom-24 text-white pointer-events-none z-0"></app-jerrycan>
+
+    <div class="relative flex w-full flex-col-reverse text-center mb-8 z-10">
+      <h2 class="uppercase font-extrabold text-balance text-4xl md:text-6xl lg:text-7xl block tracking-tighter">
+        Ils nous font <em class="text-oas-accent not-italic">confiance.</em>
+      </h2>
+      <span class="w-full rotate-[-2deg] font-serif italic text-center text-oas-accent mb-2 xl:mb-4 text-2xl lg:text-4xl opacity-80">
+        Nos Partenaires
+      </span>
+    </div>
+    <div class="text-center flex justify-center mb-20">
+      <p class="text-oas-faint max-w-2xl mx-auto text-lg leading-relaxed text-center px-6">
+        Nous collaborons avec les équipementiers les plus prestigieux pour vous garantir une qualité de réparation absolue.
+      </p>
+    </div>
+
+    <div class="relative w-full overflow-hidden mt-16 pb-8 border-y border-white/10 pt-8 bg-black/20">
+      <div class="flex group">
+        <!-- Première bande -->
+        <div class="flex shrink-0 min-w-full animate-marquee items-center justify-around gap-16 md:gap-32 px-8 group-hover:[animation-play-state:paused]">
+          @for (partner of partners; track partner.name) {
+          <div class="flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity duration-300">
+            <img [src]="partner.logoUrl" [class]="partner.heightClass + ' object-contain'" [alt]="partner.name">
+          </div>
+          }
+        </div>
+        <!-- Deuxième bande identique pour le scroll infini -->
+        <div class="flex shrink-0 min-w-full animate-marquee items-center justify-around gap-16 md:gap-32 px-8 group-hover:[animation-play-state:paused]" aria-hidden="true">
+          @for (partner of partners; track partner.name) {
+          <div class="flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity duration-300">
+            <img [src]="partner.logoUrl" [class]="partner.heightClass + ' object-contain'" [alt]="partner.name">
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center mt-4 mb-16">
+      <a routerLink="/contact" class="inline-flex items-center gap-4 px-8 py-4 rounded-0 border border-white/20 hover:border-oas-accent hover:text-oas-accent transition-colors text-xs uppercase tracking-[0.2em] font-bold">
+        Vous pouvez aussi y figurer
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- FOURNISSEURS -->
+  <section class="bg-oas-navy-dark py-32 text-white border-b border-white/5 overflow-hidden relative">
+    <div class="relative flex w-full flex-col-reverse text-center mb-8 z-10">
+      <h2 class="uppercase font-extrabold text-balance text-4xl md:text-6xl lg:text-7xl block tracking-tighter">
+        Nos fournisseurs <em class="text-oas-accent not-italic">de qualité.</em>
+      </h2>
+      <span class="w-full rotate-[-2deg] font-serif italic text-center text-oas-accent mb-2 xl:mb-4 text-2xl lg:text-4xl opacity-80">
+        Nos Fournisseurs
+      </span>
+    </div>
+    <div class="text-center flex justify-center mb-20">
+      <p class="text-oas-faint max-w-2xl mx-auto text-lg leading-relaxed text-center px-6">
+        Nous sélectionnons rigoureusement nos fournisseurs pour vous offrir les meilleures pièces et matériaux du marché.
+      </p>
+    </div>
+
+    <div class="relative w-full overflow-hidden mt-16 pb-8 border-y border-white/10 pt-8 bg-black/20">
+      <div class="flex group">
+        <!-- Première bande -->
+        <div class="flex shrink-0 min-w-full animate-marquee items-center justify-around gap-16 md:gap-32 px-8 group-hover:[animation-play-state:paused]">
+          @for (fournisseur of fournisseurs; track fournisseur.id) {
+          <div class="flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity duration-300">
+            <h3 class="text-2xl font-bold uppercase tracking-wider">{{ fournisseur.nomEntreprise }}</h3>
+          </div>
+          }
+        </div>
+        <!-- Deuxième bande identique pour le scroll infini -->
+        <div class="flex shrink-0 min-w-full animate-marquee items-center justify-around gap-16 md:gap-32 px-8 group-hover:[animation-play-state:paused]" aria-hidden="true">
+          @for (fournisseur of fournisseurs; track fournisseur.id) {
+          <div class="flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity duration-300">
+            <h3 class="text-2xl font-bold uppercase tracking-wider">{{ fournisseur.nomEntreprise }}</h3>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA FINAL (FULLSCREEN VIBE) -->
+  <section class="py-24 lg:py-40 bg-oas-bg text-oas-navy-dark text-center relative overflow-hidden">
+    <!-- Mechanical Gears interactif en filigrane d'arrière-plan -->
+    <app-mechanical-gears [opacity]="0.15" [size]="480" class="absolute -right-12 -bottom-12 text-oas-navy-dark pointer-events-none"></app-mechanical-gears>
+
+    <div class="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+      <h1 class="text-[30vw] font-black tracking-tighter whitespace-nowrap">CONTACT</h1>
+    </div>
+    <div class="relative z-10 max-w-3xl mx-auto px-6">
+      <app-section-title 
+        align="center"
+        theme="light"
+        mainTitle="FAITES LE PREMIER PAS VERS L'" 
+        highlightedText="EXCELLENCE." 
+        subtitle="Contactez-nous">
+      </app-section-title>
+      <div class="mt-12">
+        <a routerLink="/rdv" class="inline-flex items-center gap-4 px-10 py-5 bg-oas-navy-dark text-white hover:bg-white hover:text-oas-navy-dark transition-colors duration-300 text-sm font-bold tracking-[0.2em] uppercase shadow-2xl group">
+          Prendre rendez-vous
+          <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<style>
+/* Custom text stroke effect for tailwind */
+.text-stroke {
+  -webkit-text-stroke: 1px currentColor;
+}
+.text-stroke-oas-accent {
+  -webkit-text-stroke-color: var(--color-oas-accent);
+}
+</style>

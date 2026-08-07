@@ -1,0 +1,172 @@
+<!-- Loader de chargement mécanique -->
+<div *ngIf="isLoading" class="loader-container">
+  <div class="gear-spinner">
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <path d="M50 25c-13.8 0-25 11.2-25 25s11.2 25 25 25 25-11.2 25-25-11.2-25-25-25zm0 40c-8.3 0-15-6.7-15-15s6.7-15 15-15 15 6.7 15 15-6.7 15-15 15z" fill="var(--color-oas-accent)"/>
+      <path d="M50 5c-3 0-5.5 2.5-5.5 5.5v4c0 3 2.5 5.5 5.5 5.5s5.5-2.5 5.5-5.5v-4C55.5 7.5 53 5 50 5zm0 70c-3 0-5.5 2.5-5.5 5.5v4c0 3 2.5 5.5 5.5 5.5s5.5-2.5 5.5-5.5v-4c0-3-2.5-5.5-5.5-5.5zM10.5 44.5h4c3 0 5.5-2.5 5.5-5.5s-2.5-5.5-5.5-5.5h-4c-3 0-5.5 2.5-5.5 5.5s2.5 5.5 5.5 5.5zm70 0h4c3 0 5.5-2.5 5.5-5.5s-2.5-5.5-5.5-5.5h-4c-3 0-5.5 2.5-5.5 5.5s2.5 5.5 5.5 5.5z" fill="var(--color-oas-accent)" />
+    </svg>
+  </div>
+  <p class="loader-text">DÉCODAGE DES DONNÉES...</p>
+</div>
+
+<!-- Contenu de l'article -->
+<div *ngIf="!isLoading && article" class="article-detail-page bg-oas-navy-dark min-h-screen text-white pb-24">
+  
+  <!-- Hero Header -->
+  <section class="relative py-20 md:py-32 border-b border-white/10 overflow-hidden bg-oas-navy-dark">
+    <div class="max-w-4xl mx-auto px-6 relative z-10">
+      <a routerLink="/blog" class="back-link flex items-center gap-2 text-oas-accent hover:text-white transition-colors duration-300 font-bold uppercase tracking-wider text-xs mb-8">
+        <span>←</span> RETOUR AUX ARTICLES
+      </a>
+      
+      <div class="article-meta mb-6">
+        <span class="category-badge">{{ article.category }}</span>
+        <time class="text-white/60 text-sm ml-4">{{ formatDate(article.datePublication) }}</time>
+        <span class="text-white/40 text-sm ml-4">•</span>
+        <span class="text-white/60 text-sm ml-4">{{ article.readTime }}</span>
+      </div>
+
+      <h1 class="text-4xl md:text-5xl lg:text-6xl font-sans font-black uppercase tracking-tight leading-none mb-6">
+        {{ article.title }}
+      </h1>
+      
+      <p class="text-xl text-white/80 leading-relaxed font-medium max-w-3xl">
+        {{ article.metaDescription }}
+      </p>
+    </div>
+  </section>
+
+  <!-- Article Cover Image & Content -->
+  <main class="max-w-4xl mx-auto px-6 mt-12">
+    <!-- Image Card with Bolts -->
+    <div class="relative w-full aspect-[16/9] mb-12 border border-white/10 bg-black/40 relative overflow-hidden">
+      <!-- Vis cruciformes aux 4 coins -->
+      <app-bolt-corners variant="light" [size]="14" [offset]="8"></app-bolt-corners>
+      <img 
+        [src]="getArticleImage(article.images)" 
+        [alt]="article.title"
+        class="w-full h-full object-cover opacity-90"
+      />
+    </div>
+
+    <!-- Article Body Text -->
+    <article class="prose prose-invert max-w-none text-white/95 leading-loose text-lg font-sans space-y-6 pb-12 border-b border-white/10">
+      <p class="whitespace-pre-line">{{ article.description }}</p>
+    </article>
+
+    <!-- Section Likes & Feedback -->
+    <section class="py-8 flex items-center justify-between border-b border-white/10 mb-12">
+      <div class="flex items-center gap-4">
+        <button 
+          (click)="toggleLike()" 
+          class="like-button flex items-center gap-2 px-5 py-3 border border-white/10 uppercase tracking-wider text-xs font-bold transition-all duration-300 relative overflow-hidden"
+          [class.liked]="hasLiked"
+        >
+          <!-- Utilisation d'un SVG de clé plate mécanique à la place d'un cœur pour rester mécanique -->
+          <svg class="w-4 h-4 fill-current transition-transform duration-300" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19.78 10.22A9 9 0 0 0 7.25 4.5l1.65 1.65a5.5 5.5 0 0 1 7.78 0c.2.2.3.4.4.7l-4.7 4.7-2.82-2.83-1.42 1.42 4.24 4.24 6.12-6.12a5.5 5.5 0 0 1 1.28 1.96zm-9.9 5.66-4.24-4.24-1.42 1.42 2.83 2.82-4.7 4.7a5.5 5.5 0 0 1-.7-.4 5.5 5.5 0 0 1 0-7.78l1.65 1.65a9 9 0 0 0 5.72 12.53l1.58-1.58z"/>
+          </svg>
+          {{ hasLiked ? 'AIMÉ !' : 'APPROUVER L\'ARTICLE' }}
+        </button>
+        <span class="text-white/60 text-xs tracking-wider font-bold">
+          {{ likesCount }} {{ likesCount > 1 ? 'RECOMMANDATIONS' : 'RECOMMANDATION' }}
+        </span>
+      </div>
+      
+      <button 
+        (click)="copyLink()"
+        class="text-white/40 hover:text-white text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-2 cursor-pointer"
+        [class.text-oas-ok]="linkCopied"
+      >
+        <svg *ngIf="!linkCopied" class="w-4 h-4 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92z"/>
+        </svg>
+        <svg *ngIf="linkCopied" class="w-4 h-4 fill-current text-oas-ok" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+        </svg>
+        {{ linkCopied ? 'LIEN COPIÉ !' : 'Partager ce conseil' }}
+      </button>
+    </section>
+
+    <!-- Section Commentaires -->
+    <section class="comments-section">
+      <h3 class="text-xl font-sans font-black uppercase tracking-wider mb-8 text-white">
+        ZONE DE DISCUSSION ({{ comments.length }})
+      </h3>
+
+      <!-- Formulaire de commentaire -->
+      <form (submit)="submitComment($event)" class="comment-form mb-12 space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="flex flex-col gap-2">
+            <label for="author" class="text-xs font-bold uppercase tracking-wider text-white/50">Votre Nom / Pseudo</label>
+            <input 
+              id="author"
+              type="text" 
+              [(ngModel)]="newCommentAuthor" 
+              name="author"
+              required
+              placeholder="ex: Jean-Marc" 
+              class="form-input"
+            />
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label for="content" class="text-xs font-bold uppercase tracking-wider text-white/50">Votre Message</label>
+          <textarea 
+            id="content"
+            [(ngModel)]="newCommentContent" 
+            name="content"
+            required
+            rows="4" 
+            placeholder="Écrivez votre commentaire ici..." 
+            class="form-input resize-none"
+          ></textarea>
+        </div>
+
+        <button 
+          type="submit" 
+          [disabled]="!newCommentAuthor.trim() || !newCommentContent.trim()"
+          class="submit-button py-3 px-6 bg-oas-accent hover:bg-oas-accent-dark text-white uppercase text-xs font-bold tracking-widest transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          POSTER LA NOTE
+        </button>
+      </form>
+
+      <!-- Liste des commentaires -->
+      <div class="comments-list space-y-6">
+        <div *ngFor="let comment of paginatedComments" class="comment-card p-6 border border-white/10 relative overflow-hidden bg-white/[0.02]">
+          <!-- Micro-boulon dans le coin supérieur droit pour rester dans le thème -->
+          <div class="absolute top-2 right-2 w-2 h-2 rounded-full bg-white/20 border border-white/40"></div>
+          
+          <div class="flex justify-between items-start mb-4">
+            <strong class="text-sm font-black uppercase tracking-wider text-oas-accent">{{ comment.author }}</strong>
+            <span class="text-xs text-white/40">{{ comment.date }}</span>
+          </div>
+          <p class="text-white/80 leading-relaxed text-sm whitespace-pre-line">{{ comment.content }}</p>
+        </div>
+      </div>
+
+      <!-- Pagination des commentaires -->
+      <app-pagination 
+        *ngIf="comments.length > 0"
+        [page]="currentPage"
+        [totalPages]="totalPages"
+        [total]="comments.length"
+        [pageSize]="pageSize"
+        (prev)="onPrevPage()"
+        (next)="onNextPage()"
+        class="mt-8 block"
+      ></app-pagination>
+    </section>
+  </main>
+</div>
+
+<!-- Cas d'article introuvable -->
+<div *ngIf="!isLoading && !article" class="error-container bg-oas-navy-dark min-h-screen text-white flex flex-col items-center justify-center p-6">
+  <h2 class="text-2xl font-black uppercase mb-4 text-oas-accent">Article introuvable</h2>
+  <p class="text-white/60 mb-8">L'article demandé semble avoir été démonté ou n'existe pas.</p>
+  <a routerLink="/blog" class="px-6 py-3 bg-oas-accent text-white uppercase font-bold tracking-wider hover:bg-oas-accent-dark transition-colors duration-300">
+    Retour au blog
+  </a>
+</div>

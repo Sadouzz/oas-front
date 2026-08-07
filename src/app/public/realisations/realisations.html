@@ -1,0 +1,254 @@
+<section class="realisations-page">
+
+  <!-- HERO SECTION SLIDER -->
+  <section class="relative w-full" style="height: 70vh; min-height: 500px;">
+    <swiper-container autoplay-delay="4500" autoplay-disable-on-interaction="false" pagination="true" class="w-full h-full" style="--swiper-navigation-color: #ef1a1a; --swiper-pagination-color: #ef1a1a; height: 100%;">
+      
+      <!-- Slide 1 -->
+      <swiper-slide class="relative w-full h-full flex items-center justify-start px-6 md:px-12 lg:px-24">
+        <div class="absolute inset-0 z-0 bg-cover bg-center" style="background-image: radial-gradient(rgba(255,255,255,.14) 1.4px, transparent 1.4px), linear-gradient(135deg, var(--color-oas-navy) 0%, var(--color-oas-navy-dark) 100%);">
+          <div class="absolute inset-0 bg-gradient-to-t from-oas-navy-dark/90 via-oas-navy-dark/40 to-transparent"></div>
+        </div>
+        <div class="relative z-10 max-w-2xl text-left">
+          <app-section-title
+            mainTitle="Le travail bien fait,"
+            highlightedText="ça se voit."
+            subtitle="Nos réalisations"
+            align="left"
+            theme="dark"
+          ></app-section-title>
+          <p class="text-white/80 leading-relaxed mt-4 mb-8">
+            Ateliers, véhicules, transformations : découvrez en images le soin que nous apportons à chaque véhicule qui passe entre nos mains.
+          </p>
+          <div class="flex gap-4">
+            <a routerLink="/rdv" class="btn-primary">Prendre rendez-vous</a>
+          </div>
+        </div>
+      </swiper-slide>
+
+      <!-- Slide 2 -->
+      <swiper-slide class="relative w-full h-full flex items-center justify-start px-6 md:px-12 lg:px-24">
+        <div class="absolute inset-0 z-0 bg-cover bg-center" style="background-image: radial-gradient(rgba(255,255,255,.14) 1.4px, transparent 1.4px), linear-gradient(135deg, var(--color-oas-navy) 0%, var(--color-oas-navy-dark) 100%);">
+          <div class="absolute inset-0 bg-gradient-to-t from-oas-navy-dark/90 via-oas-navy-dark/40 to-transparent"></div>
+        </div>
+        <div class="relative z-10 max-w-2xl text-left">
+          <app-section-title
+            mainTitle="Diagnostic de précision"
+            highlightedText="au millième."
+            subtitle="Atelier de Pointe"
+            align="left"
+            theme="dark"
+          ></app-section-title>
+          <p class="text-white/80 leading-relaxed mt-4 mb-8">
+            Nos équipements électroniques de dernière génération nous permettent de déceler les moindres anomalies en un temps record.
+          </p>
+          <div class="flex gap-4">
+            <a routerLink="/rdv" class="btn-primary">Prendre rendez-vous</a>
+          </div>
+        </div>
+      </swiper-slide>
+
+    </swiper-container>
+  </section>
+
+  <!-- CHIFFRES CLÉS -->
+  <section class="py-24 bg-oas-navy-dark text-white relative overflow-hidden">
+    <!-- Texte géant en filigrane d'arrière-plan -->
+    <div class="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
+      <span class="text-[25vw] font-black tracking-tighter whitespace-nowrap">CHIFFRES</span>
+    </div>
+    
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div class="mb-16 text-center">
+        <app-section-title
+          mainTitle="Des chiffres qui"
+          highlightedText="parlent d’eux-mêmes."
+          subtitle="Notre engagement"
+          align="center"
+          theme="dark"
+        ></app-section-title>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 max-w-[1200px] mx-auto">
+        <div *ngFor="let stat of statistiques">
+          <app-speedometer
+            [value]="stat.value"
+            [suffix]="stat.suffix"
+            [max]="stat.max"
+            [unit]="stat.unit"
+            [label]="stat.label"
+          ></app-speedometer>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tire Track Separator -->
+  <div class="py-4 bg-oas-bg border-t border-oas-line overflow-hidden">
+    <app-tire-track [opacity]="0.45" rotation="1.7deg" variant="horizontal" align="center"></app-tire-track>
+  </div>
+
+  <!-- GALERIE FILTRABLE -->
+  <section class="gallery-section">
+    <div class="container">
+
+      <div class="mb-12">
+        <app-section-title
+          mainTitle="Un aperçu de"
+          highlightedText="notre quotidien."
+          subtitle="Galerie"
+          align="center"
+          theme="light"
+        ></app-section-title>
+      </div>
+
+      <div class="gallery-filters" role="tablist" aria-label="Filtrer la galerie">
+        <button
+          *ngFor="let filter of filters"
+          type="button"
+          class="filter-btn"
+          [class.active]="activeFilter === filter.key"
+          (click)="setFilter(filter.key)">
+          {{ filter.label }}
+        </button>
+      </div>
+
+      <div class="gallery-grid">
+        <figure class="gallery-card" *ngFor="let item of filteredGallery">
+          <app-bolt-corners variant="light" [size]="11" [offset]="5"></app-bolt-corners>
+          <img [src]="item.src" [alt]="item.title" loading="lazy">
+          <figcaption>{{ item.title }}</figcaption>
+        </figure>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- AVANT / APRÈS (FLIP CARDS) -->
+  <section class="before-after-section">
+    <div class="container">
+
+      <div class="mb-12">
+        <app-section-title
+          mainTitle="La transformation,"
+          highlightedText="en un coup d’œil."
+          subtitle="Avant / Après"
+          align="center"
+          theme="light"
+        ></app-section-title>
+        <p class="text-center text-oas-muted mt-4 text-sm font-medium">Survolez l'image pour voir le résultat après notre intervention.</p>
+      </div>
+
+      <div class="before-after-grid">
+        <div class="flip-card-container" *ngFor="let item of beforeAfterItems">
+          <!-- Vis cruciformes aux 4 coins de chaque flip card -->
+          <app-bolt-corners variant="dark" [size]="12" [offset]="6"></app-bolt-corners>
+          <div class="flip-card-inner">
+            
+            <!-- FRONT (AVANT) -->
+            <div class="flip-card-front">
+              <div class="flip-card-image">
+                <img [src]="item.before" [alt]="'Avant — ' + item.title">
+                <span class="ba-tag ba-tag-before">Avant</span>
+              </div>
+              <div class="flip-card-content">
+                <h3>{{ item.title }}</h3>
+                <p class="text-oas-accent font-bold text-sm mt-1">Tournez la carte pour voir le résultat ⤵</p>
+              </div>
+            </div>
+
+            <!-- BACK (APRÈS) -->
+            <div class="flip-card-back">
+              <div class="flip-card-image">
+                <img [src]="item.after" [alt]="'Après — ' + item.title">
+                <span class="ba-tag ba-tag-after">Après</span>
+              </div>
+              <div class="flip-card-content">
+                <h3>Résultat final</h3>
+                <p>{{ item.description }}</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- TÉMOIGNAGES -->
+  <section class="py-12 bg-white text-oas-navy-dark">
+    <div class="px-6 md:px-12 lg:px-24">
+
+      <div class="w-full text-left">
+        <app-section-title
+          align="left"
+          mainTitle="LA VOIX DE NOS"
+          highlightedText="CLIENTS."
+          subtitle="Témoignages">
+        </app-section-title>
+      </div>
+
+      <div class="mt-2 mb-16 pb-16 px-4 relative" style="-webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent); mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);">
+        <swiper-container
+          slides-per-view="1.2"
+          space-between="10"
+          loop="false"
+          pagination="true"
+          pagination-clickable="true"
+          mousewheel="true"
+          mousewheel-force-to-axis="true"
+          breakpoints='{"768": {"slidesPerView": 2.2, "spaceBetween": 15}, "1025": {"slidesPerView": 2.7, "spaceBetween": 20}, "1440": {"slidesPerView": 3, "spaceBetween": 25}}'
+          class="w-full pt-6 pb-36"
+        >
+          @for (item of testimonials; track item.id) {
+          <swiper-slide class="h-auto">
+            <div class="pt-24 pb-16 h-full">
+              <div class="bg-oas-info-bg px-6 pb-10 pt-20 text-center relative h-full flex flex-col">
+                <!-- Vis cruciformes aux 4 coins -->
+                <app-bolt-corners variant="dark" [size]="11" [offset]="5"></app-bolt-corners>
+                <img [src]="item.imageSrc" class="w-40 h-40 rounded-full object-cover absolute -top-20 left-1/2 transform -translate-x-1/2 shadow-lg bg-white border-4 border-white z-10">
+                <div class="text-oas-info text-5xl leading-none font-serif mb-4 flex justify-center mt-4">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9.983 3v7.391c0 5.704-3.731 9.57-8.983 10.609l-.995-2.151c2.432-.917 3.995-3.638 3.995-5.849h-4v-10h9.983zm14.017 0v7.391c0 5.704-3.748 9.571-9 10.609l-.996-2.151c2.433-.917 3.996-3.638 3.996-5.849h-3.983v-10h9.983z"/>
+                  </svg>
+                </div>
+                <h4 class="text-lg font-bold text-oas-navy-dark mb-1">{{ item.author }}</h4>
+                <p class="text-sm font-semibold text-oas-accent mb-4">{{ item.location }}</p>
+                <p class="text-oas-muted text-sm leading-relaxed font-light grow">{{ item.text }}</p>
+              </div>
+            </div>
+          </swiper-slide>
+          }
+        </swiper-container>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="py-24 lg:py-40 bg-oas-bg text-oas-navy-dark text-center relative overflow-hidden">
+    <!-- Jerrycan interactif en filigrane d'arrière-plan -->
+    <app-jerrycan [opacity]="0.25" [size]="480" class="absolute -right-8 -bottom-8 text-oas-navy-dark pointer-events-none"></app-jerrycan>
+
+    <div class="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+      <h1 class="text-[25vw] font-black tracking-tighter whitespace-nowrap">RÉALISATIONS</h1>
+    </div>
+    <div class="relative z-10 max-w-3xl mx-auto px-6">
+      <app-section-title
+        align="center"
+        theme="light"
+        mainTitle="VOTRE VÉHICULE MÉRITE"
+        highlightedText="LE MÊME SOIN."
+        subtitle="Prêt à nous confier votre voiture ?">
+      </app-section-title>
+      <div class="mt-12">
+        <a routerLink="/devis" class="inline-flex items-center gap-4 px-10 py-5 bg-oas-navy-dark text-white hover:bg-white hover:text-oas-navy-dark transition-colors duration-300 text-sm font-bold tracking-[0.2em] uppercase shadow-2xl group">
+          Demander un devis
+          <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+</section>
