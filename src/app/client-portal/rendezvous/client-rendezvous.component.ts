@@ -50,6 +50,7 @@ export class ClientRendezVousComponent implements OnInit {
   saving = false;
   successMessage = '';
   errorMessage = '';
+  modalErrorMessage = '';
 
   searchTerm = '';
   statutFilter = '';
@@ -58,7 +59,7 @@ export class ClientRendezVousComponent implements OnInit {
   form: FormGroup = this.fb.group({
     dateRendezVous: ['', Validators.required],
     motif: ['', Validators.required],
-    vehiculeId: [null],
+    vehiculeId: [null, Validators.required],
     garageId: [null, Validators.required]
   });
 
@@ -116,6 +117,7 @@ export class ClientRendezVousComponent implements OnInit {
 
   openCreate(): void {
     this.form.reset();
+    this.modalErrorMessage = '';
     this.showCreateModal = true;
   }
 
@@ -126,11 +128,12 @@ export class ClientRendezVousComponent implements OnInit {
   save(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.modalErrorMessage = "Veuillez remplir tous les champs obligatoires.";
       return;
     }
 
     this.saving = true;
-    this.errorMessage = '';
+    this.modalErrorMessage = '';
 
     this.service.create(this.form.value).subscribe({
       next: () => {
@@ -142,7 +145,8 @@ export class ClientRendezVousComponent implements OnInit {
       },
       error: (err: any) => {
         this.saving = false;
-        this.errorMessage = err.error?.message || "Une erreur est survenue lors de l'envoi de la demande.";
+        const msg = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.modalErrorMessage = msg || "Une erreur est survenue lors de l'envoi de la demande.";
       },
     });
   }
