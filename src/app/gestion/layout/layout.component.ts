@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { AuthService } from '../auth/services/auth.service';
 import { AgentNotificationService } from '../../core/services/agent-notification.service';
 import { AgentNotification } from '../../shared/models/agent-notification.model';
+import { GarageContextService } from '../../core/services/garage-context.service';
 import { filter, Subscription } from 'rxjs';
 import {
   LucideHouse,
@@ -29,6 +30,7 @@ import {
 export class LayoutComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private notificationService = inject(AgentNotificationService);
+  private garageContext = inject(GarageContextService);
   private router = inject(Router);
   private routerSub?: Subscription;
   private notificationInterval: any;
@@ -36,6 +38,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
   openSection: string | null = null;
   notificationsOpen = false;
   notifications: AgentNotification[] = [];
+  
+  activeGarageName: string | null = null;
   
   get unreadCount(): number {
     return this.notifications.filter(n => !n.lu).length;
@@ -120,6 +124,19 @@ export class LayoutComponent implements OnInit, OnDestroy {
     this.notificationInterval = setInterval(() => {
       this.loadNotifications();
     }, 10000);
+
+    this.garageContext.activeGarageId$.subscribe(id => {
+      if (id) {
+        this.activeGarageName = this.garageContext.getActiveGarageName();
+      } else {
+        this.activeGarageName = null;
+      }
+    });
+  }
+
+  leaveGarage() {
+    this.garageContext.leaveGarage();
+    this.router.navigate(['/dashboard'], { replaceUrl: true });
   }
 
   ngOnDestroy() {

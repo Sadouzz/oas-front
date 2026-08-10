@@ -4,11 +4,18 @@ import { Observable, tap } from 'rxjs';
 import { jwtDecode } from 'jwt-decode';
 import { environment } from '../../../environments/environment';
 import { AuthResponse, LoginRequest, RegisterRequest } from '../../shared/models';
+import { Router } from '@angular/router';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
+  private router = inject(Router);
   private api = `${environment.apiUrl}/api/auth`;
+  private expirationTimer: any;
+
+  constructor() {
+    this.scheduleAutoLogout();
+  }
 
   login(credentials: LoginRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.api}/signin`, credentials).pipe(
@@ -16,6 +23,7 @@ export class AuthService {
         localStorage.setItem('token', response.token);
         localStorage.setItem('username', response.username);
         localStorage.setItem('role', response.role);
+        this.scheduleAutoLogout();
       })
     );
   }
@@ -29,6 +37,7 @@ export class AuthService {
     localStorage.removeItem('token');
     localStorage.removeItem('username');
     localStorage.removeItem('role');
+    this.clearAutoLogoutTimer();
   }
 
   getToken(): string | null {
@@ -45,11 +54,43 @@ export class AuthService {
     try {
       const { exp } = jwtDecode<{ exp: number }>(token);
       const valid = Date.now() < exp * 1000;
-      if (!valid) this.logout();
+      if (!valid) {
+        this.logout();
+      }
       return valid;
     } catch {
       this.logout();
       return false;
+    }
+  }
+
+  private scheduleAutoLogout() {
+    const token = this.getToken();
+    if (!token) return;
+
+    try {
+      const { exp } = jwtDecode<{ exp: number }>(token);
+      const expiresIn = (exp * 1000) - Date.now();
+
+      this.clearAutoLogoutTimer();
+
+      if (expiresIn > 0) {
+        this.expirationTimer = setTimeout(() => {
+          this.logout();
+          this.router.navigate(['/login'], { replaceUrl: true });
+        }, expiresIn);
+      } else {
+        this.logout();
+      }
+    } catch {
+      this.logout();
+    }
+  }
+
+  private clearAutoLogoutTimer() {
+    if (this.expirationTimer) {
+      clearTimeout(this.expirationTimer);
+      this.expirationTimer = null;
     }
   }
 
@@ -76,3 +117,4 @@ export class AuthService {
     return { username, role };
   }
 }
+

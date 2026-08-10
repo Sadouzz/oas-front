@@ -11,7 +11,6 @@ import { SparksCanvasComponent } from './shared/components/sparks-canvas/sparks-
   imports: [
     RouterOutlet,
     CookiePopupComponent,
-    WrenchCursorComponent,
     RouteLoaderComponent,
     SparksCanvasComponent
   ],

@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UserManagementService } from '../../../services/user-management.service';
+import { GarageService } from '../../../services/garage.service';
 import { UserModel } from '../../../shared/models/index';
 import { AlertComponent } from '../../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
@@ -24,9 +25,11 @@ const ROLE_PREFIX: Record<string, string> = {
 export class UsersComponent implements OnInit {
   private fb = inject(FormBuilder);
   private userService = inject(UserManagementService);
+  private garageService = inject(GarageService);
 
   users: UserModel[] = [];
   filtered: UserModel[] = [];
+  garages: any[] = [];
   page = 1;
   readonly pageSize = 10;
   loading = false;
@@ -49,6 +52,7 @@ export class UsersComponent implements OnInit {
     email: ['', [Validators.required, Validators.email]],
     password: [''],
     role: ['AGENT', Validators.required],
+    garageId: [null as number | null],
   });
 
   get generatedMatricule(): string {
@@ -57,6 +61,14 @@ export class UsersComponent implements OnInit {
 
   ngOnInit() {
     this.loadUsers();
+    this.loadGarages();
+  }
+
+  loadGarages() {
+    this.garageService.getAll().subscribe({
+      next: (data) => this.garages = data,
+      error: (err) => console.error('Erreur lors du chargement des garages', err)
+    });
   }
 
   loadUsers() {
@@ -107,7 +119,7 @@ export class UsersComponent implements OnInit {
   openCreate() {
     this.isNew = true;
     this.editingId = null;
-    this.form.reset({ role: 'AGENT' });
+    this.form.reset({ role: 'AGENT', garageId: null });
     this.form.get('password')?.setValidators(Validators.required);
     this.form.get('password')?.updateValueAndValidity();
     this.refreshMatricule();
@@ -129,13 +141,14 @@ export class UsersComponent implements OnInit {
       email: user.email,
       password: '',
       role: this.effectiveRole(user) || 'AGENT',
+      garageId: user.garage?.id || null,
     });
     this.showModal = true;
   }
 
   closeModal() {
     this.showModal = false;
-    this.form.reset({ role: 'AGENT' });
+    this.form.reset({ role: 'AGENT', garageId: null });
     this.errorMessage = '';
   }
 
@@ -153,12 +166,14 @@ export class UsersComponent implements OnInit {
 
     if (this.isNew) {
       const payload = { ...raw, type: 'AGENT' } as any;
+      if (!payload.garageId) delete payload.garageId;
       this.userService.create(payload).subscribe({
         next: () => { this.saving = false; this.showSuccess('Utilisateur créé avec succès !'); this.closeModal(); this.loadUsers(); },
         error: (err: any) => { this.saving = false; this.errorMessage = this.parseError(err); }
       });
     } else {
-      const payload = { phone: raw.phone, firstName: raw.firstName, lastName: raw.lastName, email: raw.email, role: raw.role };
+      const payload: any = { phone: raw.phone, firstName: raw.firstName, lastName: raw.lastName, email: raw.email, role: raw.role };
+      if (raw.garageId) payload.garageId = raw.garageId;
       this.userService.update(this.editingId!, payload as any).subscribe({
         next: () => { this.saving = false; this.showSuccess('Utilisateur modifié avec succès !'); this.closeModal(); this.loadUsers(); },
         error: (err: any) => { this.saving = false; this.errorMessage = this.parseError(err); }

@@ -10,6 +10,7 @@ export interface UserModel {
   enabled: boolean;
   createdAt: string;
   role?: string;
+  garage?: { id: number; nom: string };
   authorities?: { authority: string }[];
 }
 
@@ -30,6 +31,7 @@ export interface CreateUserPayload {
   password: string;
   type: string;
   role?: string;
+  garageId?: number;
 }
 
 export interface AdminUserUpdatePayload {
@@ -38,4 +40,5 @@ export interface AdminUserUpdatePayload {
   lastName?: string;
   email?: string;
   role?: string;
+  garageId?: number;
 }

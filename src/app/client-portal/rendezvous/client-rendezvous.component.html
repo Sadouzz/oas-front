@@ -149,6 +149,17 @@
           </div>
 
           <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1.5">Garage</label>
+            <select formControlName="garageId"
+              class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition">
+              <option [ngValue]="null">— Sélectionnez un garage —</option>
+              @for (garage of garages; track garage.id) {
+                <option [ngValue]="garage.id">{{ garage.nom }} - {{ garage.localite }}</option>
+              }
+            </select>
+          </div>
+
+          <div>
             <label class="block text-sm font-semibold text-oas-ink mb-1.5">Véhicule concerné</label>
             <select formControlName="vehiculeId"
               class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition">

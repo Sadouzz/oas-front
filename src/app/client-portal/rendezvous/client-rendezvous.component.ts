@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ClientRendezVousService } from '../services/client-rendezvous.service';
 import { ClientVehiculeService } from '../services/client-vehicule.service';
-import { RendezVous, RendezVousStatus, VehiculeModel } from '../../shared/models';
+import { GarageService } from '../../services/garage.service';
+import { RendezVous, RendezVousStatus, VehiculeModel, Garage } from '../../shared/models';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { StatusBadgeComponent, BadgeTone } from '../ui/status-badge/status-badge.component';
 import { ModalComponent } from '../ui/modal/modal.component';
@@ -36,12 +37,14 @@ const STATUT_TONES: Record<RendezVousStatus, BadgeTone> = {
 export class ClientRendezVousComponent implements OnInit {
   private service = inject(ClientRendezVousService);
   private vehiculeService = inject(ClientVehiculeService);
+  private garageService = inject(GarageService);
   private fb = inject(FormBuilder);
 
   rendezvous: RendezVous[] = [];
   filtered: RendezVous[] = [];
   selected: RendezVous | null = null;
   vehicules: VehiculeModel[] = [];
+  garages: Garage[] = [];
   loading = false;
   showCreateModal = false;
   saving = false;
@@ -56,6 +59,7 @@ export class ClientRendezVousComponent implements OnInit {
     dateRendezVous: ['', Validators.required],
     motif: ['', Validators.required],
     vehiculeId: [null],
+    garageId: [null, Validators.required]
   });
 
   readonly statutLabels = STATUT_LABELS;
@@ -65,6 +69,7 @@ export class ClientRendezVousComponent implements OnInit {
   ngOnInit(): void {
     this.load();
     this.vehiculeService.getAll().subscribe({ next: v => this.vehicules = v });
+    this.garageService.getAll().subscribe({ next: g => this.garages = g });
   }
 
   load(): void {

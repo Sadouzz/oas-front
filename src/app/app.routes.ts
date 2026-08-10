@@ -174,6 +174,11 @@ export const routes: Routes = [
               import('./gestion/admin/users/users.component').then(m => m.UsersComponent),
           },
           {
+            path: 'garages',
+            loadComponent: () =>
+              import('./gestion/admin/garages/garages.component').then(m => m.GaragesComponent),
+          },
+          {
             path: 'history',
             loadComponent: () =>
               import('./gestion/admin/history/history.component').then(m => m.HistoryComponent),

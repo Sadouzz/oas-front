@@ -1,15 +1,17 @@
-import { Component, ElementRef, ViewChild, AfterViewInit, HostListener, ChangeDetectorRef } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewInit, HostListener, ChangeDetectorRef, Renderer2, OnInit, OnDestroy, Inject } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { WrenchCursorComponent } from '../../../shared/components/wrench-cursor/wrench-cursor';
 
 @Component({
   selector: 'app-public-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, WrenchCursorComponent],
   templateUrl: './public-layout.html',
   styleUrl: './public-layout.css',
 })
-export class PublicLayout implements AfterViewInit {
+export class PublicLayout implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('footer') footerRef!: ElementRef;
   footerHeight = 0;
   isCurtain = true;
@@ -88,7 +90,19 @@ export class PublicLayout implements AfterViewInit {
     { label: 'Cookies', path: '/cookies' }
   ];
 
-  constructor(private cdr: ChangeDetectorRef) {}
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private renderer: Renderer2,
+    @Inject(DOCUMENT) private document: Document
+  ) {}
+
+  ngOnInit() {
+    this.renderer.addClass(this.document.body, 'public-cursor');
+  }
+
+  ngOnDestroy() {
+    this.renderer.removeClass(this.document.body, 'public-cursor');
+  }
 
   ngAfterViewInit() {
     // Timeout to ensure rendering is complete before measuring
