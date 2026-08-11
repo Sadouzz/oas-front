@@ -69,7 +69,7 @@
                   <span class="font-mono-data font-semibold text-sm text-oas-ink">{{ f.numero }}</span>
                   <app-status-badge [label]="statutLabels[f.statutPaiement]" [tone]="statutTones[f.statutPaiement]"></app-status-badge>
                 </div>
-                <p class="text-xs text-oas-muted mt-0.5 truncate">{{ f.immatriculation ?? '—' }} · <span class="font-mono-data">{{ f.montantTTC | number:'1.0-0' }} F</span></p>
+                <p class="text-xs text-oas-muted mt-0.5 truncate">{{ f.immatriculation ?? '—' }} · <span class="font-mono-data">{{ f.montantTotal | number:'1.0-0' }} F</span></p>
                 <p class="text-[10px] mt-1 font-semibold" [class.text-oas-bad]="f.resteAPayer > 0" [class.text-oas-ok]="f.resteAPayer === 0">
                   {{ f.resteAPayer > 0 ? (f.resteAPayer | number:'1.0-0') + ' F restant' : 'Soldée' }}
                 </p>
@@ -138,7 +138,14 @@
                 <div class="border-t border-oas-line pt-4 mt-2 space-y-1 text-sm">
                   <div class="flex justify-between"><span class="text-oas-muted">Total HT</span><span class="font-mono-data">{{ selected.montantHT | number:'1.0-0' }} F</span></div>
                   <div class="flex justify-between"><span class="text-oas-muted">TVA</span><span class="font-mono-data">{{ selected.montantTVA | number:'1.0-0' }} F</span></div>
-                  <div class="flex justify-between font-extrabold text-base text-oas-ink pt-1"><span>Total TTC</span><span class="font-mono-data">{{ selected.montantTTC | number:'1.0-0' }} F</span></div>
+                  <div class="flex justify-between"><span class="text-oas-muted">Total TTC</span><span class="font-mono-data">{{ selected.montantTTC | number:'1.0-0' }} F</span></div>
+                  @if (selected.montantTimbre > 0) {
+                    <div class="flex justify-between"><span class="text-oas-muted">Timbre fiscal</span><span class="font-mono-data">{{ selected.montantTimbre | number:'1.0-0' }} F</span></div>
+                  }
+                  @if (selected.montantAutre > 0) {
+                    <div class="flex justify-between"><span class="text-oas-muted">Autres frais</span><span class="font-mono-data">{{ selected.montantAutre | number:'1.0-0' }} F</span></div>
+                  }
+                  <div class="flex justify-between font-extrabold text-base text-oas-ink pt-1"><span>Total</span><span class="font-mono-data">{{ selected.montantTotal | number:'1.0-0' }} F</span></div>
                   <div class="flex justify-between text-oas-ok"><span>Déjà payé</span><span class="font-mono-data">{{ selected.montantPaye | number:'1.0-0' }} F</span></div>
                   <div class="flex justify-between font-bold" [class.text-oas-bad]="selected.resteAPayer > 0"><span>Reste à payer</span><span class="font-mono-data">{{ selected.resteAPayer | number:'1.0-0' }} F</span></div>
                 </div>

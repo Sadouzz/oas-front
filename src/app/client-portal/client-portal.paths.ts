@@ -4,6 +4,7 @@ export const CLIENT_PORTAL_PATHS = {
   tableauDeBord: '/espace-client/tableau-de-bord',
   vehicules: '/espace-client/vehicules',
   rendezVous: '/espace-client/rendez-vous',
+  marketplace: '/espace-client/marketplace',
   devis: '/espace-client/devis',
   proformas: '/espace-client/proformas',
   factures: '/espace-client/factures',

@@ -3,7 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ClientRendezVousService } from '../services/client-rendezvous.service';
 import { ClientVehiculeService } from '../services/client-vehicule.service';
+import { ClientInterventionService } from '../services/client-intervention.service';
 import { RendezVous, RendezVousStatus, VehiculeModel } from '../../shared/models';
+import { Intervention } from '../models';
+import { isActiveRepair } from '../intervention-stage';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { StatusBadgeComponent, BadgeTone } from '../ui/status-badge/status-badge.component';
 import { ModalComponent } from '../ui/modal/modal.component';
@@ -36,17 +39,25 @@ const STATUT_TONES: Record<RendezVousStatus, BadgeTone> = {
 export class ClientRendezVousComponent implements OnInit {
   private service = inject(ClientRendezVousService);
   private vehiculeService = inject(ClientVehiculeService);
+  private interventionService = inject(ClientInterventionService);
   private fb = inject(FormBuilder);
 
   rendezvous: RendezVous[] = [];
   filtered: RendezVous[] = [];
   selected: RendezVous | null = null;
   vehicules: VehiculeModel[] = [];
+  interventions: Intervention[] = [];
   loading = false;
   showCreateModal = false;
   saving = false;
   successMessage = '';
   errorMessage = '';
+
+  vehiculeSearchTerm = '';
+  vehiculeDropdownOpen = false;
+  showVehiculeCreateForm = false;
+  vehiculeSaving = false;
+  vehiculeCreateError = '';
 
   searchTerm = '';
   statutFilter = '';
@@ -58,6 +69,15 @@ export class ClientRendezVousComponent implements OnInit {
     vehiculeId: [null],
   });
 
+  vehiculeForm: FormGroup = this.fb.group({
+    immatriculation: ['', Validators.required],
+    marque: ['', Validators.required],
+    modele: ['', Validators.required],
+    annee: [null],
+    kilometrage: [null],
+    numeroChassis: [''],
+  });
+
   readonly statutLabels = STATUT_LABELS;
   readonly statutTones = STATUT_TONES;
   readonly statutOptions = Object.keys(STATUT_LABELS) as RendezVousStatus[];
@@ -65,6 +85,88 @@ export class ClientRendezVousComponent implements OnInit {
   ngOnInit(): void {
     this.load();
     this.vehiculeService.getAll().subscribe({ next: v => this.vehicules = v });
+    this.interventionService.getAll().subscribe({ next: i => this.interventions = i });
+  }
+
+  /** Le véhicule a-t-il une réparation en cours (statut actif, hors "Terminée") ? */
+  vehiculeEnReparation(vehiculeId: number): boolean {
+    const derniere = this.interventions
+      .filter(i => i.vehicule?.id === vehiculeId)
+      .sort((a, b) => new Date(b.dateCreation).getTime() - new Date(a.dateCreation).getTime())[0];
+    return !!derniere && isActiveRepair(derniere.statut);
+  }
+
+  get vehiculesDisponibles(): VehiculeModel[] {
+    return this.vehicules.filter(v => !this.vehiculeEnReparation(v.id));
+  }
+
+  get vehiculesFiltres(): VehiculeModel[] {
+    const term = this.vehiculeSearchTerm.trim().toLowerCase();
+    return this.vehiculesDisponibles.filter(v => !term
+      || v.immatriculation.toLowerCase().includes(term)
+      || v.marque.toLowerCase().includes(term)
+      || v.modele.toLowerCase().includes(term));
+  }
+
+  selectedVehiculeLabel(): string {
+    const id = this.form.get('vehiculeId')?.value;
+    const v = this.vehicules.find(x => x.id === id);
+    return v ? `${v.immatriculation} — ${v.marque} ${v.modele}` : '';
+  }
+
+  onVehiculeSearch(value: string): void {
+    this.vehiculeSearchTerm = value;
+    this.vehiculeDropdownOpen = true;
+  }
+
+  openVehiculeDropdown(): void {
+    this.vehiculeSearchTerm = '';
+    this.vehiculeDropdownOpen = true;
+  }
+
+  selectVehicule(id: number | null): void {
+    this.form.get('vehiculeId')?.setValue(id);
+    this.vehiculeSearchTerm = '';
+    this.vehiculeDropdownOpen = false;
+  }
+
+  closeVehiculeDropdownDelayed(): void {
+    setTimeout(() => this.vehiculeDropdownOpen = false, 150);
+  }
+
+  openVehiculeCreateForm(): void {
+    this.vehiculeForm.reset();
+    this.vehiculeCreateError = '';
+    this.showVehiculeCreateForm = true;
+    this.vehiculeDropdownOpen = false;
+  }
+
+  closeVehiculeCreateForm(): void {
+    this.showVehiculeCreateForm = false;
+    this.vehiculeCreateError = '';
+  }
+
+  saveVehicule(): void {
+    if (this.vehiculeForm.invalid) {
+      this.vehiculeForm.markAllAsTouched();
+      return;
+    }
+
+    this.vehiculeSaving = true;
+    this.vehiculeCreateError = '';
+
+    this.vehiculeService.create(this.vehiculeForm.value).subscribe({
+      next: (vehicule) => {
+        this.vehiculeSaving = false;
+        this.vehicules = [...this.vehicules, vehicule];
+        this.selectVehicule(vehicule.id);
+        this.showVehiculeCreateForm = false;
+      },
+      error: (err: any) => {
+        this.vehiculeSaving = false;
+        this.vehiculeCreateError = err.error?.message || "Impossible d'ajouter ce véhicule.";
+      },
+    });
   }
 
   load(): void {
@@ -111,6 +213,9 @@ export class ClientRendezVousComponent implements OnInit {
 
   openCreate(): void {
     this.form.reset();
+    this.vehiculeSearchTerm = '';
+    this.vehiculeDropdownOpen = false;
+    this.showVehiculeCreateForm = false;
     this.showCreateModal = true;
   }
 

@@ -63,8 +63,6 @@ export class FacturesComponent implements OnInit {
     vehiculeId: [null as number | null, Validators.required],
     ficheAtelierId: [null as number | null, Validators.required],
     remarque: [''],
-    appliquerTVA: [false],
-    appliquerTimbre: [false],
     modePaiement: ['ESPECE', Validators.required],
   });
 
@@ -109,7 +107,7 @@ export class FacturesComponent implements OnInit {
 
   openCreate() {
     if (!this.form.get('clientId')?.value) {
-      this.form.reset({ remarque: '', appliquerTVA: false, appliquerTimbre: false, modePaiement: 'ESPECE' });
+      this.form.reset({ remarque: '', modePaiement: 'ESPECE' });
       this.vehiculesFiltres = [];
       this.clientFilter = '';
       this.vehiculeFilter = '';
@@ -237,8 +235,6 @@ export class FacturesComponent implements OnInit {
       vehiculeId: Number(val.vehiculeId),
       ficheAtelierId: Number(val.ficheAtelierId),
       remarque: val.remarque || null,
-      appliquerTVA: !!val.appliquerTVA,
-      appliquerTimbre: !!val.appliquerTimbre,
       modePaiement: val.modePaiement,
     };
 
@@ -246,7 +242,7 @@ export class FacturesComponent implements OnInit {
       next: (res: any) => {
         this.saving = false;
         this.closeCreate();
-        this.form.reset({ remarque: '', appliquerTVA: false, appliquerTimbre: false, modePaiement: 'ESPECE' });
+        this.form.reset({ remarque: '', modePaiement: 'ESPECE' });
         this.createStep = 1;
         this.load();
         this.notify('Facture ' + res.numero + ' créée avec succès !');

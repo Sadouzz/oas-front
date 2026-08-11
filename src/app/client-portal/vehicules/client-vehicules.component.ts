@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ClientVehiculeService } from '../services/client-vehicule.service';
 import { ClientInterventionService } from '../services/client-intervention.service';
-import { VehiculeModel } from '../../shared/models';
+import { ClientFactureService } from '../services/client-facture.service';
+import { VehiculeModel, FactureModel } from '../../shared/models';
 import { Intervention } from '../models';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { VehicleAvatarComponent } from '../ui/vehicle-avatar/vehicle-avatar.component';
@@ -23,14 +24,16 @@ type SortOrder = 'recent' | 'ancien';
 export class ClientVehiculesComponent implements OnInit {
   private service = inject(ClientVehiculeService);
   private interventionService = inject(ClientInterventionService);
+  private factureService = inject(ClientFactureService);
   private fb = inject(FormBuilder);
 
   vehicules: VehiculeModel[] = [];
   filtered: VehiculeModel[] = [];
   interventions: Intervention[] = [];
+  factures: FactureModel[] = [];
   selected: VehiculeModel | null = null;
   loading = false;
-  showCreateForm = true;
+  showCreateForm = false;
   saving = false;
   successMessage = '';
   errorMessage = '';
@@ -55,7 +58,7 @@ export class ClientVehiculesComponent implements OnInit {
 
   load(): void {
     this.loading = true;
-    let remaining = 2;
+    let remaining = 3;
     const done = () => { remaining -= 1; if (remaining === 0) { this.loading = false; this.applyFilter(); } };
 
     this.service.getAll().subscribe({
@@ -65,6 +68,11 @@ export class ClientVehiculesComponent implements OnInit {
 
     this.interventionService.getAll().subscribe({
       next: interventions => { this.interventions = interventions; done(); },
+      error: () => done(),
+    });
+
+    this.factureService.getAll().subscribe({
+      next: factures => { this.factures = factures; done(); },
       error: () => done(),
     });
   }
@@ -89,10 +97,28 @@ export class ClientVehiculesComponent implements OnInit {
     return this.interventionsFor(vehicule.id);
   }
 
-  /** Fiche de réparation en cours, si le véhicule est actuellement en intervention. */
+  /**
+   * Fiche de réparation à afficher comme "en cours". Reste affichée après la fin de la
+   * réparation (statut "Terminée") tant qu'on n'est pas au lendemain de la date de sortie
+   * ET qu'au moins un paiement partiel a été effectué sur la facture liée. Sans paiement,
+   * elle ne disparaît jamais via cette règle (le véhicule n'a probablement pas encore été repris).
+   */
   ficheEnCoursFor(vehicule: VehiculeModel): Intervention | null {
     const derniere = this.interventionsFor(vehicule.id)[0];
-    return derniere && isActiveRepair(derniere.statut) ? derniere : null;
+    if (!derniere) return null;
+    if (isActiveRepair(derniere.statut)) return derniere;
+    if (interventionStage(derniere.statut).label !== 'Terminée') return null;
+
+    if (!derniere.dateSortie) return derniere;
+
+    const facture = this.factures.find(f => f.ficheAtelierId === derniere.id);
+    const aPaiementPartiel = !!facture && facture.montantPaye > 0;
+    if (!aPaiementPartiel) return derniere;
+
+    const lendemainSortie = new Date(derniere.dateSortie);
+    lendemainSortie.setDate(lendemainSortie.getDate() + 1);
+    lendemainSortie.setHours(0, 0, 0, 0);
+    return new Date() < lendemainSortie ? derniere : null;
   }
 
   stageOf(statut: string) {

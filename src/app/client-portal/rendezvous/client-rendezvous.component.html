@@ -75,9 +75,12 @@
               [class.bg-oas-accent-bg]="selected?.id === rdv.id" [class.hover:bg-oas-bg]="selected?.id !== rdv.id">
               <app-vehicle-avatar></app-vehicle-avatar>
               <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
                   <span class="font-mono-data font-semibold text-sm text-oas-ink">{{ rdv.dateRendezVous | date:'dd/MM/yyyy HH:mm' }}</span>
                   <app-status-badge [label]="statutLabels[rdv.statut]" [tone]="statutTones[rdv.statut]"></app-status-badge>
+                  @if (rdv.dateHistory?.length) {
+                    <span class="text-[10px] font-bold uppercase text-oas-accent bg-oas-accent-bg px-1.5 py-0.5 rounded">Décalé</span>
+                  }
                 </div>
                 <p class="text-xs text-oas-muted mt-0.5 truncate">{{ rdv.motif }}</p>
               </div>
@@ -110,6 +113,9 @@
                   <h2 class="font-mono-data font-bold text-oas-ink text-base">{{ selected.dateRendezVous | date:'dd/MM/yyyy HH:mm' }}</h2>
                   <app-status-badge [label]="statutLabels[selected.statut]" [tone]="statutTones[selected.statut]"></app-status-badge>
                 </div>
+                @if (selected.dateHistory?.length) {
+                  <p class="text-xs text-oas-accent font-semibold mt-1">Rendez-vous décalé par le garage</p>
+                }
               </div>
 
               <div class="p-5 space-y-4 text-sm">
@@ -121,6 +127,26 @@
                   <p class="text-oas-muted text-xs mb-1">Motif</p>
                   <p class="text-oas-ink2">{{ selected.motif }}</p>
                 </div>
+
+                @if (selected.dateHistory?.length) {
+                  <div>
+                    <p class="text-oas-muted text-xs mb-1.5">Historique des changements de date</p>
+                    <div class="border border-oas-line rounded-lg divide-y divide-oas-line">
+                      @for (h of selected.dateHistory; track h.id) {
+                        <div class="px-3 py-2.5 text-xs">
+                          <div class="flex items-center gap-1.5 font-mono-data">
+                            <span class="text-oas-muted line-through">{{ h.ancienneDate | date:'dd/MM/yyyy HH:mm' }}</span>
+                            <svg class="w-3 h-3 text-oas-muted flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                            </svg>
+                            <span class="text-oas-ink font-semibold">{{ h.nouvelleDate | date:'dd/MM/yyyy HH:mm' }}</span>
+                          </div>
+                          <p class="text-oas-muted mt-0.5">Modifié le {{ h.dateModification | date:'dd/MM/yyyy à HH:mm' }}</p>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
 
                 @if (canCancel(selected.statut)) {
                   <div class="pt-2 border-t border-oas-line">
@@ -150,13 +176,100 @@
 
           <div>
             <label class="block text-sm font-semibold text-oas-ink mb-1.5">Véhicule concerné</label>
-            <select formControlName="vehiculeId"
-              class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition">
-              <option [ngValue]="null">— Aucun véhicule enregistré —</option>
-              @for (vehicule of vehicules; track vehicule.id) {
-                <option [ngValue]="vehicule.id">{{ vehicule.immatriculation }} — {{ vehicule.marque }} {{ vehicule.modele }}</option>
+            <div class="relative">
+              <input type="text" autocomplete="off"
+                [value]="vehiculeDropdownOpen ? vehiculeSearchTerm : selectedVehiculeLabel()"
+                (focus)="openVehiculeDropdown()"
+                (input)="onVehiculeSearch($any($event.target).value)"
+                (blur)="closeVehiculeDropdownDelayed()"
+                placeholder="Rechercher par plaque, marque, modèle..."
+                class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition" />
+              @if (vehiculeDropdownOpen) {
+                <div class="absolute left-0 right-0 top-full mt-1 z-20 bg-white border border-oas-line rounded-lg shadow-lg max-h-56 overflow-y-auto">
+                  <div (mousedown)="selectVehicule(null)" class="px-4 py-2.5 text-sm text-oas-muted hover:bg-oas-bg cursor-pointer">
+                    — Aucun véhicule —
+                  </div>
+                  @for (vehicule of vehiculesFiltres; track vehicule.id) {
+                    <div (mousedown)="selectVehicule(vehicule.id)" class="px-4 py-2.5 text-sm text-oas-ink hover:bg-oas-bg cursor-pointer">
+                      {{ vehicule.immatriculation }} — {{ vehicule.marque }} {{ vehicule.modele }}
+                    </div>
+                  }
+                  @if (vehiculesFiltres.length === 0) {
+                    <div class="px-4 py-2.5 text-sm text-oas-muted">Aucun véhicule disponible.</div>
+                  }
+                  <div (mousedown)="openVehiculeCreateForm()"
+                    class="flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-oas-accent hover:bg-oas-accent-bg cursor-pointer border-t border-oas-line">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Créer un véhicule
+                  </div>
+                </div>
               }
-            </select>
+            </div>
+            @if (vehicules.length !== vehiculesDisponibles.length) {
+              <p class="text-xs text-oas-muted mt-1.5">Les véhicules déjà en réparation ne sont pas proposés.</p>
+            }
+
+            @if (showVehiculeCreateForm) {
+              <div class="mt-3 border border-oas-line rounded-lg p-4 bg-oas-bg space-y-3">
+                <div class="flex items-center justify-between">
+                  <p class="text-xs font-bold uppercase text-oas-muted">Nouveau véhicule</p>
+                  <button type="button" (click)="closeVehiculeCreateForm()" class="text-oas-muted hover:text-oas-ink transition cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                  </button>
+                </div>
+
+                <div [formGroup]="vehiculeForm" class="space-y-3">
+                  <div>
+                    <label class="block text-xs font-semibold text-oas-ink mb-1">Immatriculation</label>
+                    <input type="text" formControlName="immatriculation" placeholder="DK-1234-AB"
+                      class="w-full px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition" />
+                  </div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="block text-xs font-semibold text-oas-ink mb-1">Marque</label>
+                      <input type="text" formControlName="marque" placeholder="Peugeot"
+                        class="w-full px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition" />
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-oas-ink mb-1">Modèle</label>
+                      <input type="text" formControlName="modele" placeholder="308"
+                        class="w-full px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition" />
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <div>
+                      <label class="block text-xs font-semibold text-oas-ink mb-1">Année</label>
+                      <input type="number" formControlName="annee" placeholder="2020"
+                        class="w-full px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition" />
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-oas-ink mb-1">Kilométrage</label>
+                      <input type="number" formControlName="kilometrage" placeholder="45000"
+                        class="w-full px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition" />
+                    </div>
+                  </div>
+
+                  @if (vehiculeCreateError) {
+                    <p class="text-oas-bad text-xs">{{ vehiculeCreateError }}</p>
+                  }
+
+                  <div class="flex gap-2 pt-1">
+                    <button type="button" (click)="closeVehiculeCreateForm()"
+                      class="flex-1 border border-oas-line bg-white text-oas-ink2 font-semibold py-2 rounded-lg text-sm hover:bg-oas-bg transition cursor-pointer">
+                      Annuler
+                    </button>
+                    <button type="button" (click)="saveVehicule()" [disabled]="vehiculeSaving"
+                      class="flex-1 bg-oas-accent hover:bg-oas-accent-dark disabled:opacity-60 text-white font-bold py-2 rounded-lg text-sm transition cursor-pointer">
+                      {{ vehiculeSaving ? 'Ajout...' : 'Ajouter' }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
           </div>
 
           <div>

@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { jwtDecode } from 'jwt-decode';
 import { environment } from '../../../environments/environment';
-import { AuthResponse, LoginRequest, RegisterRequest } from '../../shared/models';
+import { AuthResponse, LoginRequest, RegisterRequest, CheckAvailabilityResponse } from '../../shared/models';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -23,6 +23,14 @@ export class AuthService {
   register(data: RegisterRequest): Observable<void> {
     const { login, ...rest } = data;
     return this.http.post<void>(`${this.api}/signup`, { ...rest, username: login });
+  }
+
+  checkUsername(username: string): Observable<CheckAvailabilityResponse> {
+    return this.http.get<CheckAvailabilityResponse>(`${this.api}/check-username`, { params: { username } });
+  }
+
+  checkEmail(email: string): Observable<CheckAvailabilityResponse> {
+    return this.http.get<CheckAvailabilityResponse>(`${this.api}/check-email`, { params: { email } });
   }
 
   logout(): void {

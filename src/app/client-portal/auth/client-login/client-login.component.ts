@@ -3,12 +3,12 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { CLIENT_PORTAL_PATHS } from '../../client-portal.paths';
-import { LucideUser, LucideLock, LucideEye, LucideEyeOff, LucideCheck, LucideLoader2 } from '@lucide/angular';
+import { LucideMail, LucideLock, LucideEye, LucideEyeOff, LucideCheck, LucideLoader2 } from '@lucide/angular';
 
 @Component({
   selector: 'app-client-login',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, LucideUser, LucideLock, LucideEye, LucideEyeOff, LucideCheck, LucideLoader2],
+  imports: [ReactiveFormsModule, RouterLink, LucideMail, LucideLock, LucideEye, LucideEyeOff, LucideCheck, LucideLoader2],
   templateUrl: './client-login.component.html',
 })
 export class ClientLoginComponent {

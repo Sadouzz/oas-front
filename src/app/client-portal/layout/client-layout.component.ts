@@ -37,6 +37,7 @@ export class ClientLayoutComponent implements OnInit, OnDestroy {
     [CLIENT_PORTAL_PATHS.tableauDeBord]: 'Tableau de bord',
     [CLIENT_PORTAL_PATHS.vehicules]: 'Mes véhicules',
     [CLIENT_PORTAL_PATHS.rendezVous]: 'Mes rendez-vous',
+    [CLIENT_PORTAL_PATHS.marketplace]: 'Marketplace',
     [CLIENT_PORTAL_PATHS.proformas]: 'Mes proformas',
     [CLIENT_PORTAL_PATHS.devis]: 'Mes devis',
     [CLIENT_PORTAL_PATHS.factures]: 'Mes factures',

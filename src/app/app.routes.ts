@@ -21,15 +21,15 @@ export const routes: Routes = [
       { path: 'a-propos', loadComponent: () => import('./public/about/about').then(m => m.About) },
       { path: 'devis', loadComponent: () => import('./public/devis/devis').then(m => m.Devis) },
       {
-  path: 'contact',
-  loadComponent: () =>
-    import('./public/contact/contact').then(m => m.ContactComponent),
-},
+        path: 'contact',
+        loadComponent: () =>
+          import('./public/contact/contact').then(m => m.ContactComponent),
+      },
       {
-    path: 'rdv',
-    loadComponent: () =>
-      import('./public/rdv/rdv').then(m => m.RdvComponent),
-  },
+        path: 'rdv',
+        loadComponent: () =>
+          import('./public/rdv/rdv').then(m => m.RdvComponent),
+      },
       { path: 'partenaires', loadComponent: () => import('./public/partenaires/partenaires').then(m => m.Partenaires) },
       { path: 'mentions-legales', loadComponent: () => import('./public/legal/mentions-legales').then(m => m.MentionsLegalesComponent) },
       { path: 'confidentialite', loadComponent: () => import('./public/legal/confidentialite').then(m => m.ConfidentialiteComponent) },

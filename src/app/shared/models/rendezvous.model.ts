@@ -1,5 +1,12 @@
 export type RendezVousStatus = 'EN_ATTENTE' | 'CONFIRME' | 'REFUSE' | 'ANNULE' | 'TERMINE';
 
+export interface RendezVousDateHistory {
+  id: number;
+  ancienneDate: string;
+  nouvelleDate: string;
+  dateModification: string;
+}
+
 export interface RendezVous {
   id: number;
   clientId: number;
@@ -11,4 +18,5 @@ export interface RendezVous {
   statut: RendezVousStatus;
   commentaire: string | null;
   dateCreation: string;
+  dateHistory?: RendezVousDateHistory[];
 }

@@ -29,6 +29,8 @@ export interface FactureModel {
   resteAPayer: number;
   statutPaiement: 'NON_PAYE' | 'PARTIEL' | 'PAYE';
   recus: import('./recu.model').RecuModel[];
+  ficheAtelierId?: number | null;
+  numeroFicheAtelier?: string | null;
 }
 
 export interface FactureCreateRequest {
@@ -37,7 +39,8 @@ export interface FactureCreateRequest {
   ficheAtelierId: number;
   kilometrage?: number | null;
   remarque?: string | null;
-  appliquerTVA: boolean;
-  appliquerTimbre: boolean;
+  tvaRate?: number | null;
+  montantTimbre?: number | null;
+  montantAutre?: number | null;
   modePaiement: string;
 }

@@ -32,6 +32,10 @@ export const CLIENT_PORTAL_ROUTES: Routes = [
         loadComponent: () => import('./rendezvous/client-rendezvous.component').then(m => m.ClientRendezVousComponent),
       },
       {
+        path: 'marketplace',
+        loadComponent: () => import('./marketplace/client-marketplace.component').then(m => m.ClientMarketplaceComponent),
+      },
+      {
         path: 'proformas',
         loadComponent: () => import('./proformas/client-proformas.component').then(m => m.ClientProformasComponent),
       },

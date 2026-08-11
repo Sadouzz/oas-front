@@ -463,19 +463,10 @@
               <p class="text-xs text-oas-muted text-center py-4">Toutes les fiches de ce véhicule ont déjà une facture.</p>
             }
 
-            <!-- TVA + Timbre -->
-            <div class="grid grid-cols-2 gap-4 mt-4">
-              <div class="flex items-center gap-3">
-                <input type="checkbox" formControlName="appliquerTVA" id="tva"
-                       class="w-4 h-4 accent-oas-accent rounded cursor-pointer"/>
-                <label for="tva" class="text-sm font-semibold text-oas-ink cursor-pointer">TVA (18%)</label>
-              </div>
-              <div class="flex items-center gap-3">
-                <input type="checkbox" formControlName="appliquerTimbre" id="timbre"
-                       class="w-4 h-4 accent-oas-accent rounded cursor-pointer"/>
-                <label for="timbre" class="text-sm font-semibold text-oas-ink cursor-pointer">Timbre fiscal (200 FCFA)</label>
-              </div>
-            </div>
+            <!-- TVA + Timbre : appliqués automatiquement (18% / 100 FCFA) à la création -->
+            <p class="text-xs text-oas-muted mt-4 bg-oas-bg rounded-lg px-3 py-2.5">
+              La TVA (18%) et le timbre fiscal sont appliqués automatiquement à la création de la facture.
+            </p>
 
             <!-- Mode de paiement -->
             <div class="mt-4">

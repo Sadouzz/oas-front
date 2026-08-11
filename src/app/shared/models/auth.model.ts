@@ -13,6 +13,15 @@ export interface RegisterRequest {
   password: string;
   type: string;
   role?: string;
+  typeClient?: 'PARTICULIER' | 'ENTREPRISE';
+  raisonSociale?: string | null;
+  numeroEntreprise?: string | null;
+  emailEntreprise?: string | null;
+  adresseEntreprise?: string | null;
+}
+
+export interface CheckAvailabilityResponse {
+  available: boolean;
 }
 
 export interface AuthResponse {

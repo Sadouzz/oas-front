@@ -52,15 +52,15 @@
         <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="space-y-5">
 
           <div>
-            <label class="block text-sm font-semibold text-oas-ink mb-1.5">Nom d'utilisateur</label>
+            <label class="block text-sm font-semibold text-oas-ink mb-1.5">Email</label>
             <div class="relative">
               <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-oas-faint">
-                <svg lucideUser class="w-4 h-4" stroke-width="2"></svg>
+                <svg lucideMail class="w-4 h-4" stroke-width="2"></svg>
               </span>
               <input
                 type="text"
                 formControlName="username"
-                placeholder="Jean Dupond"
+                placeholder="exemple@email.com"
                 class="w-full pl-10 pr-4 py-3 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
                 [class.border-oas-bad]="username?.invalid && username?.touched"
               />

@@ -59,8 +59,6 @@ export class BonsDeSortieComponent implements OnInit {
     clientId: [null as number | null, Validators.required],
     vehiculeId: [null as number | null, Validators.required],
     remarque: [''],
-    appliquerTVA: [false],
-    appliquerTimbre: [false],
     lignesPieces: this.fb.array([]),
   });
 
@@ -175,7 +173,7 @@ export class BonsDeSortieComponent implements OnInit {
   // ── WIZARD ─────────────────────────────────────────────────────
 
   openCreate() {
-    this.form.reset({ remarque: '', appliquerTVA: false, appliquerTimbre: false });
+    this.form.reset({ remarque: '' });
     while (this.lignesPieces.length) this.lignesPieces.removeAt(0);
     this.addPiece();
     this.vehiculesFiltres = [];
@@ -247,8 +245,6 @@ export class BonsDeSortieComponent implements OnInit {
       clientId: val.clientId,
       vehiculeId: val.vehiculeId,
       remarque: val.remarque,
-      appliquerTVA: !!val.appliquerTVA,
-      appliquerTimbre: !!val.appliquerTimbre,
       lignesPieces
     } as any).subscribe({
       next: () => { this.saving = false; this.showSuccess('Bon de sortie cree !'); this.closeCreate(); this.loadBons(); },
