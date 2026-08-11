@@ -14,7 +14,7 @@ import {
   standalone: true,
   imports: [
     ReactiveFormsModule, AlertComponent, PaginationComponent,
-    LucideSearch, LucideX, LucideCheck, LucidePencil],
+    LucideSearch, LucideX, LucideCalendar, LucideCheck, LucidePencil],
   templateUrl: './rendezvous.component.html',
 })
 export class RendezVousComponent implements OnInit {
@@ -26,6 +26,7 @@ export class RendezVousComponent implements OnInit {
   filtered: RendezVous[] = [];
   mecaniciens: Mecanicien[] = [];
   selectedMecanicienIds = new Set<number>();
+  editedDate = '';
 
   loading = true;
   saving = false;
@@ -103,7 +104,17 @@ export class RendezVousComponent implements OnInit {
   openValider(rdv: RendezVous) {
     this.editingRdv = rdv;
     this.selectedMecanicienIds = new Set();
+    this.editedDate = this.toDatetimeLocal(rdv.dateRendezVous);
     this.showValiderModal = true;
+  }
+
+  onDateChange(e: Event) {
+    this.editedDate = (e.target as HTMLInputElement).value;
+  }
+
+  /** Convertit une date ISO (back) en valeur compatible <input type="datetime-local">. */
+  private toDatetimeLocal(iso: string): string {
+    return iso ? iso.slice(0, 16) : '';
   }
 
   saveStatut() {
@@ -118,15 +129,26 @@ export class RendezVousComponent implements OnInit {
 
   saveValider() {
     if (!this.editingRdv) return;
-    if (this.selectedMecanicienIds.size === 0) {
-      this.notifyError('Sélectionnez au moins un mécanicien.');
-      return;
-    }
     this.saving = true;
-    this.service.valider(this.editingRdv.id, Array.from(this.selectedMecanicienIds)).subscribe({
-      next: () => { this.showValiderModal = false; this.load(); this.notify('Rendez-vous validé. Fiche atelier créée.'); },
-      error: () => { this.saving = false; this.notifyError('Erreur lors de la validation.'); },
-    });
+
+    const dateChanged = this.editedDate !== this.toDatetimeLocal(this.editingRdv.dateRendezVous);
+    const mecanicienIds = Array.from(this.selectedMecanicienIds);
+
+    const doValider = () => {
+      this.service.valider(this.editingRdv!.id, mecanicienIds).subscribe({
+        next: () => { this.showValiderModal = false; this.load(); this.notify('Rendez-vous validé. Fiche atelier créée.'); },
+        error: () => { this.saving = false; this.notifyError('Erreur lors de la validation.'); },
+      });
+    };
+
+    if (dateChanged) {
+      this.service.updateDate(this.editingRdv.id, this.editedDate).subscribe({
+        next: () => doValider(),
+        error: () => { this.saving = false; this.notifyError('Erreur lors de la modification de la date.'); },
+      });
+    } else {
+      doValider();
+    }
   }
 
   toggleMecanicien(id: number) {

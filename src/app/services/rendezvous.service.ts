@@ -24,4 +24,8 @@ export class RendezVousService {
   valider(id: number, mecanicienIds: number[]): Observable<RendezVous> {
     return this.http.post<RendezVous>(`${this.api}/${id}/valider`, mecanicienIds);
   }
+
+  updateDate(id: number, nouvelleDate: string): Observable<RendezVous> {
+    return this.http.put<RendezVous>(`${this.api}/${id}/date`, { nouvelleDate });
+  }
 }
