@@ -41,6 +41,8 @@ export class RendezVousComponent implements OnInit {
   pageSize = 10;
   successMessage = '';
   errorMessage = '';
+  modalErrorMessage = '';
+  modalSuccessMessage = '';
 
   readonly statutOptions: { value: RendezVousStatus; label: string }[] = [
     { value: 'EN_ATTENTE', label: 'En attente' },
@@ -97,6 +99,8 @@ export class RendezVousComponent implements OnInit {
 
   openStatut(rdv: RendezVous) {
     this.editingRdv = rdv;
+    this.modalErrorMessage = '';
+    this.modalSuccessMessage = '';
     this.statutForm.patchValue({ statut: rdv.statut, commentaire: rdv.commentaire ?? '' });
     this.showStatutModal = true;
   }
@@ -105,6 +109,8 @@ export class RendezVousComponent implements OnInit {
     this.editingRdv = rdv;
     this.selectedMecanicienIds = new Set();
     this.editedDate = this.toDatetimeLocal(rdv.dateRendezVous);
+    this.modalErrorMessage = '';
+    this.modalSuccessMessage = '';
     this.showValiderModal = true;
   }
 
@@ -123,13 +129,14 @@ export class RendezVousComponent implements OnInit {
     const { statut, commentaire } = this.statutForm.value;
     this.service.updateStatut(this.editingRdv.id, statut, commentaire || undefined).subscribe({
       next: () => { this.showStatutModal = false; this.load(); this.notify('Statut mis à jour.'); },
-      error: () => { this.saving = false; this.notifyError('Erreur lors de la mise à jour.'); },
+      error: (err) => { this.saving = false; this.modalErrorMessage = err.error || 'Erreur lors de la mise à jour.'; },
     });
   }
 
   saveValider() {
     if (!this.editingRdv) return;
     this.saving = true;
+    this.modalErrorMessage = '';
 
     const dateChanged = this.editedDate !== this.toDatetimeLocal(this.editingRdv.dateRendezVous);
     const mecanicienIds = Array.from(this.selectedMecanicienIds);
@@ -137,14 +144,14 @@ export class RendezVousComponent implements OnInit {
     const doValider = () => {
       this.service.valider(this.editingRdv!.id, mecanicienIds).subscribe({
         next: () => { this.showValiderModal = false; this.load(); this.notify('Rendez-vous validé. Fiche atelier créée.'); },
-        error: () => { this.saving = false; this.notifyError('Erreur lors de la validation.'); },
+        error: (err) => { this.saving = false; this.modalErrorMessage = err.error || 'Erreur lors de la validation.'; },
       });
     };
 
     if (dateChanged) {
       this.service.updateDate(this.editingRdv.id, this.editedDate).subscribe({
         next: () => doValider(),
-        error: () => { this.saving = false; this.notifyError('Erreur lors de la modification de la date.'); },
+        error: (err) => { this.saving = false; this.modalErrorMessage = err.error || 'Erreur lors de la modification de la date.'; },
       });
     } else {
       doValider();
