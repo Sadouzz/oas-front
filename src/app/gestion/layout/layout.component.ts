@@ -97,6 +97,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
     if (!role) return '';
     const labels: Record<string, string> = {
       'ROLE_SUPER_AGENT': 'Super Agent',
+      'ROLE_MASTER': 'Master',
       'ROLE_AGENT': 'Agent',
       'ROLE_CHEF_ATELIER': 'Chef Atelier',
       'ROLE_AGENT_MAGASIN': 'Agent Magasin',
@@ -110,6 +111,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
   }
 
   isSuperAgent(): boolean  { return this.authService.hasRole('ROLE_SUPER_AGENT'); }
+  isMaster(): boolean  { return this.authService.hasRole('ROLE_MASTER'); }
   isAgent(): boolean       { return this.authService.hasRole('ROLE_AGENT'); }
   isChefAtelier(): boolean { return this.authService.hasRole('ROLE_CHEF_ATELIER'); }
   isMagasinier(): boolean  { return this.authService.hasRole('ROLE_AGENT_MAGASIN'); }

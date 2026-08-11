@@ -29,4 +29,6 @@ export interface AuthResponse {
   tokenType: string;
   username: string;
   role: string;
+  garageId?: number;
+  garageName?: string;
 }

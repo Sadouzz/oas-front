@@ -329,7 +329,9 @@
               </svg>
               {{ activeGarageName }}
             </span>
-            <button (click)="leaveGarage()" class="text-xs font-semibold text-oas-faint hover:text-oas-accent transition">Quitter</button>
+            @if (isSuperAgent()) {
+              <button (click)="leaveGarage()" class="text-xs font-semibold text-oas-faint hover:text-oas-accent transition">Quitter</button>
+            }
           </div>
         }
       </div>

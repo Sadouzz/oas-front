@@ -5,11 +5,13 @@ import { jwtDecode } from 'jwt-decode';
 import { environment } from '../../../environments/environment';
 import { AuthResponse, LoginRequest, RegisterRequest, CheckAvailabilityResponse } from '../../shared/models';
 import { Router } from '@angular/router';
+import { GarageContextService } from './garage-context.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
+  private garageContext = inject(GarageContextService);
   private api = `${environment.apiUrl}/api/auth`;
   private expirationTimer: any;
 
@@ -23,6 +25,9 @@ export class AuthService {
         localStorage.setItem('token', response.token);
         localStorage.setItem('username', response.username);
         localStorage.setItem('role', response.role);
+        if (response.garageId && response.garageName) {
+          this.garageContext.enterGarage(response.garageId, response.garageName);
+        }
         this.scheduleAutoLogout();
       })
     );
@@ -45,6 +50,7 @@ export class AuthService {
     localStorage.removeItem('token');
     localStorage.removeItem('username');
     localStorage.removeItem('role');
+    this.garageContext.leaveGarage();
     this.clearAutoLogoutTimer();
   }
 

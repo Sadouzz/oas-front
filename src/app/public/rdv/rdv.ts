@@ -1,6 +1,6 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import {
   AbstractControl,
   FormBuilder,
@@ -12,6 +12,7 @@ import {
 } from '@angular/forms';
 
 import { IconComponent } from '../../shared/icon/icon';
+import { AuthService } from '../../core/services/auth.service';
 
 /**
  * Vérifie que "motDePasse" et "confirmation" sont identiques.
@@ -61,7 +62,11 @@ export class RdvComponent implements OnInit {
   avantages: any[] = [];
   services: any[] = [];
 
-  constructor(private fb: FormBuilder) {}
+  private fb = inject(FormBuilder);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
+  constructor() {}
 
   ngOnInit(): void {
 
@@ -162,7 +167,7 @@ export class RdvComponent implements OnInit {
   private initialiserFormulaires(): void {
 
     this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
+      email: ['', [Validators.required]],
       motDePasse: ['', [Validators.required, Validators.minLength(6)]],
       seSouvenir: [false]
     });
@@ -203,7 +208,7 @@ export class RdvComponent implements OnInit {
 
   closeModal(): void {
     this.showModal = false;
-    document.body.classList.add('no-scroll');
+    document.body.classList.remove('no-scroll');
     this.isSubmitting = false;
     this.resetMessages();
   }
@@ -245,17 +250,27 @@ export class RdvComponent implements OnInit {
 
     this.isSubmitting = true;
 
-    const payload = this.loginForm.value;
+    const formValue = this.loginForm.value;
+    const payload = {
+      username: formValue.email,
+      password: formValue.motDePasse
+    };
 
-    /**
-     * TODO : remplacer par un appel au service d'authentification
-     * (ex: this.authService.login(payload).subscribe(...))
-     */
-    setTimeout(() => {
-      this.isSubmitting = false;
-      this.successMessage = 'Connexion réussie ! Redirection en cours...';
-      // ex: this.router.navigate(['/espace-client']);
-    }, 1200);
+    this.authService.login(payload as any).subscribe({
+      next: (res) => {
+        this.isSubmitting = false;
+        this.successMessage = 'Connexion réussie ! Redirection en cours...';
+        
+        setTimeout(() => {
+          this.closeModal();
+          this.router.navigate(['/espace-client']);
+        }, 1200);
+      },
+      error: (err) => {
+        this.isSubmitting = false;
+        this.errorMessage = 'Identifiants incorrects ou erreur serveur.';
+      }
+    });
 
   }
 
@@ -283,18 +298,31 @@ export class RdvComponent implements OnInit {
 
     this.isSubmitting = true;
 
-    const payload = this.registerForm.value;
+    const formValue = this.registerForm.value;
+    const payload = {
+      firstName: formValue.prenom,
+      lastName: formValue.nom,
+      email: formValue.email,
+      phone: formValue.telephone,
+      login: formValue.email,
+      password: formValue.motDePasse,
+      type: 'CLIENT'
+    };
 
-    /**
-     * TODO : remplacer par un appel au service d'inscription
-     * (ex: this.authService.register(payload).subscribe(...))
-     */
-    setTimeout(() => {
-      this.isSubmitting = false;
-      this.successMessage = 'Compte créé avec succès ! Vous pouvez vous connecter.';
-      this.registerForm.reset();
-      this.activeTab = 'login';
-    }, 1200);
+    this.authService.register(payload as any).subscribe({
+      next: () => {
+        this.isSubmitting = false;
+        this.successMessage = 'Compte créé avec succès ! Vous pouvez vous connecter.';
+        this.registerForm.reset();
+        setTimeout(() => {
+          this.activeTab = 'login';
+        }, 1500);
+      },
+      error: (err) => {
+        this.isSubmitting = false;
+        this.errorMessage = err.error?.message || 'Erreur lors de la création du compte.';
+      }
+    });
 
   }
 
