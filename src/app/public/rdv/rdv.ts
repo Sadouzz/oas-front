@@ -167,7 +167,7 @@ export class RdvComponent implements OnInit {
   private initialiserFormulaires(): void {
 
     this.loginForm = this.fb.group({
-      email: ['', [Validators.required]],
+      email: ['', [Validators.required, Validators.email]],
       motDePasse: ['', [Validators.required, Validators.minLength(6)]],
       seSouvenir: [false]
     });
@@ -185,6 +185,14 @@ export class RdvComponent implements OnInit {
       { validators: passwordsMatchValidator() }
     );
 
+  }
+
+  demanderRdv(): void {
+    if (this.authService.isAuthenticated()) {
+      this.router.navigate(['/espace-client/rendez-vous']);
+    } else {
+      this.openLoginModal();
+    }
   }
 
   openLoginModal(): void {
@@ -208,7 +216,7 @@ export class RdvComponent implements OnInit {
 
   closeModal(): void {
     this.showModal = false;
-    document.body.classList.remove('no-scroll');
+    document.body.classList.add('no-scroll');
     this.isSubmitting = false;
     this.resetMessages();
   }

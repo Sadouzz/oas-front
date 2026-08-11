@@ -1,7 +1,7 @@
 <section class="partners-page">
 
     <!-- HERO SECTION SLIDER -->
-    <section class="relative w-full" style="height: 70vh; min-height: 500px;">
+    <section class="relative w-full mb-16" style="height: 70vh; min-height: 500px;">
         <swiper-container autoplay-delay="4500" autoplay-disable-on-interaction="false" pagination="true" class="w-full h-full" style="--swiper-navigation-color: #ef1a1a; --swiper-pagination-color: #ef1a1a; height: 100%;">
           
           <!-- Slide 1 -->
@@ -19,7 +19,7 @@
               <p class="text-white/80 leading-relaxed mt-4 mb-8">
                 Orient Auto Service accompagne les propriétaires de véhicules allemands et européens grâce à une expertise reconnue, des équipements modernes et une équipe qualifiée.
               </p>
-              <div class="flex gap-4">
+              <div class="flex gap-4 mb-12">
                 <a routerLink="/rdv" class="btn-primary flex items-center gap-2">
                   <app-icon name="calendar-check" [size]="18"></app-icon>
                   Prendre rendez-vous
@@ -43,7 +43,7 @@
               <p class="text-white/80 leading-relaxed mt-4 mb-8">
                 Nous travaillons en étroite collaboration avec des équipementiers de premier rang pour vous assurer un service sans compromis.
               </p>
-              <div class="flex gap-4">
+              <div class="flex gap-4 mb-12">
                 <a routerLink="/rdv" class="btn-primary flex items-center gap-2">
                   <app-icon name="calendar-check" [size]="18"></app-icon>
                   Prendre rendez-vous
@@ -76,20 +76,20 @@
                 ></app-section-title>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
-                <div class="brand-card shadow-lg rounded-xl overflow-hidden bg-white" *ngFor="let p of partenairesLocaux">
-                    <div class="brand-image relative h-48">
-                        <img [src]="p.image" [alt]="p.nom" class="w-full h-full object-cover">
-                        <div class="brand-logo absolute bottom-4 left-4 bg-white p-2 rounded shadow">
-                            <img [src]="p.logo" [alt]="p.nom" class="h-8">
+            <swiper-container slides-per-view="1" space-between="32" pagination="true" style="--swiper-pagination-color: #ef1a1a;" breakpoints='{"768": {"slidesPerView": 2}, "1024": {"slidesPerView": 3}}' class="mb-20">
+                <swiper-slide *ngFor="let p of partenairesLocaux" class="pb-12 h-auto">
+                    <div class="brand-card shadow-lg rounded-xl overflow-hidden bg-white h-full flex flex-col">
+                        <div class="brand-image relative h-48 bg-gray-50 border-b border-gray-100 p-8 flex items-center justify-center shrink-0">
+                            <img *ngIf="p.logo" [src]="p.logo" [alt]="p.nom" class="w-full h-full object-contain max-h-32">
+                            <span *ngIf="!p.logo" class="text-gray-400 uppercase tracking-widest text-sm font-bold">{{ p.nom }}</span>
+                        </div>
+                        <div class="brand-content p-6 flex-grow">
+                            <h3 class="text-xl font-bold text-oas-navy-dark mb-2">{{ p.nom }}</h3>
+                            <p class="text-oas-muted">{{ p.description }}</p>
                         </div>
                     </div>
-                    <div class="brand-content p-6">
-                        <h3 class="text-xl font-bold text-oas-navy-dark mb-2">{{ p.nom }}</h3>
-                        <p class="text-oas-muted">{{ p.description }}</p>
-                    </div>
-                </div>
-            </div>
+                </swiper-slide>
+            </swiper-container>
 
             <div class="mb-12">
                 <app-section-title 
@@ -101,20 +101,42 @@
                 ></app-section-title>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <div class="brand-card shadow-lg rounded-xl overflow-hidden bg-white" *ngFor="let p of partenairesExterieurs">
-                    <div class="brand-image relative h-48">
-                        <img [src]="p.image" [alt]="p.nom" class="w-full h-full object-cover">
-                        <div class="brand-logo absolute bottom-4 left-4 bg-white p-2 rounded shadow">
-                            <img [src]="p.logo" [alt]="p.nom" class="h-8">
+            <swiper-container slides-per-view="1" space-between="32" pagination="true" style="--swiper-pagination-color: #ef1a1a;" breakpoints='{"768": {"slidesPerView": 2}, "1024": {"slidesPerView": 3}}'>
+                <swiper-slide *ngFor="let p of partenairesExterieurs" class="pb-12 h-auto">
+                    <div class="brand-card shadow-lg rounded-xl overflow-hidden bg-white h-full flex flex-col">
+                        <div class="brand-image relative h-48 bg-gray-50 border-b border-gray-100 p-8 flex items-center justify-center shrink-0">
+                            <img *ngIf="p.logo" [src]="p.logo" [alt]="p.nom" class="w-full h-full object-contain max-h-32">
+                            <span *ngIf="!p.logo" class="text-gray-400 uppercase tracking-widest text-sm font-bold">{{ p.nom }}</span>
+                        </div>
+                        <div class="brand-content p-6 flex-grow">
+                            <h3 class="text-xl font-bold text-oas-navy-dark mb-2">{{ p.nom }}</h3>
+                            <p class="text-oas-muted">{{ p.description }}</p>
                         </div>
                     </div>
-                    <div class="brand-content p-6">
-                        <h3 class="text-xl font-bold text-oas-navy-dark mb-2">{{ p.nom }}</h3>
-                        <p class="text-oas-muted">{{ p.description }}</p>
-                    </div>
-                </div>
+                </swiper-slide>
+            </swiper-container>
+
+            <!-- NOUVELLE SECTION FOURNISSEURS -->
+            <div *ngIf="fournisseurs && fournisseurs.length > 0" class="mt-20 mb-12">
+                <app-section-title 
+                    mainTitle="Nos"
+                    highlightedText="fournisseurs"
+                    subtitle="Partenaires d'approvisionnement"
+                    align="center"
+                    theme="light"
+                ></app-section-title>
             </div>
+
+            <swiper-container *ngIf="fournisseurs && fournisseurs.length > 0" slides-per-view="1" space-between="32" pagination="true" style="--swiper-pagination-color: #ef1a1a;" breakpoints='{"768": {"slidesPerView": 2}, "1024": {"slidesPerView": 3}}'>
+                <swiper-slide *ngFor="let f of fournisseurs" class="pb-12 h-auto">
+                    <div class="brand-card shadow-lg rounded-xl overflow-hidden bg-white h-full">
+                        <div class="brand-content p-6 flex flex-col h-full justify-center text-center">
+                            <h3 class="text-xl font-bold text-oas-navy-dark mb-2 uppercase">{{ f.nomEntreprise }}</h3>
+                            <p class="text-oas-muted">Contact: {{ f.prenom }} {{ f.nom }}</p>
+                        </div>
+                    </div>
+                </swiper-slide>
+            </swiper-container>
 
         </div>
 
@@ -213,9 +235,9 @@
     </div>
 
     <!-- CTA -->
-    <section class="py-24 lg:py-40 bg-oas-accent text-white text-center relative overflow-hidden">
+    <section class="py-24 lg:py-40 bg-oas-bg text-oas-navy-dark text-center relative overflow-hidden">
         <!-- Jerrycan interactif en filigrane d'arrière-plan -->
-        <app-jerrycan [opacity]="0.25" [size]="480" class="absolute -right-8 -bottom-8 text-white pointer-events-none"></app-jerrycan>
+        <app-jerrycan [opacity]="0.25" [size]="480" class="absolute -right-8 -bottom-8 text-oas-navy-dark pointer-events-none"></app-jerrycan>
 
         <div class="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
             <h1 class="text-[25vw] font-black tracking-tighter whitespace-nowrap">CONTACT</h1>
@@ -223,26 +245,26 @@
         <div class="relative z-10 max-w-3xl mx-auto px-6">
             <app-section-title 
                 align="center"
-                theme="accent"
+                theme="light"
                 mainTitle="Confiez votre véhicule à"
                 highlightedText="des spécialistes."
                 subtitle="Orient Auto Service"
             ></app-section-title>
 
             <div class="mt-12">
-                <p class="text-white/90 text-lg mb-8">
+                <p class="text-oas-ink text-lg mb-8">
                     Notre équipe met son expérience au service de votre véhicule, quelle que soit sa marque.
                 </p>
 
                 <div class="flex flex-col sm:flex-row justify-center gap-4">
-                    <a routerLink="/rdv" class="inline-flex items-center gap-4 px-10 py-5 bg-oas-navy-dark text-white hover:bg-white hover:text-oas-navy-dark transition-colors duration-300 text-sm font-bold tracking-[0.2em] uppercase shadow-2xl group">
+                    <a routerLink="/rdv" class="inline-flex items-center gap-4 px-10 py-5 bg-oas-navy-dark text-white hover:bg-white hover:text-oas-navy-dark hover:border-oas-navy-dark transition-colors duration-300 text-sm font-bold tracking-[0.2em] uppercase shadow-2xl group border-2 border-transparent">
                         Prendre rendez-vous
                         <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                         </svg>
                     </a>
 
-                    <a routerLink="/contact" class="inline-flex items-center gap-4 px-10 py-5 border-2 border-white text-white hover:bg-white hover:text-oas-navy-dark transition-colors duration-300 text-sm font-bold tracking-[0.2em] uppercase shadow-2xl group">
+                    <a routerLink="/contact" class="inline-flex items-center gap-4 px-10 py-5 border-2 border-oas-navy-dark text-oas-navy-dark hover:bg-oas-navy-dark hover:text-white transition-colors duration-300 text-sm font-bold tracking-[0.2em] uppercase shadow-2xl group">
                         Nous contacter
                     </a>
                 </div>

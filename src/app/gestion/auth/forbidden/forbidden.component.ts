@@ -19,6 +19,6 @@ export class ForbiddenComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/dashboard'], { replaceUrl: true });
+    this.router.navigate(['/gestion/dashboard'], { replaceUrl: true });
   }
 }

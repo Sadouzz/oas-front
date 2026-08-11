@@ -383,9 +383,9 @@
                       <app-icon name="wrench" [size]="24"></app-icon>
                   </div>
                   <div>
-                      <h4 class="font-bold text-oas-navy text-lg mb-1">Mécaniciens & Électriciens</h4>
+                      <h4 class="font-bold text-oas-navy text-lg mb-1">Techniciens</h4>
                       <p class="text-oas-muted text-sm leading-relaxed">
-                          La force opérationnelle de l’atelier. Ils mènent les diagnostics électroniques poussés, réalisent la maintenance mécanique et exécutent les travaux complexes de tôlerie/carrosserie avec minutie.
+                          La force opérationnelle de l'atelier. Qu'il s'agisse de <strong>mécaniciens</strong> passionnés par la mécanique pure, d'<strong>électriciens</strong> experts en diagnostic de pointe, de <strong>techniciens du froid</strong> spécialisés en climatisation, ou d'intervenants minutieux en tôlerie et carrosserie, nos équipes maîtrisent l'ensemble des technologies automobiles pour assurer une réparation rigoureuse et durable de vos véhicules.
                       </p>
                   </div>
               </div>
@@ -428,26 +428,33 @@
 
           <!-- Main Text -->
           <div class="lg:col-span-8 lg:pl-16 lg:pt-8">
-              <div class="space-y-16 max-w-4xl">
-                  <div>
-                      <span class="text-oas-accent font-black tracking-[0.2em] text-xs mb-4 block uppercase border-b border-white/20 pb-4">Des hommes et des femmes</span>
-                      <p class="font-sans text-2xl md:text-3xl lg:text-4xl leading-[1.3] tracking-tight font-medium text-balance text-white/90">
-                          Derrière chaque capot soulevé, il y a <span class="font-extrabold text-white uppercase text-xl md:text-2xl lg:text-3xl">une équipe d'experts dévoués.</span> Des passionnés qui cumulent des dizaines d'années d'expérience et qui partagent un même amour pour la belle mécanique.
-                      </p>
-                  </div>
-                  <div>
-                      <span class="text-oas-accent font-black tracking-[0.2em] text-xs mb-4 block uppercase border-b border-white/20 pb-4">Une synergie parfaite</span>
-                      <p class="font-sans text-2xl md:text-3xl lg:text-4xl leading-[1.3] tracking-tight font-medium text-balance text-white/90">
-                          Sous la direction de notre Chef d'Atelier, nos experts en <span class="italic font-serif text-oas-accent">diagnostic électronique</span> et nos <span class="italic font-serif text-oas-accent">mécaniciens de précision</span> travaillent en parfaite harmonie. Chaque véhicule bénéficie ainsi d'une analyse collégiale et rigoureuse.
-                      </p>
-                  </div>
+              <div class="space-y-4 max-w-4xl">
+                  <app-piston-accordion 
+                    title="Des hommes et des femmes" 
+                    subtitle="L'humain avant tout"
+                    [active]="activeTeamSection === 1" 
+                    (toggle)="toggleTeamSection(1)">
+                    <p class="font-sans text-xl md:text-2xl leading-[1.4] font-medium text-balance">
+                        Derrière chaque capot soulevé, il y a <span class="font-extrabold text-oas-accent uppercase">une équipe d'experts dévoués.</span> Des passionnés qui cumulent des dizaines d'années d'expérience et qui partagent un même amour pour la belle mécanique.
+                    </p>
+                  </app-piston-accordion>
+
+                  <app-piston-accordion 
+                    title="Une synergie parfaite" 
+                    subtitle="Collaboration"
+                    [active]="activeTeamSection === 2" 
+                    (toggle)="toggleTeamSection(2)">
+                    <p class="font-sans text-xl md:text-2xl leading-[1.4] font-medium text-balance">
+                        Sous la direction de notre Chef d'Atelier, nos experts en <span class="italic font-serif text-oas-accent">diagnostic électronique</span> et nos <span class="italic font-serif text-oas-accent">mécaniciens de précision</span> travaillent en parfaite harmonie. Chaque véhicule bénéficie ainsi d'une analyse collégiale et rigoureuse.
+                    </p>
+                  </app-piston-accordion>
               </div>
           </div>
       </div>
   </section>
 
   <!-- CERTIFICATIONS (CAROUSEL WITH CTA BACKGROUND) -->
-  <section class="py-24 lg:py-40 bg-oas-accent text-white text-center relative overflow-hidden">
+  <section class="py-24 lg:py-40 bg-oas-bg text-oas-navy-dark text-center relative overflow-hidden">
     <div class="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
       <h1 class="text-[30vw] font-black tracking-tighter whitespace-nowrap">QUALITÉ</h1>
     </div>
@@ -455,13 +462,13 @@
     <div class="relative z-10  mx-auto px-6">
       <app-section-title 
         align="center"
-        theme="accent"
+        theme="light"
         mainTitle="NOS " 
         highlightedText="CERTIFICATIONS." 
         subtitle="Gages de Qualité">
       </app-section-title>
       
-      <p class="mt-8 text-white/90 text-xl max-w-2xl mx-auto font-medium mb-16">
+      <p class="mt-8 text-oas-ink text-xl max-w-2xl mx-auto font-medium mb-16">
         La confiance se mérite, et l'excellence se prouve. Nous sommes fiers de détenir les normes les plus strictes.
       </p>
 

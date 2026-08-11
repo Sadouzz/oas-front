@@ -36,6 +36,12 @@ export class About {
     this.activeChapter = this.activeChapter === chapter ? null : chapter;
   }
 
+  activeTeamSection: number | null = 1;
+
+  toggleTeamSection(section: number) {
+    this.activeTeamSection = this.activeTeamSection === section ? null : section;
+  }
+
   certifications = [
     { id: 1, icon: 'ISO', title: 'Qualité 9001', description: 'Un contrôle qualité implacable à chaque étape de notre intervention, garantissant des prestations sans compromis.' },
     { id: 2, icon: 'ECO', title: 'Atelier Vert', description: 'Un respect absolu de l\'environnement dans le traitement de nos déchets et l\'utilisation de nos produits.' },

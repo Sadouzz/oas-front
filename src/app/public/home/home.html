@@ -311,7 +311,7 @@
       </div>
     </div>
 
-    <div class="text-center mt-4">
+    <div class="text-center mt-4 mb-16">
       <a routerLink="/contact" class="inline-flex items-center gap-4 px-8 py-4 rounded-0 border border-white/20 hover:border-oas-accent hover:text-oas-accent transition-colors text-xs uppercase tracking-[0.2em] font-bold">
         Vous pouvez aussi y figurer
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -321,10 +321,48 @@
     </div>
   </section>
 
+  <!-- FOURNISSEURS -->
+  <section class="bg-oas-navy-dark py-32 text-white border-b border-white/5 overflow-hidden relative">
+    <div class="relative flex w-full flex-col-reverse text-center mb-8 z-10">
+      <h2 class="uppercase font-extrabold text-balance text-4xl md:text-6xl lg:text-7xl block tracking-tighter">
+        Nos fournisseurs <em class="text-oas-accent not-italic">de qualité.</em>
+      </h2>
+      <span class="w-full rotate-[-2deg] font-serif italic text-center text-oas-accent mb-2 xl:mb-4 text-2xl lg:text-4xl opacity-80">
+        Nos Fournisseurs
+      </span>
+    </div>
+    <div class="text-center flex justify-center mb-20">
+      <p class="text-oas-faint max-w-2xl mx-auto text-lg leading-relaxed text-center px-6">
+        Nous sélectionnons rigoureusement nos fournisseurs pour vous offrir les meilleures pièces et matériaux du marché.
+      </p>
+    </div>
+
+    <div class="relative w-full overflow-hidden mt-16 pb-8 border-y border-white/10 pt-8 bg-black/20">
+      <div class="flex group">
+        <!-- Première bande -->
+        <div class="flex shrink-0 min-w-full animate-marquee items-center justify-around gap-16 md:gap-32 px-8 group-hover:[animation-play-state:paused]">
+          @for (fournisseur of fournisseurs; track fournisseur.id) {
+          <div class="flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity duration-300">
+            <h3 class="text-2xl font-bold uppercase tracking-wider">{{ fournisseur.nomEntreprise }}</h3>
+          </div>
+          }
+        </div>
+        <!-- Deuxième bande identique pour le scroll infini -->
+        <div class="flex shrink-0 min-w-full animate-marquee items-center justify-around gap-16 md:gap-32 px-8 group-hover:[animation-play-state:paused]" aria-hidden="true">
+          @for (fournisseur of fournisseurs; track fournisseur.id) {
+          <div class="flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity duration-300">
+            <h3 class="text-2xl font-bold uppercase tracking-wider">{{ fournisseur.nomEntreprise }}</h3>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- CTA FINAL (FULLSCREEN VIBE) -->
-  <section class="py-24 lg:py-40 bg-oas-accent text-white text-center relative overflow-hidden">
+  <section class="py-24 lg:py-40 bg-oas-bg text-oas-navy-dark text-center relative overflow-hidden">
     <!-- Mechanical Gears interactif en filigrane d'arrière-plan -->
-    <app-mechanical-gears [opacity]="0.15" [size]="480" class="absolute -right-12 -bottom-12 text-white pointer-events-none"></app-mechanical-gears>
+    <app-mechanical-gears [opacity]="0.15" [size]="480" class="absolute -right-12 -bottom-12 text-oas-navy-dark pointer-events-none"></app-mechanical-gears>
 
     <div class="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
       <h1 class="text-[30vw] font-black tracking-tighter whitespace-nowrap">CONTACT</h1>
@@ -332,7 +370,7 @@
     <div class="relative z-10 max-w-3xl mx-auto px-6">
       <app-section-title 
         align="center"
-        theme="accent"
+        theme="light"
         mainTitle="FAITES LE PREMIER PAS VERS L'" 
         highlightedText="EXCELLENCE." 
         subtitle="Contactez-nous">

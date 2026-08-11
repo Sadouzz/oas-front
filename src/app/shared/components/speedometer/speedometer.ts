@@ -117,6 +117,25 @@ export class SpeedometerComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
+  onMouseEnter(): void {
+    if (!this.hasAnimated) return;
+
+    // Instant reset
+    this.isVisible = false;
+    this.needleAngle = -120;
+    this.displayedValue = 0;
+    
+    if (this.animFrameId) {
+      cancelAnimationFrame(this.animFrameId);
+    }
+    this.cdr.markForCheck();
+
+    // Small delay to allow DOM to apply non-transitioned reset
+    setTimeout(() => {
+      this.startAnimation();
+    }, 50);
+  }
+
   formatValue(val: number): string {
     return val.toLocaleString('fr-FR');
   }

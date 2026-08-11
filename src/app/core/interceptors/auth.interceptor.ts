@@ -26,19 +26,20 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
+      // Ignorer les erreurs 401/403 si on est sur le site public ET pas authentifié
+      const isPublicRoute = !router.url.startsWith('/gestion') && !isClientArea;
+      
       if (error.status === 401) {
-        // Non authentifié → logout et redirection vers la page de connexion contextuelle
         authService.logout();
         if (isClientArea) {
           router.navigate(['/espace-client/connexion'], { replaceUrl: true });
-        } else {
+        } else if (!isPublicRoute) {
           router.navigate(['/login'], { replaceUrl: true });
         }
       } else if (error.status === 403) {
-        // Authentifié mais pas autorisé → page interdite contextuelle
         if (isClientArea) {
           router.navigate(['/espace-client'], { replaceUrl: true });
-        } else {
+        } else if (!isPublicRoute) {
           router.navigate(['/forbidden'], { replaceUrl: true });
         }
       }

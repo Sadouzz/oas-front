@@ -6,6 +6,9 @@ import { HorizontalGalleryComponent, RealisationItem } from '../../shared/compon
 import { BlogPreviewComponent, BlogArticle } from '../../shared/components/blog-preview/blog-preview';
 import { register } from 'swiper/element/bundle';
 import { BlogService } from '../../services/blog.service';
+import { PartenaireService } from '../../services/partenaire.service';
+import { FournisseurService } from '../../services/fournisseur.service';
+import { PartenaireModel, FournisseurModel } from '../../shared/models';
 
 register();
 
@@ -56,14 +59,8 @@ export class Home implements OnInit {
   ];
   testimonialsData: Testimonial[] = TESTIMONIALS_DATA;
 
-  partners: Partner[] = [
-    { name: 'Partner 1', logoUrl: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?q=80&w=400&auto=format&fit=crop', heightClass: 'h-16 rounded-md' },
-    { name: 'Partner 2', logoUrl: 'https://images.unsplash.com/photo-1503376712351-1b2d3c96048c?q=80&w=400&auto=format&fit=crop', heightClass: 'h-16 rounded-md' },
-    { name: 'Partner 3', logoUrl: 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?q=80&w=400&auto=format&fit=crop', heightClass: 'h-16 rounded-md' },
-    { name: 'Partner 4', logoUrl: 'https://images.unsplash.com/photo-1493238792000-8113da705763?q=80&w=400&auto=format&fit=crop', heightClass: 'h-16 rounded-md' },
-    { name: 'Partner 5', logoUrl: 'https://images.unsplash.com/photo-1517524008697-84bbe3c3fd98?q=80&w=400&auto=format&fit=crop', heightClass: 'h-16 rounded-md' },
-    { name: 'Partner 6', logoUrl: 'https://images.unsplash.com/photo-1504215680853-026ed2a45def?q=80&w=400&auto=format&fit=crop', heightClass: 'h-16 rounded-md' },
-  ];
+  partners: Partner[] = [];
+  fournisseurs: FournisseurModel[] = [];
 
   stats = [
     { value: 18, suffix: '+', max: 25, unit: 'ANS', label: "Années d'expérience" },
@@ -110,6 +107,8 @@ export class Home implements OnInit {
 
   blogArticles: BlogArticle[] = [];
   private blogService = inject(BlogService);
+  private partenaireService = inject(PartenaireService);
+  private fournisseurService = inject(FournisseurService);
 
   ngOnInit(): void {
     const rotations = ['rotate-[-6deg]', 'rotate-[3deg]', 'rotate-[-4deg]', 'rotate-[4deg]'];
@@ -127,6 +126,28 @@ export class Home implements OnInit {
       },
       error: (err) => {
         console.error('Erreur lors du chargement des articles de blog sur la page d\'accueil:', err);
+      }
+    });
+
+    this.partenaireService.getAll().subscribe({
+      next: (data) => {
+        this.partners = data.map(p => ({
+          name: p.nom,
+          logoUrl: p.logo && p.logo !== '' ? p.logo : 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?q=80&w=400&auto=format&fit=crop',
+          heightClass: 'h-16 rounded-md'
+        }));
+      },
+      error: (err) => {
+        console.error('Erreur chargement partenaires:', err);
+      }
+    });
+
+    this.fournisseurService.getAll().subscribe({
+      next: (data) => {
+        this.fournisseurs = data;
+      },
+      error: (err) => {
+        console.error('Erreur chargement fournisseurs:', err);
       }
     });
   }

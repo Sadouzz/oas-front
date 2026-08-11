@@ -1,4 +1,4 @@
-<div class="speedometer-card" [class.is-visible]="isVisible">
+<div class="speedometer-card" [class.is-visible]="isVisible" (mouseenter)="onMouseEnter()">
   <!-- Vis cruciformes aux 4 coins -->
   <app-bolt-corners variant="red" [size]="12" [offset]="6"></app-bolt-corners>
 

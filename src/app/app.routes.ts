@@ -48,7 +48,7 @@ export const routes: Routes = [
   },
 
   {
-    path: '',
+    path: 'gestion',
     component: LayoutComponent,
     canActivate: [staffGuard],
     children: [
@@ -193,5 +193,5 @@ export const routes: Routes = [
     ],
   },
 
-  { path: '**', redirectTo: 'login' },
+  { path: '**', redirectTo: '' },
 ];

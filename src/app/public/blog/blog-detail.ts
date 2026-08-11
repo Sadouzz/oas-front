@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { BlogService, BlogPostModel } from '../../services/blog.service';
 import { BoltCornersComponent } from '../../shared/components/bolt-corners/bolt-corners';
+import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 
 interface Comment {
   author: string;
@@ -14,7 +15,7 @@ interface Comment {
 @Component({
   selector: 'app-blog-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, BoltCornersComponent],
+  imports: [CommonModule, FormsModule, RouterLink, BoltCornersComponent, PaginationComponent],
   templateUrl: './blog-detail.html',
   styleUrl: './blog-detail.css'
 })
@@ -34,6 +35,38 @@ export class BlogDetailComponent implements OnInit {
   newCommentContent = '';
 
   private articleId = 0;
+
+  // Pagination
+  currentPage = 1;
+  pageSize = 5;
+
+  // Share
+  linkCopied = false;
+
+  get paginatedComments(): Comment[] {
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    return this.comments.slice(startIndex, startIndex + this.pageSize);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.comments.length / this.pageSize);
+  }
+
+  onNextPage(): void {
+    if (this.currentPage < this.totalPages) this.currentPage++;
+  }
+
+  onPrevPage(): void {
+    if (this.currentPage > 1) this.currentPage--;
+  }
+
+  copyLink(): void {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+      this.linkCopied = true;
+      setTimeout(() => this.linkCopied = false, 3000);
+    });
+  }
 
   ngOnInit(): void {
     const idParam = this.route.snapshot.paramMap.get('id');

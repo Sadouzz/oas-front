@@ -3,6 +3,9 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { register } from 'swiper/element/bundle';
 
+import { PartenaireService, PartenaireModel } from '../../services/partenaire.service';
+import { FournisseurService, FournisseurModel } from '../../services/fournisseur.service';
+
 import { IconComponent } from '../../shared/icon/icon';
 import { SectionTitle } from '../../shared/components/section-title/section-title';
 import { TireTrackComponent } from '../../shared/components/tire-track/tire-track';
@@ -31,35 +34,14 @@ register();
 })
 export class Partenaires implements OnInit, AfterViewInit, OnDestroy {
 
-  partenairesLocaux = [
-    {
-      nom: 'Garage Local 1',
-      image: '/assets/images/garage1.jpg',
-      logo: '/assets/oas-logo.svg',
-      description: 'Partenaire de proximité pour vos besoins rapides.'
-    },
-    {
-      nom: 'Garage Local 2',
-      image: '/assets/images/garage2.jpg',
-      logo: '/assets/oas-logo.svg',
-      description: 'Spécialiste de votre région.'
-    }
-  ];
+  partenairesLocaux: PartenaireModel[] = [];
+  partenairesExterieurs: PartenaireModel[] = [];
+  fournisseurs: FournisseurModel[] = [];
 
-  partenairesExterieurs = [
-    {
-      nom: 'Mercedes-Benz',
-      image: '/assets/images/garage1.jpg',
-      logo: '/assets/oas-logo.svg',
-      description: 'Spécialiste de l’entretien, du diagnostic électronique et de la réparation des véhicules Mercedes-Benz.'
-    },
-    {
-      nom: 'Porsche',
-      image: '/assets/images/garage2.jpg',
-      logo: '/assets/oas-logo.svg',
-      description: 'Maintenance et réparations réalisées dans le respect des exigences des véhicules Porsche.'
-    }
-  ];
+  constructor(
+    private partenaireService: PartenaireService,
+    private fournisseurService: FournisseurService
+  ) {}
 
   expertises = [
     {
@@ -104,6 +86,14 @@ export class Partenaires implements OnInit, AfterViewInit, OnDestroy {
   ];
 
   ngOnInit(): void {
+    this.partenaireService.getAll().subscribe(data => {
+      this.partenairesLocaux = data.filter(p => p.type === 'LOCAL' && !p.archived);
+      this.partenairesExterieurs = data.filter(p => p.type === 'EXTERIEUR' && !p.archived);
+    });
+
+    this.fournisseurService.getAll().subscribe(data => {
+      this.fournisseurs = data.filter(f => !f.archived);
+    });
   }
 
   /* ==========================================================
