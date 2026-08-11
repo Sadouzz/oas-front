@@ -53,14 +53,14 @@ export class Realisations {
   ];
 
   readonly galleryItems: GalleryItem[] = [
-    { id: 1, category: 'atelier', title: 'Notre atelier, entre tradition et savoir-faire', src: 'https://images.unsplash.com/photo-1649615084630-431b70a6e89a?q=80&w=900&auto=format&fit=crop' },
-    { id: 2, category: 'vehicules', title: 'Intervention en cours', src: 'https://images.unsplash.com/photo-1730461749346-d75ee4d30aa1?q=80&w=900&auto=format&fit=crop' },
-    { id: 3, category: 'atelier', title: 'Poste de travail équipé', src: 'https://images.unsplash.com/photo-1477333183135-292dd5b3910f?q=80&w=900&auto=format&fit=crop' },
-    { id: 4, category: 'vehicules', title: 'Précision mécanique', src: 'https://images.unsplash.com/photo-1703632998797-a8d220ce58ce?q=80&w=900&auto=format&fit=crop' },
-    { id: 5, category: 'atelier', title: 'Un espace pensé pour l’efficacité', src: 'https://images.unsplash.com/photo-1647299852821-40401c0b0976?q=80&w=900&auto=format&fit=crop' },
-    { id: 6, category: 'vehicules', title: 'Le bon outil pour chaque intervention', src: 'https://images.unsplash.com/photo-1503791228404-a79884146f98?q=80&w=900&auto=format&fit=crop' },
-    { id: 7, category: 'atelier', title: 'Clés et outils toujours prêts', src: 'https://images.unsplash.com/photo-1623055659540-42475c90e3c3?q=80&w=900&auto=format&fit=crop' },
-    { id: 8, category: 'vehicules', title: 'Outils de précision', src: 'https://images.unsplash.com/photo-1745449064670-94bd0fc13df8?q=80&w=900&auto=format&fit=crop' },
+    { id: 1, category: 'atelier', title: 'Notre atelier, entre tradition et savoir-faire', src: 'https://res.cloudinary.com/p3dkpqm9/image/upload/v1786449286/oas/website/hpunm2bmu8oxp6jc2m4n.jpg' },
+    { id: 2, category: 'vehicules', title: 'Intervention en cours', src: 'https://res.cloudinary.com/p3dkpqm9/image/upload/v1786449279/oas/website/kwp39f5nl5abncxkjzyj.jpg' },
+    { id: 3, category: 'atelier', title: 'Poste de travail équipé', src: 'https://res.cloudinary.com/p3dkpqm9/image/upload/v1786449272/oas/website/gxule2frfbwuhkbij7eb.jpg' },
+    { id: 4, category: 'vehicules', title: 'Précision mécanique', src: 'https://res.cloudinary.com/p3dkpqm9/image/upload/v1786449269/oas/website/wugb99sl4nc5hxhmx0ka.jpg' },
+    { id: 5, category: 'atelier', title: 'Un espace pensé pour l’efficacité', src: 'https://res.cloudinary.com/p3dkpqm9/image/upload/v1786449290/oas/website/sontcoysahukicosznr9.jpg' },
+    { id: 6, category: 'vehicules', title: 'Le bon outil pour chaque intervention', src: 'https://res.cloudinary.com/p3dkpqm9/image/upload/v1786449294/oas/website/ml5vlmldvdlvww2v5u1o.jpg' },
+    { id: 7, category: 'atelier', title: 'Clés et outils toujours prêts', src: 'https://res.cloudinary.com/p3dkpqm9/image/upload/v1786449306/oas/website/crfhms8eehim75ddasfp.jpg' },
+    { id: 8, category: 'vehicules', title: 'Outils de précision', src: 'https://res.cloudinary.com/p3dkpqm9/image/upload/v1786449303/oas/website/z5rllu92rls3yvwivq2d.jpg' },
   ];
 
   readonly beforeAfterItems: BeforeAfterItem[] = [

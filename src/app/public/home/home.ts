@@ -136,11 +136,11 @@ export class Home implements OnInit {
       road: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?q=80&w=800&auto=format&fit=crop',
       brakes: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?q=80&w=800&auto=format&fit=crop',
       air: 'https://images.unsplash.com/photo-1517524008697-84bbe3c3fd98?q=80&w=800&auto=format&fit=crop',
-      garage: 'https://images.unsplash.com/photo-1520627918841-86e57201c13d?q=80&w=800&auto=format&fit=crop',
+      garage: 'https://res.cloudinary.com/p3dkpqm9/image/upload/v1786449299/oas/website/samcwf93dnxox0og9avx.jpg',
       dashboard: 'https://images.unsplash.com/photo-1635835694200-a4a350080648?q=80&w=800&auto=format&fit=crop',
       oil: 'https://images.unsplash.com/photo-1632823471565-1ec2a74c2e6f?q=80&w=800&auto=format&fit=crop',
       tyres: 'https://images.unsplash.com/photo-1600705722908-bab1e61c0b4d?q=80&w=800&auto=format&fit=crop',
-      tools: 'https://images.unsplash.com/photo-1487754180451-c456f719a1fc?q=80&w=800&auto=format&fit=crop'
+      tools: 'https://res.cloudinary.com/p3dkpqm9/image/upload/v1786449272/oas/website/gxule2frfbwuhkbij7eb.jpg'
     };
     return mapping[imageKey] || 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?q=80&w=800&auto=format&fit=crop';
   }
