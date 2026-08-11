@@ -12,7 +12,52 @@
 
   <!-- ══════════════════════════════════════════════ SUPER AGENT ══ -->
   @if (isSuperAgent) {
-    <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4 mb-6 flex items-center justify-between">
+    @if (isGarageSelectionMode) {
+      <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4 mb-6">
+        <h1 class="text-2xl font-bold text-oas-ink">Sélectionnez un Garage</h1>
+        <p class="text-sm text-oas-muted mt-1">Choisissez un garage pour voir et gérer ses données.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- Carte Vue Globale -->
+        <div (click)="selectGarage({ id: 0, nom: 'Tous les garages' })" class="bg-oas-bg rounded-xl border border-oas-line shadow-sm p-6 cursor-pointer hover:border-oas-accent/50 hover:shadow-md transition">
+          <div class="flex items-start gap-4">
+            <span class="w-12 h-12 rounded-xl bg-oas-accent text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+              <svg lucideBuilding class="w-6 h-6"></svg>
+            </span>
+            <div>
+              <h3 class="font-bold text-oas-ink text-lg">Vue Globale</h3>
+              <p class="text-sm text-oas-muted">Toutes les données confondues</p>
+              <div class="mt-4 flex items-center gap-1 text-sm font-semibold text-oas-accent">
+                Accéder à la vue globale
+                <svg lucideArrowRight class="w-4 h-4"></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        @for (g of garages; track g.id) {
+          <div (click)="selectGarage(g)" class="bg-white rounded-xl border border-oas-line shadow-card p-6 cursor-pointer hover:border-oas-accent/50 hover:shadow-md transition">
+            <div class="flex items-start gap-4">
+              <span class="w-12 h-12 rounded-xl bg-oas-navy text-white flex items-center justify-center flex-shrink-0">
+                <svg lucideBuilding class="w-6 h-6"></svg>
+              </span>
+              <div>
+                <h3 class="font-bold text-oas-ink text-lg">{{ g.nom }}</h3>
+                <p class="text-sm text-oas-muted">{{ g.localite }}</p>
+                <div class="mt-4 flex items-center gap-1 text-sm font-semibold text-oas-accent">
+                  Entrer dans ce garage
+                  <svg lucideArrowRight class="w-4 h-4"></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        } @empty {
+          <div class="col-span-full py-12 text-center text-oas-muted text-sm">Aucun garage trouvé</div>
+        }
+      </div>
+    } @else {
+      <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4 mb-6 flex items-center justify-between">
       <div>
         <h1 class="text-2xl font-bold text-oas-ink">Tableau de bord</h1>
         <p class="text-sm text-oas-muted mt-1">Vue d'ensemble de l'activité du garage.</p>
@@ -301,6 +346,7 @@
       </div>
       </div>
     </div>
+    }
   }
 
   <!-- ══════════════════════════════════════════════ AGENT ══ -->

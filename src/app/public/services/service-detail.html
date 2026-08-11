@@ -1,7 +1,7 @@
 <ng-container *ngIf="service() as current; else missing">
   <section class="detail-hero">
     <div>
-      <div class="hero-in" style="animation-delay:.05s">
+      <div>
         <app-section-title 
             [mainTitle]="current.title"
             highlightedText=""
@@ -10,7 +10,7 @@
             theme="dark"
         ></app-section-title>
       </div>
-      <div class="detail-intro hero-in" style="animation-delay:.3s">
+      <div class="detail-intro">
         <p>{{ current.description }}</p>
         <a routerLink="/rdv">Prendre rendez-vous <span>→</span></a>
       </div>
@@ -18,7 +18,7 @@
   </section>
 
   <main class="detail-main">
-    <section class="detail-grid" appScrollReveal>
+    <section class="detail-grid">
       <div>
         <app-section-title 
             mainTitle="Une réponse adaptée à"
@@ -28,9 +28,9 @@
             theme="light"
         ></app-section-title>
       </div>
-      <ul><li *ngFor="let item of current.includes; let i = index" appScrollReveal [appScrollRevealDelay]="i * 70">{{ item }}</li></ul>
+      <ul><li *ngFor="let item of current.includes">{{ item }}</li></ul>
     </section>
-    <section class="detail-alert" appScrollReveal>
+    <section class="detail-alert">
       <div>
         <app-section-title 
             mainTitle="N’attendez pas que le"
@@ -40,26 +40,52 @@
             theme="light"
         ></app-section-title>
       </div>
-      <div><p *ngFor="let item of current.alert; let i = index" appScrollReveal [appScrollRevealDelay]="i * 70"><b>•</b>{{ item }}</p></div>
+      <div><p *ngFor="let item of current.alert"><b>•</b>{{ item }}</p></div>
     </section>
     <section class="detail-process">
-      <p class="eyebrow" appScrollReveal>L’intervention OAS</p>
+      <p class="eyebrow">L’intervention OAS</p>
       <div>
-        <article appScrollReveal [appScrollRevealDelay]="0"><span>01</span><h3>Contrôle</h3><p>Nous vérifions les éléments concernés.</p></article>
-        <article appScrollReveal [appScrollRevealDelay]="90"><span>02</span><h3>Explication</h3><p>Vous recevez un diagnostic et un devis clair.</p></article>
-        <article appScrollReveal [appScrollRevealDelay]="180"><span>03</span><h3>Intervention</h3><p>Nous intervenons après votre validation.</p></article>
+        <article><span>01</span><h3>Contrôle</h3><p>Nous vérifions les éléments concernés.</p></article>
+        <article><span>02</span><h3>Explication</h3><p>Vous recevez un diagnostic et un devis clair.</p></article>
+        <article><span>03</span><h3>Intervention</h3><p>Nous intervenons après votre validation.</p></article>
       </div>
     </section>
-    <section class="detail-cta" appScrollReveal>
-      <app-section-title 
-          mainTitle="Parlons de"
-          highlightedText="votre véhicule."
-          subtitle="Besoin d’un conseil ?"
-          align="center"
-          theme="dark"
-      ></app-section-title>
-      <a routerLink="/devis">Demander un devis <span>→</span></a>
-    </section>
   </main>
+
+  <!-- Tire Track Separator -->
+  <div class="py-4 bg-white border-t border-oas-line overflow-hidden">
+    <app-tire-track [opacity]="0.5" rotation="-1.7deg" variant="horizontal" align="center"></app-tire-track>
+  </div>
+
+  <!-- FULL WIDTH CTA BANNER (Style Red OAS Accent) -->
+  <section class="w-full py-24 px-6 lg:px-12 bg-oas-accent text-white relative overflow-hidden">
+    <div class="absolute inset-0 z-0">
+      <img src="https://images.unsplash.com/photo-1617814076367-b759c7d7e738?q=80&w=2070&auto=format&fit=crop" alt="Devis OAS" class="w-full h-full object-cover opacity-10">
+      <div class="absolute inset-0 bg-gradient-to-r from-oas-accent via-oas-accent/95 to-transparent"></div>
+    </div>
+    
+    <div class="max-w-[1400px] mx-auto relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
+      <div class="w-full md:w-2/3">
+        <app-section-title 
+          align="left"
+          theme="accent"
+          mainTitle="PARLONS DE " 
+          highlightedText="VOTRE VÉHICULE." 
+          subtitle="Besoin d'un conseil ?">
+        </app-section-title>
+        <p class="mt-6 text-white/90 text-lg leading-relaxed max-w-xl">
+          Chaque intervention est personnalisée. Contactez nos techniciens pour obtenir une estimation claire et sans engagement.
+        </p>
+      </div>
+      <div class="w-full md:w-1/3 flex justify-start md:justify-end">
+        <a routerLink="/devis" class="inline-flex items-center gap-4 px-10 py-5 bg-oas-navy-dark text-white hover:bg-white hover:text-oas-navy-dark transition-colors duration-300 text-sm font-bold tracking-[0.2em] uppercase shadow-2xl group rounded-none">
+          Demander un devis
+          <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
 </ng-container>
 <ng-template #missing><section class="missing"><h1>Service introuvable</h1><a routerLink="/services">Retour aux services</a></section></ng-template>

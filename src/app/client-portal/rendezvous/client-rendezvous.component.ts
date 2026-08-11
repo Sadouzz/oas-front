@@ -4,7 +4,8 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ClientRendezVousService } from '../services/client-rendezvous.service';
 import { ClientVehiculeService } from '../services/client-vehicule.service';
 import { ClientInterventionService } from '../services/client-intervention.service';
-import { RendezVous, RendezVousStatus, VehiculeModel } from '../../shared/models';
+import { GarageService } from '../../services/garage.service';
+import { RendezVous, RendezVousStatus, VehiculeModel, Garage } from '../../shared/models';
 import { Intervention } from '../models';
 import { isActiveRepair } from '../intervention-stage';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
@@ -40,6 +41,7 @@ export class ClientRendezVousComponent implements OnInit {
   private service = inject(ClientRendezVousService);
   private vehiculeService = inject(ClientVehiculeService);
   private interventionService = inject(ClientInterventionService);
+  private garageService = inject(GarageService);
   private fb = inject(FormBuilder);
 
   rendezvous: RendezVous[] = [];
@@ -47,11 +49,13 @@ export class ClientRendezVousComponent implements OnInit {
   selected: RendezVous | null = null;
   vehicules: VehiculeModel[] = [];
   interventions: Intervention[] = [];
+  garages: Garage[] = [];
   loading = false;
   showCreateModal = false;
   saving = false;
   successMessage = '';
   errorMessage = '';
+  modalErrorMessage = '';
 
   vehiculeSearchTerm = '';
   vehiculeDropdownOpen = false;
@@ -66,7 +70,8 @@ export class ClientRendezVousComponent implements OnInit {
   form: FormGroup = this.fb.group({
     dateRendezVous: ['', Validators.required],
     motif: ['', Validators.required],
-    vehiculeId: [null],
+    vehiculeId: [null, Validators.required],
+    garageId: [null, Validators.required]
   });
 
   vehiculeForm: FormGroup = this.fb.group({
@@ -86,6 +91,7 @@ export class ClientRendezVousComponent implements OnInit {
     this.load();
     this.vehiculeService.getAll().subscribe({ next: v => this.vehicules = v });
     this.interventionService.getAll().subscribe({ next: i => this.interventions = i });
+    this.garageService.getAll().subscribe({ next: g => this.garages = g });
   }
 
   /** Le véhicule a-t-il une réparation en cours (statut actif, hors "Terminée") ? */
@@ -216,6 +222,7 @@ export class ClientRendezVousComponent implements OnInit {
     this.vehiculeSearchTerm = '';
     this.vehiculeDropdownOpen = false;
     this.showVehiculeCreateForm = false;
+    this.modalErrorMessage = '';
     this.showCreateModal = true;
   }
 
@@ -226,11 +233,12 @@ export class ClientRendezVousComponent implements OnInit {
   save(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.modalErrorMessage = "Veuillez remplir tous les champs obligatoires.";
       return;
     }
 
     this.saving = true;
-    this.errorMessage = '';
+    this.modalErrorMessage = '';
 
     this.service.create(this.form.value).subscribe({
       next: () => {
@@ -242,7 +250,8 @@ export class ClientRendezVousComponent implements OnInit {
       },
       error: (err: any) => {
         this.saving = false;
-        this.errorMessage = err.error?.message || "Une erreur est survenue lors de l'envoi de la demande.";
+        const msg = typeof err.error === 'string' ? err.error : err.error?.message;
+        this.modalErrorMessage = msg || "Une erreur est survenue lors de l'envoi de la demande.";
       },
     });
   }

@@ -26,7 +26,7 @@
     overflow:hidden;
     background-image:
         radial-gradient(rgba(255,255,255,.14) 1.4px, transparent 1.4px),
-        linear-gradient(135deg, var(--color-oas-navy) 0%, var(--color-oas-navy-mid) 48%, var(--color-oas-accent) 100%);
+        linear-gradient(135deg, var(--color-oas-navy) 0%, var(--color-oas-navy-dark) 100%);
     background-size: 26px 26px, cover;
     background-position: 0 0, center;
 }
@@ -425,7 +425,7 @@ textarea.invalide{
 }
 
 .cta-card{
-    background:linear-gradient(135deg,var(--color-oas-navy),var(--color-oas-accent));
+    background:linear-gradient(135deg, var(--color-oas-navy) 0%, var(--color-oas-navy-dark) 100%);
     color:#fff;
     border-radius:var(--radius-lg);
     padding:60px;

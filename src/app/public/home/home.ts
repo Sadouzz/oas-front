@@ -1,14 +1,21 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SectionTitle } from '../../shared/components/section-title/section-title';
 import { MagneticCarouselComponent, MagneticItem } from '../../shared/components/magnetic-carousel/magnetic-carousel';
 import { HorizontalGalleryComponent, RealisationItem } from '../../shared/components/horizontal-gallery/horizontal-gallery';
 import { BlogPreviewComponent, BlogArticle } from '../../shared/components/blog-preview/blog-preview';
 import { register } from 'swiper/element/bundle';
+import { BlogService } from '../../services/blog.service';
 
 register();
 
 import { TESTIMONIALS_DATA, Testimonial } from '../../shared/data/testimonials.data';
+
+import { SpeedometerComponent } from '../../shared/components/speedometer/speedometer';
+import { TireTrackComponent } from '../../shared/components/tire-track/tire-track';
+import { BoltCornersComponent } from '../../shared/components/bolt-corners/bolt-corners';
+import { MechanicalGearsComponent } from '../../shared/components/mechanical-gears/mechanical-gears';
+import { JerrycanComponent } from '../../shared/components/jerrycan/jerrycan';
 
 interface Partner {
   name: string;
@@ -24,13 +31,18 @@ interface Partner {
     SectionTitle, 
     MagneticCarouselComponent,
     HorizontalGalleryComponent,
-    BlogPreviewComponent
+    BlogPreviewComponent,
+    SpeedometerComponent,
+    TireTrackComponent,
+    BoltCornersComponent,
+    MechanicalGearsComponent,
+    JerrycanComponent
   ],
   templateUrl: './home.html',
   styleUrl: './home.css',
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
-export class Home {
+export class Home implements OnInit {
   servicesImages: MagneticItem[] = [
     { id: 1, title: 'Mécanique générale', slug: 'mecanique-generale', description: 'Toutes les réparations mécaniques pour votre moteur et boîte de vitesses.', src: 'https://images.unsplash.com/photo-1493238792000-8113da705763?q=80&w=800&auto=format&fit=crop' },
     { id: 2, title: 'Diagnostic électronique', slug: 'diagnostic-electronique', description: 'Lecture des codes défauts avec valises multimarques de dernière génération.', src: 'https://images.unsplash.com/photo-1635835694200-a4a350080648?q=80&w=800&auto=format&fit=crop' },
@@ -54,10 +66,9 @@ export class Home {
   ];
 
   stats = [
-    { value: '15+', label: 'Années d\'expérience' },
-    { value: '5000+', label: 'Véhicules réparés' },
-    { value: '100%', label: 'Satisfaction client' },
-    { value: '12', label: 'Experts certifiés' }
+    { value: 18, suffix: '+', max: 25, unit: 'ANS', label: "Années d'expérience" },
+    { value: 5000, suffix: '+', max: 6000, unit: 'VOITURES', label: 'Véhicules réparés' },
+    { value: 98, suffix: '%', max: 100, unit: '%', label: 'Satisfaction client' }
   ];
 
   realisationsData: RealisationItem[] = [
@@ -97,38 +108,54 @@ export class Home {
   blogSubtitle = 'Le Blog OAS';
   blogDescription = "Restez informé des dernières nouveautés de l'automobile. Découvrez nos conseils d'entretien, des analyses techniques et suivez les restaurations incroyables de l'atelier <strong class='text-oas-navy-dark'>OAS</strong>.";
 
-  blogArticles: BlogArticle[] = [
-    {
-        id: 1,
-        imageSrc: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?q=80&w=800&auto=format&fit=crop',
-        alt: 'Voiture classique dans l\'atelier',
-        rotation: 'rotate-[-6deg]',
-        title: 'L\'art de la restauration',
-        date: '12 MAR 2026'
-    },
-    {
-        id: 2,
-        imageSrc: 'https://images.unsplash.com/photo-1517524008697-84bbe3c3fd98?q=80&w=800&auto=format&fit=crop',
-        alt: 'Mécanicien travaillant sur un moteur',
-        rotation: 'rotate-[3deg]',
-        title: 'L\'importance de l\'entretien régulier',
-        date: '05 FÉV 2026'
-    },
-    {
-        id: 3,
-        imageSrc: 'https://images.unsplash.com/photo-1520627918841-86e57201c13d?q=80&w=800&auto=format&fit=crop',
-        alt: 'Outils de diagnostic de pointe',
-        rotation: 'rotate-[-4deg]',
-        title: 'Nouveaux outils de diagnostic 2026',
-        date: '22 JAN 2026'
-    },
-    {
-        id: 4,
-        imageSrc: 'https://images.unsplash.com/photo-1487754180451-c456f719a1fc?q=80&w=800&auto=format&fit=crop',
-        alt: 'Détail de carrosserie lustrée',
-        rotation: 'rotate-[4deg]',
-        title: 'Techniques de Detailing Auto',
-        date: '10 JAN 2026'
+  blogArticles: BlogArticle[] = [];
+  private blogService = inject(BlogService);
+
+  ngOnInit(): void {
+    const rotations = ['rotate-[-6deg]', 'rotate-[3deg]', 'rotate-[-4deg]', 'rotate-[4deg]'];
+    this.blogService.getAll().subscribe({
+      next: (data) => {
+        // Prendre les 4 derniers articles du blog
+        this.blogArticles = data.slice(0, 4).map((post, idx) => ({
+          id: post.id,
+          imageSrc: this.getArticleImage(post.images),
+          alt: post.title,
+          rotation: rotations[idx % rotations.length],
+          title: post.title,
+          date: this.formatDate(post.datePublication)
+        }));
+      },
+      error: (err) => {
+        console.error('Erreur lors du chargement des articles de blog sur la page d\'accueil:', err);
+      }
+    });
+  }
+
+  private getArticleImage(imageKey: string): string {
+    const mapping: Record<string, string> = {
+      road: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?q=80&w=800&auto=format&fit=crop',
+      brakes: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?q=80&w=800&auto=format&fit=crop',
+      air: 'https://images.unsplash.com/photo-1517524008697-84bbe3c3fd98?q=80&w=800&auto=format&fit=crop',
+      garage: 'https://images.unsplash.com/photo-1520627918841-86e57201c13d?q=80&w=800&auto=format&fit=crop',
+      dashboard: 'https://images.unsplash.com/photo-1635835694200-a4a350080648?q=80&w=800&auto=format&fit=crop',
+      oil: 'https://images.unsplash.com/photo-1632823471565-1ec2a74c2e6f?q=80&w=800&auto=format&fit=crop',
+      tyres: 'https://images.unsplash.com/photo-1600705722908-bab1e61c0b4d?q=80&w=800&auto=format&fit=crop',
+      tools: 'https://images.unsplash.com/photo-1487754180451-c456f719a1fc?q=80&w=800&auto=format&fit=crop'
+    };
+    return mapping[imageKey] || 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?q=80&w=800&auto=format&fit=crop';
+  }
+
+  private formatDate(dateStr: string): string {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      }).toUpperCase();
+    } catch (e) {
+      return dateStr;
     }
-  ];
+  }
 }

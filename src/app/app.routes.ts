@@ -18,8 +18,10 @@ export const routes: Routes = [
       { path: 'services/:slug', loadComponent: () => import('./public/services/service-detail').then(m => m.ServiceDetail) },
       { path: 'realisations', loadComponent: () => import('./public/realisations/realisations').then(m => m.Realisations) },
       { path: 'blog', loadComponent: () => import('./public/blog/blog').then(m => m.Blog) },
+      { path: 'blog/:id', loadComponent: () => import('./public/blog/blog-detail').then(m => m.BlogDetailComponent) },
       { path: 'a-propos', loadComponent: () => import('./public/about/about').then(m => m.About) },
-      { path: 'devis', loadComponent: () => import('./public/devis/devis').then(m => m.Devis) },
+      // { path: 'devis', loadComponent: () => import('./public/devis/devis').then(m => m.Devis) },
+      { path: 'marketplace', loadComponent: () => import('./public/marketplace/marketplace').then(m => m.Marketplace) },
       {
         path: 'contact',
         loadComponent: () =>
@@ -170,6 +172,11 @@ export const routes: Routes = [
             path: 'users',
             loadComponent: () =>
               import('./gestion/admin/users/users.component').then(m => m.UsersComponent),
+          },
+          {
+            path: 'garages',
+            loadComponent: () =>
+              import('./gestion/admin/garages/garages.component').then(m => m.GaragesComponent),
           },
           {
             path: 'history',

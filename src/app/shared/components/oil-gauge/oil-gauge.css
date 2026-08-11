@@ -1,0 +1,155 @@
+/* Oil Gauge Fixed Layout (On the left side of the viewport) */
+.oil-gauge-wrapper {
+  position: fixed;
+  left: 24px;
+  bottom: 40px;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Courier New', Courier, monospace;
+  pointer-events: none; /* Ne pas bloquer les clics de l'utilisateur */
+}
+
+/* Label above the gauge */
+.oil-gauge-label {
+  font-size: 9px;
+  font-weight: 900;
+  color: var(--color-oas-accent, #ef1a1a);
+  letter-spacing: 0.15em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Outer layout combining tube and marks */
+.oil-tube-outer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(10, 25, 47, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 12px 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+}
+
+/* Graduation marks */
+.oil-marks {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 140px;
+  font-size: 8px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: right;
+  line-height: 1;
+}
+
+.mark-max {
+  color: var(--color-oas-accent, #ef1a1a);
+}
+
+.mark-min {
+  color: #2ce888;
+}
+
+/* Glass tube container */
+.oil-glass-tube {
+  position: relative;
+  width: 14px;
+  height: 140px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
+  overflow: hidden;
+}
+
+/* The liquid (amber/golden oil) */
+.oil-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 0%; /* Piloté par le code JS */
+  background: linear-gradient(to top, #503102 0%, #b06f0e 40%, #e2951b 80%, #ffd068 100%);
+  box-shadow: 0 0 8px rgba(226, 149, 27, 0.6);
+  transition: height 0.1s ease-out;
+}
+
+/* Wave overlay at the top of the fluid */
+.oil-wave {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.3);
+  opacity: 0.8;
+  transform: translateY(-50%);
+  animation: waveMotion 1.5s linear infinite;
+}
+
+/* Shiny glare reflection on the glass tube */
+.glass-glare {
+  position: absolute;
+  top: 0;
+  left: 2px;
+  width: 3px;
+  height: 100%;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0) 100%);
+  pointer-events: none;
+}
+
+/* Oil bubble animations */
+.oil-bubbles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.bubble {
+  position: absolute;
+  bottom: -10px;
+  width: 2px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+  animation: floatBubbles 3s infinite ease-in;
+}
+
+.bubble:nth-child(1) { left: 20%; animation-duration: 2.2s; animation-delay: 0.5s; }
+.bubble:nth-child(2) { left: 50%; animation-duration: 2.8s; animation-delay: 1.2s; }
+.bubble:nth-child(3) { left: 70%; animation-duration: 1.8s; animation-delay: 0.1s; }
+
+/* Keyframes */
+@keyframes waveMotion {
+  0% { transform: translateX(0) translateY(-50%); }
+  100% { transform: translateX(-50%) translateY(-50%); }
+}
+
+@keyframes floatBubbles {
+  0% {
+    bottom: -5px;
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  10% {
+    opacity: 0.6;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    bottom: 95%;
+    opacity: 0;
+    transform: scale(1.3);
+  }
+}
+
+/* Responsive adjustment */
+@media (max-width: 768px) {
+  .oil-gauge-wrapper {
+    display: none; /* Masqué sur petit écran pour éviter d'encombrer */
+  }
+}

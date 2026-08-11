@@ -1,0 +1,25 @@
+:host {
+  display: block;
+  pointer-events: none;
+  user-select: none;
+}
+
+.wrench-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 18px;
+  height: 50px;
+  pointer-events: none;
+  z-index: 99999;
+  will-change: transform;
+  margin-left: -8px;
+  margin-top: -3px;
+}
+
+.wrench-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  display: block;
+}

@@ -1,0 +1,72 @@
+<div class="bolts-overlay" [class]="'bolts--' + variant" aria-hidden="true">
+
+  <!-- Coin haut-gauche -->
+  <div class="bolt bolt--tl" [style.width.px]="size" [style.height.px]="size" [style.top.px]="offset" [style.left.px]="offset">
+    <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="bg-tl" cx="35%" cy="35%" r="65%">
+          <stop offset="0%"   class="bolt-grad-hi"/>
+          <stop offset="100%" class="bolt-grad-lo"/>
+        </radialGradient>
+      </defs>
+      <circle cx="10" cy="10" r="9"   class="bolt-body"   fill="url(#bg-tl)"/>
+      <circle cx="10" cy="10" r="9"   class="bolt-ring"/>
+      <circle cx="10" cy="10" r="5.5" class="bolt-inner"/>
+      <!-- Fente cruciforme -->
+      <line x1="10" y1="5.5" x2="10" y2="14.5" class="bolt-cross"/>
+      <line x1="5.5" y1="10" x2="14.5" y2="10" class="bolt-cross"/>
+    </svg>
+  </div>
+
+  <!-- Coin haut-droite -->
+  <div class="bolt bolt--tr" [style.width.px]="size" [style.height.px]="size" [style.top.px]="offset" [style.right.px]="offset">
+    <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="bg-tr" cx="65%" cy="35%" r="65%">
+          <stop offset="0%"   class="bolt-grad-hi"/>
+          <stop offset="100%" class="bolt-grad-lo"/>
+        </radialGradient>
+      </defs>
+      <circle cx="10" cy="10" r="9"   class="bolt-body"   fill="url(#bg-tr)"/>
+      <circle cx="10" cy="10" r="9"   class="bolt-ring"/>
+      <circle cx="10" cy="10" r="5.5" class="bolt-inner"/>
+      <line x1="10" y1="5.5" x2="10" y2="14.5" class="bolt-cross"/>
+      <line x1="5.5" y1="10" x2="14.5" y2="10" class="bolt-cross"/>
+    </svg>
+  </div>
+
+  <!-- Coin bas-gauche -->
+  <div class="bolt bolt--bl" [style.width.px]="size" [style.height.px]="size" [style.bottom.px]="offset" [style.left.px]="offset">
+    <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="bg-bl" cx="35%" cy="65%" r="65%">
+          <stop offset="0%"   class="bolt-grad-hi"/>
+          <stop offset="100%" class="bolt-grad-lo"/>
+        </radialGradient>
+      </defs>
+      <circle cx="10" cy="10" r="9"   class="bolt-body"   fill="url(#bg-bl)"/>
+      <circle cx="10" cy="10" r="9"   class="bolt-ring"/>
+      <circle cx="10" cy="10" r="5.5" class="bolt-inner"/>
+      <line x1="10" y1="5.5" x2="10" y2="14.5" class="bolt-cross"/>
+      <line x1="5.5" y1="10" x2="14.5" y2="10" class="bolt-cross"/>
+    </svg>
+  </div>
+
+  <!-- Coin bas-droite -->
+  <div class="bolt bolt--br" [style.width.px]="size" [style.height.px]="size" [style.bottom.px]="offset" [style.right.px]="offset">
+    <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="bg-br" cx="65%" cy="65%" r="65%">
+          <stop offset="0%"   class="bolt-grad-hi"/>
+          <stop offset="100%" class="bolt-grad-lo"/>
+        </radialGradient>
+      </defs>
+      <circle cx="10" cy="10" r="9"   class="bolt-body"   fill="url(#bg-br)"/>
+      <circle cx="10" cy="10" r="9"   class="bolt-ring"/>
+      <circle cx="10" cy="10" r="5.5" class="bolt-inner"/>
+      <line x1="10" y1="5.5" x2="10" y2="14.5" class="bolt-cross"/>
+      <line x1="5.5" y1="10" x2="14.5" y2="10" class="bolt-cross"/>
+    </svg>
+  </div>
+
+</div>

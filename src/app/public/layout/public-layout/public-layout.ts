@@ -1,15 +1,17 @@
-import { Component, ElementRef, ViewChild, AfterViewInit, HostListener, ChangeDetectorRef } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewInit, HostListener, ChangeDetectorRef, Renderer2, OnInit, OnDestroy, Inject } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { WrenchCursorComponent } from '../../../shared/components/wrench-cursor/wrench-cursor';
 
 @Component({
   selector: 'app-public-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, WrenchCursorComponent],
   templateUrl: './public-layout.html',
   styleUrl: './public-layout.css',
 })
-export class PublicLayout implements AfterViewInit {
+export class PublicLayout implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('footer') footerRef!: ElementRef;
   footerHeight = 0;
   isCurtain = true;
@@ -19,12 +21,12 @@ export class PublicLayout implements AfterViewInit {
     { label: 'Le garage', path: '/a-propos' },
     { label: 'Nos Services', path: '/services' },
     { label: 'Réalisations', path: '/realisations' }
-    // { label: 'Accueil', path: '/', exact: true }
   ];
   
   headerRightLinks: { label: string, path: string, exact?: boolean }[] = [
     { label: 'Blog', path: '/blog' },
-    { label: 'Devis', path: '/devis' },
+    { label: 'Marketplace', path: '/marketplace' },
+    // { label: 'Devis', path: '/devis' },
     { label: 'RDV', path: '/rdv' },
     { label: 'Partenaires', path: '/partenaires' }
   ];
@@ -35,7 +37,8 @@ export class PublicLayout implements AfterViewInit {
       links: [
         { label: 'Blog', path: '/blog' },
         { label: 'Nos services', path: '/services' },
-        { label: 'Réalisations', path: '/realisations' }
+        { label: 'Réalisations', path: '/realisations' },
+        { label: 'Marketplace', path: '/marketplace' }
       ]
     },
     {
@@ -73,10 +76,10 @@ export class PublicLayout implements AfterViewInit {
   ];
 
   contactInfo = {
-    email: 'contact@oas-atelier.fr',
-    phone: '+33 1 23 45 67 89',
-    addressLine1: '123 Rue de la Mécanique',
-    addressLine2: '75000 Paris',
+    email: 'orientautoservice@gmail.com',
+    phone: '+221 33 821 47 11 / +221 78 596 86 42',
+    addressLine1: 'km 2,5 Bd du Centenaire Rond Point CYRNOS',
+    addressLine2: 'BP : 14092 Dakar - Sénégal',
     hoursDays: 'Lundi - Vendredi',
     hoursTime: '08:00 AM - 18:00 PM'
   };
@@ -87,7 +90,19 @@ export class PublicLayout implements AfterViewInit {
     { label: 'Cookies', path: '/cookies' }
   ];
 
-  constructor(private cdr: ChangeDetectorRef) {}
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private renderer: Renderer2,
+    @Inject(DOCUMENT) private document: Document
+  ) {}
+
+  ngOnInit() {
+    this.renderer.addClass(this.document.body, 'public-cursor');
+  }
+
+  ngOnDestroy() {
+    this.renderer.removeClass(this.document.body, 'public-cursor');
+  }
 
   ngAfterViewInit() {
     // Timeout to ensure rendering is complete before measuring

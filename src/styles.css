@@ -36,6 +36,12 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Curseur natif masqué — remplacé par la clé à molette SVG (uniquement pour le layout public) */
+.public-cursor,
+.public-cursor * {
+  cursor: none !important;
+}
+
 /* Portail client uniquement : typographie plus sobre + accent orange (au lieu du rouge global),
    pour ne pas confondre "sélectionné" et "refusé/erreur". Scopé pour ne pas impacter le staff/le site public. */
 .client-portal-scope {

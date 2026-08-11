@@ -31,6 +31,8 @@
       (click)="onItemClick($event, i)"
       [style.cursor]="openIndex === i ? 'default' : 'pointer'"
     >
+      <!-- Vis cruciformes aux 4 coins de chaque item -->
+      <app-bolt-corners variant="light" [size]="11" [offset]="6"></app-bolt-corners>
       <!-- Title Overlay -->
       @if (img.title) {
         <div 

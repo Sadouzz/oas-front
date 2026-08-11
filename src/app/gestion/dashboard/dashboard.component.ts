@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { LucidePlus, LucideUsers, LucideCar, LucideAlertTriangle, LucideClock, LucidePackage, LucideArrowRight, LucideCheckCircle } from '@lucide/angular';
+import { LucidePlus, LucideUsers, LucideCar, LucideAlertTriangle, LucideClock, LucidePackage, LucideArrowRight, LucideCheckCircle, LucideBuilding } from '@lucide/angular';
 import { AuthService } from '../auth/services/auth.service';
 import { ClientService, UserModel } from '../../services/client.service';
 import { VehiculeService, VehiculeModel } from '../../services/vehicule.service';
@@ -8,10 +8,12 @@ import { StockService } from '../../services/stock.service';
 import { PieceDetacheeService, AlerteStock } from '../../services/piece-detachee.service';
 import { BonDeSortieService, BonDeSortie } from '../../services/bon-de-sortie.service';
 import { FicheAtelierService } from '../../services/fiche-atelier.service';
+import { GarageContextService } from '../../core/services/garage-context.service';
+import { GarageService } from '../../services/garage.service';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink, LucidePlus, LucideUsers, LucideCar, LucideAlertTriangle, LucideClock, LucidePackage, LucideArrowRight, LucideCheckCircle],
+  imports: [RouterLink, LucidePlus, LucideUsers, LucideCar, LucideAlertTriangle, LucideClock, LucidePackage, LucideArrowRight, LucideCheckCircle, LucideBuilding],
   templateUrl: './dashboard.component.html',
 })
 export class DashboardComponent implements OnInit {
@@ -21,6 +23,11 @@ export class DashboardComponent implements OnInit {
   private stockService = inject(StockService);
   private pieceService = inject(PieceDetacheeService);
   private bonService = inject(BonDeSortieService);
+  private garageContext = inject(GarageContextService);
+  private garageService = inject(GarageService);
+
+  garages: any[] = [];
+  isGarageSelectionMode = false;
 
   recentClients: UserModel[] = [];
   recentVehicules: VehiculeModel[] = [];
@@ -56,6 +63,37 @@ export class DashboardComponent implements OnInit {
   get isMagasinier()  { return this.role === 'ROLE_AGENT_MAGASIN'; }
 
   ngOnInit() {
+    this.garageContext.activeGarageId$.subscribe(id => {
+      if (this.isSuperAgent && !id) {
+        this.isGarageSelectionMode = true;
+        this.loadGarages();
+      } else {
+        this.isGarageSelectionMode = false;
+        this.loadDashboardData();
+      }
+    });
+  }
+
+  loadGarages() {
+    this.loading = true;
+    this.garageService.getAll().subscribe({
+      next: (data) => {
+        this.garages = data;
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+      }
+    });
+  }
+
+  selectGarage(g: any) {
+    this.garageContext.enterGarage(g.id, g.nom);
+  }
+
+  loadDashboardData() {
+    this.loading = true;
+    this.loaded = 0;
     if (this.isSuperAgent || this.isAgent) {
       this.clientService.getAll().subscribe({ next: (d) => { this.totalClients = d.length; this.recentClients = d.slice(0, 5); this.done(); }, error: () => this.done() });
       this.vehiculeService.getAll().subscribe({ next: (d) => { this.totalVehicules = d.length; this.recentVehicules = d.slice(0, 5); this.done(); }, error: () => this.done() });

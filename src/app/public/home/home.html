@@ -94,6 +94,11 @@
       </div>
   </section>
 
+  <!-- Tire Track Separator 1 -->
+  <div class="py-6 bg-white border-y border-oas-line overflow-hidden">
+    <app-tire-track [opacity]="0.65" rotation="-1.8deg" variant="horizontal" align="center"></app-tire-track>
+  </div>
+
   <!-- SERVICES (STYLE 01) -->
   <section class="py-32 bg-white text-oas-navy-dark">
     <!-- Title (with padding) -->
@@ -119,6 +124,11 @@
   </section>
 
 
+  <!-- Tire Track Separator 2 -->
+  <div class="py-4 bg-oas-navy-dark border-t border-white/10 overflow-hidden">
+    <app-tire-track [opacity]="0.4" rotation="1.6deg" variant="horizontal" align="center"></app-tire-track>
+  </div>
+
   <!-- NOS CHIFFRES -->
   <section class="py-24 bg-oas-navy-dark text-white border-y border-white/5 relative overflow-hidden">
     <!-- Subtle Background Element -->
@@ -137,17 +147,15 @@
         </app-section-title>
       </div>
 
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 max-w-[1200px] mx-auto">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 max-w-[1200px] mx-auto">
         @for (stat of stats; track stat.label) {
-          <div class="flex flex-col items-center justify-center text-center group">
-            <span class="text-5xl md:text-6xl lg:text-7xl font-black font-sans text-transparent bg-clip-text bg-gradient-to-br from-white to-white/50 mb-2 transition-transform duration-500 group-hover:scale-110 group-hover:from-oas-accent group-hover:to-oas-accent/50">
-              {{ stat.value }}
-            </span>
-            <div class="w-12 h-1 bg-oas-accent mb-4 transition-all duration-500 group-hover:w-24"></div>
-            <span class="text-sm md:text-base font-bold uppercase tracking-widest text-white/80">
-              {{ stat.label }}
-            </span>
-          </div>
+          <app-speedometer
+            [value]="stat.value"
+            [suffix]="stat.suffix"
+            [max]="stat.max"
+            [unit]="stat.unit"
+            [label]="stat.label">
+          </app-speedometer>
         }
       </div>
     </div>
@@ -193,7 +201,9 @@
             <!-- WRAPPER TO PREVENT CLIPPING -->
             <div class="pt-24 pb-16 h-full">
               <!-- CARD -->
-              <div class="bg-oas-info-bg rounded-xl px-6 pb-10 pt-20 text-center relative h-full flex flex-col">
+              <div class="bg-oas-info-bg px-6 pb-10 pt-20 text-center relative h-full flex flex-col">
+                <!-- Vis cruciformes aux 4 coins -->
+                <app-bolt-corners variant="dark" [size]="11" [offset]="5"></app-bolt-corners>
                 <!-- Profile Picture -->
                 <img [src]="item.imageSrc" class="w-40 h-40 rounded-full object-cover absolute -top-20 left-1/2 transform -translate-x-1/2 shadow-lg bg-white border-4 border-white z-10">
                 <!-- Quote Icon -->
@@ -217,6 +227,37 @@
     </div>
   </section>
 
+  <!-- MARKETPLACE BANNER -->
+  <section class="w-full py-24 px-6 lg:px-12 bg-oas-navy-dark text-white relative overflow-hidden">
+    <div class="absolute inset-0 z-0">
+      <img src="https://images.unsplash.com/photo-1549399542-7e3f8b79c341?q=80&w=2070&auto=format&fit=crop" alt="Marketplace" class="w-full h-full object-cover opacity-10">
+      <div class="absolute inset-0 bg-gradient-to-r from-oas-navy-dark via-oas-navy-dark/90 to-transparent"></div>
+    </div>
+    
+    <div class="max-w-[1400px] mx-auto relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
+      <div class="w-full md:w-2/3">
+        <app-section-title 
+          align="left"
+          theme="dark"
+          mainTitle="DÉCOUVREZ NOTRE " 
+          highlightedText="MARKETPLACE." 
+          subtitle="Véhicules & Pièces d'exception">
+        </app-section-title>
+        <p class="mt-6 text-white/80 text-lg leading-relaxed max-w-xl">
+          Trouvez le véhicule de vos rêves ou la pièce détachée qu'il vous manque. Des produits exclusifs, rigoureusement contrôlés par nos experts.
+        </p>
+      </div>
+      <div class="w-full md:w-1/3 flex justify-start md:justify-end">
+        <a routerLink="/marketplace" class="inline-flex items-center gap-4 px-10 py-5 bg-oas-accent text-white hover:bg-oas-accent-dark transition-colors duration-300 text-sm font-bold tracking-[0.2em] uppercase shadow-2xl group">
+          Visiter la boutique
+          <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
   <!-- BLOG PREVIEW SECTION -->
   <app-blog-preview 
     [articles]="blogArticles"
@@ -225,9 +266,17 @@
     [description]="blogDescription">
   </app-blog-preview>
 
+  <!-- Tire Track Separator 3 -->
+  <div class="py-4 bg-oas-navy-dark border-t border-white/10 overflow-hidden">
+    <app-tire-track [opacity]="0.35" rotation="-2.2deg" variant="horizontal" align="center"></app-tire-track>
+  </div>
+
   <!-- PARTENAIRES -->
-  <section class="bg-oas-navy-dark py-32 text-white border-y border-white/5 overflow-hidden">
-    <div class="relative flex w-full flex-col-reverse text-center mb-8">
+  <section class="bg-oas-navy-dark py-32 text-white border-y border-white/5 overflow-hidden relative">
+    <!-- Jerrycan interactif en filigrane d'arrière-plan (grand format) -->
+    <app-jerrycan [opacity]="0.08" [size]="550" class="absolute -right-24 -bottom-24 text-white pointer-events-none z-0"></app-jerrycan>
+
+    <div class="relative flex w-full flex-col-reverse text-center mb-8 z-10">
       <h2 class="uppercase font-extrabold text-balance text-4xl md:text-6xl lg:text-7xl block tracking-tighter">
         Ils nous font <em class="text-oas-accent not-italic">confiance.</em>
       </h2>
@@ -274,6 +323,9 @@
 
   <!-- CTA FINAL (FULLSCREEN VIBE) -->
   <section class="py-24 lg:py-40 bg-oas-accent text-white text-center relative overflow-hidden">
+    <!-- Mechanical Gears interactif en filigrane d'arrière-plan -->
+    <app-mechanical-gears [opacity]="0.15" [size]="480" class="absolute -right-12 -bottom-12 text-white pointer-events-none"></app-mechanical-gears>
+
     <div class="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
       <h1 class="text-[30vw] font-black tracking-tighter whitespace-nowrap">CONTACT</h1>
     </div>

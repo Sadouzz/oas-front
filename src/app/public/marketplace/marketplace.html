@@ -1,0 +1,384 @@
+<div class="bg-oas-bg min-h-screen font-sans marketplace-bg pb-24">
+  
+  <!-- HERO SECTION -->
+  <section class="w-full pt-32 pb-24 px-6 lg:px-12 bg-oas-navy-dark text-white relative overflow-hidden">
+    <div class="absolute inset-0 z-0">
+      <img src="https://images.unsplash.com/photo-1549399542-7e3f8b79c341?q=80&w=2070&auto=format&fit=crop" alt="Marketplace OAS" class="w-full h-full object-cover opacity-20">
+      <div class="absolute inset-0 bg-gradient-to-t from-oas-navy-dark via-oas-navy-dark/80 to-transparent"></div>
+    </div>
+    
+    <div class="max-w-[1400px] mx-auto relative z-10 text-center">
+      <app-section-title 
+        align="center"
+        theme="dark"
+        mainTitle="NOTRE " 
+        highlightedText="MARKETPLACE." 
+        subtitle="Véhicules & Pièces d'exception">
+      </app-section-title>
+      <p class="mt-8 text-white/80 max-w-2xl mx-auto text-lg leading-relaxed">
+        Découvrez notre sélection exclusive de véhicules de prestige, pièces détachées premium et accessoires, rigoureusement contrôlés par nos experts.
+      </p>
+    </div>
+  </section>
+
+  <!-- POURQUOI OAS MARKETPLACE (TRUST SECTION) -->
+  <section class="bg-white py-16 border-b border-oas-line">
+    <div class="max-w-[1400px] mx-auto px-6 lg:px-12">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+        <div data-aos="fade-up">
+          <div class="w-16 h-16 mx-auto bg-oas-accent-bg text-oas-accent rounded-full flex items-center justify-center mb-6">
+            <app-icon name="shield-check" [size]="32"></app-icon>
+          </div>
+          <h3 class="text-xl font-bold text-oas-navy-dark mb-3">Qualité garantie</h3>
+          <p class="text-oas-muted">Tous nos véhicules et pièces sont inspectés, révisés et certifiés par nos techniciens.</p>
+        </div>
+        <div data-aos="fade-up" data-aos-delay="100">
+          <div class="w-16 h-16 mx-auto bg-oas-accent-bg text-oas-accent rounded-full flex items-center justify-center mb-6">
+            <app-icon name="headphones" [size]="32"></app-icon>
+          </div>
+          <h3 class="text-xl font-bold text-oas-navy-dark mb-3">Accompagnement sur-mesure</h3>
+          <p class="text-oas-muted">Nos experts sont à votre disposition pour vous conseiller et vous guider dans votre achat.</p>
+        </div>
+        <div data-aos="fade-up" data-aos-delay="200">
+          <div class="w-16 h-16 mx-auto bg-oas-accent-bg text-oas-accent rounded-full flex items-center justify-center mb-6">
+            <app-icon name="file-search" [size]="32"></app-icon>
+          </div>
+          <h3 class="text-xl font-bold text-oas-navy-dark mb-3">Transparence totale</h3>
+          <p class="text-oas-muted">Historique limpide, prix justes et aucune mauvaise surprise sur nos produits.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EN VEDETTE (FEATURED PRODUCTS) -->
+  <section class="py-20 bg-oas-bg">
+    <div class="max-w-[1400px] mx-auto px-6 lg:px-12">
+      <div class="mb-12 flex items-center justify-between">
+        <h2 class="text-3xl font-black text-oas-navy-dark uppercase tracking-tight">En <span class="text-oas-accent">Vedette</span></h2>
+      </div>
+
+      <div class="w-full relative">
+        <swiper-container
+          slides-per-view="1"
+          space-between="30"
+          loop="true"
+          pagination="true"
+          navigation="true"
+          autoplay-delay="5000"
+          breakpoints='{"1024": {"slidesPerView": 1.5, "spaceBetween": 40}}'
+          class="w-full pb-16"
+        >
+          @for (product of featuredProducts; track product.id) {
+            <swiper-slide class="h-auto">
+              <div class="bg-white shadow-2xl flex flex-col sm:flex-row overflow-hidden group h-full">
+                <div class="sm:w-1/2 relative h-64 sm:h-full min-h-[300px] overflow-hidden">
+                  <img [src]="product.images[0]" [alt]="product.nom" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                  <div class="absolute top-4 left-4 bg-oas-accent text-white px-3 py-1 text-xs font-bold uppercase tracking-wider">Top Vente</div>
+                </div>
+                <div class="sm:w-1/2 p-8 flex flex-col justify-between h-full">
+                  <div>
+                    <h3 class="text-2xl font-bold text-oas-navy-dark mb-4">{{ product.nom }}</h3>
+                    <p class="text-oas-muted text-sm line-clamp-4 leading-relaxed mb-6">{{ product.description }}</p>
+                  </div>
+                  <div class="mt-auto">
+                    <div class="text-2xl font-black text-oas-accent mb-6">{{ product.prix | number:'1.0-0' }} €</div>
+                    <button (click)="openLoginModal(product)" class="w-full py-4 bg-oas-navy-dark text-white font-bold text-sm tracking-[0.1em] uppercase hover:bg-oas-accent transition-colors duration-300">
+                      Demander l'achat
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </swiper-slide>
+          }
+        </swiper-container>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOUS NOS PRODUITS & CATÉGORIES -->
+  <section class="max-w-[1400px] mx-auto px-6 lg:px-12 pb-20">
+    <div class="mb-12 border-b border-oas-line pb-8">
+      <h2 class="text-3xl font-black text-oas-navy-dark uppercase tracking-tight mb-8">Tous nos <span class="text-oas-accent">Produits</span></h2>
+      
+      <!-- Category Filters -->
+      <div class="flex flex-wrap gap-4">
+        <button (click)="setCategory('Tous')" [class]="activeCategory === 'Tous' ? 'bg-oas-navy-dark text-white' : 'bg-white text-oas-navy border border-oas-line hover:border-oas-navy'" class="px-6 py-2 font-bold text-sm uppercase tracking-wider transition-colors">Tous</button>
+        <button (click)="setCategory('Vehicules')" [class]="activeCategory === 'Vehicules' ? 'bg-oas-navy-dark text-white' : 'bg-white text-oas-navy border border-oas-line hover:border-oas-navy'" class="px-6 py-2 font-bold text-sm uppercase tracking-wider transition-colors">Véhicules</button>
+        <button (click)="setCategory('Pieces')" [class]="activeCategory === 'Pieces' ? 'bg-oas-navy-dark text-white' : 'bg-white text-oas-navy border border-oas-line hover:border-oas-navy'" class="px-6 py-2 font-bold text-sm uppercase tracking-wider transition-colors">Pièces Détachées</button>
+        <button (click)="setCategory('Accessoires')" [class]="activeCategory === 'Accessoires' ? 'bg-oas-navy-dark text-white' : 'bg-white text-oas-navy border border-oas-line hover:border-oas-navy'" class="px-6 py-2 font-bold text-sm uppercase tracking-wider transition-colors">Accessoires</button>
+      </div>
+    </div>
+
+    <!-- Products Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+      @for (product of filteredProducts; track product.id) {
+        <div class="product-card bg-white overflow-hidden shadow-lg hover:shadow-2xl transition-shadow flex flex-col h-full group" data-aos="fade-up">
+          
+          <!-- Image Gallery -->
+          <div class="relative h-64 w-full bg-gray-100 overflow-hidden">
+            @if (product.images.length > 1) {
+              <swiper-container pagination="true" navigation="true" class="h-full w-full">
+                @for (img of product.images; track img) {
+                  <swiper-slide>
+                    <img [src]="img" [alt]="product.nom" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                  </swiper-slide>
+                }
+              </swiper-container>
+            } @else {
+              <img [src]="product.images[0]" [alt]="product.nom" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+            }
+            <div class="absolute top-4 right-4 z-10 bg-oas-accent text-white px-4 py-1 text-sm font-bold tracking-wider shadow-lg">
+              {{ product.prix | number:'1.0-0' }} €
+            </div>
+          </div>
+
+          <!-- Content -->
+          <div class="p-6 flex flex-col flex-grow">
+            <h3 class="text-xl font-bold text-oas-navy-dark mb-3">{{ product.nom }}</h3>
+            <p class="text-oas-muted text-sm line-clamp-3 mb-6 flex-grow leading-relaxed">
+              {{ product.description }}
+            </p>
+            
+            <button 
+              (click)="openLoginModal(product)"
+              class="w-full py-3 px-4 bg-oas-navy-dark text-white font-bold text-sm tracking-[0.1em] uppercase hover:bg-oas-accent transition-colors duration-300 mt-auto flex items-center justify-center gap-2">
+              <span>Demander l'achat</span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      }
+      
+      @if (filteredProducts.length === 0) {
+        <div class="col-span-full py-12 text-center text-oas-muted text-lg">
+          Aucun produit trouvé dans cette catégorie pour le moment.
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- AUTH MODAL (CONNEXION / INSCRIPTION) -->
+  @if(showModal){
+    <div class="modal-overlay fixed inset-0 z-[1000] flex items-center justify-center bg-oas-navy-dark/80 backdrop-blur-sm p-5 animate-fade-in" (click)="closeModal()">
+        <div class="auth-modal relative bg-white rounded-[22px] p-10 w-full max-w-[560px] max-h-[92vh] overflow-y-auto shadow-2xl animate-slide-up" (click)="$event.stopPropagation()">
+
+            <button class="close-modal absolute top-[18px] right-[22px] bg-transparent border-none text-[26px] text-oas-faint cursor-pointer leading-none transition-colors duration-200 hover:text-oas-accent" (click)="closeModal()" aria-label="Fermer">×</button>
+
+            <!-- Messages -->
+            @if(errorMessage){
+                <div class="form-banner form-banner-error flex items-center gap-[10px] p-[13px_16px] rounded-[12px] text-[13.5px] font-semibold mb-[20px] bg-oas-bad-bg text-oas-bad">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    {{ errorMessage }}
+                </div>
+            }
+            @if(successMessage){
+                <div class="form-banner form-banner-success flex items-center gap-[10px] p-[13px_16px] rounded-[12px] text-[13.5px] font-semibold mb-[20px] bg-oas-ok-bg text-oas-ok">
+                    <i class="fa-solid fa-circle-check"></i>
+                    {{ successMessage }}
+                </div>
+            }
+
+            <!-- ===================== CONNEXION ===================== -->
+            @if(activeTab === 'login'){
+                <form class="auth-form" [formGroup]="loginForm" (ngSubmit)="onSubmitLogin()" novalidate>
+                    <h2 class="text-[24px] font-extrabold text-oas-ink mb-[6px] text-center font-sans">Connectez-vous pour acheter</h2>
+                    <p class="auth-subtitle text-center text-oas-muted text-[14px] mb-[26px]">Connectez-vous à votre espace client OAS.</p>
+
+                    <div class="form-group mb-[18px]">
+                        <label for="login-email" class="block text-[13px] font-bold text-oas-ink2 mb-[8px]">Adresse e-mail</label>
+                        <div class="input-icon relative flex items-center">
+                            <i class="fa-solid fa-envelope absolute left-[16px] text-oas-faint text-[15px]"></i>
+                            <input
+                                id="login-email"
+                                type="email"
+                                formControlName="email"
+                                placeholder="vous@exemple.com"
+                                class="w-full p-[13px_16px_13px_44px] border-[1.5px] border-oas-line rounded-[12px] font-inherit text-[14px] text-oas-ink bg-oas-bg transition-all duration-200 focus:outline-none focus:border-oas-accent focus:bg-white focus:shadow-[0_0_0_4px_var(--color-oas-accent-bg)]"
+                                [class.border-oas-bad]="lf['email'].invalid && lf['email'].touched"
+                                [class.bg-oas-bad-bg]="lf['email'].invalid && lf['email'].touched">
+                        </div>
+                        @if(lf['email'].invalid && lf['email'].touched){
+                            <span class="form-error block mt-[7px] text-[12.5px] text-oas-bad font-semibold">
+                                @if(lf['email'].errors?.['required']){ L'adresse e-mail est requise. }
+                                @if(lf['email'].errors?.['email']){ Veuillez saisir une adresse e-mail valide. }
+                            </span>
+                        }
+                    </div>
+
+                    <div class="form-group mb-[18px]">
+                        <label for="login-password" class="block text-[13px] font-bold text-oas-ink2 mb-[8px]">Mot de passe</label>
+                        <div class="input-icon relative flex items-center">
+                            <i class="fa-solid fa-lock absolute left-[16px] text-oas-faint text-[15px]"></i>
+                            <input
+                                id="login-password"
+                                [type]="showLoginPassword ? 'text' : 'password'"
+                                formControlName="motDePasse"
+                                placeholder="••••••••"
+                                class="w-full p-[13px_16px_13px_44px] border-[1.5px] border-oas-line rounded-[12px] font-inherit text-[14px] text-oas-ink bg-oas-bg transition-all duration-200 focus:outline-none focus:border-oas-accent focus:bg-white focus:shadow-[0_0_0_4px_var(--color-oas-accent-bg)]"
+                                [class.border-oas-bad]="lf['motDePasse'].invalid && lf['motDePasse'].touched"
+                                [class.bg-oas-bad-bg]="lf['motDePasse'].invalid && lf['motDePasse'].touched">
+                            <button type="button" class="toggle-visibility absolute right-[14px] bg-transparent border-none text-oas-faint cursor-pointer text-[15px] p-[4px] hover:text-oas-muted" (click)="showLoginPassword = !showLoginPassword" aria-label="Afficher le mot de passe">
+                                <i class="fa-solid" [class.fa-eye]="!showLoginPassword" [class.fa-eye-slash]="showLoginPassword"></i>
+                            </button>
+                        </div>
+                        @if(lf['motDePasse'].invalid && lf['motDePasse'].touched){
+                            <span class="form-error block mt-[7px] text-[12.5px] text-oas-bad font-semibold">
+                                @if(lf['motDePasse'].errors?.['required']){ Le mot de passe est requis. }
+                                @if(lf['motDePasse'].errors?.['minlength']){ 6 caractères minimum. }
+                            </span>
+                        }
+                    </div>
+
+                    <div class="form-row-between flex items-center justify-between flex-wrap gap-[10px] mb-[26px]">
+                        <label class="form-checkbox flex items-center gap-[9px] text-[13.5px] color-oas-ink2 cursor-pointer">
+                            <input type="checkbox" formControlName="seSouvenir" class="w-[17px] h-[17px] cursor-pointer accent-oas-accent">
+                            <span>Se souvenir de moi</span>
+                        </label>
+                        <a href="javascript:void(0)" class="form-link text-[13.5px] text-oas-accent font-bold no-underline hover:underline">Mot de passe oublié ?</a>
+                    </div>
+
+                    <button type="submit" class="w-full inline-flex justify-center items-center gap-[10px] p-[15px_34px] border-none bg-oas-accent text-white font-bold font-inherit text-[15px] cursor-pointer no-underline shadow-[0_8px_20px_rgba(239,108,26,0.28)] transition-all duration-300 hover:bg-oas-accent-dark hover:-translate-y-[3px] hover:shadow-[0_12px_26px_rgba(239,108,26,0.35)] mt-[12px]" [disabled]="isSubmitting">
+                        @if(!isSubmitting){ Se connecter }
+                        @if(isSubmitting){ <i class="fa-solid fa-spinner fa-spin"></i> Connexion... }
+                    </button>
+
+                    <p class="auth-switch text-center mt-[22px] text-[13.5px] text-oas-muted">
+                        Pas encore de compte ?
+                        <a href="javascript:void(0)" (click)="switchTab('register')" class="text-oas-accent font-bold no-underline cursor-pointer hover:underline">Créer un compte</a>
+                    </p>
+                </form>
+            }
+
+            <!-- ===================== INSCRIPTION ===================== -->
+            @if(activeTab === 'register'){
+                <form class="auth-form" [formGroup]="registerForm" (ngSubmit)="onSubmitRegister()" novalidate>
+                    <h2 class="text-[24px] font-extrabold text-oas-ink mb-[6px] text-center font-sans">Créer votre compte</h2>
+                    <p class="auth-subtitle text-center text-oas-muted text-[14px] mb-[26px]">Rejoignez l'espace client OAS en 1 minute.</p>
+
+                    <div class="form-grid-2 grid grid-cols-1 md:grid-cols-2 gap-[16px]">
+                        <div class="form-group mb-[18px]">
+                            <label for="register-prenom" class="block text-[13px] font-bold text-oas-ink2 mb-[8px]">Prénom</label>
+                            <div class="input-icon relative flex items-center">
+                                <i class="fa-solid fa-user absolute left-[16px] text-oas-faint text-[15px]"></i>
+                                <input id="register-prenom" type="text" formControlName="prenom" placeholder="Jean"
+                                    class="w-full p-[13px_16px_13px_44px] border-[1.5px] border-oas-line rounded-[12px] font-inherit text-[14px] text-oas-ink bg-oas-bg transition-all duration-200 focus:outline-none focus:border-oas-accent focus:bg-white focus:shadow-[0_0_0_4px_var(--color-oas-accent-bg)]"
+                                    [class.border-oas-bad]="rf['prenom'].invalid && rf['prenom'].touched"
+                                    [class.bg-oas-bad-bg]="rf['prenom'].invalid && rf['prenom'].touched">
+                            </div>
+                            @if(rf['prenom'].invalid && rf['prenom'].touched){
+                                <span class="form-error block mt-[7px] text-[12.5px] text-oas-bad font-semibold">Prénom requis (2 caractères min.)</span>
+                            }
+                        </div>
+
+                        <div class="form-group mb-[18px]">
+                            <label for="register-nom" class="block text-[13px] font-bold text-oas-ink2 mb-[8px]">Nom</label>
+                            <div class="input-icon relative flex items-center">
+                                <i class="fa-solid fa-user absolute left-[16px] text-oas-faint text-[15px]"></i>
+                                <input id="register-nom" type="text" formControlName="nom" placeholder="Dupont"
+                                    class="w-full p-[13px_16px_13px_44px] border-[1.5px] border-oas-line rounded-[12px] font-inherit text-[14px] text-oas-ink bg-oas-bg transition-all duration-200 focus:outline-none focus:border-oas-accent focus:bg-white focus:shadow-[0_0_0_4px_var(--color-oas-accent-bg)]"
+                                    [class.border-oas-bad]="rf['nom'].invalid && rf['nom'].touched"
+                                    [class.bg-oas-bad-bg]="rf['nom'].invalid && rf['nom'].touched">
+                            </div>
+                            @if(rf['nom'].invalid && rf['nom'].touched){
+                                <span class="form-error block mt-[7px] text-[12.5px] text-oas-bad font-semibold">Nom requis (2 caractères min.)</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="form-grid-2 grid grid-cols-1 md:grid-cols-2 gap-[16px]">
+                        <div class="form-group mb-[18px]">
+                            <label for="register-email" class="block text-[13px] font-bold text-oas-ink2 mb-[8px]">Adresse e-mail</label>
+                            <div class="input-icon relative flex items-center">
+                                <i class="fa-solid fa-envelope absolute left-[16px] text-oas-faint text-[15px]"></i>
+                                <input id="register-email" type="email" formControlName="email" placeholder="vous@exemple.com"
+                                    class="w-full p-[13px_16px_13px_44px] border-[1.5px] border-oas-line rounded-[12px] font-inherit text-[14px] text-oas-ink bg-oas-bg transition-all duration-200 focus:outline-none focus:border-oas-accent focus:bg-white focus:shadow-[0_0_0_4px_var(--color-oas-accent-bg)]"
+                                    [class.border-oas-bad]="rf['email'].invalid && rf['email'].touched"
+                                    [class.bg-oas-bad-bg]="rf['email'].invalid && rf['email'].touched">
+                            </div>
+                            @if(rf['email'].invalid && rf['email'].touched){
+                                <span class="form-error block mt-[7px] text-[12.5px] text-oas-bad font-semibold">
+                                    @if(rf['email'].errors?.['required']){ L'adresse e-mail est requise. }
+                                    @if(rf['email'].errors?.['email']){ Veuillez saisir une adresse e-mail valide. }
+                                </span>
+                            }
+                        </div>
+
+                        <div class="form-group mb-[18px]">
+                            <label for="register-tel" class="block text-[13px] font-bold text-oas-ink2 mb-[8px]">Téléphone</label>
+                            <div class="input-icon relative flex items-center">
+                                <i class="fa-solid fa-phone absolute left-[16px] text-oas-faint text-[15px]"></i>
+                                <input id="register-tel" type="tel" formControlName="telephone" placeholder="+221 77 000 00 00"
+                                    class="w-full p-[13px_16px_13px_44px] border-[1.5px] border-oas-line rounded-[12px] font-inherit text-[14px] text-oas-ink bg-oas-bg transition-all duration-200 focus:outline-none focus:border-oas-accent focus:bg-white focus:shadow-[0_0_0_4px_var(--color-oas-accent-bg)]"
+                                    [class.border-oas-bad]="rf['telephone'].invalid && rf['telephone'].touched"
+                                    [class.bg-oas-bad-bg]="rf['telephone'].invalid && rf['telephone'].touched">
+                            </div>
+                            @if(rf['telephone'].invalid && rf['telephone'].touched){
+                                <span class="form-error block mt-[7px] text-[12.5px] text-oas-bad font-semibold">Numéro de téléphone invalide.</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="form-grid-2 grid grid-cols-1 md:grid-cols-2 gap-[16px]">
+                        <div class="form-group mb-[18px]">
+                            <label for="register-password" class="block text-[13px] font-bold text-oas-ink2 mb-[8px]">Mot de passe</label>
+                            <div class="input-icon relative flex items-center">
+                                <i class="fa-solid fa-lock absolute left-[16px] text-oas-faint text-[15px]"></i>
+                                <input id="register-password" [type]="showRegisterPassword ? 'text' : 'password'" formControlName="motDePasse" placeholder="••••••••"
+                                    class="w-full p-[13px_16px_13px_44px] border-[1.5px] border-oas-line rounded-[12px] font-inherit text-[14px] text-oas-ink bg-oas-bg transition-all duration-200 focus:outline-none focus:border-oas-accent focus:bg-white focus:shadow-[0_0_0_4px_var(--color-oas-accent-bg)]"
+                                    [class.border-oas-bad]="rf['motDePasse'].invalid && rf['motDePasse'].touched"
+                                    [class.bg-oas-bad-bg]="rf['motDePasse'].invalid && rf['motDePasse'].touched">
+                                <button type="button" class="toggle-visibility absolute right-[14px] bg-transparent border-none text-oas-faint cursor-pointer text-[15px] p-[4px] hover:text-oas-muted" (click)="showRegisterPassword = !showRegisterPassword" aria-label="Afficher le mot de passe">
+                                    <i class="fa-solid" [class.fa-eye]="!showRegisterPassword" [class.fa-eye-slash]="showRegisterPassword"></i>
+                                </button>
+                            </div>
+                            @if(rf['motDePasse'].invalid && rf['motDePasse'].touched){
+                                <span class="form-error block mt-[7px] text-[12.5px] text-oas-bad font-semibold">6 caractères minimum.</span>
+                            }
+                        </div>
+
+                        <div class="form-group mb-[18px]">
+                            <label for="register-confirmation" class="block text-[13px] font-bold text-oas-ink2 mb-[8px]">Confirmation</label>
+                            <div class="input-icon relative flex items-center">
+                                <i class="fa-solid fa-lock absolute left-[16px] text-oas-faint text-[15px]"></i>
+                                <input id="register-confirmation" [type]="showRegisterConfirmation ? 'text' : 'password'" formControlName="confirmation" placeholder="••••••••"
+                                    class="w-full p-[13px_16px_13px_44px] border-[1.5px] border-oas-line rounded-[12px] font-inherit text-[14px] text-oas-ink bg-oas-bg transition-all duration-200 focus:outline-none focus:border-oas-accent focus:bg-white focus:shadow-[0_0_0_4px_var(--color-oas-accent-bg)]"
+                                    [class.border-oas-bad]="motsDePassesDifferents"
+                                    [class.bg-oas-bad-bg]="motsDePassesDifferents">
+                                <button type="button" class="toggle-visibility absolute right-[14px] bg-transparent border-none text-oas-faint cursor-pointer text-[15px] p-[4px] hover:text-oas-muted" (click)="showRegisterConfirmation = !showRegisterConfirmation" aria-label="Afficher le mot de passe">
+                                    <i class="fa-solid" [class.fa-eye]="!showRegisterConfirmation" [class.fa-eye-slash]="showRegisterConfirmation"></i>
+                                </button>
+                            </div>
+                            @if(motsDePassesDifferents){
+                                <span class="form-error block mt-[7px] text-[12.5px] text-oas-bad font-semibold">Les mots de passe ne correspondent pas.</span>
+                            }
+                        </div>
+                    </div>
+
+                    <label class="form-checkbox form-checkbox-cgu flex items-start gap-[9px] text-[13.5px] text-oas-ink2 cursor-pointer mt-[4px] mb-[4px]">
+                        <input type="checkbox" formControlName="cgu" class="w-[17px] h-[17px] accent-oas-accent cursor-pointer mt-1">
+                        <span>J'accepte les <a href="javascript:void(0)" class="text-oas-accent font-bold no-underline">conditions générales</a> d'utilisation.</span>
+                    </label>
+                    @if(rf['cgu'].invalid && rf['cgu'].touched){
+                        <span class="form-error block mt-[7px] text-[12.5px] text-oas-bad font-semibold">Vous devez accepter les conditions.</span>
+                    }
+
+                    <button type="submit" class="w-full inline-flex justify-center items-center gap-[10px] p-[15px_34px] border-none bg-oas-accent text-white font-bold font-inherit text-[15px] cursor-pointer no-underline shadow-[0_8px_20px_rgba(239,108,26,0.28)] transition-all duration-300 hover:bg-oas-accent-dark hover:-translate-y-[3px] hover:shadow-[0_12px_26px_rgba(239,108,26,0.35)] mt-[12px]" [disabled]="isSubmitting">
+                        @if(!isSubmitting){ Créer mon compte }
+                        @if(isSubmitting){ <i class="fa-solid fa-spinner fa-spin"></i> Création... }
+                    </button>
+
+                    <p class="auth-switch text-center mt-[22px] text-[13.5px] text-oas-muted">
+                        Déjà un compte ?
+                        <a href="javascript:void(0)" (click)="switchTab('login')" class="text-oas-accent font-bold no-underline cursor-pointer hover:underline">Se connecter</a>
+                    </p>
+                </form>
+            }
+
+        </div>
+    </div>
+  }
+
+
+</div>
