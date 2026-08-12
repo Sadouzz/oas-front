@@ -85,43 +85,43 @@ export const routes: Routes = [
       },
       {
         path: 'stock',
-        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_AGENT_MAGASIN'])],
+        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_AGENT_MAGASIN'])],
         loadComponent: () =>
           import('./gestion/stock/stock.component').then(m => m.StockComponent),
       },
       {
         path: 'inventaire',
-        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_AGENT_MAGASIN'])],
+        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_AGENT_MAGASIN'])],
         loadComponent: () =>
           import('./gestion/inventaire/inventaire.component').then(m => m.InventaireComponent),
       },
       {
         path: 'fournisseurs',
-        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_AGENT_MAGASIN'])],
+        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_AGENT_MAGASIN'])],
         loadComponent: () =>
           import('./gestion/fournisseurs/fournisseurs.component').then(m => m.FournisseursComponent),
       },
       {
-        path: 'fiches-atelier',
-        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_CHEF_ATELIER'])],
+        path: 'ordres-reparation',
+        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER'])],
         loadComponent: () =>
-          import('./gestion/fiches-atelier/fiches-atelier.component').then(m => m.FichesAtelierComponent),
+          import('./gestion/ordres-reparation/ordres-reparation.component').then(m => m.OrdresReparationComponent),
       },
       {
         path: 'mecaniciens',
-        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_CHEF_ATELIER'])],
+        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER'])],
         loadComponent: () =>
           import('./gestion/mecaniciens/mecaniciens.component').then(m => m.MecaniciensComponent),
       },
       {
         path: 'rendezvous',
-        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_CHEF_ATELIER'])],
+        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER'])],
         loadComponent: () =>
           import('./gestion/rendezvous/rendezvous.component').then(m => m.RendezVousComponent),
       },
       {
         path: 'devis-previsionnels',
-        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_CHEF_ATELIER'])],
+        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER'])],
         loadComponent: () =>
           import('./gestion/devis-previsionnels/devis-previsionnels.component').then(m => m.DevisPrevisionnelsComponent),
       },
@@ -172,7 +172,7 @@ export const routes: Routes = [
       },
       {
         path: 'admin',
-        canActivate: [roleGuard('ROLE_SUPER_AGENT')],
+        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER'])],
         children: [
           {
             path: 'users',

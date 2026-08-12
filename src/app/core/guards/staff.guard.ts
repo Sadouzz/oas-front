@@ -2,7 +2,7 @@ import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
-const STAFF_ROLES = ['ROLE_SUPER_AGENT', 'ROLE_AGENT', 'ROLE_CHEF_ATELIER', 'ROLE_AGENT_MAGASIN'];
+const STAFF_ROLES = ['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_AGENT', 'ROLE_CHEF_ATELIER', 'ROLE_AGENT_MAGASIN'];
 
 /**
  * Ferme l'accès au dashboard staff aux comptes clients : la plupart des routes

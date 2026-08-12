@@ -49,7 +49,7 @@ export class GestionRecuComponent implements OnInit {
         (r.numero?.toLowerCase().includes(term)) ||
         (r.numeroFacture?.toLowerCase().includes(term)) ||
         (r.clientNom?.toLowerCase().includes(term)) ||
-        (r.numeroFicheAtelier?.toLowerCase().includes(term))
+        (r.numeroOrdreReparation?.toLowerCase().includes(term))
       );
     }
     this.page = 1;

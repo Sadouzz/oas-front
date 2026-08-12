@@ -4,7 +4,7 @@ export * from './vehicule.model';
 export * from './fournisseur.model';
 export * from './mecanicien.model';
 export * from './piece-detachee.model';
-export * from './fiche-atelier.model';
+export * from './ordre-reparation.model';
 export * from './bon-de-sortie.model';
 export * from './devis-previsionnel.model';
 export * from './main-doeuvre.model';

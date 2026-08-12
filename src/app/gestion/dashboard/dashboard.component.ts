@@ -7,7 +7,7 @@ import { VehiculeService, VehiculeModel } from '../../services/vehicule.service'
 import { StockService } from '../../services/stock.service';
 import { PieceDetacheeService, AlerteStock } from '../../services/piece-detachee.service';
 import { BonDeSortieService, BonDeSortie } from '../../services/bon-de-sortie.service';
-import { FicheAtelierService } from '../../services/fiche-atelier.service';
+import { OrdreReparationService } from '../../services/ordre-reparation.service';
 import { GarageContextService } from '../../core/services/garage-context.service';
 import { GarageService } from '../../services/garage.service';
 @Component({
@@ -35,7 +35,7 @@ export class DashboardComponent implements OnInit {
   bonsEnAttente: BonDeSortie[] = [];
   recentFiches: any[] = [];
 
-  private ficheService = inject(FicheAtelierService);
+  private ficheService = inject(OrdreReparationService);
   ficheStats = { 
     aFaire: 0, 
     diagnostic: 0, 
@@ -58,6 +58,7 @@ export class DashboardComponent implements OnInit {
   get username(): string { return this.authService.getUsername() ?? ''; }
 
   get isSuperAgent()  { return this.role === 'ROLE_SUPER_AGENT'; }
+  get isMaster()      { return this.role === 'ROLE_MASTER'; }
   get isAgent()       { return this.role === 'ROLE_AGENT'; }
   get isChefAtelier() { return this.role === 'ROLE_CHEF_ATELIER'; }
   get isMagasinier()  { return this.role === 'ROLE_AGENT_MAGASIN'; }
@@ -94,11 +95,11 @@ export class DashboardComponent implements OnInit {
   loadDashboardData() {
     this.loading = true;
     this.loaded = 0;
-    if (this.isSuperAgent || this.isAgent) {
+    if (this.isSuperAgent || this.isMaster || this.isAgent) {
       this.clientService.getAll().subscribe({ next: (d) => { this.totalClients = d.length; this.recentClients = d.slice(0, 5); this.done(); }, error: () => this.done() });
       this.vehiculeService.getAll().subscribe({ next: (d) => { this.totalVehicules = d.length; this.recentVehicules = d.slice(0, 5); this.done(); }, error: () => this.done() });
     }
-    if (this.isSuperAgent || this.isAgent || this.isChefAtelier) {
+    if (this.isSuperAgent || this.isMaster || this.isAgent || this.isChefAtelier) {
       this.ficheService.getAll().subscribe({
         next: (data) => {
           this.ficheStats.aFaire = data.filter(f => f.statut === 'A_FAIRE').length;
@@ -123,10 +124,10 @@ export class DashboardComponent implements OnInit {
         }
       });
     }
-    if (this.isSuperAgent || this.isMagasinier) {
+    if (this.isSuperAgent || this.isMaster || this.isMagasinier) {
       this.stockService.alertes().subscribe({ next: (d) => { this.alertes = d; this.done(); }, error: () => this.done() });
     }
-    if (this.isSuperAgent || this.isAgent || this.isChefAtelier || this.isMagasinier) {
+    if (this.isSuperAgent || this.isMaster || this.isAgent || this.isChefAtelier || this.isMagasinier) {
       this.bonService.getAll({ statut: 'EN_ATTENTE' }).subscribe({ next: (d) => { this.bonsEnAttente = d; this.done(); }, error: () => this.done() });
     }
     if (this.isChefAtelier) {

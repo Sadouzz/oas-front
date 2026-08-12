@@ -2,29 +2,29 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { FicheAtelier, FicheAtelierRequest, StatutFiche } from '../shared/models';
+import { OrdreReparation, OrdreReparationRequest, StatutFiche } from '../shared/models';
 
-export type { FicheAtelier, FicheAtelierRequest, StatutFiche };
+export type { OrdreReparation, OrdreReparationRequest, StatutFiche };
 
 @Injectable({ providedIn: 'root' })
-export class FicheAtelierService {
+export class OrdreReparationService {
   private http = inject(HttpClient);
-  private api = `${environment.apiUrl}/api/fiches-atelier`;
+  private api = `${environment.apiUrl}/api/ordres-reparation`;
 
-  getAll(): Observable<FicheAtelier[]> {
-    return this.http.get<FicheAtelier[]>(this.api);
+  getAll(): Observable<OrdreReparation[]> {
+    return this.http.get<OrdreReparation[]>(this.api);
   }
 
-  getById(id: number): Observable<FicheAtelier> {
-    return this.http.get<FicheAtelier>(`${this.api}/${id}`);
+  getById(id: number): Observable<OrdreReparation> {
+    return this.http.get<OrdreReparation>(`${this.api}/${id}`);
   }
 
-  create(data: FicheAtelierRequest): Observable<FicheAtelier> {
-    return this.http.post<FicheAtelier>(`${this.api}/create`, data);
+  create(data: OrdreReparationRequest): Observable<OrdreReparation> {
+    return this.http.post<OrdreReparation>(`${this.api}/create`, data);
   }
 
-  update(id: number, data: FicheAtelierRequest): Observable<FicheAtelier> {
-    return this.http.put<FicheAtelier>(`${this.api}/${id}`, data);
+  update(id: number, data: OrdreReparationRequest): Observable<OrdreReparation> {
+    return this.http.put<OrdreReparation>(`${this.api}/${id}`, data);
   }
 
   delete(id: number): Observable<string> {
@@ -47,7 +47,7 @@ export class FicheAtelierService {
     return this.http.delete(`${this.api}/${ficheId}/mecaniciens-reparation/${mecId}`, { responseType: 'text' as 'json' });
   }
 
-  updateStatut(ficheId: number, statut: StatutFiche): Observable<FicheAtelier> {
-    return this.http.patch<FicheAtelier>(`${this.api}/${ficheId}/statut`, null, { params: { statut } });
+  updateStatut(ficheId: number, statut: StatutFiche): Observable<OrdreReparation> {
+    return this.http.patch<OrdreReparation>(`${this.api}/${ficheId}/statut`, null, { params: { statut } });
   }
 }

@@ -65,8 +65,8 @@ export class BonsDeSortieComponent implements OnInit {
   get lignesPieces(): FormArray { return this.form.get('lignesPieces') as FormArray; }
 
   get role(): string { return this.authService.getRole() ?? ''; }
-  get canCreate(): boolean { return ['ROLE_SUPER_AGENT', 'ROLE_AGENT', 'ROLE_AGENT_MAGASIN'].includes(this.role); }
-  get canValidate(): boolean { return ['ROLE_SUPER_AGENT', 'ROLE_AGENT_MAGASIN'].includes(this.role); }
+  get canCreate(): boolean { return ['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_AGENT', 'ROLE_AGENT_MAGASIN'].includes(this.role); }
+  get canValidate(): boolean { return ['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_AGENT_MAGASIN'].includes(this.role); }
 
   // ── Searchable selects ──────────────────────────────────────────
 

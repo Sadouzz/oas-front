@@ -195,11 +195,11 @@
                         <p class="text-oas-muted text-xs mb-1">Éléments reçus à la prise en charge</p>
                         <p class="text-oas-ink2 text-sm">{{ ficheEnCours.listeReception || '—' }}</p>
                       </div>
-                      @if (ficheEnCours.lignesFicheAtelierPieces.length) {
+                      @if (ficheEnCours.lignesOrdreReparationPieces.length) {
                         <div>
                           <p class="text-oas-muted text-xs mb-1.5">Pièces utilisées</p>
                           <div class="border border-oas-line rounded-lg divide-y divide-oas-line">
-                            @for (ligne of ficheEnCours.lignesFicheAtelierPieces; track ligne.id) {
+                            @for (ligne of ficheEnCours.lignesOrdreReparationPieces; track ligne.id) {
                               <div class="flex items-center justify-between px-3 py-2 text-xs">
                                 <span class="text-oas-ink2">{{ ligne.piece.reference }} <span class="text-oas-muted">× {{ ligne.quantite }}</span></span>
                                 <span class="font-mono-data font-semibold text-oas-ink">{{ ligne.prix | number:'1.0-0' }} F</span>
@@ -208,11 +208,11 @@
                           </div>
                         </div>
                       }
-                      @if (ficheEnCours.lignesFicheAtelierMainDoeuvres.length) {
+                      @if (ficheEnCours.lignesOrdreReparationMainDoeuvres.length) {
                         <div>
                           <p class="text-oas-muted text-xs mb-1.5">Main d'œuvre</p>
                           <div class="border border-oas-line rounded-lg divide-y divide-oas-line">
-                            @for (ligne of ficheEnCours.lignesFicheAtelierMainDoeuvres; track ligne.id) {
+                            @for (ligne of ficheEnCours.lignesOrdreReparationMainDoeuvres; track ligne.id) {
                               <div class="flex items-center justify-between px-3 py-2 text-xs">
                                 <span class="text-oas-ink2">{{ ligne.mainDoeuvre.description }} <span class="text-oas-muted">· {{ ligne.nbreHeure }}h</span></span>
                                 <span class="font-mono-data font-semibold text-oas-ink">{{ ligne.prix | number:'1.0-0' }} F</span>

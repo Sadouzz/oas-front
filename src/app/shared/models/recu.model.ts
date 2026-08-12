@@ -4,7 +4,7 @@ export interface RecuModel {
   factureId: number;
   numeroFacture?: string;
   clientNom?: string;
-  numeroFicheAtelier?: string;
+  numeroOrdreReparation?: string;
   montant: number;
   modePaiement: string | null;
   remarque: string | null;

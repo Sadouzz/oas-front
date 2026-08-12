@@ -2,7 +2,7 @@ import { BadgeTone } from './ui/status-badge/status-badge.component';
 
 /**
  * Étapes simplifiées à destination du client, dérivées du statut technique
- * de la fiche atelier (StatutFiche côté back, ex. EN_ATTENTE_MECANICIEN,
+ * de la ordre de réparation (StatutFiche côté back, ex. EN_ATTENTE_MECANICIEN,
  * EN_ATTENTE_SORTIE...) qui reste trop détaillé/interne pour être affiché tel quel.
  * Partagé entre le dashboard et la page Véhicules.
  */

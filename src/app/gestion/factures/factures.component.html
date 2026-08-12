@@ -422,21 +422,21 @@
         <!-- STEP 2 -->
         @if (createStep === 2) {
           <div class="space-y-4">
-            <p class="text-sm text-oas-muted">Selectionnez la fiche atelier liee a cette facture.</p>
+            <p class="text-sm text-oas-muted">Selectionnez la ordre de réparation liee a cette facture.</p>
             <div>
-              <label class="block text-sm font-semibold text-oas-ink mb-1">Fiche Atelier *</label>
+              <label class="block text-sm font-semibold text-oas-ink mb-1">Ordre de Réparation *</label>
               @if (ficheOpen) {
                 <div class="fixed inset-0 z-[5]" (click)="ficheOpen = false"></div>
               }
               <div class="relative z-[10]">
                 <input type="text"
-                       [value]="ficheOpen ? ficheFilter : ficheAtelierLabel"
+                       [value]="ficheOpen ? ficheFilter : ordreReparationLabel"
                        (focus)="ficheOpen = true; ficheFilter = ''"
                        (input)="ficheFilter = $any($event.target).value"
                        [placeholder]="fichesFiltrees.length > 0 ? 'Rechercher une fiche...' : 'Aucune fiche disponible'"
                        [disabled]="fichesFiltrees.length === 0"
                        class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition disabled:opacity-50"
-                       [class.border-oas-bad]="form.get('ficheAtelierId')?.invalid && form.get('ficheAtelierId')?.touched"/>
+                       [class.border-oas-bad]="form.get('ordreReparationId')?.invalid && form.get('ordreReparationId')?.touched"/>
                 @if (ficheOpen && fichesFiltrees.length > 0) {
                   <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-oas-line rounded-lg shadow-xl z-[10] max-h-52 overflow-y-auto"
                        (click)="$event.stopPropagation()">
@@ -453,12 +453,12 @@
                   </div>
                 }
               </div>
-              @if (form.get('ficheAtelierId')?.invalid && form.get('ficheAtelierId')?.touched) {
-                <p class="text-xs text-oas-bad mt-1">Fiche Atelier requise.</p>
+              @if (form.get('ordreReparationId')?.invalid && form.get('ordreReparationId')?.touched) {
+                <p class="text-xs text-oas-bad mt-1">Ordre de Réparation requise.</p>
               }
             </div>
             @if (fichesFiltrees.length === 0) {
-              <p class="text-xs text-oas-muted text-center py-4">Aucune fiche atelier pour ce vehicule.</p>
+              <p class="text-xs text-oas-muted text-center py-4">Aucune ordre de réparation pour ce vehicule.</p>
             } @else if (availableFiches.length === 0) {
               <p class="text-xs text-oas-muted text-center py-4">Toutes les fiches de ce véhicule ont déjà une facture.</p>
             }

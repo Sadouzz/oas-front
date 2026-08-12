@@ -70,7 +70,7 @@ export class PiecesDetacheesComponent implements OnInit {
 
   get canEdit(): boolean {
     const r = this.authService.getRole();
-    return r === 'ROLE_SUPER_AGENT' || r === 'ROLE_AGENT_MAGASIN';
+    return r === 'ROLE_SUPER_AGENT' || r === 'ROLE_MASTER' || r === 'ROLE_AGENT_MAGASIN';
   }
 
   get selectedType(): string {

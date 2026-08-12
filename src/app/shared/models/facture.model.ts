@@ -29,14 +29,14 @@ export interface FactureModel {
   resteAPayer: number;
   statutPaiement: 'NON_PAYE' | 'PARTIEL' | 'PAYE';
   recus: import('./recu.model').RecuModel[];
-  ficheAtelierId?: number | null;
-  numeroFicheAtelier?: string | null;
+  ordreReparationId?: number | null;
+  numeroOrdreReparation?: string | null;
 }
 
 export interface FactureCreateRequest {
   clientId: number;
   vehiculeId: number;
-  ficheAtelierId: number;
+  ordreReparationId: number;
   kilometrage?: number | null;
   remarque?: string | null;
   tvaRate?: number | null;

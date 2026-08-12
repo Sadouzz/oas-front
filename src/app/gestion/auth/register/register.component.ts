@@ -30,7 +30,7 @@ export class RegisterComponent {
   });
 
   typeOptions = ['CLIENT', 'AGENT'];
-  roleOptions = ['SUPER_AGENT', 'AGENT', 'CHEF_ATELIER', 'AGENT_MAGASIN'];
+  roleOptions = ['SUPER_AGENT', 'MASTER', 'AGENT', 'CHEF_ATELIER', 'AGENT_MAGASIN'];
 
   showPassword = false;
   loading = false;

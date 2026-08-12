@@ -26,8 +26,8 @@
         Tableau de bord
       </a>
 
-      <!-- ── Atelier — Chef Atelier + Super Agent ── -->
-      @if (isChefAtelier() || isSuperAgent()) {
+      <!-- ── Atelier — Chef Atelier + Super Agent + Master ── -->
+      @if (isChefAtelier() || isSuperAgent() || isMaster()) {
       <button (click)="toggleSection('atelier')"
         class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
         <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -43,9 +43,9 @@
       </button>
       @if (openSection === 'atelier') {
       <div class="ml-3 pl-3 border-l border-white/10 space-y-0.5">
-        <a routerLink="/gestion/fiches-atelier" routerLinkActive="oas-sub-active"
+        <a routerLink="/gestion/ordres-reparation" routerLinkActive="oas-sub-active"
           class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
-          Fiches atelier
+          Ordres de réparation
         </a>
         <a routerLink="/gestion/mecaniciens" routerLinkActive="oas-sub-active"
           class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
@@ -55,8 +55,8 @@
       }
       }
 
-      <!-- Rendez-vous — Super Agent + Chef Atelier -->
-      @if (isSuperAgent() || isChefAtelier()) {
+      <!-- Rendez-vous — Super Agent + Chef Atelier + Master -->
+      @if (isSuperAgent() || isMaster() || isChefAtelier()) {
         <a routerLink="/gestion/rendezvous" routerLinkActive="oas-nav-active"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
           <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -66,8 +66,8 @@
         </a>
       }
 
-      <!-- Clients — Agent + Super Agent -->
-      @if (isAgent() || isSuperAgent()) {
+      <!-- Clients — Agent + Super Agent + Master -->
+      @if (isAgent() || isSuperAgent() || isMaster()) {
         <a routerLink="/gestion/clients" routerLinkActive="oas-nav-active"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
           <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -110,7 +110,7 @@
              class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
             Pièce détachée
           </a>
-          @if (isMagasinier() || isSuperAgent()) {
+          @if (isMagasinier() || isSuperAgent() || isMaster()) {
             <a routerLink="/gestion/stock" routerLinkActive="oas-sub-active"
                class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
               Historique
@@ -124,7 +124,7 @@
       }
 
       <!-- ── Réapprovisionnement ── -->
-      @if (isAgent() || isSuperAgent() || isMagasinier()) {
+      @if (isAgent() || isSuperAgent() || isMaster() || isMagasinier()) {
         <button (click)="toggleSection('reappro')"
                 class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
           <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -154,8 +154,8 @@
         }
       }
 
-      <!-- ── Facture TTC — Agent + Super Agent ── -->
-      @if (isAgent() || isSuperAgent()) {
+      <!-- ── Facture TTC — Agent + Super Agent + Master ── -->
+      @if (isAgent() || isSuperAgent() || isMaster()) {
         <button (click)="toggleSection('facture-ttc')"
                 class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
           <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -186,7 +186,7 @@
       }
 
       <!-- ── Facture HT — Agent + Super + Chef Atelier ── -->
-      <!-- @if (isAgent() || isSuperAgent() || isChefAtelier()) {
+      <!-- @if (isAgent() || isSuperAgent() || isMaster() || isChefAtelier()) {
         <button (click)="toggleSection('facture-ht')"
                 class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
           <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -204,7 +204,7 @@
                class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
               Note de prix
             </a>
-            @if (isChefAtelier() || isSuperAgent()) {
+            @if (isChefAtelier() || isSuperAgent() || isMaster()) {
               <a routerLink="/devis-previsionnels" routerLinkActive="oas-sub-active"
                  class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
                 Devis prévisionnel
@@ -219,7 +219,7 @@
       } -->
 
       <!-- Gestion TVA — Agent + Super -->
-      <!-- @if (isAgent() || isSuperAgent()) {
+      <!-- @if (isAgent() || isSuperAgent() || isMaster()) {
         <a routerLink="/gestion-tva" routerLinkActive="oas-nav-active"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
           <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -229,8 +229,8 @@
         </a>
       } -->
 
-      <!-- Gestion reçu — Agent + Super -->
-      @if (isAgent() || isSuperAgent()) {
+      <!-- Gestion reçu — Agent + Super + Master -->
+      @if (isAgent() || isSuperAgent() || isMaster()) {
         <a routerLink="/gestion/gestion-recu" routerLinkActive="oas-nav-active"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
           <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -240,8 +240,8 @@
         </a>
       }
 
-      <!-- Main d'œuvre — Super Agent uniquement -->
-      @if (isSuperAgent()) {
+      <!-- Main d'œuvre — Super Agent et Master -->
+      @if (isSuperAgent() || isMaster()) {
         <a routerLink="/gestion/admin/main-doeuvre" routerLinkActive="oas-nav-active"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
           <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -251,8 +251,8 @@
         </a>
       }
 
-      <!-- ── Administration — Super Agent uniquement ── -->
-      @if (isSuperAgent()) {
+      <!-- ── Administration — Super Agent et Master ── -->
+      @if (isSuperAgent() || isMaster()) {
         <button (click)="toggleSection('admin')"
                 class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
           <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -267,10 +267,12 @@
         </button>
         @if (openSection === 'admin') {
           <div class="ml-3 pl-3 border-l border-white/10 space-y-0.5">
-            <a routerLink="/gestion/admin/garages" routerLinkActive="oas-sub-active"
-               class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
-              Garages
-            </a>
+            @if (isSuperAgent()) {
+              <a routerLink="/gestion/admin/garages" routerLinkActive="oas-sub-active"
+                 class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
+                Garages
+              </a>
+            }
             <a routerLink="/gestion/admin/users" routerLinkActive="oas-sub-active"
                class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
               Utilisateurs

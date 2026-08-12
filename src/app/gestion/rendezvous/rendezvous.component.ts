@@ -143,7 +143,7 @@ export class RendezVousComponent implements OnInit {
 
     const doValider = () => {
       this.service.valider(this.editingRdv!.id, mecanicienIds).subscribe({
-        next: () => { this.showValiderModal = false; this.load(); this.notify('Rendez-vous validé. Fiche atelier créée.'); },
+        next: () => { this.showValiderModal = false; this.load(); this.notify('Rendez-vous validé. Ordre de réparation créée.'); },
         error: (err) => { this.saving = false; this.modalErrorMessage = err.error || 'Erreur lors de la validation.'; },
       });
     };

@@ -111,7 +111,7 @@ export class ClientVehiculesComponent implements OnInit {
 
     if (!derniere.dateSortie) return derniere;
 
-    const facture = this.factures.find(f => f.ficheAtelierId === derniere.id);
+    const facture = this.factures.find(f => f.ordreReparationId === derniere.id);
     const aPaiementPartiel = !!facture && facture.montantPaye > 0;
     if (!aPaiementPartiel) return derniere;
 

@@ -6,11 +6,13 @@ import { UserModel } from '../../../shared/models/index';
 import { AlertComponent } from '../../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideUser, LucideCheck, LucideArchive } from '@lucide/angular';
+import { AuthService } from '../../auth/services/auth.service';
 
-const ROLES = ['SUPER_AGENT', 'AGENT', 'CHEF_ATELIER', 'AGENT_MAGASIN'] as const;
+const ROLES = ['SUPER_AGENT', 'MASTER', 'AGENT', 'CHEF_ATELIER', 'AGENT_MAGASIN'] as const;
 
 const ROLE_PREFIX: Record<string, string> = {
   SUPER_AGENT: 'SAD',
+  MASTER: 'MAS',
   AGENT: 'AGT',
   CHEF_ATELIER: 'CHF',
   AGENT_MAGASIN: 'MAG',
@@ -26,6 +28,9 @@ export class UsersComponent implements OnInit {
   private fb = inject(FormBuilder);
   private userService = inject(UserManagementService);
   private garageService = inject(GarageService);
+  private authService = inject(AuthService);
+  
+  get isSuperAgent(): boolean { return this.authService.getRole() === 'ROLE_SUPER_AGENT'; }
 
   users: UserModel[] = [];
   filtered: UserModel[] = [];
@@ -65,10 +70,12 @@ export class UsersComponent implements OnInit {
   }
 
   loadGarages() {
-    this.garageService.getAll().subscribe({
-      next: (data) => this.garages = data,
-      error: (err) => console.error('Erreur lors du chargement des garages', err)
-    });
+    if (this.isSuperAgent) {
+      this.garageService.getAll().subscribe({
+        next: (data) => this.garages = data,
+        error: (err) => console.error('Erreur lors du chargement des garages', err)
+      });
+    }
   }
 
   loadUsers() {
@@ -210,6 +217,7 @@ export class UsersComponent implements OnInit {
   roleLabel(roleOrUser: string | UserModel | undefined): string {
     const labels: Record<string, string> = {
       SUPER_AGENT: 'Super Agent',
+      MASTER: 'Master',
       AGENT: 'Agent',
       CHEF_ATELIER: 'Chef Atelier',
       AGENT_MAGASIN: 'Agent Magasin',

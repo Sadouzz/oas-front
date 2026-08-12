@@ -6,7 +6,7 @@ import { FactureService } from '../../services/facture.service';
 import { FactureModel, FactureCreateRequest } from '../../shared/models/facture.model';
 import { ClientService, UserModel } from '../../services/client.service';
 import { VehiculeService, VehiculeModel } from '../../services/vehicule.service';
-import { FicheAtelierService, FicheAtelier } from '../../services/fiche-atelier.service';
+import { OrdreReparationService, OrdreReparation } from '../../services/ordre-reparation.service';
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideReceipt, LucideEye, LucidePrinter } from '@lucide/angular';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
@@ -23,7 +23,7 @@ export class FacturesComponent implements OnInit {
   private fb = inject(FormBuilder);
   private clientService = inject(ClientService);
   private vehiculeService = inject(VehiculeService);
-  private ficheService = inject(FicheAtelierService);
+  private ficheService = inject(OrdreReparationService);
 
   factures: FactureModel[] = [];
   filtered: FactureModel[] = [];
@@ -41,8 +41,8 @@ export class FacturesComponent implements OnInit {
 
   clients: UserModel[] = [];
   vehiculesFiltres: VehiculeModel[] = [];
-  fichesAtelier: FicheAtelier[] = [];
-  fichesFiltrees: FicheAtelier[] = [];
+  ordresReparation: OrdreReparation[] = [];
+  fichesFiltrees: OrdreReparation[] = [];
 
   clientOpen = false;
   vehiculeOpen = false;
@@ -61,7 +61,7 @@ export class FacturesComponent implements OnInit {
   form = this.fb.group({
     clientId: [null as number | null, Validators.required],
     vehiculeId: [null as number | null, Validators.required],
-    ficheAtelierId: [null as number | null, Validators.required],
+    ordreReparationId: [null as number | null, Validators.required],
     remarque: [''],
     modePaiement: ['ESPECE', Validators.required],
   });
@@ -74,7 +74,7 @@ export class FacturesComponent implements OnInit {
     }).subscribe({
       next: ({ clients, fiches }) => {
         this.clients = clients.filter(c => c.enabled);
-        this.fichesAtelier = fiches;
+        this.ordresReparation = fiches;
       },
     });
   }
@@ -135,7 +135,7 @@ export class FacturesComponent implements OnInit {
         this.errorMessage = 'Veuillez sélectionner un client et un véhicule.';
         return;
       }
-      this.fichesFiltrees = this.fichesAtelier.filter(f => f.vehicule?.id === Number(vehiculeCtrl.value));
+      this.fichesFiltrees = this.ordresReparation.filter(f => f.vehicule?.id === Number(vehiculeCtrl.value));
     }
     this.createStep = n;
   }
@@ -194,23 +194,23 @@ export class FacturesComponent implements OnInit {
   }
 
   selectVehicule(v: VehiculeModel) {
-    this.form.patchValue({ vehiculeId: v.id, ficheAtelierId: null });
+    this.form.patchValue({ vehiculeId: v.id, ordreReparationId: null });
     this.vehiculeFilter = '';
     this.vehiculeOpen = false;
-    this.fichesFiltrees = this.fichesAtelier.filter(f => f.vehicule?.id === v.id);
+    this.fichesFiltrees = this.ordresReparation.filter(f => f.vehicule?.id === v.id);
   }
 
   // ── Step 2 helpers ─────────────────────────────────────────────
 
-  get ficheAtelierLabel(): string {
-    const id = this.form.get('ficheAtelierId')?.value;
+  get ordreReparationLabel(): string {
+    const id = this.form.get('ordreReparationId')?.value;
     if (!id) return '';
     const f = this.fichesFiltrees.find(x => x.id === Number(id));
     return f ? `Fiche #${f.numero}` : '';
   }
 
-  selectFiche(f: FicheAtelier) {
-    this.form.patchValue({ ficheAtelierId: f.id });
+  selectFiche(f: OrdreReparation) {
+    this.form.patchValue({ ordreReparationId: f.id });
     this.ficheOpen = false;
     this.ficheFilter = '';
   }
@@ -221,7 +221,7 @@ export class FacturesComponent implements OnInit {
     if (this.saving) return;
     const val = this.form.value as any;
 
-    if (!val.modePaiement || !val.ficheAtelierId) {
+    if (!val.modePaiement || !val.ordreReparationId) {
       this.form.markAllAsTouched();
       this.errorMessage = 'Veuillez remplir tous les champs obligatoires.';
       return;
@@ -233,7 +233,7 @@ export class FacturesComponent implements OnInit {
     const request: FactureCreateRequest = {
       clientId: Number(val.clientId),
       vehiculeId: Number(val.vehiculeId),
-      ficheAtelierId: Number(val.ficheAtelierId),
+      ordreReparationId: Number(val.ordreReparationId),
       remarque: val.remarque || null,
       modePaiement: val.modePaiement,
     };

@@ -51,7 +51,7 @@ export interface Proforma {
 
 export interface ProformaRequest {
   clientId: number;
-  ficheAtelierId?: number | null;
+  ordreReparationId?: number | null;
   vehiculeId?: number | null;
   kilometrage: number;
   immatriculation?: string;
@@ -81,8 +81,8 @@ export class ProformaService {
     return this.http.get<Proforma>(`${this.api}/${id}`);
   }
 
-  getByFicheAtelierId(ficheAtelierId: number): Observable<Proforma> {
-    return this.http.get<Proforma>(`${this.api}/fiche-atelier/${ficheAtelierId}`);
+  getByOrdreReparationId(ordreReparationId: number): Observable<Proforma> {
+    return this.http.get<Proforma>(`${this.api}/ordre-reparation/${ordreReparationId}`);
   }
 
   search(keyword: string): Observable<Proforma[]> {

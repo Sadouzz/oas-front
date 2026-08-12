@@ -283,7 +283,7 @@
       <div class="px-6 py-5">
         <form [formGroup]="form" (ngSubmit)="save()" class="space-y-5">
 
-          <!-- Fournisseur (searchable dropdown style Fiche Atelier) -->
+          <!-- Fournisseur (searchable dropdown style Ordre de Réparation) -->
           @if (fournisseurOpen) { <div class="fixed inset-0 z-[5]" (click)="fournisseurOpen = false"></div> }
           <div>
             <label class="block text-sm font-semibold text-oas-ink mb-1">Fournisseur <span class="font-normal text-oas-muted text-xs">(optionnel — assignable plus tard)</span></label>
@@ -656,7 +656,7 @@
           </svg>
           <div class="text-sm text-green-800">
             <p class="font-bold">Confirmation de réception</p>
-            <p class="text-xs mt-1">Ajustez les quantités reçues si nécessaire. Les pièces seront ajoutées au stock du magasin et la fiche atelier passera en statut "Bon de Sortie" si applicable.</p>
+            <p class="text-xs mt-1">Ajustez les quantités reçues si nécessaire. Les pièces seront ajoutées au stock du magasin et la ordre de réparation passera en statut "Bon de Sortie" si applicable.</p>
           </div>
         </div>
 

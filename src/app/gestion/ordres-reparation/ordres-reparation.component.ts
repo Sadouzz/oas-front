@@ -4,7 +4,7 @@ import { CommonModule, NgClass, NgStyle } from '@angular/common';
 import { forkJoin } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Subject } from 'rxjs';
-import { FicheAtelierService, FicheAtelier, StatutFiche } from '../../services/fiche-atelier.service';
+import { OrdreReparationService, OrdreReparation, StatutFiche } from '../../services/ordre-reparation.service';
 import { VehiculeService, VehiculeModel } from '../../services/vehicule.service';
 import { MecanicienService, Mecanicien } from '../../services/mecanicien.service';
 import { PieceDetacheeService, PieceDetache } from '../../services/piece-detachee.service';
@@ -87,13 +87,13 @@ const STATUT_STEPS: { statut: StatutFiche; label: string }[] = [
 ];
 
 @Component({
-  selector: 'app-fiches-atelier',
+  selector: 'app-ordres-reparation',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, FormsModule, NgClass, NgStyle, AlertComponent, PaginationComponent, SearchableSelectComponent],
-  templateUrl: './fiches-atelier.component.html',
+  templateUrl: './ordres-reparation.component.html',
 })
-export class FichesAtelierComponent implements OnInit, OnDestroy {
-  private service = inject(FicheAtelierService);
+export class OrdresReparationComponent implements OnInit, OnDestroy {
+  private service = inject(OrdreReparationService);
   private vehiculeService = inject(VehiculeService);
   private mecService = inject(MecanicienService);
   private pieceService = inject(PieceDetacheeService);
@@ -107,15 +107,15 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
 
   // ─── Liste ───────────────────────────────────────────
-  fiches: FicheAtelier[] = [];
-  loadedFiche: FicheAtelier | null = null;
-  filtered: FicheAtelier[] = [];
+  fiches: OrdreReparation[] = [];
+  loadedFiche: OrdreReparation | null = null;
+  filtered: OrdreReparation[] = [];
   loading = true;
   page = 1;
   pageSize = 10;
   successMessage = '';
   errorMessage = '';
-  selectedFiche: FicheAtelier | null = null;
+  selectedFiche: OrdreReparation | null = null;
 
   // ─── Référentiels ─────────────────────────────────────
   vehicules: VehiculeModel[] = [];
@@ -513,7 +513,7 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     });
   }
 
-  openEdit(f: FicheAtelier) {
+  openEdit(f: OrdreReparation) {
     this.loadReferentiels(() => {
       if (this.pollInterval) clearInterval(this.pollInterval);
       this.pollInterval = setInterval(() => { this.pollStatus(); }, 7000);
@@ -559,8 +559,8 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
 
         this.dateSortieEstimee = f.dateSortie ? f.dateSortie.substring(0, 10) : '';
 
-        // Reconstituer les lignes pièces depuis la fiche atelier
-        this.lignesPieces = (f.lignesFicheAtelierPieces || [])
+        // Reconstituer les lignes pièces depuis la ordre de réparation
+        this.lignesPieces = (f.lignesOrdreReparationPieces || [])
           .map((lp: any) => {
             const piece = this.allPieces.find(pp => pp.id === lp.piece?.id);
             if (!piece) return null;
@@ -581,8 +581,8 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
           })
           .filter((l: any) => l !== null) as LignePiece[];
 
-        // Reconstituer les lignes MO depuis la fiche atelier
-        this.lignesMO = (f.lignesFicheAtelierMainDoeuvres || [])
+        // Reconstituer les lignes MO depuis la ordre de réparation
+        this.lignesMO = (f.lignesOrdreReparationMainDoeuvres || [])
           .map((lmd: any) => {
             const mo = this.allMO.find(m => m.id === lmd.mainDoeuvre?.id);
             if (!mo) return null;
@@ -630,19 +630,19 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
         error: () => { }
       });
 
-      // Try to fetch any existing proforma attached to this fiche atelier and any facture linked to it
+      // Try to fetch any existing proforma attached to this ordre de réparation and any facture linked to it
       this.proformaChargee = null;
       this.invoiceCreated = false;
       this.createdFacture = null;
       this.isLoadingProforma = true;
       try {
-        this.proformaService.getByFicheAtelierId(f.id).subscribe({
+        this.proformaService.getByOrdreReparationId(f.id).subscribe({
           next: (p) => { this.proformaChargee = p; this.isLoadingProforma = false; },
           error: () => { this.proformaChargee = null; this.isLoadingProforma = false; }
         });
       } catch (e) { this.proformaChargee = null; this.isLoadingProforma = false; }
 
-      // Fetch invoices and try to find one linked to this fiche atelier
+      // Fetch invoices and try to find one linked to this ordre de réparation
       this.isLoadingFacture = true;
       try {
         this.factureService.getAll().subscribe({
@@ -650,8 +650,8 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
             this.isLoadingFacture = false;
             if (!list || !list.length) return;
             const inv = list.find(it => 
-              (it.ficheAtelierId && Number(it.ficheAtelierId) === Number(f.id)) || 
-              (it.ficheAtelier && Number(it.ficheAtelier.id) === Number(f.id))
+              (it.ordreReparationId && Number(it.ordreReparationId) === Number(f.id)) || 
+              (it.ordreReparation && Number(it.ordreReparation.id) === Number(f.id))
             );
             if (inv) {
               this.createdFacture = inv;
@@ -701,7 +701,7 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
   pollStatus() {
     if (!this.editingId || !this.showWorkflow) return;
     this.service.getById(this.editingId).subscribe({
-      next: (f: FicheAtelier) => {
+      next: (f: OrdreReparation) => {
         this.loadedFiche = f;
         if (f.statut !== this.editingFicheStatus) {
           this.editingFicheStatus = f.statut;
@@ -867,14 +867,14 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     }).subscribe({
       next: () => {
         this.proformaSaving = false;
-        this.proformaService.getByFicheAtelierId(this.editingId!).subscribe({
+        this.proformaService.getByOrdreReparationId(this.editingId!).subscribe({
           next: (p: any) => {
             this.proformaChargee = p;
             const num = p.numero || p.code || ('DK-' + p.id);
             this.notify(`Pièces et main d'œuvre enregistrées. Proforma ${num} généré.`);
           },
           error: () => {
-            this.notify('Pièces et main d\'œuvre enregistrées dans la fiche atelier.');
+            this.notify('Pièces et main d\'œuvre enregistrées dans la ordre de réparation.');
           }
         });
         this.currentStep = 4; // PROFORMA_VALIDE validation step
@@ -892,7 +892,7 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     if (!this.editingId) return;
     this.proformaSaving = true;
     this.service.getById(this.editingId).subscribe({
-      next: (f: FicheAtelier) => {
+      next: (f: OrdreReparation) => {
         this.proformaSaving = false;
         if (f.statut !== 'EN_ATTENTE_PROFORMA') {
           this.editingFicheStatus = f.statut;
@@ -966,7 +966,7 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     this.bdsService.creer({
       clientId,
       vehiculeId: fiche.vehicule!.id,
-      ficheAtelierId: fiche.id,
+      ordreReparationId: fiche.id,
       lignesPieces: lignes.map(l => ({ pieceId: l.piece.id, quantite: l.aSortirMagasin!, prix: l.piece.prix ?? null })),
       remarque: `Bon de sortie automatique pour réparation FA-${this.editingId}`,
     }).subscribe({
@@ -1004,7 +1004,7 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     if (!this.editingId) return;
     this.saving = true;
     this.service.getById(this.editingId).subscribe({
-      next: (f: FicheAtelier) => {
+      next: (f: OrdreReparation) => {
         this.saving = false;
         if (f.statut !== 'EN_ATTENTE_COMMANDE') {
           this.editingFicheStatus = f.statut;
@@ -1026,7 +1026,7 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     if (!this.editingId) return;
     this.saving = true;
     this.service.getById(this.editingId).subscribe({
-      next: (f: FicheAtelier) => {
+      next: (f: OrdreReparation) => {
         this.saving = false;
         if (f.statut !== 'EN_ATTENTE_SORTIE') {
           this.editingFicheStatus = f.statut;
@@ -1045,7 +1045,7 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     if (!this.editingId) return;
     this.saving = true;
     this.service.getById(this.editingId).subscribe({
-      next: (f: FicheAtelier) => {
+      next: (f: OrdreReparation) => {
         this.saving = false;
         if (f.statut !== 'EN_ATTENTE_PAIEMENT') {
           this.editingFicheStatus = f.statut;
@@ -1088,7 +1088,7 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ─── Création de facture depuis la fiche atelier ─────────────────
+  // ─── Création de facture depuis la ordre de réparation ─────────────────
   createFactureFromFiche() {
     if (!this.editingId) { this.notifyError('Fiche non sélectionnée.'); return; }
     const fiche = this.fiches.find(x => x.id === this.editingId);
@@ -1100,7 +1100,7 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     const payload = {
       clientId: Number(clientId),
       vehiculeId: Number(vehId),
-      ficheAtelierId: Number(this.editingId),
+      ordreReparationId: Number(this.editingId),
       appliquerTVA: true,
       appliquerTimbre: true,
       modePaiement: 'ESPECE'
@@ -1114,7 +1114,7 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
           this.saving = false;
           this.invoiceCreated = true;
           this.createdFacture = res;
-          this.notify('Facture créée depuis la fiche atelier.');
+          this.notify('Facture créée depuis la ordre de réparation.');
           // refresh lists
           this.load();
           // advance to next step to reflect payment/validation
@@ -1325,7 +1325,7 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
       fournisseurId: null, // Pas de fournisseur — sera assigné plus tard
       vehiculeId: fiche?.vehicule?.id,
       tvaApplicable: false,
-      observation: `Commande liée à la fiche atelier #${this.step1Form.value.numero}`,
+      observation: `Commande liée à la ordre de réparation #${this.step1Form.value.numero}`,
       lignes: this.rupturesOnly.map(l => ({ pieceDetacheeId: l.piece.id, quantite: l.manquant, prixUnitaire: l.piece.prix ?? 0 })),
     };
     this.bdcSaving = true;
@@ -1352,7 +1352,7 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
   }
 
   // ─── Panneau détail ───────────────────────────────────
-  selectFiche(f: FicheAtelier) {
+  selectFiche(f: OrdreReparation) {
     if (this.selectedFiche && this.selectedFiche.id === f.id) {
       this.selectedFiche = null;
       return;
@@ -1360,7 +1360,7 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
     this.detailLoading = true;
     this.selectedFiche = null; // Hide current while loading
     this.service.getById(f.id).subscribe({
-      next: (fullFiche: FicheAtelier) => {
+      next: (fullFiche: OrdreReparation) => {
         this.selectedFiche = fullFiche;
         this.detailLoading = false;
       },
@@ -1372,7 +1372,7 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
   }
   closeDetail() { this.selectedFiche = null; }
 
-  ficheInitials(f: FicheAtelier): string {
+  ficheInitials(f: OrdreReparation): string {
     return (f.vehicule?.immatriculation ?? 'FA').slice(0, 2).toUpperCase();
   }
 
@@ -1410,7 +1410,7 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
   }
 
   // ─── Pagination ──────────────────────────────────────
-  get paged(): FicheAtelier[] {
+  get paged(): OrdreReparation[] {
     return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
   }
   get totalPages(): number { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }
@@ -1426,7 +1426,7 @@ export class FichesAtelierComponent implements OnInit, OnDestroy {
   formatDate(d: string | null): string { return d ? new Date(d).toLocaleDateString('fr-FR') : '—'; }
 
   delete(id: number) {
-    if (!confirm('Supprimer cette fiche atelier ?')) return;
+    if (!confirm('Supprimer cette ordre de réparation ?')) return;
     this.service.delete(id).subscribe({
       next: () => { this.load(); this.notify('Fiche supprimée.'); if (this.selectedFiche?.id === id) this.selectedFiche = null; },
       error: () => this.notifyError('Erreur lors de la suppression.'),

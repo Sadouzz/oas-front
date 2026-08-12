@@ -10,6 +10,6 @@ export interface Intervention {
   statut: string;
   vehicule: { id: number; immatriculation: string; marque: string; modele: string } | null;
   mecaniciens: { id: number; nom: string }[];
-  lignesFicheAtelierPieces: { id: number; piece: { reference: string }; quantite: number; prix: number }[];
-  lignesFicheAtelierMainDoeuvres: { id: number; mainDoeuvre: { description: string }; nbreHeure: number; prix: number }[];
+  lignesOrdreReparationPieces: { id: number; piece: { reference: string }; quantite: number; prix: number }[];
+  lignesOrdreReparationMainDoeuvres: { id: number; mainDoeuvre: { description: string }; nbreHeure: number; prix: number }[];
 }

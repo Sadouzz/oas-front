@@ -257,7 +257,7 @@ export class ClientRendezVousComponent implements OnInit {
   }
 
   canCancel(statut: RendezVousStatus): boolean {
-    // Un RDV confirmé est immédiatement transformé en fiche atelier côté back
+    // Un RDV confirmé est immédiatement transformé en ordre de réparation côté back
     // (même transaction) : au-delà de EN_ATTENTE, il n'est plus annulable.
     return statut === 'EN_ATTENTE';
   }
