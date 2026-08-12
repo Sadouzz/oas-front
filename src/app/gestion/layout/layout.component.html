@@ -55,8 +55,8 @@
       }
       }
 
-      <!-- Rendez-vous — Super Agent + Chef Atelier -->
-      @if (isSuperAgent() || isChefAtelier()) {
+      <!-- Rendez-vous — Super Agent + Chef Atelier + Agent -->
+      @if (isSuperAgent() || isChefAtelier() || isAgent()) {
         <a routerLink="/gestion/rendezvous" routerLinkActive="oas-nav-active"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
           <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

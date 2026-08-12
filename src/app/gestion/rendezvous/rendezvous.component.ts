@@ -2,7 +2,11 @@ import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RendezVousService } from '../../services/rendezvous.service';
 import { MecanicienService } from '../../services/mecanicien.service';
-import { RendezVous, RendezVousStatus, Mecanicien } from '../../shared/models/index';
+import { ClientService } from '../../services/client.service';
+import { VehiculeService } from '../../services/vehicule.service';
+import { GarageService } from '../../services/garage.service';
+import { AuthService } from '../../core/services/auth.service';
+import { RendezVous, RendezVousStatus, Mecanicien, UserModel, VehiculeModel, Garage } from '../../shared/models/index';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import {
@@ -20,11 +24,18 @@ import {
 export class RendezVousComponent implements OnInit {
   private service = inject(RendezVousService);
   private mecanicienService = inject(MecanicienService);
+  private clientService = inject(ClientService);
+  private vehiculeService = inject(VehiculeService);
+  private garageService = inject(GarageService);
+  private authService = inject(AuthService);
   private fb = inject(FormBuilder);
 
   rdvs: RendezVous[] = [];
   filtered: RendezVous[] = [];
   mecaniciens: Mecanicien[] = [];
+  clients: UserModel[] = [];
+  vehicules: VehiculeModel[] = [];
+  garages: Garage[] = [];
   selectedMecanicienIds = new Set<number>();
   editedDate = '';
 
@@ -32,6 +43,9 @@ export class RendezVousComponent implements OnInit {
   saving = false;
   showStatutModal = false;
   showValiderModal = false;
+  showCreateModal = false;
+  showClientCreateForm = false;
+  showVehicleCreateForm = false;
   editingRdv: RendezVous | null = null;
 
   searchText = '';
@@ -57,9 +71,39 @@ export class RendezVousComponent implements OnInit {
     commentaire: [''],
   });
 
+  createForm: FormGroup = this.fb.group({
+    clientId: [null, Validators.required],
+    vehiculeId: [null, Validators.required],
+    garageId: [null, Validators.required],
+    dateRendezVous: ['', Validators.required],
+    motif: ['', Validators.required],
+  });
+  clientForm: FormGroup = this.fb.group({
+    firstName: ['', Validators.required], lastName: ['', Validators.required],
+    email: ['', [Validators.required, Validators.email]], phone: ['', Validators.required],
+    username: ['', Validators.required], password: ['', Validators.required],
+  });
+  vehicleForm: FormGroup = this.fb.group({
+    immatriculation: ['', Validators.required], marque: ['', Validators.required], modele: ['', Validators.required],
+    annee: [null], kilometrage: [null], numeroChassis: [''],
+  });
+  clientSearchTerm = '';
+  clientSearching = false;
+
+  get isAgent(): boolean { return this.authService.hasRole('ROLE_AGENT'); }
+  get availableVehicles(): VehiculeModel[] {
+    const clientId = Number(this.createForm.get('clientId')?.value);
+    return this.vehicules.filter(v => v.client?.id === clientId);
+  }
+  get statusOptionsForRole() {
+    return this.statutOptions;
+  }
+
   ngOnInit() {
     this.load();
     this.mecanicienService.getAll().subscribe({ next: data => this.mecaniciens = data });
+    this.vehiculeService.getAll().subscribe({ next: data => this.vehicules = data });
+    this.garageService.getAll().subscribe({ next: data => this.garages = data });
   }
 
   load() {
@@ -105,6 +149,102 @@ export class RendezVousComponent implements OnInit {
     this.showStatutModal = true;
   }
 
+  openCreate() {
+    this.createForm.reset();
+    this.clientForm.reset();
+    this.vehicleForm.reset();
+    this.clients = [];
+    this.clientSearchTerm = '';
+    this.showClientCreateForm = false;
+    this.showVehicleCreateForm = false;
+    this.modalErrorMessage = '';
+    this.showCreateModal = true;
+  }
+
+  onCreateClientChange() {
+    this.createForm.patchValue({ vehiculeId: null });
+  }
+
+  searchClients(value: string) {
+    this.clientSearchTerm = value;
+    this.createForm.patchValue({ clientId: null, vehiculeId: null });
+    if (value.trim().length < 2) { this.clients = []; return; }
+    this.clientSearching = true;
+    this.clientService.getAll(value.trim()).subscribe({
+      next: data => { this.clients = data.filter(c => c.enabled); this.clientSearching = false; },
+      error: () => { this.clients = []; this.clientSearching = false; },
+    });
+  }
+
+  selectCreateClient(client: UserModel) {
+    this.createForm.patchValue({ clientId: client.id, vehiculeId: null });
+    this.clientSearchTerm = `${client.firstName} ${client.lastName} — ${client.phone}`;
+    this.clients = [];
+    this.showClientCreateForm = false;
+  }
+
+  openClientCreate() {
+    this.clientForm.reset();
+    this.showClientCreateForm = true;
+    this.showVehicleCreateForm = false;
+    this.modalErrorMessage = '';
+  }
+
+  saveClient() {
+    if (this.clientForm.invalid || this.saving) { this.clientForm.markAllAsTouched(); return; }
+    this.saving = true;
+    const raw = this.clientForm.value;
+    this.clientService.create({ ...raw, matricule: `CLT-${Date.now()}`, type: 'CLIENT' }).subscribe({
+      next: () => this.clientService.getAll(raw.email).subscribe({
+        next: clients => {
+          const client = clients.find(c => c.email === raw.email);
+          this.saving = false;
+          if (!client) { this.modalErrorMessage = 'Client créé, mais introuvable. Recherchez-le à nouveau.'; return; }
+          this.selectCreateClient(client);
+          this.showClientCreateForm = false;
+          this.openVehicleCreate();
+        },
+        error: () => { this.saving = false; this.modalErrorMessage = 'Client créé, mais introuvable. Recherchez-le à nouveau.'; },
+      }),
+      error: err => { this.saving = false; this.modalErrorMessage = err.error?.message || err.error || 'Erreur lors de la création du client.'; },
+    });
+  }
+
+  openVehicleCreate() {
+    if (!this.createForm.value.clientId) return;
+    this.vehicleForm.reset();
+    this.showVehicleCreateForm = true;
+    this.modalErrorMessage = '';
+  }
+
+  saveVehicle() {
+    if (this.vehicleForm.invalid || !this.createForm.value.clientId || this.saving) { this.vehicleForm.markAllAsTouched(); return; }
+    this.saving = true;
+    this.vehiculeService.create({ ...this.vehicleForm.value, clientId: this.createForm.value.clientId }).subscribe({
+      next: vehicle => {
+        this.saving = false;
+        this.vehicules = [...this.vehicules, vehicle];
+        this.createForm.patchValue({ vehiculeId: vehicle.id });
+        this.showVehicleCreateForm = false;
+      },
+      error: err => { this.saving = false; this.modalErrorMessage = err.error?.message || 'Erreur lors de la création du véhicule.'; },
+    });
+  }
+
+  saveCreate() {
+    if (this.createForm.invalid || this.saving) {
+      this.createForm.markAllAsTouched();
+      return;
+    }
+    this.saving = true;
+    this.modalErrorMessage = '';
+    const data = this.createForm.value;
+    this.service.create(Number(data.clientId), data).subscribe({
+      next: () => { this.saving = false; this.showCreateModal = false; this.load(); this.notify('Rendez-vous créé.'); },
+      error: err => { this.saving = false; this.modalErrorMessage = err.error?.message || err.error || 'Erreur lors de la création du rendez-vous.'; },
+    });
+  }
+
   openValider(rdv: RendezVous) {
     this.editingRdv = rdv;
     this.selectedMecanicienIds = new Set();
@@ -139,7 +279,7 @@ export class RendezVousComponent implements OnInit {
     this.modalErrorMessage = '';
 
     const dateChanged = this.editedDate !== this.toDatetimeLocal(this.editingRdv.dateRendezVous);
-    const mecanicienIds = Array.from(this.selectedMecanicienIds);
+    const mecanicienIds = this.isAgent ? [] : Array.from(this.selectedMecanicienIds);
 
     const doValider = () => {
       this.service.valider(this.editingRdv!.id, mecanicienIds).subscribe({

@@ -109,7 +109,7 @@ export const routes: Routes = [
       },
       {
         path: 'rendezvous',
-        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_CHEF_ATELIER'])],
+        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_CHEF_ATELIER', 'ROLE_AGENT'])],
         loadComponent: () =>
           import('./gestion/rendezvous/rendezvous.component').then(m => m.RendezVousComponent),
       },

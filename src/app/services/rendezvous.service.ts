@@ -15,6 +15,10 @@ export class RendezVousService {
     return this.http.get<RendezVous[]>(this.api);
   }
 
+  create(clientId: number, data: { dateRendezVous: string; motif: string; vehiculeId: number | null; garageId: number | null }): Observable<RendezVous> {
+    return this.http.post<RendezVous>(this.api, data, { params: { clientId: String(clientId) } });
+  }
+
   updateStatut(id: number, statut: RendezVousStatus, commentaire?: string): Observable<RendezVous> {
     let params = new HttpParams().set('statut', statut);
     if (commentaire) params = params.set('commentaire', commentaire);
