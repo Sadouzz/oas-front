@@ -21,15 +21,12 @@ export class DashboardWarningsComponent {
   @Output() warningSelected = new EventEmitter<{ slug: string; index: number }>();
 
   warnings: WarningItem[] = [
-    { id: 'engine', label: 'Moteur & Mécanique', shortLabel: 'Moteur', slug: 'mecanique-generale', index: 0 },
-    { id: 'diag', label: 'Diagnostic Électronique', shortLabel: 'Diag', slug: 'diagnostic-electronique', index: 1 },
-    { id: 'oil', label: 'Pression d\'Huile', shortLabel: 'Huile', slug: 'entretien-vidange', index: 2 },
-    { id: 'brakes', label: 'Système de Freinage', shortLabel: 'Freins', slug: 'freinage-suspension', index: 3 },
-    { id: 'ac', label: 'Climatisation', shortLabel: 'Clim', slug: 'climatisation', index: 4 },
-    { id: 'battery', label: 'Batterie & Charge', shortLabel: 'Batterie', slug: 'electricite-batterie', index: 5 },
-    { id: 'bodywork', label: 'Carrosserie & Peinture', shortLabel: 'Carrosserie', slug: 'carrosserie-peinture', index: 6 },
-    { id: 'tpms', label: 'Pression des Pneus', shortLabel: 'Pneus', slug: 'pneumatiques', index: 7 },
-    { id: 'towing', label: 'Dépannage & Remorquage', shortLabel: 'Remorquage', slug: 'remorquage', index: 8 },
+    { id: 'mecanique', label: 'Mécanique', shortLabel: 'Mécanique', slug: 'mecanique', index: 0 },
+    { id: 'electricite', label: 'Électricité', shortLabel: 'Électrique', slug: 'electricite', index: 1 },
+    { id: 'vidange', label: 'Vidange', shortLabel: 'Vidange', slug: 'vidange', index: 2 },
+    { id: 'climatisation', label: 'Climatisation', shortLabel: 'Clim', slug: 'climatisation', index: 3 },
+    { id: 'tolerie', label: 'Tôlerie', shortLabel: 'Tôlerie', slug: 'tolerie', index: 4 },
+    { id: 'peinture', label: 'Peinture', shortLabel: 'Peinture', slug: 'peinture', index: 5 }
   ];
 
   selectWarning(warning: WarningItem): void {

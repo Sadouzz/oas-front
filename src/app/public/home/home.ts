@@ -13,6 +13,7 @@ import { PartenaireModel, FournisseurModel } from '../../shared/models';
 register();
 
 import { TESTIMONIALS_DATA, Testimonial } from '../../shared/data/testimonials.data';
+import { SERVICES } from '../services/services.data';
 
 import { SpeedometerComponent } from '../../shared/components/speedometer/speedometer';
 import { TireTrackComponent } from '../../shared/components/tire-track/tire-track';
@@ -46,50 +47,13 @@ interface Partner {
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class Home implements OnInit {
-  servicesImages: MagneticItem[] = [
-  {
-    id: 1,
-    title: 'Mécanique',
-    slug: 'mecanique',
-    description: 'Réparation et entretien de tous types de moteurs, boîtes de vitesses et organes mécaniques.',
-    src: 'https://images.unsplash.com/photo-1493238792000-8113da705763?q=80&w=800&auto=format&fit=crop'
-  },
-  {
-    id: 2,
-    title: 'Électricité',
-    slug: 'electricite',
-    description: 'Diagnostic et réparation des systèmes électriques, alternateurs, démarreurs et batteries.',
-    src: 'https://images.unsplash.com/photo-1621217736657-3a139a066440?q=80&w=800&auto=format&fit=crop'
-  },
-  {
-    id: 3,
-    title: 'Vidange',
-    slug: 'vidange',
-    description: 'Vidange moteur, remplacement des filtres et entretien périodique.',
-    src: 'https://images.unsplash.com/photo-1632823471565-1ec2a74c2e6f?q=80&w=800&auto=format&fit=crop'
-  },
-  {
-    id: 4,
-    title: 'Climatisation',
-    slug: 'climatisation',
-    description: 'Recharge de gaz, entretien et réparation des systèmes de climatisation.',
-    src: 'https://images.unsplash.com/photo-1579893963473-cbcf2eb98b4b?q=80&w=800&auto=format&fit=crop'
-  },
-  {
-    id: 5,
-    title: 'Tôlerie',
-    slug: 'tolerie',
-    description: 'Redressage de carrosserie, réparation des chocs et remise en état des éléments de tôlerie.',
-    src: 'https://images.unsplash.com/photo-1590498305417-640a3dd90dcb?q=80&w=800&auto=format&fit=crop'
-  },
-  {
-    id: 6,
-    title: 'Peinture',
-    slug: 'peinture',
-    description: 'Peinture automobile complète, retouches et finitions professionnelles.',
-    src: 'https://images.unsplash.com/photo-1600705722908-bab1e61c0b4d?q=80&w=800&auto=format&fit=crop'
-  }
-];
+  servicesImages: MagneticItem[] = SERVICES.map((s, index) => ({
+    id: index + 1,
+    title: s.title,
+    slug: s.slug,
+    description: s.summary,
+    src: s.image
+  }));
   
   testimonialsData: Testimonial[] = TESTIMONIALS_DATA;
 
