@@ -19,4 +19,5 @@ export interface RendezVous {
   commentaire: string | null;
   dateCreation: string;
   dateHistory?: RendezVousDateHistory[];
+  photoUrl?: string | null;
 }

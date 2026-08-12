@@ -1,0 +1,124 @@
+<div class="space-y-6">
+
+  <!-- Header -->
+  <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4">
+    <h1 class="text-2xl font-bold text-oas-ink">Messagerie</h1>
+    <p class="text-sm text-oas-muted mt-1">{{ conversations.length }} conversation(s)</p>
+  </div>
+
+  <div class="bg-white rounded-lg border border-oas-line shadow-card overflow-hidden">
+    <div class="flex items-stretch" style="min-height: 560px;">
+
+      <!-- Liste des conversations -->
+      <div class="w-full lg:w-[360px] lg:flex-shrink-0 lg:border-r lg:border-oas-line overflow-y-auto max-h-[640px]">
+
+        <div class="px-4 py-3 border-b border-oas-line">
+          <span class="text-xs font-bold uppercase text-oas-muted">Clients ({{ conversations.length }})</span>
+        </div>
+
+        @if (loadingConversations && conversations.length === 0) {
+          <div class="flex items-center justify-center py-10">
+            <div class="w-6 h-6 border-2 border-oas-accent border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        } @else if (conversations.length === 0) {
+          <div class="p-8 text-center text-oas-muted text-sm">Aucune conversation pour le moment.</div>
+        } @else {
+          @for (conv of conversations; track conv.clientId) {
+            <div (click)="select(conv)"
+              class="px-4 py-3.5 border-b border-oas-line cursor-pointer transition flex items-start gap-3"
+              [class.bg-oas-accent-bg]="selected?.clientId === conv.clientId" [class.hover:bg-oas-bg]="selected?.clientId !== conv.clientId">
+              <div class="w-9 h-9 rounded-full bg-oas-navy text-white flex items-center justify-center flex-shrink-0 text-xs font-bold">
+                {{ conv.clientName.charAt(0) }}
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="font-semibold text-sm text-oas-ink truncate">{{ conv.clientName }}</span>
+                  @if (conv.unreadCount > 0) {
+                    <span class="min-w-[18px] h-[18px] px-1 rounded-full bg-oas-accent text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+                      {{ conv.unreadCount > 99 ? '99+' : conv.unreadCount }}
+                    </span>
+                  }
+                </div>
+                @if (conv.lastMessage) {
+                  <p class="text-xs text-oas-muted truncate mt-0.5">{{ conv.lastMessage.contenu }}</p>
+                  <p class="text-[10px] text-oas-faint mt-0.5">
+                    {{ conv.lastMessage.dateEnvoi | date:'dd/MM/yyyy HH:mm' }}
+                    @if (conv.lastMessage.garageName) { · {{ conv.lastMessage.garageName }} }
+                  </p>
+                } @else {
+                  <p class="text-xs text-oas-muted italic mt-0.5">Aucun message</p>
+                }
+              </div>
+            </div>
+          }
+        }
+      </div>
+
+      <!-- Fil de discussion -->
+      <div class="flex-1 min-w-0 flex flex-col">
+        @if (!selected) {
+          <div class="flex-1 flex items-center justify-center text-oas-muted text-sm text-center px-6">
+            Sélectionnez une conversation pour voir les messages.
+          </div>
+        } @else {
+          <div class="px-5 py-3.5 border-b border-oas-line flex items-center justify-between">
+            <div>
+              <p class="font-semibold text-oas-ink text-sm">{{ selected.clientName }}</p>
+              <p class="text-xs text-oas-muted">{{ selected.clientPhone }}</p>
+            </div>
+          </div>
+
+          <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-oas-bg" style="max-height: 460px;">
+            @if (loadingThread) {
+              <div class="flex items-center justify-center py-10">
+                <div class="w-6 h-6 border-2 border-oas-accent border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            } @else if (thread.length === 0) {
+              <div class="h-full flex items-center justify-center text-center px-6">
+                <p class="text-oas-muted text-sm">Aucun message pour le moment.</p>
+              </div>
+            } @else {
+              @for (m of thread; track m.id) {
+                <div class="flex" [class.justify-end]="!isFromClient(m)">
+                  <div class="max-w-[75%] rounded-xl px-3.5 py-2 text-sm"
+                       [class.bg-oas-accent]="!isFromClient(m)" [class.text-white]="!isFromClient(m)"
+                       [class.bg-white]="isFromClient(m)" [class.text-oas-ink]="isFromClient(m)"
+                       [class.border]="isFromClient(m)" [class.border-oas-line]="isFromClient(m)">
+                    <p class="text-[11px] font-bold mb-0.5 opacity-70">{{ m.expediteurName }}</p>
+                    <p>{{ m.contenu }}</p>
+                    <p class="text-[10px] mt-1 opacity-70">
+                      {{ m.dateEnvoi | date:'dd/MM HH:mm' }}
+                      @if (m.garageName) { · {{ m.garageName }} }
+                    </p>
+                  </div>
+                </div>
+              }
+            }
+          </div>
+
+          @if (errorMessage) {
+            <div class="px-4 pt-2">
+              <div class="px-4 py-2.5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs">{{ errorMessage }}</div>
+            </div>
+          }
+
+          <div class="border-t border-oas-line p-3 flex gap-2 flex-shrink-0 bg-white">
+            <input
+              type="text"
+              [(ngModel)]="draft"
+              (keyup.enter)="reply()"
+              placeholder="Écrivez votre réponse..."
+              class="flex-1 px-3.5 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"
+            />
+            <button (click)="reply()" [disabled]="sending || !draft.trim()"
+              class="px-4 h-10 flex-shrink-0 bg-oas-accent hover:bg-oas-accent-dark disabled:opacity-60 text-white font-semibold rounded-lg text-sm transition cursor-pointer">
+              {{ sending ? 'Envoi...' : 'Envoyer' }}
+            </button>
+          </div>
+        }
+      </div>
+
+    </div>
+  </div>
+
+</div>

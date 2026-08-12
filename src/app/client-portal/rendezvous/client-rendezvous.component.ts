@@ -12,6 +12,8 @@ import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { StatusBadgeComponent, BadgeTone } from '../ui/status-badge/status-badge.component';
 import { ModalComponent } from '../ui/modal/modal.component';
 import { VehicleAvatarComponent } from '../ui/vehicle-avatar/vehicle-avatar.component';
+import { MediaUploaderComponent } from '../../shared/components/media-uploader/media-uploader.component';
+import { AuthService } from '../../core/services/auth.service';
 
 type SortOrder = 'recent' | 'ancien';
 
@@ -34,7 +36,7 @@ const STATUT_TONES: Record<RendezVousStatus, BadgeTone> = {
 @Component({
   selector: 'app-client-rendezvous',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, AlertComponent, StatusBadgeComponent, ModalComponent, VehicleAvatarComponent],
+  imports: [CommonModule, ReactiveFormsModule, AlertComponent, StatusBadgeComponent, ModalComponent, VehicleAvatarComponent, MediaUploaderComponent],
   templateUrl: './client-rendezvous.component.html',
 })
 export class ClientRendezVousComponent implements OnInit {
@@ -42,7 +44,17 @@ export class ClientRendezVousComponent implements OnInit {
   private vehiculeService = inject(ClientVehiculeService);
   private interventionService = inject(ClientInterventionService);
   private garageService = inject(GarageService);
+  private authService = inject(AuthService);
   private fb = inject(FormBuilder);
+
+  photoUrl: string | null = null;
+
+  /** Dossier Cloudinary dédié à ce client, pour regrouper toutes ses pièces jointes de demandes de RDV. */
+  get photoFolder(): string {
+    const username = this.authService.getUsername() ?? 'client';
+    const slug = username.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '-');
+    return `oas/demandeRDV/${slug}`;
+  }
 
   rendezvous: RendezVous[] = [];
   filtered: RendezVous[] = [];
@@ -213,6 +225,10 @@ export class ClientRendezVousComponent implements OnInit {
     this.selected = rdv;
   }
 
+  isVideoUrl(url: string): boolean {
+    return /\.(mp4|mov|webm|avi)$/i.test(url);
+  }
+
   closeDetail(): void {
     this.selected = null;
   }
@@ -223,6 +239,7 @@ export class ClientRendezVousComponent implements OnInit {
     this.vehiculeDropdownOpen = false;
     this.showVehiculeCreateForm = false;
     this.modalErrorMessage = '';
+    this.photoUrl = null;
     this.showCreateModal = true;
   }
 
@@ -240,7 +257,9 @@ export class ClientRendezVousComponent implements OnInit {
     this.saving = true;
     this.modalErrorMessage = '';
 
-    this.service.create(this.form.value).subscribe({
+    const payload = { ...this.form.value, photoUrl: this.photoUrl };
+
+    this.service.create(payload).subscribe({
       next: () => {
         this.saving = false;
         this.showCreateModal = false;

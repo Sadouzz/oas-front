@@ -15,3 +15,4 @@ export * from './rendezvous.model';
 export * from './garage.model';
 export * from './partenaire.model';
 export * from './media.model';
+export * from './messagerie.model';

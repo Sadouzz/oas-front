@@ -166,6 +166,10 @@ export class RendezVousComponent implements OnInit {
     }
   }
 
+  isVideoUrl(url: string): boolean {
+    return /\.(mp4|mov|webm|avi)$/i.test(url);
+  }
+
   get paged(): RendezVous[] {
     return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
   }

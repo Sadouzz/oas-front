@@ -120,6 +120,15 @@
           <p class="text-oas-muted">
             Motif : <span class="text-oas-ink">{{ editingRdv.motif }}</span>
           </p>
+          @if (editingRdv.photoUrl) {
+            <a [href]="editingRdv.photoUrl" target="_blank" rel="noopener" class="inline-block mt-1">
+              @if (isVideoUrl(editingRdv.photoUrl)) {
+                <video [src]="editingRdv.photoUrl" class="w-24 h-16 object-cover rounded-lg border border-oas-line" muted></video>
+              } @else {
+                <img [src]="editingRdv.photoUrl" class="w-24 h-16 object-cover rounded-lg border border-oas-line" alt="Pièce jointe du client" />
+              }
+            </a>
+          }
         </div>
       }
 
@@ -182,6 +191,15 @@
           <p class="text-oas-muted">
             Motif : <span class="text-oas-ink">{{ editingRdv.motif }}</span>
           </p>
+          @if (editingRdv.photoUrl) {
+            <a [href]="editingRdv.photoUrl" target="_blank" rel="noopener" class="inline-block mt-1">
+              @if (isVideoUrl(editingRdv.photoUrl)) {
+                <video [src]="editingRdv.photoUrl" class="w-24 h-16 object-cover rounded-lg border border-oas-line" muted></video>
+              } @else {
+                <img [src]="editingRdv.photoUrl" class="w-24 h-16 object-cover rounded-lg border border-oas-line" alt="Pièce jointe du client" />
+              }
+            </a>
+          }
         </div>
       }
 

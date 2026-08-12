@@ -8,6 +8,8 @@ export interface ClientRendezVousRequest {
   dateRendezVous: string;
   motif: string;
   vehiculeId: number | null;
+  garageId: number | null;
+  photoUrl?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })

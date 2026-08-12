@@ -120,6 +120,11 @@ export const routes: Routes = [
           import('./gestion/rendezvous/rendezvous.component').then(m => m.RendezVousComponent),
       },
       {
+        path: 'messagerie',
+        loadComponent: () =>
+          import('./gestion/messagerie/messagerie.component').then(m => m.MessagerieComponent),
+      },
+      {
         path: 'devis-previsionnels',
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_CHEF_ATELIER'])],
         loadComponent: () =>

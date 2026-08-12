@@ -128,6 +128,20 @@
                   <p class="text-oas-ink2">{{ selected.motif }}</p>
                 </div>
 
+                @if (selected.photoUrl) {
+                  <div>
+                    <p class="text-oas-muted text-xs mb-1.5">Photo / vidéo jointe</p>
+                    <a [href]="selected.photoUrl" target="_blank" rel="noopener"
+                      class="block rounded-lg border border-oas-line overflow-hidden bg-oas-bg">
+                      @if (isVideoUrl(selected.photoUrl)) {
+                        <video [src]="selected.photoUrl" class="w-full h-40 object-cover" muted></video>
+                      } @else {
+                        <img [src]="selected.photoUrl" class="w-full h-40 object-cover" alt="Pièce jointe du rendez-vous" />
+                      }
+                    </a>
+                  </div>
+                }
+
                 @if (selected.dateHistory?.length) {
                   <div>
                     <p class="text-oas-muted text-xs mb-1.5">Historique des changements de date</p>
@@ -287,6 +301,15 @@
             <label class="block text-sm font-semibold text-oas-ink mb-1.5">Motif</label>
             <textarea formControlName="motif" rows="3" placeholder="Décrivez brièvement le motif de votre visite"
               class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition resize-none"></textarea>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1.5">Photo ou vidéo <span class="font-normal text-oas-muted">(optionnel)</span></label>
+            <app-media-uploader
+              [folder]="photoFolder"
+              label="Ajoutez une photo ou une courte vidéo du problème"
+              (uploaded)="photoUrl = $event.secureUrl"
+              (removed)="photoUrl = null" />
           </div>
 
           <app-alert [error]="modalErrorMessage"></app-alert>

@@ -3,7 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClientMessageService } from '../services/client-message.service';
 import { ClientPortalService } from '../services/client-portal.service';
+import { GarageService } from '../../services/garage.service';
 import { Message } from '../models';
+import { Garage } from '../../shared/models';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 
 const POLL_INTERVAL_MS = 15000;
@@ -17,6 +19,7 @@ const POLL_INTERVAL_MS = 15000;
 export class ClientMessagerieWidgetComponent implements OnInit, OnDestroy {
   private messageService = inject(ClientMessageService);
   private portalService = inject(ClientPortalService);
+  private garageService = inject(GarageService);
   private pollInterval: any;
   private knownIds = new Set<number>();
 
@@ -29,8 +32,13 @@ export class ClientMessagerieWidgetComponent implements OnInit, OnDestroy {
   errorMessage = '';
   unreadCount = 0;
 
+  garages: Garage[] = [];
+  selectedGarageId: number | null = null;
+  private garagePrefilled = false;
+
   ngOnInit(): void {
     this.portalService.getMe().subscribe({ next: me => this.myId = me.id });
+    this.garageService.getAll().subscribe({ next: g => this.garages = g });
     this.load(true);
     this.pollInterval = setInterval(() => this.load(false), POLL_INTERVAL_MS);
   }
@@ -50,6 +58,15 @@ export class ClientMessagerieWidgetComponent implements OnInit, OnDestroy {
         messages.forEach(m => this.knownIds.add(m.id));
         this.messages = messages;
         this.loading = false;
+
+        // Pré-sélectionne le dernier garage choisi par le client, une seule fois.
+        if (!this.garagePrefilled) {
+          const lastWithGarage = [...messages].reverse().find(m => m.garageId != null);
+          if (lastWithGarage) {
+            this.selectedGarageId = lastWithGarage.garageId;
+            this.garagePrefilled = true;
+          }
+        }
       },
       error: () => { this.loading = false; },
     });
@@ -73,12 +90,12 @@ export class ClientMessagerieWidgetComponent implements OnInit, OnDestroy {
 
   send(): void {
     const contenu = this.draft.trim();
-    if (!contenu) return;
+    if (!contenu || !this.selectedGarageId) return;
 
     this.sending = true;
     this.errorMessage = '';
 
-    this.messageService.send({ contenu }).subscribe({
+    this.messageService.send({ contenu, garageId: this.selectedGarageId }).subscribe({
       next: () => {
         this.sending = false;
         this.draft = '';

@@ -5,9 +5,12 @@ export interface Message {
   contenu: string;
   dateEnvoi: string;
   lu: boolean;
+  garageId: number | null;
+  garageName: string | null;
 }
 
 export interface MessageRequest {
   contenu: string;
   destinataireId?: number;
+  garageId: number | null;
 }
