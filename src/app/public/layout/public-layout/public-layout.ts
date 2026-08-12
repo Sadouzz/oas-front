@@ -70,9 +70,9 @@ export class PublicLayout implements OnInit, AfterViewInit, OnDestroy {
   ];
 
   socialLinks = [
-    { label: 'Facebook', url: 'https://facebook.com' },
-    { label: 'Instagram', url: 'https://instagram.com' },
-    { label: 'Twitter', url: 'https://twitter.com' }
+    { label: 'Facebook', url: 'https://www.facebook.com/orientautoservice' },
+    { label: 'Instagram', url: 'https://www.instagram.com/oassenegal/' },
+    { label: 'TikTok', url: 'https://www.tiktok.com/@orient.auto.servi' }
   ];
 
   contactInfo = {

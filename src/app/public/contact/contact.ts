@@ -8,6 +8,7 @@ import { IconComponent } from '../../shared/icon/icon';
 import { SectionTitle } from '../../shared/components/section-title/section-title';
 import { TireTrackComponent } from '../../shared/components/tire-track/tire-track';
 import { BoltCornersComponent } from '../../shared/components/bolt-corners/bolt-corners';
+import { PistonAccordionComponent } from '../../shared/components/piston-accordion/piston-accordion';
 
 register();
 
@@ -21,7 +22,8 @@ register();
     IconComponent,
     SectionTitle,
     TireTrackComponent,
-    BoltCornersComponent
+    BoltCornersComponent,
+    PistonAccordionComponent
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './contact.html',
@@ -68,39 +70,34 @@ export class ContactComponent implements OnInit {
   private initialiserDonnees(): void {
 
     this.informations = [
-
       {
         icone: 'phone',
         titre: 'Téléphone',
-        valeur: '+221 77 000 00 00',
-        lien: 'tel:+221770000000',
+        valeur: '+221 33 821 47 11 / 78 596 86 42',
+        lien: 'tel:+221338214711',
         cible: '_self'
       },
-
       {
         icone: 'whatsapp',
         titre: 'WhatsApp',
-        valeur: '+221 77 000 00 00',
-        lien: 'https://wa.me/221770000000',
+        valeur: '+221 78 596 86 42',
+        lien: 'https://wa.me/221785968642',
         cible: '_blank'
       },
-
       {
         icone: 'mail',
         titre: 'Email',
-        valeur: 'contact@oas.sn',
-        lien: 'mailto:contact@oas.sn',
+        valeur: 'orientautoservice@gmail.com',
+        lien: 'mailto:orientautoservice@gmail.com',
         cible: '_self'
       },
-
       {
         icone: 'clock',
         titre: 'Horaires',
-        valeur: 'Lun - Sam : 08h00 - 18h00',
+        valeur: 'Lun - Ven : 08h00 - 18h00',
         lien: null,
         cible: null
       }
-
     ];
 
     this.questions = [
