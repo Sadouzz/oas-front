@@ -38,6 +38,12 @@ export const routes: Routes = [
       { path: 'cookies', loadComponent: () => import('./public/legal/cookies').then(m => m.CookiesComponent) },
     ]
   },
+  {
+    path: 'pourajouterlesimages',
+    loadComponent: () =>
+      import('./temp-media-upload/temp-media-upload.component').then(m => m.TempMediaUploadComponent),
+  },
+
   { path: 'login', component: LoginComponent, canActivate: [noAuthGuard] },
   { path: 'register', component: RegisterComponent, canActivate: [noAuthGuard] },
   { path: 'forbidden', component: ForbiddenComponent },

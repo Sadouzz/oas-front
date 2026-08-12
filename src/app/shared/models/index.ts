@@ -14,3 +14,4 @@ export * from './facture.model';
 export * from './rendezvous.model';
 export * from './garage.model';
 export * from './partenaire.model';
+export * from './media.model';

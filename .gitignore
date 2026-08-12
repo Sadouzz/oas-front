@@ -42,3 +42,8 @@ testem.log
 Thumbs.db
 
 contxte.md
+
+# Médias migrés vers Cloudinary (voir oas/website) — ne plus committer en local
+/public/garage-photos
+/public/videos
+/public/mechanic_working.png

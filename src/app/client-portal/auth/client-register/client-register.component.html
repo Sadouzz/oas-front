@@ -85,22 +85,84 @@
               </div>
 
               <div>
-                <label class="block text-sm font-semibold text-oas-ink mb-1.5">Numéro d'entreprise</label>
-                <input type="text" formControlName="numeroEntreprise" placeholder="RCCM / NINEA"
+                <label class="block text-sm font-semibold text-oas-ink mb-1.5">Ninea</label>
+                <input type="text" formControlName="numeroEntreprise" placeholder="Numéro NINEA"
                   class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
                   [class.border-oas-bad]="f('numeroEntreprise')?.invalid && f('numeroEntreprise')?.touched" />
                 @if (f('numeroEntreprise')?.invalid && f('numeroEntreprise')?.touched) {
-                  <p class="text-oas-bad text-xs mt-1">Le numéro d'entreprise est obligatoire.</p>
+                  <p class="text-oas-bad text-xs mt-1">Le Ninea est obligatoire.</p>
                 }
               </div>
 
               <div>
-                <label class="block text-sm font-semibold text-oas-ink mb-1.5">Email entreprise (optionnel)</label>
-                <input type="email" formControlName="emailEntreprise" placeholder="contact@entreprise.com"
+                <label class="block text-sm font-semibold text-oas-ink mb-1.5">Téléphone entreprise</label>
+                <input type="tel" formControlName="telephoneEntreprise" placeholder="+221 33 000 00 00"
                   class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
-                  [class.border-oas-bad]="f('emailEntreprise')?.invalid && f('emailEntreprise')?.touched" />
+                  [class.border-oas-bad]="f('telephoneEntreprise')?.invalid && f('telephoneEntreprise')?.touched" />
+                @if (f('telephoneEntreprise')?.invalid && f('telephoneEntreprise')?.touched) {
+                  <p class="text-oas-bad text-xs mt-1">
+                    @if (f('telephoneEntreprise')?.errors?.['taken']) { Ce numéro de téléphone est déjà utilisé. }
+                    @else { Le téléphone de l'entreprise est obligatoire. }
+                  </p>
+                }
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-oas-ink mb-1.5">Email entreprise</label>
+                <div class="relative">
+                  <input type="email" formControlName="emailEntreprise" placeholder="contact@entreprise.com"
+                    autocomplete="off"
+                    class="w-full px-4 py-2.5 pr-9 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
+                    [class.border-oas-bad]="(f('emailEntreprise')?.invalid && f('emailEntreprise')?.touched) || emailStatus === 'taken'"
+                    [class.border-oas-ok]="emailStatus === 'available'" />
+                  @if (emailStatus === 'checking') {
+                    <svg lucideLoader2 class="animate-spin h-4 w-4 text-oas-muted absolute right-3 top-1/2 -translate-y-1/2" [strokeWidth]="2"></svg>
+                  } @else if (emailStatus === 'available') {
+                    <svg lucideCheck class="h-4 w-4 text-oas-ok absolute right-3 top-1/2 -translate-y-1/2" [strokeWidth]="2.5"></svg>
+                  } @else if (emailStatus === 'taken') {
+                    <svg lucideX class="h-4 w-4 text-oas-bad absolute right-3 top-1/2 -translate-y-1/2" [strokeWidth]="2.5"></svg>
+                  }
+                </div>
                 @if (f('emailEntreprise')?.invalid && f('emailEntreprise')?.touched) {
-                  <p class="text-oas-bad text-xs mt-1">Format d'email invalide.</p>
+                  <p class="text-oas-bad text-xs mt-1">
+                    @if (f('emailEntreprise')?.errors?.['required']) { L'email de l'entreprise est obligatoire. }
+                    @else if (f('emailEntreprise')?.errors?.['email']) { Format d'email invalide. }
+                    @else if (f('emailEntreprise')?.errors?.['taken']) { Cette adresse email est déjà utilisée. }
+                  </p>
+                } @else if (emailStatus === 'taken') {
+                  <p class="text-oas-bad text-xs mt-1">Cette adresse email est déjà utilisée.</p>
+                } @else if (emailStatus === 'available') {
+                  <p class="text-oas-ok text-xs mt-1">Disponible.</p>
+                }
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-oas-ink mb-1.5">Mot de passe</label>
+                <div class="relative">
+                  <input
+                    [type]="showPassword ? 'text' : 'password'"
+                    formControlName="password"
+                    placeholder="••••••••"
+                    class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint pr-10"
+                    [class.border-oas-bad]="f('password')?.invalid && f('password')?.touched"
+                  />
+                  <button
+                    type="button"
+                    (click)="showPassword = !showPassword"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-oas-muted hover:text-oas-ink transition"
+                  >
+                    @if (showPassword) {
+                      <svg lucideEyeOff class="h-5 w-5" [strokeWidth]="2"></svg>
+                    } @else {
+                      <svg lucideEye class="h-5 w-5" [strokeWidth]="2"></svg>
+                    }
+                  </button>
+                </div>
+                @if (f('password')?.invalid && f('password')?.touched) {
+                  <p class="text-oas-bad text-xs mt-1">
+                    @if (f('password')?.errors?.['required']) { Le mot de passe est obligatoire. }
+                    @else if (f('password')?.errors?.['minlength']) { Minimum 6 caractères. }
+                  </p>
                 }
               </div>
 
@@ -148,125 +210,87 @@
               }
             </div>
 
-            <div>
-              <label class="block text-sm font-semibold text-oas-ink mb-1.5">Téléphone</label>
-              <input
-                type="tel"
-                formControlName="phone"
-                placeholder="+221 77 000 00 00"
-                class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
-                [class.border-oas-bad]="f('phone')?.invalid && f('phone')?.touched"
-              />
-              @if (f('phone')?.invalid && f('phone')?.touched) {
-                <p class="text-oas-bad text-xs mt-1">
-                  @if (f('phone')?.errors?.['taken']) { Ce numéro de téléphone est déjà utilisé. }
-                  @else { Le téléphone est obligatoire. }
-                </p>
-              }
-            </div>
-
-            <div>
-              <label class="block text-sm font-semibold text-oas-ink mb-1.5">Login</label>
-              <div class="relative">
+            @if (clientType === 'PARTICULIER') {
+              <div>
+                <label class="block text-sm font-semibold text-oas-ink mb-1.5">Téléphone</label>
                 <input
-                  type="text"
-                  formControlName="login"
-                  placeholder="nom_utilisateur"
-                  autocomplete="off"
-                  class="w-full px-4 py-2.5 pr-9 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
-                  [class.border-oas-bad]="(f('login')?.invalid && f('login')?.touched) || usernameStatus === 'taken'"
-                  [class.border-oas-ok]="usernameStatus === 'available'"
+                  type="tel"
+                  formControlName="phone"
+                  placeholder="+221 77 000 00 00"
+                  class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
+                  [class.border-oas-bad]="f('phone')?.invalid && f('phone')?.touched"
                 />
-                @if (usernameStatus === 'checking') {
-                  <svg lucideLoader2 class="animate-spin h-4 w-4 text-oas-muted absolute right-3 top-1/2 -translate-y-1/2" [strokeWidth]="2"></svg>
-                } @else if (usernameStatus === 'available') {
-                  <svg lucideCheck class="h-4 w-4 text-oas-ok absolute right-3 top-1/2 -translate-y-1/2" [strokeWidth]="2.5"></svg>
-                } @else if (usernameStatus === 'taken') {
-                  <svg lucideX class="h-4 w-4 text-oas-bad absolute right-3 top-1/2 -translate-y-1/2" [strokeWidth]="2.5"></svg>
+                @if (f('phone')?.invalid && f('phone')?.touched) {
+                  <p class="text-oas-bad text-xs mt-1">
+                    @if (f('phone')?.errors?.['taken']) { Ce numéro de téléphone est déjà utilisé. }
+                    @else { Le téléphone est obligatoire. }
+                  </p>
                 }
               </div>
-              @if (f('login')?.invalid && f('login')?.touched) {
-                <p class="text-oas-bad text-xs mt-1">
-                  @if (f('login')?.errors?.['taken']) { Ce nom d'utilisateur est déjà pris. }
-                  @else { Le login est obligatoire. }
-                </p>
-              } @else if (usernameStatus === 'taken') {
-                <p class="text-oas-bad text-xs mt-1">
-                  Déjà pris.
-                  @if (usernameSuggestions.length) {
-                    Essayez :
-                    @for (s of usernameSuggestions; track s) {
-                      <button type="button" (click)="applySuggestion(s)" class="text-oas-accent font-semibold underline ml-1 cursor-pointer">{{ s }}</button>
-                    }
-                  }
-                </p>
-              } @else if (usernameStatus === 'available') {
-                <p class="text-oas-ok text-xs mt-1">Disponible.</p>
-              }
-            </div>
 
-            <div class="md:col-span-2">
-              <label class="block text-sm font-semibold text-oas-ink mb-1.5">Adresse email</label>
-              <div class="relative">
-                <input
-                  type="email"
-                  formControlName="email"
-                  placeholder="exemple@email.com"
-                  autocomplete="off"
-                  class="w-full px-4 py-2.5 pr-9 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
-                  [class.border-oas-bad]="(f('email')?.invalid && f('email')?.touched) || emailStatus === 'taken'"
-                  [class.border-oas-ok]="emailStatus === 'available'"
-                />
-                @if (emailStatus === 'checking') {
-                  <svg lucideLoader2 class="animate-spin h-4 w-4 text-oas-muted absolute right-3 top-1/2 -translate-y-1/2" [strokeWidth]="2"></svg>
-                } @else if (emailStatus === 'available') {
-                  <svg lucideCheck class="h-4 w-4 text-oas-ok absolute right-3 top-1/2 -translate-y-1/2" [strokeWidth]="2.5"></svg>
+              <div class="md:col-span-2">
+                <label class="block text-sm font-semibold text-oas-ink mb-1.5">Adresse email</label>
+                <div class="relative">
+                  <input
+                    type="email"
+                    formControlName="email"
+                    placeholder="exemple@email.com"
+                    autocomplete="off"
+                    class="w-full px-4 py-2.5 pr-9 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
+                    [class.border-oas-bad]="(f('email')?.invalid && f('email')?.touched) || emailStatus === 'taken'"
+                    [class.border-oas-ok]="emailStatus === 'available'"
+                  />
+                  @if (emailStatus === 'checking') {
+                    <svg lucideLoader2 class="animate-spin h-4 w-4 text-oas-muted absolute right-3 top-1/2 -translate-y-1/2" [strokeWidth]="2"></svg>
+                  } @else if (emailStatus === 'available') {
+                    <svg lucideCheck class="h-4 w-4 text-oas-ok absolute right-3 top-1/2 -translate-y-1/2" [strokeWidth]="2.5"></svg>
+                  } @else if (emailStatus === 'taken') {
+                    <svg lucideX class="h-4 w-4 text-oas-bad absolute right-3 top-1/2 -translate-y-1/2" [strokeWidth]="2.5"></svg>
+                  }
+                </div>
+                @if (f('email')?.invalid && f('email')?.touched) {
+                  <p class="text-oas-bad text-xs mt-1">
+                    @if (f('email')?.errors?.['required']) { L'email est obligatoire. }
+                    @else if (f('email')?.errors?.['email']) { Format d'email invalide. }
+                    @else if (f('email')?.errors?.['taken']) { Cette adresse email est déjà utilisée. }
+                  </p>
                 } @else if (emailStatus === 'taken') {
-                  <svg lucideX class="h-4 w-4 text-oas-bad absolute right-3 top-1/2 -translate-y-1/2" [strokeWidth]="2.5"></svg>
+                  <p class="text-oas-bad text-xs mt-1">Cette adresse email est déjà utilisée.</p>
+                } @else if (emailStatus === 'available') {
+                  <p class="text-oas-ok text-xs mt-1">Disponible.</p>
                 }
               </div>
-              @if (f('email')?.invalid && f('email')?.touched) {
-                <p class="text-oas-bad text-xs mt-1">
-                  @if (f('email')?.errors?.['required']) { L'email est obligatoire. }
-                  @else if (f('email')?.errors?.['email']) { Format d'email invalide. }
-                  @else if (f('email')?.errors?.['taken']) { Cette adresse email est déjà utilisée. }
-                </p>
-              } @else if (emailStatus === 'taken') {
-                <p class="text-oas-bad text-xs mt-1">Cette adresse email est déjà utilisée.</p>
-              } @else if (emailStatus === 'available') {
-                <p class="text-oas-ok text-xs mt-1">Disponible.</p>
-              }
-            </div>
 
-            <div class="md:col-span-2">
-              <label class="block text-sm font-semibold text-oas-ink mb-1.5">Mot de passe</label>
-              <div class="relative">
-                <input
-                  [type]="showPassword ? 'text' : 'password'"
-                  formControlName="password"
-                  placeholder="••••••••"
-                  class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint pr-10"
-                  [class.border-oas-bad]="f('password')?.invalid && f('password')?.touched"
-                />
-                <button
-                  type="button"
-                  (click)="showPassword = !showPassword"
-                  class="absolute right-3 top-1/2 -translate-y-1/2 text-oas-muted hover:text-oas-ink transition"
-                >
-                  @if (showPassword) {
-                    <svg lucideEyeOff class="h-5 w-5" [strokeWidth]="2"></svg>
-                  } @else {
-                    <svg lucideEye class="h-5 w-5" [strokeWidth]="2"></svg>
-                  }
-                </button>
+              <div class="md:col-span-2">
+                <label class="block text-sm font-semibold text-oas-ink mb-1.5">Mot de passe</label>
+                <div class="relative">
+                  <input
+                    [type]="showPassword ? 'text' : 'password'"
+                    formControlName="password"
+                    placeholder="••••••••"
+                    class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint pr-10"
+                    [class.border-oas-bad]="f('password')?.invalid && f('password')?.touched"
+                  />
+                  <button
+                    type="button"
+                    (click)="showPassword = !showPassword"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-oas-muted hover:text-oas-ink transition"
+                  >
+                    @if (showPassword) {
+                      <svg lucideEyeOff class="h-5 w-5" [strokeWidth]="2"></svg>
+                    } @else {
+                      <svg lucideEye class="h-5 w-5" [strokeWidth]="2"></svg>
+                    }
+                  </button>
+                </div>
+                @if (f('password')?.invalid && f('password')?.touched) {
+                  <p class="text-oas-bad text-xs mt-1">
+                    @if (f('password')?.errors?.['required']) { Le mot de passe est obligatoire. }
+                    @else if (f('password')?.errors?.['minlength']) { Minimum 6 caractères. }
+                  </p>
+                }
               </div>
-              @if (f('password')?.invalid && f('password')?.touched) {
-                <p class="text-oas-bad text-xs mt-1">
-                  @if (f('password')?.errors?.['required']) { Le mot de passe est obligatoire. }
-                  @else if (f('password')?.errors?.['minlength']) { Minimum 6 caractères. }
-                </p>
-              }
-            </div>
+            }
 
           </div>
 

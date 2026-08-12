@@ -1,0 +1,46 @@
+<div class="min-h-screen bg-oas-bg flex items-start justify-center p-6">
+  <div class="w-full max-w-xl mt-10">
+    <div class="bg-oas-warn-bg border border-oas-warn/30 text-oas-warn text-xs font-semibold px-4 py-2 rounded-lg mb-4">
+      Écran temporaire — /pourajouterlesimages — à retirer une fois les écrans définitifs en place.
+    </div>
+
+    <div class="bg-white rounded-2xl border border-oas-line p-6">
+      <h1 class="text-xl font-extrabold text-oas-ink mb-1">Ajouter des images / vidéos</h1>
+      <p class="text-oas-muted text-sm mb-5">Upload direct vers Cloudinary. Copiez l'URL générée pour la coller où vous en avez besoin.</p>
+
+      <label class="block text-xs font-semibold text-oas-ink mb-1.5">Dossier Cloudinary</label>
+      <input type="text" [(ngModel)]="folder" placeholder="oas/temp"
+        class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm font-mono-data focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition mb-4" />
+
+      <app-media-uploader #uploader [folder]="folder" (uploaded)="onUploaded($event, uploader)" />
+
+      @if (items.length) {
+        <div class="mt-6">
+          <p class="text-xs font-bold uppercase text-oas-muted mb-2">Fichiers envoyés ({{ items.length }})</p>
+          <div class="space-y-2">
+            @for (item of items; track item.publicId) {
+              <div class="flex items-center gap-3 border border-oas-line rounded-lg p-2.5">
+                <div class="w-12 h-12 rounded-lg bg-oas-bg overflow-hidden flex-shrink-0 flex items-center justify-center">
+                  @if (item.resourceType === 'video') {
+                    <video [src]="item.secureUrl" class="w-full h-full object-cover" muted></video>
+                  } @else {
+                    <img [src]="item.secureUrl" class="w-full h-full object-cover" alt="" />
+                  }
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs font-mono-data text-oas-ink truncate">{{ item.secureUrl }}</p>
+                  <p class="text-[11px] text-oas-muted">{{ item.format }} · {{ (item.bytes / 1024 / 1024) | number:'1.1-1' }} Mo</p>
+                </div>
+                <button type="button" (click)="copy(item)"
+                  class="flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg border border-oas-line hover:bg-oas-bg transition cursor-pointer"
+                  [class.text-oas-ok]="item.copied" [class.border-oas-ok]="item.copied">
+                  {{ item.copied ? 'Copié !' : 'Copier' }}
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>

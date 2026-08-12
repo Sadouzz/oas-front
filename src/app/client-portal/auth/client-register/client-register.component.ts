@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { debounceTime, distinctUntilChanged, switchMap, of, catchError } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap, of, catchError, firstValueFrom } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { CLIENT_PORTAL_PATHS } from '../../client-portal.paths';
 import { LucideEye, LucideEyeOff, LucideLoader2, LucideCheck, LucideX } from '@lucide/angular';
@@ -29,14 +29,17 @@ export class ClientRegisterComponent implements OnInit {
   form: FormGroup = this.fb.group({
     firstName: ['', Validators.required],
     lastName: ['', Validators.required],
-    phone: ['', Validators.required],
-    login: ['', Validators.required],
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(6)]],
+    // Champs "particulier"
+    phone: [''],
+    email: [''],
+    // Champs "entreprise" — seul contact utilisé pour le compte dans ce cas (pas de contact
+    // personnel du responsable, cf. consigne : uniquement le mail et le téléphone de l'entreprise).
     raisonSociale: [''],
     numeroEntreprise: [''],
-    emailEntreprise: ['', Validators.email],
+    emailEntreprise: [''],
+    telephoneEntreprise: [''],
     adresseEntreprise: [''],
+    password: ['', [Validators.required, Validators.minLength(6)]],
   });
 
   showPassword = false;
@@ -44,32 +47,22 @@ export class ClientRegisterComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
 
-  usernameStatus: AvailabilityStatus = 'idle';
-  usernameSuggestions: string[] = [];
   emailStatus: AvailabilityStatus = 'idle';
 
   ngOnInit(): void {
-    this.form.get('login')!.valueChanges.pipe(
-      debounceTime(400),
-      distinctUntilChanged(),
-      switchMap(value => {
-        const username = (value ?? '').trim();
-        if (!username) { this.usernameStatus = 'idle'; this.usernameSuggestions = []; return of(null); }
-        this.usernameStatus = 'checking';
-        return this.authService.checkUsername(username).pipe(catchError(() => of(null)));
-      }),
-    ).subscribe(res => {
-      if (!res) { if (this.usernameStatus === 'checking') this.usernameStatus = 'idle'; return; }
-      this.usernameStatus = res.available ? 'available' : 'taken';
-      if (res.available) { this.usernameSuggestions = []; } else { this.buildSuggestions(this.form.get('login')!.value); }
-    });
+    // Vérification de dispo en temps réel, quel que soit le champ email actif (particulier ou entreprise).
+    this.wireEmailAvailabilityCheck('email');
+    this.wireEmailAvailabilityCheck('emailEntreprise');
+  }
 
-    this.form.get('email')!.valueChanges.pipe(
+  private wireEmailAvailabilityCheck(controlName: string): void {
+    this.form.get(controlName)!.valueChanges.pipe(
       debounceTime(400),
       distinctUntilChanged(),
       switchMap(value => {
         const email = (value ?? '').trim();
-        if (!email || this.form.get('email')!.hasError('email')) { this.emailStatus = 'idle'; return of(null); }
+        const ctrl = this.form.get(controlName)!;
+        if (!email || ctrl.hasError('email')) { this.emailStatus = 'idle'; return of(null); }
         this.emailStatus = 'checking';
         return this.authService.checkEmail(email).pipe(catchError(() => of(null)));
       }),
@@ -79,42 +72,28 @@ export class ClientRegisterComponent implements OnInit {
     });
   }
 
-  /** Propose des variantes du login saisi, en ne gardant que celles réellement disponibles côté back. */
-  private buildSuggestions(base: string): void {
-    const clean = (base || '').trim().toLowerCase().replace(/\s+/g, '');
-    if (!clean) { this.usernameSuggestions = []; return; }
-    const candidates = [`${clean}${Math.floor(Math.random() * 90 + 10)}`, `${clean}.oas`, `${clean}_${new Date().getFullYear()}`];
-    this.usernameSuggestions = candidates;
-    candidates.forEach(candidate => {
-      this.authService.checkUsername(candidate).subscribe({
-        next: res => {
-          if (!res.available) {
-            this.usernameSuggestions = this.usernameSuggestions.filter(c => c !== candidate);
-          }
-        },
-        error: () => {},
-      });
-    });
-  }
-
-  applySuggestion(suggestion: string): void {
-    this.form.get('login')!.setValue(suggestion);
-  }
-
   choose(type: ClientType): void {
     this.clientType = type;
     this.step = 'form';
 
-    const entrepriseControls = ['raisonSociale', 'numeroEntreprise', 'adresseEntreprise'];
-    for (const name of entrepriseControls) {
-      const ctrl = this.form.get(name)!;
-      if (type === 'ENTREPRISE') {
-        ctrl.setValidators(Validators.required);
-      } else {
-        ctrl.clearValidators();
+    const particulierControls = ['phone', 'email'];
+    const entrepriseControls = ['raisonSociale', 'numeroEntreprise', 'emailEntreprise', 'telephoneEntreprise', 'adresseEntreprise'];
+
+    const applyRequired = (names: string[], required: boolean) => {
+      for (const name of names) {
+        const ctrl = this.form.get(name)!;
+        if (required) {
+          ctrl.setValidators(name.toLowerCase().includes('email') ? [Validators.required, Validators.email] : Validators.required);
+        } else {
+          ctrl.clearValidators();
+          ctrl.setValue('');
+        }
+        ctrl.updateValueAndValidity();
       }
-      ctrl.updateValueAndValidity();
-    }
+    };
+
+    applyRequired(particulierControls, type === 'PARTICULIER');
+    applyRequired(entrepriseControls, type === 'ENTREPRISE');
   }
 
   backToChoice(): void {
@@ -122,7 +101,29 @@ export class ClientRegisterComponent implements OnInit {
     this.errorMessage = '';
   }
 
-  onSubmit(): void {
+  /**
+   * Aucun login visible côté client : on génère un identifiant technique en interne
+   * (à partir du nom/de la raison sociale) et on vérifie sa disponibilité avant de l'utiliser.
+   */
+  private async resolveAvailableUsername(): Promise<string> {
+    const raw = this.form.value;
+    const base = (this.clientType === 'ENTREPRISE' ? raw.raisonSociale : `${raw.firstName}${raw.lastName}`) || 'client';
+    const clean = base.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '') || 'client';
+
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const candidate = `${clean}${Math.floor(Math.random() * 9000 + 1000)}`;
+      try {
+        const res = await firstValueFrom(this.authService.checkUsername(candidate));
+        if (res.available) return candidate;
+      } catch {
+        // en cas d'erreur réseau sur la vérification, on tente quand même ce candidat
+        return candidate;
+      }
+    }
+    return `${clean}${Date.now()}`;
+  }
+
+  async onSubmit(): Promise<void> {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -130,25 +131,30 @@ export class ClientRegisterComponent implements OnInit {
 
     this.loading = true;
     this.errorMessage = '';
-    this.form.get('login')?.setErrors(null);
     this.form.get('email')?.setErrors(null);
+    this.form.get('emailEntreprise')?.setErrors(null);
+    this.form.get('phone')?.setErrors(null);
+    this.form.get('telephoneEntreprise')?.setErrors(null);
 
     const raw = this.form.value;
+    const isEntreprise = this.clientType === 'ENTREPRISE';
+    const login = await this.resolveAvailableUsername();
+
     // matricule laissé vide : généré automatiquement côté serveur pour un compte CLIENT
     const payload = {
       firstName: raw.firstName,
       lastName: raw.lastName,
-      phone: raw.phone,
-      login: raw.login,
-      email: raw.email,
+      phone: isEntreprise ? raw.telephoneEntreprise : raw.phone,
+      login,
+      email: isEntreprise ? raw.emailEntreprise : raw.email,
       password: raw.password,
       matricule: '',
       type: 'CLIENT',
       typeClient: this.clientType ?? 'PARTICULIER',
-      ...(this.clientType === 'ENTREPRISE' ? {
+      ...(isEntreprise ? {
         raisonSociale: raw.raisonSociale,
         numeroEntreprise: raw.numeroEntreprise,
-        emailEntreprise: raw.emailEntreprise || null,
+        emailEntreprise: raw.emailEntreprise,
         adresseEntreprise: raw.adresseEntreprise,
       } : {}),
     };
@@ -163,14 +169,15 @@ export class ClientRegisterComponent implements OnInit {
         const msg: string = err.error?.message || err.error || '';
 
         if (/username/i.test(msg)) {
-          this.form.get('login')?.setErrors({ taken: true });
-          this.form.get('login')?.markAsTouched();
+          this.errorMessage = "Une erreur technique est survenue, veuillez réessayer.";
         } else if (/email/i.test(msg)) {
-          this.form.get('email')?.setErrors({ taken: true });
-          this.form.get('email')?.markAsTouched();
+          const ctrlName = isEntreprise ? 'emailEntreprise' : 'email';
+          this.form.get(ctrlName)?.setErrors({ taken: true });
+          this.form.get(ctrlName)?.markAsTouched();
         } else if (/phone/i.test(msg)) {
-          this.form.get('phone')?.setErrors({ taken: true });
-          this.form.get('phone')?.markAsTouched();
+          const ctrlName = isEntreprise ? 'telephoneEntreprise' : 'phone';
+          this.form.get(ctrlName)?.setErrors({ taken: true });
+          this.form.get(ctrlName)?.markAsTouched();
         } else {
           this.errorMessage = msg || 'Une erreur est survenue.';
         }
