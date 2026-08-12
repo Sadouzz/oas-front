@@ -138,7 +138,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
   leaveGarage() {
     this.garageContext.leaveGarage();
-    this.router.navigate(['/dashboard'], { replaceUrl: true });
+    this.router.navigate(['/gestion/dashboard'], { replaceUrl: true });
   }
 
   ngOnDestroy() {

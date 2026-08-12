@@ -30,15 +30,11 @@ export class FournisseursComponent implements OnInit {
   editingId: number | null = null;
 
   form = this.fb.group({
-    matricule: [{ value: '', disabled: true }, Validators.required],
     nomEntreprise: ['', Validators.required],
     nom: ['', Validators.required],
     prenom: ['', Validators.required],
   });
 
-  get generatedMatricule(): string {
-    return this.form.getRawValue().matricule ?? '';
-  }
 
   ngOnInit() { this.load(); }
 
@@ -50,14 +46,7 @@ export class FournisseursComponent implements OnInit {
     });
   }
 
-  private nextMatricule(): string {
-    const p = 'FRN-';
-    const nums = this.fournisseurs
-      .map(f => f.matricule?.startsWith(p) ? parseInt(f.matricule.slice(p.length), 10) : NaN)
-      .filter(n => !isNaN(n));
-    const next = nums.length > 0 ? Math.max(...nums) + 1 : 1;
-    return `${p}${String(next).padStart(5, '0')}`;
-  }
+  // La génération du matricule est gérée par le backend
 
   onSearch(event: Event) {
     const term = (event.target as HTMLInputElement).value.toLowerCase().trim();
@@ -80,14 +69,13 @@ export class FournisseursComponent implements OnInit {
     this.isNew = true;
     this.editingId = null;
     this.form.reset();
-    this.form.get('matricule')?.setValue(this.nextMatricule());
     this.showModal = true;
   }
 
   openEdit(f: FournisseurModel) {
     this.isNew = false;
     this.editingId = f.id;
-    this.form.patchValue({ matricule: f.matricule, nomEntreprise: f.nomEntreprise, nom: f.nom, prenom: f.prenom });
+    this.form.patchValue({ nomEntreprise: f.nomEntreprise, nom: f.nom, prenom: f.prenom });
     this.showModal = true;
   }
 
@@ -102,7 +90,11 @@ export class FournisseursComponent implements OnInit {
       : this.service.update(this.editingId!, payload);
     obs.subscribe({
       next: () => { this.saving = false; this.showSuccess(this.isNew ? 'Fournisseur créé !' : 'Fournisseur modifié !'); this.closeModal(); this.load(); },
-      error: (err: any) => { this.saving = false; this.errorMessage = err.error?.message || 'Erreur.'; }
+      error: (err: any) => { 
+        console.error("Erreur backend:", err);
+        this.saving = false; 
+        this.errorMessage = typeof err.error === 'string' ? err.error : (err.error?.message || 'Erreur.'); 
+      }
     });
   }
 

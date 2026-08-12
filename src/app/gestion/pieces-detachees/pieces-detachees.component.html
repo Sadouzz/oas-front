@@ -126,6 +126,7 @@
             <tr class="border-b border-oas-line">
               <th class="text-left text-xs text-oas-muted px-5 py-3">Type</th>
               <th class="text-left text-xs text-oas-muted px-5 py-3">Référence</th>
+              <th class="text-left text-xs text-oas-muted px-5 py-3">Numéro</th>
               <th class="text-left text-xs text-oas-muted px-5 py-3">N° Série</th>
               <th class="text-left text-xs text-oas-muted px-5 py-3">Catégorie</th>
               <th class="text-left text-xs text-oas-muted px-5 py-3">Stock magasin</th>
@@ -140,7 +141,7 @@
           </thead>
           <tbody>
             @if (loading) {
-              <tr><td [attr.colspan]="canEdit ? 10 : 9" class="text-center py-14 text-oas-muted">
+              <tr><td [attr.colspan]="canEdit ? 11 : 10" class="text-center py-14 text-oas-muted">
                 <svg class="animate-spin h-5 w-5 mx-auto mb-2 text-oas-accent" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
@@ -153,6 +154,7 @@
                     <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold {{ typeBadge(p.type) }}">{{ p.type }}</span>
                   </td>
                   <td class="px-5 py-4 font-semibold text-oas-ink">{{ p.reference }}</td>
+                  <td class="px-5 py-4 font-mono text-xs text-oas-accent">{{ p.numero }}</td>
                   <td class="px-5 py-4 font-mono text-xs text-oas-muted">{{ p.numeroDeSerie }}</td>
                   <td class="px-5 py-4 text-sm text-oas-ink2">{{ p.categorie }}</td>
                   <td class="px-5 py-4">

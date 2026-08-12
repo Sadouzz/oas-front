@@ -187,12 +187,20 @@ export class PiecesDetacheesComponent implements OnInit {
     if (this.isNew) {
       this.service.create(payload).subscribe({
         next: () => { this.saving = false; this.showSuccess('Pièce créée avec succès !'); this.closeModal(); this.load(); },
-        error: (err: any) => { this.saving = false; this.errorMessage = err.error?.message || 'Erreur lors de la création.'; }
+        error: (err: any) => { 
+          console.error("Erreur backend:", err);
+          this.saving = false; 
+          this.errorMessage = typeof err.error === 'string' ? err.error : (err.error?.message || 'Erreur lors de la création.'); 
+        }
       });
     } else {
       this.service.update(this.editingId!, payload).subscribe({
         next: () => { this.saving = false; this.showSuccess('Pièce modifiée avec succès !'); this.closeModal(); this.load(); },
-        error: (err: any) => { this.saving = false; this.errorMessage = err.error?.message || 'Erreur lors de la modification.'; }
+        error: (err: any) => { 
+          console.error("Erreur backend:", err);
+          this.saving = false; 
+          this.errorMessage = typeof err.error === 'string' ? err.error : (err.error?.message || 'Erreur lors de la modification.'); 
+        }
       });
     }
   }

@@ -1,6 +1,7 @@
 export interface PieceDetache {
   id: number;
   type: 'PDP' | 'PDG' | 'PDS';
+  numero: string;
   numeroDeSerie: string;
   reference: string;
   categorie: string;
