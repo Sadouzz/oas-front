@@ -1,12 +1,13 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { RendezVousService } from '../../services/rendezvous.service';
 import { MecanicienService } from '../../services/mecanicien.service';
 import { RendezVous, RendezVousStatus, Mecanicien } from '../../shared/models/index';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import {
-  LucideSearch, LucideX, LucideCalendar, LucideCheck, LucidePencil, LucideUser,
+  LucideSearch, LucideX, LucideCalendar, LucideCheck, LucidePencil, LucideUser, LucideFileText
 } from '@lucide/angular';
 
 @Component({
@@ -14,13 +15,14 @@ import {
   standalone: true,
   imports: [
     ReactiveFormsModule, AlertComponent, PaginationComponent,
-    LucideSearch, LucideX, LucideCalendar, LucideCheck, LucidePencil],
+    LucideSearch, LucideX, LucideCalendar, LucideCheck, LucidePencil, LucideFileText],
   templateUrl: './rendezvous.component.html',
 })
 export class RendezVousComponent implements OnInit {
   private service = inject(RendezVousService);
   private mecanicienService = inject(MecanicienService);
   private fb = inject(FormBuilder);
+  private router = inject(Router);
 
   rdvs: RendezVous[] = [];
   filtered: RendezVous[] = [];
@@ -164,6 +166,10 @@ export class RendezVousComponent implements OnInit {
     } else {
       this.selectedMecanicienIds.add(id);
     }
+  }
+
+  createFicheAtelier(rdv: RendezVous) {
+    this.router.navigate(['/gestion/admin/fiches-atelier/new', rdv.id]);
   }
 
   get paged(): RendezVous[] {

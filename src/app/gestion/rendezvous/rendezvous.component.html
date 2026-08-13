@@ -70,6 +70,15 @@
                           class="p-1.5 rounded-lg hover:bg-oas-info-bg text-oas-muted hover:text-oas-info transition cursor-pointer">
                     <svg lucidePencil class="w-4 h-4"></svg>
                   </button>
+                  @if (rdv.statut === 'CONFIRME') {
+                    <button (click)="createFicheAtelier(rdv)" 
+                            title="Créer la fiche atelier"
+                            [disabled]="rdv.hasFicheAtelier"
+                            class="p-1.5 rounded-lg transition"
+                            [class]="!rdv.hasFicheAtelier ? 'text-oas-muted hover:text-oas-accent hover:bg-oas-accent/10 cursor-pointer' : 'opacity-50 cursor-not-allowed text-oas-muted'">
+                      <svg lucideFileText class="w-4 h-4"></svg>
+                    </button>
+                  }
                   @if (rdv.statut === 'EN_ATTENTE') {
                     <button (click)="openValider(rdv)" title="Valider et assigner des mécaniciens"
                             class="p-1.5 rounded-lg hover:bg-green-50 text-oas-muted hover:text-green-600 transition cursor-pointer">

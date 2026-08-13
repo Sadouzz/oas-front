@@ -1,0 +1,272 @@
+<div class="space-y-6 max-w-4xl mx-auto pb-10">
+
+  <!-- Header -->
+  <div class="flex items-center gap-4">
+    <button (click)="goBack()" class="p-2 rounded-lg bg-white border border-oas-line text-oas-muted hover:text-oas-ink hover:bg-oas-bg transition">
+      <svg lucideArrowLeft class="w-5 h-5"></svg>
+    </button>
+    <div>
+      <h1 class="text-2xl font-bold text-oas-ink">Créer une Fiche Atelier</h1>
+      <p class="text-sm text-oas-muted mt-1">Nouvelle réception de véhicule</p>
+    </div>
+  </div>
+
+  @if (error) {
+    <div class="bg-red-50 text-red-700 p-4 rounded-lg border border-red-200">
+      {{ error }}
+    </div>
+  }
+
+  @if (success) {
+    <div class="bg-green-50 text-green-700 p-4 rounded-lg border border-green-200">
+      {{ success }}
+    </div>
+  }
+
+  @if (loading) {
+    <div class="flex items-center justify-center py-16">
+      <div class="w-6 h-6 border-2 border-oas-accent border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  } @else if (rdvData) {
+    
+    <div class="bg-white rounded-lg border border-oas-line p-5 shadow-sm space-y-2">
+      <h2 class="font-bold text-oas-ink text-lg">Détails du Rendez-vous</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        <div><span class="text-oas-muted">Client :</span> <span class="font-semibold text-oas-ink">{{ rdvData.clientName }}</span></div>
+        <div><span class="text-oas-muted">Véhicule :</span> <span class="font-semibold text-oas-ink">{{ rdvData.vehiculeImmatriculation }}</span></div>
+      </div>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
+      
+      <!-- Infos Chauffeur & Véhicule -->
+      <div class="bg-white rounded-lg border border-oas-line p-6 shadow-sm">
+        <h3 class="text-lg font-bold text-oas-ink mb-4 pb-2 border-b border-oas-line">Informations Générales</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1.5">Nom du chauffeur *</label>
+            <input type="text" formControlName="nomChauffeur"
+                   class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent outline-none transition text-sm"
+                   [class.border-red-400]="form.get('nomChauffeur')?.invalid && form.get('nomChauffeur')?.touched">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1.5">Téléphone du chauffeur</label>
+            <input type="text" formControlName="telephoneChauffeur"
+                   class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent outline-none transition text-sm">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1.5">Kilométrage (km) *</label>
+            <input type="number" formControlName="kilometrage"
+                   class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent outline-none transition text-sm"
+                   [class.border-red-400]="form.get('kilometrage')?.invalid && form.get('kilometrage')?.touched">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1.5">Niveau d'essence</label>
+            <select formControlName="niveauEssence"
+                    class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent outline-none transition text-sm">
+              <option value="">Sélectionner</option>
+              <option value="Vide">Vide</option>
+              <option value="1/4">1/4</option>
+              <option value="1/2">1/2</option>
+              <option value="3/4">3/4</option>
+              <option value="Plein">Plein</option>
+            </select>
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-sm font-semibold text-oas-ink mb-1.5">Désignation des travaux, demandes clients *</label>
+            <textarea formControlName="designationTravaux" rows="3"
+                      class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent outline-none transition text-sm"
+                      [class.border-red-400]="form.get('designationTravaux')?.invalid && form.get('designationTravaux')?.touched"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Réception -->
+      <div class="bg-white rounded-lg border border-oas-line p-6 shadow-sm">
+        <h3 class="text-lg font-bold text-oas-ink mb-4 pb-2 border-b border-oas-line">Réception</h3>
+        <div class="space-y-3" formArrayName="lignesReception">
+          @for (ctrl of lignesReception.controls; track $index) {
+            <div [formGroupName]="$index" class="flex items-center gap-4 bg-oas-bg/50 p-2 rounded-lg border border-oas-line/50">
+              <div class="flex-1">
+                <input type="text" formControlName="nom" class="w-full bg-transparent border-none text-sm outline-none font-medium text-oas-ink" placeholder="Nom de la ligne">
+              </div>
+              <div class="flex items-center gap-3">
+                <label class="flex items-center gap-1.5 text-sm cursor-pointer">
+                  <input type="radio" [formControlName]="'etat'" [value]="true" class="w-4 h-4 accent-oas-accent cursor-pointer">
+                  <span>Oui</span>
+                </label>
+                <label class="flex items-center gap-1.5 text-sm cursor-pointer">
+                  <input type="radio" [formControlName]="'etat'" [value]="false" class="w-4 h-4 accent-oas-accent cursor-pointer">
+                  <span>Non</span>
+                </label>
+              </div>
+              <button type="button" (click)="removeReception($index)" class="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition cursor-pointer">
+                <svg lucideTrash2 class="w-4 h-4"></svg>
+              </button>
+            </div>
+          }
+        </div>
+        <button type="button" (click)="addReception()" class="mt-4 flex items-center gap-2 text-sm text-oas-accent font-semibold hover:bg-oas-accent/10 px-3 py-1.5 rounded-lg transition cursor-pointer">
+          <svg lucidePlus class="w-4 h-4"></svg>
+          Ajouter une ligne
+        </button>
+      </div>
+
+      <!-- Défauts -->
+      <div class="bg-white rounded-lg border border-oas-line p-6 shadow-sm">
+        <h3 class="text-lg font-bold text-oas-ink mb-4 pb-2 border-b border-oas-line">Défauts constatés à la réception</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" formArrayName="lignesDefauts">
+          @for (ctrl of lignesDefauts.controls; track $index) {
+            <div [formGroupName]="$index" class="flex items-center gap-3 bg-oas-bg/50 p-2.5 rounded-lg border border-oas-line/50">
+              <input type="checkbox" formControlName="present" class="w-4 h-4 rounded accent-oas-accent cursor-pointer">
+              <input type="text" formControlName="nom" class="flex-1 bg-transparent border-none text-sm outline-none text-oas-ink" placeholder="Nom du défaut">
+              <button type="button" (click)="removeDefaut($index)" class="p-1 text-red-500 hover:bg-red-50 rounded-lg transition cursor-pointer">
+                <svg lucideTrash2 class="w-4 h-4"></svg>
+              </button>
+            </div>
+          }
+        </div>
+        <button type="button" (click)="addDefaut()" class="mt-4 flex items-center gap-2 text-sm text-oas-accent font-semibold hover:bg-oas-accent/10 px-3 py-1.5 rounded-lg transition cursor-pointer">
+          <svg lucidePlus class="w-4 h-4"></svg>
+          Ajouter un défaut
+        </button>
+      </div>
+
+      <!-- NB, Date, Garantie -->
+      <div class="bg-white rounded-lg border border-oas-line p-6 shadow-sm">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1.5">Date de sortie prévue</label>
+            <input type="date" formControlName="dateSortiePrevue"
+                   class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent outline-none transition text-sm">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1.5">Garantie</label>
+            <input type="text" formControlName="garantie" placeholder="Ex: 6 mois"
+                   class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent outline-none transition text-sm">
+          </div>
+          <div class="md:col-span-3">
+            <label class="block text-sm font-semibold text-oas-ink mb-1.5">N.B (Remarques supplémentaires)</label>
+            <textarea formControlName="nb" rows="2"
+                      class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent outline-none transition text-sm"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Signatures -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+        
+        <!-- Signature Réceptionnaire -->
+        <div class="bg-white rounded-lg border border-oas-line p-6 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <label class="block text-sm font-semibold text-oas-ink">Signature du réceptionnaire</label>
+            <button type="button" (click)="clearSignatureRec()" class="text-xs text-red-500 hover:text-red-600 font-medium px-2 py-1 bg-red-50 hover:bg-red-100 rounded transition cursor-pointer">
+              Effacer
+            </button>
+          </div>
+          <div class="border border-oas-line rounded-lg overflow-hidden bg-oas-bg/30 relative">
+            <canvas #signatureReceptionnaireCanvas width="600" height="200" 
+                    class="w-full h-[200px] cursor-crosshair touch-none"
+                    (mousedown)="startDrawing($event, 'rec')"
+                    (mousemove)="draw($event, 'rec')"
+                    (mouseup)="stopDrawing('rec')"
+                    (mouseleave)="stopDrawing('rec')"
+                    (touchstart)="startDrawing($event, 'rec')"
+                    (touchmove)="draw($event, 'rec')"
+                    (touchend)="stopDrawing('rec')"></canvas>
+          </div>
+        </div>
+
+        <!-- Signature Client -->
+        <div class="bg-white rounded-lg border border-oas-line p-6 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <label class="block text-sm font-semibold text-oas-ink">Signature du client / chauffeur</label>
+            <button type="button" (click)="clearSignatureClient()" class="text-xs text-red-500 hover:text-red-600 font-medium px-2 py-1 bg-red-50 hover:bg-red-100 rounded transition cursor-pointer">
+              Effacer
+            </button>
+          </div>
+          <div class="border border-oas-line rounded-lg overflow-hidden bg-oas-bg/30 relative">
+            @if (!conditionsAcceptees) {
+              <div class="absolute inset-0 bg-white/70 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center p-4 text-center">
+                <p class="text-sm font-bold text-oas-ink mb-2">Veuillez lire et accepter les conditions générales</p>
+                <button type="button" (click)="showConditionsModal = true" class="text-xs bg-oas-accent text-white px-3 py-1.5 rounded-lg shadow-sm hover:bg-oas-accent-dark transition">Lire les conditions</button>
+              </div>
+            }
+            <canvas #signatureClientCanvas width="600" height="200" 
+                    class="w-full h-[200px] touch-none"
+                    [class.cursor-crosshair]="conditionsAcceptees"
+                    [class.cursor-not-allowed]="!conditionsAcceptees"
+                    (mousedown)="startDrawing($event, 'client')"
+                    (mousemove)="draw($event, 'client')"
+                    (mouseup)="stopDrawing('client')"
+                    (mouseleave)="stopDrawing('client')"
+                    (touchstart)="startDrawing($event, 'client')"
+                    (touchmove)="draw($event, 'client')"
+                    (touchend)="stopDrawing('client')"></canvas>
+          </div>
+          <p class="text-xs text-oas-muted mt-2 flex items-center gap-1">
+            En signant ci-dessus, vous acceptez les 
+            <button type="button" (click)="showConditionsModal = true" class="text-oas-accent hover:underline cursor-pointer font-semibold">Conditions générales de réparation</button>.
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Actions -->
+      <div class="flex justify-end gap-3 pt-4 border-t border-oas-line mt-6">
+        <button type="button" (click)="goBack()" class="px-5 py-2.5 rounded-lg border border-oas-line bg-white hover:bg-oas-bg text-oas-ink font-semibold transition cursor-pointer text-sm">
+          Annuler
+        </button>
+        <button type="submit" [disabled]="saving || form.invalid" 
+                class="px-5 py-2.5 rounded-lg bg-oas-accent hover:bg-oas-accent-dark text-white font-bold flex items-center gap-2 transition cursor-pointer disabled:opacity-60 text-sm shadow-md">
+          <svg lucideSave class="w-4 h-4"></svg>
+          {{ saving ? 'Enregistrement...' : 'Créer la Fiche Atelier' }}
+        </button>
+      </div>
+      
+    </form>
+  }
+</div>
+@if (showConditionsModal) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div class="bg-white rounded-lg shadow-2xl w-full max-w-3xl mx-4 max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line shrink-0">
+        <h2 class="text-lg font-bold text-oas-ink">Conditions générales de réparation</h2>
+        <button (click)="showConditionsModal = false" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted cursor-pointer">
+          <svg lucideX class="w-5 h-5"></svg>
+        </button>
+      </div>
+      <div class="p-6 overflow-y-auto flex-1 text-sm text-oas-ink2 space-y-4">
+        <h3 class="font-bold text-oas-ink">Article 1er : Engagement juridique des parties</h3>
+        <p>Le présent contrat constitue dès sa signature un engagement, tant pour le réparateur que pour le client.</p>
+        <p>Pour sa part, la Société OAS s'engage à respecter l'ordre donné.</p>
+        <p>Dans le cas où celui-ci ne pourrait être tenu, soit par défaut d'approvisionnement, soit par cas de force majeure, le réparateur devra en informer son client et lui donner les motifs du retard de la livraison.</p>
+        <p>Le client, en ce qui le concerne, s'engage à s'acquitter, à la livraison du véhicule, du montant de la facture résultant des travaux commandés, sauf accord contraire expressément passé lors de l'établissement de l'ordre de réparation.</p>
+
+        <h3 class="font-bold text-oas-ink mt-6">Article 2 : Modifications éventuelles des travaux prévus par l'ordre de réparation</h3>
+        <p>Le professionnel, pour satisfaire à l'obligation de résultat à laquelle il est légalement tenu pourra être amené au cours de la réparation, à constater la nécessité d'effectuer des travaux complémentaires non prévus sur l'ordre de réparation.</p>
+        <p>Si ces travaux entraînent une facturation dont le montant excède plus de 10% de l'estimation prévue, le réparateur devra en informer son client et obtenir son accord sur ce nouveau montant.</p>
+
+        <h3 class="font-bold text-oas-ink mt-6">Article 3 : Restitution des pièces changées</h3>
+        <p>Les pièces usagées restent la propriété du client, elles lui sont remises ou présentées au moment de la restitution de son véhicule.</p>
+        <p>Si les pièces usagées ne sont pas reprises par le client, au moment de la restitution du véhicule, le réparateur peut en disposer librement.</p>
+        <p>Font exception au principe de la restitution par le réparateur les pièces changées dans le cadre de la garantie contractuelle et de l'échange standard.</p>
+
+        <h3 class="font-bold text-oas-ink mt-6">Article 4 : Limites de responsabilités</h3>
+        <p>La Société OAS ne répond que de ses fautes professionnelles dans l'exécution de son travail, et uniquement pour les travaux commandés par le client sur son véhicule.</p>
+        <p>La Société OAS n'est responsable desdites fautes professionnelles qu'envers la personne qui lui a confié le véhicule et qui a signé l'ordre de réparation.</p>
+        <p>La Société OAS n'est pas responsable des produits endommagés ou cassés par négligence ou mauvaise manutention du fait d'un autre réparateur.</p>
+        <p>La Société OAS n'est également pas responsable des dommages causés du fait des agissements personnels du client, ou pour un cas de force majeure.</p>
+        <p>La Société OAS n'est pas responsable des objets laissés dans le véhicule par le client.</p>
+
+        <h3 class="font-bold text-oas-ink mt-6">Article 5 : Contestations</h3>
+        <p>En cas de différend relatif à l'exécution de l'ordre de réparation, il est fait attribution de juridiction au Tribunal du lieu de la signature du présent contrat.</p>
+      </div>
+      <div class="flex justify-end p-4 border-t border-oas-line shrink-0">
+        <button (click)="accepterConditions()" class="px-5 py-2.5 rounded-lg bg-oas-accent hover:bg-oas-accent-dark text-white font-bold transition cursor-pointer text-sm shadow-md">
+          J'ai compris et j'accepte
+        </button>
+      </div>
+    </div>
+  </div>
+}

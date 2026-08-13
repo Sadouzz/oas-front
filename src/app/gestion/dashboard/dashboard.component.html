@@ -146,7 +146,7 @@
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
           </svg>
-          <p class="text-sm">Chargement des fiches...</p>
+          <p class="text-sm">Chargement des ordres...</p>
         </div>
       } @else {
       <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-3">
@@ -240,7 +240,7 @@
       <!-- Fiches récentes -->
       <div class="bg-white rounded-lg border border-oas-line overflow-hidden">
         <div class="flex items-center justify-between px-5 py-4 border-b border-oas-line">
-          <h3 class="font-bold text-oas-ink">Fiches d'atelier récentes</h3>
+          <h3 class="font-bold text-oas-ink">Ordres de réparation récents</h3>
           <a routerLink="/ordres-reparation" class="text-xs text-oas-accent hover:text-oas-accent-dark font-semibold transition">Voir tout</a>
         </div>
         @if (loadingFiches) {
@@ -251,7 +251,7 @@
             </svg>
           </div>
         } @else if (recentFiches.length === 0) {
-          <div class="py-12 text-center text-oas-muted text-sm">Aucune fiche enregistrée</div>
+          <div class="py-12 text-center text-oas-muted text-sm">Aucun ordre enregistré</div>
         } @else {
           <table class="w-full text-sm">
             <thead>
@@ -404,7 +404,7 @@
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
           </svg>
-          <p class="text-sm">Chargement des fiches...</p>
+          <p class="text-sm">Chargement des ordres...</p>
         </div>
       } @else {
       <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-3">
@@ -574,7 +574,7 @@
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
           </svg>
-          <p class="text-sm">Chargement des fiches...</p>
+          <p class="text-sm">Chargement des ordres...</p>
         </div>
       } @else {
       <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-3">

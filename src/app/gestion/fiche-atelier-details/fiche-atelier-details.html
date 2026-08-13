@@ -1,0 +1,210 @@
+<div class="h-full flex flex-col bg-white rounded-2xl shadow-sm border border-oas-line overflow-hidden">
+  
+  <!-- Header -->
+  <div class="p-6 border-b border-oas-line flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/50">
+    <div class="flex items-center gap-4">
+      <button (click)="goBack()" class="p-2 rounded-lg hover:bg-oas-bg text-oas-muted hover:text-oas-ink transition cursor-pointer">
+        <svg lucideArrowLeft class="w-5 h-5"></svg>
+      </button>
+      <div>
+        <h2 class="text-xl font-extrabold text-oas-ink">Détails de la Fiche Atelier #{{ fiche?.id }}</h2>
+        @if (fiche) {
+          <p class="text-sm text-oas-faint mt-1">Créée le {{ fiche.createdAt | date:'dd/MM/yyyy HH:mm' }}</p>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading) {
+    <div class="flex-1 flex flex-col items-center justify-center p-12 space-y-4">
+      <div class="w-10 h-10 border-4 border-oas-line border-t-oas-accent rounded-full animate-spin"></div>
+      <p class="text-oas-faint font-medium animate-pulse">Chargement de la fiche...</p>
+    </div>
+  }
+
+  <!-- Error Message -->
+  @if (error) {
+    <div class="m-6 p-4 rounded-xl bg-red-50 text-red-600 text-sm border border-red-100 flex items-center gap-3">
+      <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+      </svg>
+      {{ error }}
+    </div>
+  }
+
+  <!-- Content -->
+  @if (fiche) {
+    <div class="flex-1 overflow-y-auto p-6 bg-oas-bg/30">
+      
+      <!-- Infos client et vehicule -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="bg-white rounded-xl border border-oas-line p-5 shadow-sm">
+          <h3 class="font-bold text-oas-ink mb-4 border-b border-oas-line pb-2">Informations Générales</h3>
+          <div class="space-y-3">
+            <div class="flex justify-between">
+              <span class="text-sm text-oas-faint">Client</span>
+              <span class="text-sm font-semibold text-oas-ink2">{{ fiche.clientName }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-sm text-oas-faint">Véhicule</span>
+              <span class="text-sm font-semibold text-oas-ink2">{{ fiche.vehiculeImmatriculation }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-sm text-oas-faint">Chauffeur</span>
+              <span class="text-sm font-semibold text-oas-ink2">{{ fiche.nomChauffeur }}</span>
+            </div>
+            <div class="flex justify-between" *ngIf="fiche.telephoneChauffeur">
+              <span class="text-sm text-oas-faint">Tél. Chauffeur</span>
+              <span class="text-sm font-semibold text-oas-ink2">{{ fiche.telephoneChauffeur }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl border border-oas-line p-5 shadow-sm">
+          <h3 class="font-bold text-oas-ink mb-4 border-b border-oas-line pb-2">Détails Véhicule</h3>
+          <div class="space-y-3">
+            <div class="flex justify-between">
+              <span class="text-sm text-oas-faint">Kilométrage</span>
+              <span class="text-sm font-semibold text-oas-ink2">{{ fiche.kilometrage }} km</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-sm text-oas-faint">Niveau Essence</span>
+              <span class="text-sm font-semibold text-oas-ink2">{{ fiche.niveauEssence || 'Non renseigné' }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-sm text-oas-faint">Date Sortie Prévue</span>
+              <span class="text-sm font-semibold text-oas-ink2">{{ fiche.dateSortiePrevue ? (fiche.dateSortiePrevue | date:'dd/MM/yyyy') : 'Non renseignée' }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-sm text-oas-faint">Garantie</span>
+              <span class="text-sm font-semibold text-oas-ink2">{{ fiche.garantie || 'Aucune' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Désignation Travaux -->
+      <div class="bg-white rounded-xl border border-oas-line p-5 shadow-sm mb-6">
+        <h3 class="font-bold text-oas-ink mb-3 border-b border-oas-line pb-2">Désignation des travaux & Demandes client</h3>
+        <p class="text-sm text-oas-ink2 whitespace-pre-wrap">{{ fiche.designationTravaux }}</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <!-- Réception -->
+        <div class="bg-white rounded-xl border border-oas-line p-5 shadow-sm">
+          <h3 class="font-bold text-oas-ink mb-4 border-b border-oas-line pb-2">Réception</h3>
+          <div class="space-y-2">
+            @for (ligne of fiche.lignesReception; track ligne.nom) {
+              <div class="flex justify-between items-center bg-gray-50 p-2 rounded border border-oas-line/50">
+                <span class="text-sm font-medium text-oas-ink2">{{ ligne.nom }}</span>
+                <span class="text-xs px-2 py-1 rounded-full font-bold"
+                      [ngClass]="ligne.etat === true ? 'bg-green-100 text-green-700' : (ligne.etat === false ? 'bg-red-100 text-red-700' : 'bg-gray-200 text-gray-500')">
+                  {{ ligne.etat === true ? 'OUI' : (ligne.etat === false ? 'NON' : 'N/A') }}
+                </span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Défauts -->
+        <div class="bg-white rounded-xl border border-oas-line p-5 shadow-sm">
+          <h3 class="font-bold text-oas-ink mb-4 border-b border-oas-line pb-2">Défauts constatés</h3>
+          <div class="space-y-2">
+            @for (defaut of fiche.lignesDefauts; track defaut.nom) {
+              <div class="flex justify-between items-center bg-gray-50 p-2 rounded border border-oas-line/50">
+                <span class="text-sm font-medium text-oas-ink2">{{ defaut.nom }}</span>
+                <div class="flex items-center justify-center w-6 h-6 rounded-full" 
+                     [ngClass]="defaut.present ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-300'">
+                  <svg *ngIf="defaut.present" lucideCheck class="w-4 h-4"></svg>
+                  <svg *ngIf="!defaut.present" lucideX class="w-4 h-4"></svg>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Remarques -->
+      @if (fiche.nb) {
+        <div class="bg-white rounded-xl border border-oas-line p-5 shadow-sm mb-6">
+          <h3 class="font-bold text-oas-ink mb-3 border-b border-oas-line pb-2">N.B (Remarques)</h3>
+          <p class="text-sm text-oas-ink2 whitespace-pre-wrap">{{ fiche.nb }}</p>
+        </div>
+      }
+
+      <!-- Signatures -->
+      <div class="bg-white rounded-xl border border-oas-line p-5 shadow-sm">
+        <h3 class="font-bold text-oas-ink mb-4 border-b border-oas-line pb-2">Signatures</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Réceptionnaire -->
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-2">Signature du réceptionnaire (Entrée)</label>
+            @if (fiche.signatureReceptionnaireBase64) {
+              <div class="border border-oas-line rounded-lg overflow-hidden bg-oas-bg/30 h-[200px] flex items-center justify-center">
+                <img [src]="fiche.signatureReceptionnaireBase64" alt="Signature Réceptionnaire" class="max-w-full max-h-full object-contain mix-blend-multiply">
+              </div>
+            } @else {
+              <div class="p-6 text-center text-oas-muted bg-gray-50 rounded-lg border border-oas-line border-dashed h-[200px] flex items-center justify-center">
+                Non fournie
+              </div>
+            }
+          </div>
+
+          <!-- Client -->
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-2">Signature du client / chauffeur (Entrée)</label>
+            @if (fiche.signatureBase64) {
+              <div class="border border-oas-line rounded-lg overflow-hidden bg-oas-bg/30 h-[200px] flex items-center justify-center">
+                <img [src]="fiche.signatureBase64" alt="Signature Client" class="max-w-full max-h-full object-contain mix-blend-multiply">
+              </div>
+            } @else {
+              <div class="p-6 text-center text-oas-muted bg-gray-50 rounded-lg border border-oas-line border-dashed h-[200px] flex items-center justify-center">
+                Non fournie
+              </div>
+            }
+          </div>
+
+          <!-- Sortie -->
+          <div class="md:col-span-2 mt-4 pt-6 border-t border-oas-line">
+            <div class="flex items-center justify-between mb-2">
+              <label class="block text-sm font-semibold text-oas-ink">Signature de restitution du véhicule (Sortie)</label>
+              @if (!fiche.signatureSortieBase64) {
+                <button type="button" (click)="clearSignature()" class="text-xs text-red-500 hover:text-red-600 font-medium px-2 py-1 bg-red-50 hover:bg-red-100 rounded transition cursor-pointer">
+                  Effacer
+                </button>
+              }
+            </div>
+
+            @if (fiche.signatureSortieBase64) {
+              <div class="border border-oas-line rounded-lg overflow-hidden bg-oas-bg/30 h-[200px] max-w-[600px] flex items-center justify-center">
+                <img [src]="fiche.signatureSortieBase64" alt="Signature Sortie" class="max-w-full max-h-full object-contain mix-blend-multiply">
+              </div>
+            } @else {
+              <div class="border border-oas-line rounded-lg overflow-hidden bg-oas-bg/30 max-w-[600px]">
+                <canvas #signatureSortieCanvas width="600" height="200" 
+                        class="w-full h-[200px] cursor-crosshair touch-none"
+                        (mousedown)="startDrawing($event)"
+                        (mousemove)="draw($event)"
+                        (mouseup)="stopDrawing()"
+                        (mouseleave)="stopDrawing()"
+                        (touchstart)="startDrawing($event)"
+                        (touchmove)="draw($event)"
+                        (touchend)="stopDrawing()"></canvas>
+              </div>
+              <div class="mt-4">
+                <button type="button" (click)="validerSortie()" [disabled]="savingSortie"
+                        class="px-5 py-2.5 rounded-lg bg-oas-accent hover:bg-oas-accent-dark text-white font-bold flex items-center gap-2 transition cursor-pointer disabled:opacity-60 text-sm shadow-md">
+                  <svg lucideCheck class="w-4 h-4"></svg>
+                  {{ savingSortie ? 'Validation en cours...' : 'Valider la restitution' }}
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+    </div>
+  }
+</div>

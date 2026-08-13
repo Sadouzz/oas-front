@@ -18,5 +18,6 @@ export interface RendezVous {
   statut: RendezVousStatus;
   commentaire: string | null;
   dateCreation: string;
+  hasFicheAtelier: boolean;
   dateHistory?: RendezVousDateHistory[];
 }
