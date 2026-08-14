@@ -115,7 +115,7 @@ export const routes: Routes = [
       },
       {
         path: 'rendezvous',
-        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER'])],
+        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER', 'ROLE_AGENT'])],
         loadComponent: () =>
           import('./gestion/rendezvous/rendezvous.component').then(m => m.RendezVousComponent),
       },
@@ -198,19 +198,19 @@ export const routes: Routes = [
       },
       {
         path: 'fiches-atelier',
-        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER'])],
+        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER', 'ROLE_AGENT'])],
         loadComponent: () =>
           import('./gestion/fiches-atelier-list/fiches-atelier-list').then(m => m.FichesAtelierList),
       },
       {
         path: 'fiches-atelier/:id',
-        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER'])],
+        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER', 'ROLE_AGENT'])],
         loadComponent: () =>
           import('./gestion/fiche-atelier-details/fiche-atelier-details').then(m => m.FicheAtelierDetails),
       },
       {
         path: 'admin/fiches-atelier/new/:rendezVousId',
-        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER'])],
+        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER', 'ROLE_AGENT'])],
         loadComponent: () =>
           import('./gestion/admin/fiches-atelier/fiches-atelier').then(m => m.FichesAtelier),
       },

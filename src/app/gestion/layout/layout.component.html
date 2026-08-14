@@ -27,7 +27,7 @@
       </a>
 
       <!-- ── Atelier — Chef Atelier + Super Agent + Master ── -->
-      @if (isChefAtelier() || isSuperAgent() || isMaster()) {
+      @if (isAgent() || isChefAtelier() || isSuperAgent() || isMaster()) {
       <button (click)="toggleSection('atelier')"
         class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
         <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -47,6 +47,7 @@
           class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
           Fiches atelier
         </a>
+        @if (isChefAtelier() || isSuperAgent() || isMaster()) {
         <a routerLink="/gestion/ordres-reparation" routerLinkActive="oas-sub-active"
           class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
           Ordres de réparation
@@ -55,12 +56,13 @@
           class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
           Mécaniciens
         </a>
+        }
       </div>
       }
       }
 
-      <!-- Rendez-vous — Super Agent + Chef Atelier + Master -->
-      @if (isSuperAgent() || isMaster() || isChefAtelier()) {
+      <!-- Rendez-vous — Super Agent + Chef Atelier + Master + Agent -->
+      @if (isAgent() || isSuperAgent() || isMaster() || isChefAtelier()) {
         <a routerLink="/gestion/rendezvous" routerLinkActive="oas-nav-active"
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
           <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
