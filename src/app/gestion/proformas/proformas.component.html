@@ -91,6 +91,11 @@
                           }">
                       {{ p.statut || 'N/A' }}
                     </span>
+                    @if (!p.visibleClient) {
+                      <span class="ml-1 px-2 py-1 rounded text-[10px] font-bold tracking-wider bg-gray-100 text-gray-500" title="Pas encore visible côté portail client">
+                        Non envoyé
+                      </span>
+                    }
                   </td>
                   <td class="px-5 py-4" (click)="$event.stopPropagation()">
                     <div class="flex items-center gap-1 justify-end">
@@ -139,6 +144,10 @@
                       'bg-gray-100 text-gray-700': !selectedProforma.statut
                     }">
                 {{ selectedProforma.statut || 'N/A' }}
+              </span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider"
+                    [ngClass]="selectedProforma.visibleClient ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'">
+                {{ selectedProforma.visibleClient ? 'Envoyé au client' : 'En préparation' }}
               </span>
             </div>
             <p class="text-xs text-oas-muted mt-0.5">{{ formatDate(selectedProforma.dateCreation) }}</p>
@@ -282,7 +291,19 @@
 
           <!-- Actions -->
           <div class="space-y-2">
-            @if (selectedProforma.statut === 'EN_ATTENTE' || !selectedProforma.statut) {
+            @if (!selectedProforma.visibleClient) {
+              <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-700">
+                Ce proforma n'est pas encore visible côté portail client. Ajustez les prix si besoin (icône crayon)
+                puis validez pour l'envoyer.
+              </div>
+              <button (click)="validerEnvoi(selectedProforma.id)"
+                      class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl transition text-sm cursor-pointer flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                </svg>
+                Valider les prix et envoyer au client
+              </button>
+            } @else if (selectedProforma.statut === 'EN_ATTENTE' || !selectedProforma.statut) {
               <button (click)="validerProforma(selectedProforma.id)"
                       class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2.5 rounded-xl transition text-sm cursor-pointer flex items-center justify-center gap-2">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

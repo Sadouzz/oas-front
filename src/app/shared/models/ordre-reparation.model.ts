@@ -1,9 +1,21 @@
 export type StatutFiche = 'A_FAIRE' | 'EN_DIAGNOSTIC' | 'EN_ATTENTE_PROFORMA' | 'PROFORMA_VALIDE' | 'EN_ATTENTE_COMMANDE' | 'EN_ATTENTE_SORTIE' | 'EN_ATTENTE_MECANICIEN' | 'EN_COURS' | 'EN_ATTENTE_PAIEMENT' | 'TERMINE' | 'LIVRE';
 
+export type TypePieceJointeDiagnostic = 'PHOTO' | 'PDF';
+
+export interface PieceJointeDiagnostic {
+  id: number;
+  ordreReparationId: number;
+  url: string;
+  type: TypePieceJointeDiagnostic;
+  remarque: string | null;
+  createdAt: string;
+}
+
 export interface OrdreReparation {
   id: number;
   numero: string;
   descriptionTravaux: string;
+  travauxDemandes: string | null;
   listeReception: string | null;
   listeDefauts: string | null;
   dateCreation: string;
@@ -38,6 +50,7 @@ export interface OrdreReparation {
 export interface OrdreReparationRequest {
   numero: string;
   descriptionTravaux: string;
+  travauxDemandes?: string;
   listeReception?: string;
   listeDefauts?: string;
   dateSortie?: string;

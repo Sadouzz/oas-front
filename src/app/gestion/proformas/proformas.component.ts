@@ -392,6 +392,20 @@ export class ProformasComponent implements OnInit {
     });
   }
 
+  validerEnvoi(id: number) {
+    if (!confirm('Valider les prix et rendre ce proforma visible au client ? Vérifiez les lignes pièces/MO avant de continuer.')) return;
+    this.service.validerEnvoi(id).subscribe({
+      next: (updated) => {
+        this.load();
+        if (this.selectedProforma && this.selectedProforma.id === id) {
+          this.selectedProforma.visibleClient = updated.visibleClient ?? true;
+        }
+        this.notify('Proforma validé et envoyé au client.');
+      },
+      error: (err) => this.notifyError(err.error?.message || "Erreur lors de l'envoi du proforma au client."),
+    });
+  }
+
   validerProforma(id: number) {
     if (!confirm('Valider ce proforma ? L\'accord client a-t-il été obtenu ?')) return;
     this.service.valider(id).subscribe({

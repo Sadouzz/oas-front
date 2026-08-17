@@ -267,7 +267,7 @@
 
     @if (selectedFiche.mecaniciens && selectedFiche.mecaniciens.length) {
     <div>
-      <p class="text-xs font-bold text-oas-ink mb-2">Mécaniciens</p>
+      <p class="text-xs font-bold text-oas-ink mb-2">Techniciens</p>
       <div class="flex flex-wrap gap-1.5">
         @for (m of selectedFiche.mecaniciens; track m.id) {
         <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-oas-info-bg text-oas-info">{{ m.nom }}</span>
@@ -282,6 +282,15 @@
         <p class="text-sm text-oas-ink leading-relaxed">{{ selectedFiche.descriptionTravaux }}</p>
       </div>
     </div>
+
+    @if (selectedFiche.travauxDemandes) {
+    <div>
+      <p class="text-xs font-bold text-oas-ink mb-1.5">Travaux demandés (description libre)</p>
+      <div class="bg-oas-bg rounded-xl p-3">
+        <p class="text-sm text-oas-ink leading-relaxed">{{ selectedFiche.travauxDemandes }}</p>
+      </div>
+    </div>
+    }
 
     @if (selectedFiche.listeDefauts) {
     <div>
@@ -707,32 +716,20 @@
         </div>
       </div>
 
-      <!-- Éléments reçus (Checkboxes) -->
+      <!-- Travaux demandés (texte libre — section distincte, cf. spec point 2) -->
       <div>
-        <label class="block text-sm font-semibold text-oas-ink mb-2">Éléments reçus avec le véhicule</label>
-        <div class="grid grid-cols-3 gap-2">
-          @for (e of elementsRecusFrequents; track e) {
-          <label class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs cursor-pointer transition"
-            [ngClass]="selectedReception.includes(e) ? 'bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200' : 'bg-oas-bg text-oas-ink2 border border-transparent hover:bg-oas-line'">
-            <input type="checkbox" [checked]="selectedReception.includes(e)" (change)="toggleReception(e)"
-              class="w-4 h-4 accent-emerald-500 rounded" />
-            {{ e }}
-          </label>
-          }
-        </div>
-        <div class="mt-2">
-          <label class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs cursor-pointer transition"
-            [ngClass]="showAutreReception ? 'bg-amber-50 text-amber-700 font-semibold border border-amber-200' : 'bg-oas-bg text-oas-ink2 border border-transparent hover:bg-oas-line'">
-            <input type="checkbox" [checked]="showAutreReception" (change)="showAutreReception = !showAutreReception"
-              class="w-4 h-4 accent-amber-500 rounded" />
-            Autre
-          </label>
-          @if (showAutreReception) {
-          <input [(ngModel)]="autreReception" [ngModelOptions]="{standalone: true}"
-            placeholder="Autres éléments reçus..."
-            class="w-full mt-2 px-3 py-2 rounded-xl border border-amber-200 bg-amber-50/50 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/40 transition" />
-          }
-        </div>
+        <label class="block text-sm font-semibold text-oas-ink mb-2">Travaux demandés (description libre)</label>
+        <textarea formControlName="travauxDemandes" rows="3"
+          placeholder="Décrivez librement les travaux demandés (comme sur la fiche atelier)..."
+          class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition resize-none"></textarea>
+      </div>
+
+      <!-- Réception : simple récapitulatif — désignation libre (cf. spec point 1) -->
+      <div>
+        <label class="block text-sm font-semibold text-oas-ink mb-2">Réception — désignation</label>
+        <input formControlName="listeReception"
+          placeholder="Ex : véhicule reçu avec clé, carte grise et roue de secours..."
+          class="w-full px-3 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition" />
       </div>
 
       @if (isNew) {
@@ -755,9 +752,9 @@
     @if (currentStep === 2) {
     <div class="space-y-5">
 
-      <!-- Mécaniciens -->
+      <!-- Techniciens -->
       <div>
-        <label class="block text-sm font-semibold text-oas-ink mb-2">Mécaniciens affectés au diagnostic</label>
+        <label class="block text-sm font-semibold text-oas-ink mb-2">Techniciens affectés au diagnostic</label>
         <div class="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
           @for (mec of allMecaniciens; track mec.id) {
           <button type="button" (click)="toggleMecStepper(mec)" [disabled]="mecToggling !== null"
@@ -771,9 +768,13 @@
           </button>
           }
         </div>
+        @if (selectedMecs.length === 0) {
+        <p class="text-xs text-oas-bad font-semibold mt-2">Affectez au moins un technicien pour pouvoir démarrer le diagnostic.</p>
+        }
       </div>
       <div class="flex gap-2">
-        <button type="button" (click)="startDiagnostic()" [disabled]="diagnosticStarted || saving"
+        <button type="button" (click)="startDiagnostic()" [disabled]="!canStartDiagnostic"
+          [title]="selectedMecs.length === 0 ? 'Affectez au moins un technicien avant de démarrer le diagnostic' : ''"
           class="px-3 py-2 rounded-lg bg-oas-accent text-white text-xs font-bold hover:bg-oas-accent-dark transition cursor-pointer disabled:opacity-60">
           {{ diagnosticStarted ? 'Diagnostic commencé' : 'Commencer le diagnostic' }}
         </button>
@@ -781,6 +782,56 @@
           class="px-3 py-2 rounded-lg bg-emerald-500 text-white text-xs font-bold hover:bg-emerald-600 transition cursor-pointer disabled:opacity-60">
           {{ diagnosticFinished ? 'Diagnostic terminé' : 'Terminer le diagnostic' }}
         </button>
+      </div>
+
+      <!-- Pièces jointes de diagnostic (photos / PDF) -->
+      <div class="border-t border-oas-line pt-4">
+        <div class="flex items-center justify-between mb-2">
+          <label class="block text-sm font-semibold text-oas-ink">Pièces jointes de diagnostic</label>
+          <select [ngModel]="piecesJointesFilterType" [ngModelOptions]="{standalone: true}"
+            (ngModelChange)="onPiecesJointesFilterChange($event)"
+            class="px-2 py-1.5 rounded-lg border border-oas-line bg-oas-bg text-xs focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition">
+            <option value="">Tous types</option>
+            <option value="PHOTO">Photos</option>
+            <option value="PDF">PDF</option>
+          </select>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-2 mb-3">
+          <input [(ngModel)]="pieceJointeRemarque" [ngModelOptions]="{standalone: true}"
+            placeholder="Remarque (optionnelle)"
+            class="flex-1 px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-xs focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition" />
+        </div>
+        <app-media-uploader folder="oas/ordres-reparation/diagnostic" accept="image/*,application/pdf"
+          label="Cliquez ou glissez une photo ou un PDF ici"
+          (uploaded)="onPieceJointeUploaded($event)"></app-media-uploader>
+        @if (pieceJointeError) {
+        <p class="text-xs text-oas-bad font-semibold mt-2">{{ pieceJointeError }}</p>
+        }
+
+        @if (piecesJointesFiltrees.length > 0) {
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-3">
+          @for (pj of piecesJointesFiltrees; track pj.id) {
+          <div class="relative border border-oas-line rounded-xl p-2 bg-oas-bg group">
+            <span class="absolute top-1 left-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-white/90 text-oas-ink2">{{ pj.type }}</span>
+            <button type="button" (click)="removePieceJointeDiagnostic(pj.id)"
+              class="absolute top-1 right-1 w-5 h-5 rounded-full bg-white/90 text-oas-bad flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition cursor-pointer">✕</button>
+            <a [href]="pj.url" target="_blank" rel="noopener" class="block mt-4">
+              @if (pj.type === 'PHOTO') {
+              <img [src]="pj.url" class="w-full h-20 object-cover rounded-lg" alt="Pièce jointe diagnostic" />
+              } @else {
+              <div class="w-full h-20 rounded-lg bg-white flex items-center justify-center text-xs font-bold text-oas-muted">PDF</div>
+              }
+            </a>
+            @if (pj.remarque) {
+            <p class="text-[10px] text-oas-muted mt-1 truncate" [title]="pj.remarque">{{ pj.remarque }}</p>
+            }
+          </div>
+          }
+        </div>
+        } @else {
+        <p class="text-xs text-oas-muted">Aucune pièce jointe pour ce filtre.</p>
+        }
       </div>
     </div>
     }
@@ -1084,7 +1135,7 @@
       } @else if (allPiecesDisponibles || lignesPieces.length === 0) {
       <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-emerald-800 text-sm">
         <p class="font-bold">✓ Toutes les pièces sont disponibles</p>
-        <p class="text-xs mt-1">Passez à l'étape suivante pour créer le bon de sortie et affecter les mécaniciens.</p>
+        <p class="text-xs mt-1">Passez à l'étape suivante pour créer le bon de sortie et affecter les techniciens.</p>
       </div>
       
       }
@@ -1196,7 +1247,7 @@
         </div>
         <div>
           <p class="font-bold text-oas-ink text-sm">Assignation & Planification</p>
-          <p class="text-xs text-oas-muted">Assignez les mécaniciens et définissez la date de sortie.</p>
+          <p class="text-xs text-oas-muted">Assignez les techniciens et définissez la date de sortie.</p>
         </div>
       </div>
 
@@ -1215,7 +1266,7 @@
       </div>
 
       <div>
-        <p class="text-sm font-bold text-oas-ink mb-2">Mécaniciens assignés à la réparation *</p>
+        <p class="text-sm font-bold text-oas-ink mb-2">Techniciens assignés à la réparation *</p>
         <div class="grid grid-cols-3 gap-2">
           @for (mec of allMecaniciens; track mec.id) {
           <button type="button" (click)="toggleMecStepper(mec)" [disabled]="mecToggling !== null"
@@ -1254,7 +1305,7 @@
         </div>
         <div>
           <p class="font-bold text-oas-ink text-sm">Réparation en cours</p>
-          <p class="text-xs text-oas-muted">Les pièces ont été sorties et les mécaniciens sont au travail.</p>
+          <p class="text-xs text-oas-muted">Les pièces ont été sorties et les techniciens sont au travail.</p>
         </div>
       </div>
 
