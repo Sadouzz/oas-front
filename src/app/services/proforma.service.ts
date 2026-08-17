@@ -45,6 +45,7 @@ export interface Proforma {
   annee: number | null;
   numeroBonDeCommande: string | null;
   statut?: string;
+  visibleClient?: boolean;
   lignesPieces: LignePiece[];
   lignesMainDoeuvres: LigneMD[];
 }
@@ -107,6 +108,11 @@ export class ProformaService {
 
   valider(id: number): Observable<Proforma> {
     return this.http.put<Proforma>(`${this.api}/${id}/valider`, {});
+  }
+
+  /** Validation des prix par le chef d'atelier + envoi/visibilité au client (cf. spec point 7). */
+  validerEnvoi(id: number): Observable<Proforma> {
+    return this.http.post<Proforma>(`${this.api}/${id}/valider-envoi`, {});
   }
 
   convertToFacture(id: number): Observable<any> {

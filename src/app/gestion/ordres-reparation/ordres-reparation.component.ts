@@ -18,6 +18,9 @@ import { ClientService, UserModel } from '../../services/client.service';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select.component';
+import { MediaUploaderComponent } from '../../shared/components/media-uploader/media-uploader.component';
+import { CloudinaryUploadResult } from '../../shared/models';
+import { PieceJointeDiagnostic, TypePieceJointeDiagnostic } from '../../services/ordre-reparation.service';
 
 export interface LignePiece {
   piece: PieceDetache;
@@ -45,18 +48,6 @@ export const TRAVAUX_FREQUENTS = [
   'Parallélisme / géométrie',
   'Révision générale',
   'Changement pneus',
-];
-
-export const ELEMENTS_RECUS_FREQUENTS = [
-  'Clé de contact',
-  'Carte grise',
-  'Documents du véhicule',
-  'Cric',
-  'Roue de secours',
-  'Gilet de sécurité',
-  'Triangle de signalisation',
-  'Tapis de sol',
-  'Antenne radio',
 ];
 
 export const PANNES_FREQUENTES = [
@@ -89,7 +80,7 @@ const STATUT_STEPS: { statut: StatutFiche; label: string }[] = [
 @Component({
   selector: 'app-ordres-reparation',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, NgClass, NgStyle, AlertComponent, PaginationComponent, SearchableSelectComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, NgClass, NgStyle, AlertComponent, PaginationComponent, SearchableSelectComponent, MediaUploaderComponent],
   templateUrl: './ordres-reparation.component.html',
 })
 export class OrdresReparationComponent implements OnInit, OnDestroy {
@@ -138,7 +129,6 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
 
   // ─── Constantes Checkboxes ────────────────────────────
   travauxFrequents = TRAVAUX_FREQUENTS;
-  elementsRecusFrequents = ELEMENTS_RECUS_FREQUENTS;
   pannesFrequentes = PANNES_FREQUENTES;
 
   // ─── Checkbox sélections ──────────────────────────────
@@ -146,19 +136,17 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
   autreTravaux = '';
   showAutreTravaux = false;
 
-  selectedReception: string[] = [];
-  autreReception = '';
-  showAutreReception = false;
-
   selectedPannes: string[] = [];
   autrePannes = '';
   showAutrePannes = false;
 
-  // Étape 1 — Réception
+  // Étape 1 — Réception (simple récapitulatif texte, cf. spec point 1) +
+  // Travaux demandés (texte libre, cf. spec point 2)
   step1Form: FormGroup = this.fb.group({
     numero: [''],
     vehiculeId: [null, Validators.required],
     listeReception: [''],
+    travauxDemandes: [''],
     descriptionTravaux: [''],
   });
 
@@ -329,9 +317,19 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
   diagnosticStarted = false;
   diagnosticFinished = false;
 
+  // Au moins un technicien (mécanicien) doit être affecté avant de pouvoir démarrer
+  // le diagnostic (cf. spec point 4). Utilisé pour désactiver le bouton côté template.
+  get canStartDiagnostic(): boolean {
+    return this.selectedMecs.length > 0 && !this.diagnosticStarted && !this.saving;
+  }
+
   startDiagnostic() {
     if (!this.editingId) { this.notifyError('Aucune fiche sélectionnée.'); return; }
     if (this.diagnosticStarted) return;
+    if (this.selectedMecs.length === 0) {
+      this.notifyError('Veuillez affecter au moins un technicien avant de démarrer le diagnostic.');
+      return;
+    }
     // Advance status to EN_DIAGNOSTIC
     this.saving = true;
     this.advanceStatutTo('EN_DIAGNOSTIC', () => {
@@ -472,12 +470,6 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
     else this.selectedTravaux.push(item);
   }
 
-  toggleReception(item: string) {
-    const idx = this.selectedReception.indexOf(item);
-    if (idx >= 0) this.selectedReception.splice(idx, 1);
-    else this.selectedReception.push(item);
-  }
-
   togglePannes(item: string) {
     const idx = this.selectedPannes.indexOf(item);
     if (idx >= 0) this.selectedPannes.splice(idx, 1);
@@ -534,6 +526,7 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
           numero: f.numero,
           vehiculeId: f.vehicule?.id ?? null,
           listeReception: f.listeReception ?? '',
+          travauxDemandes: f.travauxDemandes ?? '',
           descriptionTravaux: f.descriptionTravaux,
         });
 
@@ -542,11 +535,6 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
         this.selectedTravaux = travauxDecomp.selected;
         this.autreTravaux = travauxDecomp.autre;
         this.showAutreTravaux = this.autreTravaux.length > 0;
-
-        const receptionDecomp = this.decomposeToCheckboxes(f.listeReception ?? '', ELEMENTS_RECUS_FREQUENTS);
-        this.selectedReception = receptionDecomp.selected;
-        this.autreReception = receptionDecomp.autre;
-        this.showAutreReception = this.autreReception.length > 0;
 
         const pannesDecomp = this.decomposeToCheckboxes(f.listeDefauts ?? '', PANNES_FREQUENTES);
         this.selectedPannes = pannesDecomp.selected;
@@ -624,11 +612,106 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
 
       this.showWorkflow = true;
 
-      // Load the full fiche to get relations like bonDeSortie
+      // Charger la fiche complète : la liste (source de `f`) est un DTO allégé qui n'inclut pas
+      // listeReception/travauxDemandes/mecaniciens/lignes — on repatch donc le formulaire et l'état
+      // dérivé avec cette version complète une fois reçue (et pas avec `f`), pour ne pas perdre ces
+      // champs à la réouverture d'une fiche existante.
       this.service.getById(f.id).subscribe({
-        next: (full) => { this.loadedFiche = full; },
+        next: (full) => {
+          this.loadedFiche = full;
+          if (!isSame) {
+            this.step1Form.patchValue({
+              numero: full.numero,
+              vehiculeId: full.vehicule?.id ?? null,
+              listeReception: full.listeReception ?? '',
+              travauxDemandes: full.travauxDemandes ?? '',
+              descriptionTravaux: full.descriptionTravaux,
+            });
+
+            // Décomposer les checkboxes depuis les textes existants
+            const travauxDecomp = this.decomposeToCheckboxes(full.descriptionTravaux, TRAVAUX_FREQUENTS);
+            this.selectedTravaux = travauxDecomp.selected;
+            this.autreTravaux = travauxDecomp.autre;
+            this.showAutreTravaux = this.autreTravaux.length > 0;
+
+            const pannesDecomp = this.decomposeToCheckboxes(full.listeDefauts ?? '', PANNES_FREQUENTES);
+            this.selectedPannes = pannesDecomp.selected;
+            this.autrePannes = pannesDecomp.autre;
+            this.showAutrePannes = this.autrePannes.length > 0;
+
+            this.step2Form.patchValue({
+              listeDefauts: full.listeDefauts ?? '',
+            });
+
+            this.dateSortieEstimee = full.dateSortie ? full.dateSortie.substring(0, 10) : '';
+
+            // Reconstituer les lignes pièces depuis la ordre de réparation
+            this.lignesPieces = (full.lignesOrdreReparationPieces || [])
+              .map((lp: any) => {
+                const piece = this.allPieces.find(pp => pp.id === lp.piece?.id);
+                if (!piece) return null;
+                const stockAtelier = piece.stockAtelier ?? 0;
+                const stockMagasin = piece.stockMagasin ?? 0;
+                const manquantAtelier = Math.max(0, lp.quantite - stockAtelier);
+                const aSortirMagasin = Math.min(manquantAtelier, stockMagasin);
+                const manquantGlobal = Math.max(0, manquantAtelier - stockMagasin);
+
+                return {
+                  piece,
+                  quantite: lp.quantite,
+                  stockDisponible: stockAtelier + stockMagasin,
+                  manquant: manquantGlobal,
+                  aSortirMagasin: aSortirMagasin,
+                  stockAtelier: stockAtelier
+                } as LignePiece;
+              })
+              .filter((l: any) => l !== null) as LignePiece[];
+
+            // Reconstituer les lignes MO depuis la ordre de réparation
+            this.lignesMO = (full.lignesOrdreReparationMainDoeuvres || [])
+              .map((lmd: any) => {
+                const mo = this.allMO.find(m => m.id === lmd.mainDoeuvre?.id);
+                if (!mo) return null;
+                return { mo, quantite: lmd.nbreHeure };
+              })
+              .filter((l: any): l is LigneMO => l !== null);
+
+            if (full.vehicule) {
+              const v = this.vehicules.find(vv => vv.id === full.vehicule!.id);
+              if (v) {
+                this.selectedVehicule = v;
+                this.vehiculeSearch = v.immatriculation + ' — ' + v.marque + ' ' + v.modele;
+              }
+            }
+
+            if (trueStep >= 7) {
+              if (full.mecaniciensReparation && full.mecaniciensReparation.length > 0) {
+                this.selectedMecs = full.mecaniciensReparation.map(m => m.id);
+              } else {
+                // Default to diagnostic mechanics if no reparation mechanics yet
+                this.selectedMecs = full.mecaniciens ? full.mecaniciens.map(m => m.id) : [];
+              }
+            } else {
+              this.selectedMecs = full.mecaniciens ? full.mecaniciens.map(m => m.id) : [];
+            }
+
+            // Restore local state for diagnostic
+            if (full.statut === 'EN_DIAGNOSTIC') {
+              this.diagnosticStarted = true;
+              this.diagnosticFinished = false;
+            } else if (trueStep >= 3) {
+              this.diagnosticStarted = true;
+              this.diagnosticFinished = true;
+            } else {
+              this.diagnosticStarted = false;
+              this.diagnosticFinished = false;
+            }
+          }
+        },
         error: () => { }
       });
+
+      this.loadPiecesJointesDiagnostic();
 
       // Try to fetch any existing proforma attached to this ordre de réparation and any facture linked to it
       this.proformaChargee = null;
@@ -682,14 +765,13 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
     this.selectedTravaux = [];
     this.autreTravaux = '';
     this.showAutreTravaux = false;
-    this.selectedReception = [];
-    this.autreReception = '';
-    this.showAutreReception = false;
     this.selectedPannes = [];
     this.autrePannes = '';
     this.showAutrePannes = false;
     this.dateSortieEstimee = '';
     this.proformaChargee = null;
+    this.piecesJointesDiagnostic = [];
+    this.piecesJointesFilterType = '';
   }
 
   closeWorkflow() {
@@ -763,7 +845,6 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
   // ─── Étape 1 ─────────────────────────────────────────
   private saveStep1ThenGoNext() {
     const descriptionTravaux = this.composeFromCheckboxes(this.selectedTravaux, this.autreTravaux);
-    const listeReception = this.composeFromCheckboxes(this.selectedReception, this.autreReception);
 
     if (!descriptionTravaux) {
       this.notifyError('Veuillez sélectionner au moins un travail demandé.');
@@ -771,9 +852,12 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
     }
 
     const raw = this.step1Form.value;
+    const listeReception = (raw.listeReception || '').toString().trim();
+    const travauxDemandes = (raw.travauxDemandes || '').toString().trim();
     const payload = {
       numero: raw.numero,
       descriptionTravaux: descriptionTravaux,
+      travauxDemandes: travauxDemandes || undefined,
       listeReception: listeReception || undefined,
       vehiculeId: Number(raw.vehiculeId),
       statut: 'A_FAIRE' as StatutFiche,
@@ -793,6 +877,7 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
         this.step1Form.patchValue({ numero: f.numero });
         // Avancer au step 2 (mécaniciens) mais rester en A_FAIRE
         this.currentStep = 2;
+        this.loadPiecesJointesDiagnostic();
         this.load();
         if (wasNew) this.notify('Fiche créée. Affectez les mécaniciens.');
       },
@@ -854,11 +939,13 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
 
     const listeDefauts = this.composeFromCheckboxes(this.selectedPannes, this.autrePannes);
     const descriptionTravaux = this.composeFromCheckboxes(this.selectedTravaux, this.autreTravaux);
-    const listeReception = this.composeFromCheckboxes(this.selectedReception, this.autreReception);
+    const listeReception = (this.step1Form.value.listeReception || '').toString().trim();
+    const travauxDemandes = (this.step1Form.value.travauxDemandes || '').toString().trim();
 
     this.service.update(this.editingId!, {
       numero: this.step1Form.value.numero,
       descriptionTravaux: descriptionTravaux || '',
+      travauxDemandes: travauxDemandes || undefined,
       listeReception: listeReception || undefined,
       listeDefauts: listeDefauts || undefined,
       vehiculeId: Number(this.step1Form.value.vehiculeId),
@@ -1284,6 +1371,63 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
   
   getTotalASortir(): number {
     return this.lignesPieces.reduce((acc, l) => acc + (l.aSortirMagasin || 0), 0);
+  }
+
+  // ─── Pièces jointes de diagnostic (photos/PDF, cf. spec point 3) ──────
+  piecesJointesDiagnostic: PieceJointeDiagnostic[] = [];
+  piecesJointesFilterType: '' | TypePieceJointeDiagnostic = '';
+  pieceJointeRemarque = '';
+  pieceJointeUploading = false;
+  pieceJointeError = '';
+
+  get piecesJointesFiltrees(): PieceJointeDiagnostic[] {
+    if (!this.piecesJointesFilterType) return this.piecesJointesDiagnostic;
+    return this.piecesJointesDiagnostic.filter(p => p.type === this.piecesJointesFilterType);
+  }
+
+  onPiecesJointesFilterChange(type: string) {
+    this.piecesJointesFilterType = (type as '' | TypePieceJointeDiagnostic);
+    this.loadPiecesJointesDiagnostic();
+  }
+
+  loadPiecesJointesDiagnostic() {
+    if (!this.editingId) return;
+    const type = this.piecesJointesFilterType || undefined;
+    this.service.getPiecesJointesDiagnostic(this.editingId, type).subscribe({
+      next: (list) => { this.piecesJointesDiagnostic = list; },
+      error: () => { this.piecesJointesDiagnostic = []; },
+    });
+  }
+
+  onPieceJointeUploaded(result: CloudinaryUploadResult) {
+    if (!this.editingId) return;
+    const type: TypePieceJointeDiagnostic = (result.format === 'pdf' || result.resourceType === 'raw') ? 'PDF' : 'PHOTO';
+    this.pieceJointeUploading = true;
+    this.service.addPieceJointeDiagnostic(this.editingId, {
+      url: result.secureUrl,
+      type,
+      remarque: this.pieceJointeRemarque.trim() || null,
+    }).subscribe({
+      next: () => {
+        this.pieceJointeUploading = false;
+        this.pieceJointeRemarque = '';
+        this.notify('Pièce jointe de diagnostic ajoutée.');
+        this.loadPiecesJointesDiagnostic();
+      },
+      error: (err) => {
+        this.pieceJointeUploading = false;
+        this.pieceJointeError = err.error?.message || "Erreur lors de l'enregistrement de la pièce jointe.";
+      },
+    });
+  }
+
+  removePieceJointeDiagnostic(pieceJointeId: number) {
+    if (!this.editingId) return;
+    if (!confirm('Supprimer cette pièce jointe de diagnostic ?')) return;
+    this.service.deletePieceJointeDiagnostic(this.editingId, pieceJointeId).subscribe({
+      next: () => { this.loadPiecesJointesDiagnostic(); },
+      error: () => { this.notifyError('Erreur lors de la suppression de la pièce jointe.'); },
+    });
   }
 
   // ─── Mécaniciens ─────────────────────────────────────

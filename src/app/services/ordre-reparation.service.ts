@@ -2,9 +2,9 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { OrdreReparation, OrdreReparationRequest, StatutFiche } from '../shared/models';
+import { OrdreReparation, OrdreReparationRequest, StatutFiche, PieceJointeDiagnostic, TypePieceJointeDiagnostic } from '../shared/models';
 
-export type { OrdreReparation, OrdreReparationRequest, StatutFiche };
+export type { OrdreReparation, OrdreReparationRequest, StatutFiche, PieceJointeDiagnostic, TypePieceJointeDiagnostic };
 
 @Injectable({ providedIn: 'root' })
 export class OrdreReparationService {
@@ -49,5 +49,29 @@ export class OrdreReparationService {
 
   updateStatut(ficheId: number, statut: StatutFiche): Observable<OrdreReparation> {
     return this.http.patch<OrdreReparation>(`${this.api}/${ficheId}/statut`, null, { params: { statut } });
+  }
+
+  // ─── Pièces jointes de diagnostic ─────────────────────
+  getPiecesJointesDiagnostic(ficheId: number, type?: TypePieceJointeDiagnostic): Observable<PieceJointeDiagnostic[]> {
+    return this.http.get<PieceJointeDiagnostic[]>(`${this.api}/${ficheId}/diagnostic/pieces-jointes`, {
+      params: type ? { type } : {},
+    });
+  }
+
+  addPieceJointeDiagnostic(ficheId: number, data: { url: string; type: TypePieceJointeDiagnostic; remarque?: string | null }): Observable<PieceJointeDiagnostic> {
+    return this.http.post<PieceJointeDiagnostic>(`${this.api}/${ficheId}/diagnostic/pieces-jointes`, data);
+  }
+
+  deletePieceJointeDiagnostic(ficheId: number, pieceJointeId: number): Observable<any> {
+    return this.http.delete(`${this.api}/${ficheId}/diagnostic/pieces-jointes/${pieceJointeId}`, { responseType: 'text' as 'json' });
+  }
+
+  // ─── Lien Fiche Atelier → Ordre de réparation ─────────
+  createFromFicheAtelier(ficheAtelierId: number): Observable<OrdreReparation> {
+    return this.http.post<OrdreReparation>(`${this.api}/depuis-fiche-atelier/${ficheAtelierId}`, {});
+  }
+
+  existsForFicheAtelier(ficheAtelierId: number): Observable<{ exists: boolean }> {
+    return this.http.get<{ exists: boolean }>(`${this.api}/exists-for-fiche-atelier/${ficheAtelierId}`);
   }
 }
