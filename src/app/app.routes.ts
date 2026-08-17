@@ -54,6 +54,11 @@ export const routes: Routes = [
   },
 
   {
+    path: 'espace-technicien',
+    loadChildren: () => import('./espace-technicien/technicien-portal.routes').then(m => m.TECHNICIEN_PORTAL_ROUTES),
+  },
+
+  {
     path: 'gestion',
     component: LayoutComponent,
     canActivate: [staffGuard],
@@ -108,10 +113,10 @@ export const routes: Routes = [
           import('./gestion/ordres-reparation/ordres-reparation.component').then(m => m.OrdresReparationComponent),
       },
       {
-        path: 'mecaniciens',
+        path: 'techniciens',
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER'])],
         loadComponent: () =>
-          import('./gestion/mecaniciens/mecaniciens.component').then(m => m.MecaniciensComponent),
+          import('./gestion/techniciens/techniciens.component').then(m => m.TechniciensComponent),
       },
       {
         path: 'rendezvous',

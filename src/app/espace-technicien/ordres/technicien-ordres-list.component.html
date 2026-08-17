@@ -1,0 +1,39 @@
+<div class="space-y-5">
+
+  <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4">
+    <h1 class="text-xl font-bold text-oas-ink">Mes ordres de réparation</h1>
+    <p class="text-sm text-oas-muted mt-1">Ordres où vous êtes assigné (diagnostic ou réparation)</p>
+  </div>
+
+  @if (errorMessage) {
+    <div class="px-4 py-3 rounded-lg bg-oas-bad-bg text-oas-bad text-sm font-semibold">{{ errorMessage }}</div>
+  }
+
+  <div class="bg-white rounded-lg border border-oas-line shadow-card overflow-hidden">
+    @if (loading) {
+      <div class="flex items-center justify-center py-16">
+        <div class="w-6 h-6 border-2 border-oas-accent border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    } @else if (ordres.length === 0) {
+      <div class="text-center py-16 text-oas-muted text-sm">Aucun ordre de réparation assigné pour le moment.</div>
+    } @else {
+      <div class="divide-y divide-oas-line">
+        @for (o of ordres; track o.id) {
+          <button (click)="open(o.id)"
+                  class="w-full text-left px-5 py-4 hover:bg-oas-bg transition cursor-pointer flex items-center justify-between gap-4">
+            <div class="min-w-0">
+              <p class="font-bold text-oas-ink">{{ o.numero }}</p>
+              <p class="text-sm text-oas-muted truncate">
+                {{ o.vehicule?.marque }} {{ o.vehicule?.modele }} — {{ o.vehicule?.immatriculation }}
+              </p>
+              <p class="text-xs text-oas-faint mt-1">Créé le {{ formatDate(o.dateCreation) }}</p>
+            </div>
+            <span class="flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-bold bg-oas-info-bg text-oas-info">
+              {{ statutLabel(o.statut) }}
+            </span>
+          </button>
+        }
+      </div>
+    }
+  </div>
+</div>

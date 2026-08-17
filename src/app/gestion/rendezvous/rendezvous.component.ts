@@ -2,8 +2,8 @@ import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { RendezVousService } from '../../services/rendezvous.service';
-import { MecanicienService } from '../../services/mecanicien.service';
-import { RendezVous, RendezVousStatus, Mecanicien } from '../../shared/models/index';
+import { TechnicienService } from '../../services/technicien.service';
+import { RendezVous, RendezVousStatus, Technicien } from '../../shared/models/index';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import {
@@ -20,14 +20,14 @@ import {
 })
 export class RendezVousComponent implements OnInit {
   private service = inject(RendezVousService);
-  private mecanicienService = inject(MecanicienService);
+  private technicienService = inject(TechnicienService);
   private fb = inject(FormBuilder);
   private router = inject(Router);
 
   rdvs: RendezVous[] = [];
   filtered: RendezVous[] = [];
-  mecaniciens: Mecanicien[] = [];
-  selectedMecanicienIds = new Set<number>();
+  techniciens: Technicien[] = [];
+  selectedTechnicienIds = new Set<number>();
   editedDate = '';
 
   loading = true;
@@ -61,7 +61,7 @@ export class RendezVousComponent implements OnInit {
 
   ngOnInit() {
     this.load();
-    this.mecanicienService.getAll().subscribe({ next: data => this.mecaniciens = data });
+    this.technicienService.getAll().subscribe({ next: data => this.techniciens = data });
   }
 
   load() {
@@ -109,7 +109,7 @@ export class RendezVousComponent implements OnInit {
 
   openValider(rdv: RendezVous) {
     this.editingRdv = rdv;
-    this.selectedMecanicienIds = new Set();
+    this.selectedTechnicienIds = new Set();
     this.editedDate = this.toDatetimeLocal(rdv.dateRendezVous);
     this.modalErrorMessage = '';
     this.modalSuccessMessage = '';
@@ -141,10 +141,10 @@ export class RendezVousComponent implements OnInit {
     this.modalErrorMessage = '';
 
     const dateChanged = this.editedDate !== this.toDatetimeLocal(this.editingRdv.dateRendezVous);
-    const mecanicienIds = Array.from(this.selectedMecanicienIds);
+    const technicienIds = Array.from(this.selectedTechnicienIds);
 
     const doValider = () => {
-      this.service.valider(this.editingRdv!.id, mecanicienIds).subscribe({
+      this.service.valider(this.editingRdv!.id, technicienIds).subscribe({
         next: () => { this.showValiderModal = false; this.load(); this.notify('Rendez-vous validé. Ordre de réparation créée.'); },
         error: (err) => { this.saving = false; this.modalErrorMessage = err.error || 'Erreur lors de la validation.'; },
       });
@@ -160,11 +160,11 @@ export class RendezVousComponent implements OnInit {
     }
   }
 
-  toggleMecanicien(id: number) {
-    if (this.selectedMecanicienIds.has(id)) {
-      this.selectedMecanicienIds.delete(id);
+  toggleTechnicien(id: number) {
+    if (this.selectedTechnicienIds.has(id)) {
+      this.selectedTechnicienIds.delete(id);
     } else {
-      this.selectedMecanicienIds.add(id);
+      this.selectedTechnicienIds.add(id);
     }
   }
 

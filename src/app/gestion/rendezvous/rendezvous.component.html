@@ -214,20 +214,20 @@
         </div>
         <div>
           <p class="text-sm font-semibold text-oas-ink mb-3">
-            Assigner des mécaniciens <span class="font-normal text-oas-muted">(optionnel)</span>
-            <span class="font-normal text-oas-muted">({{ selectedMecanicienIds.size }} sélectionné(s))</span>
+            Assigner des techniciens <span class="font-normal text-oas-muted">(optionnel)</span>
+            <span class="font-normal text-oas-muted">({{ selectedTechnicienIds.size }} sélectionné(s))</span>
           </p>
-          @if (mecaniciens.length === 0) {
-            <p class="text-sm text-oas-muted text-center py-4">Aucun mécanicien disponible.</p>
+          @if (techniciens.length === 0) {
+            <p class="text-sm text-oas-muted text-center py-4">Aucun technicien disponible.</p>
           } @else {
             <div class="max-h-52 overflow-y-auto space-y-1.5 rounded-lg border border-oas-line p-2">
-              @for (m of mecaniciens; track m.id) {
+              @for (t of techniciens; track t.id) {
                 <label class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-oas-bg cursor-pointer transition">
                   <input type="checkbox"
-                         [checked]="selectedMecanicienIds.has(m.id)"
-                         (change)="toggleMecanicien(m.id)"
+                         [checked]="selectedTechnicienIds.has(t.id)"
+                         (change)="toggleTechnicien(t.id)"
                          class="w-4 h-4 rounded border-oas-line text-oas-accent accent-oas-accent cursor-pointer"/>
-                  <span class="text-sm text-oas-ink">{{ m.nom }}</span>
+                  <span class="text-sm text-oas-ink">{{ t.firstName }} {{ t.lastName }}</span>
                 </label>
               }
             </div>

@@ -30,8 +30,8 @@ export interface OrdreReparation {
     kilometrage?: number | null;
     client?: { id: number; firstName: string; lastName: string; phone?: string } | null;
   } | null;
-  mecaniciens: { id: number; nom: string }[];
-  mecaniciensReparation: { id: number; nom: string }[];
+  techniciens: { id: number; firstName: string; lastName: string; specialite?: string | null }[];
+  techniciensReparation: { id: number; firstName: string; lastName: string; specialite?: string | null }[];
   bonDeSortie?: { id: number; reference: string; statut: string } | null;
   lignesOrdreReparationPieces?: {
     id: number;

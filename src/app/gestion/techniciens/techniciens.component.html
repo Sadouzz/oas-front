@@ -1,0 +1,210 @@
+<div class="space-y-6">
+
+  <!-- Header -->
+  <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4 flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-oas-ink">Techniciens</h1>
+      <p class="text-sm text-oas-muted mt-1">{{ filtered.length }} technicien(s)</p>
+    </div>
+    @if (canCreate) {
+      <button (click)="openNew()"
+              class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-11 rounded-lg flex items-center gap-2 transition cursor-pointer">
+        <svg lucidePlus class="w-4 h-4"></svg>
+        Nouveau technicien
+      </button>
+    }
+  </div>
+
+  <app-alert [success]="successMessage" [error]="errorMessage" />
+
+  <!-- Search -->
+  <div class="bg-white rounded-lg border border-oas-line p-3 shadow-sm">
+    <div class="relative">
+      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-oas-muted">
+        <svg lucideSearch class="w-4 h-4"></svg>
+      </span>
+      <input (input)="onSearch($event)" placeholder="Rechercher par nom, identifiant, email ou matricule..."
+             class="w-full pl-9 pr-4 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="bg-white rounded-lg border border-oas-line shadow-card overflow-hidden">
+    @if (loading) {
+      <div class="flex items-center justify-center py-16">
+        <div class="w-6 h-6 border-2 border-oas-accent border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    } @else if (paged.length === 0) {
+      <div class="text-center py-16 text-oas-muted text-sm">Aucun technicien trouvé.</div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-oas-line">
+              <th class="text-left text-xs text-oas-muted px-5 py-3">Matricule</th>
+              <th class="text-left text-xs text-oas-muted px-5 py-3">Technicien</th>
+              <th class="text-left text-xs text-oas-muted px-5 py-3">Spécialité</th>
+              <th class="text-left text-xs text-oas-muted px-5 py-3">Contact</th>
+              <th class="text-left text-xs text-oas-muted px-5 py-3">Garage</th>
+              <th class="px-5 py-3"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (t of paged; track t.id) {
+              <tr class="hover:bg-oas-bg transition border-b border-oas-line">
+                <td class="px-5 py-4 font-mono text-oas-muted text-xs">{{ t.matricule }}</td>
+                <td class="px-5 py-4">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-full bg-oas-info-bg text-oas-info flex items-center justify-center text-xs font-bold flex-shrink-0">
+                      {{ t.firstName[0] }}{{ t.lastName[0] }}
+                    </div>
+                    <div>
+                      <p class="font-semibold text-oas-ink">{{ t.firstName }} {{ t.lastName }}</p>
+                      <p class="text-xs text-oas-muted">&#64;{{ t.username }}</p>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-5 py-4">
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-oas-info-bg text-oas-info">
+                    {{ specialiteLabel(t.specialite) }}
+                  </span>
+                </td>
+                <td class="px-5 py-4 text-xs text-oas-muted">
+                  <p>{{ t.phone }}</p>
+                  <p>{{ t.email }}</p>
+                </td>
+                <td class="px-5 py-4 text-xs text-oas-muted">{{ t.garage?.nom ?? '—' }}</td>
+                <td class="px-5 py-4">
+                  <div class="flex items-center gap-1 justify-end">
+                    <button (click)="openEdit(t)"
+                            class="p-1.5 rounded-lg hover:bg-oas-info-bg text-oas-muted hover:text-oas-info transition cursor-pointer">
+                      <svg lucidePencil class="w-4 h-4"></svg>
+                    </button>
+                    <button (click)="delete(t)"
+                            class="p-1.5 rounded-lg hover:bg-oas-bad-bg text-oas-muted hover:text-oas-bad transition cursor-pointer">
+                      <svg lucideTrash2 class="w-4 h-4"></svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <app-pagination [page]="page" [totalPages]="totalPages" [total]="filtered.length" [pageSize]="pageSize" (prev)="prevPage()" (next)="nextPage()" />
+    }
+  </div>
+</div>
+
+<!-- Modal -->
+@if (showModal) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+    <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line sticky top-0 bg-white">
+        <h2 class="text-base font-bold text-oas-ink">
+          {{ isNew ? 'Nouveau technicien' : 'Modifier le technicien' }}
+        </h2>
+        <button (click)="closeModal()" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted cursor-pointer">
+          <svg lucideX class="w-5 h-5"></svg>
+        </button>
+      </div>
+      <div class="px-6 py-5">
+        @if (modalErrorMessage) {
+          <div class="mb-4 px-3 py-2 rounded-lg bg-oas-bad-bg text-oas-bad text-xs font-semibold">{{ modalErrorMessage }}</div>
+        }
+        <form [formGroup]="form" (ngSubmit)="save()" class="space-y-4">
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1">Prénom *</label>
+              <input formControlName="firstName"
+                     class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                     [class.border-oas-bad]="form.get('firstName')?.invalid && form.get('firstName')?.touched"/>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1">Nom *</label>
+              <input formControlName="lastName"
+                     class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                     [class.border-oas-bad]="form.get('lastName')?.invalid && form.get('lastName')?.touched"/>
+            </div>
+          </div>
+
+          @if (isNew) {
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-semibold text-oas-ink mb-1">Identifiant *</label>
+                <input formControlName="username"
+                       class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                       [class.border-oas-bad]="form.get('username')?.invalid && form.get('username')?.touched"/>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-oas-ink mb-1">Mot de passe *</label>
+                <input type="password" formControlName="password"
+                       class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                       [class.border-oas-bad]="form.get('password')?.invalid && form.get('password')?.touched"/>
+              </div>
+            </div>
+          }
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1">Email *</label>
+              <input type="email" formControlName="email"
+                     class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                     [class.border-oas-bad]="form.get('email')?.invalid && form.get('email')?.touched"/>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1">Téléphone *</label>
+              <input formControlName="phone"
+                     class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                     [class.border-oas-bad]="form.get('phone')?.invalid && form.get('phone')?.touched"/>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1">Adresse</label>
+            <input formControlName="adresse"
+                   class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1">Spécialité</label>
+              <select formControlName="specialite"
+                      class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
+                <option [ngValue]="null">-- Non renseignée --</option>
+                @for (s of specialites; track s.value) {
+                  <option [ngValue]="s.value">{{ s.label }}</option>
+                }
+              </select>
+            </div>
+            @if (isSuperAgent) {
+              <div>
+                <label class="block text-sm font-semibold text-oas-ink mb-1">Garage</label>
+                <select formControlName="garageId"
+                        class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
+                  <option [ngValue]="null">-- Aucun garage assigné --</option>
+                  @for (g of garages; track g.id) {
+                    <option [ngValue]="g.id">{{ g.nom }}</option>
+                  }
+                </select>
+              </div>
+            }
+          </div>
+
+          <div class="flex justify-end gap-3 pt-2">
+            <button type="button" (click)="closeModal()"
+                    class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-lg border border-oas-line flex items-center transition cursor-pointer text-sm">
+              Annuler
+            </button>
+            <button type="submit" [disabled]="saving"
+                    class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-10 rounded-lg flex items-center transition cursor-pointer disabled:opacity-60 text-sm">
+              {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}

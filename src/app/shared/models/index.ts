@@ -2,7 +2,7 @@ export * from './auth.model';
 export * from './user.model';
 export * from './vehicule.model';
 export * from './fournisseur.model';
-export * from './mecanicien.model';
+export * from './technicien.model';
 export * from './piece-detachee.model';
 export * from './ordre-reparation.model';
 export * from './bon-de-sortie.model';

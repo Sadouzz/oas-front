@@ -265,12 +265,12 @@
     </div>
     }
 
-    @if (selectedFiche.mecaniciens && selectedFiche.mecaniciens.length) {
+    @if (selectedFiche.techniciens && selectedFiche.techniciens.length) {
     <div>
       <p class="text-xs font-bold text-oas-ink mb-2">Techniciens</p>
       <div class="flex flex-wrap gap-1.5">
-        @for (m of selectedFiche.mecaniciens; track m.id) {
-        <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-oas-info-bg text-oas-info">{{ m.nom }}</span>
+        @for (m of selectedFiche.techniciens; track m.id) {
+        <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-oas-info-bg text-oas-info">{{ m.firstName }} {{ m.lastName }}</span>
         }
       </div>
     </div>
@@ -756,25 +756,25 @@
       <div>
         <label class="block text-sm font-semibold text-oas-ink mb-2">Techniciens affectés au diagnostic</label>
         <div class="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
-          @for (mec of allMecaniciens; track mec.id) {
-          <button type="button" (click)="toggleMecStepper(mec)" [disabled]="mecToggling !== null"
+          @for (technicien of allTechniciens; track technicien.id) {
+          <button type="button" (click)="toggleTechnicienStepper(technicien)" [disabled]="technicienToggling !== null"
             class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs transition cursor-pointer text-left disabled:opacity-60"
-            [ngClass]="isMecSelected(mec.id) ? 'bg-oas-ok-bg text-oas-ok font-semibold' : 'bg-oas-bg text-oas-ink2 hover:bg-oas-line'">
+            [ngClass]="isTechnicienSelected(technicien.id) ? 'bg-oas-ok-bg text-oas-ok font-semibold' : 'bg-oas-bg text-oas-ink2 hover:bg-oas-line'">
             <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
-              [ngClass]="isMecSelected(mec.id) ? 'bg-oas-ok text-white' : 'bg-oas-line text-oas-muted'">
-              @if (mecToggling === mec.id) { ⟳ } @else if (isMecSelected(mec.id)) { ✓ } @else { + }
+              [ngClass]="isTechnicienSelected(technicien.id) ? 'bg-oas-ok text-white' : 'bg-oas-line text-oas-muted'">
+              @if (technicienToggling === technicien.id) { ⟳ } @else if (isTechnicienSelected(technicien.id)) { ✓ } @else { + }
             </span>
-            <span class="truncate">{{ mec.nom }}</span>
+            <span class="truncate">{{ technicien.firstName }} {{ technicien.lastName }}</span>
           </button>
           }
         </div>
-        @if (selectedMecs.length === 0) {
+        @if (selectedTechniciens.length === 0) {
         <p class="text-xs text-oas-bad font-semibold mt-2">Affectez au moins un technicien pour pouvoir démarrer le diagnostic.</p>
         }
       </div>
       <div class="flex gap-2">
         <button type="button" (click)="startDiagnostic()" [disabled]="!canStartDiagnostic"
-          [title]="selectedMecs.length === 0 ? 'Affectez au moins un technicien avant de démarrer le diagnostic' : ''"
+          [title]="selectedTechniciens.length === 0 ? 'Affectez au moins un technicien avant de démarrer le diagnostic' : ''"
           class="px-3 py-2 rounded-lg bg-oas-accent text-white text-xs font-bold hover:bg-oas-accent-dark transition cursor-pointer disabled:opacity-60">
           {{ diagnosticStarted ? 'Diagnostic commencé' : 'Commencer le diagnostic' }}
         </button>
@@ -1268,21 +1268,21 @@
       <div>
         <p class="text-sm font-bold text-oas-ink mb-2">Techniciens assignés à la réparation *</p>
         <div class="grid grid-cols-3 gap-2">
-          @for (mec of allMecaniciens; track mec.id) {
-          <button type="button" (click)="toggleMecStepper(mec)" [disabled]="mecToggling !== null"
+          @for (technicien of allTechniciens; track technicien.id) {
+          <button type="button" (click)="toggleTechnicienStepper(technicien)" [disabled]="technicienToggling !== null"
             class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs transition cursor-pointer text-left disabled:opacity-60"
-            [ngClass]="isMecSelected(mec.id) ? 'bg-blue-50 text-blue-600 font-semibold' : 'bg-oas-bg text-oas-ink2 hover:bg-oas-line'">
+            [ngClass]="isTechnicienSelected(technicien.id) ? 'bg-blue-50 text-blue-600 font-semibold' : 'bg-oas-bg text-oas-ink2 hover:bg-oas-line'">
             <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
-              [ngClass]="isMecSelected(mec.id) ? 'bg-blue-500 text-white' : 'bg-oas-line text-oas-muted'">
-              @if (mecToggling === mec.id) { ⦿ } @else if (isMecSelected(mec.id)) { ✓ } @else { + }
+              [ngClass]="isTechnicienSelected(technicien.id) ? 'bg-blue-500 text-white' : 'bg-oas-line text-oas-muted'">
+              @if (technicienToggling === technicien.id) { ⦿ } @else if (isTechnicienSelected(technicien.id)) { ✓ } @else { + }
             </span>
-            <span class="truncate">{{ mec.nom }}</span>
+            <span class="truncate">{{ technicien.firstName }} {{ technicien.lastName }}</span>
           </button>
           }
         </div>
       </div>
 
-      <button (click)="checkAndStartReparation()" [disabled]="saving || selectedMecs.length === 0 || !dateSortieEstimee"
+      <button (click)="checkAndStartReparation()" [disabled]="saving || selectedTechniciens.length === 0 || !dateSortieEstimee"
         class="w-full py-3 rounded-xl font-bold text-sm text-white shadow-lg transition cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 shadow-blue-500/30">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round"

@@ -1,0 +1,154 @@
+<div class="space-y-5 max-w-3xl mx-auto">
+
+  <a routerLink="/espace-technicien/ordres-reparation"
+     class="inline-flex items-center gap-1.5 text-sm text-oas-muted hover:text-oas-ink transition">
+    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+    </svg>
+    Retour à mes ordres
+  </a>
+
+  @if (successMessage) {
+    <div class="px-4 py-3 rounded-lg bg-oas-ok-bg text-oas-ok text-sm font-semibold">{{ successMessage }}</div>
+  }
+  @if (errorMessage) {
+    <div class="px-4 py-3 rounded-lg bg-oas-bad-bg text-oas-bad text-sm font-semibold">{{ errorMessage }}</div>
+  }
+
+  @if (loading) {
+    <div class="flex items-center justify-center py-16">
+      <div class="w-6 h-6 border-2 border-oas-accent border-t-transparent rounded-full animate-spin"></div>
+    </div>
+  } @else if (forbidden) {
+    <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-8 text-center">
+      <p class="text-oas-bad font-semibold">Vous n'êtes pas assigné à cet ordre de réparation.</p>
+    </div>
+  } @else if (ordre) {
+
+    <!-- En-tête -->
+    <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h1 class="text-xl font-bold text-oas-ink">{{ ordre.numero }}</h1>
+          <p class="text-sm text-oas-muted mt-1">
+            {{ ordre.vehicule?.marque }} {{ ordre.vehicule?.modele }} — {{ ordre.vehicule?.immatriculation }}
+          </p>
+          @if (ordre.vehicule?.client) {
+            <p class="text-xs text-oas-faint mt-0.5">{{ ordre.vehicule?.client?.firstName }} {{ ordre.vehicule?.client?.lastName }}</p>
+          }
+        </div>
+        <span class="flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-bold bg-oas-info-bg text-oas-info">{{ ordre.statut }}</span>
+      </div>
+      @if (ordre.travauxDemandes) {
+        <div class="mt-3 pt-3 border-t border-oas-line">
+          <p class="text-xs font-bold text-oas-ink mb-1">Travaux demandés</p>
+          <p class="text-sm text-oas-ink2">{{ ordre.travauxDemandes }}</p>
+        </div>
+      }
+    </div>
+
+    <!-- Pannes détectées -->
+    <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4">
+      <label class="block text-sm font-semibold text-oas-ink mb-2">Pannes détectées</label>
+      <textarea [(ngModel)]="listeDefauts" rows="4"
+                placeholder="Décrivez les pannes détectées lors du diagnostic..."
+                class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"></textarea>
+      <button (click)="savePannes()" [disabled]="savingPannes"
+              class="mt-2 px-4 h-10 rounded-lg bg-oas-accent hover:bg-oas-accent-dark text-white text-sm font-bold transition cursor-pointer disabled:opacity-60">
+        {{ savingPannes ? 'Enregistrement...' : 'Enregistrer les pannes' }}
+      </button>
+    </div>
+
+    <!-- Diagnostic : pièces jointes -->
+    <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4">
+      <label class="block text-sm font-semibold text-oas-ink mb-2">Pièces jointes de diagnostic (photo / PDF)</label>
+      <input [(ngModel)]="pieceJointeRemarque" placeholder="Remarque (optionnel)"
+             class="w-full mb-2 px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+      <app-media-uploader folder="oas/ordres-reparation/diagnostic" accept="image/*,application/pdf"
+        label="Cliquez ou glissez une photo/PDF de diagnostic"
+        (uploaded)="onPieceJointeUploaded($event)"></app-media-uploader>
+
+      @if (piecesJointesDiagnostic.length > 0) {
+        <div class="grid grid-cols-3 gap-2 mt-3">
+          @for (pj of piecesJointesDiagnostic; track pj.id) {
+            <div class="relative group">
+              <button type="button" (click)="removePieceJointeDiagnostic(pj.id)"
+                      class="absolute top-1 right-1 z-10 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer">
+                ✕
+              </button>
+              @if (pj.type === 'PHOTO') {
+                <img [src]="pj.url" class="w-full h-20 object-cover rounded-lg" alt="Pièce jointe diagnostic" />
+              } @else {
+                <a [href]="pj.url" target="_blank" class="flex items-center justify-center h-20 rounded-lg bg-oas-bg text-xs text-oas-muted font-semibold">PDF</a>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Pièces proposées (sans prix) -->
+    <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4">
+      <label class="block text-sm font-semibold text-oas-ink mb-2">Proposer une pièce</label>
+      <p class="text-xs text-oas-muted mb-3">Le prix sera défini ensuite par le chef d'atelier.</p>
+      <div class="flex gap-2">
+        <select [(ngModel)]="selectedPieceId"
+                class="flex-1 px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
+          <option [ngValue]="null">-- Choisir une pièce --</option>
+          @for (p of allPieces; track p.id) {
+            <option [ngValue]="p.id">{{ p.reference }} ({{ p.categorie }})</option>
+          }
+        </select>
+        <input type="number" [(ngModel)]="pieceQuantite" min="1"
+               class="w-24 px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+        <button (click)="proposerPiece()" [disabled]="!selectedPieceId || savingPiece"
+                class="px-4 h-[42px] rounded-lg bg-oas-accent hover:bg-oas-accent-dark text-white text-sm font-bold transition cursor-pointer disabled:opacity-60">
+          Ajouter
+        </button>
+      </div>
+
+      @if (ordre.lignesOrdreReparationPieces && ordre.lignesOrdreReparationPieces.length > 0) {
+        <ul class="mt-3 space-y-1">
+          @for (lp of ordre.lignesOrdreReparationPieces; track lp.id) {
+            <li class="text-sm text-oas-ink2 flex justify-between px-3 py-2 rounded-lg bg-oas-bg">
+              <span>{{ lp.piece.reference }}</span>
+              <span class="text-oas-muted">x{{ lp.quantite }}</span>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+
+    <!-- Main d'œuvre proposée (sans prix) -->
+    <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4">
+      <label class="block text-sm font-semibold text-oas-ink mb-2">Proposer une main d'œuvre</label>
+      <p class="text-xs text-oas-muted mb-3">Le prix sera défini ensuite par le chef d'atelier.</p>
+      <div class="flex gap-2">
+        <select [(ngModel)]="selectedMainDoeuvreId"
+                class="flex-1 px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
+          <option [ngValue]="null">-- Choisir une main d'œuvre --</option>
+          @for (m of allMO; track m.id) {
+            <option [ngValue]="m.id">{{ m.description || m.categorie.nom }}</option>
+          }
+        </select>
+        <input type="number" [(ngModel)]="moNbreHeure" min="1"
+               class="w-24 px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+        <button (click)="proposerMainDoeuvre()" [disabled]="!selectedMainDoeuvreId || savingMainDoeuvre"
+                class="px-4 h-[42px] rounded-lg bg-oas-accent hover:bg-oas-accent-dark text-white text-sm font-bold transition cursor-pointer disabled:opacity-60">
+          Ajouter
+        </button>
+      </div>
+
+      @if (ordre.lignesOrdreReparationMainDoeuvres && ordre.lignesOrdreReparationMainDoeuvres.length > 0) {
+        <ul class="mt-3 space-y-1">
+          @for (lmd of ordre.lignesOrdreReparationMainDoeuvres; track lmd.id) {
+            <li class="text-sm text-oas-ink2 flex justify-between px-3 py-2 rounded-lg bg-oas-bg">
+              <span>{{ lmd.mainDoeuvre.categorie?.nom }}</span>
+              <span class="text-oas-muted">{{ lmd.nbreHeure }}h</span>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  }
+</div>

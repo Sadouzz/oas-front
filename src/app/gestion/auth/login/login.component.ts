@@ -53,7 +53,12 @@ export class LoginComponent {
     this.errorMessage = '';
 
     this.authService.login(this.form.value).subscribe({
-      next: () => this.router.navigate(['/gestion/dashboard'], { replaceUrl: true }),
+      next: () => {
+        // Un compte technicien est redirigé vers son propre espace, pas le dashboard staff
+        // (bloqué par staffGuard pour ce rôle).
+        const target = this.authService.getRole() === 'ROLE_TECHNICIEN' ? '/espace-technicien' : '/gestion/dashboard';
+        this.router.navigate([target], { replaceUrl: true });
+      },
         error: (err: any) => {
         this.loading = false;
         this.errorMessage = err.error?.message || "Nom d'utilisateur ou mot de passe incorrect.";

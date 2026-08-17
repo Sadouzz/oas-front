@@ -6,7 +6,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { OrdreReparationService, OrdreReparation, StatutFiche } from '../../services/ordre-reparation.service';
 import { VehiculeService, VehiculeModel } from '../../services/vehicule.service';
-import { MecanicienService, Mecanicien } from '../../services/mecanicien.service';
+import { TechnicienService, Technicien } from '../../services/technicien.service';
 import { PieceDetacheeService, PieceDetache } from '../../services/piece-detachee.service';
 import { MainDoeuvreService, MainDoeuvreModel } from '../../services/main-doeuvre.service';
 import { BonDeSortieService } from '../../services/bon-de-sortie.service';
@@ -70,7 +70,7 @@ const STATUT_STEPS: { statut: StatutFiche; label: string }[] = [
   { statut: 'PROFORMA_VALIDE', label: 'Proforma' },
   { statut: 'EN_ATTENTE_COMMANDE', label: 'Approv.' },
   { statut: 'EN_ATTENTE_SORTIE', label: 'Attente BS' },
-  { statut: 'EN_ATTENTE_MECANICIEN', label: 'Assign. Méc.' },
+  { statut: 'EN_ATTENTE_MECANICIEN', label: 'Assign. Tech.' },
   { statut: 'EN_COURS', label: 'Réparation' },
   { statut: 'EN_ATTENTE_PAIEMENT', label: 'Paiement' },
   { statut: 'TERMINE', label: 'Prêt' },
@@ -86,7 +86,7 @@ const STATUT_STEPS: { statut: StatutFiche; label: string }[] = [
 export class OrdresReparationComponent implements OnInit, OnDestroy {
   private service = inject(OrdreReparationService);
   private vehiculeService = inject(VehiculeService);
-  private mecService = inject(MecanicienService);
+  private technicienService = inject(TechnicienService);
   private pieceService = inject(PieceDetacheeService);
   private moService = inject(MainDoeuvreService);
   private bdcService = inject(BonDeCommandeService);
@@ -111,7 +111,7 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
   // ─── Référentiels ─────────────────────────────────────
   vehicules: VehiculeModel[] = [];
   allClients: UserModel[] = [];
-  allMecaniciens: Mecanicien[] = [];
+  allTechniciens: Technicien[] = [];
   allPieces: PieceDetache[] = [];
   allMO: MainDoeuvreModel[] = [];
   fournisseurs: FournisseurModel[] = [];
@@ -242,8 +242,8 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
   // ─── Étape 3 — Pièces, MO & Mécaniciens ───────────────
   lignesPieces: LignePiece[] = [];
   lignesMO: LigneMO[] = [];
-  selectedMecs: number[] = [];
-  mecToggling: number | null = null;
+  selectedTechniciens: number[] = [];
+  technicienToggling: number | null = null;
   pieceAjouter: number | null = null;
   qteAjouter = 1;
   moAjouter: number | null = null;
@@ -320,13 +320,13 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
   // Au moins un technicien (mécanicien) doit être affecté avant de pouvoir démarrer
   // le diagnostic (cf. spec point 4). Utilisé pour désactiver le bouton côté template.
   get canStartDiagnostic(): boolean {
-    return this.selectedMecs.length > 0 && !this.diagnosticStarted && !this.saving;
+    return this.selectedTechniciens.length > 0 && !this.diagnosticStarted && !this.saving;
   }
 
   startDiagnostic() {
     if (!this.editingId) { this.notifyError('Aucune fiche sélectionnée.'); return; }
     if (this.diagnosticStarted) return;
-    if (this.selectedMecs.length === 0) {
+    if (this.selectedTechniciens.length === 0) {
       this.notifyError('Veuillez affecter au moins un technicien avant de démarrer le diagnostic.');
       return;
     }
@@ -376,15 +376,15 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
     this.loading = true;
     forkJoin({
       vehicules: this.vehiculeService.getAll(),
-      mecaniciens: this.mecService.getAll(),
+      techniciens: this.technicienService.getAll(),
       pieces: this.pieceService.getAll(),
       mo: this.moService.getAll(),
       fournisseurs: this.fournisseurSvc.getAll(),
       clients: this.clientService.getAll(),
     }).subscribe({
-      next: ({ vehicules, mecaniciens, pieces, mo, fournisseurs, clients }) => {
+      next: ({ vehicules, techniciens, pieces, mo, fournisseurs, clients }) => {
         this.vehicules = vehicules;
-        this.allMecaniciens = mecaniciens;
+        this.allTechniciens = techniciens;
         this.allPieces = pieces.filter(p => p.statut === 'ACTIF');
         this.allMO = mo.filter(m => !m.isArchived);
         this.fournisseurs = fournisseurs.filter(f => !f.archived);
@@ -587,14 +587,14 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
         }
         
         if (trueStep >= 7) {
-          if (f.mecaniciensReparation && f.mecaniciensReparation.length > 0) {
-            this.selectedMecs = f.mecaniciensReparation.map(m => m.id);
+          if (f.techniciensReparation && f.techniciensReparation.length > 0) {
+            this.selectedTechniciens = f.techniciensReparation.map(m => m.id);
           } else {
             // Default to diagnostic mechanics if no reparation mechanics yet
-            this.selectedMecs = f.mecaniciens ? f.mecaniciens.map(m => m.id) : [];
+            this.selectedTechniciens = f.techniciens ? f.techniciens.map(m => m.id) : [];
           }
         } else {
-          this.selectedMecs = f.mecaniciens ? f.mecaniciens.map(m => m.id) : [];
+          this.selectedTechniciens = f.techniciens ? f.techniciens.map(m => m.id) : [];
         }
 
         // Restore local state for diagnostic
@@ -685,14 +685,14 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
             }
 
             if (trueStep >= 7) {
-              if (full.mecaniciensReparation && full.mecaniciensReparation.length > 0) {
-                this.selectedMecs = full.mecaniciensReparation.map(m => m.id);
+              if (full.techniciensReparation && full.techniciensReparation.length > 0) {
+                this.selectedTechniciens = full.techniciensReparation.map(m => m.id);
               } else {
                 // Default to diagnostic mechanics if no reparation mechanics yet
-                this.selectedMecs = full.mecaniciens ? full.mecaniciens.map(m => m.id) : [];
+                this.selectedTechniciens = full.techniciens ? full.techniciens.map(m => m.id) : [];
               }
             } else {
-              this.selectedMecs = full.mecaniciens ? full.mecaniciens.map(m => m.id) : [];
+              this.selectedTechniciens = full.techniciens ? full.techniciens.map(m => m.id) : [];
             }
 
             // Restore local state for diagnostic
@@ -752,7 +752,7 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
     this.step2Form.reset();
     this.lignesPieces = [];
     this.lignesMO = [];
-    this.selectedMecs = [];
+    this.selectedTechniciens = [];
     this.selectedVehicule = null;
     this.vehiculeSearch = '';
     this.showVehiculeDropdown = false;
@@ -905,7 +905,7 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
   };
 
   private saveStep2ThenGoNext() {
-    if (this.selectedMecs.length === 0) {
+    if (this.selectedTechniciens.length === 0) {
       this.notifyError('Veuillez affecter au moins un mécanicien pour le diagnostic.');
       return;
     }
@@ -1073,7 +1073,7 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
   }
 
   checkAndStartReparation() {
-    if (this.selectedMecs.length === 0) {
+    if (this.selectedTechniciens.length === 0) {
       this.notifyError('Veuillez affecter au moins un mécanicien.');
       return;
     }
@@ -1430,32 +1430,32 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ─── Mécaniciens ─────────────────────────────────────
-  isMecSelected(id: number): boolean { return this.selectedMecs.includes(id); }
+  // ─── Techniciens ─────────────────────────────────────
+  isTechnicienSelected(id: number): boolean { return this.selectedTechniciens.includes(id); }
 
-  toggleMecStepper(mec: Mecanicien) {
-    if (!this.editingId || this.mecToggling !== null) return;
-    this.mecToggling = mec.id;
-    const assigned = this.isMecSelected(mec.id);
+  toggleTechnicienStepper(technicien: Technicien) {
+    if (!this.editingId || this.technicienToggling !== null) return;
+    this.technicienToggling = technicien.id;
+    const assigned = this.isTechnicienSelected(technicien.id);
     
     let req$;
     if (this.currentStep === 7) {
       req$ = assigned
-        ? this.service.removeMecanicienReparation(this.editingId, mec.id)
-        : this.service.assignMecanicienReparation(this.editingId, mec.id);
+        ? this.service.removeTechnicienReparation(this.editingId, technicien.id)
+        : this.service.assignTechnicienReparation(this.editingId, technicien.id);
     } else {
       req$ = assigned
-        ? this.service.removeMecanicien(this.editingId, mec.id)
-        : this.service.assignMecanicien(this.editingId, mec.id);
+        ? this.service.removeTechnicien(this.editingId, technicien.id)
+        : this.service.assignTechnicien(this.editingId, technicien.id);
     }
 
     req$.subscribe({
       next: () => {
-        if (assigned) this.selectedMecs = this.selectedMecs.filter(id => id !== mec.id);
-        else this.selectedMecs = [...this.selectedMecs, mec.id];
-        this.mecToggling = null;
+        if (assigned) this.selectedTechniciens = this.selectedTechniciens.filter(id => id !== technicien.id);
+        else this.selectedTechniciens = [...this.selectedTechniciens, technicien.id];
+        this.technicienToggling = null;
       },
-      error: () => { this.mecToggling = null; },
+      error: () => { this.technicienToggling = null; },
     });
   }
 

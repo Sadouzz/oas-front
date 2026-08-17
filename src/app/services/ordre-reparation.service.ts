@@ -31,20 +31,20 @@ export class OrdreReparationService {
     return this.http.delete<string>(`${this.api}/${id}`);
   }
 
-  assignMecanicien(ficheId: number, mecId: number): Observable<any> {
-    return this.http.post(`${this.api}/${ficheId}/mecaniciens/${mecId}`, {}, { responseType: 'text' as 'json' });
+  assignTechnicien(ficheId: number, technicienId: number): Observable<any> {
+    return this.http.post(`${this.api}/${ficheId}/techniciens/${technicienId}`, {}, { responseType: 'text' as 'json' });
   }
 
-  removeMecanicien(ficheId: number, mecId: number): Observable<any> {
-    return this.http.delete(`${this.api}/${ficheId}/mecaniciens/${mecId}`, { responseType: 'text' as 'json' });
+  removeTechnicien(ficheId: number, technicienId: number): Observable<any> {
+    return this.http.delete(`${this.api}/${ficheId}/techniciens/${technicienId}`, { responseType: 'text' as 'json' });
   }
 
-  assignMecanicienReparation(ficheId: number, mecId: number): Observable<any> {
-    return this.http.post(`${this.api}/${ficheId}/mecaniciens-reparation/${mecId}`, {}, { responseType: 'text' as 'json' });
+  assignTechnicienReparation(ficheId: number, technicienId: number): Observable<any> {
+    return this.http.post(`${this.api}/${ficheId}/techniciens-reparation/${technicienId}`, {}, { responseType: 'text' as 'json' });
   }
 
-  removeMecanicienReparation(ficheId: number, mecId: number): Observable<any> {
-    return this.http.delete(`${this.api}/${ficheId}/mecaniciens-reparation/${mecId}`, { responseType: 'text' as 'json' });
+  removeTechnicienReparation(ficheId: number, technicienId: number): Observable<any> {
+    return this.http.delete(`${this.api}/${ficheId}/techniciens-reparation/${technicienId}`, { responseType: 'text' as 'json' });
   }
 
   updateStatut(ficheId: number, statut: StatutFiche): Observable<OrdreReparation> {
