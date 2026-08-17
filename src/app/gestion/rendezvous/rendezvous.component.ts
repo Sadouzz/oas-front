@@ -48,10 +48,10 @@ export class RendezVousComponent implements OnInit {
 
   readonly statutOptions: { value: RendezVousStatus; label: string }[] = [
     { value: 'EN_ATTENTE', label: 'En attente' },
-    { value: 'CONFIRME',   label: 'Confirmé'  },
-    { value: 'REFUSE',     label: 'Refusé'    },
-    { value: 'ANNULE',     label: 'Annulé'    },
-    { value: 'TERMINE',    label: 'Terminé'   },
+    { value: 'CONFIRME',   label: 'En cours (Confirmé)' },
+    { value: 'TERMINE',    label: 'Fiche atelier créée' },
+    { value: 'REFUSE',     label: 'Refusé' },
+    { value: 'ANNULE',     label: 'Annulé' },
   ];
 
   statutForm: FormGroup = this.fb.group({
@@ -189,11 +189,11 @@ export class RendezVousComponent implements OnInit {
 
   statutClass(s: RendezVousStatus): string {
     const map: Record<RendezVousStatus, string> = {
-      EN_ATTENTE: 'bg-amber-100 text-amber-700',
-      CONFIRME:   'bg-green-100 text-green-700',
-      REFUSE:     'bg-red-100 text-red-700',
+      EN_ATTENTE: 'bg-red-100 text-red-700',
+      CONFIRME:   'bg-orange-100 text-orange-700',
+      TERMINE:    'bg-green-100 text-green-700',
+      REFUSE:     'bg-gray-200 text-gray-800',
       ANNULE:     'bg-gray-100 text-gray-500',
-      TERMINE:    'bg-blue-100 text-blue-700',
     };
     return map[s] ?? '';
   }

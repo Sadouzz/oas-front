@@ -113,6 +113,22 @@ export class FichesAtelier implements OnInit {
     return this.form.get('lignesReception') as FormArray;
   }
 
+  niveauxEssence = ['Vide', '1/4', '1/2', '3/4', 'Plein'];
+
+  get niveauEssenceIndex(): number {
+    const val = this.form.get('niveauEssence')?.value;
+    const index = this.niveauxEssence.indexOf(val);
+    return index !== -1 ? index : 0;
+  }
+
+  setNiveauEssenceIndex(event: Event) {
+    const target = event.target as HTMLInputElement;
+    const index = parseInt(target.value, 10);
+    if (!isNaN(index) && index >= 0 && index < this.niveauxEssence.length) {
+      this.form.get('niveauEssence')?.setValue(this.niveauxEssence[index]);
+    }
+  }
+
   get lignesDefauts() {
     return this.form.get('lignesDefauts') as FormArray;
   }
