@@ -39,10 +39,12 @@
         </div>
         <span class="flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-bold bg-oas-info-bg text-oas-info">{{ ordre.statut }}</span>
       </div>
-      @if (ordre.travauxDemandes) {
+      @if (ordre.lignesTravaux && ordre.lignesTravaux.length) {
         <div class="mt-3 pt-3 border-t border-oas-line">
           <p class="text-xs font-bold text-oas-ink mb-1">Travaux demandés</p>
-          <p class="text-sm text-oas-ink2">{{ ordre.travauxDemandes }}</p>
+          @for (l of ordre.lignesTravaux; track $index) {
+            <p class="text-sm text-oas-ink2">{{ l.nom }}</p>
+          }
         </div>
       }
     </div>

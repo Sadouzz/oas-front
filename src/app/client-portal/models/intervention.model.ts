@@ -2,7 +2,7 @@ export interface Intervention {
   id: number;
   numero: string;
   descriptionTravaux: string;
-  listeReception: string;
+  lignesReception: { nom: string; etat: boolean | null; verrouille: boolean }[];
   listeDefauts: string;
   dateCreation: string;
   updatedAt: string;

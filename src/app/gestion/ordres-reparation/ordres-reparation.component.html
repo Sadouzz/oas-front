@@ -283,11 +283,13 @@
       </div>
     </div>
 
-    @if (selectedFiche.travauxDemandes) {
+    @if (selectedFiche.lignesTravaux && selectedFiche.lignesTravaux.length) {
     <div>
-      <p class="text-xs font-bold text-oas-ink mb-1.5">Travaux demandés (description libre)</p>
-      <div class="bg-oas-bg rounded-xl p-3">
-        <p class="text-sm text-oas-ink leading-relaxed">{{ selectedFiche.travauxDemandes }}</p>
+      <p class="text-xs font-bold text-oas-ink mb-1.5">Travaux demandés (désignations)</p>
+      <div class="bg-oas-bg rounded-xl p-3 space-y-1">
+        @for (l of selectedFiche.lignesTravaux; track $index) {
+          <p class="text-sm text-oas-ink">{{ l.nom }}</p>
+        }
       </div>
     </div>
     }
@@ -301,11 +303,18 @@
     </div>
     }
 
-    @if (selectedFiche.listeReception) {
+    @if (selectedFiche.lignesReception && selectedFiche.lignesReception.length) {
     <div>
-      <p class="text-xs font-bold text-oas-ink mb-1.5">Liste de réception</p>
-      <div class="bg-oas-ok-bg rounded-xl p-3 border border-oas-ok/20">
-        <p class="text-sm text-oas-ink leading-relaxed">{{ selectedFiche.listeReception }}</p>
+      <p class="text-xs font-bold text-oas-ink mb-1.5">Réception</p>
+      <div class="bg-oas-ok-bg rounded-xl p-3 border border-oas-ok/20 space-y-1.5">
+        @for (l of selectedFiche.lignesReception; track $index) {
+          <p class="text-sm text-oas-ink flex items-center justify-between gap-2">
+            <span>{{ l.nom }}</span>
+            <span class="text-xs font-semibold" [class.text-oas-ok]="l.etat === true" [class.text-oas-bad]="l.etat === false" [class.text-oas-muted]="l.etat === null">
+              {{ l.etat === true ? 'OK' : (l.etat === false ? 'Non' : '—') }}
+            </span>
+          </p>
+        }
       </div>
     </div>
     }
@@ -716,20 +725,95 @@
         </div>
       </div>
 
-      <!-- Travaux demandés (texte libre — section distincte, cf. spec point 2) -->
+      <!-- Travaux demandés : désignation de la fiche atelier verrouillée + ajout libre d'autres
+           désignations (même pattern que Réception). -->
       <div>
-        <label class="block text-sm font-semibold text-oas-ink mb-2">Travaux demandés (description libre)</label>
-        <textarea formControlName="travauxDemandes" rows="3"
-          placeholder="Décrivez librement les travaux demandés (comme sur la fiche atelier)..."
-          class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition resize-none"></textarea>
+        <label class="block text-sm font-semibold text-oas-ink mb-2">Travaux demandés (désignations)</label>
+        <div class="space-y-3" formArrayName="lignesTravaux">
+          @for (ctrl of lignesTravaux.controls; track $index) {
+            <div [formGroupName]="$index" class="flex items-center gap-4 bg-oas-bg/50 p-2 rounded-lg border border-oas-line/50">
+              <div class="flex-1">
+                @if (ctrl.get('verrouille')?.value) {
+                  <p class="text-sm font-medium text-oas-ink flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5 text-oas-muted flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    {{ ctrl.get('nom')?.value }}
+                  </p>
+                } @else {
+                  <input type="text" formControlName="nom" class="w-full bg-transparent border-none text-sm outline-none font-medium text-oas-ink" placeholder="Désignation du travail">
+                }
+              </div>
+              @if (!ctrl.get('verrouille')?.value) {
+                <button type="button" (click)="removeLigneTravail($index)" class="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition cursor-pointer">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                </button>
+              }
+            </div>
+          }
+          @if (!lignesTravaux.controls.length) {
+            <p class="text-sm text-oas-muted italic">Aucune désignation pour l'instant.</p>
+          }
+        </div>
+        <button type="button" (click)="addLigneTravail()" class="mt-3 flex items-center gap-2 text-sm text-oas-accent font-semibold hover:bg-oas-accent/10 px-3 py-1.5 rounded-lg transition cursor-pointer">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+          Ajouter une ligne
+        </button>
       </div>
 
-      <!-- Réception : simple récapitulatif — désignation libre (cf. spec point 1) -->
+      <!-- Réception : synthèse des lignes de la fiche atelier d'origine (désignations verrouillées,
+           non modifiables/supprimables), avec possibilité d'ajouter d'autres désignations de
+           travaux via le bouton "Ajouter une ligne" (cf. spec point 1). -->
       <div>
-        <label class="block text-sm font-semibold text-oas-ink mb-2">Réception — désignation</label>
-        <input formControlName="listeReception"
-          placeholder="Ex : véhicule reçu avec clé, carte grise et roue de secours..."
-          class="w-full px-3 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition" />
+        <label class="block text-sm font-semibold text-oas-ink mb-2">Réception</label>
+        <div class="space-y-3" formArrayName="lignesReception">
+          @for (ctrl of lignesReception.controls; track $index) {
+            <div [formGroupName]="$index" class="flex items-center gap-4 bg-oas-bg/50 p-2 rounded-lg border border-oas-line/50">
+              <div class="flex-1">
+                @if (ctrl.get('verrouille')?.value) {
+                  <p class="text-sm font-medium text-oas-ink flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5 text-oas-muted flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    {{ ctrl.get('nom')?.value }}
+                  </p>
+                } @else {
+                  <input type="text" formControlName="nom" class="w-full bg-transparent border-none text-sm outline-none font-medium text-oas-ink" placeholder="Désignation">
+                }
+              </div>
+              <div class="flex items-center gap-3">
+                <label class="flex items-center gap-1.5 text-sm cursor-pointer">
+                  <input type="radio" formControlName="etat" [value]="true" class="w-4 h-4 accent-oas-accent cursor-pointer">
+                  <span>Oui</span>
+                </label>
+                <label class="flex items-center gap-1.5 text-sm cursor-pointer">
+                  <input type="radio" formControlName="etat" [value]="false" class="w-4 h-4 accent-oas-accent cursor-pointer">
+                  <span>Non</span>
+                </label>
+              </div>
+              @if (!ctrl.get('verrouille')?.value) {
+                <button type="button" (click)="removeLigneReception($index)" class="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition cursor-pointer">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                </button>
+              }
+            </div>
+          }
+          @if (!lignesReception.controls.length) {
+            <p class="text-sm text-oas-muted italic">Aucune ligne pour l'instant.</p>
+          }
+        </div>
+        <button type="button" (click)="addLigneReception()" class="mt-3 flex items-center gap-2 text-sm text-oas-accent font-semibold hover:bg-oas-accent/10 px-3 py-1.5 rounded-lg transition cursor-pointer">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+          Ajouter une ligne
+        </button>
       </div>
 
       @if (isNew) {

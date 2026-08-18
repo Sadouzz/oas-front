@@ -11,12 +11,25 @@ export interface PieceJointeDiagnostic {
   createdAt: string;
 }
 
+export interface LigneReceptionOrdre {
+  nom: string;
+  etat: boolean | null;
+  /** true = ligne provenant de la fiche atelier d'origine : désignation non modifiable, non supprimable. */
+  verrouille: boolean;
+}
+
+export interface LigneTravailOrdre {
+  nom: string;
+  /** true = ligne provenant de la désignation des travaux de la fiche atelier d'origine : non modifiable, non supprimable. */
+  verrouille: boolean;
+}
+
 export interface OrdreReparation {
   id: number;
   numero: string;
   descriptionTravaux: string;
-  travauxDemandes: string | null;
-  listeReception: string | null;
+  lignesTravaux: LigneTravailOrdre[] | null;
+  lignesReception: LigneReceptionOrdre[] | null;
   listeDefauts: string | null;
   dateCreation: string;
   updatedAt: string;
@@ -50,8 +63,8 @@ export interface OrdreReparation {
 export interface OrdreReparationRequest {
   numero: string;
   descriptionTravaux: string;
-  travauxDemandes?: string;
-  listeReception?: string;
+  lignesTravaux?: LigneTravailOrdre[];
+  lignesReception?: LigneReceptionOrdre[];
   listeDefauts?: string;
   dateSortie?: string;
   vehiculeId: number;

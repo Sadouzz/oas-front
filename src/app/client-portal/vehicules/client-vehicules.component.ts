@@ -103,6 +103,11 @@ export class ClientVehiculesComponent implements OnInit {
    * ET qu'au moins un paiement partiel a été effectué sur la facture liée. Sans paiement,
    * elle ne disparaît jamais via cette règle (le véhicule n'a probablement pas encore été repris).
    */
+  formatLignesReception(lignes: { nom: string; etat: boolean | null }[] | null | undefined): string {
+    if (!lignes || !lignes.length) return '—';
+    return lignes.map(l => l.nom + (l.etat === true ? ' (OK)' : l.etat === false ? ' (Non)' : '')).join(', ');
+  }
+
   ficheEnCoursFor(vehicule: VehiculeModel): Intervention | null {
     const derniere = this.interventionsFor(vehicule.id)[0];
     if (!derniere) return null;
