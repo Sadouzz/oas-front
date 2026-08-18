@@ -836,21 +836,35 @@
     @if (currentStep === 2) {
     <div class="space-y-5">
 
-      <!-- Techniciens -->
+      <!-- Techniciens : sélection par type (spécialité) à gauche, techniciens de ce type à droite -->
       <div>
         <label class="block text-sm font-semibold text-oas-ink mb-2">Techniciens affectés au diagnostic</label>
-        <div class="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
-          @for (technicien of allTechniciens; track technicien.id) {
-          <button type="button" (click)="toggleTechnicienStepper(technicien)" [disabled]="technicienToggling !== null"
-            class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs transition cursor-pointer text-left disabled:opacity-60"
-            [ngClass]="isTechnicienSelected(technicien.id) ? 'bg-oas-ok-bg text-oas-ok font-semibold' : 'bg-oas-bg text-oas-ink2 hover:bg-oas-line'">
-            <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
-              [ngClass]="isTechnicienSelected(technicien.id) ? 'bg-oas-ok text-white' : 'bg-oas-line text-oas-muted'">
-              @if (technicienToggling === technicien.id) { ⟳ } @else if (isTechnicienSelected(technicien.id)) { ✓ } @else { + }
-            </span>
-            <span class="truncate">{{ technicien.firstName }} {{ technicien.lastName }}</span>
-          </button>
-          }
+        <div class="grid grid-cols-1 sm:grid-cols-[220px_1fr] gap-3">
+          <div>
+            <select [(ngModel)]="specialiteFiltreDiagnostic" [ngModelOptions]="{standalone: true}"
+              class="w-full px-3 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition cursor-pointer">
+              <option value="">Tous les types</option>
+              @for (s of specialitesTechnicien; track s.value) {
+                <option [value]="s.value">{{ s.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+            @for (technicien of techniciensDiagnosticFiltres; track technicien.id) {
+            <button type="button" (click)="toggleTechnicienStepper(technicien)" [disabled]="technicienToggling !== null"
+              class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs transition cursor-pointer text-left disabled:opacity-60"
+              [ngClass]="isTechnicienSelected(technicien.id) ? 'bg-oas-ok-bg text-oas-ok font-semibold' : 'bg-oas-bg text-oas-ink2 hover:bg-oas-line'">
+              <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                [ngClass]="isTechnicienSelected(technicien.id) ? 'bg-oas-ok text-white' : 'bg-oas-line text-oas-muted'">
+                @if (technicienToggling === technicien.id) { ⟳ } @else if (isTechnicienSelected(technicien.id)) { ✓ } @else { + }
+              </span>
+              <span class="truncate">{{ technicien.firstName }} {{ technicien.lastName }}</span>
+            </button>
+            }
+            @if (!techniciensDiagnosticFiltres.length) {
+              <p class="text-xs text-oas-muted italic col-span-2">Aucun technicien pour ce type.</p>
+            }
+          </div>
         </div>
         @if (selectedTechniciens.length === 0) {
         <p class="text-xs text-oas-bad font-semibold mt-2">Affectez au moins un technicien pour pouvoir démarrer le diagnostic.</p>
