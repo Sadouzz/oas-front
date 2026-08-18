@@ -72,11 +72,11 @@ export class FichesAtelier implements OnInit {
   ];
 
   defaultDefauts = [
-    'Bruit anormal',
-    'Fuite d\'huile / liquide',
-    'Voyant allumé au tableau de bord',
-    'Problème de freinage',
-    'Problème de direction'
+    'Mécanique',
+    'Électrique',
+    'Climatisation',
+    'Peinture',
+    'Tôlerie'
   ];
 
   ngOnInit(): void {
@@ -113,22 +113,6 @@ export class FichesAtelier implements OnInit {
     return this.form.get('lignesReception') as FormArray;
   }
 
-  niveauxEssence = ['Vide', '1/4', '1/2', '3/4', 'Plein'];
-
-  get niveauEssenceIndex(): number {
-    const val = this.form.get('niveauEssence')?.value;
-    const index = this.niveauxEssence.indexOf(val);
-    return index !== -1 ? index : 0;
-  }
-
-  setNiveauEssenceIndex(event: Event) {
-    const target = event.target as HTMLInputElement;
-    const index = parseInt(target.value, 10);
-    if (!isNaN(index) && index >= 0 && index < this.niveauxEssence.length) {
-      this.form.get('niveauEssence')?.setValue(this.niveauxEssence[index]);
-    }
-  }
-
   get lignesDefauts() {
     return this.form.get('lignesDefauts') as FormArray;
   }
@@ -147,7 +131,7 @@ export class FichesAtelier implements OnInit {
   addDefaut(nom: string = '') {
     this.lignesDefauts.push(this.fb.group({
       nom: [nom, Validators.required],
-      present: [false] // checkbox
+      designation: [''] // text field for user to write the defect description
     }));
   }
 

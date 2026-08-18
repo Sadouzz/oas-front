@@ -5,7 +5,8 @@ export interface LigneReception {
 
 export interface LigneDefaut {
     nom: string;
-    present: boolean | null; // true = cochée, false = non cochée
+    present?: boolean | null; // true = cochée, false = non cochée
+    designation?: string;
 }
 
 export interface FicheAtelierRequest {
@@ -50,4 +51,5 @@ export interface FicheAtelierResponse {
     signatureSortieBase64?: string;
     createdAt: string;
     updatedAt: string;
+    hasOrdreReparation?: boolean;
 }

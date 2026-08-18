@@ -10,7 +10,7 @@ import { AuthService } from '../auth/services/auth.service';
 @Component({
   selector: 'app-fiche-atelier-details',
   standalone: true,
-  imports: [CommonModule, LucideArrowLeft, LucideCheck, LucideX],
+  imports: [CommonModule, LucideArrowLeft, LucideCheck],
   templateUrl: './fiche-atelier-details.html'
 })
 export class FicheAtelierDetails implements OnInit {
@@ -68,24 +68,8 @@ export class FicheAtelierDetails implements OnInit {
   }
 
   creerOrdreReparation() {
-    if (!this.fiche || this.creatingOrdreReparation || this.ordreReparationExists) return;
-    this.creatingOrdreReparation = true;
-    this.error = '';
-    this.ordreReparationService.createFromFicheAtelier(this.fiche.id).subscribe({
-      next: () => {
-        this.creatingOrdreReparation = false;
-        this.router.navigate(['/gestion/ordres-reparation']);
-      },
-      error: (err) => {
-        this.creatingOrdreReparation = false;
-        if (err?.status === 409) {
-          this.ordreReparationExists = true;
-          this.error = "Un ordre de réparation existe déjà pour cette fiche atelier.";
-        } else {
-          this.error = err.error?.message || "Erreur lors de la création de l'ordre de réparation.";
-        }
-      }
-    });
+    if (!this.fiche) return;
+    this.router.navigate(['/gestion/ordres-reparation'], { queryParams: { ficheAtelierId: this.fiche.id } });
   }
 
   goBack() {

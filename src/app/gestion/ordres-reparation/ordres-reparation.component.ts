@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, OnDestroy, HostListener, ElementRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { CommonModule, NgClass, NgStyle } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Subject } from 'rxjs';
@@ -357,8 +358,34 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
     this.nextStep();
   }
 
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+
   ngOnInit() {
     this.load();
+    
+    this.route.queryParams.subscribe((params: any) => {
+      const ficheAtelierId = params['ficheAtelierId'];
+      if (ficheAtelierId) {
+        // Tente de créer l'OR (ou d'en récupérer un existant si le backend le permettait)
+        this.service.createFromFicheAtelier(+ficheAtelierId).subscribe({
+          next: (newOr) => {
+            // Nettoie l'URL pour ne pas reboucler au rechargement
+            this.router.navigate([], { queryParams: { ficheAtelierId: null }, queryParamsHandling: 'merge' });
+            // Ouvre le modal directement
+            this.openEdit(newOr);
+          },
+          error: (err) => {
+            this.router.navigate([], { queryParams: { ficheAtelierId: null }, queryParamsHandling: 'merge' });
+            if (err?.status === 409) {
+              this.notifyError("Un ordre de réparation existe déjà pour cette fiche.");
+            } else {
+              this.notifyError("Erreur lors de la création de l'ordre de réparation.");
+            }
+          }
+        });
+      }
+    });
   }
 
   ngOnDestroy() {
