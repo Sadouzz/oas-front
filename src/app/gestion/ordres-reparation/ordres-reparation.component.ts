@@ -7,6 +7,7 @@ import { Subject } from 'rxjs';
 import { OrdreReparationService, OrdreReparation, StatutFiche } from '../../services/ordre-reparation.service';
 import { VehiculeService, VehiculeModel } from '../../services/vehicule.service';
 import { TechnicienService, Technicien } from '../../services/technicien.service';
+import { Specialite } from '../../shared/models/technicien.model';
 import { PieceDetacheeService, PieceDetache } from '../../services/piece-detachee.service';
 import { MainDoeuvreService, MainDoeuvreModel } from '../../services/main-doeuvre.service';
 import { BonDeSortieService } from '../../services/bon-de-sortie.service';
@@ -64,6 +65,16 @@ export const PANNES_FREQUENTES = [
   'Jeu dans la direction',
 ];
 
+export const SPECIALITES_TECHNICIEN: { value: Specialite; label: string }[] = [
+  { value: 'MECANIQUE_GENERALE', label: 'Mécanique générale' },
+  { value: 'ELECTRICITE_AUTO', label: 'Électricité auto' },
+  { value: 'CARROSSERIE_PEINTURE', label: 'Carrosserie / Peinture' },
+  { value: 'TOLERIE', label: 'Tôlerie' },
+  { value: 'CLIMATISATION', label: 'Climatisation' },
+  { value: 'DIAGNOSTIC_ELECTRONIQUE', label: 'Diagnostic électronique' },
+  { value: 'PNEUMATIQUE', label: 'Pneumatique' },
+];
+
 const STATUT_STEPS: { statut: StatutFiche; label: string }[] = [
   { statut: 'A_FAIRE', label: 'Réception' },
   { statut: 'EN_DIAGNOSTIC', label: 'Diagnostic' },
@@ -113,6 +124,13 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
   vehicules: VehiculeModel[] = [];
   allClients: UserModel[] = [];
   allTechniciens: Technicien[] = [];
+  readonly specialitesTechnicien = SPECIALITES_TECHNICIEN;
+  // Filtre par spécialité pour l'affectation des techniciens au diagnostic (étape 2).
+  specialiteFiltreDiagnostic: Specialite | '' = '';
+  get techniciensDiagnosticFiltres(): Technicien[] {
+    if (!this.specialiteFiltreDiagnostic) return this.allTechniciens;
+    return this.allTechniciens.filter(t => t.specialite === this.specialiteFiltreDiagnostic);
+  }
   allPieces: PieceDetache[] = [];
   allMO: MainDoeuvreModel[] = [];
   fournisseurs: FournisseurModel[] = [];
