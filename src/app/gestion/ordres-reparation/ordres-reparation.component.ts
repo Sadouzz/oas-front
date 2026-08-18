@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, OnDestroy, HostListener, ElementRef } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
+import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { CommonModule, NgClass, NgStyle } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -22,6 +22,7 @@ import { SearchableSelectComponent } from '../../shared/components/searchable-se
 import { MediaUploaderComponent } from '../../shared/components/media-uploader/media-uploader.component';
 import { CloudinaryUploadResult } from '../../shared/models';
 import { PieceJointeDiagnostic, TypePieceJointeDiagnostic } from '../../services/ordre-reparation.service';
+import { LigneReceptionOrdre, LigneTravailOrdre } from '../../shared/models/ordre-reparation.model';
 
 export interface LignePiece {
   piece: PieceDetache;
@@ -146,10 +147,65 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
   step1Form: FormGroup = this.fb.group({
     numero: [''],
     vehiculeId: [null, Validators.required],
-    listeReception: [''],
-    travauxDemandes: [''],
+    lignesReception: this.fb.array([]),
+    lignesTravaux: this.fb.array([]),
     descriptionTravaux: [''],
   });
+
+  get lignesReception(): FormArray {
+    return this.step1Form.get('lignesReception') as FormArray;
+  }
+
+  get lignesTravaux(): FormArray {
+    return this.step1Form.get('lignesTravaux') as FormArray;
+  }
+
+  /** Même principe que les lignes de réception : la ligne issue de la désignation des
+   *  travaux de la fiche atelier est verrouillée, les lignes ajoutées restent éditables. */
+  private buildLigneTravailGroup(l: LigneTravailOrdre) {
+    return this.fb.group({
+      nom: [{ value: l.nom, disabled: !!l.verrouille }, Validators.required],
+      verrouille: [!!l.verrouille],
+    });
+  }
+
+  private setLignesTravaux(lignes: LigneTravailOrdre[] | null | undefined) {
+    this.lignesTravaux.clear();
+    (lignes || []).forEach(l => this.lignesTravaux.push(this.buildLigneTravailGroup(l)));
+  }
+
+  addLigneTravail() {
+    this.lignesTravaux.push(this.buildLigneTravailGroup({ nom: '', verrouille: false }));
+  }
+
+  removeLigneTravail(index: number) {
+    if (this.lignesTravaux.at(index)?.get('verrouille')?.value) return;
+    this.lignesTravaux.removeAt(index);
+  }
+
+  /** Lignes verrouillées (issues de la fiche atelier) non modifiables/supprimables ;
+   *  les nouvelles lignes ajoutées via "Ajouter une ligne" restent éditables. */
+  private buildLigneReceptionGroup(l: LigneReceptionOrdre) {
+    return this.fb.group({
+      nom: [{ value: l.nom, disabled: !!l.verrouille }, Validators.required],
+      etat: [{ value: l.etat, disabled: !!l.verrouille }],
+      verrouille: [!!l.verrouille],
+    });
+  }
+
+  private setLignesReception(lignes: LigneReceptionOrdre[] | null | undefined) {
+    this.lignesReception.clear();
+    (lignes || []).forEach(l => this.lignesReception.push(this.buildLigneReceptionGroup(l)));
+  }
+
+  addLigneReception() {
+    this.lignesReception.push(this.buildLigneReceptionGroup({ nom: '', etat: null, verrouille: false }));
+  }
+
+  removeLigneReception(index: number) {
+    if (this.lignesReception.at(index)?.get('verrouille')?.value) return;
+    this.lignesReception.removeAt(index);
+  }
 
   // Étape 2 — Diagnostic
   step2Form: FormGroup = this.fb.group({
@@ -552,10 +608,10 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
         this.step1Form.patchValue({
           numero: f.numero,
           vehiculeId: f.vehicule?.id ?? null,
-          listeReception: f.listeReception ?? '',
-          travauxDemandes: f.travauxDemandes ?? '',
           descriptionTravaux: f.descriptionTravaux,
         });
+        this.setLignesReception(f.lignesReception);
+        this.setLignesTravaux(f.lignesTravaux);
 
         // Décomposer les checkboxes depuis les textes existants
         const travauxDecomp = this.decomposeToCheckboxes(f.descriptionTravaux, TRAVAUX_FREQUENTS);
@@ -640,7 +696,7 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
       this.showWorkflow = true;
 
       // Charger la fiche complète : la liste (source de `f`) est un DTO allégé qui n'inclut pas
-      // listeReception/travauxDemandes/mecaniciens/lignes — on repatch donc le formulaire et l'état
+      // lignesReception/lignesTravaux/mecaniciens/lignes — on repatch donc le formulaire et l'état
       // dérivé avec cette version complète une fois reçue (et pas avec `f`), pour ne pas perdre ces
       // champs à la réouverture d'une fiche existante.
       this.service.getById(f.id).subscribe({
@@ -650,10 +706,10 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
             this.step1Form.patchValue({
               numero: full.numero,
               vehiculeId: full.vehicule?.id ?? null,
-              listeReception: full.listeReception ?? '',
-              travauxDemandes: full.travauxDemandes ?? '',
               descriptionTravaux: full.descriptionTravaux,
             });
+            this.setLignesReception(full.lignesReception);
+            this.setLignesTravaux(full.lignesTravaux);
 
             // Décomposer les checkboxes depuis les textes existants
             const travauxDecomp = this.decomposeToCheckboxes(full.descriptionTravaux, TRAVAUX_FREQUENTS);
@@ -776,6 +832,8 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
 
   private resetForms() {
     this.step1Form.reset();
+    this.lignesReception.clear();
+    this.lignesTravaux.clear();
     this.step2Form.reset();
     this.lignesPieces = [];
     this.lignesMO = [];
@@ -879,13 +937,11 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
     }
 
     const raw = this.step1Form.value;
-    const listeReception = (raw.listeReception || '').toString().trim();
-    const travauxDemandes = (raw.travauxDemandes || '').toString().trim();
     const payload = {
       numero: raw.numero,
       descriptionTravaux: descriptionTravaux,
-      travauxDemandes: travauxDemandes || undefined,
-      listeReception: listeReception || undefined,
+      lignesTravaux: this.lignesTravaux.getRawValue() as LigneTravailOrdre[],
+      lignesReception: this.lignesReception.getRawValue() as LigneReceptionOrdre[],
       vehiculeId: Number(raw.vehiculeId),
       statut: 'A_FAIRE' as StatutFiche,
     };
@@ -966,14 +1022,12 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
 
     const listeDefauts = this.composeFromCheckboxes(this.selectedPannes, this.autrePannes);
     const descriptionTravaux = this.composeFromCheckboxes(this.selectedTravaux, this.autreTravaux);
-    const listeReception = (this.step1Form.value.listeReception || '').toString().trim();
-    const travauxDemandes = (this.step1Form.value.travauxDemandes || '').toString().trim();
 
     this.service.update(this.editingId!, {
       numero: this.step1Form.value.numero,
       descriptionTravaux: descriptionTravaux || '',
-      travauxDemandes: travauxDemandes || undefined,
-      listeReception: listeReception || undefined,
+      lignesTravaux: this.lignesTravaux.getRawValue() as LigneTravailOrdre[],
+      lignesReception: this.lignesReception.getRawValue() as LigneReceptionOrdre[],
       listeDefauts: listeDefauts || undefined,
       vehiculeId: Number(this.step1Form.value.vehiculeId),
       lignesPieces: this.lignesPieces.map(l => ({ pieceId: l.piece.id, quantite: l.quantite, prix: l.piece.prix ?? null })),

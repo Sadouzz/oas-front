@@ -193,7 +193,7 @@
                       </div>
                       <div>
                         <p class="text-oas-muted text-xs mb-1">Éléments reçus à la prise en charge</p>
-                        <p class="text-oas-ink2 text-sm">{{ ficheEnCours.listeReception || '—' }}</p>
+                        <p class="text-oas-ink2 text-sm">{{ formatLignesReception(ficheEnCours.lignesReception) }}</p>
                       </div>
                       @if (ficheEnCours.lignesOrdreReparationPieces.length) {
                         <div>

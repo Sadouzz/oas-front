@@ -27,6 +27,11 @@ export class ClientInterventionsComponent implements OnInit {
   statutFilter = '';
   sortOrder: SortOrder = 'recent';
 
+  formatLignesReception(lignes: { nom: string; etat: boolean | null }[] | null | undefined): string {
+    if (!lignes || !lignes.length) return '—';
+    return lignes.map(l => l.nom + (l.etat === true ? ' (OK)' : l.etat === false ? ' (Non)' : '')).join(', ');
+  }
+
   get statutOptions(): string[] {
     return [...new Set(this.interventions.map(i => i.statut))];
   }
