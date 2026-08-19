@@ -1453,8 +1453,7 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ─── Pièces ──────────────────────────────────────────
-  addPieceVide() {
+  addPiece() {
     this.lignesPieces.push({
       isCustom: false,
       quantite: 1,
