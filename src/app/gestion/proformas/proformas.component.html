@@ -215,7 +215,7 @@
                   <tbody class="divide-y divide-oas-line">
                     @for (l of selectedProforma.lignesPieces; track l.id) {
                       <tr>
-                        <td class="px-3 py-2 text-oas-ink">{{ l.designationPiece }}</td>
+                        <td class="px-3 py-2 text-oas-ink">{{ l.designationPiece || l.designationPds }}</td>
                         <td class="px-3 py-2 text-center">{{ l.quantite }}</td>
                         <td class="px-3 py-2 text-right font-semibold">{{ fmt(l.montantTotal) }}</td>
                       </tr>
@@ -502,14 +502,29 @@
             <div formArrayName="lignesPieces" class="space-y-2">
               @for (ligne of lignesPiecesArray.controls; track $index) {
                 <div [formGroupName]="$index" class="flex items-center gap-2 bg-oas-bg rounded-lg p-3">
-                  <select formControlName="pieceId" (change)="onPieceChange($index)"
-                          class="flex-1 px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink"
-                          [class.border-oas-bad]="ligne.get('pieceId')?.invalid && ligne.get('pieceId')?.touched">
-                    <option [ngValue]="null" disabled>Pièce...</option>
-                    @for (p of pieces; track p.id) {
-                      <option [value]="p.id">{{ p.reference }} — {{ p.numeroDeSerie }}</option>
-                    }
-                  </select>
+                  <!-- Toggle CAT / PDS -->
+                  <button type="button" (click)="togglePieceCustom($index)"
+                    class="px-2 py-1 rounded border border-oas-line bg-white text-[10px] font-bold text-oas-muted hover:text-oas-ink hover:border-oas-ink transition cursor-pointer flex-shrink-0"
+                    title="Basculer entre le Catalogue (CAT) et une Pièce Détachée Spéciale (PDS) hors stock">
+                    {{ ligne.get('isCustom')?.value ? 'PDS' : 'CAT' }}
+                  </button>
+
+                  <!-- Select ou Input selon isCustom -->
+                  @if (!ligne.get('isCustom')?.value) {
+                    <select formControlName="pieceId" (change)="onPieceChange($index)"
+                            class="flex-1 px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink"
+                            [class.border-oas-bad]="ligne.get('pieceId')?.invalid && ligne.get('pieceId')?.touched">
+                      <option [ngValue]="null" disabled>Pièce...</option>
+                      @for (p of pieces; track p.id) {
+                        <option [value]="p.id">{{ p.reference }} — {{ p.numeroDeSerie }}</option>
+                      }
+                    </select>
+                  } @else {
+                    <input formControlName="designationPds"
+                           placeholder="Désignation de la pièce..."
+                           class="flex-1 px-3 py-2 rounded-lg border border-orange-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-300/40 transition"/>
+                  }
+
                   <input formControlName="quantite" type="number" min="1" placeholder="Qté"
                          class="w-20 px-3 py-2 rounded-lg border border-oas-line bg-white text-sm text-center focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
                   <input formControlName="prix" type="number" min="0" placeholder="Prix"

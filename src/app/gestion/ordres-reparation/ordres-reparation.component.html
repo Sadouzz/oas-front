@@ -119,10 +119,10 @@
               </td>
               <td class="px-5 py-3.5">
                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold"
-                  [ngStyle]="{'background': statutColor(f.statut) + '18', 'color': statutColor(f.statut)}">
+                  [ngStyle]="{'background': statutColor(f) + '18', 'color': statutColor(f)}">
                   <span class="w-1.5 h-1.5 rounded-full inline-block"
-                    [ngStyle]="{'background': statutColor(f.statut)}"></span>
-                  {{ statutLabel(f.statut) }}
+                    [ngStyle]="{'background': statutColor(f)}"></span>
+                  {{ statutLabel(f) }}
                 </span>
               </td>
               <td class="px-5 py-3.5 text-sm text-oas-ink2 max-w-xs truncate hidden md:table-cell">{{
@@ -174,7 +174,7 @@
       <div class="px-5 py-4 border-b border-oas-line flex items-start justify-between">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm text-white flex-shrink-0"
-            [ngStyle]="{'background': statutColor(selectedFiche.statut)}">
+            [ngStyle]="{'background': statutColor(selectedFiche)}">
             {{ ficheInitials(selectedFiche) }}
           </div>
           <div>
@@ -207,17 +207,17 @@
         <div class="flex items-center justify-between mb-3">
           <p class="text-xs font-bold text-oas-muted uppercase tracking-wide">Progression</p>
           <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold"
-            [ngStyle]="{'background': statutColor(selectedFiche.statut) + '18', 'color': statutColor(selectedFiche.statut)}">
-            {{ statutLabel(selectedFiche.statut) }}
+            [ngStyle]="{'background': statutColor(selectedFiche) + '18', 'color': statutColor(selectedFiche)}">
+            {{ statutLabel(selectedFiche) }}
           </span>
         </div>
         <div class="flex items-center">
           @for (step of statutSteps; track step.statut; let i = $index) {
-          @let stepIdx = statutStepIndex(selectedFiche.statut);
+          @let stepIdx = statutStepIndex(selectedFiche);
           @let done = i <= stepIdx; <div class="flex flex-col items-center">
             <div
               class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 transition-all"
-              [ngStyle]="{'background': done ? statutColor(selectedFiche.statut) : '#e5e7eb', 'color': done ? 'white' : '#9ca3af'}">
+              [ngStyle]="{'background': done ? statutColor(selectedFiche) : '#e5e7eb', 'color': done ? 'white' : '#9ca3af'}">
               @if (done) {
               <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
@@ -225,10 +225,10 @@
               } @else { {{ i + 1 }} }
             </div>
             <span class="text-[8px] font-semibold mt-1 text-center w-11 leading-tight"
-              [ngStyle]="{'color': done ? statutColor(selectedFiche.statut) : '#9ca3af'}">{{ step.label }}</span>
+              [ngStyle]="{'color': done ? statutColor(selectedFiche) : '#9ca3af'}">{{ step.label }}</span>
         </div>
         @if (i < statutSteps.length - 1) { <div class="flex-1 h-0.5 mx-0.5 mb-3 transition-all"
-          [ngStyle]="{'background': i < stepIdx ? statutColor(selectedFiche.statut) : '#e5e7eb'}">
+          [ngStyle]="{'background': i < stepIdx ? statutColor(selectedFiche) : '#e5e7eb'}">
       </div>
       }
       }
@@ -993,53 +993,106 @@
 
       <!-- Pièces -->
       <div>
-        <p class="text-sm font-bold text-oas-ink mb-2">Pièces détachées</p>
-        <div class="flex gap-2 mb-3">
-          <app-searchable-select class="flex-1" [(ngModel)]="pieceAjouter" [options]="piecesFiltrees" bindValue="id"
-            [bindLabel]="formatPiece" placeholder="— Rechercher une pièce —"></app-searchable-select>
-          <input type="number" [(ngModel)]="qteAjouter" min="1"
-            class="w-16 px-2 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm text-center focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition" />
-          <button type="button" (click)="addPiece()"
-            class="px-3 py-2 rounded-lg bg-oas-accent text-white text-xs font-bold hover:bg-oas-accent-dark transition cursor-pointer">+
-            Ajouter</button>
+        <div class="flex items-center justify-between mb-2">
+          <label class="text-sm font-bold text-oas-ink">Pièces détachées</label>
+          <button type="button" (click)="addPieceVide()"
+                  class="text-xs font-bold text-oas-accent hover:text-oas-accent-dark flex items-center gap-1 cursor-pointer">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+            </svg>
+            Ajouter une ligne
+          </button>
         </div>
-        @if (lignesPieces.length > 0) {
-        <div class="rounded-xl border border-oas-line overflow-hidden">
-          <table class="w-full text-xs">
-            <thead class="bg-oas-bg">
-              <tr>
-                <th class="text-left px-3 py-2 font-bold text-oas-muted">Pièce</th>
-                <th class="text-center px-3 py-2 font-bold text-oas-muted">Qté</th>
-                <th class="text-center px-3 py-2 font-bold text-oas-muted">Stock</th>
-                <th class="text-right px-3 py-2 font-bold text-oas-muted">Prix</th>
-                <th class="px-2 py-2"></th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (l of lignesPieces; track l.piece.id; let i = $index) {
-              <tr class="border-b border-oas-line last:border-0">
-                <td class="px-3 py-2">
-                  <p class="font-semibold text-oas-ink">{{ l.piece.reference }}</p>
-                  <p class="text-oas-muted text-[10px]">{{ l.piece.categorie }}</p>
-                </td>
-                <td class="px-3 py-2 text-center"><input type="number" [ngModel]="l.quantite"
-                    (ngModelChange)="updateQtePiece(i, $event)" min="1"
-                    class="w-12 text-center border border-oas-line rounded px-1 py-0.5 text-xs" /></td>
-                <td class="px-3 py-2 text-center"><span
-                    [ngClass]="l.manquant > 0 ? 'text-red-500 font-bold' : 'text-oas-ok'">{{ l.stockDisponible }}</span>
-                </td>
-                <td class="px-3 py-2 text-right font-semibold">{{ formatPrice((l.piece.prix ?? 0) * l.quantite) }}</td>
-                <td class="px-2 py-2"><button (click)="removePiece(i)"
-                    class="text-oas-muted hover:text-oas-bad cursor-pointer"><svg class="w-3.5 h-3.5" fill="none"
-                      viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg></button></td>
-              </tr>
-              }
-            </tbody>
-          </table>
-        </div>
+
+        @if (lignesPieces.length === 0) {
+          <p class="text-xs text-oas-muted text-center py-4 border border-dashed border-oas-line rounded-lg">
+            Aucune pièce ajoutée.
+          </p>
         }
+
+        <div class="space-y-2 mb-3">
+          @for (l of lignesPieces; track $index; let i = $index) {
+            <div class="bg-oas-bg rounded-lg p-3 space-y-2">
+              <div class="flex items-center gap-2">
+                <!-- Toggle catalogue / personnalisé -->
+                <button type="button" (click)="togglePieceCustom(i)"
+                        class="flex-shrink-0 px-2 py-1.5 rounded-lg border text-xs font-bold transition cursor-pointer"
+                        [class.bg-white]="!l.isCustom"
+                        [class.border-oas-line]="!l.isCustom"
+                        [class.text-oas-muted]="!l.isCustom"
+                        [class.bg-orange-100]="l.isCustom"
+                        [class.border-orange-300]="l.isCustom"
+                        [class.text-orange-700]="l.isCustom"
+                        title="{{ l.isCustom ? 'Pièce personnalisée (PDS)' : 'Pièce du catalogue' }}">
+                  {{ l.isCustom ? 'PDS' : 'CAT' }}
+                </button>
+
+                <!-- Catalogue select -->
+                @if (!l.isCustom) {
+                  <select [(ngModel)]="l.pieceIdTemp" (ngModelChange)="onSelectCataloguePiece(i, $event)" [ngModelOptions]="{standalone: true}"
+                          class="flex-1 px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
+                    <option [ngValue]="undefined" disabled>Pièce du catalogue...</option>
+                    @for (p of piecesFiltrees; track p.id) {
+                      <option [value]="p.id">{{ p.reference }} — {{ p.categorie }}</option>
+                    }
+                  </select>
+                }
+
+                <!-- Custom designation -->
+                @if (l.isCustom) {
+                  <input [(ngModel)]="l.designationPds" [ngModelOptions]="{standalone: true}"
+                         placeholder="Désignation de la pièce..."
+                         class="flex-1 px-3 py-2 rounded-lg border border-orange-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-300/40 transition"/>
+                }
+
+                <!-- Quantité -->
+                <div class="flex items-center gap-1.5 flex-shrink-0 bg-white border border-oas-line rounded-lg px-2 py-1.5 focus-within:ring-2 focus-within:ring-oas-accent/40 transition">
+                  <span class="text-xs font-bold text-oas-muted select-none">Qté</span>
+                  <input [(ngModel)]="l.quantite" (ngModelChange)="updateQtePiece(i, $event)" type="number" min="1" [ngModelOptions]="{standalone: true}"
+                         class="w-12 bg-transparent text-sm text-center font-semibold focus:outline-none text-oas-ink" />
+                </div>
+                
+                <!-- Prix custom si applicable -->
+                @if (l.isCustom) {
+                  <div class="flex items-center gap-1.5 flex-shrink-0 bg-white border border-orange-300 rounded-lg px-2 py-1.5 focus-within:ring-2 focus-within:ring-orange-300/40 transition">
+                    <span class="text-xs font-bold text-oas-muted select-none">Prix</span>
+                    <input [(ngModel)]="l.prixUnitaire" type="number" min="0" [ngModelOptions]="{standalone: true}"
+                           class="w-20 bg-transparent text-sm text-center font-semibold focus:outline-none text-oas-ink" />
+                  </div>
+                } @else {
+                   <!-- Prix affiché (read only) ou rien -->
+                   <div class="flex items-center gap-1.5 flex-shrink-0 px-2 py-1.5 min-w-[80px] justify-end">
+                      <span class="text-sm font-bold text-oas-ink">{{ formatPrice((l.piece?.prix ?? 0) * l.quantite) }}</span>
+                   </div>
+                }
+
+                <button (click)="removePiece(i)"
+                        class="text-oas-muted hover:text-oas-bad cursor-pointer ml-1 p-1">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Messages de stock (seulement pour CAT) -->
+              @if (!l.isCustom && l.piece) {
+                <div class="flex items-center gap-4 px-10">
+                  <p class="text-[10px]" [ngClass]="l.manquant > 0 ? 'text-red-500 font-bold' : 'text-oas-ok'">
+                    Stock disp. : {{ l.stockDisponible }}
+                  </p>
+                  @if (l.manquant > 0) {
+                    <p class="text-[10px] text-red-500 font-bold flex items-center gap-1">
+                      <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                      </svg>
+                      Manquant: {{ l.manquant }}
+                    </p>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
       </div>
 
       <!-- MO -->
@@ -1119,6 +1172,17 @@
             Proforma: {{ (proformaChargee?.numero || selectedFicheProforma?.numero || proformaChargee?.code ||
             selectedFicheProforma?.code) }}</p>
           <p class="text-xs text-oas-muted">En attente de la validation du client</p>
+          
+          <a *ngIf="proformaChargee || selectedFicheProforma"
+             routerLink="/gestion/proformas" 
+             [queryParams]="{ openId: proformaChargee?.id || selectedFicheProforma?.id }"
+             target="_blank"
+             class="inline-flex items-center gap-1 mt-2 px-3 py-1.5 bg-white border border-purple-200 text-purple-700 text-xs font-bold rounded-lg hover:bg-purple-50 transition cursor-pointer">
+            Vérifier / Modifier les prix (Module Proformas) 
+            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
         </div>
       </div>
 
@@ -1137,18 +1201,38 @@
         </button>
         }
       } @else {
-        <div class="bg-purple-50 border border-purple-200 rounded-xl p-4 text-purple-800 text-sm">
-          <div class="flex items-center gap-2 mb-1">
-            <span class="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></span>
-            <p class="font-bold text-base">En attente du client</p>
+        @if (!(proformaChargee?.visibleClient || selectedFicheProforma?.visibleClient)) {
+          <div class="bg-orange-50 border border-orange-200 rounded-xl p-4 text-orange-800 text-sm">
+            <div class="flex items-center gap-2 mb-1">
+              <svg class="w-5 h-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
+              <p class="font-bold text-base">Proforma non envoyé</p>
+            </div>
+            <p>Le proforma a été généré avec succès. Vous pouvez encore ajuster les prix dans le module des proformas avant de l'envoyer au client.</p>
+            <button (click)="envoyerProforma()" [disabled]="proformaSaving"
+              class="mt-4 w-full py-3 rounded-xl font-bold text-sm bg-orange-500 hover:bg-orange-600 text-white shadow-lg transition cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60">
+              @if (proformaSaving) { <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> }
+              Envoyer au client
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+            </button>
           </div>
-          <p>Le proforma a été émis. Veuillez patienter jusqu'à ce que le client ou la personne responsable le valide.</p>
-          <button (click)="checkProformaValid()" [disabled]="proformaSaving"
-            class="mt-3 px-4 py-2 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition disabled:opacity-60 flex items-center justify-center gap-2">
-            @if (proformaSaving) { <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> }
-            Vérifier le statut
-          </button>
-        </div>
+        } @else {
+          <div class="bg-purple-50 border border-purple-200 rounded-xl p-4 text-purple-800 text-sm">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></span>
+              <p class="font-bold text-base">En attente du client</p>
+            </div>
+            <p>Le proforma a été envoyé. Veuillez patienter jusqu'à ce que le client ou la personne responsable le valide.</p>
+            <button (click)="checkProformaValid()" [disabled]="proformaSaving"
+              class="mt-3 px-4 py-2 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition disabled:opacity-60 flex items-center justify-center gap-2">
+              @if (proformaSaving) { <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> }
+              Vérifier le statut
+            </button>
+          </div>
+        }
       }
     </div>
     }
@@ -1176,7 +1260,7 @@
       <div>
         <p class="text-sm font-bold text-oas-ink mb-2">Disponibilité des pièces</p>
         <div class="rounded-xl border border-oas-line overflow-hidden">
-          @for (l of lignesPieces; track l.piece.id) {
+          @for (l of lignesPieces; track $index) {
           <div class="flex items-center justify-between px-4 py-2.5 border-b border-oas-line last:border-0">
             <div class="flex items-center gap-2">
               @if (l.manquant === 0) {
@@ -1193,7 +1277,7 @@
                 </svg></span>
               }
               <div>
-                <p class="text-sm font-semibold text-oas-ink">{{ l.piece.reference }}</p>
+                <p class="text-sm font-semibold text-oas-ink">{{ l.isCustom ? l.designationPds : l.piece?.reference }}</p>
                 <p class="text-xs text-oas-muted">Requis: {{ l.quantite }} | Stock: {{ l.stockDisponible }}</p>
               </div>
             </div>
@@ -1277,21 +1361,23 @@
       currentStep === 6) {
       @if (lignesPieces.length > 0 || lignesMO.length > 0) {
       <div class="rounded-xl border border-oas-line overflow-hidden mt-4">
-        @for (l of lignesPieces; track l.piece.id) {
+        @for (l of lignesPieces; track $index) {
         <div class="flex items-center justify-between px-4 py-2.5 border-b border-oas-line last:border-0">
           <div>
-            <p class="text-sm font-semibold text-oas-ink">{{ l.piece.reference }}</p>
-            <p class="text-xs text-oas-muted">Dispo Atelier: {{ l.stockAtelier }} | Requis: {{ l.quantite }}</p>
+            <p class="text-sm font-semibold text-oas-ink">{{ l.isCustom ? l.designationPds : l.piece?.reference }}</p>
+            <p class="text-xs text-oas-muted">Dispo Atelier: {{ l.stockAtelier ?? 0 }} | Requis: {{ l.quantite }}</p>
           </div>
           <div class="text-right flex items-center gap-2 justify-end">
             @if (l.manquant > 0) {
             <span class="text-xs font-bold text-red-500 bg-red-50 px-2 py-1 rounded-md">Rupture: {{ l.manquant }}</span>
             }
+            @if (!l.isCustom) {
             <div class="flex items-center gap-1">
               <label class="text-[10px] text-emerald-700 font-bold uppercase">Du magasin:</label>
-              <input type="number" [(ngModel)]="l.aSortirMagasin" min="0" [max]="l.piece.stockMagasin || 0"
+              <input type="number" [(ngModel)]="l.aSortirMagasin" min="0" [max]="l.piece?.stockMagasin || 0"
                 class="w-16 px-2 py-1 text-xs border border-emerald-200 rounded-md bg-emerald-50 text-emerald-800 text-center font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500" />
             </div>
+            }
           </div>
         </div>
         }
@@ -1619,11 +1705,11 @@
 
     <div class="px-6 py-5 space-y-4">
       <div class="rounded-xl border border-pink-200 bg-pink-50 overflow-hidden">
-        @for (l of rupturesOnly; track l.piece.id) {
+        @for (l of rupturesOnly; track $index) {
         <div class="flex items-center justify-between px-4 py-2.5 border-b border-pink-100 last:border-0">
           <div>
-            <p class="text-sm font-semibold text-oas-ink">{{ l.piece.reference }}</p>
-            <p class="text-xs text-oas-muted">{{ l.piece.categorie }}</p>
+            <p class="text-sm font-semibold text-oas-ink">{{ l.piece?.reference || l.designationPds }}</p>
+            <p class="text-xs text-oas-muted">{{ l.piece?.categorie }}</p>
           </div>
           <span class="text-sm font-bold text-pink-600">{{ l.manquant }} à commander</span>
         </div>

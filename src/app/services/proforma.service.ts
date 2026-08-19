@@ -5,8 +5,10 @@ import { environment } from '../../environments/environment';
 
 export interface LignePiece {
   id: number;
-  pieceId: number;
-  designationPiece: string;
+  pieceId?: number;
+  designationPiece?: string;
+  isCustom?: boolean;
+  designationPds?: string;
   quantite: number;
   prix: number;
   montantTotal: number;

@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
 import { ProformaService, Proforma } from '../../services/proforma.service';
 import { BonDeCommandeService, BonDeCommande } from '../../services/bon-de-commande.service';
 import { ClientService } from '../../services/client.service';
@@ -25,6 +26,7 @@ export class ProformasComponent implements OnInit {
   private pieceService = inject(PieceDetacheeService);
   private mdService = inject(MainDoeuvreService);
   private fb = inject(FormBuilder);
+  private route = inject(ActivatedRoute);
 
   proformas: Proforma[] = [];
   filtered: Proforma[] = [];
@@ -95,6 +97,23 @@ export class ProformasComponent implements OnInit {
         this.pieces = pieces;
         this.mainsDoeuvre = mds.filter(m => !m.isArchived);
         this.bonsCommande = bonsCommande;
+
+        // Auto-open modal if openId is provided in query params
+        this.route.queryParams.subscribe(params => {
+          const openId = params['openId'];
+          if (openId) {
+            const id = Number(openId);
+            const p = this.proformas.find(x => x.id === id);
+            if (p) {
+              this.openEdit(p);
+            } else {
+              // Si pas encore chargé, on peut faire un refetch
+              this.service.getById(id).subscribe(prof => {
+                if (prof) this.openEdit(prof);
+              });
+            }
+          }
+        });
       },
     });
   }
@@ -246,7 +265,9 @@ export class ProformasComponent implements OnInit {
 
   private makeLignePiece(): FormGroup {
     return this.fb.group({
-      pieceId: [null, Validators.required],
+      isCustom: [false],
+      designationPds: [''],
+      pieceId: [null],
       quantite: [1, [Validators.required, Validators.min(1)]],
       prix: [0, [Validators.required, Validators.min(0)]],
     });
@@ -264,6 +285,12 @@ export class ProformasComponent implements OnInit {
   removePiece(i: number) { this.lignesPiecesArray.removeAt(i); }
   addMD() { this.lignesMDArray.push(this.makeLigneMD()); }
   removeMD(i: number) { this.lignesMDArray.removeAt(i); }
+
+  togglePieceCustom(i: number) {
+    const ctrl = this.lignesPiecesArray.at(i);
+    const val = ctrl.get('isCustom')?.value;
+    ctrl.patchValue({ isCustom: !val, pieceId: null, designationPds: '' });
+  }
 
   onPieceChange(i: number) {
     const ctrl = this.lignesPiecesArray.at(i);
@@ -330,7 +357,9 @@ export class ProformasComponent implements OnInit {
     while (this.lignesPiecesArray.length) this.lignesPiecesArray.removeAt(0);
     for (const l of p.lignesPieces) {
       this.lignesPiecesArray.push(this.fb.group({
-        pieceId: [l.pieceId, Validators.required],
+        isCustom: [l.isCustom ?? false],
+        designationPds: [l.designationPds ?? ''],
+        pieceId: [l.pieceId],
         quantite: [l.quantite, [Validators.required, Validators.min(1)]],
         prix: [l.prix, [Validators.required, Validators.min(0)]],
       }));
@@ -364,8 +393,11 @@ export class ProformasComponent implements OnInit {
       annee: raw.annee ? Number(raw.annee) : null,
       numeroBonDeCommande: raw.numeroBonDeCommande || undefined,
       remarque: raw.remarque || undefined,
-      lignesPieces: raw.lignesPieces.map((l: any) => ({
-        pieceId: Number(l.pieceId),
+      lignesPieces: this.lignesPiecesArray.getRawValue().map((l: any) => ({
+        pieceId: l.isCustom ? null : l.pieceId,
+        isCustom: l.isCustom,
+        custom: l.isCustom,
+        designationPds: l.designationPds,
         quantite: Number(l.quantite),
         prix: Number(l.prix),
       })),

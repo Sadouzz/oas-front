@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, OnDestroy, HostListener, ElementRef } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { CommonModule, NgClass, NgStyle } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Subject } from 'rxjs';
@@ -26,9 +26,13 @@ import { PieceJointeDiagnostic, TypePieceJointeDiagnostic } from '../../services
 import { LigneReceptionOrdre, LigneTravailOrdre } from '../../shared/models/ordre-reparation.model';
 
 export interface LignePiece {
-  piece: PieceDetache;
+  isCustom?: boolean;
+  piece?: PieceDetache;
+  pieceIdTemp?: number; // Used for UI select model
+  designationPds?: string;
+  prixUnitaire?: number; // Used for custom piece price
   quantite: number;
-  stockDisponible: number;
+  stockDisponible?: number;
   manquant: number;
   aSortirMagasin?: number;
   stockAtelier?: number;
@@ -93,7 +97,7 @@ const STATUT_STEPS: { statut: StatutFiche; label: string }[] = [
 @Component({
   selector: 'app-ordres-reparation',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, NgClass, NgStyle, AlertComponent, PaginationComponent, SearchableSelectComponent, MediaUploaderComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, NgClass, NgStyle, RouterLink, AlertComponent, PaginationComponent, SearchableSelectComponent, MediaUploaderComponent],
   templateUrl: './ordres-reparation.component.html',
 })
 export class OrdresReparationComponent implements OnInit, OnDestroy {
@@ -388,6 +392,35 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
     return false;
   }
 
+  private doSaveFicheData(callback: () => void, errorCallback?: (err: any) => void) {
+    if (!this.editingId) return;
+    const listeDefauts = this.composeFromCheckboxes(this.selectedPannes, this.autrePannes);
+    const descriptionTravaux = this.composeFromCheckboxes(this.selectedTravaux, this.autreTravaux);
+
+    this.service.update(this.editingId, {
+      numero: this.step1Form.value.numero,
+      descriptionTravaux: descriptionTravaux || '',
+      lignesTravaux: this.lignesTravaux.getRawValue() as LigneTravailOrdre[],
+      lignesReception: this.lignesReception.getRawValue() as LigneReceptionOrdre[],
+      listeDefauts: listeDefauts || undefined,
+      vehiculeId: Number(this.step1Form.value.vehiculeId),
+      lignesPieces: this.lignesPieces.map(l => ({ 
+        pieceId: (l.isCustom ? null : (l.piece?.id || l.pieceIdTemp)) as any, 
+        quantite: l.quantite, 
+        prix: (l.isCustom ? l.prixUnitaire : (l.piece?.prix ?? null)) as any,
+        isCustom: l.isCustom,
+        custom: l.isCustom,
+        designationPds: l.designationPds
+      })),
+      lignesMainDoeuvres: this.lignesMO.map(l => ({ mainDoeuvreId: l.mo.id, nbreHeure: l.quantite, prix: l.mo.prix ?? null }))
+    }).subscribe({
+      next: callback,
+      error: errorCallback || ((err) => {
+        this.notifyError('Erreur lors de la sauvegarde : ' + (err.error?.message || ''));
+      })
+    });
+  }
+
   // Diagnostic control flags
   diagnosticStarted = false;
   diagnosticFinished = false;
@@ -637,6 +670,20 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
         this.autreTravaux = travauxDecomp.autre;
         this.showAutreTravaux = this.autreTravaux.length > 0;
 
+        this.lignesPieces = (f.lignesOrdreReparationPieces || []).map((l: any) => {
+          return {
+            piece: l.piece,
+            pieceIdTemp: l.piece?.id,
+            quantite: l.quantite,
+            isCustom: l.isCustom,
+            designationPds: l.designationPds,
+            prixUnitaire: l.prix,
+            stockDisponible: l.isCustom ? 0 : (l.piece?.stockMagasin ?? 0) + (l.piece?.stockAtelier ?? 0),
+            manquant: l.isCustom ? 0 : Math.max(0, l.quantite - (l.piece?.stockAtelier ?? 0)),
+            aSortirMagasin: l.isCustom ? 0 : (Math.max(0, l.quantite - (l.piece?.stockAtelier ?? 0)) > 0 ? 0 : 1)
+          };
+        });
+
         const pannesDecomp = this.decomposeToCheckboxes(f.listeDefauts ?? '', PANNES_FREQUENTES);
         this.selectedPannes = pannesDecomp.selected;
         this.autrePannes = pannesDecomp.autre;
@@ -647,28 +694,6 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
         });
 
         this.dateSortieEstimee = f.dateSortie ? f.dateSortie.substring(0, 10) : '';
-
-        // Reconstituer les lignes pièces depuis la ordre de réparation
-        this.lignesPieces = (f.lignesOrdreReparationPieces || [])
-          .map((lp: any) => {
-            const piece = this.allPieces.find(pp => pp.id === lp.piece?.id);
-            if (!piece) return null;
-            const stockAtelier = piece.stockAtelier ?? 0;
-            const stockMagasin = piece.stockMagasin ?? 0;
-            const manquantAtelier = Math.max(0, lp.quantite - stockAtelier);
-            const aSortirMagasin = Math.min(manquantAtelier, stockMagasin);
-            const manquantGlobal = Math.max(0, manquantAtelier - stockMagasin);
-
-            return {
-              piece,
-              quantite: lp.quantite,
-              stockDisponible: stockAtelier + stockMagasin,
-              manquant: manquantGlobal,
-              aSortirMagasin: aSortirMagasin,
-              stockAtelier: stockAtelier
-            } as LignePiece;
-          })
-          .filter((l: any) => l !== null) as LignePiece[];
 
         // Reconstituer les lignes MO depuis la ordre de réparation
         this.lignesMO = (f.lignesOrdreReparationMainDoeuvres || [])
@@ -735,6 +760,20 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
             this.autreTravaux = travauxDecomp.autre;
             this.showAutreTravaux = this.autreTravaux.length > 0;
 
+            this.lignesPieces = (full.lignesOrdreReparationPieces || []).map((l: any) => {
+              return {
+                piece: l.piece,
+                pieceIdTemp: l.piece?.id,
+                quantite: l.quantite,
+                isCustom: l.isCustom,
+                designationPds: l.designationPds,
+                prixUnitaire: l.prix,
+                stockDisponible: l.isCustom ? 0 : (l.piece?.stockMagasin ?? 0) + (l.piece?.stockAtelier ?? 0),
+                manquant: l.isCustom ? 0 : Math.max(0, l.quantite - (l.piece?.stockAtelier ?? 0)),
+                aSortirMagasin: l.isCustom ? 0 : (Math.max(0, l.quantite - (l.piece?.stockAtelier ?? 0)) > 0 ? 0 : 1)
+              };
+            });
+
             const pannesDecomp = this.decomposeToCheckboxes(full.listeDefauts ?? '', PANNES_FREQUENTES);
             this.selectedPannes = pannesDecomp.selected;
             this.autrePannes = pannesDecomp.autre;
@@ -745,28 +784,6 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
             });
 
             this.dateSortieEstimee = full.dateSortie ? full.dateSortie.substring(0, 10) : '';
-
-            // Reconstituer les lignes pièces depuis la ordre de réparation
-            this.lignesPieces = (full.lignesOrdreReparationPieces || [])
-              .map((lp: any) => {
-                const piece = this.allPieces.find(pp => pp.id === lp.piece?.id);
-                if (!piece) return null;
-                const stockAtelier = piece.stockAtelier ?? 0;
-                const stockMagasin = piece.stockMagasin ?? 0;
-                const manquantAtelier = Math.max(0, lp.quantite - stockAtelier);
-                const aSortirMagasin = Math.min(manquantAtelier, stockMagasin);
-                const manquantGlobal = Math.max(0, manquantAtelier - stockMagasin);
-
-                return {
-                  piece,
-                  quantite: lp.quantite,
-                  stockDisponible: stockAtelier + stockMagasin,
-                  manquant: manquantGlobal,
-                  aSortirMagasin: aSortirMagasin,
-                  stockAtelier: stockAtelier
-                } as LignePiece;
-              })
-              .filter((l: any) => l !== null) as LignePiece[];
 
             // Reconstituer les lignes MO depuis la ordre de réparation
             this.lignesMO = (full.lignesOrdreReparationMainDoeuvres || [])
@@ -821,7 +838,13 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
       this.isLoadingProforma = true;
       try {
         this.proformaService.getByOrdreReparationId(f.id).subscribe({
-          next: (p) => { this.proformaChargee = p; this.isLoadingProforma = false; },
+          next: (p) => { 
+            this.proformaChargee = p; 
+            this.isLoadingProforma = false; 
+            if (this.editingFicheStatus === 'EN_ATTENTE_PROFORMA' && this.currentStep === 3) {
+              this.currentStep = 4;
+            }
+          },
           error: () => { this.proformaChargee = null; this.isLoadingProforma = false; }
         });
       } catch (e) { this.proformaChargee = null; this.isLoadingProforma = false; }
@@ -1012,21 +1035,34 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
     }
 
     this.saving = true;
-    if (this.editingFicheStatus === 'A_FAIRE') {
-      this.advanceStatutTo('EN_DIAGNOSTIC' as StatutFiche, () => {
-        this.saving = false;
-        this.notify('Diagnostic commencé.');
-        this.load();
-      });
-    } else {
-      this.service.updateStatut(this.editingId!, 'EN_ATTENTE_PROFORMA')
-        .subscribe(() => {
-          this.proformaSaving = false;
-          this.notify('Diagnostic terminé. Veuillez sélectionner les pièces et main d\'œuvre.');
-          this.currentStep = 3;
+    this.doSaveFicheData(() => {
+      if (this.editingFicheStatus === 'A_FAIRE') {
+        this.advanceStatutTo('EN_DIAGNOSTIC' as StatutFiche, () => {
+          this.saving = false;
+          this.notify('Diagnostic commencé et sauvegardé.');
           this.load();
         });
-    }
+      } else {
+        const trueStep = this.statutToStep(this.editingFicheStatus!);
+        if (trueStep <= 2) {
+          this.service.updateStatut(this.editingId!, 'EN_ATTENTE_PROFORMA')
+            .subscribe(() => {
+              this.saving = false;
+              this.notify('Diagnostic terminé et sauvegardé. Sélectionnez les pièces.');
+              this.currentStep = 3;
+              this.load();
+            });
+        } else {
+          this.saving = false;
+          this.notify('Diagnostic sauvegardé.');
+          this.currentStep = 3;
+          this.load();
+        }
+      }
+    }, (err) => {
+      this.saving = false;
+      this.notifyError('Erreur lors de la sauvegarde: ' + (err.error?.message || ''));
+    });
   }
 
   // ─── Pièces & Main d'œuvre (Nouvelle Étape 3) ──────────────────────
@@ -1038,38 +1074,25 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
 
     this.proformaSaving = true;
 
-    const listeDefauts = this.composeFromCheckboxes(this.selectedPannes, this.autrePannes);
-    const descriptionTravaux = this.composeFromCheckboxes(this.selectedTravaux, this.autreTravaux);
-
-    this.service.update(this.editingId!, {
-      numero: this.step1Form.value.numero,
-      descriptionTravaux: descriptionTravaux || '',
-      lignesTravaux: this.lignesTravaux.getRawValue() as LigneTravailOrdre[],
-      lignesReception: this.lignesReception.getRawValue() as LigneReceptionOrdre[],
-      listeDefauts: listeDefauts || undefined,
-      vehiculeId: Number(this.step1Form.value.vehiculeId),
-      lignesPieces: this.lignesPieces.map(l => ({ pieceId: l.piece.id, quantite: l.quantite, prix: l.piece.prix ?? null })),
-      lignesMainDoeuvres: this.lignesMO.map(l => ({ mainDoeuvreId: l.mo.id, nbreHeure: l.quantite, prix: l.mo.prix ?? null }))
-    }).subscribe({
-      next: () => {
-        this.proformaSaving = false;
-        this.proformaService.getByOrdreReparationId(this.editingId!).subscribe({
-          next: (p: any) => {
-            this.proformaChargee = p;
-            const num = p.numero || p.code || ('DK-' + p.id);
-            this.notify(`Pièces et main d'œuvre enregistrées. Proforma ${num} généré.`);
-          },
-          error: () => {
-            this.notify('Pièces et main d\'œuvre enregistrées dans la ordre de réparation.');
-          }
-        });
-        this.currentStep = 4; // PROFORMA_VALIDE validation step
-        this.load();
-      },
-      error: (err) => {
-        this.proformaSaving = false;
-        this.notifyError('Erreur lors de la sauvegarde : ' + (err.error?.message || ''));
-      }
+    this.doSaveFicheData(() => {
+      this.proformaSaving = false;
+      this.proformaService.getByOrdreReparationId(this.editingId!).subscribe({
+        next: (p: any) => {
+          this.proformaChargee = p;
+          const num = p.numero || p.code || ('DK-' + p.id);
+          this.notify(`Pièces et main d'œuvre enregistrées. Proforma ${num} généré.`);
+          this.currentStep = 4;
+          this.load();
+        },
+        error: () => {
+          this.notify('Pièces et main d\'œuvre enregistrées dans la ordre de réparation.');
+          this.currentStep = 4;
+          this.load();
+        }
+      });
+    }, (err) => {
+      this.proformaSaving = false;
+      this.notifyError('Erreur lors de la sauvegarde : ' + (err.error?.message || ''));
     });
   }
 
@@ -1092,6 +1115,24 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
       error: () => {
         this.proformaSaving = false;
         this.notifyError('Erreur lors de la vérification.');
+      }
+    });
+  }
+
+  envoyerProforma() {
+    const profId = this.proformaChargee?.id || this.selectedFicheProforma?.id;
+    if (!profId) return;
+    this.proformaSaving = true;
+    this.proformaService.validerEnvoi(profId).subscribe({
+      next: (p: any) => {
+        this.proformaSaving = false;
+        this.proformaChargee = p;
+        this.notify('Le proforma a été envoyé au client avec succès.');
+        this.load();
+      },
+      error: (err) => {
+        this.proformaSaving = false;
+        this.notifyError('Erreur lors de l\'envoi du proforma.');
       }
     });
   }
@@ -1153,7 +1194,13 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
       clientId,
       vehiculeId: fiche.vehicule!.id,
       ordreReparationId: fiche.id,
-      lignesPieces: lignes.map(l => ({ pieceId: l.piece.id, quantite: l.aSortirMagasin!, prix: l.piece.prix ?? null })),
+      lignesPieces: lignes.map(l => ({ 
+        pieceId: (l.isCustom ? null : l.piece?.id) as any, 
+        quantite: l.aSortirMagasin || 0,
+        prix: (l.prixUnitaire || l.piece?.prix) as any,
+        isCustom: l.isCustom,
+        designationPds: l.designationPds
+      })),
       remarque: `Bon de sortie automatique pour réparation FA-${this.editingId}`,
     }).subscribe({
       next: (bds: any) => {
@@ -1407,50 +1454,68 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
   }
 
   // ─── Pièces ──────────────────────────────────────────
-  addPiece() {
-    if (!this.pieceAjouter || this.qteAjouter < 1) return;
-    const piece = this.allPieces.find(p => p.id === Number(this.pieceAjouter));
-    if (!piece) return;
-
-    const stockAtelier = piece.stockAtelier ?? 0;
-    const stockMagasin = piece.stockMagasin ?? 0;
-
-    const existing = this.lignesPieces.find(l => l.piece.id === piece.id);
-    if (existing) {
-      existing.quantite += this.qteAjouter;
-      const manquantAtelier = Math.max(0, existing.quantite - stockAtelier);
-      existing.aSortirMagasin = Math.min(manquantAtelier, stockMagasin);
-      existing.manquant = Math.max(0, manquantAtelier - stockMagasin);
-    } else {
-      const manquantAtelier = Math.max(0, this.qteAjouter - stockAtelier);
-      const aSortirMagasin = Math.min(manquantAtelier, stockMagasin);
-      const manquantGlobal = Math.max(0, manquantAtelier - stockMagasin);
-
-      this.lignesPieces.push({
-        piece,
-        quantite: this.qteAjouter,
-        stockDisponible: stockAtelier + stockMagasin,
-        manquant: manquantGlobal,
-        aSortirMagasin,
-        stockAtelier
-      });
-    }
-    this.pieceAjouter = null;
-    this.qteAjouter = 1;
+  addPieceVide() {
+    this.lignesPieces.push({
+      isCustom: false,
+      quantite: 1,
+      stockDisponible: 0,
+      manquant: 0,
+      aSortirMagasin: 0,
+      pieceIdTemp: undefined
+    });
   }
 
-  removePiece(idx: number) { this.lignesPieces.splice(idx, 1); }
+  togglePieceCustom(idx: number) {
+    const l = this.lignesPieces[idx];
+    l.isCustom = !l.isCustom;
+    if (l.isCustom) {
+      l.piece = undefined;
+      l.pieceIdTemp = undefined;
+      l.stockDisponible = 0;
+      l.manquant = 0;
+      l.aSortirMagasin = 0;
+      l.prixUnitaire = 0;
+    }
+  }
+
+  onSelectCataloguePiece(idx: number, pieceId: number) {
+    const piece = this.piecesFiltrees.find(p => p.id === pieceId) || this.allPieces.find(p => p.id === pieceId);
+    if (!piece) return;
+    const l = this.lignesPieces[idx];
+    
+    // verifier si pas deja existante
+    const existingIdx = this.lignesPieces.findIndex((ligne, i) => i !== idx && !ligne.isCustom && ligne.piece?.id === pieceId);
+    if (existingIdx !== -1) {
+      this.notifyError('Cette pièce est déjà dans la liste');
+      l.pieceIdTemp = l.piece?.id;
+      return;
+    }
+
+    l.piece = piece;
+    const stockAtelier = piece.stockAtelier ?? 0;
+    const stockMagasin = piece.stockMagasin ?? 0;
+    l.stockDisponible = stockAtelier + stockMagasin;
+    l.stockAtelier = stockAtelier;
+    
+    const manquantAtelier = Math.max(0, l.quantite - stockAtelier);
+    l.aSortirMagasin = Math.min(manquantAtelier, stockMagasin);
+    l.manquant = Math.max(0, manquantAtelier - stockMagasin);
+  }
 
   updateQtePiece(idx: number, qte: number) {
     const l = this.lignesPieces[idx];
     l.quantite = Math.max(1, qte);
 
-    const stockAtelier = l.stockAtelier ?? 0;
-    const stockMagasin = l.piece.stockMagasin ?? 0;
-    const manquantAtelier = Math.max(0, l.quantite - stockAtelier);
-    l.aSortirMagasin = Math.min(manquantAtelier, stockMagasin);
-    l.manquant = Math.max(0, manquantAtelier - stockMagasin);
+    if (!l.isCustom && l.piece) {
+      const stockAtelier = l.stockAtelier ?? 0;
+      const stockMagasin = l.piece.stockMagasin ?? 0;
+      const manquantAtelier = Math.max(0, l.quantite - stockAtelier);
+      l.aSortirMagasin = Math.min(manquantAtelier, stockMagasin);
+      l.manquant = Math.max(0, manquantAtelier - stockMagasin);
+    }
   }
+
+  removePiece(idx: number) { this.lignesPieces.splice(idx, 1); }
 
   // ─── Main d'œuvre ─────────────────────────────────────
   addMO() {
@@ -1554,7 +1619,11 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
         else this.selectedTechniciens = [...this.selectedTechniciens, technicien.id];
         this.technicienToggling = null;
       },
-      error: () => { this.technicienToggling = null; },
+      error: (err) => { 
+        console.error("Backend Error Trace:", err?.error?.trace || err);
+        this.notifyError(err?.error?.message || 'Erreur lors de l\'assignation du technicien');
+        this.technicienToggling = null; 
+      },
     });
   }
 
@@ -1569,7 +1638,11 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
       vehiculeId: fiche?.vehicule?.id,
       tvaApplicable: false,
       observation: `Commande liée à la ordre de réparation #${this.step1Form.value.numero}`,
-      lignes: this.rupturesOnly.map(l => ({ pieceDetacheeId: l.piece.id, quantite: l.manquant, prixUnitaire: l.piece.prix ?? 0 })),
+      lignes: this.rupturesOnly.map(l => ({ 
+        pieceDetacheeId: l.piece?.id as number, 
+        quantite: l.manquant, 
+        prixUnitaire: l.piece?.prix ?? 0 
+      })),
     };
     this.bdcSaving = true;
     this.bdcService.create(payload).subscribe({
@@ -1619,21 +1692,37 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
     return (f.vehicule?.immatriculation ?? 'FA').slice(0, 2).toUpperCase();
   }
 
-  statutLabel(s: StatutFiche): string {
-    return STATUT_STEPS.find(st => st.statut === s)?.label ?? s;
+  hasPiecesOrMo(f: OrdreReparation | any): boolean {
+    if (!f) return false;
+    // from backend light DTO
+    if (f.hasPiecesOrMo === true) return true;
+    
+    // fallback if full detail is loaded
+    return (f.lignesOrdreReparationPieces && f.lignesOrdreReparationPieces.length > 0) ||
+           (f.lignesOrdreReparationMainDoeuvres && f.lignesOrdreReparationMainDoeuvres.length > 0) || false;
   }
 
-  statutStepIndex(s: StatutFiche): number {
-    return STATUT_STEPS.findIndex(st => st.statut === s);
+  statutLabel(f: OrdreReparation): string {
+    if (!f) return '';
+    if (f.statut === 'EN_ATTENTE_PROFORMA' && this.hasPiecesOrMo(f)) return 'Proforma';
+    return STATUT_STEPS.find(st => st.statut === f.statut)?.label ?? f.statut;
   }
 
-  statutColor(s: StatutFiche | string): string {
+  statutStepIndex(f: OrdreReparation): number {
+    if (!f) return 0;
+    if (f.statut === 'EN_ATTENTE_PROFORMA' && this.hasPiecesOrMo(f)) return 3; // Index 3 is Proforma
+    return STATUT_STEPS.findIndex(st => st.statut === f.statut);
+  }
+
+  statutColor(f: OrdreReparation): string {
+    if (!f) return '#6b7280';
+    if (f.statut === 'EN_ATTENTE_PROFORMA' && this.hasPiecesOrMo(f)) return '#a855f7';
     const map: Record<string, string> = {
       A_FAIRE: '#6b7280', EN_DIAGNOSTIC: '#f59e0b', EN_ATTENTE_PROFORMA: '#8b5cf6',
       PROFORMA_VALIDE: '#a855f7', EN_ATTENTE_COMMANDE: '#ec4899', EN_ATTENTE_SORTIE: '#eab308',
       EN_COURS: '#3b82f6', EN_ATTENTE_PAIEMENT: '#ef4444', TERMINE: '#10b981', LIVRE: '#22c55e',
     };
-    return map[s as string] ?? '#6b7280';
+    return map[f.statut] ?? '#6b7280';
   }
 
   private statutToStep(s: StatutFiche | string): number {
@@ -1645,6 +1734,16 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
 
     const idx = STATUT_STEPS.findIndex(x => x.statut === s);
     return idx >= 0 ? idx + 1 : 1;
+  }
+
+  get isEtape3Valid(): boolean {
+    const piecesRemplies = this.lignesPieces.every(l => {
+      if (l.isCustom) return l.designationPds && l.designationPds.trim().length > 0;
+      return l.piece != null;
+    });
+    const moRemplies = this.lignesMO.every(l => l.mo != null && l.quantite > 0);
+    const hasItems = this.lignesPieces.length > 0 || this.lignesMO.length > 0;
+    return hasItems && piecesRemplies && moRemplies;
   }
 
   // Raccourci : peut-on créer le bon de sortie ?
@@ -1661,7 +1760,7 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
   nextPage() { if (this.page < this.totalPages) this.page++; }
 
   // ─── Calculs ─────────────────────────────────────────
-  get totalPieces(): number { return this.lignesPieces.reduce((s, l) => s + (l.piece.prix ?? 0) * l.quantite, 0); }
+  get totalPieces(): number { return this.lignesPieces.reduce((s, l) => s + (l.isCustom ? (l.prixUnitaire ?? 0) : (l.piece?.prix ?? 0)) * l.quantite, 0); }
   get totalMO(): number { return this.lignesMO.reduce((s, l) => s + l.mo.prix * l.quantite, 0); }
   get grandTotal(): number { return this.totalPieces + this.totalMO; }
 

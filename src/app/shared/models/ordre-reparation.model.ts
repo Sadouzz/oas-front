@@ -69,6 +69,12 @@ export interface OrdreReparationRequest {
   dateSortie?: string;
   vehiculeId: number;
   statut?: StatutFiche;
-  lignesPieces?: { pieceId: number; quantite: number; prix?: number | null }[];
+  lignesPieces?: { 
+    pieceId?: number | null; 
+    quantite: number; 
+    prix?: number | null;
+    isCustom?: boolean;
+    designationPds?: string;
+  }[];
   lignesMainDoeuvres?: { mainDoeuvreId: number; nbreHeure: number; prix?: number | null }[];
 }
