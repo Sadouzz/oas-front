@@ -22,7 +22,7 @@ import { PaginationComponent } from '../../shared/components/pagination/paginati
 import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select.component';
 import { MediaUploaderComponent } from '../../shared/components/media-uploader/media-uploader.component';
 import { CloudinaryUploadResult } from '../../shared/models';
-import { PieceJointeDiagnostic, TypePieceJointeDiagnostic } from '../../services/ordre-reparation.service';
+import { PieceJointeDiagnostic, TypePieceJointeDiagnostic, RemarqueDiagnostic } from '../../services/ordre-reparation.service';
 import { LigneReceptionOrdre, LigneTravailOrdre } from '../../shared/models/ordre-reparation.model';
 
 export interface LignePiece {
@@ -165,7 +165,7 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
   showAutrePannes = false;
 
   // Remarques de diagnostic (depuis les techniciens)
-  remarquesDiagnostic: sn.oas.facturation.ordreReparation.dto.RemarqueDiagnosticResponse[] = [];
+  remarquesDiagnostic: RemarqueDiagnostic[] = [];
 
   // Étape 1 — Réception (simple récapitulatif texte, cf. spec point 1) +
   // Travaux demandés (texte libre, cf. spec point 2)
@@ -1786,5 +1786,12 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
   private notifyError(msg: string) {
     this.saving = false; this.errorMessage = msg;
     setTimeout(() => this.errorMessage = '', 4000);
+  }
+
+  loadRemarquesDiagnostic(ficheId: number) {
+    this.service.getRemarquesDiagnostic(ficheId).subscribe({
+      next: (list) => { this.remarquesDiagnostic = list; },
+      error: () => { this.remarquesDiagnostic = []; },
+    });
   }
 }
