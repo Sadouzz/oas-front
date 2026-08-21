@@ -8,6 +8,15 @@ export interface PieceJointeDiagnostic {
   url: string;
   type: TypePieceJointeDiagnostic;
   remarque: string | null;
+  technicienNom: string | null;
+  createdAt: string;
+}
+
+export interface RemarqueDiagnostic {
+  id: number;
+  ordreReparationId: number;
+  technicienNom: string | null;
+  contenu: string;
   createdAt: string;
 }
 

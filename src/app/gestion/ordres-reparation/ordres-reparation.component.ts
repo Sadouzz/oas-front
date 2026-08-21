@@ -164,6 +164,9 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
   autrePannes = '';
   showAutrePannes = false;
 
+  // Remarques de diagnostic (depuis les techniciens)
+  remarquesDiagnostic: sn.oas.facturation.ordreReparation.dto.RemarqueDiagnosticResponse[] = [];
+
   // Étape 1 — Réception (simple récapitulatif texte, cf. spec point 1) +
   // Travaux demandés (texte libre, cf. spec point 2)
   step1Form: FormGroup = this.fb.group({
@@ -634,6 +637,7 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
       this.isNew = true;
       this.editingId = null;
       this.currentStep = 1;
+      this.remarquesDiagnostic = [];
       this.resetForms();
       this.showWorkflow = true;
     });
@@ -745,6 +749,7 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
       this.service.getById(f.id).subscribe({
         next: (full) => {
           this.loadedFiche = full;
+          this.loadRemarquesDiagnostic(full.id);
           if (!isSame) {
             this.step1Form.patchValue({
               numero: full.numero,

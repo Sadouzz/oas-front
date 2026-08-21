@@ -3,8 +3,9 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { OrdreReparation, OrdreReparationRequest, StatutFiche, PieceJointeDiagnostic, TypePieceJointeDiagnostic } from '../shared/models';
+import { RemarqueDiagnostic } from '../shared/models/ordre-reparation.model';
 
-export type { OrdreReparation, OrdreReparationRequest, StatutFiche, PieceJointeDiagnostic, TypePieceJointeDiagnostic };
+export type { OrdreReparation, OrdreReparationRequest, StatutFiche, PieceJointeDiagnostic, TypePieceJointeDiagnostic, RemarqueDiagnostic };
 
 @Injectable({ providedIn: 'root' })
 export class OrdreReparationService {
@@ -64,6 +65,17 @@ export class OrdreReparationService {
 
   deletePieceJointeDiagnostic(ficheId: number, pieceJointeId: number): Observable<any> {
     return this.http.delete(`${this.api}/${ficheId}/diagnostic/pieces-jointes/${pieceJointeId}`, { responseType: 'text' as 'json' });
+  }
+
+  // ─── Remarques de diagnostic ─────────────────────────────
+  getRemarquesDiagnostic(ficheId: number): Observable<RemarqueDiagnostic[]> {
+    return this.http.get<RemarqueDiagnostic[]>(`${this.api}/${ficheId}/diagnostic/remarques`);
+  }
+  addRemarqueDiagnostic(ficheId: number, contenu: string): Observable<RemarqueDiagnostic> {
+    return this.http.post<RemarqueDiagnostic>(`${this.api}/${ficheId}/diagnostic/remarques`, { contenu });
+  }
+  deleteRemarqueDiagnostic(ficheId: number, remarqueId: number): Observable<any> {
+    return this.http.delete(`${this.api}/${ficheId}/diagnostic/remarques/${remarqueId}`, { responseType: 'text' as 'json' });
   }
 
   // ─── Lien Fiche Atelier → Ordre de réparation ─────────

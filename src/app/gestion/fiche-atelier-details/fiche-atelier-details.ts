@@ -1,8 +1,10 @@
 import { Component, inject, OnInit, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { FicheAtelierService } from '../../services/fiche-atelier.service';
 import { FicheAtelierResponse } from '../../shared/models';
+import { DevisPrevisionnel, DevisPrevisionnelService } from '../../services/devis-previsionnel.service';
 import { LucideArrowLeft, LucideCheck, LucideX } from '@lucide/angular';
 import { OrdreReparationService } from '../../services/ordre-reparation.service';
 import { AuthService } from '../auth/services/auth.service';
@@ -10,7 +12,7 @@ import { AuthService } from '../auth/services/auth.service';
 @Component({
   selector: 'app-fiche-atelier-details',
   standalone: true,
-  imports: [CommonModule, LucideArrowLeft, LucideCheck],
+  imports: [CommonModule, FormsModule, LucideArrowLeft, LucideCheck],
   templateUrl: './fiche-atelier-details.html'
 })
 export class FicheAtelierDetails implements OnInit {
@@ -19,10 +21,17 @@ export class FicheAtelierDetails implements OnInit {
   private service = inject(FicheAtelierService);
   private ordreReparationService = inject(OrdreReparationService);
   private authService = inject(AuthService);
+  private devisService = inject(DevisPrevisionnelService);
 
   fiche: FicheAtelierResponse | null = null;
   loading = false;
   error = '';
+  
+  devis: DevisPrevisionnel | null = null;
+  loadingDevis = false;
+  creatingDevis = false;
+  devisMontant: number | null = null;
+  devisNotes = '';
 
   // ─── Bouton "Créer l'ordre de réparation" (cf. spec point 8) ─────────
   ordreReparationExists = false;
@@ -51,6 +60,7 @@ export class FicheAtelierDetails implements OnInit {
         this.fiche = data;
         this.loading = false;
         this.checkOrdreReparationExists(id);
+        this.loadDevis(id);
       },
       error: () => {
         this.error = "Impossible de charger la fiche atelier.";
@@ -67,8 +77,61 @@ export class FicheAtelierDetails implements OnInit {
     });
   }
 
+  loadDevis(ficheId: number) {
+    this.loadingDevis = true;
+    this.devisService.getByFicheAtelierId(ficheId).subscribe({
+      next: (devis) => {
+        this.devis = devis;
+        this.loadingDevis = false;
+      },
+      error: () => {
+        this.loadingDevis = false;
+      }
+    });
+  }
+
+  saveDevis() {
+    if (!this.fiche || !this.devisMontant) return;
+    this.creatingDevis = true;
+    this.devisService.create({
+      montantTotal: this.devisMontant,
+      notesReparation: this.devisNotes,
+      kilometrageVehicule: this.fiche.kilometrage || 0,
+      vehiculeId: this.fiche.vehiculeId,
+      clientId: this.fiche.clientId,
+      ficheAtelierId: this.fiche.id
+    }).subscribe({
+      next: (newDevis) => {
+        this.devis = newDevis;
+        this.creatingDevis = false;
+      },
+      error: (err) => {
+        this.error = err.error?.message || "Erreur lors de la création du devis.";
+        this.creatingDevis = false;
+      }
+    });
+  }
+
+  validerDevis() {
+    if (!this.devis) return;
+    if (!confirm("Voulez-vous forcer la validation de ce devis (ex: accord téléphonique du client) ?")) return;
+    
+    this.devisService.valider(this.devis.id).subscribe({
+      next: (updated) => {
+        this.devis = updated;
+      },
+      error: (err) => {
+        this.error = err.error?.message || "Impossible de valider le devis.";
+      }
+    });
+  }
+
   creerOrdreReparation() {
     if (!this.fiche) return;
+    if (!this.devis || (this.devis.statut !== 'ACCEPTE' && this.devis.statut !== 'PAYEE')) {
+      this.error = "Un devis prévisionnel doit être créé et accepté avant de créer l'ordre de réparation.";
+      return;
+    }
     this.router.navigate(['/gestion/ordres-reparation'], { queryParams: { ficheAtelierId: this.fiche.id } });
   }
 

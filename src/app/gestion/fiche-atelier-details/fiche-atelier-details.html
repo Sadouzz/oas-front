@@ -80,7 +80,7 @@
             </div>
             <div class="flex justify-between">
               <span class="text-sm text-oas-faint">Niveau Essence</span>
-              <span class="text-sm font-semibold text-oas-ink2">{{ fiche.niveauEssence || 'Non renseigné' }}</span>
+              <span class="text-sm font-semibold text-oas-ink2">{{ fiche.niveauEssence ? (fiche.niveauEssence + (fiche.niveauEssence.includes('%') || fiche.niveauEssence.includes('/') ? '' : '%')) : 'Non renseigné' }}</span>
             </div>
             <div class="flex justify-between">
               <span class="text-sm text-oas-faint">Date Sortie Prévue</span>
@@ -138,6 +138,81 @@
           <p class="text-sm text-oas-ink2 whitespace-pre-wrap">{{ fiche.nb }}</p>
         </div>
       }
+
+      <!-- DEVIS PREVISIONNEL -->
+      <div class="bg-white rounded-xl border border-oas-accent/20 p-5 shadow-sm mb-6 relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-1 h-full bg-oas-accent"></div>
+        <h3 class="font-bold text-oas-accent-dark mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-oas-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          Devis Prévisionnel
+        </h3>
+
+        @if (loadingDevis) {
+          <p class="text-sm text-oas-faint animate-pulse">Chargement du devis...</p>
+        } @else {
+          @if (devis) {
+            <!-- Devis Existant -->
+            <div class="space-y-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <span class="block text-xs font-bold text-oas-faint uppercase tracking-wide">Montant Total</span>
+                  <span class="text-lg font-black text-oas-ink">{{ devis.montantTotal | number:'1.0-0' }} FCFA</span>
+                </div>
+                <div>
+                  <span class="block text-xs font-bold text-oas-faint uppercase tracking-wide">Statut</span>
+                  <span class="inline-flex mt-1 px-3 py-1 rounded-full text-xs font-bold"
+                        [ngClass]="{
+                          'bg-amber-100 text-amber-700': devis.statut === 'EN_ATTENTE',
+                          'bg-green-100 text-green-700': devis.statut === 'ACCEPTE' || devis.statut === 'PAYEE',
+                          'bg-red-100 text-red-700': devis.statut === 'REJETE'
+                        }">
+                    {{ devis.statut }}
+                  </span>
+                </div>
+              </div>
+              @if (devis.notesReparation) {
+                <div>
+                  <span class="block text-xs font-bold text-oas-faint uppercase tracking-wide">Remarques du devis</span>
+                  <p class="text-sm mt-1 text-oas-ink2 bg-gray-50 p-3 rounded-lg border border-gray-100">{{ devis.notesReparation }}</p>
+                </div>
+              }
+
+              <!-- Actions Chef d'atelier -->
+              @if (devis.statut === 'EN_ATTENTE') {
+                <div class="mt-4 pt-4 border-t border-oas-line flex flex-col sm:flex-row items-center gap-3">
+                  <p class="text-xs text-oas-muted flex-1">En attente de validation par le client (via portail).</p>
+                  <button (click)="validerDevis()" class="px-4 py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-xl font-bold text-sm transition flex items-center gap-2 border border-green-200">
+                    <svg lucideCheck class="w-4 h-4"></svg>
+                    Forcer validation (Accord Tél.)
+                  </button>
+                </div>
+              }
+            </div>
+          } @else {
+            <!-- Création Devis -->
+            <p class="text-sm text-oas-ink2 mb-4">
+              Aucun devis n'a été créé pour cette fiche atelier. Vous pouvez en saisir un si nécessaire pour validation client.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-bold text-oas-ink mb-1">Montant Prévisionnel (FCFA)</label>
+                <input type="number" [(ngModel)]="devisMontant" class="w-full h-11 bg-oas-bg rounded-xl border border-oas-line px-4 focus:ring-2 focus:ring-oas-accent focus:border-transparent outline-none transition" placeholder="Ex: 150000">
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-sm font-bold text-oas-ink mb-1">Remarques / Détails</label>
+                <textarea [(ngModel)]="devisNotes" rows="2" class="w-full bg-oas-bg rounded-xl border border-oas-line px-4 py-3 focus:ring-2 focus:ring-oas-accent focus:border-transparent outline-none transition resize-none" placeholder="Ex: Changement plaquettes et révision générale"></textarea>
+              </div>
+            </div>
+            <div class="mt-4 flex justify-end">
+              <button (click)="saveDevis()" [disabled]="!devisMontant || creatingDevis" class="px-5 h-10 bg-oas-ink text-white font-bold rounded-xl hover:bg-gray-800 disabled:opacity-50 transition cursor-pointer">
+                {{ creatingDevis ? 'Sauvegarde...' : 'Créer le Devis' }}
+              </button>
+            </div>
+          }
+        }
+      </div>
 
       <!-- Signatures -->
       <div class="bg-white rounded-xl border border-oas-line p-5 shadow-sm">

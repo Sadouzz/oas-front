@@ -33,4 +33,12 @@ export class DevisPrevisionnelService {
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.api}/${id}`);
   }
+
+  getByFicheAtelierId(ficheAtelierId: number): Observable<DevisPrevisionnel | null> {
+    return this.http.get<DevisPrevisionnel | null>(`${this.api}/fiche-atelier/${ficheAtelierId}`);
+  }
+
+  valider(id: number): Observable<DevisPrevisionnel> {
+    return this.http.put<DevisPrevisionnel>(`${this.api}/${id}/valider`, {});
+  }
 }

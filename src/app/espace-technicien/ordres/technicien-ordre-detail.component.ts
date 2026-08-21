@@ -8,6 +8,7 @@ import { PieceDetacheeService, PieceDetache } from '../../services/piece-detache
 import { MainDoeuvreService, MainDoeuvreModel } from '../../services/main-doeuvre.service';
 import { MediaUploaderComponent } from '../../shared/components/media-uploader/media-uploader.component';
 import { OrdreReparation, PieceJointeDiagnostic, TypePieceJointeDiagnostic, CloudinaryUploadResult } from '../../shared/models';
+import { RemarqueDiagnostic } from '../../shared/models/ordre-reparation.model';
 
 @Component({
   selector: 'app-technicien-ordre-detail',
@@ -41,6 +42,11 @@ export class TechnicienOrdreDetailComponent implements OnInit {
   pieceJointeRemarque = '';
   pieceJointeUploading = false;
 
+  // Diagnostic — remarques
+  remarquesDiagnostic: RemarqueDiagnostic[] = [];
+  newRemarque = '';
+  savingRemarque = false;
+
   // Pièce proposée (sans prix)
   selectedPieceId: number | null = null;
   pieceQuantite = 1;
@@ -73,6 +79,7 @@ export class TechnicienOrdreDetailComponent implements OnInit {
         this.listeDefauts = o.listeDefauts ?? '';
         this.loading = false;
         this.loadPiecesJointesDiagnostic();
+        this.loadRemarquesDiagnostic();
       },
       error: (err) => {
         this.loading = false;
@@ -89,6 +96,38 @@ export class TechnicienOrdreDetailComponent implements OnInit {
     this.service.getPiecesJointesDiagnostic(this.ordreId).subscribe({
       next: (list) => { this.piecesJointesDiagnostic = list; },
       error: () => { this.piecesJointesDiagnostic = []; },
+    });
+  }
+
+  loadRemarquesDiagnostic() {
+    this.service.getRemarquesDiagnostic(this.ordreId).subscribe({
+      next: (list) => { this.remarquesDiagnostic = list; },
+      error: () => { this.remarquesDiagnostic = []; },
+    });
+  }
+
+  addRemarque() {
+    if (!this.newRemarque.trim()) return;
+    this.savingRemarque = true;
+    this.service.addRemarqueDiagnostic(this.ordreId, this.newRemarque.trim()).subscribe({
+      next: () => {
+        this.savingRemarque = false;
+        this.newRemarque = '';
+        this.notify('Remarque ajoutée.');
+        this.loadRemarquesDiagnostic();
+      },
+      error: (err) => {
+        this.savingRemarque = false;
+        this.notifyError(err.error?.message || 'Erreur lors de l\'ajout de la remarque.');
+      },
+    });
+  }
+
+  removeRemarque(remarqueId: number) {
+    if (!confirm('Supprimer cette remarque ?')) return;
+    this.service.deleteRemarqueDiagnostic(this.ordreId, remarqueId).subscribe({
+      next: () => this.loadRemarquesDiagnostic(),
+      error: () => this.notifyError('Erreur lors de la suppression de la remarque.'),
     });
   }
 

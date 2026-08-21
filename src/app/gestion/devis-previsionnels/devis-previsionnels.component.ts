@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { DecimalPipe } from '@angular/common';
+import { CommonModule, DecimalPipe } from '@angular/common';
 import { DevisPrevisionnelService, DevisPrevisionnel } from '../../services/devis-previsionnel.service';
 import { ClientService, UserModel } from '../../services/client.service';
 import { VehiculeService, VehiculeModel } from '../../services/vehicule.service';
@@ -11,7 +11,7 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDo
 @Component({
   selector: 'app-devis-previsionnels',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, AlertComponent, PaginationComponent, LucidePlus],
+  imports: [CommonModule, ReactiveFormsModule, DecimalPipe, AlertComponent, PaginationComponent, LucidePlus],
   templateUrl: './devis-previsionnels.component.html',
 })
 export class DevisPrevisionnelsComponent implements OnInit {
@@ -130,6 +130,14 @@ export class DevisPrevisionnelsComponent implements OnInit {
     this.service.delete(id).subscribe({
       next: () => { this.load(); this.notify('Devis supprimé.'); },
       error: () => this.notifyError('Erreur lors de la suppression.'),
+    });
+  }
+
+  valider(id: number) {
+    if (!confirm('Voulez-vous vraiment forcer la validation de ce devis ?')) return;
+    this.service.valider(id).subscribe({
+      next: () => { this.load(); this.notify('Devis validé avec succès.'); },
+      error: () => this.notifyError('Erreur lors de la validation du devis.'),
     });
   }
 

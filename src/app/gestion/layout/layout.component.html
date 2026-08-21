@@ -192,7 +192,7 @@
       }
 
       <!-- ── Facture HT — Agent + Super + Chef Atelier ── -->
-      <!-- @if (isAgent() || isSuperAgent() || isMaster() || isChefAtelier()) {
+      @if (isAgent() || isSuperAgent() || isMaster() || isChefAtelier()) {
         <button (click)="toggleSection('facture-ht')"
                 class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
           <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -206,23 +206,23 @@
         </button>
         @if (openSection === 'facture-ht') {
           <div class="ml-3 pl-3 border-l border-white/10 space-y-0.5">
-            <a routerLink="/notes-prix" routerLinkActive="oas-sub-active"
+            <a routerLink="/gestion/notes-prix" routerLinkActive="oas-sub-active"
                class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
               Note de prix
             </a>
-            @if (isChefAtelier() || isSuperAgent() || isMaster()) {
-              <a routerLink="/devis-previsionnels" routerLinkActive="oas-sub-active"
+            @if (isChefAtelier() || isSuperAgent() || isMaster() || isAgent()) {
+              <a routerLink="/gestion/devis-previsionnels" routerLinkActive="oas-sub-active"
                  class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
                 Devis prévisionnel
               </a>
             }
-            <a routerLink="/avoirs-ht" routerLinkActive="oas-sub-active"
+            <a routerLink="/gestion/avoirs-ht" routerLinkActive="oas-sub-active"
                class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
               Avoir Note de prix
             </a>
           </div>
         }
-      } -->
+      }
 
       <!-- Gestion TVA — Agent + Super -->
       <!-- @if (isAgent() || isSuperAgent() || isMaster()) {

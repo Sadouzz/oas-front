@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { OrdreReparation, PieceJointeDiagnostic, TypePieceJointeDiagnostic, Technicien } from '../../shared/models';
+import { RemarqueDiagnostic } from '../../shared/models/ordre-reparation.model';
 
 @Injectable({ providedIn: 'root' })
 export class TechnicienPortalService {
@@ -45,5 +46,16 @@ export class TechnicienPortalService {
 
   proposerMainDoeuvre(id: number, data: { mainDoeuvreId: number; nbreHeure: number }): Observable<any> {
     return this.http.post(`${this.api}/ordres-reparation/${id}/main-doeuvre`, data, { responseType: 'text' as 'json' });
+  }
+
+  // ─── Remarques de diagnostic ─────────────────────────────
+  getRemarquesDiagnostic(id: number): Observable<RemarqueDiagnostic[]> {
+    return this.http.get<RemarqueDiagnostic[]>(`${this.api}/ordres-reparation/${id}/diagnostic/remarques`);
+  }
+  addRemarqueDiagnostic(id: number, contenu: string): Observable<RemarqueDiagnostic> {
+    return this.http.post<RemarqueDiagnostic>(`${this.api}/ordres-reparation/${id}/diagnostic/remarques`, { contenu });
+  }
+  deleteRemarqueDiagnostic(id: number, remarqueId: number): Observable<any> {
+    return this.http.delete(`${this.api}/ordres-reparation/${id}/diagnostic/remarques/${remarqueId}`, { responseType: 'text' as 'json' });
   }
 }

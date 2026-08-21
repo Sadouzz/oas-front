@@ -72,13 +72,21 @@ export class LayoutComponent implements OnInit, OnDestroy {
     '/admin/history': { label: 'Historique connexions', section: 'Administration' },
   };
 
+  private getRelativeUrl(url: string): string {
+    let rel = url.split('?')[0];
+    if (rel.startsWith('/gestion')) {
+      rel = rel.substring('/gestion'.length);
+    }
+    return rel === '' ? '/' : rel;
+  }
+
   get breadcrumb(): { label: string; link?: string }[] {
-    const url = this.router.url.split('?')[0];
-    if (url === '/dashboard' || !this.routeLabels[url]) {
+    const relUrl = this.getRelativeUrl(this.router.url);
+    if (relUrl === '/dashboard' || !this.routeLabels[relUrl]) {
       return [{ label: 'Tableau de bord' }];
     }
-    const entry = this.routeLabels[url];
-    const crumbs: { label: string; link?: string }[] = [{ label: 'Tableau de bord', link: '/dashboard' }];
+    const entry = this.routeLabels[relUrl];
+    const crumbs: { label: string; link?: string }[] = [{ label: 'Tableau de bord', link: '/gestion/dashboard' }];
     if (entry.section) crumbs.push({ label: entry.section });
     crumbs.push({ label: entry.label });
     return crumbs;
@@ -177,17 +185,18 @@ export class LayoutComponent implements OnInit, OnDestroy {
   }
 
   private syncSection(url: string) {
-    if (['/bons-de-sortie', '/pieces-detachees', '/stock', '/inventaire'].some(p => url.startsWith(p))) {
-      this.openSection = 'stock';
-    } else if (['/bons-commande', '/bons-livraison', '/fournisseurs'].some(p => url.startsWith(p))) {
-      this.openSection = 'reappro';
-    } else if (['/factures', '/proformas', '/avoirs-ttc'].some(p => url.startsWith(p))) {
-      this.openSection = 'facture-ttc';
-    } else if (['/notes-prix', '/devis-previsionnels', '/avoirs-ht'].some(p => url.startsWith(p))) {
-      this.openSection = 'facture-ht';
-    } else if (['/ordres-reparation', '/techniciens'].some(p => url.startsWith(p))) {
+    const relUrl = this.getRelativeUrl(url);
+    if (['/fiches-atelier', '/ordres-reparation', '/techniciens'].some(p => relUrl.startsWith(p))) {
       this.openSection = 'atelier';
-    } else if (url.startsWith('/admin') && !url.startsWith('/admin/main-doeuvre')) {
+    } else if (['/bons-de-sortie', '/pieces-detachees', '/stock', '/inventaire'].some(p => relUrl.startsWith(p))) {
+      this.openSection = 'stock';
+    } else if (['/bons-commande', '/bons-livraison', '/fournisseurs'].some(p => relUrl.startsWith(p))) {
+      this.openSection = 'reappro';
+    } else if (['/factures', '/proformas', '/avoirs-ttc'].some(p => relUrl.startsWith(p))) {
+      this.openSection = 'facture-ttc';
+    } else if (['/notes-prix', '/devis-previsionnels', '/avoirs-ht'].some(p => relUrl.startsWith(p))) {
+      this.openSection = 'facture-ht';
+    } else if (relUrl.startsWith('/admin') && !relUrl.startsWith('/admin/main-doeuvre')) {
       this.openSection = 'admin';
     } else {
       this.openSection = null;
