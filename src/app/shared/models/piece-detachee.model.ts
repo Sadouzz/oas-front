@@ -2,25 +2,26 @@ export interface PieceDetache {
   id: number;
   type: 'PDP' | 'PDG' | 'PDS';
   numero: string;
-  numeroDeSerie: string;
   reference: string;
+  designation: string;
   categorie: string;
-  pourcentage: number;
-  statut: 'ACTIF' | 'INACTIF';
+  pourcentage?: number;
+  statut?: 'ACTIF' | 'ARCHIVE';
   createdAt: string;
   qteReelle?: number;
   stockAtelier?: number;
   stockMagasin?: number;
   prix?: number;
   seuilMinimum?: number;
+  estUtilise?: boolean;
 }
 
 export interface PieceDetacheRequest {
-  type: 'PDP' | 'PDG' | 'PDS';
-  numeroDeSerie: string;
+  type: 'PDP' | 'PDG';
   reference: string;
+  designation: string;
   categorie: string;
-  pourcentage: number;
+  pourcentage?: number;
   statut?: 'ACTIF' | 'INACTIF';
   stockMagasin?: number | null;
   prix?: number | null;
@@ -29,8 +30,8 @@ export interface PieceDetacheRequest {
 
 export interface AlerteStock {
   pieceId: number;
-  numeroDeSerie: string;
   reference: string;
+  designation: string;
   categorie: string;
   stockMagasin: number;
   stockAtelier: number;

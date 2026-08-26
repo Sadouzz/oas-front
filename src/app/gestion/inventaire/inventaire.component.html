@@ -47,8 +47,8 @@
           } @else {
             @for (p of paged; track p.id) {
               <tr class="hover:bg-oas-bg transition border-b border-oas-line">
-                <td class="px-5 py-4 font-semibold text-oas-ink">{{ p.reference }}</td>
-                <td class="px-5 py-4 font-mono text-xs text-oas-muted">{{ p.numeroDeSerie }}</td>
+                <td class="px-5 py-4 font-semibold text-oas-ink">{{ p.designation }}</td>
+                <td class="px-5 py-4 font-mono text-xs text-oas-muted">{{ p.reference }}</td>
                 <td class="px-5 py-4 text-sm text-oas-ink2">{{ p.categorie }}</td>
                 <td class="px-5 py-4">
                   <span [class]="(p.stockMagasin ?? 0) === 0 ? 'text-oas-bad font-bold' : (p.stockMagasin ?? 0) <= (p.seuilMinimum ?? 10) ? 'text-oas-warn font-bold' : 'text-oas-ink font-medium'">

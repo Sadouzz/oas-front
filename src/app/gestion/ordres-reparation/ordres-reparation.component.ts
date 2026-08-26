@@ -338,9 +338,9 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
     const q = this.pieceSearch.toLowerCase();
     if (!q) return this.allPieces;
     return this.allPieces.filter(p =>
-      p.reference.toLowerCase().includes(q) ||
+      p.designation.toLowerCase().includes(q) ||
       (p.categorie ?? '').toLowerCase().includes(q) ||
-      (p.numeroDeSerie ?? '').toLowerCase().includes(q)
+      (p.reference ?? '').toLowerCase().includes(q)
     );
   }
   get moFiltrees(): MainDoeuvreModel[] {
@@ -1025,7 +1025,7 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
 
   formatPiece = (p: any) => {
     if (!p) return '';
-    return p.reference + ' — ' + (p.categorie || '') + ' (Atelier: ' + (p.stockAtelier ?? 0) + ' | Magasin: ' + (p.stockMagasin ?? 0) + ')';
+    return p.designation + ' — ' + (p.categorie || '') + ' (Atelier: ' + (p.stockAtelier ?? 0) + ' | Magasin: ' + (p.stockMagasin ?? 0) + ')';
   };
 
   formatMO = (m: any) => {

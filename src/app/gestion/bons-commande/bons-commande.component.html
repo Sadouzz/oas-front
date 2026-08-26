@@ -481,7 +481,7 @@
                               class="flex-1 px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
                         <option [ngValue]="null" disabled>Pièce du catalogue...</option>
                         @for (p of displayedPieces; track p.id) {
-                          <option [value]="p.id">{{ p.reference }} — {{ p.numeroDeSerie }}</option>
+                          <option [value]="p.id">{{ p.designation }} — {{ p.reference }}</option>
                         }
                       </select>
                     }

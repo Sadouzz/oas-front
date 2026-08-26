@@ -516,7 +516,7 @@
                             [class.border-oas-bad]="ligne.get('pieceId')?.invalid && ligne.get('pieceId')?.touched">
                       <option [ngValue]="null" disabled>Pièce...</option>
                       @for (p of pieces; track p.id) {
-                        <option [value]="p.id">{{ p.reference }} — {{ p.numeroDeSerie }}</option>
+                        <option [value]="p.id">{{ p.designation }} — {{ p.reference }}</option>
                       }
                     </select>
                   } @else {

@@ -1,7 +1,4 @@
-<div class="flex gap-5 min-h-0">
-
-  <!-- Colonne principale -->
-  <div class="flex-1 min-w-0">
+<div class="flex-1 min-w-0">
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-oas-ink">Catalogue des pièces détachées</h1>
@@ -116,6 +113,7 @@
         <option value="">Tous statuts</option>
         <option value="ACTIF">Actif</option>
         <option value="INACTIF">Inactif</option>
+        <option value="ARCHIVE">Archivé</option>
       </select>
     </div>
 
@@ -125,15 +123,14 @@
           <thead>
             <tr class="border-b border-oas-line">
               <th class="text-left text-xs text-oas-muted px-5 py-3">Type</th>
-              <th class="text-left text-xs text-oas-muted px-5 py-3">Référence</th>
+              <th class="text-left text-xs text-oas-muted px-5 py-3">Réf</th>
               <th class="text-left text-xs text-oas-muted px-5 py-3">Numéro</th>
-              <th class="text-left text-xs text-oas-muted px-5 py-3">N° Série</th>
+              <th class="text-left text-xs text-oas-muted px-5 py-3">Désignation</th>
               <th class="text-left text-xs text-oas-muted px-5 py-3">Catégorie</th>
               <th class="text-left text-xs text-oas-muted px-5 py-3">Stock magasin</th>
               <th class="text-left text-xs text-oas-muted px-5 py-3">Stock atelier</th>
-              <th class="text-left text-xs text-oas-muted px-5 py-3">Qté réelle</th>
-              <th class="text-left text-xs text-oas-muted px-5 py-3">Prix</th>
-              <th class="text-left text-xs text-oas-muted px-5 py-3">Statut</th>
+              <th class="text-left text-xs text-oas-muted px-5 py-3">Qté</th>
+              <th class="text-left text-xs text-oas-muted px-5 py-3">Prix en gros</th>
               @if (canEdit) {
                 <th class="text-right text-xs text-oas-muted px-5 py-3">Actions</th>
               }
@@ -155,7 +152,7 @@
                   </td>
                   <td class="px-5 py-4 font-semibold text-oas-ink">{{ p.reference }}</td>
                   <td class="px-5 py-4 font-mono text-xs text-oas-accent">{{ p.numero }}</td>
-                  <td class="px-5 py-4 font-mono text-xs text-oas-muted">{{ p.numeroDeSerie }}</td>
+                  <td class="px-5 py-4 font-mono text-xs text-oas-muted">{{ p.designation }}</td>
                   <td class="px-5 py-4 text-sm text-oas-ink2">{{ p.categorie }}</td>
                   <td class="px-5 py-4">
                     @if (p.type === 'PDP') {
@@ -177,17 +174,6 @@
                       {{ p.prix | number:'1.0-0' }} FCFA
                     } @else { <span class="text-oas-faint">–</span> }
                   </td>
-                  <td class="px-5 py-4">
-                    @if (p.statut === 'ACTIF') {
-                      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-oas-ok-bg text-oas-ok">
-                        <span class="w-1.5 h-1.5 rounded-full bg-oas-ok"></span>Actif
-                      </span>
-                    } @else {
-                      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-oas-bg text-oas-muted">
-                        <span class="w-1.5 h-1.5 rounded-full bg-oas-muted"></span>Inactif
-                      </span>
-                    }
-                  </td>
                   @if (canEdit) {
                     <td class="px-5 py-4">
                       <div class="flex items-center justify-end gap-1">
@@ -203,12 +189,28 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                           </svg>
                         </button>
-                        <button (click)="deletePiece(p)" title="Supprimer"
-                                class="p-1.5 rounded-lg hover:bg-oas-bad-bg text-oas-muted hover:text-oas-bad transition cursor-pointer">
-                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                          </svg>
-                        </button>
+                        @if (p.statut === 'ARCHIVE') {
+                          <button (click)="restorePiece(p)" title="Restaurer la pièce"
+                                  class="p-1.5 rounded-lg hover:bg-oas-accent-bg text-oas-muted hover:text-oas-accent transition cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                          </button>
+                        } @else if (p.estUtilise) {
+                          <button (click)="deletePiece(p)" title="Archiver (pièce utilisée)"
+                                  class="p-1.5 rounded-lg hover:bg-orange-50 text-oas-muted hover:text-orange-500 transition cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                            </svg>
+                          </button>
+                        } @else {
+                          <button (click)="deletePiece(p)" title="Supprimer (aucune relation)"
+                                  class="p-1.5 rounded-lg hover:bg-oas-bad-bg text-oas-muted hover:text-oas-bad transition cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                          </button>
+                        }
                       </div>
                     </td>
                   }
@@ -223,84 +225,6 @@
       <app-pagination [page]="page" [totalPages]="totalPages" [total]="filtered.length" [pageSize]="pageSize" (prev)="prevPage()" (next)="nextPage()" />
     </div>
   </div>
-
-  <!-- Panneau lateral : Alertes stock faible -->
-  <div class="w-72 flex-shrink-0">
-    <div class="bg-white rounded-lg border border-oas-line shadow-card overflow-hidden sticky top-0">
-      <!-- Header panneau -->
-      <div class="px-4 py-3 border-b border-oas-line flex items-center gap-2">
-        <div class="w-7 h-7 rounded-lg bg-oas-warn-bg flex items-center justify-center flex-shrink-0">
-          <svg class="w-4 h-4 text-oas-warn" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
-          </svg>
-        </div>
-        <div class="flex-1 min-w-0">
-          <p class="text-xs font-bold text-oas-ink">Alertes stock faible</p>
-          <p class="text-[10px] text-oas-muted">Stock &lt;= seuil minimum</p>
-        </div>
-        @if (lowStockPieces.length > 0) {
-          <span class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-oas-warn text-white text-[10px] font-bold flex-shrink-0">
-            {{ lowStockPieces.length }}
-          </span>
-        }
-      </div>
-
-      <!-- Liste alertes -->
-      <div class="max-h-[calc(100vh-280px)] overflow-y-auto">
-        @if (loading) {
-          <div class="flex items-center justify-center py-8 text-oas-muted">
-            <svg class="animate-spin h-4 w-4 text-oas-accent" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-            </svg>
-          </div>
-        } @else if (lowStockPieces.length === 0) {
-          <div class="px-4 py-8 text-center">
-            <svg class="w-8 h-8 text-oas-ok mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            <p class="text-xs text-oas-muted">Tous les stocks sont suffisants</p>
-          </div>
-        } @else {
-          <div class="divide-y divide-oas-line">
-            @for (p of lowStockPieces; track p.id) {
-              <div class="px-4 py-3">
-                <div class="flex items-start justify-between gap-2">
-                  <div class="min-w-0 flex-1">
-                    <p class="text-xs font-bold text-oas-ink truncate">{{ p.reference }}</p>
-                    <p class="text-[10px] text-oas-muted truncate">{{ p.categorie }}</p>
-                  </div>
-                  <div class="text-right flex-shrink-0 flex items-center gap-2">
-                    <div>
-                      <p class="text-xs font-bold"
-                         [ngClass]="(p.qteReelle ?? 0) === 0 ? 'text-oas-bad' : 'text-oas-warn'">
-                        {{ p.qteReelle ?? 0 }}
-                      </p>
-                      <p class="text-[10px] text-oas-muted">/ {{ p.seuilMinimum }}</p>
-                    </div>
-                    @if (canEdit) {
-                      <button (click)="commanderPiece(p)" title="Commander"
-                              class="p-1 rounded-lg hover:bg-orange-50 text-oas-muted hover:text-oas-accent transition cursor-pointer">
-                        <svg lucideShoppingCart class="w-3.5 h-3.5"></svg>
-                      </button>
-                    }
-                  </div>
-                </div>
-                <div class="mt-1.5 h-1.5 bg-oas-line rounded-full overflow-hidden">
-                  <div class="h-full rounded-full transition-all"
-                       [ngClass]="(p.qteReelle ?? 0) === 0 ? 'bg-oas-bad' : 'bg-oas-warn'"
-                       [style.width.%]="p.seuilMinimum ? Math.min(100, ((p.qteReelle ?? 0) / p.seuilMinimum) * 100) : 0">
-                  </div>
-                </div>
-              </div>
-            }
-          </div>
-        }
-      </div>
-    </div>
-  </div>
-
-</div>
 
 @if (showModal) {
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -320,44 +244,37 @@
             <label class="block text-sm font-semibold text-oas-ink mb-1">Type *</label>
             <select formControlName="type"
                     class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
-              @for (t of types; track t) { <option [value]="t">{{ t }}</option> }
+              @for (t of types; track t) {
+                @if (t !== 'PDS') {
+                  <option [value]="t">{{ t }}</option>
+                }
+              }
             </select>
           </div>
           <div>
-            <label class="block text-sm font-semibold text-oas-ink mb-1">Statut</label>
-            <select formControlName="statut"
-                    class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
-              <option value="ACTIF">Actif</option>
-              <option value="INACTIF">Inactif</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-semibold text-oas-ink mb-1">Référence *</label>
+            <label class="block text-sm font-semibold text-oas-ink mb-1">Réf *</label>
             <input type="text" formControlName="reference"
                    class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
                    [class.border-oas-bad]="f['reference'].invalid && f['reference'].touched"/>
           </div>
-          <div>
-            <label class="block text-sm font-semibold text-oas-ink mb-1">N° de série *</label>
-            <input type="text" formControlName="numeroDeSerie"
-                   class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
-                   [class.border-oas-bad]="f['numeroDeSerie'].invalid && f['numeroDeSerie'].touched"/>
-          </div>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-semibold text-oas-ink mb-1">Catégorie *</label>
-            <input type="text" formControlName="categorie"
-                   class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+            <label class="block text-sm font-semibold text-oas-ink mb-1">Désignation *</label>
+            <input type="text" formControlName="designation"
+                   class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                   [class.border-oas-bad]="f['designation'].invalid && f['designation'].touched"/>
           </div>
           <div>
-            <label class="block text-sm font-semibold text-oas-ink mb-1">Pourcentage (%)</label>
-            <input type="number" formControlName="pourcentage" min="0" max="100"
+            <label class="block text-sm font-semibold text-oas-ink mb-1">Catégorie *</label>
+            <input type="text" formControlName="categorie" list="categoriesList"
                    class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+            <datalist id="categoriesList">
+              @for (c of categories; track c) {
+                <option [value]="c"></option>
+              }
+            </datalist>
           </div>
         </div>
 

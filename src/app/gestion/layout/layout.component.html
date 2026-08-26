@@ -116,6 +116,10 @@
              class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
             Pièce détachée
           </a>
+          <a routerLink="/gestion/seuil-alertes" routerLinkActive="oas-sub-active"
+             class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
+            Seuil alertes
+          </a>
           @if (isMagasinier() || isSuperAgent() || isMaster()) {
             <a routerLink="/gestion/stock" routerLinkActive="oas-sub-active"
                class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">

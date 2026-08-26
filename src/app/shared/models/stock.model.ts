@@ -8,14 +8,14 @@ export interface StockMouvement {
   stockAtelierApres: number;
   motif: string;
   dateOperation: string;
-  piece: { id: number; reference: string; numeroDeSerie: string } | null;
+  piece: { id: number; designation: string; reference: string } | null;
   agent: { id: number; username: string; firstName: string; lastName: string } | null;
 }
 
 export interface InventaireResponse {
   pieceId: number;
-  numeroDeSerie: string;
   reference: string;
+  designation: string;
   stockMagasinTheorique: number;
   stockAtelierTheorique: number;
   stockMagasinPhysique: number;

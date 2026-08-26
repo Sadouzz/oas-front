@@ -480,9 +480,9 @@ export class BonsCommandeComponent implements OnInit {
 
   get montantTTCForm(): number { return this.montantHTForm + this.montantTVAForm; }
 
-  getPieceName(id: any): string {
-    const p = this.pieces.find(x => x.id === Number(id));
-    return p ? `${p.reference} — ${p.numeroDeSerie}` : '';
+  getPieceLabel(pieceId: number | null | undefined): string {
+    const p = this.pieces.find(x => x.id === pieceId);
+    return p ? `${p.designation} — ${p.designation}` : '';
   }
 
   statutClass(s: StatutBonCommande): string {

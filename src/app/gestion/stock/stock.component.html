@@ -112,7 +112,7 @@
                 <tr class="hover:bg-oas-bg transition border-b border-oas-line last:border-0">
                   <td class="px-5 py-3.5">
                     <p class="font-semibold text-oas-ink text-sm">{{ a.reference }}</p>
-                    <p class="text-xs text-oas-faint font-mono">{{ a.numeroDeSerie }}</p>
+                    <p class="text-xs text-oas-faint font-mono">{{ a.reference }}</p>
                   </td>
                   <td class="px-5 py-3.5 text-sm text-oas-ink2">{{ a.categorie }}</td>
                   <td class="px-5 py-3.5 font-bold text-sm {{ a.stockMagasin === 0 ? 'text-oas-bad' : 'text-oas-warn' }}">{{ a.stockMagasin }}</td>
@@ -196,7 +196,7 @@
                   [class.border-oas-bad]="fm['pieceId'].invalid && fm['pieceId'].touched">
             <option [value]="null">-- Sélectionner --</option>
             @for (p of pdps; track p.id) {
-              <option [value]="p.id">{{ p.reference }} (stock: {{ p.stockMagasin }})</option>
+              <option [value]="p.id">{{ p.designation }} (stock: {{ p.stockMagasin }})</option>
             }
           </select>
         </div>
@@ -246,7 +246,7 @@
                   class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
             <option [value]="null">-- Sélectionner --</option>
             @for (p of pdps; track p.id) {
-              <option [value]="p.id">{{ p.reference }} (mag: {{ p.stockMagasin }}, ate: {{ p.stockAtelier }})</option>
+              <option [value]="p.id">{{ p.designation }} (mag: {{ p.stockMagasin }}, ate: {{ p.stockAtelier }})</option>
             }
           </select>
         </div>

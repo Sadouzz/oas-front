@@ -34,4 +34,8 @@ export class PieceDetacheeService {
   delete(id: number): Observable<string> {
     return this.http.delete<string>(`${this.api}/${id}`);
   }
+
+  restore(id: number): Observable<PieceDetache> {
+    return this.http.put<PieceDetache>(`${this.api}/${id}/restore`, {});
+  }
 }

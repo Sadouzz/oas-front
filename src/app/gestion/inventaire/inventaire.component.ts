@@ -54,8 +54,8 @@ export class InventaireComponent implements OnInit {
   applyFilter() {
     this.filtered = this.keyword
       ? this.pdps.filter(p =>
+          p.designation.toLowerCase().includes(this.keyword) ||
           p.reference.toLowerCase().includes(this.keyword) ||
-          p.numeroDeSerie.toLowerCase().includes(this.keyword) ||
           p.categorie.toLowerCase().includes(this.keyword)
         )
       : this.pdps;

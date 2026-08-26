@@ -51,6 +51,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
     '/vehicules': { label: 'Véhicules' },
     '/bons-de-sortie': { label: 'Bon de sortie', section: 'Gestion de stock' },
     '/pieces-detachees': { label: 'Pièce détachée', section: 'Gestion de stock' },
+    '/seuil-alertes': { label: 'Seuil alertes', section: 'Gestion de stock' },
     '/stock': { label: 'Historique', section: 'Gestion de stock' },
     '/inventaire': { label: 'Inventaire', section: 'Gestion de stock' },
     '/fournisseurs': { label: 'Fournisseurs', section: 'Réapprovisionnement' },
@@ -188,7 +189,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
     const relUrl = this.getRelativeUrl(url);
     if (['/fiches-atelier', '/ordres-reparation', '/techniciens'].some(p => relUrl.startsWith(p))) {
       this.openSection = 'atelier';
-    } else if (['/bons-de-sortie', '/pieces-detachees', '/stock', '/inventaire'].some(p => relUrl.startsWith(p))) {
+    } else if (['/bons-de-sortie', '/pieces-detachees', '/seuil-alertes', '/stock', '/inventaire'].some(p => relUrl.startsWith(p))) {
       this.openSection = 'stock';
     } else if (['/bons-commande', '/bons-livraison', '/fournisseurs'].some(p => relUrl.startsWith(p))) {
       this.openSection = 'reappro';

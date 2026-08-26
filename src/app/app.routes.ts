@@ -84,6 +84,11 @@ export const routes: Routes = [
           import('./gestion/pieces-detachees/pieces-detachees.component').then(m => m.PiecesDetacheesComponent),
       },
       {
+        path: 'seuil-alertes',
+        loadComponent: () =>
+          import('./gestion/seuil-alertes/seuil-alertes').then(m => m.SeuilAlertes),
+      },
+      {
         path: 'bons-de-sortie',
         loadComponent: () =>
           import('./gestion/bons-de-sortie/bons-de-sortie.component').then(m => m.BonsDeSortieComponent),

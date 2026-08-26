@@ -38,17 +38,17 @@ export class PiecesDetacheesComponent implements OnInit {
   readonly Math = Math;
 
   filterType = '';
-  filterStatut = '';
+  filterStatut = 'ACTIF';
   filterCategorie = '';
   categories: string[] = [];
 
   form = this.fb.group({
     type: ['PDP', Validators.required],
-    numeroDeSerie: ['', Validators.required],
     reference: ['', Validators.required],
+    designation: ['', Validators.required],
     categorie: ['', Validators.required],
-    pourcentage: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
-    statut: ['ACTIF'],
+    // pourcentage: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
+    // statut: ['ACTIF'],
     stockMagasin: [null as number | null],
     stockAtelier: [null as number | null],
     prix: [null as number | null],
@@ -92,13 +92,7 @@ export class PiecesDetacheesComponent implements OnInit {
     });
   }
 
-  get lowStockPieces(): PieceDetache[] {
-    return this.pieces.filter(p =>
-      p.type === 'PDP' &&
-      p.seuilMinimum != null &&
-      (p.qteReelle ?? 0) <= p.seuilMinimum
-    );
-  }
+
 
   commanderPiece(p: PieceDetache) {
     this.router.navigate(['/bons-commande'], { queryParams: { pieceId: p.id } });
@@ -112,8 +106,8 @@ export class PiecesDetacheesComponent implements OnInit {
   applyFilters(keyword = '') {
     let result = this.pieces;
     if (keyword) result = result.filter(p =>
+      p.designation.toLowerCase().includes(keyword) ||
       p.reference.toLowerCase().includes(keyword) ||
-      p.numeroDeSerie.toLowerCase().includes(keyword) ||
       p.categorie.toLowerCase().includes(keyword)
     );
     if (this.filterType) result = result.filter(p => p.type === this.filterType);
@@ -146,7 +140,7 @@ export class PiecesDetacheesComponent implements OnInit {
   openCreate() {
     this.isNew = true;
     this.editingId = null;
-    this.form.reset({ type: 'PDP', statut: 'ACTIF', pourcentage: 0 });
+    this.form.reset({ type: 'PDP' });
     this.showModal = true;
   }
 
@@ -155,11 +149,9 @@ export class PiecesDetacheesComponent implements OnInit {
     this.editingId = p.id;
     this.form.patchValue({
       type: p.type,
-      numeroDeSerie: p.numeroDeSerie,
       reference: p.reference,
+      designation: p.designation,
       categorie: p.categorie,
-      pourcentage: p.pourcentage,
-      statut: p.statut,
       stockMagasin: p.stockMagasin ?? null,
       stockAtelier: p.stockAtelier ?? null,
       prix: p.prix ?? null,
@@ -168,7 +160,7 @@ export class PiecesDetacheesComponent implements OnInit {
     this.showModal = true;
   }
 
-  closeModal() { this.showModal = false; this.form.reset({ type: 'PDP', statut: 'ACTIF' }); }
+  closeModal() { this.showModal = false; this.form.reset({ type: 'PDP' }); }
 
   save() {
     if (this.form.invalid || this.saving) { this.form.markAllAsTouched(); return; }
@@ -177,12 +169,10 @@ export class PiecesDetacheesComponent implements OnInit {
     const payload = { ...val };
     if (val.type !== 'PDP') {
       delete payload.stockMagasin;
-      delete payload.stockAtelier;
       delete payload.prix;
       delete payload.seuilMinimum;
-    } else {
-      payload.stockAtelier = payload.stockAtelier || 0;
     }
+    delete payload.stockAtelier; // Backend ignores it or fails on unknown properties
 
     if (this.isNew) {
       this.service.create(payload).subscribe({
@@ -210,6 +200,14 @@ export class PiecesDetacheesComponent implements OnInit {
     this.service.delete(p.id).subscribe({
       next: () => { this.showSuccess('Pièce supprimée.'); this.load(); },
       error: (err: any) => { this.errorMessage = err.error?.message || 'Erreur.'; }
+    });
+  }
+
+  restorePiece(p: PieceDetache) {
+    if (!confirm(`Restaurer la pièce archivée "${p.reference}" ?`)) return;
+    this.service.restore(p.id).subscribe({
+      next: () => { this.showSuccess('Pièce restaurée avec succès !'); this.load(); },
+      error: (err: any) => { this.errorMessage = err.error?.message || 'Erreur lors de la restauration.'; }
     });
   }
 
