@@ -20,7 +20,7 @@ export const routes: Routes = [
       { path: 'blog', loadComponent: () => import('./public/blog/blog').then(m => m.Blog) },
       { path: 'blog/:id', loadComponent: () => import('./public/blog/blog-detail').then(m => m.BlogDetailComponent) },
       { path: 'a-propos', loadComponent: () => import('./public/about/about').then(m => m.About) },
-      // { path: 'devis', loadComponent: () => import('./public/devis/devis').then(m => m.Devis) },
+      // { path: 'devis', loadComponent: () => import('. /public/devis/devis').then(m => m.Devis) },
       { path: 'marketplace', loadComponent: () => import('./public/marketplace/marketplace').then(m => m.Marketplace) },
       {
         path: 'contact',
@@ -198,6 +198,11 @@ export const routes: Routes = [
             path: 'main-doeuvre',
             loadComponent: () =>
               import('./gestion/main-doeuvre/main-doeuvre.component').then(m => m.MainDoeuvreComponent),
+          },
+          {
+            path: 'parametres',
+            loadComponent: () =>
+              import('./gestion/parametres/parametres.component').then(m => m.ParametresComponent),
           },
         ],
       },
