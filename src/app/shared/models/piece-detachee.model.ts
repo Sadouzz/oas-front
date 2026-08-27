@@ -4,7 +4,7 @@ export interface PieceDetache {
   numero: string;
   reference: string;
   designation: string;
-  categorie: string;
+  categorie: any;
   pourcentage?: number;
   statut?: 'ACTIF' | 'ARCHIVE';
   createdAt: string;
@@ -12,6 +12,7 @@ export interface PieceDetache {
   stockAtelier?: number;
   stockMagasin?: number;
   prix?: number;
+  prixUnitaire?: number;
   seuilMinimum?: number;
   estUtilise?: boolean;
 }

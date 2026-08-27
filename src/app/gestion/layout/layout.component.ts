@@ -66,6 +66,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
     '/gestion-tva': { label: 'Gestion TVA' },
     '/gestion-recu': { label: 'Gestion reçu' },
     '/admin/main-doeuvre': { label: "Main d'œuvre" },
+    '/admin/parametres': { label: 'Paramètres' },
     '/ordres-reparation': { label: 'Ordres de réparation', section: 'Processus de réparation' },
     '/techniciens': { label: 'Techniciens', section: 'Processus de réparation' },
     '/rendezvous': { label: 'Rendez-vous' },
@@ -197,7 +198,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
       this.openSection = 'facture-ttc';
     } else if (['/notes-prix', '/devis-previsionnels', '/avoirs-ht'].some(p => relUrl.startsWith(p))) {
       this.openSection = 'facture-ht';
-    } else if (relUrl.startsWith('/admin') && !relUrl.startsWith('/admin/main-doeuvre')) {
+    } else if (relUrl.startsWith('/admin') && !relUrl.startsWith('/admin/main-doeuvre') && !relUrl.startsWith('/admin/parametres')) {
       this.openSection = 'admin';
     } else {
       this.openSection = null;

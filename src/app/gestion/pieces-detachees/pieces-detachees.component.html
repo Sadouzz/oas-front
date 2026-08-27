@@ -1,317 +1,343 @@
 <div class="flex-1 min-w-0">
-    <div class="flex items-center justify-between mb-6">
-      <div>
-        <h1 class="text-2xl font-bold text-oas-ink">Catalogue des pièces détachées</h1>
-        <p class="text-sm text-oas-muted mt-1">{{ filtered.length }} pièce(s) affichée(s)</p>
-      </div>
-      @if (canEdit) {
-        <button (click)="openCreate()"
-                class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-11 rounded-lg flex items-center gap-2 transition cursor-pointer">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-          </svg>
-          Ajouter une pièce
-        </button>
-      }
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-oas-ink">Catalogue des pièces détachées</h1>
+      <p class="text-sm text-oas-muted mt-1">{{ filtered.length }} pièce(s) affichée(s)</p>
     </div>
-
-    <app-alert [success]="successMessage" [error]="errorMessage" />
-
-    <!-- KPI cards -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
-      <div class="bg-white rounded-lg border border-oas-line p-4 shadow-sm">
-        <div class="flex items-center gap-3 mb-2">
-          <div class="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-            <svg class="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
-            </svg>
-          </div>
-          <span class="text-xs font-semibold text-oas-muted">Total articles</span>
-        </div>
-        <p class="text-2xl font-extrabold text-oas-ink">{{ totalArticles }}</p>
-        <p class="text-[10px] text-oas-faint mt-0.5">Pièces PDP actives</p>
-      </div>
-
-      <div class="bg-white rounded-lg border border-oas-line p-4 shadow-sm">
-        <div class="flex items-center gap-3 mb-2">
-          <div class="w-9 h-9 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
-            <svg class="w-5 h-5 text-oas-ok" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-            </svg>
-          </div>
-          <span class="text-xs font-semibold text-oas-muted">Valeur du stock</span>
-        </div>
-        <p class="text-2xl font-extrabold text-oas-ink">{{ valeurStock | number:'1.0-0' }}</p>
-        <p class="text-[10px] text-oas-faint mt-0.5">FCFA — valeur totale magasin</p>
-      </div>
-
-      <div class="bg-white rounded-lg border border-oas-line p-4 shadow-sm">
-        <div class="flex items-center gap-3 mb-2">
-          <div class="w-9 h-9 rounded-lg bg-oas-warn-bg flex items-center justify-center flex-shrink-0">
-            <svg class="w-5 h-5 text-oas-warn" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
-            </svg>
-          </div>
-          <span class="text-xs font-semibold text-oas-muted">Stock critique</span>
-        </div>
-        <p class="text-2xl font-extrabold text-oas-warn">{{ stockCritique }}</p>
-        <p class="text-[10px] text-oas-faint mt-0.5">Articles sous le seuil d'alerte</p>
-      </div>
-
-      <div class="bg-white rounded-lg border border-oas-line p-4 shadow-sm">
-        <div class="flex items-center gap-3 mb-2">
-          <div class="w-9 h-9 rounded-lg bg-oas-bad-bg flex items-center justify-center flex-shrink-0">
-            <svg class="w-5 h-5 text-oas-bad" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
-            </svg>
-          </div>
-          <span class="text-xs font-semibold text-oas-muted">Ruptures</span>
-        </div>
-        <p class="text-2xl font-extrabold text-oas-bad">{{ ruptures }}</p>
-        <p class="text-[10px] text-oas-faint mt-0.5">Articles en rupture de stock</p>
-      </div>
-    </div>
-
-    <!-- Filtres par categorie (tabs/buttons) -->
-    @if (categories.length > 0) {
-      <div class="flex flex-wrap gap-2 mb-4">
-        <button (click)="setFilterCategorie('')"
-                class="px-3 py-1.5 rounded-lg text-xs font-bold border transition cursor-pointer"
-                [ngClass]="filterCategorie === '' ? 'bg-oas-accent text-white border-oas-accent' : 'bg-white text-oas-muted border-oas-line hover:border-oas-accent hover:text-oas-accent'">
-          Toutes
-        </button>
-        @for (cat of categories; track cat) {
-          <button (click)="setFilterCategorie(cat)"
-                  class="px-3 py-1.5 rounded-lg text-xs font-bold border transition cursor-pointer"
-                  [ngClass]="filterCategorie === cat ? 'bg-oas-accent text-white border-oas-accent' : 'bg-white text-oas-muted border-oas-line hover:border-oas-accent hover:text-oas-accent'">
-            {{ cat }}
-          </button>
-        }
-      </div>
+    @if (canEdit) {
+    <button (click)="openCreate()"
+      class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-11 rounded-lg flex items-center gap-2 transition cursor-pointer">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+      </svg>
+      Ajouter une pièce
+    </button>
     }
+  </div>
 
-    <!-- Filtres -->
-    <div class="bg-white rounded-lg border border-oas-line p-3 mb-4 shadow-sm flex gap-3 flex-wrap">
-      <div class="relative flex-1 min-w-48">
-        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-oas-muted">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+  <app-alert [success]="successMessage" [error]="errorMessage" />
+
+  <!-- KPI cards -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+    <div class="bg-white rounded-lg border border-oas-line p-4 shadow-sm">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
           </svg>
-        </span>
-        <input type="text" (input)="onSearch($event)" placeholder="Rechercher par référence, n° série, catégorie..."
-               class="w-full pl-9 pr-4 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
+        </div>
+        <span class="text-xs font-semibold text-oas-muted">Total articles</span>
       </div>
-      <select (change)="onTypeFilter($event)"
-              class="px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
-        <option value="">Tous types</option>
-        <option value="PDP">PDP</option>
-        <option value="PDG">PDG</option>
-        <option value="PDS">PDS</option>
-      </select>
-      <select (change)="onStatutFilter($event)"
-              class="px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
-        <option value="">Tous statuts</option>
-        <option value="ACTIF">Actif</option>
-        <option value="INACTIF">Inactif</option>
-        <option value="ARCHIVE">Archivé</option>
-      </select>
+      <p class="text-2xl font-extrabold text-oas-ink">{{ totalArticles }}</p>
+      <p class="text-[10px] text-oas-faint mt-0.5">Pièces PDP actives</p>
     </div>
 
-    <div class="bg-white rounded-lg border border-oas-line shadow-card overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="border-b border-oas-line">
-              <th class="text-left text-xs text-oas-muted px-5 py-3">Type</th>
-              <th class="text-left text-xs text-oas-muted px-5 py-3">Réf</th>
-              <th class="text-left text-xs text-oas-muted px-5 py-3">Numéro</th>
-              <th class="text-left text-xs text-oas-muted px-5 py-3">Désignation</th>
-              <th class="text-left text-xs text-oas-muted px-5 py-3">Catégorie</th>
-              <th class="text-left text-xs text-oas-muted px-5 py-3">Stock magasin</th>
-              <th class="text-left text-xs text-oas-muted px-5 py-3">Stock atelier</th>
-              <th class="text-left text-xs text-oas-muted px-5 py-3">Qté</th>
-              <th class="text-left text-xs text-oas-muted px-5 py-3">Prix en gros</th>
-              @if (canEdit) {
-                <th class="text-right text-xs text-oas-muted px-5 py-3">Actions</th>
-              }
-            </tr>
-          </thead>
-          <tbody>
-            @if (loading) {
-              <tr><td [attr.colspan]="canEdit ? 11 : 10" class="text-center py-14 text-oas-muted">
-                <svg class="animate-spin h-5 w-5 mx-auto mb-2 text-oas-accent" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-                </svg>Chargement...
-              </td></tr>
-            } @else {
-              @for (p of paged; track p.id) {
-                <tr class="hover:bg-oas-bg transition border-b border-oas-line">
-                  <td class="px-5 py-4">
-                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold {{ typeBadge(p.type) }}">{{ p.type }}</span>
-                  </td>
-                  <td class="px-5 py-4 font-semibold text-oas-ink">{{ p.reference }}</td>
-                  <td class="px-5 py-4 font-mono text-xs text-oas-accent">{{ p.numero }}</td>
-                  <td class="px-5 py-4 font-mono text-xs text-oas-muted">{{ p.designation }}</td>
-                  <td class="px-5 py-4 text-sm text-oas-ink2">{{ p.categorie }}</td>
-                  <td class="px-5 py-4">
-                    @if (p.type === 'PDP') {
-                      <span [ngClass]="(p.stockMagasin ?? 0) === 0 ? 'text-oas-bad font-bold' : (p.stockMagasin ?? 0) <= (p.seuilMinimum ?? 10) ? 'text-oas-warn font-bold' : 'text-oas-ink font-medium'">
-                        {{ p.stockMagasin ?? 0 }}
-                      </span>
-                    } @else {
-                      <span class="text-oas-faint">–</span>
-                    }
-                  </td>
-                  <td class="px-5 py-4 text-sm text-oas-ink2">
-                    @if (p.type === 'PDP') { {{ p.stockAtelier ?? 0 }} } @else { <span class="text-oas-faint">–</span> }
-                  </td>
-                  <td class="px-5 py-4 font-semibold text-oas-ink">
-                    @if (p.type === 'PDP') { {{ p.qteReelle ?? 0 }} } @else { <span class="text-oas-faint">–</span> }
-                  </td>
-                  <td class="px-5 py-4 text-sm text-oas-ink2">
-                    @if (p.type === 'PDP' && p.prix != null) {
-                      {{ p.prix | number:'1.0-0' }} FCFA
-                    } @else { <span class="text-oas-faint">–</span> }
-                  </td>
-                  @if (canEdit) {
-                    <td class="px-5 py-4">
-                      <div class="flex items-center justify-end gap-1">
-                        @if (p.type === 'PDP') {
-                          <button (click)="commanderPiece(p)" title="Commander (Réapprovisionnement)"
-                                  class="p-1.5 rounded-lg hover:bg-orange-50 text-oas-muted hover:text-oas-accent transition cursor-pointer">
-                            <svg lucideShoppingCart class="w-4 h-4"></svg>
-                          </button>
-                        }
-                        <button (click)="openEdit(p)" title="Modifier"
-                                class="p-1.5 rounded-lg hover:bg-oas-info-bg text-oas-muted hover:text-oas-info transition cursor-pointer">
-                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                          </svg>
-                        </button>
-                        @if (p.statut === 'ARCHIVE') {
-                          <button (click)="restorePiece(p)" title="Restaurer la pièce"
-                                  class="p-1.5 rounded-lg hover:bg-oas-accent-bg text-oas-muted hover:text-oas-accent transition cursor-pointer">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                            </svg>
-                          </button>
-                        } @else if (p.estUtilise) {
-                          <button (click)="deletePiece(p)" title="Archiver (pièce utilisée)"
-                                  class="p-1.5 rounded-lg hover:bg-orange-50 text-oas-muted hover:text-orange-500 transition cursor-pointer">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                              <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                            </svg>
-                          </button>
-                        } @else {
-                          <button (click)="deletePiece(p)" title="Supprimer (aucune relation)"
-                                  class="p-1.5 rounded-lg hover:bg-oas-bad-bg text-oas-muted hover:text-oas-bad transition cursor-pointer">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                            </svg>
-                          </button>
-                        }
-                      </div>
-                    </td>
-                  }
-                </tr>
-              } @empty {
-                <tr><td [attr.colspan]="canEdit ? 10 : 9" class="text-center py-14 text-oas-muted text-sm">Aucune pièce trouvée</td></tr>
-              }
-            }
-          </tbody>
-        </table>
+    <div class="bg-white rounded-lg border border-oas-line p-4 shadow-sm">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-9 h-9 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-oas-ok" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        </div>
+        <span class="text-xs font-semibold text-oas-muted">Valeur du stock</span>
       </div>
-      <app-pagination [page]="page" [totalPages]="totalPages" [total]="filtered.length" [pageSize]="pageSize" (prev)="prevPage()" (next)="nextPage()" />
+      <p class="text-2xl font-extrabold text-oas-ink">{{ valeurStock | number:'1.0-0' }}</p>
+      <p class="text-[10px] text-oas-faint mt-0.5">FCFA — valeur totale magasin</p>
+    </div>
+
+    <div class="bg-white rounded-lg border border-oas-line p-4 shadow-sm">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-9 h-9 rounded-lg bg-oas-warn-bg flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-oas-warn" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+          </svg>
+        </div>
+        <span class="text-xs font-semibold text-oas-muted">Stock critique</span>
+      </div>
+      <p class="text-2xl font-extrabold text-oas-warn">{{ stockCritique }}</p>
+      <p class="text-[10px] text-oas-faint mt-0.5">Articles sous le seuil d'alerte</p>
+    </div>
+
+    <div class="bg-white rounded-lg border border-oas-line p-4 shadow-sm">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-9 h-9 rounded-lg bg-oas-bad-bg flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-oas-bad" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+          </svg>
+        </div>
+        <span class="text-xs font-semibold text-oas-muted">Ruptures</span>
+      </div>
+      <p class="text-2xl font-extrabold text-oas-bad">{{ ruptures }}</p>
+      <p class="text-[10px] text-oas-faint mt-0.5">Articles en rupture de stock</p>
     </div>
   </div>
+
+  <!-- Filtres par depot (tabs/buttons) -->
+  <span class="text-xs font-semibold text-oas-muted">Dépôts :</span>
+  @if (depotsFilters.length > 0) {
+  <div class="flex flex-wrap gap-2 mb-4">
+    <button (click)="setFilterDepot('')"
+      class="px-3 py-1.5 rounded-lg text-xs font-bold border transition cursor-pointer"
+      [ngClass]="filterDepot === '' ? 'bg-oas-accent text-white border-oas-accent' : 'bg-white text-oas-muted border-oas-line hover:border-oas-accent hover:text-oas-accent'">
+      Tous
+    </button>
+    @for (depot of depotsFilters; track depot) {
+    <button (click)="setFilterDepot(depot)"
+      class="px-3 py-1.5 rounded-lg text-xs font-bold border transition cursor-pointer"
+      [ngClass]="filterDepot === depot ? 'bg-oas-accent text-white border-oas-accent' : 'bg-white text-oas-muted border-oas-line hover:border-oas-accent hover:text-oas-accent'">
+      {{ depot }}
+    </button>
+    }
+  </div>
+  }
+
+  <!-- Filtres -->
+  <div class="bg-white rounded-lg border border-oas-line p-3 mb-4 shadow-sm flex gap-3 flex-wrap">
+    <div class="relative flex-1 min-w-48">
+      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-oas-muted">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </span>
+      <input type="text" (input)="onSearch($event)" placeholder="Rechercher par référence, n° série, catégorie..."
+        class="w-full pl-9 pr-4 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition" />
+    </div>
+    <select (change)="onTypeFilter($event)"
+      class="px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
+      <option value="">Tous types</option>
+      <option value="PDP">PDP</option>
+      <option value="PDG">PDG</option>
+      <option value="PDS">PDS</option>
+    </select>
+    <select (change)="onStatutFilter($event)"
+      class="px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
+      <option value="">Tous statuts</option>
+      <option value="ACTIF">Actif</option>
+      <option value="INACTIF">Inactif</option>
+      <option value="ARCHIVE">Archivé</option>
+    </select>
+  </div>
+
+  <div class="bg-white rounded-lg border border-oas-line shadow-card overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-oas-line">
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Type</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Réf</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Numéro</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Désignation</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Dépôt</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Catégorie</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Stock magasin</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Stock atelier</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Qté</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Prix unitaire</th>
+            @if (canEdit) {
+            <th class="text-right text-xs text-oas-muted px-5 py-3">Actions</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading) {
+          <tr>
+            <td [attr.colspan]="canEdit ? 12 : 11" class="text-center py-14 text-oas-muted">
+              <svg class="animate-spin h-5 w-5 mx-auto mb-2 text-oas-accent" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+              </svg>Chargement...
+            </td>
+          </tr>
+          } @else {
+          @for (p of paged; track p.id) {
+          <tr class="hover:bg-oas-bg transition border-b border-oas-line">
+            <td class="px-5 py-4">
+              <span
+                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold {{ typeBadge(p.type) }}">{{
+                p.type }}</span>
+            </td>
+            <td class="px-5 py-4 font-semibold text-oas-ink">{{ p.reference }}</td>
+            <td class="px-5 py-4 font-mono text-xs text-oas-accent">{{ p.numero }}</td>
+            <td class="px-5 py-4 font-mono text-xs text-oas-muted">{{ p.designation }}</td>
+            <td class="px-5 py-4 text-sm text-oas-ink2">{{ p.categorie?.depot?.nom || '-' }}</td>
+            <td class="px-5 py-4 text-sm text-oas-ink2">{{ p.categorie?.nom || p.categorie }}</td>
+            <td class="px-5 py-4">
+              @if (p.type === 'PDP') {
+              <span
+                [ngClass]="(p.stockMagasin ?? 0) === 0 ? 'text-oas-bad font-bold' : (p.stockMagasin ?? 0) <= (p.seuilMinimum ?? 10) ? 'text-oas-warn font-bold' : 'text-oas-ink font-medium'">
+                {{ p.stockMagasin ?? 0 }}
+              </span>
+              } @else {
+              <span class="text-oas-faint">–</span>
+              }
+            </td>
+            <td class="px-5 py-4 text-sm text-oas-ink2">
+              @if (p.type === 'PDP') { {{ p.stockAtelier ?? 0 }} } @else { <span class="text-oas-faint">–</span> }
+            </td>
+            <td class="px-5 py-4 font-semibold text-oas-ink">
+              @if (p.type === 'PDP') { {{ p.qteReelle ?? 0 }} } @else { <span class="text-oas-faint">–</span> }
+            </td>
+            <td class="px-5 py-4 text-sm text-oas-ink2">
+              @if (p.type === 'PDP' && (p.prixUnitaire != null || p.prix != null)) {
+              {{ (p.prixUnitaire ?? p.prix) | number:'1.0-0' }} FCFA
+              } @else { <span class="text-oas-faint">–</span> }
+            </td>
+            @if (canEdit) {
+            <td class="px-5 py-4">
+              <div class="flex items-center justify-end gap-1">
+                @if (p.type === 'PDP') {
+                <button (click)="commanderPiece(p)" title="Commander (Réapprovisionnement)"
+                  class="p-1.5 rounded-lg hover:bg-orange-50 text-oas-muted hover:text-oas-accent transition cursor-pointer">
+                  <svg lucideShoppingCart class="w-4 h-4"></svg>
+                </button>
+                }
+                <button (click)="openEdit(p)" title="Modifier"
+                  class="p-1.5 rounded-lg hover:bg-oas-info-bg text-oas-muted hover:text-oas-info transition cursor-pointer">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
+                @if (p.statut === 'ARCHIVE') {
+                <button (click)="restorePiece(p)" title="Restaurer la pièce"
+                  class="p-1.5 rounded-lg hover:bg-oas-accent-bg text-oas-muted hover:text-oas-accent transition cursor-pointer">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </button>
+                } @else if (p.estUtilise) {
+                <button (click)="deletePiece(p)" title="Archiver (pièce utilisée)"
+                  class="p-1.5 rounded-lg hover:bg-orange-50 text-oas-muted hover:text-orange-500 transition cursor-pointer">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                  </svg>
+                </button>
+                } @else {
+                <button (click)="deletePiece(p)" title="Supprimer (aucune relation)"
+                  class="p-1.5 rounded-lg hover:bg-oas-bad-bg text-oas-muted hover:text-oas-bad transition cursor-pointer">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+                }
+              </div>
+            </td>
+            }
+          </tr>
+          } @empty {
+          <tr>
+            <td [attr.colspan]="canEdit ? 10 : 9" class="text-center py-14 text-oas-muted text-sm">Aucune pièce trouvée
+            </td>
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-pagination [page]="page" [totalPages]="totalPages" [total]="filtered.length" [pageSize]="pageSize"
+      (prev)="prevPage()" (next)="nextPage()" />
+  </div>
+</div>
 
 @if (showModal) {
-  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-      <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line sticky top-0 bg-white">
-        <h3 class="font-bold text-oas-ink">{{ isNew ? 'Ajouter une pièce' : 'Modifier la pièce' }}</h3>
-        <button (click)="closeModal()" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted cursor-pointer">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
-        </button>
-      </div>
-      <form [formGroup]="form" (ngSubmit)="save()" class="px-6 py-5 space-y-4">
-
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-semibold text-oas-ink mb-1">Type *</label>
-            <select formControlName="type"
-                    class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
-              @for (t of types; track t) {
-                @if (t !== 'PDS') {
-                  <option [value]="t">{{ t }}</option>
-                }
-              }
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-semibold text-oas-ink mb-1">Réf *</label>
-            <input type="text" formControlName="reference"
-                   class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
-                   [class.border-oas-bad]="f['reference'].invalid && f['reference'].touched"/>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-semibold text-oas-ink mb-1">Désignation *</label>
-            <input type="text" formControlName="designation"
-                   class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
-                   [class.border-oas-bad]="f['designation'].invalid && f['designation'].touched"/>
-          </div>
-          <div>
-            <label class="block text-sm font-semibold text-oas-ink mb-1">Catégorie *</label>
-            <input type="text" formControlName="categorie" list="categoriesList"
-                   class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
-            <datalist id="categoriesList">
-              @for (c of categories; track c) {
-                <option [value]="c"></option>
-              }
-            </datalist>
-          </div>
-        </div>
-
-        @if (selectedType === 'PDP') {
-          <div class="border-t border-oas-line pt-4">
-            <p class="text-xs font-bold text-oas-muted uppercase tracking-wider mb-3">Champs PDP</p>
-            @if (isNew) {
-              <div class="grid grid-cols-1 gap-3 mb-3">
-                <div>
-                  <label class="block text-sm font-semibold text-oas-ink mb-1">Stock magasin initial</label>
-                  <input type="number" formControlName="stockMagasin" min="0"
-                         class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
-                </div>
-              </div>
-            }
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block text-sm font-semibold text-oas-ink mb-1">Prix (FCFA)</label>
-                <input type="number" formControlName="prix" min="0"
-                       class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
-              </div>
-              <div>
-                <label class="block text-sm font-semibold text-oas-ink mb-1">Seuil min.</label>
-                <input type="number" formControlName="seuilMinimum" min="0"
-                       class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
-              </div>
-            </div>
-          </div>
-        }
-
-        <div class="flex justify-end gap-2 pt-2">
-          <button type="button" (click)="closeModal()"
-                  class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-lg border border-oas-line flex items-center transition cursor-pointer text-sm">Annuler</button>
-          <button type="submit" [disabled]="saving"
-                  class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-10 rounded-lg flex items-center transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm">{{ saving ? 'Enregistrement...' : (isNew ? 'Créer' : 'Enregistrer') }}</button>
-        </div>
-      </form>
+<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line sticky top-0 bg-white">
+      <h3 class="font-bold text-oas-ink">{{ isNew ? 'Ajouter une pièce' : 'Modifier la pièce' }}</h3>
+      <button (click)="closeModal()" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted cursor-pointer">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
     </div>
+    <form [formGroup]="form" (ngSubmit)="save()" class="px-6 py-5 space-y-4">
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Type *</label>
+          <select formControlName="type"
+            class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
+            @for (t of types; track t) {
+            @if (t !== 'PDS') {
+            <option [value]="t">{{ t }}</option>
+            }
+            }
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Réf *</label>
+          <input type="text" formControlName="reference"
+            class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+            [class.border-oas-bad]="f['reference'].invalid && f['reference'].touched" />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Dépôt (optionnel)</label>
+          <app-searchable-select formControlName="depotId" [options]="depots" bindValue="id" bindLabel="nom"
+            placeholder="Filtrer les catégories par dépôt...">
+          </app-searchable-select>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Catégorie *</label>
+          <app-searchable-select formControlName="categorie" [options]="filteredCategories" bindValue="nom"
+            bindLabel="nom" placeholder="Sélectionner une catégorie...">
+          </app-searchable-select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Désignation *</label>
+          <input type="text" formControlName="designation"
+            class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+            [class.border-oas-bad]="f['designation'].invalid && f['designation'].touched" />
+        </div>
+      </div>
+
+      @if (selectedType === 'PDP') {
+      <div class="border-t border-oas-line pt-4">
+        <p class="text-xs font-bold text-oas-muted uppercase tracking-wider mb-3">Champs PDP</p>
+        @if (isNew) {
+        <div class="grid grid-cols-1 gap-3 mb-3">
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1">Stock magasin initial</label>
+            <input type="number" formControlName="stockMagasin" min="0"
+              class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition" />
+          </div>
+        </div>
+        }
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1">Prix (FCFA)</label>
+            <input type="number" formControlName="prix" min="0"
+              class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition" />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1">Seuil min.</label>
+            <input type="number" formControlName="seuilMinimum" min="0"
+              class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition" />
+          </div>
+        </div>
+      </div>
+      }
+
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" (click)="closeModal()"
+          class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-lg border border-oas-line flex items-center transition cursor-pointer text-sm">Annuler</button>
+        <button type="submit" [disabled]="saving"
+          class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-10 rounded-lg flex items-center transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm">{{
+          saving ? 'Enregistrement...' : (isNew ? 'Créer' : 'Enregistrer') }}</button>
+      </div>
+    </form>
   </div>
+</div>
 }

@@ -3,20 +3,25 @@ import { DecimalPipe, NgClass } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PieceDetacheeService, PieceDetache } from '../../services/piece-detachee.service';
+import { DepotService, Depot } from '../../services/depot.service';
+import { CategoriePieceService, CategoriePiece } from '../../services/categorie-piece.service';
 import { AuthService } from '../auth/services/auth.service';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
+import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select.component';
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideArchive, LucideArchiveRestore, LucideShoppingCart } from '@lucide/angular';
 
 @Component({
   selector: 'app-pieces-detachees',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, NgClass, AlertComponent, PaginationComponent, LucideShoppingCart],
+  imports: [ReactiveFormsModule, DecimalPipe, NgClass, AlertComponent, PaginationComponent, SearchableSelectComponent, LucideShoppingCart],
   templateUrl: './pieces-detachees.component.html',
 })
 export class PiecesDetacheesComponent implements OnInit {
   private fb = inject(FormBuilder);
   private service = inject(PieceDetacheeService);
+  private depotService = inject(DepotService);
+  private categorieService = inject(CategoriePieceService);
   private authService = inject(AuthService);
   private router = inject(Router);
 
@@ -39,13 +44,18 @@ export class PiecesDetacheesComponent implements OnInit {
 
   filterType = '';
   filterStatut = 'ACTIF';
-  filterCategorie = '';
-  categories: string[] = [];
+  filterDepot = '';
+  depotsFilters: string[] = [];
+  
+  categories: CategoriePiece[] = [];
+  depots: Depot[] = [];
+  filteredCategories: CategoriePiece[] = [];
 
   form = this.fb.group({
     type: ['PDP', Validators.required],
     reference: ['', Validators.required],
     designation: ['', Validators.required],
+    depotId: [null as number | null],
     categorie: ['', Validators.required],
     // pourcentage: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
     // statut: ['ACTIF'],
@@ -59,7 +69,7 @@ export class PiecesDetacheesComponent implements OnInit {
   get valeurStock(): number {
     return this.pieces
       .filter(p => p.type === 'PDP')
-      .reduce((sum, p) => sum + (p.stockMagasin ?? 0) * (p.prix ?? 0), 0);
+      .reduce((sum, p) => sum + (p.stockMagasin ?? 0) * (p.prixUnitaire ?? p.prix ?? 0), 0);
   }
   get stockCritique(): number {
     return this.pieces.filter(p => p.type === 'PDP' && (p.qteReelle ?? 0) > 0 && (p.qteReelle ?? 0) <= (p.seuilMinimum ?? 10)).length;
@@ -84,7 +94,7 @@ export class PiecesDetacheesComponent implements OnInit {
     this.service.getAll().subscribe({
       next: (data) => {
         this.pieces = data.sort((a:any, b:any) => b.id - a.id);
-        this.categories = [...new Set(data.map(p => p.categorie).filter(c => !!c))].sort();
+        this.depotsFilters = [...new Set(data.map((p: any) => p.categorie?.depot?.nom).filter((d: any) => !!d))].sort() as string[];
         this.applyFilters();
         this.loading = false;
       },
@@ -98,6 +108,35 @@ export class PiecesDetacheesComponent implements OnInit {
     this.router.navigate(['/bons-commande'], { queryParams: { pieceId: p.id } });
   }
 
+  loadReferences() {
+    this.depotService.getAll().subscribe(res => {
+      this.depots = res;
+      if (this.isNew && this.filterDepot) {
+        const depot = this.depots.find(d => d.nom === this.filterDepot);
+        if (depot) {
+          this.form.patchValue({ depotId: depot.id });
+        }
+      }
+    });
+    this.categorieService.getAll().subscribe(res => {
+      this.categories = res;
+      const currentDepotId = this.form.get('depotId')?.value;
+      if (currentDepotId) {
+        this.filteredCategories = this.categories.filter(c => c.depot?.id === Number(currentDepotId));
+      } else {
+        this.filteredCategories = res;
+      }
+    });
+
+    this.form.get('depotId')?.valueChanges.subscribe(depotId => {
+      if (depotId) {
+        this.filteredCategories = this.categories.filter(c => c.depot?.id === Number(depotId));
+      } else {
+        this.filteredCategories = this.categories;
+      }
+    });
+  }
+
   onSearch(event: Event) {
     const term = (event.target as HTMLInputElement).value.toLowerCase().trim();
     this.applyFilters(term);
@@ -105,20 +144,21 @@ export class PiecesDetacheesComponent implements OnInit {
 
   applyFilters(keyword = '') {
     let result = this.pieces;
-    if (keyword) result = result.filter(p =>
-      p.designation.toLowerCase().includes(keyword) ||
-      p.reference.toLowerCase().includes(keyword) ||
-      p.categorie.toLowerCase().includes(keyword)
-    );
-    if (this.filterType) result = result.filter(p => p.type === this.filterType);
-    if (this.filterStatut) result = result.filter(p => p.statut === this.filterStatut);
-    if (this.filterCategorie) result = result.filter(p => p.categorie === this.filterCategorie);
+    if (keyword) result = result.filter((p: any) => {
+      const catName = p.categorie?.nom || p.categorie || '';
+      return p.designation.toLowerCase().includes(keyword) ||
+             p.reference.toLowerCase().includes(keyword) ||
+             catName.toLowerCase().includes(keyword);
+    });
+    if (this.filterType) result = result.filter((p: any) => p.type === this.filterType);
+    if (this.filterStatut) result = result.filter((p: any) => p.statut === this.filterStatut);
+    if (this.filterDepot) result = result.filter((p: any) => p.categorie?.depot?.nom === this.filterDepot);
     this.filtered = result;
     this.page = 1;
   }
 
-  setFilterCategorie(cat: string) {
-    this.filterCategorie = this.filterCategorie === cat ? '' : cat;
+  setFilterDepot(depot: string) {
+    this.filterDepot = this.filterDepot === depot ? '' : depot;
     this.applyFilters();
   }
 
@@ -142,6 +182,16 @@ export class PiecesDetacheesComponent implements OnInit {
     this.editingId = null;
     this.form.reset({ type: 'PDP' });
     this.showModal = true;
+    if (this.depots.length === 0) {
+      this.loadReferences();
+    } else {
+      if (this.filterDepot) {
+        const depot = this.depots.find(d => d.nom === this.filterDepot);
+        if (depot) {
+          this.form.patchValue({ depotId: depot.id });
+        }
+      }
+    }
   }
 
   openEdit(p: PieceDetache) {
@@ -151,13 +201,15 @@ export class PiecesDetacheesComponent implements OnInit {
       type: p.type,
       reference: p.reference,
       designation: p.designation,
-      categorie: p.categorie,
+      categorie: (p.categorie as any)?.nom || p.categorie,
       stockMagasin: p.stockMagasin ?? null,
       stockAtelier: p.stockAtelier ?? null,
-      prix: p.prix ?? null,
+      prix: p.prixUnitaire ?? p.prix ?? null,
       seuilMinimum: p.seuilMinimum ?? null,
+      depotId: null
     });
     this.showModal = true;
+    if (this.depots.length === 0) this.loadReferences();
   }
 
   closeModal() { this.showModal = false; this.form.reset({ type: 'PDP' }); }
@@ -167,11 +219,14 @@ export class PiecesDetacheesComponent implements OnInit {
     this.saving = true;
     const val = this.form.value as any;
     const payload = { ...val };
-    if (val.type !== 'PDP') {
+    if (payload.type === 'PDG') {
       delete payload.stockMagasin;
+      delete payload.stockAtelier;
       delete payload.prix;
       delete payload.seuilMinimum;
     }
+    
+    delete payload.depotId;
     delete payload.stockAtelier; // Backend ignores it or fails on unknown properties
 
     if (this.isNew) {
