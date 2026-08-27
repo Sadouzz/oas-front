@@ -125,6 +125,13 @@ export class PiecesDetacheesComponent implements OnInit {
         this.filteredCategories = this.categories.filter(c => c.depot?.id === Number(currentDepotId));
       } else {
         this.filteredCategories = res;
+        const categorieNom = this.form.get('categorie')?.value;
+        if (categorieNom) {
+          const cat = this.categories.find(c => c.nom === categorieNom);
+          if (cat && cat.depot?.id) {
+            this.form.patchValue({ depotId: cat.depot.id });
+          }
+        }
       }
     });
 
@@ -133,6 +140,15 @@ export class PiecesDetacheesComponent implements OnInit {
         this.filteredCategories = this.categories.filter(c => c.depot?.id === Number(depotId));
       } else {
         this.filteredCategories = this.categories;
+      }
+    });
+
+    this.form.get('categorie')?.valueChanges.subscribe(categorieNom => {
+      if (categorieNom && !this.form.get('depotId')?.value) {
+        const cat = this.categories.find(c => c.nom === categorieNom);
+        if (cat && cat.depot?.id) {
+          this.form.patchValue({ depotId: cat.depot.id });
+        }
       }
     });
   }
