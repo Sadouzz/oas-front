@@ -1,10 +1,11 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { StockService, StockMouvement } from '../../services/stock.service';
 import { PieceDetacheeService, PieceDetache, AlerteStock } from '../../services/piece-detachee.service';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
+import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select.component';
 import { LucideSearch, LucidePlus, LucideX,  LucidePackage, LucideArrowRight, LucideRefreshCw, LucideDownload } from '@lucide/angular';
 
 type ModalType = 'entree' | 'sortie' | 'ajustement' | null;
@@ -12,7 +13,7 @@ type ModalType = 'entree' | 'sortie' | 'ajustement' | null;
 @Component({
   selector: 'app-stock',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, AlertComponent, PaginationComponent ],
+  imports: [ReactiveFormsModule, FormsModule, RouterLink, AlertComponent, PaginationComponent, SearchableSelectComponent ],
   templateUrl: './stock.component.html',
 })
 export class StockComponent implements OnInit {
@@ -29,6 +30,20 @@ export class StockComponent implements OnInit {
   saving = false;
   successMessage = '';
   errorMessage = '';
+
+  filterPieceId = '';
+  filterCategorie = '';
+  filterType = '';
+
+  get categoriesPDP(): string[] {
+    return Array.from(new Set(this.pdps.map(p => p.categorie && typeof p.categorie === 'object' ? p.categorie.nom : p.categorie))).filter(c => !!c).sort();
+  }
+
+  get categoriesPDPOptions(): { id: string; nom: string }[] {
+    return this.categoriesPDP.map(c => ({ id: c, nom: c }));
+  }
+
+  getPieceLabel = (p: PieceDetache) => p ? `${p.reference} - ${p.designation}` : '';
 
   modalType: ModalType = null;
 
@@ -61,8 +76,13 @@ export class StockComponent implements OnInit {
     const now = new Date();
     const debut = new Date(now);
     debut.setDate(debut.getDate() - 30);
-    this.stockService.historiqueGlobal(debut.toISOString(), now.toISOString()).subscribe({
-      next: (d) => { this.mouvementsRecents = d.slice(0, 10); }
+    
+    const pId = this.filterPieceId ? parseInt(this.filterPieceId, 10) : undefined;
+    const cat = this.filterCategorie || undefined;
+    const typ = this.filterType || undefined;
+
+    this.stockService.historiqueGlobal(debut.toISOString(), now.toISOString(), pId, cat, typ).subscribe({
+      next: (d) => { this.mouvementsRecents = d; }
     });
   }
 
@@ -110,7 +130,11 @@ export class StockComponent implements OnInit {
     const c: Record<string, string> = {
       ENTREE: 'bg-oas-ok-bg text-oas-ok',
       SORTIE: 'bg-oas-bad-bg text-oas-bad',
+      SORTIE_MAGASIN_VERS_ATELIER: 'bg-oas-bad-bg text-oas-bad',
+      SORTIE_ATELIER_VALIDEE: 'bg-oas-bad-bg text-oas-bad',
+      SORTIE_REELLE: 'bg-oas-bad-bg text-oas-bad',
       AJUSTEMENT: 'bg-oas-info-bg text-oas-info',
+      MODIFICATION_PRIX: 'bg-oas-info-bg text-oas-info',
       INVENTAIRE: 'bg-oas-accent-bg text-oas-accent',
     };
     return c[type] ?? 'bg-oas-bg text-oas-muted';

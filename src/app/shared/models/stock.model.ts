@@ -8,7 +8,7 @@ export interface StockMouvement {
   stockAtelierApres: number;
   motif: string;
   dateOperation: string;
-  piece: { id: number; designation: string; reference: string } | null;
+  piece: { id: number; designation: string; reference: string; categorie?: any } | null;
   agent: { id: number; username: string; firstName: string; lastName: string } | null;
 }
 

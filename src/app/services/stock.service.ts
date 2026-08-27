@@ -30,10 +30,12 @@ export class StockService {
     return this.http.get<StockMouvement[]>(`${this.api}/historique/${pieceId}`, { params });
   }
 
-  historiqueGlobal(debut: string, fin: string): Observable<StockMouvement[]> {
-    return this.http.get<StockMouvement[]>(`${this.api}/historique`, {
-      params: { debut, fin }
-    });
+  historiqueGlobal(debut: string, fin: string, pieceId?: number, categorie?: string, type?: string): Observable<StockMouvement[]> {
+    const params: Record<string, string> = { debut, fin };
+    if (pieceId) params['pieceId'] = pieceId.toString();
+    if (categorie) params['categorie'] = categorie;
+    if (type) params['type'] = type;
+    return this.http.get<StockMouvement[]>(`${this.api}/historique`, { params });
   }
 
   alertes(): Observable<AlerteStock[]> {
