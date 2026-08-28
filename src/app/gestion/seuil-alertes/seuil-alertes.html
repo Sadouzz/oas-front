@@ -6,6 +6,53 @@
     </div>
   </div>
 
+  <!-- Filtres par depot (tabs/buttons) -->
+  @if (depotsFilters.length > 0) {
+  <div class="flex items-center gap-2 mb-3">
+    <span class="text-xs font-semibold text-oas-muted">Dépôts :</span>
+    <div class="flex flex-wrap gap-2">
+      <button (click)="setFilterDepot('')"
+        class="px-3 py-1.5 rounded-lg text-xs font-bold border transition cursor-pointer"
+        [ngClass]="filterDepot === '' ? 'bg-oas-accent text-white border-oas-accent' : 'bg-white text-oas-muted border-oas-line hover:border-oas-accent hover:text-oas-accent'">
+        Tous
+      </button>
+      @for (depot of depotsFilters; track depot) {
+      <button (click)="setFilterDepot(depot)"
+        class="px-3 py-1.5 rounded-lg text-xs font-bold border transition cursor-pointer"
+        [ngClass]="filterDepot === depot ? 'bg-oas-accent text-white border-oas-accent' : 'bg-white text-oas-muted border-oas-line hover:border-oas-accent hover:text-oas-accent'">
+        {{ depot }}
+      </button>
+      }
+    </div>
+  </div>
+  }
+
+  <!-- Recherche et Filtre Catégorie -->
+  <div class="bg-white rounded-lg border border-oas-line p-3 mb-4 shadow-sm flex gap-3 flex-wrap items-center">
+    <!-- Recherche -->
+    <div class="relative flex-1 min-w-64">
+      <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-oas-muted">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </span>
+      <input type="text" (input)="onSearch($event)" placeholder="Rechercher par référence, désignation..."
+        class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink" />
+    </div>
+
+    <!-- Filtre Catégories (Searchable Select) -->
+    <div class="w-64 flex-shrink-0">
+      <app-searchable-select
+        [options]="categoriesOptions"
+        bindValue="id"
+        bindLabel="nom"
+        placeholder="Toutes catégories"
+        [ngModel]="selectedCategorie"
+        (change)="onCategorieChange($event)">
+      </app-searchable-select>
+    </div>
+  </div>
+
   <div class="bg-white rounded-lg border border-oas-line shadow-card overflow-hidden">
     <!-- Header panneau -->
     <div class="px-6 py-4 border-b border-oas-line flex items-center gap-3">
@@ -20,13 +67,13 @@
       </div>
       @if (lowStockPieces.length > 0) {
         <span class="inline-flex items-center justify-center px-3 py-1 rounded-full bg-oas-warn text-white text-xs font-bold flex-shrink-0">
-          {{ lowStockPieces.length }} alertes
+          {{ filteredLowStockPieces.length !== lowStockPieces.length ? filteredLowStockPieces.length + '/' + lowStockPieces.length : lowStockPieces.length }} alertes
         </span>
       }
     </div>
 
-    <!-- Liste alertes -->
-    <div class="p-2">
+    <!-- Liste alertes sous forme de Tableau -->
+    <div class="p-0">
       @if (loading) {
         <div class="flex items-center justify-center py-12 text-oas-muted">
           <svg class="animate-spin h-6 w-6 text-oas-accent" fill="none" viewBox="0 0 24 24">
@@ -39,41 +86,88 @@
           <svg class="w-12 h-12 text-oas-ok mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
-          <p class="text-sm text-oas-muted">Tous les stocks sont suffisants</p>
+          <p class="text-sm text-oas-muted py-6">Tous les stocks sont suffisants</p>
+        </div>
+      } @else if (filteredLowStockPieces.length === 0) {
+        <div class="px-6 py-12 text-center">
+          <svg class="w-12 h-12 text-oas-muted mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <p class="text-sm text-oas-muted py-6">Aucun article ne correspond à votre recherche.</p>
         </div>
       } @else {
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-          @for (p of lowStockPieces; track p.id) {
-            <div class="border border-oas-line rounded-lg p-4 hover:shadow-md transition">
-              <div class="flex items-start justify-between gap-3">
-                <div class="min-w-0 flex-1">
-                  <p class="text-sm font-bold text-oas-ink truncate">{{ p.reference }}</p>
-                  <p class="text-xs text-oas-muted truncate">{{ p.categorie }}</p>
-                </div>
-                <div class="text-right flex-shrink-0 flex flex-col items-end gap-2">
-                  <div>
-                    <p class="text-sm font-bold"
-                       [ngClass]="(p.qteReelle ?? 0) === 0 ? 'text-oas-bad' : 'text-oas-warn'">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm text-left border-collapse">
+            <thead>
+              <tr class="bg-oas-bg/50 border-b border-oas-line">
+                <th class="text-left text-xs text-oas-muted px-5 py-3.5">Référence</th>
+                <th class="text-left text-xs text-oas-muted px-5 py-3.5">Désignation</th>
+                <th class="text-left text-xs text-oas-muted px-5 py-3.5">Dépôt</th>
+                <th class="text-left text-xs text-oas-muted px-5 py-3.5">Catégorie</th>
+                <th class="text-left text-xs text-oas-muted px-5 py-3.5">Stock actuel</th>
+                <th class="text-left text-xs text-oas-muted px-5 py-3.5">Seuil min.</th>
+                <th class="text-left text-xs text-oas-muted px-5 py-3.5">Niveau</th>
+                @if (canEdit) {
+                  <th class="text-right text-xs text-oas-muted px-5 py-3.5">Actions</th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of pagedLowStockPieces; track p.id) {
+                <tr class="hover:bg-oas-bg transition border-b border-oas-line last:border-0">
+                  <td class="px-5 py-4 font-semibold text-oas-ink">{{ p.reference }}</td>
+                  <td class="px-5 py-4 text-sm text-oas-ink2">{{ p.designation }}</td>
+                  <td class="px-5 py-4 text-xs text-oas-muted">
+                    @if (p.categorie?.depot?.nom) {
+                      <span class="inline-flex items-center px-2 py-0.5 rounded bg-oas-bg text-oas-muted border border-oas-line">
+                        Dépôt : {{ p.categorie.depot.nom }}
+                      </span>
+                    } @else { - }
+                  </td>
+                  <td class="px-5 py-4 text-xs text-oas-muted">
+                    @if (p.categorie?.nom || p.categorie) {
+                      <span class="inline-flex items-center px-2 py-0.5 rounded bg-oas-bg text-oas-muted border border-oas-line">
+                        Catégorie : {{ p.categorie?.nom || p.categorie }}
+                      </span>
+                    } @else { - }
+                  </td>
+                  <td class="px-5 py-4">
+                    <span class="font-bold" [ngClass]="(p.qteReelle ?? 0) === 0 ? 'text-oas-bad' : 'text-oas-warn'">
                       {{ p.qteReelle ?? 0 }}
-                    </p>
-                    <p class="text-xs text-oas-muted">/ {{ p.seuilMinimum }}</p>
-                  </div>
+                    </span>
+                  </td>
+                  <td class="px-5 py-4 text-oas-muted">{{ p.seuilMinimum }}</td>
+                  <td class="px-5 py-4">
+                    <div class="h-2 bg-oas-line rounded-full overflow-hidden w-24">
+                      <div class="h-full rounded-full transition-all"
+                           [ngClass]="(p.qteReelle ?? 0) === 0 ? 'bg-oas-bad' : 'bg-oas-warn'"
+                           [style.width.%]="p.seuilMinimum ? Math.min(100, ((p.qteReelle ?? 0) / p.seuilMinimum) * 100) : 0">
+                      </div>
+                    </div>
+                  </td>
                   @if (canEdit) {
-                    <button (click)="commanderPiece(p)" title="Commander"
-                            class="p-1.5 rounded-lg hover:bg-orange-50 text-oas-muted hover:text-oas-accent transition cursor-pointer border border-transparent hover:border-oas-accent/20">
-                      <svg lucideShoppingCart class="w-4 h-4"></svg>
-                    </button>
+                    <td class="px-5 py-4 text-right">
+                      <button (click)="commanderPiece(p)" title="Commander"
+                              class="p-1.5 rounded-lg hover:bg-orange-50 text-oas-muted hover:text-oas-accent transition cursor-pointer border border-transparent hover:border-oas-accent/20">
+                        <svg lucideShoppingCart class="w-4 h-4"></svg>
+                      </button>
+                    </td>
                   }
-                </div>
-              </div>
-              <div class="mt-3 h-2 bg-oas-line rounded-full overflow-hidden">
-                <div class="h-full rounded-full transition-all"
-                     [ngClass]="(p.qteReelle ?? 0) === 0 ? 'bg-oas-bad' : 'bg-oas-warn'"
-                     [style.width.%]="p.seuilMinimum ? Math.min(100, ((p.qteReelle ?? 0) / p.seuilMinimum) * 100) : 0">
-                </div>
-              </div>
-            </div>
-          }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="p-4 border-t border-oas-line">
+          <app-pagination
+            [page]="page"
+            [totalPages]="totalPages"
+            [total]="filteredLowStockPieces.length"
+            [pageSize]="pageSize"
+            (prev)="prevPage()"
+            (next)="nextPage()">
+          </app-pagination>
         </div>
       }
     </div>

@@ -10,6 +10,7 @@ import {
   PLATFORM_ID,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { Router } from '@angular/router';
 
 interface Spark {
   x: number;
@@ -49,7 +50,8 @@ export class SparksCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: object,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private router: Router
   ) {}
 
   ngOnInit(): void {}
@@ -80,6 +82,10 @@ export class SparksCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private onMouseDown = (e: MouseEvent): void => {
+    if (this.router.url.startsWith('/gestion')) {
+      return;
+    }
+
     // Coordonnées du clic
     const x = e.clientX;
     const y = e.clientY;

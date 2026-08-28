@@ -38,7 +38,7 @@ export class PiecesDetacheesComponent implements OnInit {
   isNew = false;
   editingId: number | null = null;
 
-  readonly types = ['PDP', 'PDG', 'PDS'] as const;
+  readonly types = ['PDP', 'PDG'] as const;
   readonly statuts = ['ACTIF', 'INACTIF'] as const;
   readonly Math = Math;
 
@@ -46,7 +46,7 @@ export class PiecesDetacheesComponent implements OnInit {
   filterStatut = 'ACTIF';
   filterDepot = '';
   depotsFilters: string[] = [];
-  
+
   categories: CategoriePiece[] = [];
   depots: Depot[] = [];
   filteredCategories: CategoriePiece[] = [];
@@ -93,7 +93,7 @@ export class PiecesDetacheesComponent implements OnInit {
     this.loading = true;
     this.service.getAll().subscribe({
       next: (data) => {
-        this.pieces = data.sort((a:any, b:any) => b.id - a.id);
+        this.pieces = data.sort((a: any, b: any) => b.id - a.id);
         this.depotsFilters = [...new Set(data.map((p: any) => p.categorie?.depot?.nom).filter((d: any) => !!d))].sort() as string[];
         this.applyFilters();
         this.loading = false;
@@ -163,8 +163,8 @@ export class PiecesDetacheesComponent implements OnInit {
     if (keyword) result = result.filter((p: any) => {
       const catName = p.categorie?.nom || p.categorie || '';
       return p.designation.toLowerCase().includes(keyword) ||
-             p.reference.toLowerCase().includes(keyword) ||
-             catName.toLowerCase().includes(keyword);
+        p.reference.toLowerCase().includes(keyword) ||
+        catName.toLowerCase().includes(keyword);
     });
     if (this.filterType) result = result.filter((p: any) => p.type === this.filterType);
     if (this.filterStatut) result = result.filter((p: any) => p.statut === this.filterStatut);
@@ -196,6 +196,7 @@ export class PiecesDetacheesComponent implements OnInit {
   openCreate() {
     this.isNew = true;
     this.editingId = null;
+    this.errorMessage = '';
     this.form.reset({ type: 'PDP' });
     this.showModal = true;
     if (this.depots.length === 0) {
@@ -213,6 +214,7 @@ export class PiecesDetacheesComponent implements OnInit {
   openEdit(p: PieceDetache) {
     this.isNew = false;
     this.editingId = p.id;
+    this.errorMessage = '';
     this.form.patchValue({
       type: p.type,
       reference: p.reference,
@@ -228,39 +230,67 @@ export class PiecesDetacheesComponent implements OnInit {
     if (this.depots.length === 0) this.loadReferences();
   }
 
-  closeModal() { this.showModal = false; this.form.reset({ type: 'PDP' }); }
+  closeModal() { 
+    this.showModal = false; 
+    this.errorMessage = '';
+    this.form.reset({ type: 'PDP' }); 
+  }
 
   save() {
     if (this.form.invalid || this.saving) { this.form.markAllAsTouched(); return; }
     this.saving = true;
+    this.errorMessage = '';
     const val = this.form.value as any;
     const payload = { ...val };
+
+    // Validation d'unicité de la référence
+    const refExists = this.pieces.some(p => 
+      p.reference.toLowerCase().trim() === payload.reference.toLowerCase().trim() && 
+      p.id !== this.editingId
+    );
+    if (refExists) {
+      this.saving = false;
+      this.errorMessage = `La référence "${payload.reference}" existe déjà dans le catalogue.`;
+      return;
+    }
+
+    // Validation d'unicité de la désignation
+    const desExists = this.pieces.some(p => 
+      p.designation.toLowerCase().trim() === payload.designation.toLowerCase().trim() && 
+      p.id !== this.editingId
+    );
+    if (desExists) {
+      this.saving = false;
+      this.errorMessage = `La désignation "${payload.designation}" existe déjà dans le catalogue.`;
+      return;
+    }
+
     if (payload.type === 'PDG') {
       delete payload.stockMagasin;
       delete payload.stockAtelier;
       delete payload.prix;
       delete payload.seuilMinimum;
     }
-    
+
     delete payload.depotId;
     delete payload.stockAtelier; // Backend ignores it or fails on unknown properties
 
     if (this.isNew) {
       this.service.create(payload).subscribe({
         next: () => { this.saving = false; this.showSuccess('Pièce créée avec succès !'); this.closeModal(); this.load(); },
-        error: (err: any) => { 
+        error: (err: any) => {
           console.error("Erreur backend:", err);
-          this.saving = false; 
-          this.errorMessage = typeof err.error === 'string' ? err.error : (err.error?.message || 'Erreur lors de la création.'); 
+          this.saving = false;
+          this.errorMessage = typeof err.error === 'string' ? err.error : (err.error?.message || 'Erreur lors de la création.');
         }
       });
     } else {
       this.service.update(this.editingId!, payload).subscribe({
         next: () => { this.saving = false; this.showSuccess('Pièce modifiée avec succès !'); this.closeModal(); this.load(); },
-        error: (err: any) => { 
+        error: (err: any) => {
           console.error("Erreur backend:", err);
-          this.saving = false; 
-          this.errorMessage = typeof err.error === 'string' ? err.error : (err.error?.message || 'Erreur lors de la modification.'); 
+          this.saving = false;
+          this.errorMessage = typeof err.error === 'string' ? err.error : (err.error?.message || 'Erreur lors de la modification.');
         }
       });
     }
@@ -286,7 +316,6 @@ export class PiecesDetacheesComponent implements OnInit {
     const c: Record<string, string> = {
       PDP: 'bg-oas-info-bg text-oas-info',
       PDG: 'bg-oas-accent-bg text-oas-accent',
-      PDS: 'bg-oas-warn-bg text-oas-warn',
     };
     return c[type] ?? 'bg-oas-bg text-oas-muted';
   }

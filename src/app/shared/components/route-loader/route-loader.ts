@@ -26,6 +26,10 @@ export class RouteLoaderComponent implements OnInit, OnDestroy {
 
     this.subscription = this.router.events.subscribe((event: Event) => {
       if (event instanceof NavigationStart) {
+        if (event.url.startsWith('/gestion')) {
+          this.isLoading = false;
+          return;
+        }
         if (this.timeoutId) clearTimeout(this.timeoutId);
         this.isLoading = true;
         this.cdr.detectChanges();
