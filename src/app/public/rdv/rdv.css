@@ -319,7 +319,7 @@
 
 .advantages-section{
     position:relative;
-    background:var(--color-oas-accent-dark);
+    background:var(--color-oas-navy);
     padding:100px 0;
     overflow:hidden;
 }
@@ -329,7 +329,7 @@
     position:absolute;
     inset:0;
     background-image:
-        linear-gradient(180deg, rgba(214, 18, 18, 0.94) 0%, rgba(214, 18, 18, 0.98) 100%),
+        linear-gradient(180deg, rgba(4, 10, 18, 0.92) 0%, rgba(4, 10, 18, 0.96) 100%),
         url('/assets/images/section-atelier.jpg');
     background-size:cover;
     background-position:center;
