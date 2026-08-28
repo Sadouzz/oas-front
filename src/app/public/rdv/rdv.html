@@ -275,8 +275,131 @@
                 </div>
             }
 
-            <!-- ===================== CONNEXION ===================== -->
-            @if(activeTab === 'login'){
+            <!-- ===================== FORMULAIRE WHATSAPP ===================== -->
+            <form class="auth-form" [formGroup]="rdvWhatsappForm" (ngSubmit)="onSubmitRdvWhatsapp()" novalidate>
+
+                <h2>Demander un rendez-vous</h2>
+                <p class="auth-subtitle">Remplissez ces informations pour envoyer votre demande par WhatsApp.</p>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="rdv-nom">Nom complet *</label>
+                        <div class="input-icon">
+                            <i class="fa-solid fa-user"></i>
+                            <input
+                                id="rdv-nom"
+                                type="text"
+                                formControlName="nom"
+                                placeholder="Jean Dupont"
+                                [class.is-invalid]="rdvWhatsappForm.get('nom')?.invalid && rdvWhatsappForm.get('nom')?.touched">
+                        </div>
+                        @if(rdvWhatsappForm.get('nom')?.invalid && rdvWhatsappForm.get('nom')?.touched){
+                            <span class="form-error">Nom requis (2 caractères min.)</span>
+                        }
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rdv-tel">Téléphone *</label>
+                        <div class="input-icon">
+                            <i class="fa-solid fa-phone"></i>
+                            <input
+                                id="rdv-tel"
+                                type="tel"
+                                formControlName="telephone"
+                                placeholder="+221 77 000 00 00"
+                                [class.is-invalid]="rdvWhatsappForm.get('telephone')?.invalid && rdvWhatsappForm.get('telephone')?.touched">
+                        </div>
+                        @if(rdvWhatsappForm.get('telephone')?.invalid && rdvWhatsappForm.get('telephone')?.touched){
+                            <span class="form-error">Téléphone requis.</span>
+                        }
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="rdv-vehicule">Marque et Modèle du véhicule *</label>
+                    <div class="input-icon">
+                        <i class="fa-solid fa-car"></i>
+                        <input
+                            id="rdv-vehicule"
+                            type="text"
+                            formControlName="vehicule"
+                            placeholder="Peugeot 3008, Toyota Hilux..."
+                            [class.is-invalid]="rdvWhatsappForm.get('vehicule')?.invalid && rdvWhatsappForm.get('vehicule')?.touched">
+                    </div>
+                    @if(rdvWhatsappForm.get('vehicule')?.invalid && rdvWhatsappForm.get('vehicule')?.touched){
+                        <span class="form-error">Véhicule requis.</span>
+                    }
+                </div>
+
+                <div class="form-group">
+                    <label for="rdv-motif">Motif / Prestation demandée *</label>
+                    <div class="input-icon">
+                        <i class="fa-solid fa-wrench"></i>
+                        <input
+                            id="rdv-motif"
+                            type="text"
+                            formControlName="motif"
+                            placeholder="Vidange, freinage, climatisation..."
+                            [class.is-invalid]="rdvWhatsappForm.get('motif')?.invalid && rdvWhatsappForm.get('motif')?.touched">
+                    </div>
+                    @if(rdvWhatsappForm.get('motif')?.invalid && rdvWhatsappForm.get('motif')?.touched){
+                        <span class="form-error">Motif requis.</span>
+                    }
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="rdv-date">Date souhaitée *</label>
+                        <div class="input-icon">
+                            <i class="fa-solid fa-calendar-days"></i>
+                            <input
+                                id="rdv-date"
+                                type="date"
+                                formControlName="date"
+                                [class.is-invalid]="rdvWhatsappForm.get('date')?.invalid && rdvWhatsappForm.get('date')?.touched">
+                        </div>
+                        @if(rdvWhatsappForm.get('date')?.invalid && rdvWhatsappForm.get('date')?.touched){
+                            <span class="form-error">Date requise.</span>
+                        }
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rdv-heure">Heure souhaitée *</label>
+                        <div class="input-icon">
+                            <i class="fa-solid fa-clock"></i>
+                            <input
+                                id="rdv-heure"
+                                type="time"
+                                formControlName="heure"
+                                [class.is-invalid]="rdvWhatsappForm.get('heure')?.invalid && rdvWhatsappForm.get('heure')?.touched">
+                        </div>
+                        @if(rdvWhatsappForm.get('heure')?.invalid && rdvWhatsappForm.get('heure')?.touched){
+                            <span class="form-error">Heure requise.</span>
+                        }
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="rdv-note">Informations complémentaires</label>
+                    <div class="input-icon textarea-icon">
+                        <i class="fa-solid fa-message"></i>
+                        <textarea
+                            id="rdv-note"
+                            formControlName="note"
+                            placeholder="Détails supplémentaires..."
+                        ></textarea>
+                    </div>
+                </div>
+
+            </form>
+
+            <!-- 
+            ========================================================================
+            ANCIEN FORMULAIRE DE CONNEXION / INSCRIPTION (DÉSACTIVÉ)
+            ========================================================================
+            Pour réactiver, retirez les commentaires HTML et ajustez le code TS si nécessaire.
+
+            _if(activeTab === 'login'){
 
                 <form class="auth-form" [formGroup]="loginForm" (ngSubmit)="onSubmitLogin()" novalidate>
 
@@ -294,10 +417,10 @@
                                 placeholder="vous@exemple.com"
                                 [class.is-invalid]="lf['email'].invalid && lf['email'].touched">
                         </div>
-                        @if(lf['email'].invalid && lf['email'].touched){
+                        _if(lf['email'].invalid && lf['email'].touched){
                             <span class="form-error">
-                                @if(lf['email'].errors?.['required']){ L'adresse e-mail est requise. }
-                                @if(lf['email'].errors?.['email']){ Veuillez saisir une adresse e-mail valide. }
+                                _if(lf['email'].errors?.['required']){ L'adresse e-mail est requise. }
+                                _if(lf['email'].errors?.['email']){ Veuillez saisir une adresse e-mail valide. }
                             </span>
                         }
                     </div>
@@ -317,10 +440,10 @@
                                 <i class="fa-solid" [class.fa-eye]="!showLoginPassword" [class.fa-eye-slash]="showLoginPassword"></i>
                             </button>
                         </div>
-                        @if(lf['motDePasse'].invalid && lf['motDePasse'].touched){
+                        _if(lf['motDePasse'].invalid && lf['motDePasse'].touched){
                             <span class="form-error">
-                                @if(lf['motDePasse'].errors?.['required']){ Le mot de passe est requis. }
-                                @if(lf['motDePasse'].errors?.['minlength']){ 6 caractères minimum. }
+                                _if(lf['motDePasse'].errors?.['required']){ Le mot de passe est requis. }
+                                _if(lf['motDePasse'].errors?.['minlength']){ 6 caractères minimum. }
                             </span>
                         }
                     </div>
@@ -334,8 +457,8 @@
                     </div>
 
                     <button type="submit" class="btn-primary btn-block" [disabled]="isSubmitting">
-                        @if(!isSubmitting){ Se connecter }
-                        @if(isSubmitting){ <i class="fa-solid fa-spinner fa-spin"></i> Connexion... }
+                        _if(!isSubmitting){ Se connecter }
+                        _if(isSubmitting){ <i class="fa-solid fa-spinner fa-spin"></i> Connexion... }
                     </button>
 
                     <p class="auth-switch">
@@ -347,8 +470,7 @@
 
             }
 
-            <!-- ===================== INSCRIPTION ===================== -->
-            @if(activeTab === 'register'){
+            _if(activeTab === 'register'){
 
                 <form class="auth-form" [formGroup]="registerForm" (ngSubmit)="onSubmitRegister()" novalidate>
 
@@ -368,7 +490,7 @@
                                     placeholder="Jean"
                                     [class.is-invalid]="rf['prenom'].invalid && rf['prenom'].touched">
                             </div>
-                            @if(rf['prenom'].invalid && rf['prenom'].touched){
+                            _if(rf['prenom'].invalid && rf['prenom'].touched){
                                 <span class="form-error">Prénom requis (2 caractères min.)</span>
                             }
                         </div>
@@ -384,7 +506,7 @@
                                     placeholder="Dupont"
                                     [class.is-invalid]="rf['nom'].invalid && rf['nom'].touched">
                             </div>
-                            @if(rf['nom'].invalid && rf['nom'].touched){
+                            _if(rf['nom'].invalid && rf['nom'].touched){
                                 <span class="form-error">Nom requis (2 caractères min.)</span>
                             }
                         </div>
@@ -393,43 +515,42 @@
 
                     <div class="form-grid-2">
 
-    <div class="form-group">
-        <label for="register-email">Adresse e-mail</label>
-        <div class="input-icon">
-            <i class="fa-solid fa-envelope"></i>
-            <input
-                id="register-email"
-                type="email"
-                formControlName="email"
-                placeholder="vous@exemple.com"
-                [class.is-invalid]="rf['email'].invalid && rf['email'].touched">
-        </div>
-        @if(rf['email'].invalid && rf['email'].touched){
-            <span class="form-error">
-                @if(rf['email'].errors?.['required']){ L'adresse e-mail est requise. }
-                @if(rf['email'].errors?.['email']){ Veuillez saisir une adresse e-mail valide. }
-            </span>
-        }
-    </div>
+                        <div class="form-group">
+                            <label for="register-email">Adresse e-mail</label>
+                            <div class="input-icon">
+                                <i class="fa-solid fa-envelope"></i>
+                                <input
+                                    id="register-email"
+                                    type="email"
+                                    formControlName="email"
+                                    placeholder="vous@exemple.com"
+                                    [class.is-invalid]="rf['email'].invalid && rf['email'].touched">
+                            </div>
+                            _if(rf['email'].invalid && rf['email'].touched){
+                                <span class="form-error">
+                                    _if(rf['email'].errors?.['required']){ L'adresse e-mail est requise. }
+                                    _if(rf['email'].errors?.['email']){ Veuillez saisir une adresse e-mail valide. }
+                                </span>
+                            }
+                        </div>
 
-    <div class="form-group">
-        <label for="register-tel">Téléphone</label>
-        <div class="input-icon">
-            <i class="fa-solid fa-phone"></i>
-            <input
-                id="register-tel"
-                type="tel"
-                formControlName="telephone"
-                placeholder="+221 77 000 00 00"
-                [class.is-invalid]="rf['telephone'].invalid && rf['telephone'].touched">
-        </div>
-        @if(rf['telephone'].invalid && rf['telephone'].touched){
-            <span class="form-error">Numéro de téléphone invalide.</span>
-        }
-    </div>
+                        <div class="form-group">
+                            <label for="register-tel">Téléphone</label>
+                            <div class="input-icon">
+                                <i class="fa-solid fa-phone"></i>
+                                <input
+                                    id="register-tel"
+                                    type="tel"
+                                    formControlName="telephone"
+                                    placeholder="+221 77 000 00 00"
+                                    [class.is-invalid]="rf['telephone'].invalid && rf['telephone'].touched">
+                            </div>
+                            _if(rf['telephone'].invalid && rf['telephone'].touched){
+                                <span class="form-error">Numéro de téléphone invalide.</span>
+                            }
+                        </div>
 
-</div>
-
+                    </div>
 
                     <div class="form-grid-2">
 
@@ -448,7 +569,7 @@
                                     <i class="fa-solid" [class.fa-eye]="!showRegisterPassword" [class.fa-eye-slash]="showRegisterPassword"></i>
                                 </button>
                             </div>
-                            @if(rf['motDePasse'].invalid && rf['motDePasse'].touched){
+                            _if(rf['motDePasse'].invalid && rf['motDePasse'].touched){
                                 <span class="form-error">6 caractères minimum.</span>
                             }
                         </div>
@@ -468,7 +589,7 @@
                                     <i class="fa-solid" [class.fa-eye]="!showRegisterConfirmation" [class.fa-eye-slash]="showRegisterConfirmation"></i>
                                 </button>
                             </div>
-                            @if(motsDePassesDifferents){
+                            _if(motsDePassesDifferents){
                                 <span class="form-error">Les mots de passe ne correspondent pas.</span>
                             }
                         </div>
@@ -479,13 +600,13 @@
                         <input type="checkbox" formControlName="cgu">
                         <span>J'accepte les <a href="javascript:void(0)">conditions générales</a> d'utilisation.</span>
                     </label>
-                    @if(rf['cgu'].invalid && rf['cgu'].touched){
+                    _if(rf['cgu'].invalid && rf['cgu'].touched){
                         <span class="form-error">Vous devez accepter les conditions.</span>
                     }
 
                     <button type="submit" class="btn-primary btn-block" [disabled]="isSubmitting">
-                        @if(!isSubmitting){ Créer mon compte }
-                        @if(isSubmitting){ <i class="fa-solid fa-spinner fa-spin"></i> Création... }
+                        _if(!isSubmitting){ Créer mon compte }
+                        _if(isSubmitting){ <i class="fa-solid fa-spinner fa-spin"></i> Création... }
                     </button>
 
                     <p class="auth-switch">
@@ -496,6 +617,7 @@
                 </form>
 
             }
+            -->
 
         </div>
     </div>

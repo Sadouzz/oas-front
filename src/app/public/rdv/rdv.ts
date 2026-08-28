@@ -155,6 +155,7 @@ export class RdvComponent implements OnInit {
 
   loginForm!: FormGroup;
   registerForm!: FormGroup;
+  rdvWhatsappForm!: FormGroup;
 
   isSubmitting = false;
   errorMessage: string | null = null;
@@ -185,14 +186,47 @@ export class RdvComponent implements OnInit {
       { validators: passwordsMatchValidator() }
     );
 
+    this.rdvWhatsappForm = this.fb.group({
+      nom: ['', [Validators.required, Validators.minLength(2)]],
+      telephone: ['', [Validators.required]],
+      vehicule: ['', [Validators.required]],
+      motif: ['', [Validators.required]],
+      date: ['', [Validators.required]],
+      heure: ['', [Validators.required]],
+      note: ['']
+    });
+
   }
 
   demanderRdv(): void {
-    if (this.authService.isAuthenticated()) {
-      this.router.navigate(['/espace-client/rendez-vous']);
-    } else {
-      this.openLoginModal();
+    this.errorMessage = null;
+    this.successMessage = null;
+    this.showModal = true;
+    document.body.classList.add('no-scroll');
+  }
+
+  onSubmitRdvWhatsapp(): void {
+    if (this.rdvWhatsappForm.invalid) {
+      this.rdvWhatsappForm.markAllAsTouched();
+      return;
     }
+
+    const val = this.rdvWhatsappForm.value;
+    const message = `Bonjour Orient Auto Service,\n\n` +
+      `Je souhaite demander un rendez-vous :\n` +
+      `- *Nom* : ${val.nom}\n` +
+      `- *Téléphone* : ${val.telephone}\n` +
+      `- *Véhicule* : ${val.vehicule}\n` +
+      `- *Motif* : ${val.motif}\n` +
+      `- *Date souhaitée* : ${val.date}\n` +
+      `- *Heure souhaitée* : ${val.heure}\n` +
+      (val.note ? `- *Notes* : ${val.note}\n` : '') +
+      `\nMerci !`;
+
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/221785968642?text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank');
+    this.closeModal();
   }
 
   openLoginModal(): void {
@@ -216,7 +250,7 @@ export class RdvComponent implements OnInit {
 
   closeModal(): void {
     this.showModal = false;
-    document.body.classList.add('no-scroll');
+    document.body.classList.remove('no-scroll');
     this.isSubmitting = false;
     this.resetMessages();
   }
