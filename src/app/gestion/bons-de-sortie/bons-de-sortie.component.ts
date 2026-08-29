@@ -2,7 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormArray, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
-import { BonDeSortieService, BonDeSortie } from '../../services/bon-de-sortie.service';
+import { BonDeSortieService, BonDeSortie, BonDeSortieHistorique } from '../../services/bon-de-sortie.service';
 import { ClientService, UserModel } from '../../services/client.service';
 import { VehiculeService, VehiculeModel } from '../../services/vehicule.service';
 import { PieceDetacheeService, PieceDetache } from '../../services/piece-detachee.service';
@@ -40,6 +40,9 @@ export class BonsDeSortieComponent implements OnInit {
   saving = false;
   successMessage = '';
   errorMessage = '';
+
+  historique: BonDeSortieHistorique[] = [];
+  loadingHistorique = false;
 
   showCreateModal = false;
   showDetailModal = false;
@@ -256,15 +259,52 @@ export class BonsDeSortieComponent implements OnInit {
     });
   }
 
-  openDetail(bon: BonDeSortie) { this.selectedBon = bon; this.showDetailModal = true; }
-  closeDetail() { this.showDetailModal = false; this.selectedBon = null; }
+  openDetail(bon: BonDeSortie) {
+    this.selectedBon = bon;
+    this.showDetailModal = true;
+    this.loadHistorique(bon.id);
+  }
+  closeDetail() {
+    this.showDetailModal = false;
+    this.selectedBon = null;
+    this.historique = [];
+  }
+
+  loadHistorique(bonId: number) {
+    this.loadingHistorique = true;
+    this.bonService.getHistorique(bonId).subscribe({
+      next: (h) => { this.historique = h; this.loadingHistorique = false; },
+      error: () => { this.loadingHistorique = false; }
+    });
+  }
+
+  retournerPiece(pieceId: number) {
+    if (!this.selectedBon) return;
+    if (!confirm('Voulez-vous retirer cette pièce du bon de sortie ? La quantité sera recréditée au stock magasin.')) return;
+    if (this.saving) return;
+    this.saving = true;
+    this.bonService.retournerPiece(this.selectedBon.id, pieceId).subscribe({
+      next: (updatedBon) => {
+        this.saving = false;
+        this.selectedBon = updatedBon;
+        this.showSuccess('Pièce retournée avec succès au stock magasin.');
+        this.loadBons();
+        this.loadHistorique(updatedBon.id);
+      },
+      error: (err: any) => {
+        this.saving = false;
+        const msg = err.error?.message ?? (typeof err.error === 'string' ? err.error : '');
+        this.errorMessage = msg || 'Erreur lors du retour de pièce.';
+      }
+    });
+  }
 
   valider(bon: BonDeSortie) {
-    if (!confirm(`Valider le bon ${bon.reference} ? Les stocks seront mis a jour.`)) return;
+    if (!confirm(`Valider le bon ${bon.reference} ? Les pièces seront déduites de l'atelier.`)) return;
     if (this.saving) return;
     this.saving = true;
     this.bonService.valider(bon.id).subscribe({
-      next: () => { this.saving = false; this.showSuccess(`Bon ${bon.reference} valide !`); this.loadBons(); this.closeDetail(); },
+      next: () => { this.saving = false; this.showSuccess(`Bon ${bon.reference} validé !`); this.loadBons(); this.closeDetail(); },
       error: (err: any) => { 
         this.saving = false; 
         const msg = err.error?.message ?? (typeof err.error === 'string' ? err.error : '');
@@ -275,6 +315,19 @@ export class BonsDeSortieComponent implements OnInit {
 
   statutClass(statut: string): string {
     return statut === 'VALIDE' ? 'bg-oas-ok-bg text-oas-ok' : 'bg-oas-warn-bg text-oas-warn';
+  }
+
+  statutHistoriqueClass(statut: string): string {
+    switch (statut) {
+      case 'SORTIE':
+        return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'SORTIE ATELIER':
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'RETOUR':
+        return 'bg-amber-50 text-amber-700 border-amber-200';
+      default:
+        return 'bg-gray-50 text-gray-700 border-gray-200';
+    }
   }
 
   formatDate(d: string): string { return new Date(d).toLocaleString('fr-FR'); }

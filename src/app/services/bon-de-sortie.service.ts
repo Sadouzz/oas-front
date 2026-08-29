@@ -4,6 +4,34 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { BonDeSortie, BonDeSortieRequest, LigneBonDeSortie } from '../shared/models';
 
+export interface BonDeSortieHistorique {
+  id: number;
+  statut: string;
+  motif?: string;
+  dateAction: string;
+  prenom?: string;
+  nom?: string;
+  numBs?: string;
+  numeroSerie?: string;
+  immatriculation?: string;
+  designation?: string;
+  bonDeSortie?: BonDeSortie;
+  piece?: {
+    id: number;
+    reference: string;
+    designation?: string;
+  };
+  quantite?: number;
+  stockMagasin?: number;
+  stockAtelier?: number;
+  qteReelle?: number;
+  agent?: {
+    id: number;
+    firstName: string;
+    lastName: string;
+  };
+}
+
 export type { BonDeSortie, BonDeSortieRequest, LigneBonDeSortie };
 
 @Injectable({ providedIn: 'root' })
@@ -35,5 +63,17 @@ export class BonDeSortieService {
 
   valider(id: number): Observable<BonDeSortie> {
     return this.http.put<BonDeSortie>(`${this.api}/${id}/valider`, {});
+  }
+
+  retournerPiece(bonId: number, pieceId: number): Observable<BonDeSortie> {
+    return this.http.put<BonDeSortie>(`${this.api}/${bonId}/retour-piece/${pieceId}`, {});
+  }
+
+  getHistorique(bonId: number): Observable<BonDeSortieHistorique[]> {
+    return this.http.get<BonDeSortieHistorique[]>(`${this.api}/${bonId}/historique`);
+  }
+
+  getHistoriqueGlobal(): Observable<BonDeSortieHistorique[]> {
+    return this.http.get<BonDeSortieHistorique[]>(`${this.api}/historique-global`);
   }
 }

@@ -399,19 +399,34 @@
           <div>
             <p class="text-sm font-bold text-oas-ink mb-2">Pièces ({{ selectedBon.lignesBonDeSortiePieces?.length }} ligne(s))</p>
             <div class="border border-oas-line rounded-xl overflow-hidden">
-
               <table class="w-full text-sm">
                 <thead>
                   <tr class="border-b border-oas-line bg-oas-bg">
                     <th class="text-left px-3 py-2 text-xs font-bold text-oas-muted uppercase tracking-wide">Référence</th>
+                    <th class="text-left px-3 py-2 text-xs font-bold text-oas-muted uppercase tracking-wide">Désignation</th>
                     <th class="text-right px-3 py-2 text-xs font-bold text-oas-muted uppercase tracking-wide">Qté</th>
+                    @if (selectedBon.statut === 'EN_ATTENTE') {
+                      <th class="text-right px-3 py-2 text-xs font-bold text-oas-muted uppercase tracking-wide">Action</th>
+                    }
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-oas-line">
                   @for (l of selectedBon.lignesBonDeSortiePieces; track l.id) {
                     <tr class="hover:bg-oas-bg">
                       <td class="px-3 py-2 text-oas-ink text-xs font-medium">{{ l.piece?.reference }}</td>
+                      <td class="px-3 py-2 text-oas-muted text-xs">{{ l.piece?.designation }}</td>
                       <td class="px-3 py-2 text-right font-bold text-oas-ink">{{ l.quantite }}</td>
+                      @if (selectedBon.statut === 'EN_ATTENTE' && l.piece) {
+                        <td class="px-3 py-2 text-right">
+                          <button (click)="retournerPiece(l.piece.id)" [disabled]="saving"
+                                  title="Retourner cette pièce au magasin"
+                                  class="p-1 rounded text-red-500 hover:bg-red-50 hover:text-red-700 transition cursor-pointer disabled:opacity-50">
+                            <svg lucideTrash2 class="w-4 h-4"></svg>
+                          </button>
+                        </td>
+                      } @else if (selectedBon.statut === 'EN_ATTENTE') {
+                        <td></td>
+                      }
                     </tr>
                   }
                 </tbody>
@@ -424,11 +439,56 @@
           <p class="text-center text-oas-muted text-sm py-4">Aucune ligne sur ce bon.</p>
         }
 
+        <!-- Historique du Bon de Sortie -->
+        <div class="border-t border-oas-line pt-4">
+          <p class="text-sm font-bold text-oas-ink mb-3 flex items-center justify-between">
+            <span>Historique des mouvements</span>
+            @if (loadingHistorique) {
+              <span class="text-xs font-normal text-oas-muted">Chargement...</span>
+            }
+          </p>
+
+          @if (historique.length > 0) {
+            <div class="space-y-2">
+              @for (h of historique; track h.id) {
+                <div class="bg-oas-bg rounded-lg p-2.5 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 border border-oas-line/50">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="px-2 py-0.5 rounded text-[11px] font-bold border {{ statutHistoriqueClass(h.statut) }}">
+                      {{ h.statut }}
+                    </span>
+                    @if (h.piece) {
+                      <span class="font-bold text-oas-ink">{{ h.piece.reference }} (Qté: {{ h.quantite }})</span>
+                    }
+                    <span class="text-oas-ink2 font-normal text-[11px]">{{ h.motif || 'Mouvement' }}</span>
+                  </div>
+                  <div class="flex items-center gap-3 text-right">
+                    @if (h.stockMagasin != null || h.stockAtelier != null) {
+                      <div class="text-[10px] text-oas-muted space-x-1 whitespace-nowrap">
+                        @if (h.stockMagasin != null) { <span>Mag: <b class="text-blue-600">{{ h.stockMagasin }}</b></span> }
+                        @if (h.stockAtelier != null) { <span>| Ate: <b class="text-indigo-600">{{ h.stockAtelier }}</b></span> }
+                        @if (h.qteReelle != null) { <span>| Réel: <b class="text-emerald-600">{{ h.qteReelle }}</b></span> }
+                      </div>
+                    }
+                    <div class="text-oas-muted text-[11px] whitespace-nowrap">
+                      <span>{{ formatDate(h.dateAction) }}</span>
+                      @if (h.agent) {
+                        <span class="block text-[10px] text-oas-muted">par {{ h.agent.firstName }} {{ h.agent.lastName }}</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else if (!loadingHistorique) {
+            <p class="text-xs text-oas-muted italic">Aucun historique disponible pour le moment.</p>
+          }
+        </div>
+
         @if (canValidate && selectedBon.statut === 'EN_ATTENTE') {
           <button (click)="valider(selectedBon)" [disabled]="saving"
-                  class="w-full flex items-center justify-center gap-2 bg-oas-ok hover:bg-oas-ok/90 text-white font-bold py-3 rounded-lg transition text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                  class="w-full flex items-center justify-center gap-2 bg-oas-ok hover:bg-oas-ok/90 text-white font-bold py-3 rounded-lg transition text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed mt-2">
             <svg lucideCheckCircle class="w-4 h-4"></svg>
-            {{ saving ? 'Validation en cours...' : 'Valider ce bon (déduire du stock)' }}
+            {{ saving ? 'Validation en cours...' : 'Valider ce bon (sortie atelier)' }}
           </button>
         }
       </div>

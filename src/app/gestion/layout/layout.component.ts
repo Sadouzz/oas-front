@@ -38,6 +38,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
   openSection: string | null = null;
   notificationsOpen = false;
   notifications: AgentNotification[] = [];
+  openSubSection: string | null = 'pieces';
   
   activeGarageName: string | null = null;
   
@@ -49,11 +50,12 @@ export class LayoutComponent implements OnInit, OnDestroy {
     '/dashboard': { label: 'Tableau de bord' },
     '/clients': { label: 'Clients' },
     '/vehicules': { label: 'Véhicules' },
-    '/bons-de-sortie': { label: 'Bon de sortie', section: 'Gestion de stock' },
-    '/pieces-detachees': { label: 'Pièce détachée', section: 'Gestion de stock' },
-    '/seuil-alertes': { label: 'Seuil alertes', section: 'Gestion de stock' },
-    '/stock': { label: 'Historique', section: 'Gestion de stock' },
-    '/inventaire': { label: 'Inventaire', section: 'Gestion de stock' },
+    '/bons-de-sortie': { label: 'Bon de sortie', section: 'Gestion Stock' },
+    '/historique-bs': { label: 'Historique', section: 'Gestion Stock' },
+    '/pieces-detachees': { label: 'Liste des articles', section: 'Piéces dét' },
+    '/seuil-alertes': { label: 'Stock', section: 'Gestion Stock' },
+    '/stock': { label: 'Historique', section: 'Piéces dét' },
+    '/inventaire': { label: 'Inventaire', section: 'Gestion Stock' },
     '/fournisseurs': { label: 'Fournisseurs', section: 'Réapprovisionnement' },
     '/factures': { label: 'Facture', section: 'Facture TTC' },
     '/bons-livraison': { label: 'Bon de livraison', section: 'Réapprovisionnement' },
@@ -190,7 +192,9 @@ export class LayoutComponent implements OnInit, OnDestroy {
     const relUrl = this.getRelativeUrl(url);
     if (['/fiches-atelier', '/ordres-reparation', '/techniciens'].some(p => relUrl.startsWith(p))) {
       this.openSection = 'atelier';
-    } else if (['/bons-de-sortie', '/pieces-detachees', '/seuil-alertes', '/stock', '/inventaire'].some(p => relUrl.startsWith(p))) {
+    } else if (['/pieces-detachees', '/stock'].some(p => relUrl.startsWith(p)) && !relUrl.startsWith('/historique-bs')) {
+      this.openSection = 'pieces';
+    } else if (['/bons-de-sortie', '/historique-bs', '/inventaire', '/seuil-alertes'].some(p => relUrl.startsWith(p))) {
       this.openSection = 'stock';
     } else if (['/bons-commande', '/bons-livraison', '/fournisseurs'].some(p => relUrl.startsWith(p))) {
       this.openSection = 'reappro';
@@ -207,6 +211,10 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
   toggleSection(section: string) {
     this.openSection = this.openSection === section ? null : section;
+  }
+
+  toggleSubSection(subSection: string) {
+    this.openSubSection = this.openSubSection === subSection ? null : subSection;
   }
 
   logout(): void {

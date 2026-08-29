@@ -94,6 +94,11 @@ export const routes: Routes = [
           import('./gestion/bons-de-sortie/bons-de-sortie.component').then(m => m.BonsDeSortieComponent),
       },
       {
+        path: 'historique-bs',
+        loadComponent: () =>
+          import('./gestion/historique-bs/historique-bs.component').then(m => m.HistoriqueBsComponent),
+      },
+      {
         path: 'stock',
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_AGENT_MAGASIN'])],
         loadComponent: () =>
