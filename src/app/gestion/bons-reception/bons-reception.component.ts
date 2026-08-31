@@ -1,7 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
-import { BonDeLivraisonService, BonDeLivraison } from '../../services/bon-de-livraison.service';
+import { BonDeReceptionService, BonDeReception } from '../../services/bon-de-reception.service';
 import { BonDeCommandeService, BonDeCommande } from '../../services/bon-de-commande.service';
 import { PieceDetacheeService } from '../../services/piece-detachee.service';
 import { MainDoeuvreService } from '../../services/main-doeuvre.service';
@@ -11,22 +11,22 @@ import { PieceDetache, MainDoeuvreModel, VehiculeModel } from '../../shared/mode
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideTruck } from '@lucide/angular';
 
 @Component({
-  selector: 'app-bons-livraison',
+  selector: 'app-bons-reception',
   imports: [NgClass],
-  templateUrl: './bons-livraison.component.html',
+  templateUrl: './bons-reception.component.html',
 })
-export class BonsLivraisonComponent implements OnInit {
-  private service = inject(BonDeLivraisonService);
+export class BonsReceptionComponent implements OnInit {
+  private service = inject(BonDeReceptionService);
   private bcService = inject(BonDeCommandeService);
   private vehiculeService = inject(VehiculeService);
 
-  bons: BonDeLivraison[] = [];
-  filtered: BonDeLivraison[] = [];
+  bons: BonDeReception[] = [];
+  filtered: BonDeReception[] = [];
   bonsCommande: BonDeCommande[] = [];
   allVehicules: VehiculeModel[] = [];
 
   loading = true;
-  selectedBon: BonDeLivraison | null = null;
+  selectedBon: BonDeReception | null = null;
 
   page = 1;
   readonly pageSize = 10;
@@ -50,7 +50,7 @@ export class BonsLivraisonComponent implements OnInit {
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: data => { this.bons = data.sort((a:any, b:any) => b.id - a.id); this.applyFilter(); this.loading = false; },
+      next: data => { this.bons = data.sort((a: any, b: any) => b.id - a.id); this.applyFilter(); this.loading = false; },
       error: () => this.loading = false,
     });
   }
@@ -71,13 +71,13 @@ export class BonsLivraisonComponent implements OnInit {
     this.applyFilter();
   }
 
-  openDetail(bon: BonDeLivraison) { this.selectedBon = bon; }
+  openDetail(bon: BonDeReception) { this.selectedBon = bon; }
   closeDetail() { this.selectedBon = null; }
 
   delete(id: number) {
-    if (!confirm('Supprimer ce bon de livraison ?')) return;
+    if (!confirm('Supprimer ce bon de réception ?')) return;
     this.service.delete(id).subscribe({
-      next: () => { this.load(); this.closeDetail(); this.notify('Bon supprimé.'); },
+      next: () => { this.load(); this.closeDetail(); this.notify('Bon de réception supprimé.'); },
       error: () => this.notifyError('Erreur lors de la suppression.'),
     });
   }
@@ -87,7 +87,7 @@ export class BonsLivraisonComponent implements OnInit {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `bon-livraison-${id}.pdf`;
+      a.download = `bon-reception-${id}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     });
@@ -96,8 +96,7 @@ export class BonsLivraisonComponent implements OnInit {
 
 
 
-
-  totalAvecBC(bon: BonDeLivraison): number {
+  totalAvecBC(bon: BonDeReception): number {
     const bcAmount = bon.bonDeCommandeId
       ? this.bonsCommande.find(b => b.id === bon.bonDeCommandeId)?.montantTTC ?? 0
       : 0;
@@ -125,7 +124,7 @@ export class BonsLivraisonComponent implements OnInit {
   formatDate(d: string): string { return new Date(d).toLocaleDateString('fr-FR'); }
   fmt(n: number): string { return new Intl.NumberFormat('fr-FR').format(n ?? 0); }
 
-  get paged(): BonDeLivraison[] {
+  get paged(): BonDeReception[] {
     return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
   }
   get totalPages(): number { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }
@@ -141,7 +140,3 @@ export class BonsLivraisonComponent implements OnInit {
     setTimeout(() => this.errorMessage = '', 3500);
   }
 }
-
-
-
-

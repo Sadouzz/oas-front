@@ -1,4 +1,4 @@
-﻿<div class="p-6 max-w-7xl mx-auto space-y-6">
+<div class="p-6 max-w-7xl mx-auto space-y-6">
   <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
     <div>
       <h1 class="text-2xl font-bold text-oas-ink">Paramètres</h1>
@@ -9,31 +9,33 @@
   <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
     <div class="border-b border-slate-200">
       <nav class="flex -mb-px px-6" aria-label="Tabs">
-        <button (click)="setTab('depots')" [class]="activeTab === 'depots' ? 'border-oas-primary text-oas-primary' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'" class="whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm">Dépôts</button>
-        <button (click)="setTab('categories')" [class]="activeTab === 'categories' ? 'border-oas-primary text-oas-primary' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'" class="whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm">Catégories de Pièces</button>
-        <button (click)="setTab('configs')" [class]="activeTab === 'configs' ? 'border-oas-primary text-oas-primary' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'" class="whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm">Fiche Atelier</button>
+        <button (click)="setTab('depots')" [class]="activeTab === 'depots' ? 'border-oas-accent text-oas-accent font-bold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium'" class="whitespace-nowrap py-4 px-4 border-b-2 text-sm transition cursor-pointer">Dépôts</button>
+        <button (click)="setTab('categories')" [class]="activeTab === 'categories' ? 'border-oas-accent text-oas-accent font-bold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium'" class="whitespace-nowrap py-4 px-4 border-b-2 text-sm transition cursor-pointer">Catégories de Pièces</button>
+        <button (click)="setTab('configs')" [class]="activeTab === 'configs' ? 'border-oas-accent text-oas-accent font-bold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium'" class="whitespace-nowrap py-4 px-4 border-b-2 text-sm transition cursor-pointer">Fiche Atelier</button>
       </nav>
     </div>
     
     <div class="p-6">
       <!-- Depots Tab -->
       <div *ngIf="activeTab === 'depots'">
-        <h2 class="text-lg font-medium text-gray-900 mb-4">Gestion des Dépôts</h2>
-        <div class="flex gap-4 mb-6">
-          <input type="text" [(ngModel)]="newDepot.nom" placeholder="Nom du dépôt" class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-oas-primary/20 focus:border-oas-primary transition-all">
-          <input type="text" [(ngModel)]="newDepot.description" placeholder="Description (optionnelle)" class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-oas-primary/20 focus:border-oas-primary transition-all">
-          <button (click)="saveDepot()" class="px-4 py-2 bg-oas-primary text-white rounded-lg text-sm font-medium hover:bg-oas-primary/90 transition-colors">Ajouter</button>
+        <h2 class="text-lg font-bold text-oas-ink mb-4">Gestion des Dépôts</h2>
+        <div class="flex flex-wrap gap-4 mb-6">
+          <input type="text" [(ngModel)]="newDepot.nom" placeholder="Nom du dépôt" class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-oas-ink focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition-all min-w-[200px]">
+          <input type="text" [(ngModel)]="newDepot.description" placeholder="Description (optionnelle)" class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-oas-ink focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition-all min-w-[240px]">
+          <button (click)="saveDepot()" class="px-5 py-2 bg-oas-accent text-white rounded-lg text-sm font-bold hover:bg-oas-accent-dark transition shadow-sm cursor-pointer flex items-center gap-1.5">
+            + Ajouter
+          </button>
         </div>
         <table class="w-full text-left text-sm text-slate-600">
-          <thead class="bg-slate-50 text-slate-500 font-medium border-b border-slate-200">
+          <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
             <tr><th class="py-3 px-4">Nom</th><th class="py-3 px-4">Description</th><th class="py-3 px-4 text-right">Actions</th></tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
             <tr *ngFor="let depot of depots" class="hover:bg-slate-50 transition-colors">
-              <td class="py-3 px-4">{{ depot.nom }}</td>
-              <td class="py-3 px-4">{{ depot.description }}</td>
+              <td class="py-3 px-4 font-semibold text-oas-ink">{{ depot.nom }}</td>
+              <td class="py-3 px-4 text-oas-muted">{{ depot.description || '—' }}</td>
               <td class="py-3 px-4 text-right">
-                <button *ngIf="depot.id" (click)="deleteDepot(depot.id)" class="text-red-500 hover:text-red-700">Supprimer</button>
+                <button *ngIf="depot.id" (click)="deleteDepot(depot.id)" class="text-red-500 hover:text-red-700 font-semibold transition cursor-pointer">Supprimer</button>
               </td>
             </tr>
           </tbody>
@@ -42,27 +44,29 @@
 
       <!-- Categories Tab -->
       <div *ngIf="activeTab === 'categories'">
-        <h2 class="text-lg font-medium text-gray-900 mb-4">Catégories de Pièces</h2>
-        <div class="flex gap-4 mb-6">
-          <input type="text" [(ngModel)]="newCategorie.nom" placeholder="Nom de la catégorie" class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-oas-primary/20 focus:border-oas-primary transition-all">
-          <select *ngIf="newCategorie.depot" [(ngModel)]="newCategorie.depot.id" class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-oas-primary/20 focus:border-oas-primary transition-all">
+        <h2 class="text-lg font-bold text-oas-ink mb-4">Catégories de Pièces</h2>
+        <div class="flex flex-wrap gap-4 mb-6">
+          <input type="text" [(ngModel)]="newCategorie.nom" placeholder="Nom de la catégorie" class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-oas-ink focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition-all min-w-[200px]">
+          <select *ngIf="newCategorie.depot" [(ngModel)]="newCategorie.depot.id" class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-oas-ink focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition-all min-w-[180px]">
             <option *ngFor="let d of depots" [value]="d.id">{{ d.nom }}</option>
           </select>
-          <button (click)="saveCategorie()" [disabled]="depots.length === 0" class="px-4 py-2 bg-oas-primary text-white rounded-lg text-sm font-medium hover:bg-oas-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Ajouter</button>
+          <button (click)="saveCategorie()" [disabled]="depots.length === 0" class="px-5 py-2 bg-oas-accent text-white rounded-lg text-sm font-bold hover:bg-oas-accent-dark transition shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5">
+            + Ajouter
+          </button>
         </div>
-        <div *ngIf="depots.length === 0" class="text-sm text-amber-600 mb-4">
+        <div *ngIf="depots.length === 0" class="text-sm text-amber-600 mb-4 bg-amber-50 p-3 rounded-lg border border-amber-200">
           ⚠️ Vous devez créer au moins un dépôt avant de pouvoir créer une catégorie.
         </div>
         <table class="w-full text-left text-sm text-slate-600">
-          <thead class="bg-slate-50 text-slate-500 font-medium border-b border-slate-200">
+          <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
             <tr><th class="py-3 px-4">Nom</th><th class="py-3 px-4">Dépôt Rattaché</th><th class="py-3 px-4 text-right">Actions</th></tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
             <tr *ngFor="let cat of categories" class="hover:bg-slate-50 transition-colors">
-              <td class="py-3 px-4">{{ cat.nom }}</td>
-              <td class="py-3 px-4">{{ cat.depot ? getDepotName(cat.depot.id) : '-' }}</td>
+              <td class="py-3 px-4 font-semibold text-oas-ink">{{ cat.nom }}</td>
+              <td class="py-3 px-4 text-oas-muted">{{ cat.depot ? getDepotName(cat.depot.id) : '-' }}</td>
               <td class="py-3 px-4 text-right">
-                <button *ngIf="cat.id" (click)="deleteCategorie(cat.id)" class="text-red-500 hover:text-red-700">Supprimer</button>
+                <button *ngIf="cat.id" (click)="deleteCategorie(cat.id)" class="text-red-500 hover:text-red-700 font-semibold transition cursor-pointer">Supprimer</button>
               </td>
             </tr>
           </tbody>
@@ -71,15 +75,15 @@
 
       <!-- Config Fiche Atelier Tab -->
       <div *ngIf="activeTab === 'configs'">
-        <h2 class="text-lg font-medium text-gray-900 mb-4">Configuration Fiche Atelier (Briques dynamiques)</h2>
+        <h2 class="text-lg font-bold text-oas-ink mb-4">Configuration Fiche Atelier (Briques dynamiques)</h2>
         <div class="flex flex-wrap gap-4 mb-6 items-end">
           <div class="flex flex-col gap-1">
-            <label class="text-xs text-slate-500">Label</label>
-            <input type="text" [(ngModel)]="newConfig.label" placeholder="Ex: Kilométrage" class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-oas-primary/20 focus:border-oas-primary transition-all">
+            <label class="text-xs text-slate-500 font-semibold">Label</label>
+            <input type="text" [(ngModel)]="newConfig.label" placeholder="Ex: Kilométrage" class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-oas-ink focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition-all min-w-[180px]">
           </div>
           <div class="flex flex-col gap-1">
-            <label class="text-xs text-slate-500">Type de champ</label>
-            <select [(ngModel)]="newConfig.type" class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-oas-primary/20 focus:border-oas-primary transition-all">
+            <label class="text-xs text-slate-500 font-semibold">Type de champ</label>
+            <select [(ngModel)]="newConfig.type" class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-oas-ink focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition-all min-w-[160px]">
               <option value="text">Texte Court</option>
               <option value="number">Nombre</option>
               <option value="textarea">Texte Long (Paragraphe)</option>
@@ -89,27 +93,29 @@
             </select>
           </div>
           <div class="flex flex-col gap-1" *ngIf="newConfig.type === 'select'">
-            <label class="text-xs text-slate-500">Options (séparées par virgule)</label>
-            <input type="text" [(ngModel)]="newConfig.options" placeholder="Opt1, Opt2, Opt3" class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-oas-primary/20 focus:border-oas-primary transition-all">
+            <label class="text-xs text-slate-500 font-semibold">Options (séparées par virgule)</label>
+            <input type="text" [(ngModel)]="newConfig.options" placeholder="Opt1, Opt2, Opt3" class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-oas-ink focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition-all min-w-[200px]">
           </div>
           <div class="flex items-center gap-2 mb-2">
-            <input type="checkbox" [(ngModel)]="newConfig.obligatoire" id="obl">
-            <label for="obl" class="text-sm text-slate-600">Obligatoire</label>
+            <input type="checkbox" [(ngModel)]="newConfig.obligatoire" id="obl" class="w-4 h-4 text-oas-accent rounded">
+            <label for="obl" class="text-sm font-medium text-slate-600 cursor-pointer">Obligatoire</label>
           </div>
-          <button (click)="saveConfig()" class="px-4 py-2 bg-oas-primary text-white rounded-lg text-sm font-medium hover:bg-oas-primary/90 transition-colors">Ajouter brique</button>
+          <button (click)="saveConfig()" class="px-5 py-2 bg-oas-accent text-white rounded-lg text-sm font-bold hover:bg-oas-accent-dark transition shadow-sm cursor-pointer flex items-center gap-1.5">
+            + Ajouter brique
+          </button>
         </div>
         <table class="w-full text-left text-sm text-slate-600">
-          <thead class="bg-slate-50 text-slate-500 font-medium border-b border-slate-200">
+          <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
             <tr><th class="py-3 px-4">Label</th><th class="py-3 px-4">Type</th><th class="py-3 px-4">Options</th><th class="py-3 px-4">Obligatoire</th><th class="py-3 px-4 text-right">Actions</th></tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
             <tr *ngFor="let conf of configs" class="hover:bg-slate-50 transition-colors">
-              <td class="py-3 px-4">{{ conf.label }}</td>
-              <td class="py-3 px-4">{{ conf.type }}</td>
-              <td class="py-3 px-4">{{ conf.options }}</td>
+              <td class="py-3 px-4 font-semibold text-oas-ink">{{ conf.label }}</td>
+              <td class="py-3 px-4 text-oas-muted">{{ conf.type }}</td>
+              <td class="py-3 px-4 text-oas-muted">{{ conf.options || '—' }}</td>
               <td class="py-3 px-4">{{ conf.obligatoire ? 'Oui' : 'Non' }}</td>
               <td class="py-3 px-4 text-right">
-                <button *ngIf="conf.id" (click)="deleteConfig(conf.id)" class="text-red-500 hover:text-red-700">Supprimer</button>
+                <button *ngIf="conf.id" (click)="deleteConfig(conf.id)" class="text-red-500 hover:text-red-700 font-semibold transition cursor-pointer">Supprimer</button>
               </td>
             </tr>
           </tbody>

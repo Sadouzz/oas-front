@@ -24,7 +24,7 @@ The application is modularized by feature within `src/app/`:
   - `auth/`: Login and authentication.
   - `dashboard/`: Main application dashboard.
   - `factures`, `devis-previsionnels`, `proformas`, `avoirs-ht`, `avoirs-ttc`: Core billing and accounting.
-  - `bons-commande`, `bons-livraison`, `bons-de-sortie`: Inventory and order tracking.
+  - `bons-commande`, `bons-reception`, `bons-de-sortie`: Inventory and order tracking.
   - `fiches-atelier`, `vehicules`, `mecaniciens`, `main-doeuvre`, `pieces-detachees`: Garage and repair management.
   - `clients`, `fournisseurs`: Contact management.
   - `stock`, `inventaire`: Inventory management.

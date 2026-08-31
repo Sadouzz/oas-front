@@ -21,7 +21,7 @@ export interface LigneFacturationMainDoeuvre {
   montantTotal: number;
 }
 
-export interface BonDeLivraison {
+export interface BonDeReception {
   id: number;
   numero: string;
   dateCreation: string;
@@ -39,7 +39,7 @@ export interface BonDeLivraison {
   lignesMainDoeuvres: LigneFacturationMainDoeuvre[];
 }
 
-export interface BonDeLivraisonRequest {
+export interface BonDeReceptionRequest {
   bonDeCommandeId?: number | null;
   kilometrage: number;
   remarque?: string;
@@ -48,28 +48,28 @@ export interface BonDeLivraisonRequest {
 }
 
 @Injectable({ providedIn: 'root' })
-export class BonDeLivraisonService {
+export class BonDeReceptionService {
   private http = inject(HttpClient);
-  private api = `${environment.apiUrl}/api/bons-de-livraison`;
+  private api = `${environment.apiUrl}/api/bons-de-reception`;
 
-  getAll(): Observable<BonDeLivraison[]> {
-    return this.http.get<BonDeLivraison[]>(this.api);
+  getAll(): Observable<BonDeReception[]> {
+    return this.http.get<BonDeReception[]>(this.api);
   }
 
-  getById(id: number): Observable<BonDeLivraison> {
-    return this.http.get<BonDeLivraison>(`${this.api}/${id}`);
+  getById(id: number): Observable<BonDeReception> {
+    return this.http.get<BonDeReception>(`${this.api}/${id}`);
   }
 
-  recent(): Observable<BonDeLivraison[]> {
-    return this.http.get<BonDeLivraison[]>(`${this.api}/recent`);
+  recent(): Observable<BonDeReception[]> {
+    return this.http.get<BonDeReception[]>(`${this.api}/recent`);
   }
 
-  create(data: BonDeLivraisonRequest): Observable<BonDeLivraison> {
-    return this.http.post<BonDeLivraison>(this.api, data);
+  create(data: BonDeReceptionRequest): Observable<BonDeReception> {
+    return this.http.post<BonDeReception>(this.api, data);
   }
 
-  update(id: number, data: BonDeLivraisonRequest): Observable<BonDeLivraison> {
-    return this.http.put<BonDeLivraison>(`${this.api}/${id}`, data);
+  update(id: number, data: BonDeReceptionRequest): Observable<BonDeReception> {
+    return this.http.put<BonDeReception>(`${this.api}/${id}`, data);
   }
 
   delete(id: number): Observable<void> {

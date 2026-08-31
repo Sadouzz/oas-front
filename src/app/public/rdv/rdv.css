@@ -634,9 +634,9 @@
     position:relative;
     background:white;
     border-radius:22px;
-    padding:42px;
+    padding:40px;
     width:100%;
-    max-width:460px;
+    max-width:540px;
     max-height:92vh;
     overflow-y:auto;
     box-shadow:0 25px 60px rgba(10,20,35,.35);
@@ -719,62 +719,93 @@
 /* Champs de formulaire */
 
 .form-group{
-    margin-bottom:18px;
+    margin-bottom:14px;
 }
 
 .form-grid-2{
     display:grid;
     grid-template-columns:1fr 1fr;
-    gap:16px;
+    gap:14px;
 }
 
 .form-group label{
-    display:block;
-    font-size:13px;
+    display:flex;
+    align-items:center;
+    gap:4px;
+    font-size:12.5px;
     font-weight:700;
     color:var(--color-oas-ink2);
-    margin-bottom:8px;
+    margin-bottom:6px;
 }
 
 .input-icon{
     position:relative;
     display:flex;
     align-items:center;
-}
-
-.input-icon i:first-child{
-    position:absolute;
-    left:16px;
-    color:var(--color-oas-faint);
-    font-size:15px;
+    width:100%;
 }
 
 .input-icon input{
     width:100%;
-    padding:13px 16px 13px 44px;
+    padding:11px 14px;
     border:1.5px solid var(--color-oas-line);
-    border-radius:12px;
+    border-radius:10px;
     font-family:inherit;
     font-size:14px;
     color:var(--color-oas-ink);
     background:var(--color-oas-bg);
-    transition:.2s;
+    transition:all .2s ease;
 }
 
 .input-icon input::placeholder{
     color:var(--color-oas-faint);
+    font-size:13.5px;
+}
+
+.input-icon input:hover{
+    border-color:#cbd5e1;
 }
 
 .input-icon input:focus{
     outline:none;
     border-color:var(--color-oas-accent);
     background:white;
-    box-shadow:0 0 0 4px var(--color-oas-accent-bg);
+    box-shadow:0 0 0 3.5px var(--color-oas-accent-bg);
 }
 
 .input-icon input.is-invalid{
     border-color:var(--color-oas-bad);
     background:var(--color-oas-bad-bg);
+}
+
+.input-icon textarea{
+    width:100%;
+    padding:11px 14px;
+    border:1.5px solid var(--color-oas-line);
+    border-radius:10px;
+    font-family:inherit;
+    font-size:14px;
+    color:var(--color-oas-ink);
+    background:var(--color-oas-bg);
+    min-height:80px;
+    resize:vertical;
+    transition:all .2s ease;
+}
+
+.input-icon textarea::placeholder{
+    color:var(--color-oas-faint);
+    font-size:13.5px;
+}
+
+.input-icon textarea:hover{
+    border-color:#cbd5e1;
+}
+
+.input-icon textarea:focus{
+    outline:none;
+    border-color:var(--color-oas-accent);
+    background:white;
+    box-shadow:0 0 0 3.5px var(--color-oas-accent-bg);
 }
 
 .toggle-visibility{

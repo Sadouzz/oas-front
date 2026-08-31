@@ -98,8 +98,11 @@ export class ProformasComponent implements OnInit {
         this.mainsDoeuvre = mds.filter(m => !m.isArchived);
         this.bonsCommande = bonsCommande;
 
-        // Auto-open modal if openId is provided in query params
+        // Auto-open modal if openId or action is provided in query params
         this.route.queryParams.subscribe(params => {
+          if (params['action'] === 'new') {
+            this.openNew();
+          }
           const openId = params['openId'];
           if (openId) {
             const id = Number(openId);

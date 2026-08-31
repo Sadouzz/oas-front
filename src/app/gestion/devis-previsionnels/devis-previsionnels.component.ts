@@ -1,5 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { DevisPrevisionnelService, DevisPrevisionnel } from '../../services/devis-previsionnel.service';
 import { ClientService, UserModel } from '../../services/client.service';
@@ -19,6 +20,7 @@ export class DevisPrevisionnelsComponent implements OnInit {
   private clientService = inject(ClientService);
   private vehiculeService = inject(VehiculeService);
   private fb = inject(FormBuilder);
+  private route = inject(ActivatedRoute);
 
   devis: DevisPrevisionnel[] = [];
   filtered: DevisPrevisionnel[] = [];
@@ -49,6 +51,12 @@ export class DevisPrevisionnelsComponent implements OnInit {
     this.load();
     this.clientService.getAll().subscribe({ next: c => this.clients = c, error: () => {} });
     this.vehiculeService.getAll().subscribe({ next: v => this.vehicules = v, error: () => {} });
+
+    this.route.queryParams.subscribe(params => {
+      if (params['action'] === 'new') {
+        this.openNew();
+      }
+    });
   }
 
   load() {

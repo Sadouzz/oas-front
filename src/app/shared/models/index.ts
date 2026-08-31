@@ -16,3 +16,4 @@ export * from './garage.model';
 export * from './partenaire.model';
 export * from './media.model';
 export * from './fiche-atelier.model';
+export * from './note-de-prix.model';

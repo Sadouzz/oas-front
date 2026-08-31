@@ -1,5 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { CommonModule, DecimalPipe, DatePipe, NgClass } from '@angular/common';
 import { FactureService } from '../../services/facture.service';
@@ -21,6 +22,7 @@ import { SearchableSelectComponent } from '../../shared/components/searchable-se
 export class FacturesComponent implements OnInit {
   private service = inject(FactureService);
   private fb = inject(FormBuilder);
+  private route = inject(ActivatedRoute);
   private clientService = inject(ClientService);
   private vehiculeService = inject(VehiculeService);
   private ficheService = inject(OrdreReparationService);
@@ -51,10 +53,14 @@ export class FacturesComponent implements OnInit {
   vehiculeFilter = '';
   ficheFilter = '';
 
-
   page = 1;
   readonly pageSize = 10;
   searchTerm = '';
+  filterStatut = '';
+  dateDebut = '';
+  dateFin = '';
+  filterClient = '';
+  showDateFilter = false;
   successMessage = '';
   errorMessage = '';
 
@@ -62,6 +68,7 @@ export class FacturesComponent implements OnInit {
     clientId: [null as number | null, Validators.required],
     vehiculeId: [null as number | null, Validators.required],
     ordreReparationId: [null as number | null, Validators.required],
+    kilometrage: [null as number | null],
     remarque: [''],
     modePaiement: ['ESPECE', Validators.required],
   });
@@ -77,6 +84,21 @@ export class FacturesComponent implements OnInit {
         this.ordresReparation = fiches;
       },
     });
+
+    this.route.queryParams.subscribe(params => {
+      if (params['action'] === 'new') {
+        this.openCreate();
+      }
+      if (params['statut']) {
+        this.filterStatut = params['statut'];
+      } else if (!params['action']) {
+        this.filterStatut = '';
+      }
+      if (params['search'] === 'client-date') {
+        this.showDateFilter = true;
+      }
+      this.applyFilter();
+    });
   }
 
   load() {
@@ -88,14 +110,40 @@ export class FacturesComponent implements OnInit {
   }
 
   applyFilter() {
-    if (!this.searchTerm) { this.filtered = this.factures; this.page = 1; return; }
-    const kw = this.searchTerm;
-    this.filtered = this.factures.filter(f =>
-      f.numero.toLowerCase().includes(kw) ||
-      f.clientNom.toLowerCase().includes(kw) ||
-      (f.immatriculation ?? '').toLowerCase().includes(kw)
-    );
+    let data = this.factures;
+    if (this.filterStatut === 'EN_COURS') {
+      data = data.filter(f => f.statutPaiement !== 'PAYE');
+    } else if (this.filterStatut === 'PAYE') {
+      data = data.filter(f => f.statutPaiement === 'PAYE');
+    }
+    if (this.searchTerm) {
+      const kw = this.searchTerm.toLowerCase();
+      data = data.filter(f =>
+        f.numero.toLowerCase().includes(kw) ||
+        f.clientNom.toLowerCase().includes(kw) ||
+        (f.immatriculation ?? '').toLowerCase().includes(kw)
+      );
+    }
+    if (this.dateDebut) {
+      data = data.filter(f => f.dateCreation && f.dateCreation >= this.dateDebut);
+    }
+    if (this.dateFin) {
+      data = data.filter(f => f.dateCreation && f.dateCreation.slice(0, 10) <= this.dateFin);
+    }
+    if (this.filterClient) {
+      const cKw = this.filterClient.toLowerCase();
+      data = data.filter(f =>
+        f.clientNom.toLowerCase().includes(cKw) ||
+        String(f.clientId).includes(cKw)
+      );
+    }
+    this.filtered = data;
     this.page = 1;
+  }
+
+  onStatutFilter(e: Event) {
+    this.filterStatut = (e.target as HTMLSelectElement).value;
+    this.applyFilter();
   }
 
   onSearch(e: Event) {

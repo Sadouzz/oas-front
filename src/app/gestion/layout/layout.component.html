@@ -19,9 +19,10 @@
 
       <!-- Dashboard -->
       <a routerLink="/gestion/dashboard" routerLinkActive="oas-nav-active"
-         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
         <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
         </svg>
         Tableau de bord
       </a>
@@ -63,192 +64,449 @@
 
       <!-- Rendez-vous — Super Agent + Chef Atelier + Master + Agent -->
       @if (isAgent() || isSuperAgent() || isMaster() || isChefAtelier()) {
-        <a routerLink="/gestion/rendezvous" routerLinkActive="oas-nav-active"
-           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
-          <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-          </svg>
-          Rendez-vous
-        </a>
+      <a routerLink="/gestion/rendezvous" routerLinkActive="oas-nav-active"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        Rendez-vous
+      </a>
       }
 
       <!-- Clients — Agent + Super Agent + Master -->
       @if (isAgent() || isSuperAgent() || isMaster()) {
-        <a routerLink="/gestion/clients" routerLinkActive="oas-nav-active"
-           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
-          <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-          </svg>
-          Clients
-        </a>
+      <a routerLink="/gestion/clients" routerLinkActive="oas-nav-active"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        Clients
+      </a>
       }
 
       <!-- Véhicules — tous sauf Magasinier -->
       @if (!isMagasinier()) {
-        <a routerLink="/gestion/vehicules" routerLinkActive="oas-nav-active"
-           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
-          <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/>
-          </svg>
-          Véhicules
-        </a>
+      <a routerLink="/gestion/vehicules" routerLinkActive="oas-nav-active"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+        </svg>
+        Véhicules
+      </a>
       }
 
       <!-- ── Pièces détachées ── -->
       @if (isAgent() || isChefAtelier() || isSuperAgent() || isMaster() || isMagasinier()) {
-        <button (click)="toggleSection('pieces')"
-                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
-          <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-          </svg>
-          <span class="flex-1 text-left">Piéces dét</span>
-          <svg class="w-3.5 h-3.5 transition-transform" [class.rotate-180]="openSection === 'pieces'"
-               fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-          </svg>
-        </button>
-        @if (openSection === 'pieces') {
-          <div class="ml-3 pl-3 border-l border-white/10 space-y-0.5">
-            <a routerLink="/gestion/pieces-detachees" routerLinkActive="oas-sub-active"
-               class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
-              Liste des articles
-            </a>
-            <a routerLink="/gestion/stock" routerLinkActive="oas-sub-active"
-               class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
-              Historique
-            </a>
-          </div>
-        }
+      <button (click)="toggleSection('pieces')"
+        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+        </svg>
+        <span class="flex-1 text-left">Piéces dét</span>
+        <svg class="w-3.5 h-3.5 transition-transform" [class.rotate-180]="openSection === 'pieces'" fill="none"
+          viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      @if (openSection === 'pieces') {
+      <div class="ml-3 pl-3 border-l border-white/10 space-y-0.5">
+        <a routerLink="/gestion/pieces-detachees" routerLinkActive="oas-sub-active"
+          class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
+          Liste des articles
+        </a>
+        <a routerLink="/gestion/stock" routerLinkActive="oas-sub-active"
+          class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
+          Historique
+        </a>
+      </div>
+      }
       }
 
-      <!-- ── Gestion Stock ── -->
-      @if (isAgent() || isChefAtelier() || isSuperAgent() || isMaster() || isMagasinier()) {
-        <button (click)="toggleSection('stock')"
-                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
-          <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
-          </svg>
-          <span class="flex-1 text-left">Gestion Stock</span>
-          <svg class="w-3.5 h-3.5 transition-transform" [class.rotate-180]="openSection === 'stock'"
-               fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-          </svg>
-        </button>
-        @if (openSection === 'stock') {
-          <div class="ml-3 pl-3 border-l border-white/10 space-y-0.5">
-            <a routerLink="/gestion/bons-de-sortie" routerLinkActive="oas-sub-active"
-               class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
-              Bon de sortie
+      <!-- ── 1. Facture HT ── -->
+      @if (isAgent() || isSuperAgent() || isMaster() || isChefAtelier()) {
+      <button (click)="toggleSection('facture-ht')"
+        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+        <span class="flex-1 text-left">Facture HT</span>
+        <svg class="w-3.5 h-3.5 transition-transform" [class.rotate-180]="openSection === 'facture-ht'" fill="none"
+          viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      @if (openSection === 'facture-ht') {
+      <div class="ml-3 pl-3 border-l border-white/10 space-y-1">
+        <!-- Sous-menu Note de prix -->
+        <div>
+          <button (click)="toggleSubSection('note-prix')"
+            class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+            <span class="flex items-center gap-2">
+              <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Note de prix
+            </span>
+            <svg class="w-3 h-3 transition-transform text-white/50" [class.rotate-180]="openSubSection === 'note-prix'" fill="none"
+              viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          @if (openSubSection === 'note-prix') {
+          <div class="ml-3 pl-2.5 border-l border-white/10 space-y-0.5 mt-0.5">
+            <a routerLink="/gestion/notes-prix" [queryParams]="{ action: 'new' }" routerLinkActive="oas-sub-active"
+              class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
+              <span class="w-1.5 h-1.5 rounded-full bg-oas-accent"></span>
+              Nouvelle note de prix
             </a>
-            <a routerLink="/gestion/historique-bs" routerLinkActive="oas-sub-active"
-               class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
-              Historique BS
+            <a routerLink="/gestion/notes-prix" [queryParams]="{ statut: 'EN_COURS' }" routerLinkActive="oas-sub-active"
+              class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+              Lister les notes de prix en cours
             </a>
-            <a routerLink="/gestion/inventaire" routerLinkActive="oas-sub-active"
-               class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
-              Inventaire
+            <a routerLink="/gestion/notes-prix" [queryParams]="{ statut: 'PAYE' }" routerLinkActive="oas-sub-active"
+              class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              Lister les notes de prix payées
             </a>
-            <a routerLink="/gestion/seuil-alertes" routerLinkActive="oas-sub-active"
-               class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
-              Stock
+            <a routerLink="/gestion/notes-prix" [queryParams]="{ search: 'client-date' }" routerLinkActive="oas-sub-active"
+              class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
+              <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
+              Lister les notes de prix par numéro de client et date
             </a>
           </div>
-        }
+          }
+        </div>
+
+        <!-- Sous-menu Devis prévisionnel -->
+        <div>
+          <button (click)="toggleSubSection('devis-prev')"
+            class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+            <span class="flex items-center gap-2">
+              <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Devis prévisionnel
+            </span>
+            <svg class="w-3 h-3 transition-transform text-white/50" [class.rotate-180]="openSubSection === 'devis-prev'" fill="none"
+              viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          @if (openSubSection === 'devis-prev') {
+          <div class="ml-3 pl-2.5 border-l border-white/10 space-y-0.5 mt-0.5">
+            <a routerLink="/gestion/devis-previsionnels" [queryParams]="{ action: 'new' }" routerLinkActive="oas-sub-active"
+              class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
+              <span class="w-1.5 h-1.5 rounded-full bg-oas-accent"></span>
+              Nouveau devis prévisionnel
+            </a>
+            <a routerLink="/gestion/devis-previsionnels" routerLinkActive="oas-sub-active" [routerLinkActiveOptions]="{ exact: true }"
+              class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+              Lister les devis prévisionnel
+            </a>
+          </div>
+          }
+        </div>
+
+        <!-- Sous-menu Avoir note de prix -->
+        <div>
+          <button (click)="toggleSubSection('avoir-ht')"
+            class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+            <span class="flex items-center gap-2">
+              <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16 15v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3m9 14V5a2 2 0 00-2-2H6a2 2 0 00-2 2v16l4-2 4 2 4-2 4 2z" />
+              </svg>
+              Avoir note de prix
+            </span>
+            <svg class="w-3 h-3 transition-transform text-white/50" [class.rotate-180]="openSubSection === 'avoir-ht'" fill="none"
+              viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          @if (openSubSection === 'avoir-ht') {
+          <div class="ml-3 pl-2.5 border-l border-white/10 space-y-0.5 mt-0.5">
+            <a routerLink="/gestion/avoirs-ht" [queryParams]="{ action: 'new' }" routerLinkActive="oas-sub-active"
+              class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
+              <span class="w-1.5 h-1.5 rounded-full bg-oas-accent"></span>
+              Nouveau avoir note de prix
+            </a>
+            <a routerLink="/gestion/avoirs-ht" routerLinkActive="oas-sub-active" [routerLinkActiveOptions]="{ exact: true }"
+              class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+              Lister les avoirs note de prix
+            </a>
+          </div>
+          }
+        </div>
+      </div>
+      }
       }
 
-      <!-- ── Réapprovisionnement ── -->
-      @if (isAgent() || isSuperAgent() || isMaster() || isMagasinier()) {
-        <button (click)="toggleSection('reappro')"
-                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
-          <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
-          </svg>
-          <span class="flex-1 text-left">Réapprovisionnement</span>
-          <svg class="w-3.5 h-3.5 transition-transform" [class.rotate-180]="openSection === 'reappro'"
-               fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-          </svg>
-        </button>
-        @if (openSection === 'reappro') {
-          <div class="ml-3 pl-3 border-l border-white/10 space-y-0.5">
-            <a routerLink="/gestion/bons-commande" routerLinkActive="oas-sub-active"
-               class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
-              BC — Bon de commande
+      <!-- ── 2. Facture TTC ── -->
+      @if (isAgent() || isSuperAgent() || isMaster()) {
+      <button (click)="toggleSection('facture-ttc')"
+        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
+        </svg>
+        <span class="flex-1 text-left">Facture TTC</span>
+        <svg class="w-3.5 h-3.5 transition-transform" [class.rotate-180]="openSection === 'facture-ttc'" fill="none"
+          viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      @if (openSection === 'facture-ttc') {
+      <div class="ml-3 pl-3 border-l border-white/10 space-y-1">
+        <!-- Sous-menu Facture -->
+        <div>
+          <button (click)="toggleSubSection('facture')"
+            class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+            <span class="flex items-center gap-2">
+              <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Facture
+            </span>
+            <svg class="w-3 h-3 transition-transform text-white/50" [class.rotate-180]="openSubSection === 'facture'" fill="none"
+              viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          @if (openSubSection === 'facture') {
+          <div class="ml-3 pl-2.5 border-l border-white/10 space-y-0.5 mt-0.5">
+            <a routerLink="/gestion/factures" [queryParams]="{ action: 'new' }" routerLinkActive="oas-sub-active"
+              class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
+              <span class="w-1.5 h-1.5 rounded-full bg-oas-accent"></span>
+              Nouvelle facture
             </a>
-            <a routerLink="/gestion/bons-livraison" routerLinkActive="oas-sub-active"
-               class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
-              BL — Bon de livraison
+            <a routerLink="/gestion/factures" [queryParams]="{ statut: 'EN_COURS' }" routerLinkActive="oas-sub-active"
+              class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+              Lister les factures en cours
+            </a>
+            <a routerLink="/gestion/factures" [queryParams]="{ statut: 'PAYE' }" routerLinkActive="oas-sub-active"
+              class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
+              <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>
+              Lister les factures payées
+            </a>
+            <a routerLink="/gestion/factures" [queryParams]="{ search: 'client-date' }" routerLinkActive="oas-sub-active"
+              class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
+              <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+              Lister par N° client et date
+            </a>
+          </div>
+          }
+        </div>
+
+        <!-- Sous-menu Bon de commande -->
+        <div>
+          <button (click)="toggleSubSection('bc')"
+            class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+            <span class="flex items-center gap-2">
+              <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              Bon de commande
+            </span>
+            <svg class="w-3 h-3 transition-transform text-white/50" [class.rotate-180]="openSubSection === 'bc'" fill="none"
+              viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          @if (openSubSection === 'bc') {
+          <div class="ml-3 pl-2.5 border-l border-white/10 space-y-0.5 mt-0.5">
+            <a routerLink="/gestion/bons-commande" [queryParams]="{ action: 'new' }" routerLinkActive="oas-sub-active"
+              class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
+              <span class="w-1.5 h-1.5 rounded-full bg-oas-accent"></span>
+              Nouveau bon de commande
+            </a>
+            <a routerLink="/gestion/bons-commande" routerLinkActive="oas-sub-active" [routerLinkActiveOptions]="{ exact: true }"
+              class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+              Lister les bons de commande
+            </a>
+            <a routerLink="/gestion/bons-commande" [queryParams]="{ search: 'fournisseur-date' }" routerLinkActive="oas-sub-active"
+              class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
+              <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+              Lister par N° fournisseur et date
             </a>
             <a routerLink="/gestion/fournisseurs" routerLinkActive="oas-sub-active"
-               class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
-              Fournisseurs
+              class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
+              <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+              Fournisseur
             </a>
           </div>
-        }
-      }
-
-      <!-- ── Facture TTC — Agent + Super Agent + Master ── -->
-      @if (isAgent() || isSuperAgent() || isMaster()) {
-        <button (click)="toggleSection('facture-ttc')"
-                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
-          <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/>
-          </svg>
-          <span class="flex-1 text-left">Facture TTC</span>
-          <svg class="w-3.5 h-3.5 transition-transform" [class.rotate-180]="openSection === 'facture-ttc'"
-               fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-          </svg>
-        </button>
-        @if (openSection === 'facture-ttc') {
-          <div class="ml-3 pl-3 border-l border-white/10 space-y-0.5">
-            <a routerLink="/gestion/factures" routerLinkActive="oas-sub-active"
-               class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
-              Facture
-            </a>
-            <a routerLink="/gestion/proformas" routerLinkActive="oas-sub-active"
-               class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
+          }
+        </div>
+        <!-- Sous-menu Proforma -->
+        <div>
+          <button (click)="toggleSubSection('proforma')"
+            class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+            <span class="flex items-center gap-2">
+              <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
               Proforma
+            </span>
+            <svg class="w-3 h-3 transition-transform text-white/50" [class.rotate-180]="openSubSection === 'proforma'" fill="none"
+              viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          @if (openSubSection === 'proforma') {
+          <div class="ml-3 pl-2.5 border-l border-white/10 space-y-0.5 mt-0.5">
+            <a routerLink="/gestion/proformas" [queryParams]="{ action: 'new' }" routerLinkActive="oas-sub-active"
+              class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
+              <span class="w-1.5 h-1.5 rounded-full bg-oas-accent"></span>
+              Nouveau proforma
             </a>
-            <!-- <a routerLink="/avoirs-ttc" routerLinkActive="oas-sub-active"
-               class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
-              Avoir TTC
-            </a> -->
+            <a routerLink="/gestion/proformas" routerLinkActive="oas-sub-active" [routerLinkActiveOptions]="{ exact: true }"
+              class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+              Lister les proformas
+            </a>
           </div>
-        }
+          }
+        </div>
+        <!-- Sous-menu Avoir TTC -->
+        <div>
+          <button (click)="toggleSubSection('avoir-ttc')"
+            class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+            <span class="flex items-center gap-2">
+              <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16 15v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3m9 14V5a2 2 0 00-2-2H6a2 2 0 00-2 2v16l4-2 4 2 4-2 4 2z" />
+              </svg>
+              Avoir TTC
+            </span>
+            <svg class="w-3 h-3 transition-transform text-white/50" [class.rotate-180]="openSubSection === 'avoir-ttc'" fill="none"
+              viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          @if (openSubSection === 'avoir-ttc') {
+          <div class="ml-3 pl-2.5 border-l border-white/10 space-y-0.5 mt-0.5">
+            <a routerLink="/gestion/avoirs-ttc" [queryParams]="{ action: 'new' }" routerLinkActive="oas-sub-active"
+              class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
+              <span class="w-1.5 h-1.5 rounded-full bg-oas-accent"></span>
+              Nouveau avoir ttc
+            </a>
+            <a routerLink="/gestion/avoirs-ttc" routerLinkActive="oas-sub-active" [routerLinkActiveOptions]="{ exact: true }"
+              class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+              Lister les avoirs ttc
+            </a>
+          </div>
+          }
+        </div>
+      </div>
+      }
       }
 
-      <!-- ── Facture HT — Agent + Super + Chef Atelier ── -->
-      @if (isAgent() || isSuperAgent() || isMaster() || isChefAtelier()) {
-        <button (click)="toggleSection('facture-ht')"
-                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
-          <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-          </svg>
-          <span class="flex-1 text-left">Facture HT</span>
-          <svg class="w-3.5 h-3.5 transition-transform" [class.rotate-180]="openSection === 'facture-ht'"
-               fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-          </svg>
-        </button>
-        @if (openSection === 'facture-ht') {
-          <div class="ml-3 pl-3 border-l border-white/10 space-y-0.5">
-            <a routerLink="/gestion/notes-prix" routerLinkActive="oas-sub-active"
-               class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
-              Note de prix
+      <!-- ── 3. Gestion Stock ── -->
+      @if (isAgent() || isChefAtelier() || isSuperAgent() || isMaster() || isMagasinier()) {
+      <button (click)="toggleSection('stock')"
+        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+        </svg>
+        <span class="flex-1 text-left">Gestion Stock</span>
+        <svg class="w-3.5 h-3.5 transition-transform" [class.rotate-180]="openSection === 'stock'" fill="none"
+          viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      @if (openSection === 'stock') {
+      <div class="ml-3 pl-3 border-l border-white/10 space-y-1">
+        <!-- Sous-menu Bon de sortie -->
+        <div>
+          <button (click)="toggleSubSection('bs')"
+            class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+            <span class="flex items-center gap-2">
+              <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Bon de sortie
+            </span>
+            <svg class="w-3 h-3 transition-transform text-white/50" [class.rotate-180]="openSubSection === 'bs'" fill="none"
+              viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          @if (openSubSection === 'bs') {
+          <div class="ml-3 pl-2.5 border-l border-white/10 space-y-0.5 mt-0.5">
+            <a routerLink="/gestion/bons-de-sortie" [queryParams]="{ action: 'new' }" routerLinkActive="oas-sub-active"
+              class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
+              <span class="w-1.5 h-1.5 rounded-full bg-oas-accent"></span>
+              Nouveau bon de sortie
             </a>
-            @if (isChefAtelier() || isSuperAgent() || isMaster() || isAgent()) {
-              <a routerLink="/gestion/devis-previsionnels" routerLinkActive="oas-sub-active"
-                 class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
-                Devis prévisionnel
-              </a>
-            }
-            <a routerLink="/gestion/avoirs-ht" routerLinkActive="oas-sub-active"
-               class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
-              Avoir Note de prix
+            <a routerLink="/gestion/bons-de-sortie" [queryParams]="{ statut: 'EN_ATTENTE' }" routerLinkActive="oas-sub-active"
+              class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+              Liste des bons en cours
+            </a>
+            <a routerLink="/gestion/bons-de-sortie" [queryParams]="{ statut: 'VALIDE' }" routerLinkActive="oas-sub-active"
+              class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
+              <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>
+              Liste des bons validés
+            </a>
+            <a routerLink="/gestion/bons-de-sortie" [queryParams]="{ search: 'auto-date' }" routerLinkActive="oas-sub-active"
+              class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
+              <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+              Recherche de BS (par numéro auto et date)
             </a>
           </div>
-        }
+          }
+        </div>
+
+        <a routerLink="/gestion/historique-bs" routerLinkActive="oas-sub-active"
+          class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
+          Historique BS
+        </a>
+        <a routerLink="/gestion/inventaire" routerLinkActive="oas-sub-active"
+          class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
+          Inventaire
+        </a>
+        <a routerLink="/gestion/seuil-alertes" routerLinkActive="oas-sub-active"
+          class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
+          Stock
+        </a>
+      </div>
+      }
+      }
+
+      <!-- ── 4. Réapprovisionnement ── -->
+      @if (isAgent() || isSuperAgent() || isMaster() || isMagasinier()) {
+      <button (click)="toggleSection('reappro')"
+        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+        </svg>
+        <span class="flex-1 text-left">Réapprovisionnement</span>
+        <svg class="w-3.5 h-3.5 transition-transform" [class.rotate-180]="openSection === 'reappro'" fill="none"
+          viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      @if (openSection === 'reappro') {
+      <div class="ml-3 pl-3 border-l border-white/10 space-y-0.5">
+        <a routerLink="/gestion/bons-reception" routerLinkActive="oas-sub-active"
+          class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
+          Bon de réception
+        </a>
+        <a routerLink="/gestion/fournisseurs" routerLinkActive="oas-sub-active"
+          class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
+          Fournisseurs
+        </a>
+      </div>
+      }
       }
 
       <!-- Gestion TVA — Agent + Super -->
@@ -264,62 +522,65 @@
 
       <!-- Gestion reçu — Agent + Super + Master -->
       @if (isAgent() || isSuperAgent() || isMaster()) {
-        <a routerLink="/gestion/gestion-recu" routerLinkActive="oas-nav-active"
-           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
-          <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-          </svg>
-          Gestion reçu
-        </a>
+      <a routerLink="/gestion/gestion-recu" routerLinkActive="oas-nav-active"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        Gestion reçu
+      </a>
       }
 
       <!-- Main d'œuvre — Super Agent et Master -->
       @if (isSuperAgent() || isMaster()) {
-        <a routerLink="/gestion/admin/main-doeuvre" routerLinkActive="oas-nav-active"
-           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
-          <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z"/>
-          </svg>
-          Main d'œuvre
-        </a>
+      <a routerLink="/gestion/admin/main-doeuvre" routerLinkActive="oas-nav-active"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z" />
+        </svg>
+        Main d'œuvre
+      </a>
       }
 
       <!-- ── Administration — Super Agent et Master ── -->
       @if (isSuperAgent() || isMaster()) {
-        <button (click)="toggleSection('admin')"
-                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
-          <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-          </svg>
-          <span class="flex-1 text-left">Administration</span>
-          <svg class="w-3.5 h-3.5 transition-transform" [class.rotate-180]="openSection === 'admin'"
-               fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-          </svg>
-        </button>
-        @if (openSection === 'admin') {
-          <div class="ml-3 pl-3 border-l border-white/10 space-y-0.5">
-            @if (isSuperAgent()) {
-              <a routerLink="/gestion/admin/garages" routerLinkActive="oas-sub-active"
-                 class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
-                Garages
-              </a>
-            }
-            <a routerLink="/gestion/admin/users" routerLinkActive="oas-sub-active"
-               class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
-              Utilisateurs
-            </a>
-            <a routerLink="/gestion/admin/history" routerLinkActive="oas-sub-active"
-               class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
-              Historique connexions
-            </a>
-            <a routerLink="/gestion/admin/parametres" routerLinkActive="oas-sub-active"
-               class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
-              Paramètres
-            </a>
-          </div>
+      <button (click)="toggleSection('admin')"
+        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        <span class="flex-1 text-left">Administration</span>
+        <svg class="w-3.5 h-3.5 transition-transform" [class.rotate-180]="openSection === 'admin'" fill="none"
+          viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      @if (openSection === 'admin') {
+      <div class="ml-3 pl-3 border-l border-white/10 space-y-0.5">
+        @if (isSuperAgent()) {
+        <a routerLink="/gestion/admin/garages" routerLinkActive="oas-sub-active"
+          class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
+          Garages
+        </a>
         }
+        <a routerLink="/gestion/admin/users" routerLinkActive="oas-sub-active"
+          class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
+          Utilisateurs
+        </a>
+        <a routerLink="/gestion/admin/history" routerLinkActive="oas-sub-active"
+          class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
+          Historique connexions
+        </a>
+        <a routerLink="/gestion/admin/parametres" routerLinkActive="oas-sub-active"
+          class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
+          Paramètres
+        </a>
+      </div>
+      }
       }
 
     </nav>
@@ -327,7 +588,8 @@
     <!-- User footer -->
     <div class="px-4 py-4 border-t border-white/10">
       <div class="flex items-center gap-3 mb-3 px-1">
-        <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 text-white" style="background:#0c2742; border: 2px solid #ef6c1a;">
+        <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 text-white"
+          style="background:#0c2742; border: 2px solid #ef6c1a;">
           {{ initials }}
         </div>
         <div class="flex-1 min-w-0">
@@ -336,9 +598,10 @@
         </div>
       </div>
       <button (click)="logout()"
-              class="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm cursor-pointer">
+        class="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm cursor-pointer">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
         </svg>
         Déconnexion
       </button>
@@ -355,30 +618,36 @@
       <!-- Breadcrumb left -->
       <div class="flex items-center gap-2 text-sm flex-1 min-w-0">
         <span class="text-oas-faint font-semibold hidden sm:block">OAS</span>
-        <svg class="w-3.5 h-3.5 text-oas-faint hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/>
+        <svg class="w-3.5 h-3.5 text-oas-faint hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+          stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6" />
         </svg>
         <span class="font-semibold text-oas-ink truncate capitalize text-sm">{{ today }}</span>
 
         @if (activeGarageName) {
-          <div class="ml-4 flex items-center gap-2 border-l border-oas-line pl-4">
-            <span class="px-2.5 py-1 rounded-md bg-oas-navy text-white text-xs font-bold flex items-center gap-1.5 shadow-sm">
-              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-              </svg>
-              {{ activeGarageName }}
-            </span>
-            @if (isSuperAgent()) {
-              <button (click)="leaveGarage()" class="text-xs font-semibold text-oas-faint hover:text-oas-accent transition">Quitter</button>
-            }
-          </div>
+        <div class="ml-4 flex items-center gap-2 border-l border-oas-line pl-4">
+          <span
+            class="px-2.5 py-1 rounded-md bg-oas-navy text-white text-xs font-bold flex items-center gap-1.5 shadow-sm">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+            {{ activeGarageName }}
+          </span>
+          @if (isSuperAgent()) {
+          <button (click)="leaveGarage()"
+            class="text-xs font-semibold text-oas-faint hover:text-oas-accent transition">Quitter</button>
+          }
+        </div>
         }
       </div>
 
       <!-- Search bar (décoratif) -->
-      <div class="hidden md:flex items-center gap-2.5 bg-oas-bg border border-oas-line rounded-xl px-4 h-[42px] w-72 text-oas-muted flex-shrink-0 cursor-text">
-        <svg class="w-[18px] h-[18px] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+      <div
+        class="hidden md:flex items-center gap-2.5 bg-oas-bg border border-oas-line rounded-xl px-4 h-[42px] w-72 text-oas-muted flex-shrink-0 cursor-text">
+        <svg class="w-[18px] h-[18px] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+          stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
         <span class="text-sm select-none">Rechercher…</span>
       </div>
@@ -388,55 +657,61 @@
 
         <!-- Cloche notification -->
         <div class="relative">
-          <button (click)="toggleNotifications()" class="relative w-[42px] h-[42px] rounded-xl border border-oas-line bg-white flex items-center justify-center text-oas-ink2 hover:bg-oas-bg transition cursor-pointer">
+          <button (click)="toggleNotifications()"
+            class="relative w-[42px] h-[42px] rounded-xl border border-oas-line bg-white flex items-center justify-center text-oas-ink2 hover:bg-oas-bg transition cursor-pointer">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
             </svg>
             @if (unreadCount > 0) {
-              <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-oas-accent text-white text-[10px] font-bold flex items-center justify-center border-2 border-white">
-                {{ unreadCount > 99 ? '99+' : unreadCount }}
-              </span>
+            <span
+              class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-oas-accent text-white text-[10px] font-bold flex items-center justify-center border-2 border-white">
+              {{ unreadCount > 99 ? '99+' : unreadCount }}
+            </span>
             }
           </button>
 
           <!-- Notification Dropdown -->
           @if (notificationsOpen) {
-            <div class="absolute right-0 mt-2 w-80 bg-white border border-oas-line rounded-xl shadow-lg z-50 overflow-hidden flex flex-col max-h-[400px]">
-              <div class="p-3 border-b border-oas-line flex items-center justify-between bg-gray-50 flex-shrink-0">
-                <span class="font-bold text-sm text-oas-ink">Notifications</span>
-                @if (unreadCount > 0) {
-                  <button (click)="markAllAsRead()" class="text-xs text-oas-accent hover:underline font-medium">Tout marquer comme lu</button>
-                }
-              </div>
-              <div class="overflow-y-auto flex-1 p-2 space-y-1">
-                @if (notifications.length === 0) {
-                  <div class="text-center p-4 text-sm text-oas-muted">Aucune notification</div>
-                }
-                @for (notif of notifications; track notif.id) {
-                  <div (click)="markAsRead(notif)"
-                       class="p-3 rounded-lg cursor-pointer transition-colors border"
-                       [class.bg-white]="notif.lu" [class.bg-blue-50]="!notif.lu"
-                       [class.border-transparent]="notif.lu" [class.border-blue-100]="!notif.lu"
-                       [class.hover:bg-gray-50]="notif.lu" [class.hover:bg-blue-100]="!notif.lu">
-                    <div class="flex items-start justify-between mb-1">
-                      <span class="font-semibold text-sm" [class.text-oas-ink]="notif.lu" [class.text-blue-900]="!notif.lu">{{ notif.titre }}</span>
-                      @if (!notif.lu) {
-                        <span class="w-2 h-2 rounded-full bg-oas-accent mt-1.5 flex-shrink-0"></span>
-                      }
-                    </div>
-                    <p class="text-xs text-oas-muted leading-snug">{{ notif.message }}</p>
-                    <p class="text-[10px] text-gray-400 mt-2">{{ notif.dateCreation | date:'dd/MM/yyyy HH:mm' }}</p>
-                  </div>
-                }
-              </div>
+          <div
+            class="absolute right-0 mt-2 w-80 bg-white border border-oas-line rounded-xl shadow-lg z-50 overflow-hidden flex flex-col max-h-[400px]">
+            <div class="p-3 border-b border-oas-line flex items-center justify-between bg-gray-50 flex-shrink-0">
+              <span class="font-bold text-sm text-oas-ink">Notifications</span>
+              @if (unreadCount > 0) {
+              <button (click)="markAllAsRead()" class="text-xs text-oas-accent hover:underline font-medium">Tout marquer
+                comme lu</button>
+              }
             </div>
+            <div class="overflow-y-auto flex-1 p-2 space-y-1">
+              @if (notifications.length === 0) {
+              <div class="text-center p-4 text-sm text-oas-muted">Aucune notification</div>
+              }
+              @for (notif of notifications; track notif.id) {
+              <div (click)="markAsRead(notif)" class="p-3 rounded-lg cursor-pointer transition-colors border"
+                [class.bg-white]="notif.lu" [class.bg-blue-50]="!notif.lu" [class.border-transparent]="notif.lu"
+                [class.border-blue-100]="!notif.lu" [class.hover:bg-gray-50]="notif.lu"
+                [class.hover:bg-blue-100]="!notif.lu">
+                <div class="flex items-start justify-between mb-1">
+                  <span class="font-semibold text-sm" [class.text-oas-ink]="notif.lu"
+                    [class.text-blue-900]="!notif.lu">{{ notif.titre }}</span>
+                  @if (!notif.lu) {
+                  <span class="w-2 h-2 rounded-full bg-oas-accent mt-1.5 flex-shrink-0"></span>
+                  }
+                </div>
+                <p class="text-xs text-oas-muted leading-snug">{{ notif.message }}</p>
+                <p class="text-[10px] text-gray-400 mt-2">{{ notif.dateCreation | date:'dd/MM/yyyy HH:mm' }}</p>
+              </div>
+              }
+            </div>
+          </div>
           }
         </div>
 
         <!-- Profil utilisateur -->
         <div class="flex items-center gap-2.5 cursor-pointer pl-1">
-          <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
-               style="background:#13355c; border:2px solid #ef6c1a;">
+          <div
+            class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
+            style="background:#13355c; border:2px solid #ef6c1a;">
             {{ initials }}
           </div>
           <div class="hidden sm:block leading-tight">
@@ -444,7 +719,7 @@
             <p class="text-xs text-oas-muted">{{ roleLabel }}</p>
           </div>
           <svg class="w-4 h-4 text-oas-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
           </svg>
         </div>
 

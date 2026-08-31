@@ -24,9 +24,9 @@ export interface BonDeSortieRequest {
   clientId: number;
   vehiculeId: number;
   ordreReparationId?: number;
-  lignesPieces: { 
-    pieceId?: number | null; 
-    quantite: number; 
+  lignesPieces: {
+    pieceId?: number | null;
+    quantite: number;
     prix?: number | null;
     isCustom?: boolean;
     designationPds?: string;

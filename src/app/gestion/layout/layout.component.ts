@@ -52,19 +52,20 @@ export class LayoutComponent implements OnInit, OnDestroy {
     '/vehicules': { label: 'Véhicules' },
     '/bons-de-sortie': { label: 'Bon de sortie', section: 'Gestion Stock' },
     '/historique-bs': { label: 'Historique', section: 'Gestion Stock' },
-    '/pieces-detachees': { label: 'Liste des articles', section: 'Piéces dét' },
-    '/seuil-alertes': { label: 'Stock', section: 'Gestion Stock' },
-    '/stock': { label: 'Historique', section: 'Piéces dét' },
     '/inventaire': { label: 'Inventaire', section: 'Gestion Stock' },
+    '/seuil-alertes': { label: 'Stock', section: 'Gestion Stock' },
+    '/pieces-detachees': { label: 'Liste des articles', section: 'Piéces dét' },
+    '/stock': { label: 'Historique', section: 'Piéces dét' },
+    '/bons-reception': { label: 'Bon de réception', section: 'Réapprovisionnement' },
     '/fournisseurs': { label: 'Fournisseurs', section: 'Réapprovisionnement' },
     '/factures': { label: 'Facture', section: 'Facture TTC' },
-    '/bons-livraison': { label: 'Bon de livraison', section: 'Réapprovisionnement' },
-    '/bons-commande': { label: 'Bon de commande', section: 'Réapprovisionnement' },
+    '/bons-commande': { label: 'BC', section: 'Facture TTC' },
     '/proformas': { label: 'Proforma', section: 'Facture TTC' },
     '/avoirs-ttc': { label: 'Avoir TTC', section: 'Facture TTC' },
     '/notes-prix': { label: 'Note de prix', section: 'Facture HT' },
-    '/devis-previsionnels': { label: 'Devis prévisionnel', section: 'Facture HT' },
-    '/avoirs-ht': { label: 'Avoir Note de prix', section: 'Facture HT' },
+    // '/devis': { label: 'Devis', section: 'Facture HT' },
+    '/devis-previsionnels': { label: 'Devis Prévisionnel', section: 'Facture HT' },
+    '/avoirs-ht': { label: 'Avoir note de prix', section: 'Facture HT' },
     '/gestion-tva': { label: 'Gestion TVA' },
     '/gestion-recu': { label: 'Gestion reçu' },
     '/admin/main-doeuvre': { label: "Main d'œuvre" },
@@ -194,14 +195,34 @@ export class LayoutComponent implements OnInit, OnDestroy {
       this.openSection = 'atelier';
     } else if (['/pieces-detachees', '/stock'].some(p => relUrl.startsWith(p)) && !relUrl.startsWith('/historique-bs')) {
       this.openSection = 'pieces';
-    } else if (['/bons-de-sortie', '/historique-bs', '/inventaire', '/seuil-alertes'].some(p => relUrl.startsWith(p))) {
+    } else if (['/bons-de-sortie', '/historique-bs'].some(p => relUrl.startsWith(p))) {
       this.openSection = 'stock';
-    } else if (['/bons-commande', '/bons-livraison', '/fournisseurs'].some(p => relUrl.startsWith(p))) {
+      this.openSubSection = 'bs';
+    } else if (['/inventaire', '/seuil-alertes'].some(p => relUrl.startsWith(p))) {
+      this.openSection = 'stock';
+    } else if (['/bons-reception', '/fournisseurs'].some(p => relUrl.startsWith(p))) {
       this.openSection = 'reappro';
-    } else if (['/factures', '/proformas', '/avoirs-ttc'].some(p => relUrl.startsWith(p))) {
+    } else if (relUrl.startsWith('/factures')) {
       this.openSection = 'facture-ttc';
-    } else if (['/notes-prix', '/devis-previsionnels', '/avoirs-ht'].some(p => relUrl.startsWith(p))) {
+      this.openSubSection = 'facture';
+    } else if (relUrl.startsWith('/bons-commande')) {
+      this.openSection = 'facture-ttc';
+      this.openSubSection = 'bc';
+    } else if (relUrl.startsWith('/proformas')) {
+      this.openSection = 'facture-ttc';
+      this.openSubSection = 'proforma';
+    } else if (relUrl.startsWith('/avoirs-ttc')) {
+      this.openSection = 'facture-ttc';
+      this.openSubSection = 'avoir-ttc';
+    } else if (relUrl.startsWith('/notes-prix') || relUrl.startsWith('/notes-de-prix')) {
       this.openSection = 'facture-ht';
+      this.openSubSection = 'note-prix';
+    } else if (['/devis', '/devis-previsionnels'].some(p => relUrl.startsWith(p))) {
+      this.openSection = 'facture-ht';
+      this.openSubSection = 'devis-prev';
+    } else if (relUrl.startsWith('/avoirs-ht')) {
+      this.openSection = 'facture-ht';
+      this.openSubSection = 'avoir-ht';
     } else if (relUrl.startsWith('/admin') && !relUrl.startsWith('/admin/main-doeuvre') && !relUrl.startsWith('/admin/parametres')) {
       this.openSection = 'admin';
     } else {

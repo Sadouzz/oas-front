@@ -27,6 +27,27 @@ export interface AvoirTTC {
   lignesMainDoeuvres: { id: number; descriptionMainDoeuvre: string; nbreHeure: number; tarifHoraire: number; montantTotal: number }[];
 }
 
+export interface AvoirTTCCreateRequest {
+  clientId: number;
+  vehiculeId?: number | null;
+  kilometrage?: number;
+  remarque?: string;
+  appliquerTVA?: boolean;
+  montantTimbre?: number;
+  lignesPieces: {
+    pieceId?: number | null;
+    designationPds?: string;
+    isCustom?: boolean;
+    quantite: number;
+    prix: number;
+  }[];
+  lignesMainDoeuvres?: {
+    mainDoeuvreId?: number | null;
+    nbreHeure: number;
+    tarifHoraire: number;
+  }[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class AvoirTTCService {
   private http = inject(HttpClient);
@@ -38,6 +59,10 @@ export class AvoirTTCService {
 
   getById(id: number): Observable<AvoirTTC> {
     return this.http.get<AvoirTTC>(`${this.api}/${id}`);
+  }
+
+  create(data: AvoirTTCCreateRequest): Observable<AvoirTTC> {
+    return this.http.post<AvoirTTC>(this.api, data);
   }
 
   search(keyword: string): Observable<AvoirTTC[]> {

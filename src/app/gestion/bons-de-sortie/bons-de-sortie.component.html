@@ -5,32 +5,66 @@
       <p class="text-sm text-oas-muted mt-1">{{ filtered.length }} bon(s) affiché(s)</p>
     </div>
     @if (canCreate) {
-      <button (click)="openCreate()"
-              class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-11 rounded-lg flex items-center gap-2 transition cursor-pointer">
-        <svg lucidePlus class="w-4 h-4"></svg>
-        Nouveau bon
-      </button>
+    <button (click)="openCreate()"
+      class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-11 rounded-lg flex items-center gap-2 transition cursor-pointer">
+      <svg lucidePlus class="w-4 h-4"></svg>
+      Nouveau bon
+    </button>
     }
   </div>
 
   <app-alert [success]="successMessage" [error]="errorMessage" />
 
   <!-- Filtres -->
-  <div class="bg-white rounded-lg border border-oas-line p-3 mb-4 shadow-sm flex flex-col sm:flex-row gap-3">
-    <div class="relative flex-1">
-      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-oas-muted">
-        <svg lucideSearch class="w-4 h-4"></svg>
-      </span>
-      <input type="text" (input)="onSearch($event)"
-             placeholder="Référence, client ou immatriculation..."
-             class="w-full pl-9 pr-4 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
+  <div class="bg-white rounded-lg border border-oas-line p-3 mb-4 shadow-sm space-y-3">
+    <div class="flex flex-col sm:flex-row gap-3">
+      <div class="relative flex-1">
+        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-oas-muted">
+          <svg lucideSearch class="w-4 h-4"></svg>
+        </span>
+        <input type="text" (input)="onSearch($event)" placeholder="Référence BS, client ou immatriculation..."
+          class="w-full pl-9 pr-4 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition" />
+      </div>
+      <select (change)="onStatutFilter($event)" [value]="filterStatut"
+        class="px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink min-w-[160px]">
+        <option value="">Tous les statuts</option>
+        <option value="EN_ATTENTE">En attente</option>
+        <option value="VALIDE">Validé</option>
+      </select>
+      <button type="button" (click)="showDateFilter = !showDateFilter"
+        class="px-3 py-2 rounded-lg border text-sm font-medium transition flex items-center gap-1.5 cursor-pointer"
+        [class.bg-oas-accent]="showDateFilter"
+        [class.text-white]="showDateFilter"
+        [class.border-oas-accent]="showDateFilter"
+        [class.bg-oas-bg]="!showDateFilter"
+        [class.text-oas-ink]="!showDateFilter"
+        [class.border-oas-line]="!showDateFilter">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        Recherche par date & véhicule
+      </button>
     </div>
-    <select (change)="onStatutFilter($event)"
-            class="px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink min-w-[160px]">
-      <option value="">Tous les statuts</option>
-      <option value="EN_ATTENTE">En attente</option>
-      <option value="VALIDE">Validé</option>
-    </select>
+
+    @if (showDateFilter) {
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-oas-line">
+      <div>
+        <label class="block text-xs font-semibold text-oas-muted mb-1">Date début</label>
+        <input type="date" [(ngModel)]="dateDebut" (change)="applyFilter()"
+          class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink" />
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-oas-muted mb-1">Date fin</label>
+        <input type="date" [(ngModel)]="dateFin" (change)="applyFilter()"
+          class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink" />
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-oas-muted mb-1">Véhicule (immat / marque)</label>
+        <input type="text" [(ngModel)]="filterVehicule" (input)="applyFilter()" placeholder="Ex: AA-123-BB ou Toyota..."
+          class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink" />
+      </div>
+    </div>
+    }
   </div>
 
   <!-- Table -->
@@ -50,50 +84,57 @@
         </thead>
         <tbody>
           @if (loading) {
-            <tr><td colspan="8" class="text-center py-14 text-oas-muted">
+          <tr>
+            <td colspan="8" class="text-center py-14 text-oas-muted">
               <svg lucideLoader2 class="animate-spin h-5 w-5 mx-auto mb-2 text-oas-accent"></svg>Chargement...
-            </td></tr>
+            </td>
+          </tr>
           } @else {
-            @for (bon of paged; track bon.id) {
-              <tr class="hover:bg-oas-bg transition border-b border-oas-line">
-                <td class="px-5 py-4 font-mono font-bold text-oas-accent text-xs">{{ bon.reference }}</td>
-                <td class="px-5 py-4 text-xs text-oas-muted">{{ formatDate(bon.date) }}</td>
-                <td class="px-5 py-4">
-                  <p class="font-semibold text-oas-ink text-xs">{{ bon.client?.firstName }} {{ bon.client?.lastName }}</p>
-                </td>
-                <td class="px-5 py-4 text-xs text-oas-ink2">{{ bon.vehicule?.immatriculation }}</td>
-                <td class="px-5 py-4 text-center">
-                  <span class="text-xs font-bold text-oas-ink">{{ bon.lignesBonDeSortiePieces?.length ?? 0 }}</span>
-                </td>
-                <td class="px-5 py-4">
-                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold {{ statutClass(bon.statut) }}">
-                    <span class="w-1.5 h-1.5 rounded-full {{ bon.statut === 'VALIDE' ? 'bg-oas-ok' : 'bg-oas-warn' }}"></span>
-                    {{ bon.statut === 'VALIDE' ? 'Validé' : 'En attente' }}
-                  </span>
-                </td>
-                <td class="px-5 py-4">
-                  <div class="flex items-center justify-end gap-1">
-                    <button (click)="openDetail(bon)" title="Voir le détail"
-                            class="p-1.5 rounded-lg hover:bg-oas-info-bg text-oas-muted hover:text-oas-info transition cursor-pointer">
-                      <svg lucideSearch class="w-4 h-4"></svg>
-                    </button>
-                    @if (canValidate && bon.statut === 'EN_ATTENTE') {
-                      <button (click)="valider(bon)" title="Valider"
-                              class="p-1.5 rounded-lg hover:bg-oas-ok-bg text-oas-muted hover:text-oas-ok transition cursor-pointer">
-                        <svg lucideCheckCircle class="w-4 h-4"></svg>
-                      </button>
-                    }
-                  </div>
-                </td>
-              </tr>
-            } @empty {
-              <tr><td colspan="8" class="text-center py-14 text-oas-muted text-sm">Aucun bon de sortie</td></tr>
-            }
+          @for (bon of paged; track bon.id) {
+          <tr class="hover:bg-oas-bg transition border-b border-oas-line">
+            <td class="px-5 py-4 font-mono font-bold text-oas-accent text-xs">{{ bon.reference }}</td>
+            <td class="px-5 py-4 text-xs text-oas-muted">{{ formatDate(bon.date) }}</td>
+            <td class="px-5 py-4">
+              <p class="font-semibold text-oas-ink text-xs">{{ bon.client?.firstName }} {{ bon.client?.lastName }}</p>
+            </td>
+            <td class="px-5 py-4 text-xs text-oas-ink2">{{ bon.vehicule?.immatriculation }}</td>
+            <td class="px-5 py-4 text-center">
+              <span class="text-xs font-bold text-oas-ink">{{ bon.lignesBonDeSortiePieces?.length ?? 0 }}</span>
+            </td>
+            <td class="px-5 py-4">
+              <span
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold {{ statutClass(bon.statut) }}">
+                <span
+                  class="w-1.5 h-1.5 rounded-full {{ bon.statut === 'VALIDE' ? 'bg-oas-ok' : 'bg-oas-warn' }}"></span>
+                {{ bon.statut === 'VALIDE' ? 'Validé' : 'En attente' }}
+              </span>
+            </td>
+            <td class="px-5 py-4">
+              <div class="flex items-center justify-end gap-1">
+                <button (click)="openDetail(bon)" title="Voir le détail"
+                  class="p-1.5 rounded-lg hover:bg-oas-info-bg text-oas-muted hover:text-oas-info transition cursor-pointer">
+                  <svg lucideSearch class="w-4 h-4"></svg>
+                </button>
+                @if (canValidate && bon.statut === 'EN_ATTENTE') {
+                <button (click)="valider(bon)" title="Valider"
+                  class="p-1.5 rounded-lg hover:bg-oas-ok-bg text-oas-muted hover:text-oas-ok transition cursor-pointer">
+                  <svg lucideCheckCircle class="w-4 h-4"></svg>
+                </button>
+                }
+              </div>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="8" class="text-center py-14 text-oas-muted text-sm">Aucun bon de sortie</td>
+          </tr>
+          }
           }
         </tbody>
       </table>
     </div>
-    <app-pagination [page]="page" [totalPages]="totalPages" [total]="filtered.length" [pageSize]="pageSize" (prev)="prevPage()" (next)="nextPage()" />
+    <app-pagination [page]="page" [totalPages]="totalPages" [total]="filtered.length" [pageSize]="pageSize"
+      (prev)="prevPage()" (next)="nextPage()" />
   </div>
 </div>
 
@@ -101,397 +142,397 @@
      MODAL CRÉATION — 3-step wizard
      ═══════════════════════════════════════════════════════ -->
 @if (showCreateModal) {
-  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col">
+<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col">
 
-      <!-- Header + stepper -->
-      <div class="px-6 py-4 border-b border-oas-line flex-shrink-0">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="font-bold text-oas-ink">Nouveau bon de sortie</h3>
-          <button (click)="closeCreate()" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted cursor-pointer">
-            <svg lucideX class="w-5 h-5"></svg>
-          </button>
-        </div>
-        <!-- Stepper -->
-        <div class="flex items-center gap-0">
-          @for (step of [1,2]; track step) {
-            <div class="flex items-center" [class.flex-1]="step < 2">
-              <div class="flex flex-col items-center gap-1">
-                <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all"
-                     [class.bg-oas-accent]="createStep >= step"
-                     [class.text-white]="createStep >= step"
-                     [class.bg-oas-line]="createStep < step"
-                     [class.text-oas-muted]="createStep < step">
-                  @if (createStep > step) {
-                    <svg lucideCheck class="w-4 h-4"></svg>
-                  } @else {
-                    {{ step }}
-                  }
-                </div>
-                <span class="text-[10px] font-semibold whitespace-nowrap"
-                      [class.text-oas-accent]="createStep === step"
-                      [class.text-oas-muted]="createStep !== step">
-                  {{ step === 1 ? 'Client & Véhicule' : 'Pièces détachées' }}
-                </span>
-              </div>
-              @if (step < 2) {
-                <div class="flex-1 h-px mx-2 mb-4"
-                     [class.bg-oas-accent]="createStep > step"
-                     [class.bg-oas-line]="createStep <= step"></div>
+    <!-- Header + stepper -->
+    <div class="px-6 py-4 border-b border-oas-line flex-shrink-0">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-bold text-oas-ink">Nouveau bon de sortie</h3>
+        <button (click)="closeCreate()" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted cursor-pointer">
+          <svg lucideX class="w-5 h-5"></svg>
+        </button>
+      </div>
+      <!-- Stepper -->
+      <div class="flex items-center gap-0">
+        @for (step of [1,2]; track step) {
+        <div class="flex items-center" [class.flex-1]="step < 2">
+          <div class="flex flex-col items-center gap-1">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all"
+              [class.bg-oas-accent]="createStep >= step" [class.text-white]="createStep >= step"
+              [class.bg-oas-line]="createStep < step" [class.text-oas-muted]="createStep < step">
+              @if (createStep > step) {
+              <svg lucideCheck class="w-4 h-4"></svg>
+              } @else {
+              {{ step }}
               }
             </div>
-          }
-        </div>
-      </div>
-
-      <!-- Body scrollable -->
-      <div class="overflow-y-auto flex-1 px-6 py-5">
-        @if (errorMessage) {
-          <div class="px-3 py-2 bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-xs rounded-lg mb-4">{{ errorMessage }}</div>
-        }
-
-        <!-- ── ÉTAPE 1 : Client & Véhicule ── -->
-        @if (createStep === 1) {
-          <form [formGroup]="form" class="space-y-4">
-
-            <!-- Client + Vehicule -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-              <!-- Client -->
-              <div>
-                <label class="block text-sm font-semibold text-oas-ink mb-1">Client <span class="text-oas-bad">*</span></label>
-                @if (clientOpen) {
-                  <div class="fixed inset-0 z-[5]" (click)="clientOpen = false"></div>
-                }
-                <div class="relative z-[10]">
-                  <input type="text"
-                         [value]="clientOpen ? clientFilter : clientLabel"
-                         (focus)="clientOpen = true; clientFilter = ''"
-                         (input)="clientFilter = $any($event.target).value"
-                         placeholder="Rechercher un client..."
-                         class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
-                         [class.border-oas-bad]="form.get('clientId')!.invalid && form.get('clientId')!.touched"/>
-                  @if (clientOpen) {
-                    <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-oas-line rounded-lg shadow-xl z-[10] max-h-52 overflow-y-auto"
-                         (click)="$event.stopPropagation()">
-                      @for (c of filteredClients; track c.id) {
-                        <div (click)="selectClient(c)"
-                             class="px-3 py-2.5 hover:bg-oas-bg cursor-pointer text-sm text-oas-ink border-b border-oas-line last:border-0">
-                          <span class="font-medium">{{ c.firstName }} {{ c.lastName }}</span>
-                          @if (c.phone) { <span class="text-oas-muted ml-2 text-xs">{{ c.phone }}</span> }
-                        </div>
-                      }
-                      @if (filteredClients.length === 0) {
-                        <div class="px-3 py-3 text-sm text-oas-muted text-center">Aucun resultat</div>
-                      }
-                    </div>
-                  }
-                </div>
-                @if (form.get('clientId')!.invalid && form.get('clientId')!.touched) {
-                  <p class="text-oas-bad text-xs mt-1">Client requis</p>
-                }
-              </div>
-
-              <!-- Vehicule -->
-              <div>
-                <label class="block text-sm font-semibold text-oas-ink mb-1">Vehicule <span class="text-oas-bad">*</span></label>
-                @if (vehiculeOpen) {
-                  <div class="fixed inset-0 z-[5]" (click)="vehiculeOpen = false"></div>
-                }
-                <div class="relative z-[10]">
-                  <input type="text"
-                         [value]="vehiculeOpen ? vehiculeFilter : vehiculeLabel"
-                         (focus)="vehiculeOpen = true; vehiculeFilter = ''"
-                         (input)="vehiculeFilter = $any($event.target).value"
-                         [placeholder]="form.get('clientId')?.value ? 'Rechercher un vehicule...' : 'Choisissez d\'abord un client'"
-                         [disabled]="!form.get('clientId')?.value"
-                         class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition disabled:opacity-50"
-                         [class.border-oas-bad]="form.get('vehiculeId')!.invalid && form.get('vehiculeId')!.touched"/>
-                    @if (vehiculeOpen && form.get('clientId')?.value) {
-                      <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-oas-line rounded-lg shadow-xl z-[10] max-h-52 overflow-y-auto"
-                           (click)="$event.stopPropagation()">
-                        @for (v of filteredVehicules; track v.id) {
-                          <div (click)="selectVehicule(v)"
-                               class="px-3 py-2.5 hover:bg-oas-bg cursor-pointer text-sm text-oas-ink border-b border-oas-line last:border-0">
-                            <span class="font-medium font-mono">{{ v.immatriculation }}</span>
-                            <span class="text-oas-muted ml-2">{{ v.marque }} {{ v.modele }}</span>
-                          </div>
-                        }
-                        @if (filteredVehicules.length === 0) {
-                          <div class="px-3 py-3 text-sm text-oas-muted text-center">Aucun vehicule pour ce client</div>
-                        }
-                      </div>
-                    }
-                  </div>
-                @if (form.get('vehiculeId')!.invalid && form.get('vehiculeId')!.touched) {
-                  <p class="text-oas-bad text-xs mt-1">Vehicule requis</p>
-                }
-              </div>
-            </div>
-
-            <div>
-              <label class="block text-sm font-semibold text-oas-ink mb-1">Remarque</label>
-              <input type="text" formControlName="remarque" placeholder="Optionnel..."
-                     class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
-            </div>
-          </form>
-        }
-
-        <!-- ── ÉTAPE 2 : Pièces détachées ── -->
-        @if (createStep === 2) {
-          <div>
-            <div class="flex items-center justify-between mb-3">
-              <div>
-                <p class="font-semibold text-oas-ink text-sm">Pièces détachées</p>
-                <p class="text-xs text-oas-muted">Ajoutez les pièces à sortir du stock.</p>
-              </div>
-              <button type="button" (click)="addPiece()"
-                      class="text-xs font-semibold text-oas-accent hover:text-oas-accent-dark flex items-center gap-1 cursor-pointer transition">
-                <svg lucidePlus class="w-3.5 h-3.5"></svg>
-                Ajouter une pièce
-              </button>
-            </div>
-
-            <div class="space-y-2" [formGroup]="form">
-              <!-- En-têtes colonnes -->
-              <div class="grid grid-cols-[1fr_7rem_5rem_2.5rem] gap-2 px-3">
-                <span class="text-xs font-semibold text-oas-muted">Référence pièce</span>
-                <span class="text-xs font-semibold text-oas-muted text-right">Prix unit.</span>
-                <span class="text-xs font-semibold text-oas-muted text-center">Qté</span>
-                <span></span>
-              </div>
-
-              <div formArrayName="lignesPieces">
-                @for (ligne of fPieces; track $index) {
-                  <div [formGroupName]="$index" class="grid grid-cols-[1fr_7rem_5rem_2.5rem] gap-2 items-center bg-oas-bg rounded-lg p-3 border border-oas-line">
-                    <!-- Saisie pièce avec autocomplete -->
-                    <div>
-                      <input type="text"
-                             formControlName="pieceRef"
-                             [attr.list]="'pdp-' + $index"
-                             (input)="onPieceInput($index, $event)"
-                             placeholder="Référence ou saisir..."
-                             autocomplete="off"
-                             class="w-full px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
-                      <datalist [id]="'pdp-' + $index">
-                        @for (p of pdps; track p.id) {
-                          <option [value]="p.reference">stock: {{ p.stockMagasin }}</option>
-                        }
-                      </datalist>
-                      @if ($any(ligne).get('pieceRef').value && !$any(ligne).get('pieceId').value) {
-                        <p class="text-oas-bad text-xs mt-0.5">Référence non trouvée — cette ligne sera ignorée</p>
-                      }
-                    </div>
-                    <!-- Prix unitaire -->
-                    <input type="number" formControlName="prix" placeholder="—" min="0"
-                           class="w-full px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-right"/>
-                    <!-- Quantité -->
-                    <input type="number" formControlName="quantite" min="1" placeholder="Qté"
-                           class="w-full px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-center"/>
-                    <!-- Supprimer -->
-                    <button type="button" (click)="removePiece($index)"
-                            [disabled]="fPieces.length === 1"
-                            class="p-1.5 text-oas-muted hover:text-oas-bad cursor-pointer flex-shrink-0 transition disabled:opacity-30 disabled:cursor-not-allowed">
-                      <svg lucideTrash2 class="w-4 h-4"></svg>
-                    </button>
-                  </div>
-                }
-              </div>
-            </div>
-
-            @if (fPieces.length === 0) {
-              <div class="text-center py-8 text-oas-muted text-sm">
-                <svg lucidePackage class="w-10 h-10 mx-auto mb-2 text-oas-line"></svg>
-                Aucune pièce ajoutée.
-              </div>
-            }
-
-            <!-- Récap avant soumission -->
-            <div class="mt-4 bg-oas-bg rounded-lg p-4 border border-oas-line text-sm space-y-1">
-              <p class="font-bold text-oas-ink text-xs uppercase tracking-wide mb-2">Recapitulatif</p>
-              <p class="text-oas-ink2"><span class="font-semibold text-oas-ink">Pieces :</span> {{ fPieces.length }} ligne(s)</p>
-            </div>
+            <span class="text-[10px] font-semibold whitespace-nowrap" [class.text-oas-accent]="createStep === step"
+              [class.text-oas-muted]="createStep !== step">
+              {{ step === 1 ? 'Client & Véhicule' : 'Pièces détachées' }}
+            </span>
           </div>
+          @if (step < 2) { <div class="flex-1 h-px mx-2 mb-4" [class.bg-oas-accent]="createStep > step"
+            [class.bg-oas-line]="createStep <= step">
+        </div>
         }
       </div>
-
-      <!-- Footer actions -->
-      <div class="px-6 py-4 border-t border-oas-line flex-shrink-0 flex items-center justify-between gap-2">
-        <div>
-          @if (createStep > 1) {
-            <button type="button" (click)="goStep(createStep - 1)"
-                    class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-lg border border-oas-line flex items-center gap-1.5 transition cursor-pointer text-sm">
-              <svg lucideSearch class="w-4 h-4"></svg>
-              Retour
-            </button>
-          }
-        </div>
-        <div class="flex gap-2">
-          <button type="button" (click)="closeCreate()"
-                  class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-lg border border-oas-line transition cursor-pointer text-sm">Annuler</button>
-          @if (createStep < 2) {
-            <button type="button" (click)="goStep(createStep + 1)"
-                    class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-10 rounded-lg flex items-center gap-1.5 transition cursor-pointer text-sm">
-              Suivant
-              <svg lucideSearch class="w-4 h-4"></svg>
-            </button>
-          } @else {
-            <button type="button" (click)="save()" [disabled]="saving"
-                    class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-5 h-10 rounded-lg flex items-center gap-2 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm">
-              <svg lucideCheck class="w-4 h-4"></svg>
-              {{ saving ? 'Création...' : 'Créer le bon' }}
-            </button>
-          }
-        </div>
-      </div>
+      }
     </div>
   </div>
+
+  <!-- Body scrollable -->
+  <div class="overflow-y-auto flex-1 px-6 py-5">
+    @if (errorMessage) {
+    <div class="px-3 py-2 bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-xs rounded-lg mb-4">{{ errorMessage
+      }}</div>
+    }
+
+    <!-- ── ÉTAPE 1 : Client & Véhicule ── -->
+    @if (createStep === 1) {
+    <form [formGroup]="form" class="space-y-4">
+
+      <!-- Client + Vehicule -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+        <!-- Client -->
+        <div>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Client <span
+              class="text-oas-bad">*</span></label>
+          @if (clientOpen) {
+          <div class="fixed inset-0 z-[5]" (click)="clientOpen = false"></div>
+          }
+          <div class="relative z-[10]">
+            <input type="text" [value]="clientOpen ? clientFilter : clientLabel"
+              (focus)="clientOpen = true; clientFilter = ''" (input)="clientFilter = $any($event.target).value"
+              placeholder="Rechercher un client..."
+              class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+              [class.border-oas-bad]="form.get('clientId')!.invalid && form.get('clientId')!.touched" />
+            @if (clientOpen) {
+            <div
+              class="absolute top-full left-0 right-0 mt-1 bg-white border border-oas-line rounded-lg shadow-xl z-[10] max-h-52 overflow-y-auto"
+              (click)="$event.stopPropagation()">
+              @for (c of filteredClients; track c.id) {
+              <div (click)="selectClient(c)"
+                class="px-3 py-2.5 hover:bg-oas-bg cursor-pointer text-sm text-oas-ink border-b border-oas-line last:border-0">
+                <span class="font-medium">{{ c.firstName }} {{ c.lastName }}</span>
+                @if (c.phone) { <span class="text-oas-muted ml-2 text-xs">{{ c.phone }}</span> }
+              </div>
+              }
+              @if (filteredClients.length === 0) {
+              <div class="px-3 py-3 text-sm text-oas-muted text-center">Aucun resultat</div>
+              }
+            </div>
+            }
+          </div>
+          @if (form.get('clientId')!.invalid && form.get('clientId')!.touched) {
+          <p class="text-oas-bad text-xs mt-1">Client requis</p>
+          }
+        </div>
+
+        <!-- Vehicule -->
+        <div>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Vehicule <span
+              class="text-oas-bad">*</span></label>
+          @if (vehiculeOpen) {
+          <div class="fixed inset-0 z-[5]" (click)="vehiculeOpen = false"></div>
+          }
+          <div class="relative z-[10]">
+            <input type="text" [value]="vehiculeOpen ? vehiculeFilter : vehiculeLabel"
+              (focus)="vehiculeOpen = true; vehiculeFilter = ''" (input)="vehiculeFilter = $any($event.target).value"
+              [placeholder]="form.get('clientId')?.value ? 'Rechercher un vehicule...' : 'Choisissez d\'abord un client'"
+              [disabled]="!form.get('clientId')?.value"
+              class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition disabled:opacity-50"
+              [class.border-oas-bad]="form.get('vehiculeId')!.invalid && form.get('vehiculeId')!.touched" />
+            @if (vehiculeOpen && form.get('clientId')?.value) {
+            <div
+              class="absolute top-full left-0 right-0 mt-1 bg-white border border-oas-line rounded-lg shadow-xl z-[10] max-h-52 overflow-y-auto"
+              (click)="$event.stopPropagation()">
+              @for (v of filteredVehicules; track v.id) {
+              <div (click)="selectVehicule(v)"
+                class="px-3 py-2.5 hover:bg-oas-bg cursor-pointer text-sm text-oas-ink border-b border-oas-line last:border-0">
+                <span class="font-medium font-mono">{{ v.immatriculation }}</span>
+                <span class="text-oas-muted ml-2">{{ v.marque }} {{ v.modele }}</span>
+              </div>
+              }
+              @if (filteredVehicules.length === 0) {
+              <div class="px-3 py-3 text-sm text-oas-muted text-center">Aucun vehicule pour ce client</div>
+              }
+            </div>
+            }
+          </div>
+          @if (form.get('vehiculeId')!.invalid && form.get('vehiculeId')!.touched) {
+          <p class="text-oas-bad text-xs mt-1">Vehicule requis</p>
+          }
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-oas-ink mb-1">Remarque</label>
+        <input type="text" formControlName="remarque" placeholder="Optionnel..."
+          class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition" />
+      </div>
+    </form>
+    }
+
+    <!-- ── ÉTAPE 2 : Pièces détachées ── -->
+    @if (createStep === 2) {
+    <div>
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <p class="font-semibold text-oas-ink text-sm">Pièces détachées</p>
+          <p class="text-xs text-oas-muted">Ajoutez les pièces à sortir du stock.</p>
+        </div>
+        <button type="button" (click)="addPiece()"
+          class="text-xs font-semibold text-oas-accent hover:text-oas-accent-dark flex items-center gap-1 cursor-pointer transition">
+          <svg lucidePlus class="w-3.5 h-3.5"></svg>
+          Ajouter une pièce
+        </button>
+      </div>
+
+      <div class="space-y-2" [formGroup]="form">
+        <!-- En-têtes colonnes -->
+        <div class="grid grid-cols-[1fr_7rem_5rem_2.5rem] gap-2 px-3">
+          <span class="text-xs font-semibold text-oas-muted">Référence pièce</span>
+          <span class="text-xs font-semibold text-oas-muted text-right">Prix unit.</span>
+          <span class="text-xs font-semibold text-oas-muted text-center">Qté</span>
+          <span></span>
+        </div>
+
+        <div formArrayName="lignesPieces">
+          @for (ligne of fPieces; track $index) {
+          <div [formGroupName]="$index"
+            class="grid grid-cols-[1fr_7rem_5rem_2.5rem] gap-2 items-center bg-oas-bg rounded-lg p-3 border border-oas-line">
+            <!-- Saisie pièce avec autocomplete -->
+            <div>
+              <input type="text" formControlName="pieceRef" [attr.list]="'pdp-' + $index"
+                (input)="onPieceInput($index, $event)" placeholder="Référence ou saisir..." autocomplete="off"
+                class="w-full px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition" />
+              <datalist [id]="'pdp-' + $index">
+                @for (p of pdps; track p.id) {
+                <option [value]="p.reference">stock: {{ p.stockMagasin }}</option>
+                }
+              </datalist>
+              @if ($any(ligne).get('pieceRef').value && !$any(ligne).get('pieceId').value) {
+              <p class="text-oas-bad text-xs mt-0.5">Référence non trouvée — cette ligne sera ignorée</p>
+              }
+            </div>
+            <!-- Prix unitaire -->
+            <input type="number" formControlName="prix" placeholder="—" min="0"
+              class="w-full px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-right" />
+            <!-- Quantité -->
+            <input type="number" formControlName="quantite" min="1" placeholder="Qté"
+              class="w-full px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-center" />
+            <!-- Supprimer -->
+            <button type="button" (click)="removePiece($index)" [disabled]="fPieces.length === 1"
+              class="p-1.5 text-oas-muted hover:text-oas-bad cursor-pointer flex-shrink-0 transition disabled:opacity-30 disabled:cursor-not-allowed">
+              <svg lucideTrash2 class="w-4 h-4"></svg>
+            </button>
+          </div>
+          }
+        </div>
+      </div>
+
+      @if (fPieces.length === 0) {
+      <div class="text-center py-8 text-oas-muted text-sm">
+        <svg lucidePackage class="w-10 h-10 mx-auto mb-2 text-oas-line"></svg>
+        Aucune pièce ajoutée.
+      </div>
+      }
+
+      <!-- Récap avant soumission -->
+      <div class="mt-4 bg-oas-bg rounded-lg p-4 border border-oas-line text-sm space-y-1">
+        <p class="font-bold text-oas-ink text-xs uppercase tracking-wide mb-2">Recapitulatif</p>
+        <p class="text-oas-ink2"><span class="font-semibold text-oas-ink">Pieces :</span> {{ fPieces.length }} ligne(s)
+        </p>
+      </div>
+    </div>
+    }
+  </div>
+
+  <!-- Footer actions -->
+  <div class="px-6 py-4 border-t border-oas-line flex-shrink-0 flex items-center justify-between gap-2">
+    <div>
+      @if (createStep > 1) {
+      <button type="button" (click)="goStep(createStep - 1)"
+        class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-lg border border-oas-line flex items-center gap-1.5 transition cursor-pointer text-sm">
+        <svg lucideSearch class="w-4 h-4"></svg>
+        Retour
+      </button>
+      }
+    </div>
+    <div class="flex gap-2">
+      <button type="button" (click)="closeCreate()"
+        class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-lg border border-oas-line transition cursor-pointer text-sm">Annuler</button>
+      @if (createStep < 2) { <button type="button" (click)="goStep(createStep + 1)"
+        class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-10 rounded-lg flex items-center gap-1.5 transition cursor-pointer text-sm">
+        Suivant
+        <svg lucideSearch class="w-4 h-4"></svg>
+        </button>
+        } @else {
+        <button type="button" (click)="save()" [disabled]="saving"
+          class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-5 h-10 rounded-lg flex items-center gap-2 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm">
+          <svg lucideCheck class="w-4 h-4"></svg>
+          {{ saving ? 'Création...' : 'Créer le bon' }}
+        </button>
+        }
+    </div>
+  </div>
+</div>
+</div>
 }
 
 <!-- ═══════════════════════════════════════════════════════
      MODAL DÉTAIL
      ═══════════════════════════════════════════════════════ -->
 @if (showDetailModal && selectedBon) {
-  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
-      <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line flex-shrink-0">
-        <div>
-          <h3 class="font-bold text-oas-ink">{{ selectedBon.reference }}</h3>
-          <p class="text-xs text-oas-muted">{{ formatDate(selectedBon.date) }}</p>
-        </div>
-        <button (click)="closeDetail()" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted cursor-pointer">
-          <svg lucideX class="w-5 h-5"></svg>
-        </button>
+<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line flex-shrink-0">
+      <div>
+        <h3 class="font-bold text-oas-ink">{{ selectedBon.reference }}</h3>
+        <p class="text-xs text-oas-muted">{{ formatDate(selectedBon.date) }}</p>
       </div>
-      <div class="overflow-y-auto flex-1 px-6 py-5 space-y-4">
+      <button (click)="closeDetail()" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted cursor-pointer">
+        <svg lucideX class="w-5 h-5"></svg>
+      </button>
+    </div>
+    <div class="overflow-y-auto flex-1 px-6 py-5 space-y-4">
 
-        <div class="grid grid-cols-2 gap-3 text-sm">
-          <div class="bg-oas-bg rounded-lg p-3">
-            <p class="text-oas-muted text-xs font-semibold uppercase tracking-wide mb-1">Client</p>
-            <p class="font-semibold text-oas-ink">{{ selectedBon.client?.firstName }} {{ selectedBon.client?.lastName }}</p>
-          </div>
-          <div class="bg-oas-bg rounded-lg p-3">
-            <p class="text-oas-muted text-xs font-semibold uppercase tracking-wide mb-1">Véhicule</p>
-            <p class="font-semibold text-oas-ink">{{ selectedBon.vehicule?.immatriculation }}</p>
-            <p class="text-xs text-oas-muted">{{ selectedBon.vehicule?.marque }} {{ selectedBon.vehicule?.modele }}</p>
-          </div>
-          <div class="bg-oas-bg rounded-lg p-3">
-            <p class="text-oas-muted text-xs font-semibold uppercase tracking-wide mb-1">Agent émetteur</p>
-            <p class="font-semibold text-oas-ink">{{ selectedBon.agentEmetteur?.firstName }} {{ selectedBon.agentEmetteur?.lastName }}</p>
-          </div>
-          <div class="bg-oas-bg rounded-lg p-3">
-            <p class="text-oas-muted text-xs font-semibold uppercase tracking-wide mb-1">Statut</p>
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold {{ statutClass(selectedBon.statut) }}">
-              <span class="w-1.5 h-1.5 rounded-full {{ selectedBon.statut === 'VALIDE' ? 'bg-oas-ok' : 'bg-oas-warn' }}"></span>
-              {{ selectedBon.statut === 'VALIDE' ? 'Validé' : 'En attente' }}
-            </span>
-          </div>
-        </div>
-
-        @if (selectedBon.remarque) {
-          <div class="bg-oas-bg rounded-lg p-3 text-sm text-oas-ink2">
-            <span class="font-semibold text-oas-ink">Remarque : </span>{{ selectedBon.remarque }}
-          </div>
-        }
-
-        <!-- Pièces -->
-        @if ((selectedBon.lignesBonDeSortiePieces?.length ?? 0) > 0) {
-          <div>
-            <p class="text-sm font-bold text-oas-ink mb-2">Pièces ({{ selectedBon.lignesBonDeSortiePieces?.length }} ligne(s))</p>
-            <div class="border border-oas-line rounded-xl overflow-hidden">
-              <table class="w-full text-sm">
-                <thead>
-                  <tr class="border-b border-oas-line bg-oas-bg">
-                    <th class="text-left px-3 py-2 text-xs font-bold text-oas-muted uppercase tracking-wide">Référence</th>
-                    <th class="text-left px-3 py-2 text-xs font-bold text-oas-muted uppercase tracking-wide">Désignation</th>
-                    <th class="text-right px-3 py-2 text-xs font-bold text-oas-muted uppercase tracking-wide">Qté</th>
-                    @if (selectedBon.statut === 'EN_ATTENTE') {
-                      <th class="text-right px-3 py-2 text-xs font-bold text-oas-muted uppercase tracking-wide">Action</th>
-                    }
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-oas-line">
-                  @for (l of selectedBon.lignesBonDeSortiePieces; track l.id) {
-                    <tr class="hover:bg-oas-bg">
-                      <td class="px-3 py-2 text-oas-ink text-xs font-medium">{{ l.piece?.reference }}</td>
-                      <td class="px-3 py-2 text-oas-muted text-xs">{{ l.piece?.designation }}</td>
-                      <td class="px-3 py-2 text-right font-bold text-oas-ink">{{ l.quantite }}</td>
-                      @if (selectedBon.statut === 'EN_ATTENTE' && l.piece) {
-                        <td class="px-3 py-2 text-right">
-                          <button (click)="retournerPiece(l.piece.id)" [disabled]="saving"
-                                  title="Retourner cette pièce au magasin"
-                                  class="p-1 rounded text-red-500 hover:bg-red-50 hover:text-red-700 transition cursor-pointer disabled:opacity-50">
-                            <svg lucideTrash2 class="w-4 h-4"></svg>
-                          </button>
-                        </td>
-                      } @else if (selectedBon.statut === 'EN_ATTENTE') {
-                        <td></td>
-                      }
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          </div>
-        }
-
-        @if ((selectedBon.lignesBonDeSortiePieces?.length ?? 0) === 0) {
-          <p class="text-center text-oas-muted text-sm py-4">Aucune ligne sur ce bon.</p>
-        }
-
-        <!-- Historique du Bon de Sortie -->
-        <div class="border-t border-oas-line pt-4">
-          <p class="text-sm font-bold text-oas-ink mb-3 flex items-center justify-between">
-            <span>Historique des mouvements</span>
-            @if (loadingHistorique) {
-              <span class="text-xs font-normal text-oas-muted">Chargement...</span>
-            }
+      <div class="grid grid-cols-2 gap-3 text-sm">
+        <div class="bg-oas-bg rounded-lg p-3">
+          <p class="text-oas-muted text-xs font-semibold uppercase tracking-wide mb-1">Client</p>
+          <p class="font-semibold text-oas-ink">{{ selectedBon.client?.firstName }} {{ selectedBon.client?.lastName }}
           </p>
+        </div>
+        <div class="bg-oas-bg rounded-lg p-3">
+          <p class="text-oas-muted text-xs font-semibold uppercase tracking-wide mb-1">Véhicule</p>
+          <p class="font-semibold text-oas-ink">{{ selectedBon.vehicule?.immatriculation }}</p>
+          <p class="text-xs text-oas-muted">{{ selectedBon.vehicule?.marque }} {{ selectedBon.vehicule?.modele }}</p>
+        </div>
+        <div class="bg-oas-bg rounded-lg p-3">
+          <p class="text-oas-muted text-xs font-semibold uppercase tracking-wide mb-1">Agent émetteur</p>
+          <p class="font-semibold text-oas-ink">{{ selectedBon.agentEmetteur?.firstName }} {{
+            selectedBon.agentEmetteur?.lastName }}</p>
+        </div>
+        <div class="bg-oas-bg rounded-lg p-3">
+          <p class="text-oas-muted text-xs font-semibold uppercase tracking-wide mb-1">Statut</p>
+          <span
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold {{ statutClass(selectedBon.statut) }}">
+            <span
+              class="w-1.5 h-1.5 rounded-full {{ selectedBon.statut === 'VALIDE' ? 'bg-oas-ok' : 'bg-oas-warn' }}"></span>
+            {{ selectedBon.statut === 'VALIDE' ? 'Validé' : 'En attente' }}
+          </span>
+        </div>
+      </div>
 
-          @if (historique.length > 0) {
-            <div class="space-y-2">
-              @for (h of historique; track h.id) {
-                <div class="bg-oas-bg rounded-lg p-2.5 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 border border-oas-line/50">
-                  <div class="flex items-center gap-2 flex-wrap">
-                    <span class="px-2 py-0.5 rounded text-[11px] font-bold border {{ statutHistoriqueClass(h.statut) }}">
-                      {{ h.statut }}
-                    </span>
-                    @if (h.piece) {
-                      <span class="font-bold text-oas-ink">{{ h.piece.reference }} (Qté: {{ h.quantite }})</span>
-                    }
-                    <span class="text-oas-ink2 font-normal text-[11px]">{{ h.motif || 'Mouvement' }}</span>
-                  </div>
-                  <div class="flex items-center gap-3 text-right">
-                    @if (h.stockMagasin != null || h.stockAtelier != null) {
-                      <div class="text-[10px] text-oas-muted space-x-1 whitespace-nowrap">
-                        @if (h.stockMagasin != null) { <span>Mag: <b class="text-blue-600">{{ h.stockMagasin }}</b></span> }
-                        @if (h.stockAtelier != null) { <span>| Ate: <b class="text-indigo-600">{{ h.stockAtelier }}</b></span> }
-                        @if (h.qteReelle != null) { <span>| Réel: <b class="text-emerald-600">{{ h.qteReelle }}</b></span> }
-                      </div>
-                    }
-                    <div class="text-oas-muted text-[11px] whitespace-nowrap">
-                      <span>{{ formatDate(h.dateAction) }}</span>
-                      @if (h.agent) {
-                        <span class="block text-[10px] text-oas-muted">par {{ h.agent.firstName }} {{ h.agent.lastName }}</span>
-                      }
-                    </div>
-                  </div>
-                </div>
+      @if (selectedBon.remarque) {
+      <div class="bg-oas-bg rounded-lg p-3 text-sm text-oas-ink2">
+        <span class="font-semibold text-oas-ink">Remarque : </span>{{ selectedBon.remarque }}
+      </div>
+      }
+
+      <!-- Pièces -->
+      @if ((selectedBon.lignesBonDeSortiePieces?.length ?? 0) > 0) {
+      <div>
+        <p class="text-sm font-bold text-oas-ink mb-2">Pièces ({{ selectedBon.lignesBonDeSortiePieces?.length }}
+          ligne(s))</p>
+        <div class="border border-oas-line rounded-xl overflow-hidden">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-oas-line bg-oas-bg">
+                <th class="text-left px-3 py-2 text-xs font-bold text-oas-muted uppercase tracking-wide">Référence</th>
+                <th class="text-left px-3 py-2 text-xs font-bold text-oas-muted uppercase tracking-wide">Désignation
+                </th>
+                <th class="text-right px-3 py-2 text-xs font-bold text-oas-muted uppercase tracking-wide">Qté</th>
+                @if (selectedBon.statut === 'EN_ATTENTE') {
+                <th class="text-right px-3 py-2 text-xs font-bold text-oas-muted uppercase tracking-wide">Action</th>
+                }
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-oas-line">
+              @for (l of selectedBon.lignesBonDeSortiePieces; track l.id) {
+              <tr class="hover:bg-oas-bg">
+                <td class="px-3 py-2 text-oas-ink text-xs font-medium">{{ l.piece?.reference }}</td>
+                <td class="px-3 py-2 text-oas-muted text-xs">{{ l.piece?.designation }}</td>
+                <td class="px-3 py-2 text-right font-bold text-oas-ink">{{ l.quantite }}</td>
+                @if (selectedBon.statut === 'EN_ATTENTE' && l.piece) {
+                <td class="px-3 py-2 text-right">
+                  <button (click)="retournerPiece(l.piece.id)" [disabled]="saving"
+                    title="Retourner cette pièce au magasin"
+                    class="p-1 rounded text-red-500 hover:bg-red-50 hover:text-red-700 transition cursor-pointer disabled:opacity-50">
+                    <svg lucideTrash2 class="w-4 h-4"></svg>
+                  </button>
+                </td>
+                } @else if (selectedBon.statut === 'EN_ATTENTE') {
+                <td></td>
+                }
+              </tr>
               }
+            </tbody>
+          </table>
+        </div>
+      </div>
+      }
+
+      @if ((selectedBon.lignesBonDeSortiePieces?.length ?? 0) === 0) {
+      <p class="text-center text-oas-muted text-sm py-4">Aucune ligne sur ce bon.</p>
+      }
+
+      <!-- Historique du Bon de Sortie -->
+      <div class="border-t border-oas-line pt-4">
+        <p class="text-sm font-bold text-oas-ink mb-3 flex items-center justify-between">
+          <span>Historique des mouvements</span>
+          @if (loadingHistorique) {
+          <span class="text-xs font-normal text-oas-muted">Chargement...</span>
+          }
+        </p>
+
+        @if (historique.length > 0) {
+        <div class="space-y-2">
+          @for (h of historique; track h.id) {
+          <div
+            class="bg-oas-bg rounded-lg p-2.5 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 border border-oas-line/50">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="px-2 py-0.5 rounded text-[11px] font-bold border {{ statutHistoriqueClass(h.statut) }}">
+                {{ h.statut }}
+              </span>
+              @if (h.piece) {
+              <span class="font-bold text-oas-ink">{{ h.piece.reference }} (Qté: {{ h.quantite }})</span>
+              }
+              <span class="text-oas-ink2 font-normal text-[11px]">{{ h.motif || 'Mouvement' }}</span>
             </div>
-          } @else if (!loadingHistorique) {
-            <p class="text-xs text-oas-muted italic">Aucun historique disponible pour le moment.</p>
+            <div class="flex items-center gap-3 text-right">
+              @if (h.stockMagasin != null || h.stockAtelier != null) {
+              <div class="text-[10px] text-oas-muted space-x-1 whitespace-nowrap">
+                @if (h.stockMagasin != null) { <span>Mag: <b class="text-blue-600">{{ h.stockMagasin }}</b></span> }
+                @if (h.stockAtelier != null) { <span>| Ate: <b class="text-indigo-600">{{ h.stockAtelier }}</b></span> }
+                @if (h.qteReelle != null) { <span>| Réel: <b class="text-emerald-600">{{ h.qteReelle }}</b></span> }
+              </div>
+              }
+              <div class="text-oas-muted text-[11px] whitespace-nowrap">
+                <span>{{ formatDate(h.dateAction) }}</span>
+                @if (h.agent) {
+                <span class="block text-[10px] text-oas-muted">par {{ h.agent.firstName }} {{ h.agent.lastName }}</span>
+                }
+              </div>
+            </div>
+          </div>
           }
         </div>
-
-        @if (canValidate && selectedBon.statut === 'EN_ATTENTE') {
-          <button (click)="valider(selectedBon)" [disabled]="saving"
-                  class="w-full flex items-center justify-center gap-2 bg-oas-ok hover:bg-oas-ok/90 text-white font-bold py-3 rounded-lg transition text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed mt-2">
-            <svg lucideCheckCircle class="w-4 h-4"></svg>
-            {{ saving ? 'Validation en cours...' : 'Valider ce bon (sortie atelier)' }}
-          </button>
+        } @else if (!loadingHistorique) {
+        <p class="text-xs text-oas-muted italic">Aucun historique disponible pour le moment.</p>
         }
       </div>
+
+      @if (canValidate && selectedBon.statut === 'EN_ATTENTE') {
+      <button (click)="valider(selectedBon)" [disabled]="saving"
+        class="w-full flex items-center justify-center gap-2 bg-oas-ok hover:bg-oas-ok/90 text-white font-bold py-3 rounded-lg transition text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed mt-2">
+        <svg lucideCheckCircle class="w-4 h-4"></svg>
+        {{ saving ? 'Validation en cours...' : 'Valider ce bon (sortie atelier)' }}
+      </button>
+      }
     </div>
   </div>
+</div>
 }

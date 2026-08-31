@@ -120,11 +120,11 @@
               <tr class="hover:bg-blue-50/40 transition border-b border-oas-line last:border-0 text-oas-ink">
                 <!-- Prenom -->
                 <td class="px-3 py-3 font-medium whitespace-nowrap">
-                  {{ h.prenom || h.bonDeSortie?.client?.firstName || h.agent?.firstName || '—' }}
+                  {{ h.prenom || h.agent?.firstName || h.bonDeSortie?.agentEmetteur?.firstName || '—' }}
                 </td>
                 <!-- Nom -->
                 <td class="px-3 py-3 font-bold whitespace-nowrap">
-                  {{ h.nom || h.bonDeSortie?.client?.lastName || h.agent?.lastName || '—' }}
+                  {{ h.nom || h.agent?.lastName || h.bonDeSortie?.agentEmetteur?.lastName || '—' }}
                 </td>
                 <!-- N° de BS -->
                 <td class="px-3 py-3 text-center font-mono font-bold text-oas-accent whitespace-nowrap">

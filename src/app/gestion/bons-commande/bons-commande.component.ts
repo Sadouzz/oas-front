@@ -2,7 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
-import { BonDeCommandeService, BonDeCommande, StatutBonCommande, BonDeLivraisonRequest, BonDeLivraisonLigne } from '../../services/bon-de-commande.service';
+import { BonDeCommandeService, BonDeCommande, StatutBonCommande, ReceptionBonDeCommandeRequest, ReceptionBonDeCommandeLigne } from '../../services/bon-de-commande.service';
 import { FournisseurService } from '../../services/fournisseur.service';
 import { VehiculeService } from '../../services/vehicule.service';
 import { PieceDetacheeService } from '../../services/piece-detachee.service';
@@ -54,18 +54,16 @@ export class BonsCommandeComponent implements OnInit {
   selectedBon: BonDeCommande | null = null;
   actioning = false;
 
-  // Bon de Livraison popup
-  showLivraisonModal = false;
-  livraisonLignes: { ligneId: number; designationPiece: string; reference: string; quantiteCommandee: number; quantiteRecue: number; }[] = [];
-  livraisonSaving = false;
+  // Bon de Réception popup
+  showReceptionModal = false;
+  receptionLignes: { ligneId: number; designationPiece: string; reference: string; quantiteCommandee: number; quantiteRecue: number; }[] = [];
+  receptionSaving = false;
 
   // Assigner fournisseur popup
   showAssignFournisseur = false;
   assignFournisseurId: number | null = null;
   assigningFournisseur = false;
 
-  searchTerm = '';
-  filterStatut = '';
   successMessage = '';
   errorMessage = '';
 
@@ -150,6 +148,13 @@ export class BonsCommandeComponent implements OnInit {
     this.vehiculeOpen = false;
   }
 
+  searchTerm = '';
+  filterStatut = '';
+  dateDebut = '';
+  dateFin = '';
+  filterFournisseur = '';
+  showDateFilter = false;
+
   get displayedPieces(): PieceDetache[] {
     return this.pieces.filter(p => p.type !== 'PDS' && p.statut === 'ACTIF');
   }
@@ -174,6 +179,13 @@ export class BonsCommandeComponent implements OnInit {
           if (pieceId) {
             this.openNewWithPiece(Number(pieceId));
           }
+          if (params['action'] === 'new') {
+            this.openNew();
+          }
+          if (params['search'] === 'fournisseur-date') {
+            this.showDateFilter = true;
+          }
+          this.applyFilter();
         });
       },
     });
@@ -191,11 +203,24 @@ export class BonsCommandeComponent implements OnInit {
     let data = this.bons;
     if (this.filterStatut) data = data.filter(b => b.statut === this.filterStatut);
     if (this.searchTerm) {
-      const kw = this.searchTerm;
+      const kw = this.searchTerm.toLowerCase();
       data = data.filter(b =>
         b.numero.toLowerCase().includes(kw) ||
-        b.fournisseurNom.toLowerCase().includes(kw) ||
+        (b.fournisseurNom ?? '').toLowerCase().includes(kw) ||
         (b.immatriculationVehicule ?? '').toLowerCase().includes(kw)
+      );
+    }
+    if (this.dateDebut) {
+      data = data.filter(b => b.dateCommande && b.dateCommande >= this.dateDebut);
+    }
+    if (this.dateFin) {
+      data = data.filter(b => b.dateCommande && b.dateCommande.slice(0, 10) <= this.dateFin);
+    }
+    if (this.filterFournisseur) {
+      const fKw = this.filterFournisseur.toLowerCase();
+      data = data.filter(b =>
+        (b.fournisseurNom ?? '').toLowerCase().includes(fKw) ||
+        (b.fournisseurId ? String(b.fournisseurId).includes(fKw) : false)
       );
     }
     this.filtered = data;
@@ -212,21 +237,42 @@ export class BonsCommandeComponent implements OnInit {
     this.applyFilter();
   }
 
-  private makeLigne(): FormGroup {
+  hasReception(bon: BonDeCommande | null): boolean {
+    if (!bon) return false;
+    return bon.statut === 'INCOMPLET' || bon.statut === 'RECU' || (bon.lignes || []).some(l => (l.quantiteRecue || 0) > 0);
+  }
+
+  private makeLigne(id: number | null = null, quantiteRecue = 0): FormGroup {
+    const minQty = quantiteRecue > 0 ? quantiteRecue : 1;
     return this.fb.group({
+      id: [id],
+      quantiteRecue: [quantiteRecue],
       isCustom: [false],
       pieceDetacheeId: [null],
       designationPds: [''],
-      quantite: [1, [Validators.required, Validators.min(1)]],
+      quantite: [minQty, [Validators.required, Validators.min(minQty)]],
       prixUnitaire: [0, [Validators.required, Validators.min(0)]],
     });
   }
 
   addLigne() { this.lignesArray.push(this.makeLigne()); }
-  removeLigne(i: number) { this.lignesArray.removeAt(i); }
+  removeLigne(i: number) {
+    const ctrl = this.lignesArray.at(i);
+    const qRecue = ctrl.get('quantiteRecue')?.value || 0;
+    if (qRecue > 0) {
+      this.notifyError(`Impossible de supprimer cette ligne car ${qRecue} pièce(s) ont déjà été réceptionnée(s).`);
+      return;
+    }
+    this.lignesArray.removeAt(i);
+  }
 
   toggleCustom(i: number) {
     const ctrl = this.lignesArray.at(i);
+    const qRecue = ctrl.get('quantiteRecue')?.value || 0;
+    if (qRecue > 0) {
+      this.notifyError('Impossible de modifier le type de pièce d\'une ligne déjà réceptionnée.');
+      return;
+    }
     const current = !!ctrl.get('isCustom')?.value;
     ctrl.patchValue({ isCustom: !current, pieceDetacheeId: null, designationPds: '' });
   }
@@ -285,11 +331,15 @@ export class BonsCommandeComponent implements OnInit {
     for (const l of bon.lignes) {
       const matchingPiece = this.pieces.find(p => p.id === l.pieceDetacheeId && p.type !== 'PDS');
       const isCustom = !matchingPiece;
+      const qRecue = l.quantiteRecue || 0;
+      const minQty = qRecue > 0 ? qRecue : 1;
       this.lignesArray.push(this.fb.group({
+        id: [l.id],
+        quantiteRecue: [qRecue],
         isCustom: [isCustom],
         pieceDetacheeId: [isCustom ? null : l.pieceDetacheeId],
         designationPds: [isCustom ? (l.designationPiece || l.reference || '') : ''],
-        quantite: [l.quantite, [Validators.required, Validators.min(1)]],
+        quantite: [l.quantite, [Validators.required, Validators.min(minQty)]],
         prixUnitaire: [l.prixUnitaire, [Validators.required, Validators.min(0)]],
       }));
     }
@@ -315,6 +365,11 @@ export class BonsCommandeComponent implements OnInit {
         this.notifyError('Sélectionnez une pièce pour chaque ligne du catalogue.');
         return;
       }
+      const qRecue = Number(l.quantiteRecue || 0);
+      if (qRecue > 0 && Number(l.quantite) < qRecue) {
+        this.notifyError(`La quantité commandée (${l.quantite}) ne peut pas être inférieure à la quantité déjà reçue (${qRecue}).`);
+        return;
+      }
     }
     this.saving = true;
     const raw = this.form.value;
@@ -326,6 +381,7 @@ export class BonsCommandeComponent implements OnInit {
       lignes: lignesRaw.map((l: any) => {
         if (l.isCustom) {
           return {
+            id: l.id ? Number(l.id) : undefined,
             designationPds: l.designationPds.trim(),
             typePiece: 'PDS',
             quantite: Number(l.quantite),
@@ -333,6 +389,7 @@ export class BonsCommandeComponent implements OnInit {
           };
         }
         return {
+          id: l.id ? Number(l.id) : undefined,
           pieceDetacheeId: Number(l.pieceDetacheeId),
           quantite: Number(l.quantite),
           prixUnitaire: Number(l.prixUnitaire),
@@ -343,16 +400,21 @@ export class BonsCommandeComponent implements OnInit {
       ? this.service.create(payload)
       : this.service.update(this.editingId!, payload);
     req$.subscribe({
-      next: () => { this.showModal = false; this.load(); this.notify('Bon de commande enregistré.'); },
+      next: () => { this.showModal = false; this.saving = false; this.load(); this.notify('Bon de commande enregistré.'); },
       error: (err: any) => { this.saving = false; this.notifyError(err?.error?.message || 'Erreur lors de la sauvegarde.'); },
     });
   }
 
   delete(id: number) {
+    const bon = this.bons.find(b => b.id === id);
+    if (bon && this.hasReception(bon)) {
+      this.notifyError('Impossible de supprimer ce bon de commande : la réception a déjà commencé.');
+      return;
+    }
     if (!confirm('Supprimer ce bon de commande ?')) return;
     this.service.delete(id).subscribe({
       next: () => { this.load(); this.closeDetail(); this.notify('Bon supprimé.'); },
-      error: () => this.notifyError('Erreur lors de la suppression.'),
+      error: (err: any) => this.notifyError(err?.error?.message || 'Erreur lors de la suppression.'),
     });
   }
 
@@ -365,9 +427,9 @@ export class BonsCommandeComponent implements OnInit {
       return;
     }
 
-    // Intercepter "receptionner" pour ouvrir le popup bon de livraison
+    // Intercepter "receptionner" pour ouvrir le popup bon de réception
     if (type === 'receptionner') {
-      this.openLivraisonPopup();
+      this.openReceptionPopup();
       return;
     }
 
@@ -413,46 +475,46 @@ export class BonsCommandeComponent implements OnInit {
     });
   }
 
-  // ─── Bon de Livraison ─────────────────────────────────
-  openLivraisonPopup() {
+  // ─── Bon de Réception ─────────────────────────────────
+  openReceptionPopup() {
     if (!this.selectedBon) return;
-    this.livraisonLignes = this.selectedBon.lignes
+    this.receptionLignes = this.selectedBon.lignes
       .map(l => {
         const restante = l.quantite - (l.quantiteRecue || 0);
         return {
-          ligneId:            l.id!,
-          designationPiece:   l.designationPiece || l.reference || '',
-          reference:          l.reference || '',
-          quantiteCommandee:  restante,
-          quantiteRecue:      restante,
+          ligneId: l.id!,
+          designationPiece: l.designationPiece || l.reference || '',
+          reference: l.reference || '',
+          quantiteCommandee: restante,
+          quantiteRecue: restante,
         };
       })
       .filter(l => l.quantiteCommandee > 0);
-    this.showLivraisonModal = true;
+    this.showReceptionModal = true;
   }
 
-  saveLivraison() {
+  saveReception() {
     if (!this.selectedBon) return;
-    this.livraisonSaving = true;
-    const request: BonDeLivraisonRequest = {
-      lignes: this.livraisonLignes.map(l => ({
+    this.receptionSaving = true;
+    const request: ReceptionBonDeCommandeRequest = {
+      lignes: this.receptionLignes.map(l => ({
         ligneId: l.ligneId,
         quantiteRecue: l.quantiteRecue,
       }))
     };
-    this.service.receptionnerAvecLivraison(this.selectedBon.id, request).subscribe({
+    this.service.receptionnerAvecReception(this.selectedBon.id, request).subscribe({
       next: (updated) => {
         this.selectedBon = updated;
         const idx = this.bons.findIndex(b => b.id === updated.id);
         if (idx !== -1) this.bons[idx] = updated;
         this.applyFilter();
-        this.livraisonSaving = false;
-        this.showLivraisonModal = false;
-        this.notify('Bon de livraison enregistré. Les pièces ont été ajoutées au stock.');
+        this.receptionSaving = false;
+        this.showReceptionModal = false;
+        this.notify('Bon de réception enregistré. Les pièces ont été ajoutées au stock.');
       },
       error: (err: any) => {
-        this.livraisonSaving = false;
-        this.notifyError(err?.error?.message || 'Erreur réception livraison.');
+        this.receptionSaving = false;
+        this.notifyError(err?.error?.message || 'Erreur réception.');
       },
     });
   }

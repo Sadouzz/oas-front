@@ -135,8 +135,25 @@ export const routes: Routes = [
           import('./gestion/rendezvous/rendezvous.component').then(m => m.RendezVousComponent),
       },
       {
+        path: 'notes-prix',
+        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER', 'ROLE_AGENT'])],
+        loadComponent: () =>
+          import('./gestion/notes-prix/notes-prix.component').then(m => m.NotesPrixComponent),
+      },
+      {
+        path: 'notes-de-prix',
+        redirectTo: 'notes-prix',
+        pathMatch: 'full',
+      },
+      {
         path: 'devis-previsionnels',
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER'])],
+        loadComponent: () =>
+          import('./gestion/devis-previsionnels/devis-previsionnels.component').then(m => m.DevisPrevisionnelsComponent),
+      },
+      {
+        path: 'devis',
+        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER', 'ROLE_AGENT'])],
         loadComponent: () =>
           import('./gestion/devis-previsionnels/devis-previsionnels.component').then(m => m.DevisPrevisionnelsComponent),
       },
@@ -146,9 +163,9 @@ export const routes: Routes = [
           import('./gestion/bons-commande/bons-commande.component').then(m => m.BonsCommandeComponent),
       },
       {
-        path: 'bons-livraison',
+        path: 'bons-reception',
         loadComponent: () =>
-          import('./gestion/bons-livraison/bons-livraison.component').then(m => m.BonsLivraisonComponent),
+          import('./gestion/bons-reception/bons-reception.component').then(m => m.BonsReceptionComponent),
       },
       {
         path: 'proformas',

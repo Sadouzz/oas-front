@@ -36,6 +36,7 @@ export interface BonDeCommande {
 }
 
 export interface LigneBonDeCommandeRequest {
+  id?: number;
   pieceDetacheeId?: number;
   quantite: number;
   prixUnitaire: number;
@@ -51,13 +52,13 @@ export interface BonDeCommandeRequest {
   lignes: LigneBonDeCommandeRequest[];
 }
 
-export interface BonDeLivraisonLigne {
+export interface ReceptionBonDeCommandeLigne {
   ligneId: number;
   quantiteRecue: number;
 }
 
-export interface BonDeLivraisonRequest {
-  lignes: BonDeLivraisonLigne[];
+export interface ReceptionBonDeCommandeRequest {
+  lignes: ReceptionBonDeCommandeLigne[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -109,8 +110,8 @@ export class BonDeCommandeService {
     return this.http.post<BonDeCommande>(`${this.api}/${id}/assigner-fournisseur`, {}, { params: { fournisseurId } });
   }
 
-  receptionnerAvecLivraison(id: number, data: BonDeLivraisonRequest): Observable<BonDeCommande> {
-    return this.http.post<BonDeCommande>(`${this.api}/${id}/receptionner-livraison`, data);
+  receptionnerAvecReception(id: number, data: ReceptionBonDeCommandeRequest): Observable<BonDeCommande> {
+    return this.http.post<BonDeCommande>(`${this.api}/${id}/receptionner-reception`, data);
   }
 
   downloadPdf(id: number): Observable<Blob> {

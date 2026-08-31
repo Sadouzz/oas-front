@@ -24,6 +24,25 @@ export interface AvoirHT {
   lignesMainDoeuvres: { id: number; descriptionMainDoeuvre: string; nbreHeure: number; tarifHoraire: number; montantTotal: number }[];
 }
 
+export interface AvoirHTCreateRequest {
+  clientId: number;
+  vehiculeId?: number | null;
+  kilometrage?: number;
+  remarque?: string;
+  lignesPieces: {
+    pieceId?: number | null;
+    designationPds?: string;
+    isCustom?: boolean;
+    quantite: number;
+    prix: number;
+  }[];
+  lignesMainDoeuvres?: {
+    mainDoeuvreId?: number | null;
+    nbreHeure: number;
+    tarifHoraire: number;
+  }[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class AvoirHTService {
   private http = inject(HttpClient);
@@ -35,6 +54,10 @@ export class AvoirHTService {
 
   getById(id: number): Observable<AvoirHT> {
     return this.http.get<AvoirHT>(`${this.api}/${id}`);
+  }
+
+  create(data: AvoirHTCreateRequest): Observable<AvoirHT> {
+    return this.http.post<AvoirHT>(this.api, data);
   }
 
   search(keyword: string): Observable<AvoirHT[]> {

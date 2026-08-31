@@ -33,29 +33,16 @@
     >
       <!-- Vis cruciformes aux 4 coins de chaque item -->
       <app-bolt-corners variant="light" [size]="11" [offset]="6"></app-bolt-corners>
-      <!-- Title Overlay -->
+
+      <!-- Titre affiché directement, bien lisible et à l'horizontale -->
       @if (img.title) {
         <div 
-           class="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/95 via-black/50 to-transparent flex flex-col justify-end transition-opacity duration-500 ease-out h-[50%]"
-           [style.opacity]="openIndex === i || factors[i] > 0.3 ? 1 : 0"
+           class="absolute inset-x-0 bottom-0 px-4 py-4 sm:py-5 bg-gradient-to-t from-black/95 via-black/70 to-transparent flex flex-col justify-end items-center pointer-events-none transition-all duration-300"
         >
-           <span class="text-white uppercase font-extrabold text-xl md:text-2xl lg:text-3xl leading-tight font-sans tracking-tight mb-2">
+           <span class="text-white uppercase font-extrabold text-sm sm:text-base md:text-lg tracking-wider text-center drop-shadow-md leading-tight">
              {{ img.title }}
            </span>
-           <div 
-             class="h-1 bg-oas-accent w-12 transition-all duration-500"
-             [style.width]="openIndex === i ? '100%' : '3rem'"
-           ></div>
-        </div>
-        
-        <!-- Subtle vertical text when closed to still show what it is -->
-        <div 
-           class="absolute inset-0 flex items-end justify-center pb-8 transition-opacity duration-300 pointer-events-none bg-black/20"
-           [style.opacity]="openIndex === null && factors[i] < 0.2 ? 1 : 0"
-        >
-            <span class="text-white/90 font-bold uppercase tracking-widest text-sm whitespace-nowrap -rotate-90 origin-bottom-left absolute left-[50%] bottom-[10%] translate-x-[-100%]">
-                {{ img.title }}
-            </span>
+           <div class="h-1 bg-oas-accent w-10 mt-1.5 rounded-full transition-all duration-300"></div>
         </div>
       }
     </div>

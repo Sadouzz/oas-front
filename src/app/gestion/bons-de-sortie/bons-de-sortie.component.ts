@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormArray, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { BonDeSortieService, BonDeSortie, BonDeSortieHistorique } from '../../services/bon-de-sortie.service';
 import { ClientService, UserModel } from '../../services/client.service';
@@ -20,6 +21,7 @@ import { LucidePlus, LucideSearch, LucidePackage, LucideTrash2, LucideX, LucideC
 })
 export class BonsDeSortieComponent implements OnInit {
   private fb = inject(FormBuilder);
+  private route = inject(ActivatedRoute);
   private bonService = inject(BonDeSortieService);
   private clientService = inject(ClientService);
   private vehiculeService = inject(VehiculeService);
@@ -57,6 +59,10 @@ export class BonsDeSortieComponent implements OnInit {
 
   filterStatut = '';
   searchTerm = '';
+  dateDebut = '';
+  dateFin = '';
+  filterVehicule = '';
+  showDateFilter = false;
 
   form = this.fb.group({
     clientId: [null as number | null, Validators.required],
@@ -133,6 +139,21 @@ export class BonsDeSortieComponent implements OnInit {
         this.pdps = pdps.filter(p => p.statut === 'ACTIF');
       },
     });
+
+    this.route.queryParams.subscribe(params => {
+      if (params['action'] === 'new') {
+        this.openCreate();
+      }
+      if (params['statut']) {
+        this.filterStatut = params['statut'];
+      } else if (!params['action']) {
+        this.filterStatut = '';
+      }
+      if (params['search'] === 'auto-date') {
+        this.showDateFilter = true;
+      }
+      this.applyFilter();
+    });
   }
 
   loadBons() {
@@ -152,6 +173,20 @@ export class BonsDeSortieComponent implements OnInit {
         (b.reference ?? '').toLowerCase().includes(kw) ||
         `${b.client?.firstName ?? ''} ${b.client?.lastName ?? ''}`.toLowerCase().includes(kw) ||
         (b.vehicule?.immatriculation ?? '').toLowerCase().includes(kw)
+      );
+    }
+    if (this.dateDebut) {
+      data = data.filter(b => b.date && b.date >= this.dateDebut);
+    }
+    if (this.dateFin) {
+      data = data.filter(b => b.date && b.date.slice(0, 10) <= this.dateFin);
+    }
+    if (this.filterVehicule) {
+      const vKw = this.filterVehicule.toLowerCase();
+      data = data.filter(b =>
+        (b.vehicule?.immatriculation ?? '').toLowerCase().includes(vKw) ||
+        (b.vehicule?.marque ?? '').toLowerCase().includes(vKw) ||
+        (b.vehicule?.modele ?? '').toLowerCase().includes(vKw)
       );
     }
     this.filtered = data;
@@ -305,10 +340,10 @@ export class BonsDeSortieComponent implements OnInit {
     this.saving = true;
     this.bonService.valider(bon.id).subscribe({
       next: () => { this.saving = false; this.showSuccess(`Bon ${bon.reference} validé !`); this.loadBons(); this.closeDetail(); },
-      error: (err: any) => { 
-        this.saving = false; 
+      error: (err: any) => {
+        this.saving = false;
         const msg = err.error?.message ?? (typeof err.error === 'string' ? err.error : '');
-        this.errorMessage = msg || 'Erreur lors de la validation.'; 
+        this.errorMessage = msg || 'Erreur lors de la validation.';
       }
     });
   }
