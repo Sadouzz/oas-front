@@ -18,7 +18,7 @@ export const SERVICES: Service[] = [
     shortTitle: 'Mécanique',
     summary: 'Réparations mécaniques fiables pour préserver les performances de votre véhicule.',
     description: 'Notre atelier prend en charge tous les travaux de mécanique automobile, du diagnostic à la réparation du moteur, de la transmission et des organes mécaniques afin de garantir sécurité et performance.',
-    image: 'https://images.unsplash.com/photo-1493238792000-8113da705763?q=80&w=800&auto=format&fit=crop',
+    image: 'https://res.cloudinary.com/p3dkpqm9/image/upload/v1788140623/oas/website/re6e8exjjflzwaks8zpv.jpg',
     alert: [
       'Bruits inhabituels',
       'Perte de puissance',
@@ -38,7 +38,7 @@ export const SERVICES: Service[] = [
     shortTitle: 'Électricité',
     summary: 'Diagnostic et réparation de tous les systèmes électriques du véhicule.',
     description: 'Nous intervenons sur les batteries, alternateurs, démarreurs, faisceaux électriques et équipements électroniques pour assurer le bon fonctionnement de votre véhicule.',
-    image: 'https://images.unsplash.com/photo-1621217736657-3a139a066440?q=80&w=800&auto=format&fit=crop',
+    image: 'https://res.cloudinary.com/p3dkpqm9/image/upload/v1786449272/oas/website/gxule2frfbwuhkbij7eb.jpg',
     alert: [
       'Batterie déchargée',
       'Problème de démarrage',
@@ -58,7 +58,7 @@ export const SERVICES: Service[] = [
     shortTitle: 'Vidange',
     summary: 'Entretenez votre moteur grâce à une vidange réalisée dans les règles de l’art.',
     description: 'Nous effectuons les vidanges avec remplacement des filtres et contrôle des niveaux afin d’optimiser les performances et la durée de vie du moteur.',
-    image: 'https://images.unsplash.com/photo-1632823471565-1ec2a74c2e6f?q=80&w=800&auto=format&fit=crop',
+    image: 'https://res.cloudinary.com/p3dkpqm9/image/upload/v1786449299/oas/website/samcwf93dnxox0og9avx.jpg',
     alert: [
       'Huile moteur usée',
       'Révision périodique',
@@ -78,7 +78,7 @@ export const SERVICES: Service[] = [
     shortTitle: 'Climatisation',
     summary: 'Retrouvez une climatisation performante toute l’année.',
     description: 'Nous assurons l’entretien, la recharge en gaz, le diagnostic et la réparation complète du système de climatisation.',
-    image: 'https://images.unsplash.com/photo-1579893963473-cbcf2eb98b4b?q=80&w=800&auto=format&fit=crop',
+    image: 'https://res.cloudinary.com/p3dkpqm9/image/upload/v1788140624/oas/website/xocgj92qc393xje9sssu.jpg',
     alert: [
       'Climatisation inefficace',
       'Mauvaise odeur',
@@ -98,7 +98,7 @@ export const SERVICES: Service[] = [
     shortTitle: 'Tôlerie',
     summary: 'Réparation et remise en état de la carrosserie après un choc.',
     description: 'Nos techniciens redressent, remplacent et restaurent les éléments de carrosserie afin de redonner à votre véhicule son aspect d’origine.',
-    image: 'https://images.unsplash.com/photo-1590498305417-640a3dd90dcb?q=80&w=800&auto=format&fit=crop',
+    image: 'https://res.cloudinary.com/p3dkpqm9/image/upload/v1788140670/oas/website/d2eir2blm5juniuykdbx.jpg',
     alert: [
       'Carrosserie déformée',
       'Impact',
@@ -118,7 +118,7 @@ export const SERVICES: Service[] = [
     shortTitle: 'Peinture',
     summary: 'Des finitions professionnelles pour redonner son éclat à votre véhicule.',
     description: 'Nous réalisons des travaux de peinture automobile complets ou partiels avec des produits de qualité pour une finition durable.',
-    image: 'https://images.unsplash.com/photo-1600705722908-bab1e61c0b4d?q=80&w=800&auto=format&fit=crop',
+    image: 'https://res.cloudinary.com/p3dkpqm9/image/upload/v1788137728/oas/website/etytu10xsxufrlnucfce.jpg',
     alert: [
       'Peinture ternie',
       'Rayures',
