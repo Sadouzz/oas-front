@@ -8,6 +8,7 @@ import {
   AfterViewInit,
   Inject,
   PLATFORM_ID,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 
@@ -16,6 +17,7 @@ import { isPlatformBrowser } from '@angular/common';
   standalone: true,
   imports: [],
   templateUrl: './wrench-cursor.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './wrench-cursor.css',
 })
 export class WrenchCursorComponent implements OnInit, AfterViewInit, OnDestroy {

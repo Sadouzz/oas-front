@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ClientPortalService } from '../services/client-portal.service';
@@ -36,6 +36,7 @@ const RECU: StatutDemandeProduit[] = ['LIVREE'];
   selector: 'app-client-profile',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, AlertComponent, StatusBadgeComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './client-profile.component.html',
 })
 export class ClientProfileComponent implements OnInit {

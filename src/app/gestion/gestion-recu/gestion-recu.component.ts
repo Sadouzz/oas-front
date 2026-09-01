@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { RecuModel } from '../../shared/models/recu.model';
 import { RecuService } from '../../services/recu.service';
 import { NgClass } from '@angular/common';
@@ -9,6 +9,7 @@ import { PaginationComponent } from '../../shared/components/pagination/paginati
   selector: 'app-gestion-recu',
   standalone: true,
   imports: [NgClass, LucideSearch, LucideReceipt, PaginationComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './gestion-recu.component.html'
 })
 export class GestionRecuComponent implements OnInit {

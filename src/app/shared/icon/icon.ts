@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 
 
 /**
@@ -249,6 +249,7 @@ import { Component, Input } from '@angular/core';
       </ng-container>
     </svg>
     `,
+  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [`
     :host{ display:inline-flex; align-items:center; justify-content:center; line-height:0; }
     .app-icon-svg{ display:block; }

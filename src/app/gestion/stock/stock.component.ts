@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { StockService, StockMouvement } from '../../services/stock.service';
 import { PieceDetacheeService, PieceDetache, AlerteStock } from '../../services/piece-detachee.service';
@@ -13,6 +13,7 @@ type ModalType = 'entree' | 'sortie' | 'ajustement' | null;
   selector: 'app-stock',
   standalone: true,
   imports: [ReactiveFormsModule, FormsModule, AlertComponent, SearchableSelectComponent, PaginationComponent, LucideSearch],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './stock.component.html',
 })
 export class StockComponent implements OnInit {

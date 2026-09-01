@@ -1,4 +1,4 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy } from '@angular/core';
 
 import { RouterLink } from '@angular/router';
 import { register } from 'swiper/element/bundle';
@@ -37,6 +37,7 @@ import { TESTIMONIALS_DATA, Testimonial } from '../../shared/data/testimonials.d
   imports: [RouterLink, SectionTitle, TireTrackComponent, BoltCornersComponent, JerrycanComponent, SpeedometerComponent],
   templateUrl: './realisations.html',
   styleUrl: './realisations.css',
+  changeDetection: ChangeDetectionStrategy.Eager,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class Realisations {

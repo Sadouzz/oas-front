@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, ChangeDetectionStrategy } from '@angular/core';
 
 
 export interface WarningItem {
@@ -14,6 +14,7 @@ export interface WarningItem {
   standalone: true,
   imports: [],
   templateUrl: './dashboard-warnings.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './dashboard-warnings.css',
 })
 export class DashboardWarningsComponent {

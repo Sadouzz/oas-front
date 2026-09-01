@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output, ChangeDetectionStrategy } from '@angular/core';
 import { MediaUploadService } from '../../../core/services/media-upload.service';
 import { CloudinaryUploadResult } from '../../models';
 
@@ -15,6 +15,7 @@ import { CloudinaryUploadResult } from '../../models';
 @Component({
   selector: 'app-media-uploader',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './media-uploader.component.html',
 })
 export class MediaUploaderComponent {

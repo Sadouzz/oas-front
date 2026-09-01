@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, Pipe, PipeTransform } from '@angular/core';
+import { Component, inject, OnInit, Pipe, PipeTransform, ChangeDetectionStrategy } from '@angular/core';
 import { DecimalPipe, NgClass, UpperCasePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MainDoeuvreService, MainDoeuvreModel, MainDoeuvreRequest } from '../../services/main-doeuvre.service';
@@ -19,6 +19,7 @@ export class CategorieCountPipe implements PipeTransform {
   selector: 'app-main-doeuvre',
   standalone: true,
   imports: [ReactiveFormsModule, DecimalPipe, NgClass, UpperCasePipe, AlertComponent, PaginationComponent, CategorieCountPipe],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './main-doeuvre.component.html',
 })
 export class MainDoeuvreComponent implements OnInit {

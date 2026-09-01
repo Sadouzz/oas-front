@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, inject } from '@angular/core';
+import { Component, HostListener, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 
 import { RouterLink, Router } from '@angular/router';
 import {
@@ -52,6 +52,7 @@ import { SpeedometerComponent } from '../../shared/components/speedometer/speedo
     SpeedometerComponent
 ],
   templateUrl: './rdv.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './rdv.css'
 })
 export class RdvComponent implements OnInit {

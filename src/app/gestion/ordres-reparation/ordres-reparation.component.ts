@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, HostListener, ElementRef } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, HostListener, ElementRef, ChangeDetectionStrategy } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { CommonModule, NgClass, NgStyle } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -98,6 +98,7 @@ const STATUT_STEPS: { statut: StatutFiche; label: string }[] = [
   selector: 'app-ordres-reparation',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, FormsModule, NgClass, NgStyle, RouterLink, AlertComponent, PaginationComponent, SearchableSelectComponent, MediaUploaderComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './ordres-reparation.component.html',
 })
 export class OrdresReparationComponent implements OnInit, OnDestroy {

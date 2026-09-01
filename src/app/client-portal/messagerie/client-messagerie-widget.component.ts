@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClientMessageService } from '../services/client-message.service';
@@ -12,6 +12,7 @@ const POLL_INTERVAL_MS = 15000;
   selector: 'app-client-messagerie-widget',
   standalone: true,
   imports: [CommonModule, FormsModule, AlertComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './client-messagerie-widget.component.html',
 })
 export class ClientMessagerieWidgetComponent implements OnInit, OnDestroy {

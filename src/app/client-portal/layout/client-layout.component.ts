@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { filter, Subscription } from 'rxjs';
@@ -12,6 +12,7 @@ import { ClientMessagerieWidgetComponent } from '../messagerie/client-messagerie
   selector: 'app-client-layout',
   standalone: true,
   imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ClientMessagerieWidgetComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './client-layout.component.html',
 })
 export class ClientLayoutComponent implements OnInit, OnDestroy {

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UserManagementService } from '../../../services/user-management.service';
 import { GarageService } from '../../../services/garage.service';
@@ -22,6 +22,7 @@ const ROLE_PREFIX: Record<string, string> = {
   selector: 'app-users',
   standalone: true,
   imports: [ReactiveFormsModule, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideArchive],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './users.component.html',
 })
 export class UsersComponent implements OnInit {

@@ -5,7 +5,8 @@ import {
   OnDestroy,
   ChangeDetectorRef,
   Inject,
-  PLATFORM_ID
+  PLATFORM_ID,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 
@@ -14,6 +15,7 @@ import { isPlatformBrowser } from '@angular/common';
   standalone: true,
   imports: [],
   templateUrl: './jerrycan.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './jerrycan.css',
 })
 export class JerrycanComponent implements OnInit, OnDestroy {

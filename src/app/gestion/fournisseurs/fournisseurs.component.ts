@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FournisseurService } from '../../services/fournisseur.service';
 import { FournisseurModel } from '../../shared/models/index';
@@ -10,6 +10,7 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideBu
   selector: 'app-fournisseurs',
   standalone: true,
   imports: [ReactiveFormsModule, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideBuilding2],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './fournisseurs.component.html',
 })
 export class FournisseursComponent implements OnInit {

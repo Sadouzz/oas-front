@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
@@ -6,6 +6,7 @@ import { AuthService } from '../services/auth.service';
   selector: 'app-forbidden',
   standalone: true,
   imports: [],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './forbidden.component.html',
 })
 export class ForbiddenComponent implements OnInit {

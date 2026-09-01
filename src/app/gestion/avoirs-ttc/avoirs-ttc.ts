@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormArray, FormBuilder, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -19,6 +19,7 @@ import { LucideSearch, LucidePlus, LucideTrash2, LucideX, LucideDownload, Lucide
   imports: [CommonModule, ReactiveFormsModule, FormsModule, DecimalPipe, DatePipe, PaginationComponent, AlertComponent,
     LucideSearch, LucidePlus, LucideTrash2, LucideX, LucideDownload, LucideEye, LucideLoader2],
   templateUrl: './avoirs-ttc.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './avoirs-ttc.css',
 })
 export class AvoirsTtc implements OnInit {

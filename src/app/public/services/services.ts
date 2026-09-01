@@ -5,6 +5,7 @@ import {
   ElementRef,
   OnDestroy,
   ViewChild,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SERVICES, Service } from './services.data';
@@ -31,6 +32,7 @@ import { BoltCornersComponent } from '../../shared/components/bolt-corners/bolt-
     BoltCornersComponent
 ],
   templateUrl: './services.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './services.css',
 })
 export class Services implements AfterViewInit, OnDestroy {

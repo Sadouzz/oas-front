@@ -4,6 +4,7 @@ import {
   OnInit,
   OnDestroy,
   ChangeDetectorRef,
+  ChangeDetectionStrategy
 } from '@angular/core';
 
 
@@ -12,6 +13,7 @@ import {
   standalone: true,
   imports: [],
   templateUrl: './mechanical-gears.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './mechanical-gears.css',
 })
 export class MechanicalGearsComponent implements OnInit, OnDestroy {

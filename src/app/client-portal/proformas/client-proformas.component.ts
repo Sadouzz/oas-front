@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ClientProformaService, Proforma } from '../services/client-proforma.service';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
@@ -23,6 +23,7 @@ const STATUT_TONES: Record<string, BadgeTone> = {
   selector: 'app-client-proformas',
   standalone: true,
   imports: [CommonModule, AlertComponent, StatusBadgeComponent, VehicleAvatarComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './client-proformas.component.html',
 })
 export class ClientProformasComponent implements OnInit {

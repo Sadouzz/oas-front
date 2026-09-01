@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ClientVehiculeService } from '../services/client-vehicule.service';
@@ -19,6 +19,7 @@ type SortOrder = 'recent' | 'ancien';
   selector: 'app-client-vehicules',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, AlertComponent, VehicleAvatarComponent, StatusBadgeComponent, ProgressStepperComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './client-vehicules.component.html',
 })
 export class ClientVehiculesComponent implements OnInit {

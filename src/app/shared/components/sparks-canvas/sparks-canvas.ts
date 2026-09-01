@@ -8,6 +8,7 @@ import {
   NgZone,
   Inject,
   PLATFORM_ID,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
@@ -29,6 +30,7 @@ interface Spark {
   standalone: true,
   imports: [],
   templateUrl: './sparks-canvas.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './sparks-canvas.css',
 })
 export class SparksCanvasComponent implements OnInit, AfterViewInit, OnDestroy {

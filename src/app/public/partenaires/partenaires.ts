@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild, CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy } from '@angular/core';
 
 import { RouterModule } from '@angular/router';
 import { register } from 'swiper/element/bundle';
@@ -29,6 +29,7 @@ register();
 ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './partenaires.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./partenaires.css']
 })
 export class Partenaires implements OnInit, AfterViewInit, OnDestroy {

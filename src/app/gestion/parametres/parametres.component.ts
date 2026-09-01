@@ -1,4 +1,4 @@
-﻿import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { DepotService, Depot } from '../../services/depot.service';
@@ -9,6 +9,7 @@ import { FicheAtelierConfigService, FicheAtelierConfigBackend, BriqueConfig } fr
   selector: 'app-parametres',
   standalone: true,
   imports: [FormsModule],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './parametres.component.html'
 })
 export class ParametresComponent implements OnInit {

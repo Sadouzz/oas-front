@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, AfterViewInit, HostListener, ChangeDetectorRef, Renderer2, OnInit, OnDestroy, Inject, DOCUMENT } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewInit, HostListener, ChangeDetectorRef, Renderer2, OnInit, OnDestroy, Inject, DOCUMENT, ChangeDetectionStrategy } from '@angular/core';
 
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -9,6 +9,7 @@ import { WrenchCursorComponent } from '../../../shared/components/wrench-cursor/
   standalone: true,
   imports: [CommonModule, RouterModule, WrenchCursorComponent],
   templateUrl: './public-layout.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './public-layout.css',
 })
 export class PublicLayout implements OnInit, AfterViewInit, OnDestroy {

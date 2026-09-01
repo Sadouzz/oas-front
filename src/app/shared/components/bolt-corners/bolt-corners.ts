@@ -1,10 +1,11 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'app-bolt-corners',
   standalone: true,
   imports: [],
   templateUrl: './bolt-corners.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './bolt-corners.css',
 })
 export class BoltCornersComponent {

@@ -1,5 +1,5 @@
 
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
@@ -12,6 +12,7 @@ import { TireTrackComponent } from '../../shared/components/tire-track/tire-trac
   standalone: true,
   imports: [RouterLink, SectionTitle, TireTrackComponent],
   templateUrl: './service-detail.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './service-detail.css',
 })
 export class ServiceDetail {

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormArray, FormBuilder, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -17,6 +17,7 @@ import { SearchableSelectComponent } from '../../shared/components/searchable-se
   selector: 'app-factures',
   standalone: true,
   imports: [ReactiveFormsModule, FormsModule, NgClass, PaginationComponent, LucideSearch, LucidePlus, LucideTrash2, LucideX, LucideDownload, LucideReceipt],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './factures.component.html',
 })
 export class FacturesComponent implements OnInit {

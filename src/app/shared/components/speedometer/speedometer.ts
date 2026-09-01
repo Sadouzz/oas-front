@@ -6,6 +6,7 @@ import {
   OnDestroy,
   OnInit,
   ChangeDetectorRef,
+  ChangeDetectionStrategy
 } from '@angular/core';
 
 import { BoltCornersComponent } from '../bolt-corners/bolt-corners';
@@ -15,6 +16,7 @@ import { BoltCornersComponent } from '../bolt-corners/bolt-corners';
   standalone: true,
   imports: [BoltCornersComponent],
   templateUrl: './speedometer.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './speedometer.css',
 })
 export class SpeedometerComponent implements OnInit, AfterViewInit, OnDestroy {

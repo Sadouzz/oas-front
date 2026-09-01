@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { TechnicienPortalService } from '../services/technicien-portal.service';
 import { OrdreReparation } from '../../shared/models';
@@ -6,6 +6,7 @@ import { OrdreReparation } from '../../shared/models';
 @Component({
   selector: 'app-technicien-ordres-list',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './technicien-ordres-list.component.html',
 })
 export class TechnicienOrdresListComponent implements OnInit {

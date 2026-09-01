@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 
 
 @Component({
@@ -6,6 +6,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
   standalone: true,
   imports: [],
   templateUrl: './piston-accordion.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './piston-accordion.css'
 })
 export class PistonAccordionComponent {

@@ -320,7 +320,7 @@
           @if ((form.get('montantTimbre')?.value || 0) > 0) {
           <div class="flex justify-between text-xs text-sky-900">
             <span>Timbre :</span>
-            <span class="font-mono font-semibold">{{ form.get('montantTimbre')?.value | number:'1.0-0' }} F CFA</span>
+            <span class="font-mono font-semibold">{{ $safeNavigationMigration(form.get('montantTimbre')?.value) | number:'1.0-0' }} F CFA</span>
           </div>
           }
           <div class="flex justify-between text-sm font-bold text-sky-950 pt-2 border-t border-sky-200">

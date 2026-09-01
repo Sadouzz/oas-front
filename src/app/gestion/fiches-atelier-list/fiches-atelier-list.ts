@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FicheAtelierService } from '../../services/fiche-atelier.service';
 import { FicheAtelierResponse } from '../../shared/models';
@@ -10,6 +10,7 @@ import { LucideEye, LucideWrench } from '@lucide/angular';
   standalone: true,
   imports: [CommonModule, RouterLink, LucideEye, LucideWrench],
   templateUrl: './fiches-atelier-list.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './fiches-atelier-list.css'
 })
 export class FichesAtelierList implements OnInit {

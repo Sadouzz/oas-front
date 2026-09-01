@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -15,6 +15,7 @@ import { PaginationComponent } from '../../shared/components/pagination/paginati
   selector: 'app-notes-prix',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, FormsModule, NgClass, PaginationComponent, LucideSearch, LucidePlus, LucideTrash2, LucideX, LucideReceipt],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './notes-prix.component.html',
 })
 export class NotesPrixComponent implements OnInit {

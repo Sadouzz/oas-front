@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { TECHNICIEN_PORTAL_PATHS } from '../technicien-portal.paths';
@@ -10,6 +10,7 @@ import { TECHNICIEN_PORTAL_PATHS } from '../technicien-portal.paths';
   selector: 'app-technicien-layout',
   standalone: true,
   imports: [RouterOutlet, RouterLink],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './technicien-layout.component.html',
 })
 export class TechnicienLayoutComponent {

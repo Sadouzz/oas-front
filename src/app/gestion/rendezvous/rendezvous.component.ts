@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { RendezVousService } from '../../services/rendezvous.service';
@@ -16,6 +16,7 @@ import {
   imports: [
     ReactiveFormsModule, AlertComponent, PaginationComponent,
     LucideSearch, LucideX, LucideCalendar, LucideCheck, LucidePencil, LucideFileText],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './rendezvous.component.html',
 })
 export class RendezVousComponent implements OnInit {

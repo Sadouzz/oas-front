@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { resolveMarqueLogo } from './marque-logos';
 
 let nextId = 0;
@@ -13,6 +13,7 @@ const SIZE_CLASSES: Record<'sm' | 'md' | 'lg' | 'xl', { wrapper: string; logoImg
 @Component({
   selector: 'app-vehicle-avatar',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div class="rounded-full bg-oas-bg flex items-center justify-center flex-shrink-0 overflow-hidden" [class]="sizeClass.wrapper">
       @if (logoPath) {

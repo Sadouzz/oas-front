@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ClientRendezVousService } from '../services/client-rendezvous.service';
@@ -35,6 +35,7 @@ const STATUT_TONES: Record<RendezVousStatus, BadgeTone> = {
   selector: 'app-client-rendezvous',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, AlertComponent, StatusBadgeComponent, ModalComponent, VehicleAvatarComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './client-rendezvous.component.html',
 })
 export class ClientRendezVousComponent implements OnInit {

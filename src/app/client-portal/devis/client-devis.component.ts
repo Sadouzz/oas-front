@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ClientDevisService } from '../services/client-devis.service';
 import { DevisPrevisionnel, StatutDevis } from '../models';
@@ -30,6 +30,7 @@ const STATUT_TONES: Record<StatutDevis, BadgeTone> = {
   selector: 'app-client-devis',
   standalone: true,
   imports: [CommonModule, AlertComponent, StatusBadgeComponent, VehicleAvatarComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './client-devis.component.html',
 })
 export class ClientDevisComponent implements OnInit {

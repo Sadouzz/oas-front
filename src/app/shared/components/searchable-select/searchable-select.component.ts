@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, forwardRef, ElementRef, HostListener } from '@angular/core';
+import { Component, Input, Output, EventEmitter, forwardRef, ElementRef, HostListener, ChangeDetectionStrategy } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/forms';
 
 
@@ -13,6 +13,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/f
       multi: true
     }
   ],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div class="relative w-full text-sm">
       <div class="relative cursor-pointer" (click)="toggleOpen()">
