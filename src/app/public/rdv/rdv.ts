@@ -1,5 +1,5 @@
 import { Component, HostListener, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { RouterLink, Router } from '@angular/router';
 import {
   AbstractControl,
@@ -43,7 +43,6 @@ import { SpeedometerComponent } from '../../shared/components/speedometer/speedo
   selector: 'app-rdv',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     IconComponent,
     SectionTitle,
@@ -51,7 +50,7 @@ import { SpeedometerComponent } from '../../shared/components/speedometer/speedo
     SheetMetalCardComponent,
     BoltCornersComponent,
     SpeedometerComponent
-  ],
+],
   templateUrl: './rdv.html',
   styleUrl: './rdv.css'
 })

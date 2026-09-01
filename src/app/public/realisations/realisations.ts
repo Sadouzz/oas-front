@@ -1,5 +1,5 @@
 import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { RouterLink } from '@angular/router';
 import { register } from 'swiper/element/bundle';
 
@@ -34,7 +34,7 @@ import { TESTIMONIALS_DATA, Testimonial } from '../../shared/data/testimonials.d
 @Component({
   selector: 'app-realisations',
   standalone: true,
-  imports: [CommonModule, RouterLink, SectionTitle, TireTrackComponent, BoltCornersComponent, JerrycanComponent, SpeedometerComponent],
+  imports: [RouterLink, SectionTitle, TireTrackComponent, BoltCornersComponent, JerrycanComponent, SpeedometerComponent],
   templateUrl: './realisations.html',
   styleUrl: './realisations.css',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],

@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { RouterLink } from '@angular/router';
 import { BoltCornersComponent } from '../bolt-corners/bolt-corners';
 
@@ -15,7 +15,7 @@ export interface BlogArticle {
 @Component({
   selector: 'app-blog-preview',
   standalone: true,
-  imports: [CommonModule, RouterLink, BoltCornersComponent],
+  imports: [RouterLink, BoltCornersComponent],
   templateUrl: './blog-preview.html',
   styles: []
 })

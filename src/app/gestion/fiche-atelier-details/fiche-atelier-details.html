@@ -1,5 +1,5 @@
 <div class="h-full flex flex-col bg-white rounded-2xl shadow-sm border border-oas-line overflow-hidden">
-  
+
   <!-- Header -->
   <div class="p-6 border-b border-oas-line flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/50">
     <div class="flex items-center gap-4">
@@ -46,7 +46,7 @@
   <!-- Content -->
   @if (fiche) {
     <div class="flex-1 overflow-y-auto p-6 bg-oas-bg/30">
-      
+
       <!-- Infos client et vehicule -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div class="bg-white rounded-xl border border-oas-line p-5 shadow-sm">
@@ -64,10 +64,12 @@
               <span class="text-sm text-oas-faint">Chauffeur</span>
               <span class="text-sm font-semibold text-oas-ink2">{{ fiche.nomChauffeur }}</span>
             </div>
-            <div class="flex justify-between" *ngIf="fiche.telephoneChauffeur">
-              <span class="text-sm text-oas-faint">Tél. Chauffeur</span>
-              <span class="text-sm font-semibold text-oas-ink2">{{ fiche.telephoneChauffeur }}</span>
-            </div>
+            @if (fiche.telephoneChauffeur) {
+              <div class="flex justify-between">
+                <span class="text-sm text-oas-faint">Tél. Chauffeur</span>
+                <span class="text-sm font-semibold text-oas-ink2">{{ fiche.telephoneChauffeur }}</span>
+              </div>
+            }
           </div>
         </div>
 
@@ -109,7 +111,7 @@
               <div class="flex justify-between items-center bg-gray-50 p-2 rounded border border-oas-line/50">
                 <span class="text-sm font-medium text-oas-ink2">{{ ligne.nom }}</span>
                 <span class="text-xs px-2 py-1 rounded-full font-bold"
-                      [ngClass]="ligne.etat === true ? 'bg-green-100 text-green-700' : (ligne.etat === false ? 'bg-red-100 text-red-700' : 'bg-gray-200 text-gray-500')">
+                  [ngClass]="ligne.etat === true ? 'bg-green-100 text-green-700' : (ligne.etat === false ? 'bg-red-100 text-red-700' : 'bg-gray-200 text-gray-500')">
                   {{ ligne.etat === true ? 'OUI' : (ligne.etat === false ? 'NON' : 'N/A') }}
                 </span>
               </div>
@@ -217,7 +219,7 @@
       <!-- Signatures -->
       <div class="bg-white rounded-xl border border-oas-line p-5 shadow-sm">
         <h3 class="font-bold text-oas-ink mb-4 border-b border-oas-line pb-2">Signatures</h3>
-        
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <!-- Réceptionnaire -->
           <div>
@@ -264,19 +266,19 @@
               </div>
             } @else {
               <div class="border border-oas-line rounded-lg overflow-hidden bg-oas-bg/30 max-w-[600px]">
-                <canvas #signatureSortieCanvas width="600" height="200" 
-                        class="w-full h-[200px] cursor-crosshair touch-none"
-                        (mousedown)="startDrawing($event)"
-                        (mousemove)="draw($event)"
-                        (mouseup)="stopDrawing()"
-                        (mouseleave)="stopDrawing()"
-                        (touchstart)="startDrawing($event)"
-                        (touchmove)="draw($event)"
-                        (touchend)="stopDrawing()"></canvas>
+                <canvas #signatureSortieCanvas width="600" height="200"
+                  class="w-full h-[200px] cursor-crosshair touch-none"
+                  (mousedown)="startDrawing($event)"
+                  (mousemove)="draw($event)"
+                  (mouseup)="stopDrawing()"
+                  (mouseleave)="stopDrawing()"
+                  (touchstart)="startDrawing($event)"
+                  (touchmove)="draw($event)"
+                (touchend)="stopDrawing()"></canvas>
               </div>
               <div class="mt-4">
                 <button type="button" (click)="validerSortie()" [disabled]="savingSortie"
-                        class="px-5 py-2.5 rounded-lg bg-oas-accent hover:bg-oas-accent-dark text-white font-bold flex items-center gap-2 transition cursor-pointer disabled:opacity-60 text-sm shadow-md">
+                  class="px-5 py-2.5 rounded-lg bg-oas-accent hover:bg-oas-accent-dark text-white font-bold flex items-center gap-2 transition cursor-pointer disabled:opacity-60 text-sm shadow-md">
                   <svg lucideCheck class="w-4 h-4"></svg>
                   {{ savingSortie ? 'Validation en cours...' : 'Valider la restitution' }}
                 </button>

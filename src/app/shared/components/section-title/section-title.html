@@ -4,15 +4,19 @@
        'text-left items-start': align === 'left',
        'text-right items-end': align === 'right'
      }">
-    <h2 class="uppercase font-extrabold text-balance text-3xl md:text-5xl lg:text-6xl block tracking-tighter"
-        [ngClass]="theme === 'light' ? 'text-oas-navy-dark' : 'text-white'">
-        {{ mainTitle }}<em *ngIf="highlightedText" class="not-italic" [ngClass]="theme === 'accent' ? 'text-white' : 'text-oas-accent'"> {{ highlightedText }}</em>
-    </h2>
-    <span *ngIf="subtitle" class="w-full rotate-[-2deg] font-serif italic mb-1 xl:mb-2 text-2xl lg:text-4xl"
+  <h2 class="uppercase font-extrabold text-balance text-3xl md:text-5xl lg:text-6xl block tracking-tighter"
+    [ngClass]="theme === 'light' ? 'text-oas-navy-dark' : 'text-white'">
+    {{ mainTitle }}@if (highlightedText) {
+    <em class="not-italic" [ngClass]="theme === 'accent' ? 'text-white' : 'text-oas-accent'"> {{ highlightedText }}</em>
+  }
+</h2>
+@if (subtitle) {
+  <span class="w-full rotate-[-2deg] font-serif italic mb-1 xl:mb-2 text-2xl lg:text-4xl"
           [ngClass]="[
              align === 'center' ? 'text-center' : align === 'left' ? 'text-left' : 'text-right',
              theme === 'accent' ? 'text-white opacity-90' : 'text-oas-accent opacity-80'
           ]">
-        {{ subtitle }}
-    </span>
+    {{ subtitle }}
+  </span>
+}
 </div>

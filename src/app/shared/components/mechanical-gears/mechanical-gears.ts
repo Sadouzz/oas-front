@@ -5,12 +5,12 @@ import {
   OnDestroy,
   ChangeDetectorRef,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 
 @Component({
   selector: 'app-mechanical-gears',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './mechanical-gears.html',
   styleUrl: './mechanical-gears.css',
 })

@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, ViewChild, ElementRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FicheAtelierService } from '../../../services/fiche-atelier.service';
@@ -10,7 +10,7 @@ import { LucidePlus, LucideTrash2, LucideArrowLeft, LucideSave, LucideX } from '
 @Component({
   selector: 'app-fiches-atelier',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, LucidePlus, LucideTrash2, LucideArrowLeft, LucideSave, LucideX],
+  imports: [ReactiveFormsModule, LucidePlus, LucideTrash2, LucideArrowLeft, LucideSave, LucideX],
   templateUrl: './fiches-atelier.html',
   styleUrl: './fiches-atelier.css',
 })

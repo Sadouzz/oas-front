@@ -1,5 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { SectionTitle } from '../../shared/components/section-title/section-title';
@@ -23,7 +23,7 @@ interface Article {
 @Component({
   selector: 'app-blog',
   standalone: true,
-  imports: [CommonModule, FormsModule, SectionTitle, RouterLink, MechanicalGearsComponent],
+  imports: [FormsModule, SectionTitle, RouterLink, MechanicalGearsComponent],
   templateUrl: './blog.html',
   styleUrl: './blog.css',
 })

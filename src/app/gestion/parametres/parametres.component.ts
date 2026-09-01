@@ -1,5 +1,5 @@
 ﻿import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { DepotService, Depot } from '../../services/depot.service';
 import { CategoriePieceService, CategoriePiece } from '../../services/categorie-piece.service';
@@ -8,7 +8,7 @@ import { FicheAtelierConfigService, FicheAtelierConfigBackend, BriqueConfig } fr
 @Component({
   selector: 'app-parametres',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './parametres.component.html'
 })
 export class ParametresComponent implements OnInit {

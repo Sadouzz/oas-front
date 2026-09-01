@@ -1,5 +1,5 @@
 import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { register } from 'swiper/element/bundle';
@@ -16,7 +16,6 @@ register();
   selector: 'app-contact',
   standalone: true,
   imports: [
-    CommonModule,
     RouterModule,
     ReactiveFormsModule,
     IconComponent,
@@ -24,7 +23,7 @@ register();
     TireTrackComponent,
     BoltCornersComponent,
     PistonAccordionComponent
-  ],
+],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './contact.html',
   styleUrl: './contact.css'

@@ -1,10 +1,10 @@
 import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 
 @Component({
   selector: 'app-sheet-metal-card',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './sheet-metal-card.html',
   styleUrl: './sheet-metal-card.css'
 })

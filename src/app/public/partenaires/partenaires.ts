@@ -1,5 +1,5 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { RouterModule } from '@angular/router';
 import { register } from 'swiper/element/bundle';
 
@@ -19,15 +19,14 @@ register();
   selector: 'app-partenaires',
   standalone: true,
   imports: [
-    CommonModule, 
-    RouterModule, 
-    IconComponent, 
+    RouterModule,
+    IconComponent,
     SectionTitle,
     TireTrackComponent,
     SheetMetalCardComponent,
     BoltCornersComponent,
     JerrycanComponent
-  ],
+],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './partenaires.html',
   styleUrls: ['./partenaires.css']

@@ -7,12 +7,12 @@ import {
   Inject,
   PLATFORM_ID
 } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { isPlatformBrowser } from '@angular/common';
 
 @Component({
   selector: 'app-jerrycan',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './jerrycan.html',
   styleUrl: './jerrycan.css',
 })

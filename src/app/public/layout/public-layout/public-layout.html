@@ -1,21 +1,23 @@
 <!-- Wrapper for everything above the footer -->
 <app-wrench-cursor></app-wrench-cursor>
 <div class="relative z-10 bg-slate-50 text-slate-900 font-sans min-h-screen flex flex-col shadow-sm" [style.margin-bottom.px]="footerHeight">
-  
+
   <!-- Header (Algueye Style) -->
   <header class="fixed top-[10px] left-1/2 -translate-x-1/2 w-[calc(100vw-32px)] lg:w-[calc(100vw-64px)] max-w-[1400px] h-[64px] z-[1000] bg-white/70 backdrop-blur-md rounded-full text-oas-navy-dark shadow-lg border border-white/40 overflow-hidden font-sans transition-all duration-300">
     <nav class="flex w-full h-full items-center relative z-10 justify-between lg:justify-start">
 
       <!-- GAUCHE (Desktop) -->
       <div class="hidden lg:flex flex-1 h-full items-center justify-start border-r border-oas-line/40 transition-colors duration-300">
-        <a *ngFor="let link of headerLeftLinks" 
-           [routerLink]="[link.path]" 
-           routerLinkActive="bg-black/5 !text-oas-accent active-link" 
-           [routerLinkActiveOptions]="{exact: !!link.exact}" 
-           class="group/link relative flex h-full grow items-center justify-center px-2 xl:px-4 font-bold uppercase text-[10px] xl:text-xs tracking-widest transition-all duration-300 border-r border-oas-line/40 last:border-r-0 hover:bg-black/5 text-oas-navy-dark">
-          {{ link.label }}
-          <div class="absolute bottom-0 left-0 h-[3px] w-full transition-colors duration-300 bg-transparent group-hover/link:bg-oas-accent group-[.active-link]/link:bg-oas-accent"></div>
-        </a>
+        @for (link of headerLeftLinks; track link) {
+          <a
+            [routerLink]="[link.path]"
+            routerLinkActive="bg-black/5 !text-oas-accent active-link"
+            [routerLinkActiveOptions]="{exact: !!link.exact}"
+            class="group/link relative flex h-full grow items-center justify-center px-2 xl:px-4 font-bold uppercase text-[10px] xl:text-xs tracking-widest transition-all duration-300 border-r border-oas-line/40 last:border-r-0 hover:bg-black/5 text-oas-navy-dark">
+            {{ link.label }}
+            <div class="absolute bottom-0 left-0 h-[3px] w-full transition-colors duration-300 bg-transparent group-hover/link:bg-oas-accent group-[.active-link]/link:bg-oas-accent"></div>
+          </a>
+        }
       </div>
 
       <!-- LOGO CENTRE (Desktop/Mobile) -->
@@ -42,30 +44,38 @@
 
       <!-- DROITE (Desktop) -->
       <div class="hidden lg:flex flex-1 h-full items-center justify-end border-l border-oas-line/40 transition-colors duration-300">
-        <a *ngFor="let link of headerRightLinks" 
-           [routerLink]="[link.path]" 
-           routerLinkActive="bg-black/5 !text-oas-accent active-link" 
-           [routerLinkActiveOptions]="{exact: !!link.exact}" 
-           class="group/link relative flex h-full grow items-center justify-center px-2 xl:px-4 font-bold uppercase text-[10px] xl:text-xs tracking-widest transition-all duration-300 border-r border-oas-line/40 last:border-r-0 hover:bg-black/5 text-oas-navy-dark">
-          {{ link.label }}
-          <div class="absolute bottom-0 left-0 h-[3px] w-full transition-colors duration-300 bg-transparent group-hover/link:bg-oas-accent group-[.active-link]/link:bg-oas-accent"></div>
-        </a>
+        @for (link of headerRightLinks; track link) {
+          <a
+            [routerLink]="[link.path]"
+            routerLinkActive="bg-black/5 !text-oas-accent active-link"
+            [routerLinkActiveOptions]="{exact: !!link.exact}"
+            class="group/link relative flex h-full grow items-center justify-center px-2 xl:px-4 font-bold uppercase text-[10px] xl:text-xs tracking-widest transition-all duration-300 border-r border-oas-line/40 last:border-r-0 hover:bg-black/5 text-oas-navy-dark">
+            {{ link.label }}
+            <div class="absolute bottom-0 left-0 h-[3px] w-full transition-colors duration-300 bg-transparent group-hover/link:bg-oas-accent group-[.active-link]/link:bg-oas-accent"></div>
+          </a>
+        }
       </div>
 
     </nav>
   </header>
 
   <!-- Mobile Menu Overlay -->
-  <div *ngIf="isMenuOpen" class="fixed inset-0 z-[2000] bg-white flex flex-col pt-24 px-6 pb-6 overflow-y-auto animate-slide-in-right">
-    <button (click)="isMenuOpen = false" class="absolute top-6 right-6 p-2 text-oas-navy-dark cursor-pointer">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
-    </button>
-    <div class="flex flex-col gap-6 text-xl md:text-2xl font-bold uppercase tracking-widest mt-8">
-      <a *ngFor="let link of headerLeftLinks" [routerLink]="[link.path]" (click)="isMenuOpen = false" class="text-oas-navy-dark hover:text-oas-accent">{{ link.label }}</a>
-      <hr class="border-oas-line/50 my-2" />
-      <a *ngFor="let link of headerRightLinks" [routerLink]="[link.path]" (click)="isMenuOpen = false" class="text-oas-navy-dark hover:text-oas-accent">{{ link.label }}</a>
+  @if (isMenuOpen) {
+    <div class="fixed inset-0 z-[2000] bg-white flex flex-col pt-24 px-6 pb-6 overflow-y-auto animate-slide-in-right">
+      <button (click)="isMenuOpen = false" class="absolute top-6 right-6 p-2 text-oas-navy-dark cursor-pointer">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <div class="flex flex-col gap-6 text-xl md:text-2xl font-bold uppercase tracking-widest mt-8">
+        @for (link of headerLeftLinks; track link) {
+          <a [routerLink]="[link.path]" (click)="isMenuOpen = false" class="text-oas-navy-dark hover:text-oas-accent">{{ link.label }}</a>
+        }
+        <hr class="border-oas-line/50 my-2" />
+        @for (link of headerRightLinks; track link) {
+          <a [routerLink]="[link.path]" (click)="isMenuOpen = false" class="text-oas-navy-dark hover:text-oas-accent">{{ link.label }}</a>
+        }
+      </div>
     </div>
-  </div>
+  }
 
   <!-- Main Content -->
   <main class="flex-grow">
@@ -85,103 +95,119 @@
 
 </div>
 
-  <!-- Footer -->
-  <!-- Footer (Sibiri Layout, Curtain Effect) -->
-  <footer #footer [ngClass]="isCurtain ? 'lg:fixed lg:bottom-0 lg:left-0' : 'relative'" class="w-full z-0 bg-white">
-    <div class="bg-oas-navy-dark text-white p-6 md:p-8 lg:p-6 lg:pb-4 flex flex-col justify-between relative overflow-hidden">
-        
-        <!-- TOP ROW -->
-        <div class="flex flex-col lg:flex-row justify-between gap-12 w-full flex-1">
-            
-            <!-- Left: Branding -->
-            <div class="flex flex-col lg:w-[55%]">
-                <h2 class="text-5xl md:text-6xl lg:text-6xl font-medium tracking-tighter mb-4 flex items-start leading-none font-sans text-white">
-                    OAS <sup class="text-2xl md:text-4xl mt-2 md:mt-4 ml-2 font-light text-oas-accent">®</sup>
-                </h2>
-                
-                <img src="oas-logo.png" alt="OAS Atelier Logo" class="h-16 md:h-20 lg:h-24 object-contain mb-6 self-start" />
+<!-- Footer -->
+<!-- Footer (Sibiri Layout, Curtain Effect) -->
+<footer #footer [ngClass]="isCurtain ? 'lg:fixed lg:bottom-0 lg:left-0' : 'relative'" class="w-full z-0 bg-white">
+  <div class="bg-oas-navy-dark text-white p-6 md:p-8 lg:p-6 lg:pb-4 flex flex-col justify-between relative overflow-hidden">
 
-                <div class="mt-auto pt-4 lg:pt-6">
-                    <p class="max-w-md text-white/80 text-sm font-sans mb-6 leading-relaxed">
-                        OAS Gestion Atelier est votre partenaire de confiance pour l'entretien et la réparation automobile de pointe, alliant savoir-faire artisanal et technologies modernes.
-                    </p>
-                    <a [href]="'mailto:' + contactInfo.email" class="text-2xl md:text-4xl lg:text-5xl font-medium underline decoration-white/30 underline-offset-[12px] hover:decoration-oas-accent hover:text-oas-accent transition-colors w-max font-sans pb-2">
-                        {{ contactInfo.email }}
-                    </a>
-                </div>
-            </div>
+    <!-- TOP ROW -->
+    <div class="flex flex-col lg:flex-row justify-between gap-12 w-full flex-1">
 
-            <!-- Right: Links & Meta -->
-            <div class="flex flex-col lg:w-[45%] justify-between">
-                
-                <!-- Top right corner (Arrow and Date) -->
-                <div class="hidden lg:flex justify-end items-start mb-8 gap-8 relative">
-                    <div class="flex items-center gap-6 mt-4">
-                        <span class="text-white/80 font-sans text-xl">© 2026</span>
-                        <div class="w-20 h-[3px] bg-oas-accent"></div>
-                    </div>
-                    <button 
-                        onclick="window.scrollTo({ top: 0, behavior: 'smooth' })"
-                        class="w-14 h-14 rounded-full border border-white/30 flex items-center justify-center hover:bg-oas-accent hover:border-oas-accent hover:text-oas-navy-dark transition-colors cursor-pointer"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
-                    </button>
-                </div>
+      <!-- Left: Branding -->
+      <div class="flex flex-col lg:w-[55%]">
+        <h2 class="text-5xl md:text-6xl lg:text-6xl font-medium tracking-tighter mb-4 flex items-start leading-none font-sans text-white">
+          OAS <sup class="text-2xl md:text-4xl mt-2 md:mt-4 ml-2 font-light text-oas-accent">®</sup>
+        </h2>
 
-                <!-- Navigation Columns -->
-                <div class="grid grid-cols-2 lg:grid-cols-5 gap-6 lg:gap-6 mt-6 lg:mt-auto">
-                    <!-- DYNAMIC COLUMNS -->
-                    <div *ngFor="let section of footerSections" class="flex flex-col gap-5">
-                        <h4 class="text-[11px] tracking-widest uppercase text-white/50 font-sans mb-2">{{ section.title }}</h4>
-                        <a *ngFor="let link of section.links" [routerLink]="[link.path]" class="text-sm font-sans font-medium opacity-90 hover:opacity-100 hover:text-oas-accent transition-colors">{{ link.label }}</a>
-                    </div>
+        <img src="oas-logo.png" alt="OAS Atelier Logo" class="h-16 md:h-20 lg:h-24 object-contain mb-6 self-start" />
 
-                    <!-- SOCIAL MEDIA -->
-                    <div class="flex flex-col gap-5 col-span-2 lg:col-span-1">
-                        <h4 class="text-[11px] tracking-widest uppercase text-white/50 font-sans mb-2">Réseaux Sociaux</h4>
-                        <div class="flex gap-3">
-                            <a *ngFor="let social of socialLinks" [href]="social.url" target="_blank" rel="noopener noreferrer" class="w-10 h-10 rounded-full border border-white/30 flex items-center justify-center hover:bg-oas-accent hover:border-oas-accent hover:text-oas-navy-dark transition-colors" [attr.aria-label]="social.label">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <ng-container [ngSwitch]="social.label">
-                                        <path *ngSwitchCase="'Facebook'" d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
-                                        <ng-container *ngSwitchCase="'Instagram'">
-                                            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-                                            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
-                                            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
-                                        </ng-container>
-                                        <path *ngSwitchCase="'TikTok'" d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/>
-                                    </ng-container>
-                                </svg>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="mt-auto pt-4 lg:pt-6">
+          <p class="max-w-md text-white/80 text-sm font-sans mb-6 leading-relaxed">
+            OAS Gestion Atelier est votre partenaire de confiance pour l'entretien et la réparation automobile de pointe, alliant savoir-faire artisanal et technologies modernes.
+          </p>
+          <a [href]="'mailto:' + contactInfo.email" class="text-2xl md:text-4xl lg:text-5xl font-medium underline decoration-white/30 underline-offset-[12px] hover:decoration-oas-accent hover:text-oas-accent transition-colors w-max font-sans pb-2">
+            {{ contactInfo.email }}
+          </a>
+        </div>
+      </div>
+
+      <!-- Right: Links & Meta -->
+      <div class="flex flex-col lg:w-[45%] justify-between">
+
+        <!-- Top right corner (Arrow and Date) -->
+        <div class="hidden lg:flex justify-end items-start mb-8 gap-8 relative">
+          <div class="flex items-center gap-6 mt-4">
+            <span class="text-white/80 font-sans text-xl">© 2026</span>
+            <div class="w-20 h-[3px] bg-oas-accent"></div>
+          </div>
+          <button
+            onclick="window.scrollTo({ top: 0, behavior: 'smooth' })"
+            class="w-14 h-14 rounded-full border border-white/30 flex items-center justify-center hover:bg-oas-accent hover:border-oas-accent hover:text-oas-navy-dark transition-colors cursor-pointer"
+            >
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+          </button>
         </div>
 
-        <!-- BOTTOM INFO -->
-        <div class="mt-6 lg:mt-8 flex flex-col md:flex-row justify-between gap-6 md:gap-4 pb-4">
-            <div class="flex flex-col gap-3">
-                <span class="text-[10px] tracking-[0.2em] uppercase text-white/50">Téléphone</span>
-                <span class="text-xs md:text-sm font-sans uppercase font-medium tracking-wider">{{ contactInfo.phone }}</span>
+        <!-- Navigation Columns -->
+        <div class="grid grid-cols-2 lg:grid-cols-5 gap-6 lg:gap-6 mt-6 lg:mt-auto">
+          <!-- DYNAMIC COLUMNS -->
+          @for (section of footerSections; track section) {
+            <div class="flex flex-col gap-5">
+              <h4 class="text-[11px] tracking-widest uppercase text-white/50 font-sans mb-2">{{ section.title }}</h4>
+              @for (link of section.links; track link) {
+                <a [routerLink]="[link.path]" class="text-sm font-sans font-medium opacity-90 hover:opacity-100 hover:text-oas-accent transition-colors">{{ link.label }}</a>
+              }
             </div>
-            <div class="flex flex-col gap-3 md:items-center">
-                <span class="text-[10px] tracking-[0.2em] uppercase text-white/50">Atelier Principal</span>
-                <span class="text-xs md:text-sm font-sans uppercase font-medium tracking-wider text-left md:text-center" [innerHTML]="contactInfo.addressLine1 + '<br/>' + contactInfo.addressLine2"></span>
-            </div>
-            <div class="flex flex-col gap-3 md:items-end">
-                <span class="text-[10px] tracking-[0.2em] uppercase text-white/50">{{ contactInfo.hoursDays }}</span>
-                <span class="text-xs md:text-sm font-sans uppercase font-medium tracking-wider text-left md:text-right">{{ contactInfo.hoursTime }}</span>
-            </div>
-        </div>
+          }
 
-        <!-- VERY BOTTOM -->
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center text-[10px] uppercase tracking-widest text-white/50 font-sans pt-4 border-t border-white/10 gap-6">
-            <p>© Copyright 2026 OAS Atelier | Tous droits réservés</p>
-            <div class="flex flex-col sm:flex-row gap-4 sm:gap-8 mt-4 sm:mt-0 items-center">
-                <a *ngFor="let legal of legalLinks" [routerLink]="legal.path" class="hover:text-oas-accent transition-colors">{{ legal.label }}</a>
+          <!-- SOCIAL MEDIA -->
+          <div class="flex flex-col gap-5 col-span-2 lg:col-span-1">
+            <h4 class="text-[11px] tracking-widest uppercase text-white/50 font-sans mb-2">Réseaux Sociaux</h4>
+            <div class="flex gap-3">
+              @for (social of socialLinks; track social) {
+                <a [href]="social.url" target="_blank" rel="noopener noreferrer" class="w-10 h-10 rounded-full border border-white/30 flex items-center justify-center hover:bg-oas-accent hover:border-oas-accent hover:text-oas-navy-dark transition-colors" [attr.aria-label]="social.label">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <ng-container>
+                      @switch (social.label) {
+                        @case ('Facebook') {
+                          <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+                        }
+                        @case ('Instagram') {
+                          <ng-container>
+                            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+                          </ng-container>
+                        }
+                        @case ('TikTok') {
+                          <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/>
+                        }
+                      }
+                    </ng-container>
+                  </svg>
+                </a>
+              }
             </div>
+          </div>
         </div>
-
+      </div>
     </div>
-  </footer>
+
+    <!-- BOTTOM INFO -->
+    <div class="mt-6 lg:mt-8 flex flex-col md:flex-row justify-between gap-6 md:gap-4 pb-4">
+      <div class="flex flex-col gap-3">
+        <span class="text-[10px] tracking-[0.2em] uppercase text-white/50">Téléphone</span>
+        <span class="text-xs md:text-sm font-sans uppercase font-medium tracking-wider">{{ contactInfo.phone }}</span>
+      </div>
+      <div class="flex flex-col gap-3 md:items-center">
+        <span class="text-[10px] tracking-[0.2em] uppercase text-white/50">Atelier Principal</span>
+      <span class="text-xs md:text-sm font-sans uppercase font-medium tracking-wider text-left md:text-center" [innerHTML]="contactInfo.addressLine1 + '<br/>' + contactInfo.addressLine2"></span>
+    </div>
+    <div class="flex flex-col gap-3 md:items-end">
+      <span class="text-[10px] tracking-[0.2em] uppercase text-white/50">{{ contactInfo.hoursDays }}</span>
+      <span class="text-xs md:text-sm font-sans uppercase font-medium tracking-wider text-left md:text-right">{{ contactInfo.hoursTime }}</span>
+    </div>
+  </div>
+
+  <!-- VERY BOTTOM -->
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center text-[10px] uppercase tracking-widest text-white/50 font-sans pt-4 border-t border-white/10 gap-6">
+    <p>© Copyright 2026 OAS Atelier | Tous droits réservés</p>
+    <div class="flex flex-col sm:flex-row gap-4 sm:gap-8 mt-4 sm:mt-0 items-center">
+      @for (legal of legalLinks; track legal) {
+        <a [routerLink]="legal.path" class="hover:text-oas-accent transition-colors">{{ legal.label }}</a>
+      }
+    </div>
+  </div>
+
+</div>
+</footer>

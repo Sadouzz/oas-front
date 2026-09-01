@@ -1,5 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormBuilder, FormArray, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -15,8 +15,7 @@ import { LucidePlus, LucideSearch, LucidePackage, LucideTrash2, LucideX, LucideC
 @Component({
   selector: 'app-bons-de-sortie',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, PaginationComponent, AlertComponent,
-    LucidePlus, LucideSearch, LucidePackage, LucideTrash2, LucideX, LucideCheck, LucideCheckCircle, LucideLoader2],
+  imports: [ReactiveFormsModule, FormsModule, PaginationComponent, AlertComponent, LucidePlus, LucideSearch, LucidePackage, LucideTrash2, LucideX, LucideCheck, LucideCheckCircle, LucideLoader2],
   templateUrl: './bons-de-sortie.component.html',
 })
 export class BonsDeSortieComponent implements OnInit {

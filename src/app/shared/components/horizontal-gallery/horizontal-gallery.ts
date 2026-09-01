@@ -1,5 +1,5 @@
 import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy, Input, NgZone } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { RouterLink } from '@angular/router';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -23,7 +23,7 @@ export interface RealisationItem {
 @Component({
   selector: 'app-horizontal-gallery',
   standalone: true,
-  imports: [CommonModule, RouterLink, BoltCornersComponent],
+  imports: [RouterLink, BoltCornersComponent],
   templateUrl: './horizontal-gallery.html',
   styles: []
 })

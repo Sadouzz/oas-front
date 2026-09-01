@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { ClientProfileService } from '../services/client-profile.service';
@@ -14,7 +14,7 @@ function passwordsMatch(control: AbstractControl): ValidationErrors | null {
 @Component({
   selector: 'app-client-settings',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, AlertComponent],
+  imports: [ReactiveFormsModule, AlertComponent],
   templateUrl: './client-settings.component.html',
 })
 export class ClientSettingsComponent {

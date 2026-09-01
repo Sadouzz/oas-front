@@ -1,10 +1,10 @@
 import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 
 @Component({
   selector: 'app-engine-pistons',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './engine-pistons.html',
   styleUrl: './engine-pistons.css',
 })

@@ -1,12 +1,12 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef, Inject, PLATFORM_ID } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { isPlatformBrowser } from '@angular/common';
 import { Router, NavigationStart, NavigationEnd, NavigationCancel, NavigationError, Event } from '@angular/router';
 import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-route-loader',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './route-loader.html',
   styleUrl: './route-loader.css'
 })

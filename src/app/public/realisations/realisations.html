@@ -3,7 +3,7 @@
   <!-- HERO SECTION SLIDER -->
   <section class="relative w-full" style="height: 70vh; min-height: 500px;">
     <swiper-container autoplay-delay="4500" autoplay-disable-on-interaction="false" pagination="true" class="w-full h-full" style="--swiper-navigation-color: #ef1a1a; --swiper-pagination-color: #ef1a1a; height: 100%;">
-      
+
       <!-- Slide 1 -->
       <swiper-slide class="relative w-full h-full flex items-center justify-start px-6 md:px-12 lg:px-24">
         <div class="absolute inset-0 z-0 bg-cover bg-center" style="background-image: radial-gradient(rgba(255,255,255,.14) 1.4px, transparent 1.4px), linear-gradient(135deg, var(--color-oas-navy) 0%, var(--color-oas-navy-dark) 100%);">
@@ -57,7 +57,7 @@
     <div class="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
       <span class="text-[25vw] font-black tracking-tighter whitespace-nowrap">CHIFFRES</span>
     </div>
-    
+
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
       <div class="mb-16 text-center">
         <app-section-title
@@ -69,15 +69,17 @@
         ></app-section-title>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 max-w-[1200px] mx-auto">
-        <div *ngFor="let stat of statistiques">
-          <app-speedometer
-            [value]="stat.value"
-            [suffix]="stat.suffix"
-            [max]="stat.max"
-            [unit]="stat.unit"
-            [label]="stat.label"
-          ></app-speedometer>
-        </div>
+        @for (stat of statistiques; track stat) {
+          <div>
+            <app-speedometer
+              [value]="stat.value"
+              [suffix]="stat.suffix"
+              [max]="stat.max"
+              [unit]="stat.unit"
+              [label]="stat.label"
+            ></app-speedometer>
+          </div>
+        }
       </div>
     </div>
   </section>
@@ -102,22 +104,25 @@
       </div>
 
       <div class="gallery-filters" role="tablist" aria-label="Filtrer la galerie">
-        <button
-          *ngFor="let filter of filters"
-          type="button"
-          class="filter-btn"
-          [class.active]="activeFilter === filter.key"
-          (click)="setFilter(filter.key)">
-          {{ filter.label }}
-        </button>
+        @for (filter of filters; track filter) {
+          <button
+            type="button"
+            class="filter-btn"
+            [class.active]="activeFilter === filter.key"
+            (click)="setFilter(filter.key)">
+            {{ filter.label }}
+          </button>
+        }
       </div>
 
       <div class="gallery-grid">
-        <figure class="gallery-card" *ngFor="let item of filteredGallery">
-          <app-bolt-corners variant="light" [size]="11" [offset]="5"></app-bolt-corners>
-          <img [src]="item.src" [alt]="item.title" loading="lazy">
-          <figcaption>{{ item.title }}</figcaption>
-        </figure>
+        @for (item of filteredGallery; track item) {
+          <figure class="gallery-card">
+            <app-bolt-corners variant="light" [size]="11" [offset]="5"></app-bolt-corners>
+            <img [src]="item.src" [alt]="item.title" loading="lazy">
+            <figcaption>{{ item.title }}</figcaption>
+          </figure>
+        }
       </div>
 
     </div>
@@ -139,37 +144,36 @@
       </div>
 
       <div class="before-after-grid">
-        <div class="flip-card-container" *ngFor="let item of beforeAfterItems">
-          <!-- Vis cruciformes aux 4 coins de chaque flip card -->
-          <app-bolt-corners variant="dark" [size]="12" [offset]="6"></app-bolt-corners>
-          <div class="flip-card-inner">
-            
-            <!-- FRONT (AVANT) -->
-            <div class="flip-card-front">
-              <div class="flip-card-image">
-                <img [src]="item.before" [alt]="'Avant — ' + item.title">
-                <span class="ba-tag ba-tag-before">Avant</span>
+        @for (item of beforeAfterItems; track item) {
+          <div class="flip-card-container">
+            <!-- Vis cruciformes aux 4 coins de chaque flip card -->
+            <app-bolt-corners variant="dark" [size]="12" [offset]="6"></app-bolt-corners>
+            <div class="flip-card-inner">
+              <!-- FRONT (AVANT) -->
+              <div class="flip-card-front">
+                <div class="flip-card-image">
+                  <img [src]="item.before" [alt]="'Avant — ' + item.title">
+                  <span class="ba-tag ba-tag-before">Avant</span>
+                </div>
+                <div class="flip-card-content">
+                  <h3>{{ item.title }}</h3>
+                  <p class="text-oas-accent font-bold text-sm mt-1">Tournez la carte pour voir le résultat ⤵</p>
+                </div>
               </div>
-              <div class="flip-card-content">
-                <h3>{{ item.title }}</h3>
-                <p class="text-oas-accent font-bold text-sm mt-1">Tournez la carte pour voir le résultat ⤵</p>
+              <!-- BACK (APRÈS) -->
+              <div class="flip-card-back">
+                <div class="flip-card-image">
+                  <img [src]="item.after" [alt]="'Après — ' + item.title">
+                  <span class="ba-tag ba-tag-after">Après</span>
+                </div>
+                <div class="flip-card-content">
+                  <h3>Résultat final</h3>
+                  <p>{{ item.description }}</p>
+                </div>
               </div>
             </div>
-
-            <!-- BACK (APRÈS) -->
-            <div class="flip-card-back">
-              <div class="flip-card-image">
-                <img [src]="item.after" [alt]="'Après — ' + item.title">
-                <span class="ba-tag ba-tag-after">Après</span>
-              </div>
-              <div class="flip-card-content">
-                <h3>Résultat final</h3>
-                <p>{{ item.description }}</p>
-              </div>
-            </div>
-
           </div>
-        </div>
+        }
       </div>
 
     </div>
@@ -177,30 +181,30 @@
 
   <!-- TÉMOIGNAGES -->
   <!-- <section class="py-12 bg-white text-oas-navy-dark">
-    <div class="px-6 md:px-12 lg:px-24">
+  <div class="px-6 md:px-12 lg:px-24">
 
-      <div class="w-full text-left">
-        <app-section-title
-          align="left"
-          mainTitle="LA VOIX DE NOS"
-          highlightedText="CLIENTS."
-          subtitle="Témoignages">
-        </app-section-title>
-      </div>
+    <div class="w-full text-left">
+      <app-section-title
+        align="left"
+        mainTitle="LA VOIX DE NOS"
+        highlightedText="CLIENTS."
+        subtitle="Témoignages">
+      </app-section-title>
+    </div>
 
-      <div class="mt-2 mb-16 pb-16 px-4 relative" style="-webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent); mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);">
-        <swiper-container
-          slides-per-view="1.2"
-          space-between="10"
-          loop="false"
-          pagination="true"
-          pagination-clickable="true"
-          mousewheel="true"
-          mousewheel-force-to-axis="true"
-          breakpoints='{"768": {"slidesPerView": 2.2, "spaceBetween": 15}, "1025": {"slidesPerView": 2.7, "spaceBetween": 20}, "1440": {"slidesPerView": 3, "spaceBetween": 25}}'
-          class="w-full pt-6 pb-36"
+    <div class="mt-2 mb-16 pb-16 px-4 relative" style="-webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent); mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);">
+      <swiper-container
+        slides-per-view="1.2"
+        space-between="10"
+        loop="false"
+        pagination="true"
+        pagination-clickable="true"
+        mousewheel="true"
+        mousewheel-force-to-axis="true"
+        breakpoints='{"768": {"slidesPerView": 2.2, "spaceBetween": 15}, "1025": {"slidesPerView": 2.7, "spaceBetween": 20}, "1440": {"slidesPerView": 3, "spaceBetween": 25}}'
+        class="w-full pt-6 pb-36"
         >
-          @for (item of testimonials; track item.id) {
+        @for (item of testimonials; track item.id) {
           <swiper-slide class="h-auto">
             <div class="pt-24 pb-16 h-full">
               <div class="bg-oas-info-bg px-6 pb-10 pt-20 text-center relative h-full flex flex-col">
@@ -217,37 +221,37 @@
               </div>
             </div>
           </swiper-slide>
-          }
-        </swiper-container>
-      </div>
-
+        }
+      </swiper-container>
     </div>
-  </section> -->
 
-  <section class="py-24 lg:py-40 bg-oas-bg text-oas-navy-dark text-center relative overflow-hidden">
-    <!-- Jerrycan interactif en filigrane d'arrière-plan -->
-    <app-jerrycan [opacity]="0.25" [size]="480" class="absolute -right-8 -bottom-8 text-oas-navy-dark pointer-events-none"></app-jerrycan>
+  </div>
+</section> -->
 
-    <div class="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
-      <h1 class="text-[25vw] font-black tracking-tighter whitespace-nowrap">RÉALISATIONS</h1>
+<section class="py-24 lg:py-40 bg-oas-bg text-oas-navy-dark text-center relative overflow-hidden">
+  <!-- Jerrycan interactif en filigrane d'arrière-plan -->
+  <app-jerrycan [opacity]="0.25" [size]="480" class="absolute -right-8 -bottom-8 text-oas-navy-dark pointer-events-none"></app-jerrycan>
+
+  <div class="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+    <h1 class="text-[25vw] font-black tracking-tighter whitespace-nowrap">RÉALISATIONS</h1>
+  </div>
+  <div class="relative z-10 max-w-3xl mx-auto px-6">
+    <app-section-title
+      align="center"
+      theme="light"
+      mainTitle="VOTRE VÉHICULE MÉRITE"
+      highlightedText="LE MÊME SOIN."
+      subtitle="Prêt à nous confier votre voiture ?">
+    </app-section-title>
+    <div class="mt-12">
+      <a routerLink="/rdv" class="inline-flex items-center gap-4 px-10 py-5 bg-oas-navy-dark text-white hover:bg-white hover:text-oas-navy-dark transition-colors duration-300 text-sm font-bold tracking-[0.2em] uppercase shadow-2xl group">
+        Prendre rendez-vous
+        <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </a>
     </div>
-    <div class="relative z-10 max-w-3xl mx-auto px-6">
-      <app-section-title
-        align="center"
-        theme="light"
-        mainTitle="VOTRE VÉHICULE MÉRITE"
-        highlightedText="LE MÊME SOIN."
-        subtitle="Prêt à nous confier votre voiture ?">
-      </app-section-title>
-      <div class="mt-12">
-        <a routerLink="/rdv" class="inline-flex items-center gap-4 px-10 py-5 bg-oas-navy-dark text-white hover:bg-white hover:text-oas-navy-dark transition-colors duration-300 text-sm font-bold tracking-[0.2em] uppercase shadow-2xl group">
-          Prendre rendez-vous
-          <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-          </svg>
-        </a>
-      </div>
-    </div>
-  </section>
+  </div>
+</section>
 
 </section>

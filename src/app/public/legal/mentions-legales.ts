@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { SectionTitle } from '../../shared/components/section-title/section-title';
 
 @Component({
   selector: 'app-mentions-legales',
   standalone: true,
-  imports: [CommonModule, SectionTitle],
+  imports: [SectionTitle],
   template: `
     <section class="py-24 bg-oas-bg min-h-[70vh]">
       <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">

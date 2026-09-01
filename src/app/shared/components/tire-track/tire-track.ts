@@ -7,14 +7,14 @@ import {
   OnInit,
   ChangeDetectorRef,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 
 let nextUniqueId = 0;
 
 @Component({
   selector: 'app-tire-track',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './tire-track.html',
   styleUrl: './tire-track.css',
 })

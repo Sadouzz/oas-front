@@ -64,7 +64,7 @@ export class ProformaComponent implements OnInit {
       const list = d || [];
       // enrich each proforma so the list displays concrete values instead of '-'
       this.proformas = list.map(p => {
-        const copy = { ...p } as ProformaResponse;
+        const copy = { ...p } as unknown as ProformaResponse;
         if (!copy.numero) copy.numero = copy.id ? `DK-${copy.id}` : '';
         if (!copy.date) copy.date = new Date().toISOString();
 
@@ -429,7 +429,7 @@ export class ProformaComponent implements OnInit {
 
     console.log('Sending proforma payload', payload);
     this.errorMessage = null;
-    this.proformaService.create(payload).subscribe({ next: (r) => { this.lastCreated = r; this.creating = false; this.loadProformas(); this.openDetail(r); }, error: (err) => {
+    this.proformaService.create(payload as any).subscribe({ next: (r: any) => { this.lastCreated = r; this.creating = false; this.loadProformas(); this.openDetail(r as unknown as ProformaResponse); }, error: (err) => {
       this.creating = false;
       console.error('Failed to create proforma', err);
       if (err && err.status === 409) {

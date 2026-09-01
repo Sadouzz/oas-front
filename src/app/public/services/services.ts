@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import {
   AfterViewInit,
   Component,
@@ -21,7 +21,6 @@ import { BoltCornersComponent } from '../../shared/components/bolt-corners/bolt-
   selector: 'app-services',
   standalone: true,
   imports: [
-    CommonModule,
     RouterLink,
     ScrollRevealDirective,
     SectionTitle,
@@ -30,7 +29,7 @@ import { BoltCornersComponent } from '../../shared/components/bolt-corners/bolt-
     TireTrackComponent,
     MechanicalGearsComponent,
     BoltCornersComponent
-  ],
+],
   templateUrl: './services.html',
   styleUrl: './services.css',
 })

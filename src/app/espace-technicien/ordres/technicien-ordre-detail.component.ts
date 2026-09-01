@@ -1,5 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -13,7 +13,7 @@ import { RemarqueDiagnostic } from '../../shared/models/ordre-reparation.model';
 @Component({
   selector: 'app-technicien-ordre-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, MediaUploaderComponent],
+  imports: [FormsModule, RouterLink, MediaUploaderComponent],
   templateUrl: './technicien-ordre-detail.component.html',
 })
 export class TechnicienOrdreDetailComponent implements OnInit {

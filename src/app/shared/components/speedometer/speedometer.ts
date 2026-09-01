@@ -7,13 +7,13 @@ import {
   OnInit,
   ChangeDetectorRef,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { BoltCornersComponent } from '../bolt-corners/bolt-corners';
 
 @Component({
   selector: 'app-speedometer',
   standalone: true,
-  imports: [CommonModule, BoltCornersComponent],
+  imports: [BoltCornersComponent],
   templateUrl: './speedometer.html',
   styleUrl: './speedometer.css',
 })

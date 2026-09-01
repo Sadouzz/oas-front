@@ -1,633 +1,639 @@
 <section class="rdv-page">
 
-    <!-- HERO -->
-    <section class="hero">
- 
-        <!-- Vidéo de fond (visible en desktop/tablette, masquée sur mobile via le CSS) -->
-        <video
-            class="hero-video"
-            autoplay
-            muted
-            loop
-            playsinline
-            poster="/assets/images/partenaires/hero1.jpg">
- 
-            <source src="/assets/videos/rdv-hero.mp4" type="video/mp4">
- 
-        </video>
+  <!-- HERO -->
+  <section class="hero">
 
-        <div class="hero-overlay"></div>
+    <!-- Vidéo de fond (visible en desktop/tablette, masquée sur mobile via le CSS) -->
+    <video
+      class="hero-video"
+      autoplay
+      muted
+      loop
+      playsinline
+      poster="/assets/images/partenaires/hero1.jpg">
 
-        <div class="container">
+      <source src="/assets/videos/rdv-hero.mp4" type="video/mp4">
 
-            <div class="hero-content">
+    </video>
 
-                <app-section-title 
-                    mainTitle="Prenez rendez-vous"
-                    highlightedText="en toute simplicité."
-                    subtitle="Réservation en ligne"
-                    align="left"
-                    theme="dark"
-                ></app-section-title>
+    <div class="hero-overlay"></div>
 
-                <p>
-                    Prenez rendez-vous avec nos techniciens en quelques clics.
-                    Connectez-vous à votre espace client ou créez gratuitement
-                    votre compte afin de suivre toutes vos interventions.
-                </p>
+    <div class="container">
 
-                <div class="hero-buttons">
-                    <button class="btn-primary" (click)="demanderRdv()">
-                        Demander un rdv
-                    </button>
-                </div>
+      <div class="hero-content">
 
-            </div>
+        <app-section-title
+          mainTitle="Prenez rendez-vous"
+          highlightedText="en toute simplicité."
+          subtitle="Réservation en ligne"
+          align="left"
+          theme="dark"
+        ></app-section-title>
+
+        <p>
+          Prenez rendez-vous avec nos techniciens en quelques clics.
+          Connectez-vous à votre espace client ou créez gratuitement
+          votre compte afin de suivre toutes vos interventions.
+        </p>
+
+        <div class="hero-buttons">
+          <button class="btn-primary" (click)="demanderRdv()">
+            Demander un rdv
+          </button>
         </div>
-    </section>
 
-    <!-- Tire Track Separator 1 -->
-    <div class="py-4 bg-oas-bg border-t border-oas-line overflow-hidden">
-        <app-tire-track [opacity]="0.45" rotation="-1.5deg" variant="horizontal" align="center"></app-tire-track>
+      </div>
     </div>
+  </section>
 
-    <!-- ETAPES -->
-    <section class="steps-section">
-        <div class="container">
+  <!-- Tire Track Separator 1 -->
+  <div class="py-4 bg-oas-bg border-t border-oas-line overflow-hidden">
+    <app-tire-track [opacity]="0.45" rotation="-1.5deg" variant="horizontal" align="center"></app-tire-track>
+  </div>
 
-            <div class="mb-12">
-                <app-section-title 
-                    mainTitle="Comment ça"
-                    highlightedText="fonctionne ?"
-                    subtitle="Réservation"
-                    align="center"
-                    theme="light"
-                ></app-section-title>
-            </div>
+  <!-- ETAPES -->
+  <section class="steps-section">
+    <div class="container">
 
-            <div class="steps">
+      <div class="mb-12">
+        <app-section-title
+          mainTitle="Comment ça"
+          highlightedText="fonctionne ?"
+          subtitle="Réservation"
+          align="center"
+          theme="light"
+        ></app-section-title>
+      </div>
 
-                <div class="step">
-                    <div class="step-icon">
-                        <app-icon name="user-plus" [size]="34"></app-icon>
-                    </div>
-                    <h3>Créer un compte</h3>
-                    <p>
-                        Inscrivez-vous gratuitement
-                        afin d'accéder à votre espace client.
-                    </p>
-                </div>
+      <div class="steps">
 
-                <div class="step-line"></div>
-
-                <div class="step">
-                    <div class="step-icon">
-                        <app-icon name="calendar-check" [size]="34"></app-icon>
-                    </div>
-                    <h3>Choisir un créneau</h3>
-                    <p>
-                        Sélectionnez la date,
-                        le service et l'heure
-                        qui vous conviennent.
-                    </p>
-                </div>
-
-                <div class="step-line"></div>
-
-                <div class="step">
-                    <div class="step-icon">
-                        <app-icon name="check-circle" [size]="34"></app-icon>
-                    </div>
-                    <h3>Confirmation</h3>
-                    <p>
-                        Recevez immédiatement
-                        la confirmation
-                        de votre réservation.
-                    </p>
-                </div>
-
-            </div>
+        <div class="step">
+          <div class="step-icon">
+            <app-icon name="user-plus" [size]="34"></app-icon>
+          </div>
+          <h3>Créer un compte</h3>
+          <p>
+            Inscrivez-vous gratuitement
+            afin d'accéder à votre espace client.
+          </p>
         </div>
-    </section>
 
-    <!-- Tire Track Separator 2 -->
-    <div class="py-4 bg-oas-bg border-t border-oas-line overflow-hidden">
-        <app-tire-track [opacity]="0.45" rotation="1.5deg" variant="horizontal" align="center"></app-tire-track>
+        <div class="step-line"></div>
+
+        <div class="step">
+          <div class="step-icon">
+            <app-icon name="calendar-check" [size]="34"></app-icon>
+          </div>
+          <h3>Choisir un créneau</h3>
+          <p>
+            Sélectionnez la date,
+            le service et l'heure
+            qui vous conviennent.
+          </p>
+        </div>
+
+        <div class="step-line"></div>
+
+        <div class="step">
+          <div class="step-icon">
+            <app-icon name="check-circle" [size]="34"></app-icon>
+          </div>
+          <h3>Confirmation</h3>
+          <p>
+            Recevez immédiatement
+            la confirmation
+            de votre réservation.
+          </p>
+        </div>
+
+      </div>
     </div>
+  </section>
 
-    <!-- POURQUOI CHOISIR OAS -->
-    <section class="advantages-section">
-        <div class="advantages-bg"></div>
-        <div class="container">
+  <!-- Tire Track Separator 2 -->
+  <div class="py-4 bg-oas-bg border-t border-oas-line overflow-hidden">
+    <app-tire-track [opacity]="0.45" rotation="1.5deg" variant="horizontal" align="center"></app-tire-track>
+  </div>
 
-            <div class="mb-12 max-w-3xl mx-auto text-center">
-                <div class="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
-                    <h1 class="text-[30vw] font-black tracking-tighter whitespace-nowrap">POURQUOI OAS ?</h1>
-                </div>
-                <app-section-title 
-                    mainTitle="Votre véhicule mérite une expertise"
-                    highlightedText="de qualité"
-                    subtitle="Pourquoi OAS ?"
-                    align="center"
-                    theme="accent"
-                ></app-section-title>
-                <p class="mt-4 text-white/90">
-                    Chez Orient Auto Service, nous mettons tout en œuvre
-                    pour offrir un service rapide, fiable et transparent.
-                </p>
-            </div>
+  <!-- POURQUOI CHOISIR OAS -->
+  <section class="advantages-section">
+    <div class="advantages-bg"></div>
+    <div class="container">
 
-            <div class="advantages-grid">
-                <app-sheet-metal-card *ngFor="let service of services" [title]="service.titre" [subtitle]="''" [hasWeld]="true" class="text-left hover:-translate-y-2 transition-transform duration-300 block">
-                    <div class="advantage-icon mb-4">
-                        <app-icon [name]="service.icone" [size]="32"></app-icon>
-                    </div>
-                    <p class="text-white/80 leading-relaxed font-light text-sm">{{service.description}}</p>
-                </app-sheet-metal-card>
-            </div>
-
+      <div class="mb-12 max-w-3xl mx-auto text-center">
+        <div class="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+          <h1 class="text-[30vw] font-black tracking-tighter whitespace-nowrap">POURQUOI OAS ?</h1>
         </div>
-    </section>
+        <app-section-title
+          mainTitle="Votre véhicule mérite une expertise"
+          highlightedText="de qualité"
+          subtitle="Pourquoi OAS ?"
+          align="center"
+          theme="accent"
+        ></app-section-title>
+        <p class="mt-4 text-white/90">
+          Chez Orient Auto Service, nous mettons tout en œuvre
+          pour offrir un service rapide, fiable et transparent.
+        </p>
+      </div>
 
-    <!-- Tire Track Separator 3 -->
-    <div class="py-4 bg-oas-bg border-t border-oas-line overflow-hidden">
-        <app-tire-track [opacity]="0.45" rotation="-1.8deg" variant="horizontal" align="center"></app-tire-track>
+      <div class="advantages-grid">
+        @for (service of services; track service) {
+          <app-sheet-metal-card [title]="service.titre" [subtitle]="''" [hasWeld]="true" class="text-left hover:-translate-y-2 transition-transform duration-300 block">
+            <div class="advantage-icon mb-4">
+              <app-icon [name]="service.icone" [size]="32"></app-icon>
+            </div>
+            <p class="text-white/80 leading-relaxed font-light text-sm">{{service.description}}</p>
+          </app-sheet-metal-card>
+        }
+      </div>
+
     </div>
+  </section>
 
-    <!-- ESPACE CLIENT -->
-    <section class="benefits-section">
-        <div class="benefits-bg"></div>
-        <div class="container">
+  <!-- Tire Track Separator 3 -->
+  <div class="py-4 bg-oas-bg border-t border-oas-line overflow-hidden">
+    <app-tire-track [opacity]="0.45" rotation="-1.8deg" variant="horizontal" align="center"></app-tire-track>
+  </div>
 
-            <div class="mb-12">
-                <app-section-title 
-                    mainTitle="Pourquoi créer"
-                    highlightedText="un compte ?"
-                    subtitle="Espace client"
-                    align="center"
-                    theme="light"
-                ></app-section-title>
+  <!-- ESPACE CLIENT -->
+  <section class="benefits-section">
+    <div class="benefits-bg"></div>
+    <div class="container">
+
+      <div class="mb-12">
+        <app-section-title
+          mainTitle="Pourquoi créer"
+          highlightedText="un compte ?"
+          subtitle="Espace client"
+          align="center"
+          theme="light"
+        ></app-section-title>
+      </div>
+
+      <div class="benefits-grid">
+        @for (avantage of avantages; track avantage) {
+          <div class="benefit-card relative overflow-hidden">
+            <app-bolt-corners variant="dark" [size]="10" [offset]="4"></app-bolt-corners>
+            <div class="benefit-icon">
+              <app-icon [name]="avantage.icone" [size]="26"></app-icon>
             </div>
-
-            <div class="benefits-grid">
-                <div class="benefit-card relative overflow-hidden" *ngFor="let avantage of avantages">
-                    <app-bolt-corners variant="dark" [size]="10" [offset]="4"></app-bolt-corners>
-                    <div class="benefit-icon">
-                        <app-icon [name]="avantage.icone" [size]="26"></app-icon>
-                    </div>
-                    <div>
-                        <h3>{{avantage.titre}}</h3>
-                        <p>{{avantage.description}}</p>
-                    </div>
-                </div>
+            <div>
+              <h3>{{avantage.titre}}</h3>
+              <p>{{avantage.description}}</p>
             </div>
+          </div>
+        }
+      </div>
 
-        </div>
-    </section>
-
-    <!-- Tire Track Separator 4 -->
-    <div class="py-4 bg-oas-bg border-t border-oas-line overflow-hidden">
-        <app-tire-track [opacity]="0.45" rotation="1.2deg" variant="horizontal" align="center"></app-tire-track>
     </div>
+  </section>
 
-    <!-- STATISTIQUES -->
-    <section class="py-24 bg-oas-navy-dark text-white relative overflow-hidden">
-        <div class="absolute inset-0 flex items-center text-oas-accent justify-center opacity-10 pointer-events-none">
-            <h1 class="text-[30vw] font-black tracking-tighter whitespace-nowrap">STATISTIQUES</h1>
-        </div>
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div class="mb-16 text-center">
-                <app-section-title 
-                    mainTitle="Des chiffres qui"
-                    highlightedText="parlent d'eux-mêmes."
-                    subtitle="Notre engagement"
-                    align="center"
-                    theme="dark"
-                ></app-section-title>
-                <p class="mt-4 text-white/80 text-lg max-w-2xl mx-auto">
-                    Découvrez l'impact de notre expertise et la confiance que nous accordent nos clients chaque jour.
-                </p>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-12 text-center">
-                <div *ngFor="let stat of statistiques">
-                    <app-speedometer
-                        [value]="stat.value"
-                        [suffix]="stat.suffix"
-                        [max]="stat.max"
-                        [unit]="stat.unit"
-                        [label]="stat.label"
-                    ></app-speedometer>
-                </div>
-            </div>
-        </div>
-    </section>
+  <!-- Tire Track Separator 4 -->
+  <div class="py-4 bg-oas-bg border-t border-oas-line overflow-hidden">
+    <app-tire-track [opacity]="0.45" rotation="1.2deg" variant="horizontal" align="center"></app-tire-track>
+  </div>
 
-    <!-- Tire Track Separator 5 -->
-    <div class="py-4 bg-oas-bg border-t border-oas-line overflow-hidden">
-        <app-tire-track [opacity]="0.45" rotation="-1.6deg" variant="horizontal" align="center"></app-tire-track>
+  <!-- STATISTIQUES -->
+  <section class="py-24 bg-oas-navy-dark text-white relative overflow-hidden">
+    <div class="absolute inset-0 flex items-center text-oas-accent justify-center opacity-10 pointer-events-none">
+      <h1 class="text-[30vw] font-black tracking-tighter whitespace-nowrap">STATISTIQUES</h1>
     </div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div class="mb-16 text-center">
+        <app-section-title
+          mainTitle="Des chiffres qui"
+          highlightedText="parlent d'eux-mêmes."
+          subtitle="Notre engagement"
+          align="center"
+          theme="dark"
+        ></app-section-title>
+        <p class="mt-4 text-white/80 text-lg max-w-2xl mx-auto">
+          Découvrez l'impact de notre expertise et la confiance que nous accordent nos clients chaque jour.
+        </p>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-12 text-center">
+        @for (stat of statistiques; track stat) {
+          <div>
+            <app-speedometer
+              [value]="stat.value"
+              [suffix]="stat.suffix"
+              [max]="stat.max"
+              [unit]="stat.unit"
+              [label]="stat.label"
+            ></app-speedometer>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
 
-    <!-- APPEL A L'ACTION -->
-    <section class="py-24 lg:py-40 bg-white text-center relative overflow-hidden">
-        <div class="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
-            <h1 class="text-[15vw] font-black tracking-tighter whitespace-nowrap text-oas-navy-dark">RÉSERVEZ</h1>
-        </div>
-        <div class="relative z-10 max-w-3xl mx-auto px-6">
-            <app-section-title 
-                align="center"
-                theme="light"
-                mainTitle="VOTRE PROCHAIN ENTRETIEN" 
-                highlightedText="N'EST QU'À QUELQUES CLICS." 
-                subtitle="Réservez maintenant">
-            </app-section-title>
-            <p class="mt-6 text-oas-navy-dark/80 text-lg">
-                Demandez un rendez-vous dès maintenant pour votre prochain entretien.
-            </p>
-            <div class="mt-12 flex flex-col sm:flex-row justify-center gap-6">
-                <button (click)="demanderRdv()" class="inline-flex items-center justify-center gap-4 px-10 py-5 bg-oas-navy-dark text-white hover:bg-oas-accent transition-colors duration-300 text-sm font-bold tracking-[0.2em] uppercase shadow-2xl rounded-none">
-                    Demander un rdv
-                </button>
-            </div>
-        </div>
-    </section>
+  <!-- Tire Track Separator 5 -->
+  <div class="py-4 bg-oas-bg border-t border-oas-line overflow-hidden">
+    <app-tire-track [opacity]="0.45" rotation="-1.6deg" variant="horizontal" align="center"></app-tire-track>
+  </div>
+
+  <!-- APPEL A L'ACTION -->
+  <section class="py-24 lg:py-40 bg-white text-center relative overflow-hidden">
+    <div class="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
+      <h1 class="text-[15vw] font-black tracking-tighter whitespace-nowrap text-oas-navy-dark">RÉSERVEZ</h1>
+    </div>
+    <div class="relative z-10 max-w-3xl mx-auto px-6">
+      <app-section-title
+        align="center"
+        theme="light"
+        mainTitle="VOTRE PROCHAIN ENTRETIEN"
+        highlightedText="N'EST QU'À QUELQUES CLICS."
+        subtitle="Réservez maintenant">
+      </app-section-title>
+      <p class="mt-6 text-oas-navy-dark/80 text-lg">
+        Demandez un rendez-vous dès maintenant pour votre prochain entretien.
+      </p>
+      <div class="mt-12 flex flex-col sm:flex-row justify-center gap-6">
+        <button (click)="demanderRdv()" class="inline-flex items-center justify-center gap-4 px-10 py-5 bg-oas-navy-dark text-white hover:bg-oas-accent transition-colors duration-300 text-sm font-bold tracking-[0.2em] uppercase shadow-2xl rounded-none">
+          Demander un rdv
+        </button>
+      </div>
+    </div>
+  </section>
 
 </section>
 
 @if(showModal){
-    <div class="modal-overlay" (click)="closeModal()">
-        <div class="auth-modal" (click)="$event.stopPropagation()">
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="auth-modal" (click)="$event.stopPropagation()">
 
-            <button class="close-modal" (click)="closeModal()" aria-label="Fermer">×</button>
+      <button class="close-modal" (click)="closeModal()" aria-label="Fermer">×</button>
 
 
 
-            <!-- Messages -->
-            @if(errorMessage){
-                <div class="form-banner form-banner-error">
-                    <i class="fa-solid fa-circle-exclamation"></i>
-                    {{ errorMessage }}
+      <!-- Messages -->
+      @if(errorMessage){
+        <div class="form-banner form-banner-error">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          {{ errorMessage }}
+        </div>
+      }
+      @if(successMessage){
+        <div class="form-banner form-banner-success">
+          <i class="fa-solid fa-circle-check"></i>
+          {{ successMessage }}
+        </div>
+      }
+
+      <!-- ===================== FORMULAIRE WHATSAPP ===================== -->
+      <form class="auth-form" [formGroup]="rdvWhatsappForm" (ngSubmit)="onSubmitRdvWhatsapp()" novalidate>
+
+        <h2>Demander un rendez-vous</h2>
+        <p class="auth-subtitle">Remplissez ces informations pour envoyer votre demande par WhatsApp.</p>
+
+        <!-- Ligne 1 : Nom complet & Téléphone -->
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="rdv-nom">Nom complet <span class="text-rose-500">*</span></label>
+            <div class="input-icon">
+              <input
+                id="rdv-nom"
+                type="text"
+                formControlName="nom"
+                placeholder="ex: Jean Dupont"
+                [class.is-invalid]="rdvWhatsappForm.get('nom')?.invalid && rdvWhatsappForm.get('nom')?.touched">
+              </div>
+              @if(rdvWhatsappForm.get('nom')?.invalid && rdvWhatsappForm.get('nom')?.touched){
+                <span class="form-error">Nom requis (2 caractères min.)</span>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="rdv-tel">Téléphone <span class="text-rose-500">*</span></label>
+              <div class="input-icon">
+                <input
+                  id="rdv-tel"
+                  type="tel"
+                  formControlName="telephone"
+                  placeholder="ex: 77 123 45 67"
+                  [class.is-invalid]="rdvWhatsappForm.get('telephone')?.invalid && rdvWhatsappForm.get('telephone')?.touched">
                 </div>
-            }
-            @if(successMessage){
-                <div class="form-banner form-banner-success">
-                    <i class="fa-solid fa-circle-check"></i>
-                    {{ successMessage }}
-                </div>
-            }
+                @if(rdvWhatsappForm.get('telephone')?.invalid && rdvWhatsappForm.get('telephone')?.touched){
+                  <span class="form-error">Téléphone requis.</span>
+                }
+              </div>
+            </div>
 
-            <!-- ===================== FORMULAIRE WHATSAPP ===================== -->
-            <form class="auth-form" [formGroup]="rdvWhatsappForm" (ngSubmit)="onSubmitRdvWhatsapp()" novalidate>
-
-                <h2>Demander un rendez-vous</h2>
-                <p class="auth-subtitle">Remplissez ces informations pour envoyer votre demande par WhatsApp.</p>
-
-                <!-- Ligne 1 : Nom complet & Téléphone -->
-                <div class="form-grid-2">
-                    <div class="form-group">
-                        <label for="rdv-nom">Nom complet <span class="text-rose-500">*</span></label>
-                        <div class="input-icon">
-                            <input
-                                id="rdv-nom"
-                                type="text"
-                                formControlName="nom"
-                                placeholder="ex: Jean Dupont"
-                                [class.is-invalid]="rdvWhatsappForm.get('nom')?.invalid && rdvWhatsappForm.get('nom')?.touched">
-                        </div>
-                        @if(rdvWhatsappForm.get('nom')?.invalid && rdvWhatsappForm.get('nom')?.touched){
-                            <span class="form-error">Nom requis (2 caractères min.)</span>
-                        }
-                    </div>
-
-                    <div class="form-group">
-                        <label for="rdv-tel">Téléphone <span class="text-rose-500">*</span></label>
-                        <div class="input-icon">
-                            <input
-                                id="rdv-tel"
-                                type="tel"
-                                formControlName="telephone"
-                                placeholder="ex: 77 123 45 67"
-                                [class.is-invalid]="rdvWhatsappForm.get('telephone')?.invalid && rdvWhatsappForm.get('telephone')?.touched">
-                        </div>
-                        @if(rdvWhatsappForm.get('telephone')?.invalid && rdvWhatsappForm.get('telephone')?.touched){
-                            <span class="form-error">Téléphone requis.</span>
-                        }
-                    </div>
+            <!-- Ligne 2 : Véhicule & Motif -->
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label for="rdv-vehicule">Marque et Modèle <span class="text-rose-500">*</span></label>
+                <div class="input-icon">
+                  <input
+                    id="rdv-vehicule"
+                    type="text"
+                    formControlName="vehicule"
+                    placeholder="ex: Toyota Hilux..."
+                    [class.is-invalid]="rdvWhatsappForm.get('vehicule')?.invalid && rdvWhatsappForm.get('vehicule')?.touched">
+                  </div>
+                  @if(rdvWhatsappForm.get('vehicule')?.invalid && rdvWhatsappForm.get('vehicule')?.touched){
+                    <span class="form-error">Véhicule requis.</span>
+                  }
                 </div>
 
-                <!-- Ligne 2 : Véhicule & Motif -->
-                <div class="form-grid-2">
-                    <div class="form-group">
-                        <label for="rdv-vehicule">Marque et Modèle <span class="text-rose-500">*</span></label>
-                        <div class="input-icon">
-                            <input
-                                id="rdv-vehicule"
-                                type="text"
-                                formControlName="vehicule"
-                                placeholder="ex: Toyota Hilux..."
-                                [class.is-invalid]="rdvWhatsappForm.get('vehicule')?.invalid && rdvWhatsappForm.get('vehicule')?.touched">
-                        </div>
-                        @if(rdvWhatsappForm.get('vehicule')?.invalid && rdvWhatsappForm.get('vehicule')?.touched){
-                            <span class="form-error">Véhicule requis.</span>
-                        }
+                <div class="form-group">
+                  <label for="rdv-motif">Motif / Prestation <span class="text-rose-500">*</span></label>
+                  <div class="input-icon">
+                    <input
+                      id="rdv-motif"
+                      type="text"
+                      formControlName="motif"
+                      placeholder="ex: Révision, Vidange..."
+                      [class.is-invalid]="rdvWhatsappForm.get('motif')?.invalid && rdvWhatsappForm.get('motif')?.touched">
                     </div>
-
-                    <div class="form-group">
-                        <label for="rdv-motif">Motif / Prestation <span class="text-rose-500">*</span></label>
-                        <div class="input-icon">
-                            <input
-                                id="rdv-motif"
-                                type="text"
-                                formControlName="motif"
-                                placeholder="ex: Révision, Vidange..."
-                                [class.is-invalid]="rdvWhatsappForm.get('motif')?.invalid && rdvWhatsappForm.get('motif')?.touched">
-                        </div>
-                        @if(rdvWhatsappForm.get('motif')?.invalid && rdvWhatsappForm.get('motif')?.touched){
-                            <span class="form-error">Motif requis.</span>
-                        }
-                    </div>
+                    @if(rdvWhatsappForm.get('motif')?.invalid && rdvWhatsappForm.get('motif')?.touched){
+                      <span class="form-error">Motif requis.</span>
+                    }
+                  </div>
                 </div>
 
                 <!-- Ligne 3 : Date & Heure -->
                 <div class="form-grid-2">
-                    <div class="form-group">
-                        <label for="rdv-date">Date souhaitée <span class="text-rose-500">*</span></label>
-                        <div class="input-icon">
-                            <input
-                                id="rdv-date"
-                                type="date"
-                                formControlName="date"
-                                [class.is-invalid]="rdvWhatsappForm.get('date')?.invalid && rdvWhatsappForm.get('date')?.touched">
-                        </div>
-                        @if(rdvWhatsappForm.get('date')?.invalid && rdvWhatsappForm.get('date')?.touched){
-                            <span class="form-error">Date requise.</span>
-                        }
+                  <div class="form-group">
+                    <label for="rdv-date">Date souhaitée <span class="text-rose-500">*</span></label>
+                    <div class="input-icon">
+                      <input
+                        id="rdv-date"
+                        type="date"
+                        formControlName="date"
+                        [class.is-invalid]="rdvWhatsappForm.get('date')?.invalid && rdvWhatsappForm.get('date')?.touched">
+                      </div>
+                      @if(rdvWhatsappForm.get('date')?.invalid && rdvWhatsappForm.get('date')?.touched){
+                        <span class="form-error">Date requise.</span>
+                      }
                     </div>
 
                     <div class="form-group">
-                        <label for="rdv-heure">Heure souhaitée <span class="text-rose-500">*</span></label>
-                        <div class="input-icon">
-                            <input
-                                id="rdv-heure"
-                                type="time"
-                                formControlName="heure"
-                                [class.is-invalid]="rdvWhatsappForm.get('heure')?.invalid && rdvWhatsappForm.get('heure')?.touched">
+                      <label for="rdv-heure">Heure souhaitée <span class="text-rose-500">*</span></label>
+                      <div class="input-icon">
+                        <input
+                          id="rdv-heure"
+                          type="time"
+                          formControlName="heure"
+                          [class.is-invalid]="rdvWhatsappForm.get('heure')?.invalid && rdvWhatsappForm.get('heure')?.touched">
                         </div>
                         @if(rdvWhatsappForm.get('heure')?.invalid && rdvWhatsappForm.get('heure')?.touched){
-                            <span class="form-error">Heure requise.</span>
+                          <span class="form-error">Heure requise.</span>
                         }
+                      </div>
                     </div>
-                </div>
 
-                <!-- Ligne 4 : Remarques / Compléments -->
-                <div class="form-group">
-                    <label for="rdv-note">Informations complémentaires</label>
-                    <div class="input-icon textarea-icon">
+                    <!-- Ligne 4 : Remarques / Compléments -->
+                    <div class="form-group">
+                      <label for="rdv-note">Informations complémentaires</label>
+                      <div class="input-icon textarea-icon">
                         <textarea
-                            id="rdv-note"
-                            formControlName="note"
-                            rows="3"
-                            placeholder="Précisez d'autres détails ou vos disponibilités particulières..."
+                          id="rdv-note"
+                          formControlName="note"
+                          rows="3"
+                          placeholder="Précisez d'autres détails ou vos disponibilités particulières..."
                         ></textarea>
+                      </div>
                     </div>
-                </div>
 
-                <!-- Bouton Envoyer WhatsApp -->
-                <button type="submit"
-                    class="w-full py-3.5 px-6 rounded-xl bg-[#25D366] hover:bg-[#20ba59] active:scale-[0.99] text-white font-bold text-base flex items-center justify-center gap-2.5 transition shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/35 cursor-pointer mt-4">
-                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                    <!-- Bouton Envoyer WhatsApp -->
+                    <button type="submit"
+                      class="w-full py-3.5 px-6 rounded-xl bg-[#25D366] hover:bg-[#20ba59] active:scale-[0.99] text-white font-bold text-base flex items-center justify-center gap-2.5 transition shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/35 cursor-pointer mt-4">
+                      <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
                         <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
-                    </svg>
-                    <span>Envoyer la demande sur WhatsApp</span>
-                </button>
+                      </svg>
+                      <span>Envoyer la demande sur WhatsApp</span>
+                    </button>
 
-            </form>
+                  </form>
 
-            <!-- 
-            ========================================================================
-            ANCIEN FORMULAIRE DE CONNEXION / INSCRIPTION (DÉSACTIVÉ)
-            ========================================================================
-            Pour réactiver, retirez les commentaires HTML et ajustez le code TS si nécessaire.
+                  <!--
+                  ========================================================================
+                  ANCIEN FORMULAIRE DE CONNEXION / INSCRIPTION (DÉSACTIVÉ)
+                  ========================================================================
+                  Pour réactiver, retirez les commentaires HTML et ajustez le code TS si nécessaire.
 
-            _if(activeTab === 'login'){
+                  _if(activeTab === 'login'){
 
-                <form class="auth-form" [formGroup]="loginForm" (ngSubmit)="onSubmitLogin()" novalidate>
+                  <form class="auth-form" [formGroup]="loginForm" (ngSubmit)="onSubmitLogin()" novalidate>
 
                     <h2>Ravi de vous revoir</h2>
                     <p class="auth-subtitle">Connectez-vous à votre espace client OAS.</p>
 
                     <div class="form-group">
-                        <label for="login-email">Adresse e-mail</label>
-                        <div class="input-icon">
-                            <i class="fa-solid fa-envelope"></i>
-                            <input
-                                id="login-email"
-                                type="email"
-                                formControlName="email"
-                                placeholder="vous@exemple.com"
-                                [class.is-invalid]="lf['email'].invalid && lf['email'].touched">
+                      <label for="login-email">Adresse e-mail</label>
+                      <div class="input-icon">
+                        <i class="fa-solid fa-envelope"></i>
+                        <input
+                          id="login-email"
+                          type="email"
+                          formControlName="email"
+                          placeholder="vous@exemple.com"
+                          [class.is-invalid]="lf['email'].invalid && lf['email'].touched">
                         </div>
                         _if(lf['email'].invalid && lf['email'].touched){
-                            <span class="form-error">
-                                _if(lf['email'].errors?.['required']){ L'adresse e-mail est requise. }
-                                _if(lf['email'].errors?.['email']){ Veuillez saisir une adresse e-mail valide. }
-                            </span>
-                        }
+                        <span class="form-error">
+                          _if(lf['email'].errors?.['required']){ L'adresse e-mail est requise. }
+                          _if(lf['email'].errors?.['email']){ Veuillez saisir une adresse e-mail valide. }
+                        </span>
+                      }
                     </div>
 
                     <div class="form-group">
-                        <label for="login-password">Mot de passe</label>
-                        <div class="input-icon">
-                            <i class="fa-solid fa-lock"></i>
-                            <input
-                                id="login-password"
-                                autocomplete="current-password"
-                                [type]="showLoginPassword ? 'text' : 'password'"
-                                formControlName="motDePasse"
-                                placeholder="••••••••"
-                                [class.is-invalid]="lf['motDePasse'].invalid && lf['motDePasse'].touched">
-                            <button type="button" class="toggle-visibility" (click)="showLoginPassword = !showLoginPassword" aria-label="Afficher le mot de passe">
-                                <i class="fa-solid" [class.fa-eye]="!showLoginPassword" [class.fa-eye-slash]="showLoginPassword"></i>
-                            </button>
+                      <label for="login-password">Mot de passe</label>
+                      <div class="input-icon">
+                        <i class="fa-solid fa-lock"></i>
+                        <input
+                          id="login-password"
+                          autocomplete="current-password"
+                          [type]="showLoginPassword ? 'text' : 'password'"
+                          formControlName="motDePasse"
+                          placeholder="••••••••"
+                          [class.is-invalid]="lf['motDePasse'].invalid && lf['motDePasse'].touched">
+                          <button type="button" class="toggle-visibility" (click)="showLoginPassword = !showLoginPassword" aria-label="Afficher le mot de passe">
+                            <i class="fa-solid" [class.fa-eye]="!showLoginPassword" [class.fa-eye-slash]="showLoginPassword"></i>
+                          </button>
                         </div>
                         _if(lf['motDePasse'].invalid && lf['motDePasse'].touched){
-                            <span class="form-error">
-                                _if(lf['motDePasse'].errors?.['required']){ Le mot de passe est requis. }
-                                _if(lf['motDePasse'].errors?.['minlength']){ 6 caractères minimum. }
-                            </span>
-                        }
+                        <span class="form-error">
+                          _if(lf['motDePasse'].errors?.['required']){ Le mot de passe est requis. }
+                          _if(lf['motDePasse'].errors?.['minlength']){ 6 caractères minimum. }
+                        </span>
+                      }
                     </div>
 
                     <div class="form-row-between">
-                        <label class="form-checkbox">
-                            <input type="checkbox" formControlName="seSouvenir">
-                            <span>Se souvenir de moi</span>
-                        </label>
-                        <a href="javascript:void(0)" class="form-link">Mot de passe oublié ?</a>
+                      <label class="form-checkbox">
+                        <input type="checkbox" formControlName="seSouvenir">
+                        <span>Se souvenir de moi</span>
+                      </label>
+                      <a href="javascript:void(0)" class="form-link">Mot de passe oublié ?</a>
                     </div>
 
                     <button type="submit" class="btn-primary btn-block" [disabled]="isSubmitting">
-                        _if(!isSubmitting){ Se connecter }
-                        _if(isSubmitting){ <i class="fa-solid fa-spinner fa-spin"></i> Connexion... }
+                      _if(!isSubmitting){ Se connecter }
+                      _if(isSubmitting){ <i class="fa-solid fa-spinner fa-spin"></i> Connexion... }
                     </button>
 
                     <p class="auth-switch">
-                        Pas encore de compte ?
-                        <a href="javascript:void(0)" (click)="switchTab('register')">Créer un compte</a>
+                      Pas encore de compte ?
+                      <a href="javascript:void(0)" (click)="switchTab('register')">Créer un compte</a>
                     </p>
 
-                </form>
+                  </form>
 
-            }
+                }
 
-            _if(activeTab === 'register'){
+                _if(activeTab === 'register'){
 
                 <form class="auth-form" [formGroup]="registerForm" (ngSubmit)="onSubmitRegister()" novalidate>
 
-                    <h2>Créer votre compte</h2>
-                    <p class="auth-subtitle">Rejoignez l'espace client OAS en 1 minute.</p>
+                  <h2>Créer votre compte</h2>
+                  <p class="auth-subtitle">Rejoignez l'espace client OAS en 1 minute.</p>
 
-                    <div class="form-grid-2">
+                  <div class="form-grid-2">
 
-                        <div class="form-group">
-                            <label for="register-prenom">Prénom</label>
-                            <div class="input-icon">
-                                <i class="fa-solid fa-user"></i>
-                                <input
-                                    id="register-prenom"
-                                    type="text"
-                                    formControlName="prenom"
-                                    placeholder="Jean"
-                                    [class.is-invalid]="rf['prenom'].invalid && rf['prenom'].touched">
-                            </div>
-                            _if(rf['prenom'].invalid && rf['prenom'].touched){
-                                <span class="form-error">Prénom requis (2 caractères min.)</span>
-                            }
+                    <div class="form-group">
+                      <label for="register-prenom">Prénom</label>
+                      <div class="input-icon">
+                        <i class="fa-solid fa-user"></i>
+                        <input
+                          id="register-prenom"
+                          type="text"
+                          formControlName="prenom"
+                          placeholder="Jean"
+                          [class.is-invalid]="rf['prenom'].invalid && rf['prenom'].touched">
                         </div>
-
-                        <div class="form-group">
-                            <label for="register-nom">Nom</label>
-                            <div class="input-icon">
-                                <i class="fa-solid fa-user"></i>
-                                <input
-                                    id="register-nom"
-                                    type="text"
-                                    formControlName="nom"
-                                    placeholder="Dupont"
-                                    [class.is-invalid]="rf['nom'].invalid && rf['nom'].touched">
-                            </div>
-                            _if(rf['nom'].invalid && rf['nom'].touched){
-                                <span class="form-error">Nom requis (2 caractères min.)</span>
-                            }
-                        </div>
-
+                        _if(rf['prenom'].invalid && rf['prenom'].touched){
+                        <span class="form-error">Prénom requis (2 caractères min.)</span>
+                      }
                     </div>
 
-                    <div class="form-grid-2">
-
-                        <div class="form-group">
-                            <label for="register-email">Adresse e-mail</label>
-                            <div class="input-icon">
-                                <i class="fa-solid fa-envelope"></i>
-                                <input
-                                    id="register-email"
-                                    type="email"
-                                    formControlName="email"
-                                    placeholder="vous@exemple.com"
-                                    [class.is-invalid]="rf['email'].invalid && rf['email'].touched">
-                            </div>
-                            _if(rf['email'].invalid && rf['email'].touched){
-                                <span class="form-error">
-                                    _if(rf['email'].errors?.['required']){ L'adresse e-mail est requise. }
-                                    _if(rf['email'].errors?.['email']){ Veuillez saisir une adresse e-mail valide. }
-                                </span>
-                            }
+                    <div class="form-group">
+                      <label for="register-nom">Nom</label>
+                      <div class="input-icon">
+                        <i class="fa-solid fa-user"></i>
+                        <input
+                          id="register-nom"
+                          type="text"
+                          formControlName="nom"
+                          placeholder="Dupont"
+                          [class.is-invalid]="rf['nom'].invalid && rf['nom'].touched">
                         </div>
-
-                        <div class="form-group">
-                            <label for="register-tel">Téléphone</label>
-                            <div class="input-icon">
-                                <i class="fa-solid fa-phone"></i>
-                                <input
-                                    id="register-tel"
-                                    type="tel"
-                                    formControlName="telephone"
-                                    placeholder="+221 77 000 00 00"
-                                    [class.is-invalid]="rf['telephone'].invalid && rf['telephone'].touched">
-                            </div>
-                            _if(rf['telephone'].invalid && rf['telephone'].touched){
-                                <span class="form-error">Numéro de téléphone invalide.</span>
-                            }
-                        </div>
-
+                        _if(rf['nom'].invalid && rf['nom'].touched){
+                        <span class="form-error">Nom requis (2 caractères min.)</span>
+                      }
                     </div>
 
-                    <div class="form-grid-2">
+                  </div>
 
-                        <div class="form-group">
-                            <label for="register-password">Mot de passe</label>
-                            <div class="input-icon">
-                                <i class="fa-solid fa-lock"></i>
-                                <input
-                                    id="register-password"
-                                    autocomplete="new-password"
-                                    [type]="showRegisterPassword ? 'text' : 'password'"
-                                    formControlName="motDePasse"
-                                    placeholder="••••••••"
-                                    [class.is-invalid]="rf['motDePasse'].invalid && rf['motDePasse'].touched">
-                                <button type="button" class="toggle-visibility" (click)="showRegisterPassword = !showRegisterPassword" aria-label="Afficher le mot de passe">
-                                    <i class="fa-solid" [class.fa-eye]="!showRegisterPassword" [class.fa-eye-slash]="showRegisterPassword"></i>
-                                </button>
-                            </div>
-                            _if(rf['motDePasse'].invalid && rf['motDePasse'].touched){
-                                <span class="form-error">6 caractères minimum.</span>
-                            }
+                  <div class="form-grid-2">
+
+                    <div class="form-group">
+                      <label for="register-email">Adresse e-mail</label>
+                      <div class="input-icon">
+                        <i class="fa-solid fa-envelope"></i>
+                        <input
+                          id="register-email"
+                          type="email"
+                          formControlName="email"
+                          placeholder="vous@exemple.com"
+                          [class.is-invalid]="rf['email'].invalid && rf['email'].touched">
                         </div>
-
-                        <div class="form-group">
-                            <label for="register-confirmation">Confirmation</label>
-                            <div class="input-icon">
-                                <i class="fa-solid fa-lock"></i>
-                                <input
-                                    id="register-confirmation"
-                                    autocomplete="new-password"
-                                    [type]="showRegisterConfirmation ? 'text' : 'password'"
-                                    formControlName="confirmation"
-                                    placeholder="••••••••"
-                                    [class.is-invalid]="motsDePassesDifferents">
-                                <button type="button" class="toggle-visibility" (click)="showRegisterConfirmation = !showRegisterConfirmation" aria-label="Afficher le mot de passe">
-                                    <i class="fa-solid" [class.fa-eye]="!showRegisterConfirmation" [class.fa-eye-slash]="showRegisterConfirmation"></i>
-                                </button>
-                            </div>
-                            _if(motsDePassesDifferents){
-                                <span class="form-error">Les mots de passe ne correspondent pas.</span>
-                            }
-                        </div>
-
+                        _if(rf['email'].invalid && rf['email'].touched){
+                        <span class="form-error">
+                          _if(rf['email'].errors?.['required']){ L'adresse e-mail est requise. }
+                          _if(rf['email'].errors?.['email']){ Veuillez saisir une adresse e-mail valide. }
+                        </span>
+                      }
                     </div>
 
-                    <label class="form-checkbox form-checkbox-cgu">
-                        <input type="checkbox" formControlName="cgu">
-                        <span>J'accepte les <a href="javascript:void(0)">conditions générales</a> d'utilisation.</span>
-                    </label>
-                    _if(rf['cgu'].invalid && rf['cgu'].touched){
-                        <span class="form-error">Vous devez accepter les conditions.</span>
-                    }
+                    <div class="form-group">
+                      <label for="register-tel">Téléphone</label>
+                      <div class="input-icon">
+                        <i class="fa-solid fa-phone"></i>
+                        <input
+                          id="register-tel"
+                          type="tel"
+                          formControlName="telephone"
+                          placeholder="+221 77 000 00 00"
+                          [class.is-invalid]="rf['telephone'].invalid && rf['telephone'].touched">
+                        </div>
+                        _if(rf['telephone'].invalid && rf['telephone'].touched){
+                        <span class="form-error">Numéro de téléphone invalide.</span>
+                      }
+                    </div>
 
-                    <button type="submit" class="btn-primary btn-block" [disabled]="isSubmitting">
-                        _if(!isSubmitting){ Créer mon compte }
-                        _if(isSubmitting){ <i class="fa-solid fa-spinner fa-spin"></i> Création... }
-                    </button>
+                  </div>
 
-                    <p class="auth-switch">
-                        Déjà un compte ?
-                        <a href="javascript:void(0)" (click)="switchTab('login')">Se connecter</a>
-                    </p>
+                  <div class="form-grid-2">
 
-                </form>
+                    <div class="form-group">
+                      <label for="register-password">Mot de passe</label>
+                      <div class="input-icon">
+                        <i class="fa-solid fa-lock"></i>
+                        <input
+                          id="register-password"
+                          autocomplete="new-password"
+                          [type]="showRegisterPassword ? 'text' : 'password'"
+                          formControlName="motDePasse"
+                          placeholder="••••••••"
+                          [class.is-invalid]="rf['motDePasse'].invalid && rf['motDePasse'].touched">
+                          <button type="button" class="toggle-visibility" (click)="showRegisterPassword = !showRegisterPassword" aria-label="Afficher le mot de passe">
+                            <i class="fa-solid" [class.fa-eye]="!showRegisterPassword" [class.fa-eye-slash]="showRegisterPassword"></i>
+                          </button>
+                        </div>
+                        _if(rf['motDePasse'].invalid && rf['motDePasse'].touched){
+                        <span class="form-error">6 caractères minimum.</span>
+                      }
+                    </div>
+
+                    <div class="form-group">
+                      <label for="register-confirmation">Confirmation</label>
+                      <div class="input-icon">
+                        <i class="fa-solid fa-lock"></i>
+                        <input
+                          id="register-confirmation"
+                          autocomplete="new-password"
+                          [type]="showRegisterConfirmation ? 'text' : 'password'"
+                          formControlName="confirmation"
+                          placeholder="••••••••"
+                          [class.is-invalid]="motsDePassesDifferents">
+                          <button type="button" class="toggle-visibility" (click)="showRegisterConfirmation = !showRegisterConfirmation" aria-label="Afficher le mot de passe">
+                            <i class="fa-solid" [class.fa-eye]="!showRegisterConfirmation" [class.fa-eye-slash]="showRegisterConfirmation"></i>
+                          </button>
+                        </div>
+                        _if(motsDePassesDifferents){
+                        <span class="form-error">Les mots de passe ne correspondent pas.</span>
+                      }
+                    </div>
+
+                  </div>
+
+                  <label class="form-checkbox form-checkbox-cgu">
+                    <input type="checkbox" formControlName="cgu">
+                    <span>J'accepte les <a href="javascript:void(0)">conditions générales</a> d'utilisation.</span>
+                  </label>
+                  _if(rf['cgu'].invalid && rf['cgu'].touched){
+                  <span class="form-error">Vous devez accepter les conditions.</span>
+                }
+
+                <button type="submit" class="btn-primary btn-block" [disabled]="isSubmitting">
+                  _if(!isSubmitting){ Créer mon compte }
+                  _if(isSubmitting){ <i class="fa-solid fa-spinner fa-spin"></i> Création... }
+                </button>
+
+                <p class="auth-switch">
+                  Déjà un compte ?
+                  <a href="javascript:void(0)" (click)="switchTab('login')">Se connecter</a>
+                </p>
+
+              </form>
 
             }
             -->
 
+          </div>
         </div>
-    </div>
-}
+      }

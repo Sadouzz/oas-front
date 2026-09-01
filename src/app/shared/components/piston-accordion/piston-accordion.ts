@@ -1,10 +1,10 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 
 @Component({
   selector: 'app-piston-accordion',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './piston-accordion.html',
   styleUrl: './piston-accordion.css'
 })

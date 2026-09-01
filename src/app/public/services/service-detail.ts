@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -10,7 +10,7 @@ import { TireTrackComponent } from '../../shared/components/tire-track/tire-trac
 @Component({
   selector: 'app-service-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, SectionTitle, TireTrackComponent],
+  imports: [RouterLink, SectionTitle, TireTrackComponent],
   templateUrl: './service-detail.html',
   styleUrl: './service-detail.css',
 })

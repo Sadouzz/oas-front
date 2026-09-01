@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 
 export interface WarningItem {
   id: string;
@@ -12,7 +12,7 @@ export interface WarningItem {
 @Component({
   selector: 'app-dashboard-warnings',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './dashboard-warnings.html',
   styleUrl: './dashboard-warnings.css',
 })

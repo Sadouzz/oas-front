@@ -1,5 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { GarageService } from '../../../services/garage.service';
 import { LucidePlus, LucideEdit2, LucideTrash2, LucideX, LucideSave } from '@lucide/angular';
@@ -7,7 +7,7 @@ import { LucidePlus, LucideEdit2, LucideTrash2, LucideX, LucideSave } from '@luc
 @Component({
   selector: 'app-garages',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, LucidePlus, LucideEdit2, LucideTrash2, LucideX, LucideSave],
+  imports: [ReactiveFormsModule, LucidePlus, LucideEdit2, LucideTrash2, LucideX, LucideSave],
   templateUrl: './garages.component.html'
 })
 export class GaragesComponent implements OnInit {

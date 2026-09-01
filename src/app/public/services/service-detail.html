@@ -1,13 +1,13 @@
-<ng-container *ngIf="service() as current; else missing">
+@if (service(); as current) {
   <section class="detail-hero">
     <div>
       <div>
-        <app-section-title 
-            [mainTitle]="current.title"
-            highlightedText=""
-            [subtitle]="current.number + ' — SERVICE OAS'"
-            align="left"
-            theme="dark"
+        <app-section-title
+          [mainTitle]="current.title"
+          highlightedText=""
+          [subtitle]="current.number + ' — SERVICE OAS'"
+          align="left"
+          theme="dark"
         ></app-section-title>
       </div>
       <div class="detail-intro">
@@ -16,31 +16,34 @@
       </div>
     </div>
   </section>
-
   <main class="detail-main">
     <section class="detail-grid">
       <div>
-        <app-section-title 
-            mainTitle="Une réponse adaptée à"
-            highlightedText="votre véhicule."
-            subtitle="Ce que nous prenons en charge"
-            align="left"
-            theme="light"
+        <app-section-title
+          mainTitle="Une réponse adaptée à"
+          highlightedText="votre véhicule."
+          subtitle="Ce que nous prenons en charge"
+          align="left"
+          theme="light"
         ></app-section-title>
       </div>
-      <ul><li *ngFor="let item of current.includes">{{ item }}</li></ul>
+      <ul>@for (item of current.includes; track item) {
+        <li>{{ item }}</li>
+      }</ul>
     </section>
     <section class="detail-alert">
       <div>
-        <app-section-title 
-            mainTitle="N’attendez pas que le"
-            highlightedText="problème s’aggrave."
-            subtitle="Les signes qui doivent alerter"
-            align="left"
-            theme="light"
+        <app-section-title
+          mainTitle="N’attendez pas que le"
+          highlightedText="problème s’aggrave."
+          subtitle="Les signes qui doivent alerter"
+          align="left"
+          theme="light"
         ></app-section-title>
       </div>
-      <div><p *ngFor="let item of current.alert"><b>•</b>{{ item }}</p></div>
+      <div>@for (item of current.alert; track item) {
+        <p><b>•</b>{{ item }}</p>
+      }</div>
     </section>
     <section class="detail-process">
       <p class="eyebrow">L’intervention OAS</p>
@@ -51,26 +54,23 @@
       </div>
     </section>
   </main>
-
   <!-- Tire Track Separator -->
   <div class="py-4 bg-white border-t border-oas-line overflow-hidden">
     <app-tire-track [opacity]="0.5" rotation="-1.7deg" variant="horizontal" align="center"></app-tire-track>
   </div>
-
   <!-- FULL WIDTH CTA BANNER (Style Red OAS Accent) -->
   <section class="w-full py-24 px-6 lg:px-12 bg-oas-bg text-oas-navy-dark relative overflow-hidden">
     <div class="absolute inset-0 z-0">
       <img src="https://images.unsplash.com/photo-1617814076367-b759c7d7e738?q=80&w=2070&auto=format&fit=crop" alt="Devis OAS" class="w-full h-full object-cover opacity-5">
       <div class="absolute inset-0 bg-gradient-to-r from-oas-bg via-oas-bg/95 to-transparent"></div>
     </div>
-    
     <div class="max-w-[1400px] mx-auto relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
       <div class="w-full md:w-2/3">
-        <app-section-title 
+        <app-section-title
           align="left"
           theme="light"
-          mainTitle="PARLONS DE " 
-          highlightedText="VOTRE VÉHICULE." 
+          mainTitle="PARLONS DE "
+          highlightedText="VOTRE VÉHICULE."
           subtitle="Besoin d'un conseil ?">
         </app-section-title>
         <p class="mt-6 text-white/90 text-lg leading-relaxed max-w-xl">
@@ -87,5 +87,6 @@
       </div>
     </div>
   </section>
-</ng-container>
-<ng-template #missing><section class="missing"><h1>Service introuvable</h1><a routerLink="/services">Retour aux services</a></section></ng-template>
+} @else {
+  <section class="missing"><h1>Service introuvable</h1><a routerLink="/services">Retour aux services</a></section>
+}

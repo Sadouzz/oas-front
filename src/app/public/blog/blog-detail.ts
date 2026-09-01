@@ -1,5 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { BlogService, BlogPostModel } from '../../services/blog.service';
@@ -15,7 +15,7 @@ interface Comment {
 @Component({
   selector: 'app-blog-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, BoltCornersComponent, PaginationComponent],
+  imports: [FormsModule, RouterLink, BoltCornersComponent, PaginationComponent],
   templateUrl: './blog-detail.html',
   styleUrl: './blog-detail.css'
 })

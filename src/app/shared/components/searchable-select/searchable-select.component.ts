@@ -1,11 +1,11 @@
 import { Component, Input, Output, EventEmitter, forwardRef, ElementRef, HostListener } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+
 
 @Component({
   selector: 'app-searchable-select',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,

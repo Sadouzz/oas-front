@@ -1,5 +1,5 @@
 import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { SectionTitle } from '../../shared/components/section-title/section-title';
 import { MagneticItem } from '../../shared/components/magnetic-carousel/magnetic-carousel';
 import { TireTrackComponent } from '../../shared/components/tire-track/tire-track';
@@ -16,15 +16,14 @@ register();
   selector: 'app-about',
   standalone: true,
   imports: [
-    CommonModule, 
-    SectionTitle, 
-    TireTrackComponent, 
-    PistonAccordionComponent, 
-    SheetMetalCardComponent, 
+    SectionTitle,
+    TireTrackComponent,
+    PistonAccordionComponent,
+    SheetMetalCardComponent,
     BoltCornersComponent,
     MechanicalGearsComponent,
     IconComponent
-  ],
+],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './about.html',
   styleUrl: './about.css',

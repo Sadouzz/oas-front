@@ -1,10 +1,10 @@
 import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 
 @Component({
   selector: 'app-progress-stepper',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <div>
       <div class="flex items-center justify-between mb-2">

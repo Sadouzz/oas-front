@@ -1,5 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ClientMarketplaceService } from '../services/client-marketplace.service';
 import { Produit } from '../models';
@@ -9,7 +9,7 @@ import { ModalComponent } from '../ui/modal/modal.component';
 @Component({
   selector: 'app-client-marketplace',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, AlertComponent, ModalComponent],
+  imports: [ReactiveFormsModule, AlertComponent, ModalComponent],
   templateUrl: './client-marketplace.component.html',
 })
 export class ClientMarketplaceComponent implements OnInit {

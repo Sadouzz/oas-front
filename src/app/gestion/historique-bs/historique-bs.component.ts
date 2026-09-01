@@ -1,5 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { BonDeSortieService, BonDeSortieHistorique } from '../../services/bon-de-sortie.service';
@@ -9,7 +9,7 @@ import { LucideSearch, LucideLoader2 } from '@lucide/angular';
 @Component({
   selector: 'app-historique-bs',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, PaginationComponent, LucideSearch, LucideLoader2],
+  imports: [FormsModule, RouterLink, PaginationComponent, LucideSearch, LucideLoader2],
   templateUrl: './historique-bs.component.html',
 })
 export class HistoriqueBsComponent implements OnInit {

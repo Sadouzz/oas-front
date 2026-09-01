@@ -47,75 +47,82 @@
         stroke="rgba(255, 255, 255, 0.12)"
         stroke-width="6"
         stroke-linecap="round"
-      />
+        />
 
-      <!-- Active Illuminated Arc -->
-      <path
-        d="M 39.38 135 A 70 70 0 1 1 160.62 135"
-        fill="none"
-        stroke="#ef1a1a"
-        stroke-width="6"
-        stroke-linecap="round"
-        class="active-arc"
-        filter="url(#orangeGlow)"
-      />
-
-      <!-- Tick Marks -->
-      <g class="ticks-group">
-        <g *ngFor="let tick of ticks">
-          <line
-            x1="100"
-            y1="34"
-            x2="100"
-            [attr.y2]="tick.isMajor ? 44 : 39"
-            [attr.stroke]="tick.isMajor ? '#ef1a1a' : 'rgba(255,255,255,0.3)'"
-            [attr.stroke-width]="tick.isMajor ? 2.5 : 1.5"
-            [attr.transform]="'rotate(' + tick.angle + ' 100 100)'"
-            class="tick-line"
+        <!-- Active Illuminated Arc -->
+        <path
+          d="M 39.38 135 A 70 70 0 1 1 160.62 135"
+          fill="none"
+          stroke="#ef1a1a"
+          stroke-width="6"
+          stroke-linecap="round"
+          class="active-arc"
+          filter="url(#orangeGlow)"
           />
-          <text
-            *ngIf="tick.isMajor"
-            [attr.x]="tick.x"
-            [attr.y]="tick.y"
-            text-anchor="middle"
-            dominant-baseline="central"
-            class="tick-label">
-            {{ tick.label }}
-          </text>
-        </g>
-      </g>
 
-      <!-- Center Unit Tag -->
-      <text x="100" y="128" text-anchor="middle" class="unit-label">{{ unit }}</text>
+          <!-- Tick Marks -->
+          <g class="ticks-group">
+            @for (tick of ticks; track tick) {
+              <g>
+                <line
+                  x1="100"
+                  y1="34"
+                  x2="100"
+                  [attr.y2]="tick.isMajor ? 44 : 39"
+                  [attr.stroke]="tick.isMajor ? '#ef1a1a' : 'rgba(255,255,255,0.3)'"
+                  [attr.stroke-width]="tick.isMajor ? 2.5 : 1.5"
+                  [attr.transform]="'rotate(' + tick.angle + ' 100 100)'"
+                  class="tick-line"
+                  />
+                  @if (tick.isMajor) {
+                    <text
+                      [attr.x]="tick.x"
+                      [attr.y]="tick.y"
+                      text-anchor="middle"
+                      dominant-baseline="central"
+                      class="tick-label">
+                      {{ tick.label }}
+                    </text>
+                  }
+                </g>
+              }
+            </g>
 
-      <!-- Animated Needle -->
-      <g class="needle-group" [style.transform]="'rotate(' + needleAngle + 'deg)'">
-        <!-- Needle Shadow -->
-        <polygon points="98,100 102,100 100,24" fill="rgba(0,0,0,0.5)" transform="translate(2, 2)" />
-        <!-- Main Needle -->
-        <polygon points="97.5,100 102.5,100 100,22" fill="url(#needleGradient)" filter="url(#orangeGlow)" />
-        <!-- Red Tip Dot -->
-        <circle cx="100" cy="24" r="1.5" fill="#ffffff" />
-      </g>
+            <!-- Center Unit Tag -->
+            <text x="100" y="128" text-anchor="middle" class="unit-label">{{ unit }}</text>
 
-      <!-- Center Hub Cap -->
-      <circle cx="100" cy="100" r="14" fill="#0c2742" stroke="#ef1a1a" stroke-width="2.5" />
-      <circle cx="100" cy="100" r="6" fill="#ef1a1a" />
-    </svg>
+            <!-- Animated Needle -->
+            <g class="needle-group" [style.transform]="'rotate(' + needleAngle + 'deg)'">
+              <!-- Needle Shadow -->
+              <polygon points="98,100 102,100 100,24" fill="rgba(0,0,0,0.5)" transform="translate(2, 2)" />
+              <!-- Main Needle -->
+              <polygon points="97.5,100 102.5,100 100,22" fill="url(#needleGradient)" filter="url(#orangeGlow)" />
+              <!-- Red Tip Dot -->
+              <circle cx="100" cy="24" r="1.5" fill="#ffffff" />
+            </g>
 
-    <!-- Digital Display Screen inside/under the hub -->
-    <div class="lcd-display">
-      <span class="lcd-value">
-        <span class="prefix" *ngIf="prefix">{{ prefix }}</span>
-        {{ formatValue(displayedValue) }}
-        <span class="suffix" *ngIf="suffix">{{ suffix }}</span>
-      </span>
-    </div>
-  </div>
+            <!-- Center Hub Cap -->
+            <circle cx="100" cy="100" r="14" fill="#0c2742" stroke="#ef1a1a" stroke-width="2.5" />
+            <circle cx="100" cy="100" r="6" fill="#ef1a1a" />
+          </svg>
 
-  <!-- Stat Label -->
-  <div class="stat-meta">
-    <div class="accent-bar"></div>
-    <span class="stat-label">{{ label }}</span>
-  </div>
-</div>
+          <!-- Digital Display Screen inside/under the hub -->
+          <div class="lcd-display">
+            <span class="lcd-value">
+              @if (prefix) {
+                <span class="prefix">{{ prefix }}</span>
+              }
+              {{ formatValue(displayedValue) }}
+              @if (suffix) {
+                <span class="suffix">{{ suffix }}</span>
+              }
+            </span>
+          </div>
+        </div>
+
+        <!-- Stat Label -->
+        <div class="stat-meta">
+          <div class="accent-bar"></div>
+          <span class="stat-label">{{ label }}</span>
+        </div>
+      </div>
