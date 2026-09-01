@@ -78,9 +78,10 @@ export class NotesPrixComponent implements OnInit {
       fiches: this.ficheService.getAll(),
     }).subscribe({
       next: ({ clients, fiches }) => {
-        this.clients = clients.filter(c => c.enabled);
-        this.ordresReparation = fiches;
+        this.clients = (clients || []).filter(c => c.enabled);
+        this.ordresReparation = fiches || [];
       },
+      error: () => {},
     });
 
     this.route.queryParams.subscribe(params => {
@@ -89,7 +90,7 @@ export class NotesPrixComponent implements OnInit {
       }
       if (params['statut']) {
         this.filterStatut = params['statut'];
-      } else if (!params['action']) {
+      } else if (!params['action'] && !params['search']) {
         this.filterStatut = '';
       }
       if (params['search'] === 'client-date') {
@@ -103,16 +104,20 @@ export class NotesPrixComponent implements OnInit {
     this.loading = true;
     this.service.getAll().subscribe({
       next: data => {
-        this.notes = data.sort((a: any, b: any) => b.id - a.id);
+        this.notes = (data || []).sort((a: any, b: any) => (b.id ?? 0) - (a.id ?? 0));
         this.applyFilter();
         this.loading = false;
       },
-      error: () => this.loading = false,
+      error: () => {
+        this.notes = [];
+        this.filtered = [];
+        this.loading = false;
+      },
     });
   }
 
   applyFilter() {
-    let data = this.notes;
+    let data = this.notes || [];
     if (this.filterStatut === 'EN_COURS') {
       data = data.filter(f => f.statutPaiement !== 'PAYE');
     } else if (this.filterStatut === 'PAYE') {
@@ -121,26 +126,42 @@ export class NotesPrixComponent implements OnInit {
     if (this.searchTerm) {
       const kw = this.searchTerm.toLowerCase();
       data = data.filter(f =>
-        f.numero.toLowerCase().includes(kw) ||
+        (f.numero ?? '').toLowerCase().includes(kw) ||
         (f.clientNom ?? '').toLowerCase().includes(kw) ||
         (f.vehiculeImmatriculation ?? f.immatriculation ?? '').toLowerCase().includes(kw)
       );
     }
     if (this.dateDebut) {
-      data = data.filter(f => f.dateCreation && f.dateCreation >= this.dateDebut);
+      data = data.filter(f => {
+        const d = this.getDateString(f.dateCreation);
+        return d ? d >= this.dateDebut : false;
+      });
     }
     if (this.dateFin) {
-      data = data.filter(f => f.dateCreation && f.dateCreation.slice(0, 10) <= this.dateFin);
+      data = data.filter(f => {
+        const d = this.getDateString(f.dateCreation);
+        return d ? d <= this.dateFin : false;
+      });
     }
     if (this.filterClient) {
       const cKw = this.filterClient.toLowerCase();
       data = data.filter(f =>
         (f.clientNom ?? '').toLowerCase().includes(cKw) ||
-        String(f.clientId).includes(cKw)
+        String(f.clientId ?? '').includes(cKw)
       );
     }
     this.filtered = data;
     this.page = 1;
+  }
+
+  private getDateString(d: any): string {
+    if (!d) return '';
+    if (typeof d === 'string') return d.slice(0, 10);
+    if (Array.isArray(d)) {
+      const [year, month, day] = d;
+      return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    }
+    return '';
   }
 
   onStatutFilter(e: Event) {
@@ -296,7 +317,7 @@ export class NotesPrixComponent implements OnInit {
         this.form.reset({ remarque: '', modePaiement: 'ESPECE' });
         this.createStep = 1;
         this.load();
-        this.notify('Note de prix ' + res.numero + ' créée avec succès !');
+        this.notify('Note de prix ' + (res.numero || '') + ' créée avec succès !');
       },
       error: (err: any) => {
         this.saving = false;
@@ -342,15 +363,14 @@ export class NotesPrixComponent implements OnInit {
     }
 
     this.paySaving = true;
-    // Mise à jour rapide du paiement
     const newPaye = (this.noteToPay.montantPaye || 0) + this.payMontant;
-    const newReste = Math.max(0, (this.noteToPay.montantTotal || 0) - newPaye);
-    const newStatut = newReste === 0 ? 'PAYE' : 'PARTIEL';
 
     this.service.update(this.noteToPay.id, {
       clientId: this.noteToPay.clientId,
       vehiculeId: this.noteToPay.vehiculeId,
       ordreReparationId: this.noteToPay.ordreReparationId,
+      montantPaye: newPaye,
+      modePaiement: this.payMethode,
     } as any).subscribe({
       next: () => {
         this.paySaving = false;
@@ -370,7 +390,20 @@ export class NotesPrixComponent implements OnInit {
     return m[mp ?? ''] ?? mp ?? '—';
   }
 
-  formatDate(d: string): string { return new Date(d).toLocaleDateString('fr-FR'); }
+  formatDate(d: any): string {
+    if (!d) return '—';
+    try {
+      if (Array.isArray(d)) {
+        const [year, month, day] = d;
+        return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
+      }
+      const parsed = new Date(d);
+      return isNaN(parsed.getTime()) ? String(d) : parsed.toLocaleDateString('fr-FR');
+    } catch {
+      return String(d);
+    }
+  }
+
   fmt(n: number | null | undefined): string { return new Intl.NumberFormat('fr-FR').format(n ?? 0); }
 
   get paged(): NoteDePrixModel[] {
