@@ -1,4 +1,4 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject } from '@angular/core';
 
 import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
@@ -15,7 +15,6 @@ function passwordsMatch(control: AbstractControl): ValidationErrors | null {
   selector: 'app-client-settings',
   standalone: true,
   imports: [ReactiveFormsModule, AlertComponent],
-  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './client-settings.component.html',
 })
 export class ClientSettingsComponent {

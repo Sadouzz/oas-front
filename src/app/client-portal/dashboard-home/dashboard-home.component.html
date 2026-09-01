@@ -192,7 +192,7 @@
             @for (item of activeRepairs; track item.intervention.id) {
               @let iStage = stageOf(item.intervention.statut);
               <div class="p-4 flex items-center gap-3">
-                <app-vehicle-avatar [marque]="$safeNavigationMigration(item.vehicule?.marque)"></app-vehicle-avatar>
+                <app-vehicle-avatar [marque]="item.vehicule?.marque"></app-vehicle-avatar>
                 <div class="flex-1 min-w-0">
                   <p class="font-mono-data font-semibold text-sm text-oas-ink truncate">{{ item.vehicule?.immatriculation ?? item.intervention.numero }}</p>
                   <p class="text-xs text-oas-muted mt-0.5 truncate">{{ item.vehicule?.marque }} {{ item.vehicule?.modele }}</p>

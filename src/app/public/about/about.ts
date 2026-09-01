@@ -1,4 +1,4 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 
 import { SectionTitle } from '../../shared/components/section-title/section-title';
 import { MagneticItem } from '../../shared/components/magnetic-carousel/magnetic-carousel';
@@ -26,7 +26,6 @@ register();
 ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './about.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './about.css',
 })
 export class About {

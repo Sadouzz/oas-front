@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule, DecimalPipe } from '@angular/common';
@@ -13,7 +13,6 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDo
   selector: 'app-devis-previsionnels',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, DecimalPipe, AlertComponent, PaginationComponent, LucidePlus],
-  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './devis-previsionnels.component.html',
 })
 export class DevisPrevisionnelsComponent implements OnInit {

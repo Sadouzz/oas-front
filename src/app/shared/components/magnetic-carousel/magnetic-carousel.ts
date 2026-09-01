@@ -1,4 +1,4 @@
-import { Component, Input, ElementRef, ViewChild, AfterViewInit, OnDestroy, ChangeDetectorRef, NgZone, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, ElementRef, ViewChild, AfterViewInit, OnDestroy, ChangeDetectorRef, NgZone } from '@angular/core';
 
 import { BoltCornersComponent } from '../bolt-corners/bolt-corners';
 
@@ -15,7 +15,6 @@ export interface MagneticItem {
   standalone: true,
   imports: [BoltCornersComponent],
   templateUrl: './magnetic-carousel.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [`
     .hide-scrollbar::-webkit-scrollbar {
       display: none;

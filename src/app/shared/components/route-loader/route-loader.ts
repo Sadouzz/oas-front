@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, Inject, PLATFORM_ID, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Router, NavigationStart, NavigationEnd, NavigationCancel, NavigationError, Event } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -8,7 +8,6 @@ import { Subscription } from 'rxjs';
   standalone: true,
   imports: [],
   templateUrl: './route-loader.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './route-loader.css'
 })
 export class RouteLoaderComponent implements OnInit, OnDestroy {

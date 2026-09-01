@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { debounceTime, distinctUntilChanged, switchMap, of, catchError, firstValueFrom } from 'rxjs';
@@ -14,7 +14,6 @@ type AvailabilityStatus = 'idle' | 'checking' | 'available' | 'taken';
   selector: 'app-client-register',
   standalone: true,
   imports: [ReactiveFormsModule, RouterLink, LucideEye, LucideEyeOff, LucideLoader2, LucideCheck, LucideX],
-  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './client-register.component.html',
 })
 export class ClientRegisterComponent implements OnInit {

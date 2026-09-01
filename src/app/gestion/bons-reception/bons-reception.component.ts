@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { BonDeReceptionService, BonDeReception } from '../../services/bon-de-reception.service';
@@ -13,7 +13,6 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDo
 @Component({
   selector: 'app-bons-reception',
   imports: [NgClass],
-  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './bons-reception.component.html',
 })
 export class BonsReceptionComponent implements OnInit {

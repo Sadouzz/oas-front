@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ViewChild, ElementRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit, ViewChild, ElementRef } from '@angular/core';
 
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -12,7 +12,6 @@ import { LucidePlus, LucideTrash2, LucideArrowLeft, LucideSave, LucideX } from '
   standalone: true,
   imports: [ReactiveFormsModule, LucidePlus, LucideTrash2, LucideArrowLeft, LucideSave, LucideX],
   templateUrl: './fiches-atelier.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './fiches-atelier.css',
 })
 export class FichesAtelier implements OnInit {

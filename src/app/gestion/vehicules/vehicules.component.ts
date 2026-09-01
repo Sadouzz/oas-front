@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { VehiculeService } from '../../services/vehicule.service';
@@ -12,7 +12,6 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, Lu
   selector: 'app-vehicules',
   standalone: true,
   imports: [ReactiveFormsModule, DecimalPipe, AlertComponent, PaginationComponent],
-  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './vehicules.component.html',
 })
 export class VehiculesComponent implements OnInit {

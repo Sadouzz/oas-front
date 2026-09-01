@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { HistoryService } from '../../../services/history.service';
 import { ConnectionHistoryModel } from '../../../shared/models/index';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
@@ -8,7 +8,6 @@ import { LucideSearch, LucideX, LucideClock, LucideUser, LucideCheck } from '@lu
   selector: 'app-history',
   standalone: true,
   imports: [PaginationComponent, LucideSearch, LucideClock],
-  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './history.component.html',
 })
 export class HistoryComponent implements OnInit {

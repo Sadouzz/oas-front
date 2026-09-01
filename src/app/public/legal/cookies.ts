@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 
 import { SectionTitle } from '../../shared/components/section-title/section-title';
 
@@ -32,7 +32,6 @@ import { SectionTitle } from '../../shared/components/section-title/section-titl
       </div>
     </section>
   `,
-  changeDetection: ChangeDetectionStrategy.Eager,
   styles: [`
     .prose h3 { color: var(--color-oas-navy-dark); font-weight: 800; margin-top: 2rem; margin-bottom: 1rem; }
     .prose p { color: var(--color-oas-ink2); margin-bottom: 1rem; line-height: 1.7; }

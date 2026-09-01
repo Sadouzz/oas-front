@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 
 import { RouterModule } from '@angular/router';
 
@@ -6,7 +6,6 @@ import { RouterModule } from '@angular/router';
   selector: 'app-cookie-popup',
   standalone: true,
   imports: [RouterModule],
-  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     @if (showPopup) {
       <div class="fixed bottom-0 left-0 w-full z-[9999] bg-white border-t border-oas-line shadow-[0_-10px_40px_rgba(12,39,66,0.08)] p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 transform transition-transform duration-500 translate-y-0">

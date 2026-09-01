@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { GarageService } from '../../../services/garage.service';
@@ -8,7 +8,6 @@ import { LucidePlus, LucideEdit2, LucideTrash2, LucideX, LucideSave } from '@luc
   selector: 'app-garages',
   standalone: true,
   imports: [ReactiveFormsModule, LucidePlus, LucideEdit2, LucideTrash2, LucideX, LucideSave],
-  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './garages.component.html'
 })
 export class GaragesComponent implements OnInit {

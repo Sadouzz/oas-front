@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 
 import { FormBuilder, FormArray, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -16,7 +16,6 @@ import { LucidePlus, LucideSearch, LucidePackage, LucideTrash2, LucideX, LucideC
   selector: 'app-bons-de-sortie',
   standalone: true,
   imports: [ReactiveFormsModule, FormsModule, PaginationComponent, AlertComponent, LucidePlus, LucideSearch, LucidePackage, LucideTrash2, LucideX, LucideCheck, LucideCheckCircle, LucideLoader2],
-  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './bons-de-sortie.component.html',
 })
 export class BonsDeSortieComponent implements OnInit {

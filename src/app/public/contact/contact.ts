@@ -1,4 +1,4 @@
-import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -26,7 +26,6 @@ register();
 ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './contact.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './contact.css'
 })
 export class ContactComponent implements OnInit {

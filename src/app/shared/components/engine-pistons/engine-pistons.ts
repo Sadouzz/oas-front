@@ -1,4 +1,4 @@
-import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
 
 @Component({
@@ -6,7 +6,6 @@ import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
   standalone: true,
   imports: [],
   templateUrl: './engine-pistons.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './engine-pistons.css',
 })
 export class EnginePistonsComponent {

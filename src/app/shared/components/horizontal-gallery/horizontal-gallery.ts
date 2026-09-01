@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy, Input, NgZone, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy, Input, NgZone } from '@angular/core';
 
 import { RouterLink } from '@angular/router';
 import { gsap } from 'gsap';
@@ -25,7 +25,6 @@ export interface RealisationItem {
   standalone: true,
   imports: [RouterLink, BoltCornersComponent],
   templateUrl: './horizontal-gallery.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
   styles: []
 })
 export class HorizontalGalleryComponent implements AfterViewInit, OnDestroy {

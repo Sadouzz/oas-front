@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TechnicienService } from '../../services/technicien.service';
 import { GarageService } from '../../services/garage.service';
@@ -22,7 +22,6 @@ const SPECIALITES: { value: Specialite; label: string }[] = [
   selector: 'app-techniciens',
   standalone: true,
   imports: [ReactiveFormsModule, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX],
-  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './techniciens.component.html',
 })
 export class TechniciensComponent implements OnInit {

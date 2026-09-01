@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { StockService, InventaireResponse } from '../../services/stock.service';
 import { PieceDetacheeService, PieceDetache } from '../../services/piece-detachee.service';
@@ -10,7 +10,6 @@ import { LucideSearch, LucideRefreshCw, LucideDownload, LucidePackage, LucideAle
   selector: 'app-inventaire',
   standalone: true,
   imports: [ReactiveFormsModule, AlertComponent, PaginationComponent, LucideSearch, LucideAlertTriangle, LucideX],
-  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './inventaire.component.html',
 })
 export class InventaireComponent implements OnInit {

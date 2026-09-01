@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ElementRef, ViewChild, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -13,7 +13,6 @@ import { AuthService } from '../auth/services/auth.service';
   selector: 'app-fiche-atelier-details',
   standalone: true,
   imports: [CommonModule, FormsModule, LucideArrowLeft, LucideCheck],
-  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './fiche-atelier-details.html'
 })
 export class FicheAtelierDetails implements OnInit {

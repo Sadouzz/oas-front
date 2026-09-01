@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ClientMarketplaceService } from '../services/client-marketplace.service';
@@ -10,7 +10,6 @@ import { ModalComponent } from '../ui/modal/modal.component';
   selector: 'app-client-marketplace',
   standalone: true,
   imports: [ReactiveFormsModule, AlertComponent, ModalComponent],
-  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './client-marketplace.component.html',
 })
 export class ClientMarketplaceComponent implements OnInit {

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ClientInterventionService } from '../services/client-intervention.service';
 import { Intervention } from '../models';
@@ -12,7 +12,6 @@ type SortOrder = 'recent' | 'ancien';
   selector: 'app-client-interventions',
   standalone: true,
   imports: [CommonModule, AlertComponent, StatusBadgeComponent, VehicleAvatarComponent],
-  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './client-interventions.component.html',
 })
 export class ClientInterventionsComponent implements OnInit {

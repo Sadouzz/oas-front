@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { DecimalPipe, NgClass } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -15,7 +15,6 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideAr
   selector: 'app-pieces-detachees',
   standalone: true,
   imports: [ReactiveFormsModule, DecimalPipe, NgClass, AlertComponent, PaginationComponent, SearchableSelectComponent, LucideShoppingCart],
-  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pieces-detachees.component.html',
 })
 export class PiecesDetacheesComponent implements OnInit {

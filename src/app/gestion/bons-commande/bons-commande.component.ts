@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
@@ -16,7 +16,6 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDo
   selector: 'app-bons-commande',
   standalone: true,
   imports: [ReactiveFormsModule, FormsModule, NgClass],
-  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './bons-commande.component.html',
 })
 export class BonsCommandeComponent implements OnInit {

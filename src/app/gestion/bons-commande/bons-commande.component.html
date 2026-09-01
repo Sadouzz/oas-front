@@ -570,7 +570,7 @@
                 <div
                   class="flex items-center gap-1.5 flex-shrink-0 bg-white border border-oas-line rounded-lg px-2 py-1.5 focus-within:ring-2 focus-within:ring-oas-accent/40 transition">
                   <span class="text-xs font-bold text-oas-muted select-none">Qté</span>
-                  <input formControlName="quantite" type="number" [min]="ligne.get('quantiteRecue')?.value > 0 ? $safeNavigationMigration(ligne.get('quantiteRecue')?.value) : 1"
+                  <input formControlName="quantite" type="number" [min]="ligne.get('quantiteRecue')?.value > 0 ? (ligne.get('quantiteRecue')?.value ?? 1) : 1"
                     class="w-12 bg-transparent text-sm text-center font-semibold focus:outline-none text-oas-ink" />
                 </div>
 

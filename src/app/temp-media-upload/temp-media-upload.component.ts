@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MediaUploaderComponent } from '../shared/components/media-uploader/media-uploader.component';
@@ -18,7 +18,6 @@ interface UploadedItem extends CloudinaryUploadResult {
   selector: 'app-temp-media-upload',
   standalone: true,
   imports: [CommonModule, FormsModule, MediaUploaderComponent],
-  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './temp-media-upload.component.html',
 })
 export class TempMediaUploadComponent {

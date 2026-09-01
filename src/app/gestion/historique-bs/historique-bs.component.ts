@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -10,7 +10,6 @@ import { LucideSearch, LucideLoader2 } from '@lucide/angular';
   selector: 'app-historique-bs',
   standalone: true,
   imports: [FormsModule, RouterLink, PaginationComponent, LucideSearch, LucideLoader2],
-  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './historique-bs.component.html',
 })
 export class HistoriqueBsComponent implements OnInit {

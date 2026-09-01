@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -17,7 +17,6 @@ interface Comment {
   standalone: true,
   imports: [FormsModule, RouterLink, BoltCornersComponent, PaginationComponent],
   templateUrl: './blog-detail.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './blog-detail.css'
 })
 export class BlogDetailComponent implements OnInit {

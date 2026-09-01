@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ClientFactureService } from '../services/client-facture.service';
 import { FactureModel } from '../../shared/models';
@@ -24,7 +24,6 @@ const STATUT_TONES: Record<FactureModel['statutPaiement'], BadgeTone> = {
   selector: 'app-client-factures',
   standalone: true,
   imports: [CommonModule, AlertComponent, StatusBadgeComponent, VehicleAvatarComponent],
-  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './client-factures.component.html',
 })
 export class ClientFacturesComponent implements OnInit {

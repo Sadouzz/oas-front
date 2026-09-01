@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LucidePlus, LucideUsers, LucideCar, LucideAlertTriangle, LucideClock, LucidePackage, LucideArrowRight, LucideCheckCircle, LucideBuilding } from '@lucide/angular';
 import { AuthService } from '../auth/services/auth.service';
@@ -14,7 +14,6 @@ import { GarageService } from '../../services/garage.service';
   selector: 'app-dashboard',
   standalone: true,
   imports: [RouterLink, LucidePlus, LucideUsers, LucideCar, LucideAlertTriangle, LucideClock, LucidePackage, LucideArrowRight, LucideCheckCircle, LucideBuilding],
-  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './dashboard.component.html',
 })
 export class DashboardComponent implements OnInit {

@@ -1,4 +1,4 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
@@ -9,7 +9,6 @@ import { LucideMail, LucideLock, LucideEye, LucideEyeOff, LucideCheck, LucideLoa
   selector: 'app-client-login',
   standalone: true,
   imports: [ReactiveFormsModule, RouterLink, LucideMail, LucideLock, LucideEye, LucideEyeOff, LucideCheck, LucideLoader2],
-  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './client-login.component.html',
 })
 export class ClientLoginComponent {

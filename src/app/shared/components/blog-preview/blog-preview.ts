@@ -1,4 +1,4 @@
-import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
 import { RouterLink } from '@angular/router';
 import { BoltCornersComponent } from '../bolt-corners/bolt-corners';
@@ -17,7 +17,6 @@ export interface BlogArticle {
   standalone: true,
   imports: [RouterLink, BoltCornersComponent],
   templateUrl: './blog-preview.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
   styles: []
 })
 export class BlogPreviewComponent {

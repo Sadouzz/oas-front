@@ -63,7 +63,7 @@
             <div (click)="select(d)"
               class="px-4 py-3.5 border-b border-oas-line cursor-pointer transition flex items-center gap-3"
               [class.bg-oas-accent-bg]="selected?.id === d.id" [class.hover:bg-oas-bg]="selected?.id !== d.id">
-              <app-vehicle-avatar [marque]="$safeNavigationMigration(d.vehicule?.marque)"></app-vehicle-avatar>
+              <app-vehicle-avatar [marque]="d.vehicule?.marque"></app-vehicle-avatar>
               <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2">
                   <span class="font-mono-data font-semibold text-sm text-oas-ink">{{ d.vehicule?.immatriculation ?? 'Véhicule —' }}</span>

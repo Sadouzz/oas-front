@@ -1,4 +1,4 @@
-import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
 export type BadgeTone = 'pending' | 'success' | 'danger' | 'info' | 'neutral';
 
@@ -13,7 +13,6 @@ const TONE_CLASSES: Record<BadgeTone, string> = {
 @Component({
   selector: 'app-status-badge',
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <span class="px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap" [class]="toneClass">
       {{ label }}

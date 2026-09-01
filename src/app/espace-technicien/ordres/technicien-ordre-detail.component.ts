@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -14,7 +14,6 @@ import { RemarqueDiagnostic } from '../../shared/models/ordre-reparation.model';
   selector: 'app-technicien-ordre-detail',
   standalone: true,
   imports: [FormsModule, RouterLink, MediaUploaderComponent],
-  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './technicien-ordre-detail.component.html',
 })
 export class TechnicienOrdreDetailComponent implements OnInit {

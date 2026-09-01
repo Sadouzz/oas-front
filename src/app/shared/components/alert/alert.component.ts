@@ -1,9 +1,8 @@
-import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
 @Component({
   selector: 'app-alert',
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     @if (success) {
       <div class="mb-4 px-4 py-3 bg-oas-ok-bg border border-oas-ok/30 text-oas-ok text-sm rounded-lg">

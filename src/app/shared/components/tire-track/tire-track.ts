@@ -5,8 +5,7 @@ import {
   AfterViewInit,
   OnDestroy,
   OnInit,
-  ChangeDetectorRef,
-  ChangeDetectionStrategy
+  ChangeDetectorRef
 } from '@angular/core';
 
 
@@ -17,7 +16,6 @@ let nextUniqueId = 0;
   standalone: true,
   imports: [],
   templateUrl: './tire-track.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './tire-track.css',
 })
 export class TireTrackComponent implements OnInit, AfterViewInit, OnDestroy {

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ClientNotificationService } from '../services/client-notification.service';
 import { ClientNotification } from '../models';
@@ -8,7 +8,6 @@ import { AlertComponent } from '../../shared/components/alert/alert.component';
   selector: 'app-client-notifications',
   standalone: true,
   imports: [CommonModule, AlertComponent],
-  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './client-notifications.component.html',
 })
 export class ClientNotificationsComponent implements OnInit {
