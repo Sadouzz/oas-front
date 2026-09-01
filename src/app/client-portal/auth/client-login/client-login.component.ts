@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
@@ -12,6 +12,7 @@ import { LucideMail, LucideLock, LucideEye, LucideEyeOff, LucideCheck, LucideLoa
   templateUrl: './client-login.component.html',
 })
 export class ClientLoginComponent {
+  private cdr = inject(ChangeDetectorRef);
   readonly paths = CLIENT_PORTAL_PATHS;
 
   private fb = inject(FormBuilder);
@@ -45,7 +46,7 @@ export class ClientLoginComponent {
     this.authService.login(this.form.value).subscribe({
       next: () => {
         if (!this.authService.hasRole('ROLE_CLIENT')) {
-          this.loading = false;
+          this.loading = false; this.cdr.markForCheck();
           this.authService.logout();
           this.errorMessage = "Ce compte n'est pas un compte client.";
           return;
@@ -53,7 +54,7 @@ export class ClientLoginComponent {
         this.router.navigate([CLIENT_PORTAL_PATHS.tableauDeBord], { replaceUrl: true });
       },
       error: (err: any) => {
-        this.loading = false;
+        this.loading = false; this.cdr.markForCheck();
         this.errorMessage = err.error?.message || "Nom d'utilisateur ou mot de passe incorrect.";
       }
     });

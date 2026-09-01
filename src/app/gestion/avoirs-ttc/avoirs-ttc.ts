@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormArray, FormBuilder, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -22,6 +22,7 @@ import { LucideSearch, LucidePlus, LucideTrash2, LucideX, LucideDownload, Lucide
   styleUrl: './avoirs-ttc.css',
 })
 export class AvoirsTtc implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private service = inject(AvoirTTCService);
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
@@ -130,11 +131,11 @@ export class AvoirsTtc implements OnInit {
     this.service.getAll().subscribe({
       next: (d) => {
         this.avoirs = (d || []).sort((a, b) => b.id - a.id);
-        this.applyFilter();
-        this.loading = false;
+        this.applyFilter(); this.cdr.markForCheck();
+        this.loading = false; this.cdr.markForCheck();
       },
       error: () => {
-        this.loading = false;
+        this.loading = false; this.cdr.markForCheck();
         this.errorMessage = 'Erreur lors du chargement des avoirs TTC.';
       }
     });
@@ -156,7 +157,7 @@ export class AvoirsTtc implements OnInit {
 
   onSearch(e: Event) {
     this.searchTerm = (e.target as HTMLInputElement).value.trim();
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   get paged(): AvoirTTC[] {

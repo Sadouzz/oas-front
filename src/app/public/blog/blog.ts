@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -28,6 +28,7 @@ interface Article {
   styleUrl: './blog.css',
 })
 export class Blog implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private blogService = inject(BlogService);
   private router = inject(Router);
 

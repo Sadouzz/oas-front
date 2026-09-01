@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, HostListener, ElementRef } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, HostListener, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { CommonModule, NgClass, NgStyle } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -101,6 +101,7 @@ const STATUT_STEPS: { statut: StatutFiche; label: string }[] = [
   templateUrl: './ordres-reparation.component.html',
 })
 export class OrdresReparationComponent implements OnInit, OnDestroy {
+  private cdr = inject(ChangeDetectorRef);
   private service = inject(OrdreReparationService);
   private vehiculeService = inject(VehiculeService);
   private technicienService = inject(TechnicienService);
@@ -527,11 +528,11 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
         this.fournisseurs = fournisseurs.filter(f => !f.archived);
         this.allClients = clients;
         this.referentielsLoaded = true;
-        this.loading = false;
+        this.loading = false; this.cdr.markForCheck();
         callback();
       },
       error: () => {
-        this.loading = false;
+        this.loading = false; this.cdr.markForCheck();
         this.notifyError('Erreur de chargement des référentiels');
       }
     });
@@ -542,8 +543,8 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
     this.service.getAll().subscribe({
       next: (data) => {
         this.fiches = data.sort((a, b) => b.id - a.id);
-        this.applyFilter();
-        this.loading = false;
+        this.applyFilter(); this.cdr.markForCheck();
+        this.loading = false; this.cdr.markForCheck();
 
         if (this.selectedFiche) {
           this.selectedFiche = data.find(f => f.id === this.selectedFiche!.id) ?? null;
@@ -592,12 +593,12 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
 
   onSearch(e: Event) {
     this.searchKw = (e.target as HTMLInputElement).value;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   onFilterStatut(e: Event) {
     this.filterStatut = (e.target as HTMLSelectElement).value;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   // ─── Checkbox Toggles ──────────────────────────────────

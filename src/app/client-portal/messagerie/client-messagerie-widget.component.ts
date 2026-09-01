@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClientMessageService } from '../services/client-message.service';
@@ -15,6 +15,7 @@ const POLL_INTERVAL_MS = 15000;
   templateUrl: './client-messagerie-widget.component.html',
 })
 export class ClientMessagerieWidgetComponent implements OnInit, OnDestroy {
+  private cdr = inject(ChangeDetectorRef);
   private messageService = inject(ClientMessageService);
   private portalService = inject(ClientPortalService);
   private pollInterval: any;
@@ -49,9 +50,9 @@ export class ClientMessagerieWidgetComponent implements OnInit, OnDestroy {
         }
         messages.forEach(m => this.knownIds.add(m.id));
         this.messages = messages;
-        this.loading = false;
+        this.loading = false; this.cdr.markForCheck();
       },
-      error: () => { this.loading = false; },
+      error: () => { this.loading = false; this.cdr.markForCheck(); },
     });
   }
 

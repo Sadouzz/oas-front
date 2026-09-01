@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { TechnicienPortalService } from '../services/technicien-portal.service';
 import { OrdreReparation } from '../../shared/models';
@@ -9,6 +9,7 @@ import { OrdreReparation } from '../../shared/models';
   templateUrl: './technicien-ordres-list.component.html',
 })
 export class TechnicienOrdresListComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private service = inject(TechnicienPortalService);
   private router = inject(Router);
 
@@ -23,8 +24,8 @@ export class TechnicienOrdresListComponent implements OnInit {
   load() {
     this.loading = true;
     this.service.getMesOrdresReparation().subscribe({
-      next: data => { this.ordres = data; this.loading = false; },
-      error: () => { this.loading = false; this.errorMessage = 'Erreur de chargement des ordres de réparation.'; },
+      next: data => { this.ordres = data; this.loading = false; this.cdr.markForCheck(); },
+      error: () => { this.loading = false; this.cdr.markForCheck(); this.errorMessage = 'Erreur de chargement des ordres de réparation.'; },
     });
   }
 

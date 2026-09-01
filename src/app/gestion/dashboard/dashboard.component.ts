@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LucidePlus, LucideUsers, LucideCar, LucideAlertTriangle, LucideClock, LucidePackage, LucideArrowRight, LucideCheckCircle, LucideBuilding } from '@lucide/angular';
 import { AuthService } from '../auth/services/auth.service';
@@ -17,6 +17,7 @@ import { GarageService } from '../../services/garage.service';
   templateUrl: './dashboard.component.html',
 })
 export class DashboardComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private authService = inject(AuthService);
   private clientService = inject(ClientService);
   private vehiculeService = inject(VehiculeService);
@@ -81,9 +82,11 @@ export class DashboardComponent implements OnInit {
       next: (data) => {
         this.garages = data;
         this.loading = false;
+        this.cdr.markForCheck();
       },
       error: () => {
         this.loading = false;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -136,11 +139,19 @@ export class DashboardComponent implements OnInit {
     if (this.isMagasinier) {
       this.pieceService.getAll({ statut: 'ACTIF' }).subscribe({ next: (d) => { this.totalVehicules = d.length; this.done(); }, error: () => this.done() });
     }
-    setTimeout(() => this.loading = false, 1500);
+    setTimeout(() => {
+      this.loading = false;
+      this.cdr.markForCheck();
+    }, 1500);
   }
 
   private loaded = 0;
-  private done() { if (++this.loaded >= 1) this.loading = false; }
+  private done() {
+    if (++this.loaded >= 1) {
+      this.loading = false;
+      this.cdr.markForCheck();
+    }
+  }
 
   get ruptures(): AlerteStock[] { return this.alertes.filter(a => a.typeAlerte === 'RUPTURE'); }
   get stocksFaibles(): AlerteStock[] { return this.alertes.filter(a => a.typeAlerte === 'STOCK_FAIBLE'); }

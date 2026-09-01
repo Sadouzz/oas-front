@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -17,6 +17,7 @@ import { RemarqueDiagnostic } from '../../shared/models/ordre-reparation.model';
   templateUrl: './technicien-ordre-detail.component.html',
 })
 export class TechnicienOrdreDetailComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private service = inject(TechnicienPortalService);
@@ -77,12 +78,12 @@ export class TechnicienOrdreDetailComponent implements OnInit {
       next: (o) => {
         this.ordre = o;
         this.listeDefauts = o.listeDefauts ?? '';
-        this.loading = false;
+        this.loading = false; this.cdr.markForCheck();
         this.loadPiecesJointesDiagnostic();
         this.loadRemarquesDiagnostic();
       },
       error: (err) => {
-        this.loading = false;
+        this.loading = false; this.cdr.markForCheck();
         if (err.status === 403) {
           this.forbidden = true;
         } else {

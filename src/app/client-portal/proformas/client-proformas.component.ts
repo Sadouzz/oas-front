@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ClientProformaService, Proforma } from '../services/client-proforma.service';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
@@ -26,6 +26,7 @@ const STATUT_TONES: Record<string, BadgeTone> = {
   templateUrl: './client-proformas.component.html',
 })
 export class ClientProformasComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private service = inject(ClientProformaService);
 
   proformas: Proforma[] = [];
@@ -49,8 +50,8 @@ export class ClientProformasComponent implements OnInit {
   load(): void {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: proformas => { this.proformas = proformas; this.loading = false; this.applyFilter(); },
-      error: () => { this.loading = false; this.errorMessage = 'Impossible de charger vos proformas.'; },
+      next: proformas => { this.proformas = proformas; this.loading = false; this.cdr.markForCheck(); this.applyFilter(); this.cdr.markForCheck(); },
+      error: () => { this.loading = false; this.cdr.markForCheck(); this.errorMessage = 'Impossible de charger vos proformas.'; },
     });
   }
 
@@ -67,17 +68,17 @@ export class ClientProformasComponent implements OnInit {
 
   onSearch(value: string): void {
     this.searchTerm = value;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   onStatutFilter(value: string): void {
     this.statutFilter = value;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   onSortChange(value: SortOrder): void {
     this.sortOrder = value;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   select(proforma: Proforma): void {

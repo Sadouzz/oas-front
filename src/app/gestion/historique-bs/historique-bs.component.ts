@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -13,6 +13,7 @@ import { LucideSearch, LucideLoader2 } from '@lucide/angular';
   templateUrl: './historique-bs.component.html',
 })
 export class HistoriqueBsComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private bonService = inject(BonDeSortieService);
 
   historiqueList: BonDeSortieHistorique[] = [];
@@ -37,18 +38,18 @@ export class HistoriqueBsComponent implements OnInit {
     this.bonService.getHistoriqueGlobal().subscribe({
       next: (data) => {
         this.historiqueList = data;
-        this.applyFilter();
-        this.loading = false;
+        this.applyFilter(); this.cdr.markForCheck();
+        this.loading = false; this.cdr.markForCheck();
       },
       error: () => {
-        this.loading = false;
+        this.loading = false; this.cdr.markForCheck();
       }
     });
   }
 
   onSearch(event: Event) {
     this.searchQuery = (event.target as HTMLInputElement).value.toLowerCase();
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   onPresetChange() {
@@ -76,7 +77,7 @@ export class HistoriqueBsComponent implements OnInit {
       this.dateDebut = '';
       this.dateFin = '';
     }
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   applyFilter() {
@@ -136,7 +137,7 @@ export class HistoriqueBsComponent implements OnInit {
     this.dateDebut = '';
     this.dateFin = '';
     this.filterPiece = '';
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   get paged(): BonDeSortieHistorique[] {

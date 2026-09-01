@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ClientMarketplaceService } from '../services/client-marketplace.service';
@@ -13,6 +13,7 @@ import { ModalComponent } from '../ui/modal/modal.component';
   templateUrl: './client-marketplace.component.html',
 })
 export class ClientMarketplaceComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private service = inject(ClientMarketplaceService);
   private fb = inject(FormBuilder);
 
@@ -44,12 +45,12 @@ export class ClientMarketplaceComponent implements OnInit {
         // Défense en profondeur : le back ne devrait renvoyer que les produits disponibles,
         // mais on filtre quand même les archivés côté client au cas où.
         this.produits = produits.filter(p => p.disponible && !p.archive);
-        this.applyFilter();
-        this.loading = false;
+        this.applyFilter(); this.cdr.markForCheck();
+        this.loading = false; this.cdr.markForCheck();
       },
       error: () => {
         this.errorMessage = 'Impossible de charger les produits du marketplace.';
-        this.loading = false;
+        this.loading = false; this.cdr.markForCheck();
       },
     });
   }
@@ -63,7 +64,7 @@ export class ClientMarketplaceComponent implements OnInit {
 
   onSearch(value: string): void {
     this.searchTerm = value;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   openDemande(produit: Produit): void {

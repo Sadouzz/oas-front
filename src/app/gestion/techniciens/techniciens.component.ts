@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TechnicienService } from '../../services/technicien.service';
 import { GarageService } from '../../services/garage.service';
@@ -25,6 +25,7 @@ const SPECIALITES: { value: Specialite; label: string }[] = [
   templateUrl: './techniciens.component.html',
 })
 export class TechniciensComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private service = inject(TechnicienService);
   private garageService = inject(GarageService);
   private authService = inject(AuthService);
@@ -77,7 +78,7 @@ export class TechniciensComponent implements OnInit {
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: data => { this.techniciens = data; this.filtered = data; this.loading = false; },
+      next: data => { this.techniciens = data; this.filtered = data; this.loading = false; this.cdr.markForCheck(); },
       error: () => this.loading = false,
     });
   }

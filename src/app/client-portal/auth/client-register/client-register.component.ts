@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { debounceTime, distinctUntilChanged, switchMap, of, catchError, firstValueFrom } from 'rxjs';
@@ -17,6 +17,7 @@ type AvailabilityStatus = 'idle' | 'checking' | 'available' | 'taken';
   templateUrl: './client-register.component.html',
 })
 export class ClientRegisterComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   readonly paths = CLIENT_PORTAL_PATHS;
 
   private fb = inject(FormBuilder);
@@ -165,7 +166,7 @@ export class ClientRegisterComponent implements OnInit {
         setTimeout(() => this.router.navigate([CLIENT_PORTAL_PATHS.connexion]), 1500);
       },
       error: (err: any) => {
-        this.loading = false;
+        this.loading = false; this.cdr.markForCheck();
         const msg: string = err.error?.message || err.error || '';
 
         if (/username/i.test(msg)) {

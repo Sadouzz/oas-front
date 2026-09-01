@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
@@ -19,6 +19,7 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDo
   templateUrl: './proformas.component.html',
 })
 export class ProformasComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private service = inject(ProformaService);
   private bcService = inject(BonDeCommandeService);
   private clientService = inject(ClientService);
@@ -124,7 +125,7 @@ export class ProformasComponent implements OnInit {
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: data => { this.proformas = data.sort((a:any, b:any) => b.id - a.id); this.applyFilter(); this.loading = false; },
+      next: data => { this.proformas = data.sort((a:any, b:any) => b.id - a.id); this.applyFilter(); this.cdr.markForCheck(); this.loading = false; this.cdr.markForCheck(); },
       error: () => this.loading = false,
     });
   }
@@ -148,12 +149,12 @@ export class ProformasComponent implements OnInit {
 
   onSearch(e: Event) {
     this.searchTerm = (e.target as HTMLInputElement).value.toLowerCase().trim();
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   onStatutFilterChange(e: Event) {
     this.statutFilter = (e.target as HTMLSelectElement).value;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   get bcLabel(): string {

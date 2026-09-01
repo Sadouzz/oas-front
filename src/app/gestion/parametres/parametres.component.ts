@@ -1,4 +1,4 @@
-﻿import { Component, OnInit } from '@angular/core';
+﻿import { inject, Component, OnInit, ChangeDetectorRef } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { DepotService, Depot } from '../../services/depot.service';
@@ -12,6 +12,7 @@ import { FicheAtelierConfigService, FicheAtelierConfigBackend, BriqueConfig } fr
   templateUrl: './parametres.component.html'
 })
 export class ParametresComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   activeTab = 'depots';
 
   depots: Depot[] = [];

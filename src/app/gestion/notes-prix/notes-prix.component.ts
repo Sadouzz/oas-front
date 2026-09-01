@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -18,6 +18,7 @@ import { PaginationComponent } from '../../shared/components/pagination/paginati
   templateUrl: './notes-prix.component.html',
 })
 export class NotesPrixComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private service = inject(NoteDePrixService);
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
@@ -96,7 +97,7 @@ export class NotesPrixComponent implements OnInit {
       if (params['search'] === 'client-date') {
         this.showDateFilter = true;
       }
-      this.applyFilter();
+      this.applyFilter(); this.cdr.markForCheck();
     });
   }
 
@@ -105,13 +106,13 @@ export class NotesPrixComponent implements OnInit {
     this.service.getAll().subscribe({
       next: data => {
         this.notes = (data || []).sort((a: any, b: any) => (b.id ?? 0) - (a.id ?? 0));
-        this.applyFilter();
-        this.loading = false;
+        this.applyFilter(); this.cdr.markForCheck();
+        this.loading = false; this.cdr.markForCheck();
       },
       error: () => {
         this.notes = [];
         this.filtered = [];
-        this.loading = false;
+        this.loading = false; this.cdr.markForCheck();
       },
     });
   }
@@ -166,12 +167,12 @@ export class NotesPrixComponent implements OnInit {
 
   onStatutFilter(e: Event) {
     this.filterStatut = (e.target as HTMLSelectElement).value;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   onSearch(e: Event) {
     this.searchTerm = (e.target as HTMLInputElement).value.toLowerCase().trim();
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   // ── Wizard ─────────────────────────────────────────────────────

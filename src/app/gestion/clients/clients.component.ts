@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NgClass, DatePipe, DecimalPipe } from '@angular/common';
 import { forkJoin } from 'rxjs';
@@ -18,6 +18,7 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, Lu
   templateUrl: './clients.component.html',
 })
 export class ClientsComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
   private clientService = inject(ClientService);
   private vehiculeService = inject(VehiculeService);
@@ -95,8 +96,8 @@ export class ClientsComponent implements OnInit {
     this.clientService.getAll().subscribe({
       next: (clients) => {
         this.clients = clients.sort((a:any, b:any) => b.id - a.id);
-        this.applyFilter();
-        this.loading = false;
+        this.applyFilter(); this.cdr.markForCheck();
+        this.loading = false; this.cdr.markForCheck();
         // Refresh selected client data if one is selected
         if (this.selectedClient) {
           const updated = clients.find(c => c.id === this.selectedClient!.id);
@@ -104,7 +105,7 @@ export class ClientsComponent implements OnInit {
         }
       },
       error: () => {
-        this.loading = false;
+        this.loading = false; this.cdr.markForCheck();
         this.errorMessage = 'Impossible de charger les clients. Vérifiez que le serveur est démarré.';
       },
     });
@@ -156,12 +157,12 @@ export class ClientsComponent implements OnInit {
 
   onSearch(event: Event) {
     this.searchTerm = (event.target as HTMLInputElement).value.trim().toLowerCase();
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   onStatutFilter(event: Event) {
     this.filterStatut = (event.target as HTMLSelectElement).value;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   get paged(): UserModel[] { return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize); }

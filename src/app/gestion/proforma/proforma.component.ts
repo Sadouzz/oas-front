@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, FormArray, Validators, FormsModule } from '@angular/forms';
 import { ProformaService } from '../../services/proforma.service';
@@ -14,6 +14,7 @@ import { VehiculeService } from '../../services/vehicule.service';
   templateUrl: './proforma.component.html',
 })
 export class ProformaComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   // simple incremental counter for generating line references
   private referenceCounter = 1;
   private fb = inject(FormBuilder);

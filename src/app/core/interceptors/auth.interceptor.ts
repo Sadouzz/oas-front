@@ -20,7 +20,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     headers = headers.set('X-Garage-ID', activeGarageId.toString());
   }
 
-  const authReq = req.clone({ headers });
+  const authReq = req.clone({
+    headers,
+    withCredentials: true
+  });
 
   const isClientArea = router.url.startsWith('/espace-client');
 

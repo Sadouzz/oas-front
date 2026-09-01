@@ -1,4 +1,4 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit, inject } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SectionTitle } from '../../shared/components/section-title/section-title';
 import { MagneticCarouselComponent, MagneticItem } from '../../shared/components/magnetic-carousel/magnetic-carousel';
@@ -47,6 +47,7 @@ interface Partner {
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class Home implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   servicesImages: MagneticItem[] = SERVICES.map((s, index) => ({
     id: index + 1,
     title: s.title,

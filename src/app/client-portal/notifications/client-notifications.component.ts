@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ClientNotificationService } from '../services/client-notification.service';
 import { ClientNotification } from '../models';
@@ -11,6 +11,7 @@ import { AlertComponent } from '../../shared/components/alert/alert.component';
   templateUrl: './client-notifications.component.html',
 })
 export class ClientNotificationsComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private service = inject(ClientNotificationService);
 
   notifications: ClientNotification[] = [];
@@ -28,8 +29,8 @@ export class ClientNotificationsComponent implements OnInit {
   load(): void {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: notifs => { this.notifications = notifs; this.loading = false; },
-      error: () => { this.loading = false; this.errorMessage = 'Impossible de charger vos notifications.'; },
+      next: notifs => { this.notifications = notifs; this.loading = false; this.cdr.markForCheck(); },
+      error: () => { this.loading = false; this.cdr.markForCheck(); this.errorMessage = 'Impossible de charger vos notifications.'; },
     });
   }
 

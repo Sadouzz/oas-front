@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormArray, FormBuilder, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -20,6 +20,7 @@ import { SearchableSelectComponent } from '../../shared/components/searchable-se
   templateUrl: './factures.component.html',
 })
 export class FacturesComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private service = inject(FactureService);
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
@@ -97,14 +98,14 @@ export class FacturesComponent implements OnInit {
       if (params['search'] === 'client-date') {
         this.showDateFilter = true;
       }
-      this.applyFilter();
+      this.applyFilter(); this.cdr.markForCheck();
     });
   }
 
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: data => { this.factures = data.sort((a:any, b:any) => b.id - a.id); this.applyFilter(); this.loading = false; },
+      next: data => { this.factures = data.sort((a:any, b:any) => b.id - a.id); this.applyFilter(); this.cdr.markForCheck(); this.loading = false; this.cdr.markForCheck(); },
       error: () => this.loading = false,
     });
   }
@@ -143,12 +144,12 @@ export class FacturesComponent implements OnInit {
 
   onStatutFilter(e: Event) {
     this.filterStatut = (e.target as HTMLSelectElement).value;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   onSearch(e: Event) {
     this.searchTerm = (e.target as HTMLInputElement).value.toLowerCase().trim();
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   // ── Wizard ─────────────────────────────────────────────────────

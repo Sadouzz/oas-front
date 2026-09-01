@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { HistoryService } from '../../../services/history.service';
 import { ConnectionHistoryModel } from '../../../shared/models/index';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
@@ -11,6 +11,7 @@ import { LucideSearch, LucideX, LucideClock, LucideUser, LucideCheck } from '@lu
   templateUrl: './history.component.html',
 })
 export class HistoryComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private historyService = inject(HistoryService);
 
   history: ConnectionHistoryModel[] = [];
@@ -27,9 +28,9 @@ export class HistoryComponent implements OnInit {
           new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
         );
         this.filtered = this.history;
-        this.loading = false;
+        this.loading = false; this.cdr.markForCheck();
       },
-      error: () => { this.loading = false; }
+      error: () => { this.loading = false; this.cdr.markForCheck(); }
     });
   }
 

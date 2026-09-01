@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ClientPortalService } from '../services/client-portal.service';
@@ -39,6 +39,7 @@ const RECU: StatutDemandeProduit[] = ['LIVREE'];
   templateUrl: './client-profile.component.html',
 })
 export class ClientProfileComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private portalService = inject(ClientPortalService);
   private profileService = inject(ClientProfileService);
   private marketplaceService = inject(ClientMarketplaceService);
@@ -78,10 +79,10 @@ export class ClientProfileComponent implements OnInit {
           phone: me.phone,
           email: me.email,
         });
-        this.loading = false;
+        this.loading = false; this.cdr.markForCheck();
       },
       error: () => {
-        this.loading = false;
+        this.loading = false; this.cdr.markForCheck();
         this.errorMessage = 'Impossible de charger votre profil.';
       },
     });

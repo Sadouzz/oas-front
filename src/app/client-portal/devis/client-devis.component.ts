@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ClientDevisService } from '../services/client-devis.service';
 import { DevisPrevisionnel, StatutDevis } from '../models';
@@ -33,6 +33,7 @@ const STATUT_TONES: Record<StatutDevis, BadgeTone> = {
   templateUrl: './client-devis.component.html',
 })
 export class ClientDevisComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private service = inject(ClientDevisService);
 
   devis: DevisPrevisionnel[] = [];
@@ -58,8 +59,8 @@ export class ClientDevisComponent implements OnInit {
   load(): void {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: devis => { this.devis = devis; this.loading = false; this.applyFilter(); },
-      error: () => { this.loading = false; this.errorMessage = 'Impossible de charger vos devis.'; },
+      next: devis => { this.devis = devis; this.loading = false; this.cdr.markForCheck(); this.applyFilter(); this.cdr.markForCheck(); },
+      error: () => { this.loading = false; this.cdr.markForCheck(); this.errorMessage = 'Impossible de charger vos devis.'; },
     });
   }
 
@@ -76,17 +77,17 @@ export class ClientDevisComponent implements OnInit {
 
   onSearch(value: string): void {
     this.searchTerm = value;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   onStatutFilter(value: string): void {
     this.statutFilter = value;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   onSortChange(value: SortOrder): void {
     this.sortOrder = value;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   select(devis: DevisPrevisionnel): void {

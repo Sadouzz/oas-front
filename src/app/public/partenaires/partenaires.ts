@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { inject, AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild, CUSTOM_ELEMENTS_SCHEMA, ChangeDetectorRef } from '@angular/core';
 
 import { RouterModule } from '@angular/router';
 import { register } from 'swiper/element/bundle';
@@ -32,6 +32,7 @@ register();
   styleUrls: ['./partenaires.css']
 })
 export class Partenaires implements OnInit, AfterViewInit, OnDestroy {
+  private cdr = inject(ChangeDetectorRef);
 
   partenairesLocaux: PartenaireModel[] = [];
   partenairesExterieurs: PartenaireModel[] = [];

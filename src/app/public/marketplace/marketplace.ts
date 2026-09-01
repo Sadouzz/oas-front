@@ -1,4 +1,4 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit, HostListener, inject } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit, HostListener, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { Product } from '../../shared/models/product.model';
@@ -30,6 +30,7 @@ register();
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class Marketplace implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   products: Product[] = [];
   private marketplaceService = inject(MarketplaceService);
 

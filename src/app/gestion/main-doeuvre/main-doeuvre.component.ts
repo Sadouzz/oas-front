@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, Pipe, PipeTransform } from '@angular/core';
+import { Component, inject, OnInit, Pipe, PipeTransform, ChangeDetectorRef } from '@angular/core';
 import { DecimalPipe, NgClass, UpperCasePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MainDoeuvreService, MainDoeuvreModel, MainDoeuvreRequest } from '../../services/main-doeuvre.service';
@@ -10,6 +10,7 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideAr
 // Pipe inline pour compter par catégorie dans le template
 @Pipe({ name: 'categorieCount', standalone: true, pure: false })
 export class CategorieCountPipe implements PipeTransform {
+  private cdr = inject(ChangeDetectorRef);
   transform(items: MainDoeuvreModel[], catId: number): number {
     return items.filter(i => i.categorie?.id === catId).length;
   }
@@ -22,6 +23,7 @@ export class CategorieCountPipe implements PipeTransform {
   templateUrl: './main-doeuvre.component.html',
 })
 export class MainDoeuvreComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private fb      = inject(FormBuilder);
   private service = inject(MainDoeuvreService);
   private catService = inject(CategorieMainDoeuvreService);
@@ -76,8 +78,8 @@ export class MainDoeuvreComponent implements OnInit {
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: (data) => { this.items = data.sort((a:any, b:any) => b.id - a.id); this.applyFilter(); this.loading = false; },
-      error: ()    => { this.loading = false; }
+      next: (data) => { this.items = data.sort((a:any, b:any) => b.id - a.id); this.applyFilter(); this.cdr.markForCheck(); this.loading = false; this.cdr.markForCheck(); },
+      error: ()    => { this.loading = false; this.cdr.markForCheck(); }
     });
   }
 
@@ -99,23 +101,23 @@ export class MainDoeuvreComponent implements OnInit {
 
   onSearch(event: Event) {
     this.searchTerm = (event.target as HTMLInputElement).value.toLowerCase().trim();
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   onCategorieFilter(event: Event) {
     const val = (event.target as HTMLSelectElement).value;
     this.filterCategorieId = val ? +val : null;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   onArchivedFilter(event: Event) {
     this.filterArchived = (event.target as HTMLSelectElement).value;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   filterByCategorie(catId: number) {
     this.filterCategorieId = this.filterCategorieId === catId ? null : catId;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   // ── Pagination ────────────────────────────────────────

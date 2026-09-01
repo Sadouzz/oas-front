@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, inject, OnInit, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -15,6 +15,7 @@ import { LucidePlus, LucideTrash2, LucideArrowLeft, LucideSave, LucideX } from '
   styleUrl: './fiches-atelier.css',
 })
 export class FichesAtelier implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -152,11 +153,11 @@ export class FichesAtelier implements OnInit {
             designationTravaux: this.rdvData.motif
           });
         }
-        this.loading = false;
+        this.loading = false; this.cdr.markForCheck();
       },
       error: () => {
         this.error = "Erreur lors du chargement du rendez-vous.";
-        this.loading = false;
+        this.loading = false; this.cdr.markForCheck();
       }
     });
   }

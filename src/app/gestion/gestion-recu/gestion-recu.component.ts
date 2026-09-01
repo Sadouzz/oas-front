@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { RecuModel } from '../../shared/models/recu.model';
 import { RecuService } from '../../services/recu.service';
 import { NgClass } from '@angular/common';
@@ -12,6 +12,7 @@ import { PaginationComponent } from '../../shared/components/pagination/paginati
   templateUrl: './gestion-recu.component.html'
 })
 export class GestionRecuComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private recuService = inject(RecuService);
 
   recus: RecuModel[] = [];
@@ -31,11 +32,11 @@ export class GestionRecuComponent implements OnInit {
     this.recuService.getAll().subscribe({
       next: (data) => {
         this.recus = data;
-        this.applyFilter();
-        this.loading = false;
+        this.applyFilter(); this.cdr.markForCheck();
+        this.loading = false; this.cdr.markForCheck();
       },
       error: () => {
-        this.loading = false;
+        this.loading = false; this.cdr.markForCheck();
       }
     });
   }
@@ -57,7 +58,7 @@ export class GestionRecuComponent implements OnInit {
 
   onSearch(e: Event) {
     this.searchTerm = (e.target as HTMLInputElement).value;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   get paged(): RecuModel[] {

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { RendezVousService } from '../../services/rendezvous.service';
@@ -19,6 +19,7 @@ import {
   templateUrl: './rendezvous.component.html',
 })
 export class RendezVousComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private service = inject(RendezVousService);
   private technicienService = inject(TechnicienService);
   private fb = inject(FormBuilder);
@@ -67,7 +68,7 @@ export class RendezVousComponent implements OnInit {
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: data => { this.rdvs = data; this.applyFilters(); this.loading = false; },
+      next: data => { this.rdvs = data; this.applyFilters(); this.loading = false; this.cdr.markForCheck(); },
       error: () => this.loading = false,
     });
   }

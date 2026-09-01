@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -21,6 +21,7 @@ import { SearchableSelectComponent } from '../../shared/components/searchable-se
   templateUrl: './seuil-alertes.html'
 })
 export class SeuilAlertes implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private service = inject(PieceDetacheeService);
   private authService = inject(AuthService);
   private router = inject(Router);
@@ -74,10 +75,10 @@ export class SeuilAlertes implements OnInit {
           return typeof c === 'string' ? { id: c, nom: c } : { id: c.nom, nom: c.nom };
         }).sort((a, b) => a.nom.localeCompare(b.nom));
 
-        this.loading = false;
+        this.loading = false; this.cdr.markForCheck();
       },
       error: () => {
-        this.loading = false;
+        this.loading = false; this.cdr.markForCheck();
       }
     });
   }

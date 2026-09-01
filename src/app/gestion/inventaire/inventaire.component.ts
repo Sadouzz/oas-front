@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { StockService, InventaireResponse } from '../../services/stock.service';
 import { PieceDetacheeService, PieceDetache } from '../../services/piece-detachee.service';
@@ -13,6 +13,7 @@ import { LucideSearch, LucideRefreshCw, LucideDownload, LucidePackage, LucideAle
   templateUrl: './inventaire.component.html',
 })
 export class InventaireComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
   private stockService = inject(StockService);
   private pieceService = inject(PieceDetacheeService);
@@ -41,14 +42,14 @@ export class InventaireComponent implements OnInit {
   ngOnInit() {
     this.loading = true;
     this.pieceService.getAll({ type: 'PDP', statut: 'ACTIF' }).subscribe({
-      next: (d) => { this.pdps = d.sort((a:any, b:any) => b.id - a.id); this.applyFilter(); this.loading = false; },
-      error: () => { this.loading = false; }
+      next: (d) => { this.pdps = d.sort((a:any, b:any) => b.id - a.id); this.applyFilter(); this.cdr.markForCheck(); this.loading = false; this.cdr.markForCheck(); },
+      error: () => { this.loading = false; this.cdr.markForCheck(); }
     });
   }
 
   onSearch(event: Event) {
     this.keyword = (event.target as HTMLInputElement).value.toLowerCase().trim();
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   applyFilter() {

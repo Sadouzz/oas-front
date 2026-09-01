@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
@@ -19,6 +19,7 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDo
   templateUrl: './bons-commande.component.html',
 })
 export class BonsCommandeComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private service = inject(BonDeCommandeService);
   private fournisseurService = inject(FournisseurService);
   private vehiculeService = inject(VehiculeService);
@@ -185,7 +186,7 @@ export class BonsCommandeComponent implements OnInit {
           if (params['search'] === 'fournisseur-date') {
             this.showDateFilter = true;
           }
-          this.applyFilter();
+          this.applyFilter(); this.cdr.markForCheck();
         });
       },
     });
@@ -194,7 +195,7 @@ export class BonsCommandeComponent implements OnInit {
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: (d) => { this.bons = d.sort((a: any, b: any) => b.id - a.id); this.applyFilter(); this.loading = false; },
+      next: (d) => { this.bons = d.sort((a: any, b: any) => b.id - a.id); this.applyFilter(); this.cdr.markForCheck(); this.loading = false; this.cdr.markForCheck(); },
       error: () => this.loading = false,
     });
   }
@@ -229,12 +230,12 @@ export class BonsCommandeComponent implements OnInit {
 
   onSearch(e: Event) {
     this.searchTerm = (e.target as HTMLInputElement).value.toLowerCase().trim();
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   onFilterStatut(e: Event) {
     this.filterStatut = (e.target as HTMLSelectElement).value;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   hasReception(bon: BonDeCommande | null): boolean {
@@ -439,7 +440,7 @@ export class BonsCommandeComponent implements OnInit {
         this.selectedBon = updated;
         const idx = this.bons.findIndex(b => b.id === updated.id);
         if (idx !== -1) this.bons[idx] = updated;
-        this.applyFilter();
+        this.applyFilter(); this.cdr.markForCheck();
         this.actioning = false;
         this.notify('Statut mis à jour.');
       },
@@ -462,7 +463,7 @@ export class BonsCommandeComponent implements OnInit {
         this.selectedBon = updated;
         const idx = this.bons.findIndex(b => b.id === updated.id);
         if (idx !== -1) this.bons[idx] = updated;
-        this.applyFilter();
+        this.applyFilter(); this.cdr.markForCheck();
         this.assigningFournisseur = false;
         this.showAssignFournisseur = false;
         this.assignFournisseurId = null;
@@ -507,7 +508,7 @@ export class BonsCommandeComponent implements OnInit {
         this.selectedBon = updated;
         const idx = this.bons.findIndex(b => b.id === updated.id);
         if (idx !== -1) this.bons[idx] = updated;
-        this.applyFilter();
+        this.applyFilter(); this.cdr.markForCheck();
         this.receptionSaving = false;
         this.showReceptionModal = false;
         this.notify('Bon de réception enregistré. Les pièces ont été ajoutées au stock.');

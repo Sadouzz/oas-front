@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet, NavigationEnd } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { filter, Subscription } from 'rxjs';
@@ -15,6 +15,7 @@ import { ClientMessagerieWidgetComponent } from '../messagerie/client-messagerie
   templateUrl: './client-layout.component.html',
 })
 export class ClientLayoutComponent implements OnInit, OnDestroy {
+  private cdr = inject(ChangeDetectorRef);
   private authService = inject(AuthService);
   private notificationService = inject(ClientNotificationService);
   private router = inject(Router);

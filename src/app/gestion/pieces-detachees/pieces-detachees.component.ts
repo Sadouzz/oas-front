@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { DecimalPipe, NgClass } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -18,6 +18,7 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideAr
   templateUrl: './pieces-detachees.component.html',
 })
 export class PiecesDetacheesComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
   private service = inject(PieceDetacheeService);
   private depotService = inject(DepotService);
@@ -96,9 +97,9 @@ export class PiecesDetacheesComponent implements OnInit {
         this.pieces = data.sort((a: any, b: any) => b.id - a.id);
         this.depotsFilters = [...new Set(data.map((p: any) => p.categorie?.depot?.nom).filter((d: any) => !!d))].sort() as string[];
         this.applyFilters();
-        this.loading = false;
+        this.loading = false; this.cdr.markForCheck();
       },
-      error: () => { this.loading = false; }
+      error: () => { this.loading = false; this.cdr.markForCheck(); }
     });
   }
 

@@ -17,3 +17,4 @@ export * from './partenaire.model';
 export * from './media.model';
 export * from './fiche-atelier.model';
 export * from './note-de-prix.model';
+export * from './api-response.model';

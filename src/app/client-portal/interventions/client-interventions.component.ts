@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ClientInterventionService } from '../services/client-intervention.service';
 import { Intervention } from '../models';
@@ -15,6 +15,7 @@ type SortOrder = 'recent' | 'ancien';
   templateUrl: './client-interventions.component.html',
 })
 export class ClientInterventionsComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private service = inject(ClientInterventionService);
 
   interventions: Intervention[] = [];
@@ -43,8 +44,8 @@ export class ClientInterventionsComponent implements OnInit {
   load(): void {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: interventions => { this.interventions = interventions; this.loading = false; this.applyFilter(); },
-      error: () => { this.loading = false; this.errorMessage = 'Impossible de charger votre historique.'; },
+      next: interventions => { this.interventions = interventions; this.loading = false; this.cdr.markForCheck(); this.applyFilter(); this.cdr.markForCheck(); },
+      error: () => { this.loading = false; this.cdr.markForCheck(); this.errorMessage = 'Impossible de charger votre historique.'; },
     });
   }
 
@@ -61,17 +62,17 @@ export class ClientInterventionsComponent implements OnInit {
 
   onSearch(value: string): void {
     this.searchTerm = value;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   onStatutFilter(value: string): void {
     this.statutFilter = value;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   onSortChange(value: SortOrder): void {
     this.sortOrder = value;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   select(intervention: Intervention): void {

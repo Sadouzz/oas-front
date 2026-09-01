@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { BonDeReceptionService, BonDeReception } from '../../services/bon-de-reception.service';
@@ -16,6 +16,7 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDo
   templateUrl: './bons-reception.component.html',
 })
 export class BonsReceptionComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private service = inject(BonDeReceptionService);
   private bcService = inject(BonDeCommandeService);
   private vehiculeService = inject(VehiculeService);
@@ -50,7 +51,7 @@ export class BonsReceptionComponent implements OnInit {
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: data => { this.bons = data.sort((a: any, b: any) => b.id - a.id); this.applyFilter(); this.loading = false; },
+      next: data => { this.bons = data.sort((a: any, b: any) => b.id - a.id); this.applyFilter(); this.cdr.markForCheck(); this.loading = false; this.cdr.markForCheck(); },
       error: () => this.loading = false,
     });
   }
@@ -68,7 +69,7 @@ export class BonsReceptionComponent implements OnInit {
 
   onSearch(e: Event) {
     this.searchTerm = (e.target as HTMLInputElement).value.toLowerCase().trim();
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   openDetail(bon: BonDeReception) { this.selectedBon = bon; }

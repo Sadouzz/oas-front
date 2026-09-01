@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ElementRef, ViewChild } from '@angular/core';
+import { Component, inject, OnInit, ElementRef, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -16,6 +16,7 @@ import { AuthService } from '../auth/services/auth.service';
   templateUrl: './fiche-atelier-details.html'
 })
 export class FicheAtelierDetails implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private service = inject(FicheAtelierService);
@@ -58,13 +59,13 @@ export class FicheAtelierDetails implements OnInit {
     this.service.getById(id).subscribe({
       next: (data) => {
         this.fiche = data;
-        this.loading = false;
+        this.loading = false; this.cdr.markForCheck();
         this.checkOrdreReparationExists(id);
         this.loadDevis(id);
       },
       error: () => {
         this.error = "Impossible de charger la fiche atelier.";
-        this.loading = false;
+        this.loading = false; this.cdr.markForCheck();
       }
     });
   }

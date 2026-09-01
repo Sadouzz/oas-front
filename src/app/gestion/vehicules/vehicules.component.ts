@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { VehiculeService } from '../../services/vehicule.service';
@@ -15,6 +15,7 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, Lu
   templateUrl: './vehicules.component.html',
 })
 export class VehiculesComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
   private vehiculeService = inject(VehiculeService);
   private clientService = inject(ClientService);
@@ -103,9 +104,9 @@ export class VehiculesComponent implements OnInit {
   loadVehicules() {
     this.loading = true;
     this.vehiculeService.getAll().subscribe({
-      next: (data) => { this.vehicules = data.sort((a:any, b:any) => b.id - a.id); this.applyFilter(); this.loading = false; },
+      next: (data) => { this.vehicules = data.sort((a:any, b:any) => b.id - a.id); this.applyFilter(); this.cdr.markForCheck(); this.loading = false; this.cdr.markForCheck(); },
       error: () => {
-        this.loading = false;
+        this.loading = false; this.cdr.markForCheck();
         this.errorMessage = 'Impossible de charger les véhicules. Vérifiez que le serveur est démarré.';
       }
     });
@@ -134,18 +135,18 @@ export class VehiculesComponent implements OnInit {
 
   onSearch(event: Event) {
     this.searchTerm = (event.target as HTMLInputElement).value.toLowerCase().trim();
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   onMarqueFilter(event: Event) {
     this.filterMarque = (event.target as HTMLSelectElement).value;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   onClientFilter(event: Event) {
     const val = (event.target as HTMLSelectElement).value;
     this.filterClientId = val ? Number(val) : null;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   get paged(): VehiculeModel[] { return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize); }

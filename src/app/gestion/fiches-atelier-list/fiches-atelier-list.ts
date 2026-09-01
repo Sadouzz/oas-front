@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FicheAtelierService } from '../../services/fiche-atelier.service';
 import { FicheAtelierResponse } from '../../shared/models';
@@ -13,6 +13,7 @@ import { LucideEye, LucideWrench } from '@lucide/angular';
   styleUrl: './fiches-atelier-list.css'
 })
 export class FichesAtelierList implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private service = inject(FicheAtelierService);
   
   fiches: FicheAtelierResponse[] = [];
@@ -32,24 +33,24 @@ export class FichesAtelierList implements OnInit {
     this.service.getAll().subscribe({
       next: (data) => {
         this.fiches = data.sort((a, b) => b.id - a.id);
-        this.applyFilter();
-        this.loading = false;
+        this.applyFilter(); this.cdr.markForCheck();
+        this.loading = false; this.cdr.markForCheck();
       },
       error: () => {
         this.error = 'Erreur lors du chargement des fiches atelier.';
-        this.loading = false;
+        this.loading = false; this.cdr.markForCheck();
       }
     });
   }
 
   onSearchVehicule(event: Event) {
     this.searchVehicule = (event.target as HTMLInputElement).value;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   onSearchClient(event: Event) {
     this.searchClient = (event.target as HTMLInputElement).value;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   applyFilter() {

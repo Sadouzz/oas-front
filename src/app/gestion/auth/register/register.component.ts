@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../services/auth.service';
@@ -13,6 +13,7 @@ import { LucideEye, LucideEyeOff, LucideLoader2 } from '@lucide/angular';
   templateUrl: './register.component.html',
 })
 export class RegisterComponent {
+  private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private authService = inject(AuthService);
@@ -54,7 +55,7 @@ export class RegisterComponent {
         setTimeout(() => this.router.navigate(['/login']), 1500);
       },
       error: (err: any) => {
-        this.loading = false;
+        this.loading = false; this.cdr.markForCheck();
         this.errorMessage = err.error?.message || 'Une erreur est survenue.';
       }
     });

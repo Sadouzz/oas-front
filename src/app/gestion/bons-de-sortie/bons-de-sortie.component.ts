@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 
 import { FormBuilder, FormArray, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -19,6 +19,7 @@ import { LucidePlus, LucideSearch, LucidePackage, LucideTrash2, LucideX, LucideC
   templateUrl: './bons-de-sortie.component.html',
 })
 export class BonsDeSortieComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
   private bonService = inject(BonDeSortieService);
@@ -151,15 +152,15 @@ export class BonsDeSortieComponent implements OnInit {
       if (params['search'] === 'auto-date') {
         this.showDateFilter = true;
       }
-      this.applyFilter();
+      this.applyFilter(); this.cdr.markForCheck();
     });
   }
 
   loadBons() {
     this.loading = true;
     this.bonService.getAll().subscribe({
-      next: (d) => { this.bons = d.sort((a: any, b: any) => b.id - a.id); this.applyFilter(); this.loading = false; },
-      error: () => { this.loading = false; }
+      next: (d) => { this.bons = d.sort((a: any, b: any) => b.id - a.id); this.applyFilter(); this.cdr.markForCheck(); this.loading = false; this.cdr.markForCheck(); },
+      error: () => { this.loading = false; this.cdr.markForCheck(); }
     });
   }
 
@@ -194,7 +195,7 @@ export class BonsDeSortieComponent implements OnInit {
 
   onSearch(event: Event) {
     this.searchTerm = (event.target as HTMLInputElement).value.toLowerCase().trim();
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   get paged(): BonDeSortie[] { return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize); }
@@ -204,7 +205,7 @@ export class BonsDeSortieComponent implements OnInit {
 
   onStatutFilter(event: Event) {
     this.filterStatut = (event.target as HTMLSelectElement).value;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   // ── WIZARD ─────────────────────────────────────────────────────

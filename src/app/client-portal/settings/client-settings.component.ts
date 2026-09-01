@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectorRef } from '@angular/core';
 
 import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
@@ -18,6 +18,7 @@ function passwordsMatch(control: AbstractControl): ValidationErrors | null {
   templateUrl: './client-settings.component.html',
 })
 export class ClientSettingsComponent {
+  private cdr = inject(ChangeDetectorRef);
   private authService = inject(AuthService);
   private profileService = inject(ClientProfileService);
   private fb = inject(FormBuilder);

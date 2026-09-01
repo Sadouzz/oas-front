@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FournisseurService } from '../../services/fournisseur.service';
 import { FournisseurModel } from '../../shared/models/index';
@@ -13,6 +13,7 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideBu
   templateUrl: './fournisseurs.component.html',
 })
 export class FournisseursComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
   private service = inject(FournisseurService);
 
@@ -41,8 +42,8 @@ export class FournisseursComponent implements OnInit {
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: (data) => { this.fournisseurs = data; this.filtered = data; this.loading = false; },
-      error: () => { this.loading = false; }
+      next: (data) => { this.fournisseurs = data; this.filtered = data; this.loading = false; this.cdr.markForCheck(); },
+      error: () => { this.loading = false; this.cdr.markForCheck(); }
     });
   }
 

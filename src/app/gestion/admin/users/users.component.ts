@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UserManagementService } from '../../../services/user-management.service';
 import { GarageService } from '../../../services/garage.service';
@@ -25,6 +25,7 @@ const ROLE_PREFIX: Record<string, string> = {
   templateUrl: './users.component.html',
 })
 export class UsersComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
   private userService = inject(UserManagementService);
   private garageService = inject(GarageService);
@@ -84,9 +85,9 @@ export class UsersComponent implements OnInit {
       next: (data) => {
         this.users = data.filter(u => u.type === 'AGENT');
         this.filtered = this.users;
-        this.loading = false;
+        this.loading = false; this.cdr.markForCheck();
       },
-      error: () => { this.loading = false; }
+      error: () => { this.loading = false; this.cdr.markForCheck(); }
     });
   }
 

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { StockService, StockMouvement } from '../../services/stock.service';
 import { PieceDetacheeService, PieceDetache, AlerteStock } from '../../services/piece-detachee.service';
@@ -16,6 +16,7 @@ type ModalType = 'entree' | 'sortie' | 'ajustement' | null;
   templateUrl: './stock.component.html',
 })
 export class StockComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
   private stockService = inject(StockService);
   private pieceService = inject(PieceDetacheeService);
@@ -117,7 +118,7 @@ export class StockComponent implements OnInit {
   }
 
   private loadCount = 0;
-  private checkDone() { if (++this.loadCount >= 2) this.loading = false; }
+  private checkDone() { if (++this.loadCount >= 2) this.loading = false; this.cdr.markForCheck(); }
 
   loadMovementsRecent() {
     const pId = this.filterPieceId ? parseInt(this.filterPieceId, 10) : undefined;

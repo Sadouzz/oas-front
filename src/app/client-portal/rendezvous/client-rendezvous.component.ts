@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ClientRendezVousService } from '../services/client-rendezvous.service';
@@ -38,6 +38,7 @@ const STATUT_TONES: Record<RendezVousStatus, BadgeTone> = {
   templateUrl: './client-rendezvous.component.html',
 })
 export class ClientRendezVousComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private service = inject(ClientRendezVousService);
   private vehiculeService = inject(ClientVehiculeService);
   private interventionService = inject(ClientInterventionService);
@@ -178,8 +179,8 @@ export class ClientRendezVousComponent implements OnInit {
   load(): void {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: rdv => { this.rendezvous = rdv; this.loading = false; this.applyFilter(); },
-      error: () => { this.loading = false; this.errorMessage = 'Impossible de charger vos rendez-vous.'; },
+      next: rdv => { this.rendezvous = rdv; this.loading = false; this.cdr.markForCheck(); this.applyFilter(); this.cdr.markForCheck(); },
+      error: () => { this.loading = false; this.cdr.markForCheck(); this.errorMessage = 'Impossible de charger vos rendez-vous.'; },
     });
   }
 
@@ -196,17 +197,17 @@ export class ClientRendezVousComponent implements OnInit {
 
   onSearch(value: string): void {
     this.searchTerm = value;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   onStatutFilter(value: string): void {
     this.statutFilter = value;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   onSortChange(value: SortOrder): void {
     this.sortOrder = value;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   select(rdv: RendezVous): void {

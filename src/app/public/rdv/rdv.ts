@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, inject } from '@angular/core';
+import { Component, HostListener, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 
 import { RouterLink, Router } from '@angular/router';
 import {
@@ -55,6 +55,7 @@ import { SpeedometerComponent } from '../../shared/components/speedometer/speedo
   styleUrl: './rdv.css'
 })
 export class RdvComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
 
   
   statistiques: any[] = [];

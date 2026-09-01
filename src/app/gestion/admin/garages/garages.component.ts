@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { GarageService } from '../../../services/garage.service';
@@ -11,6 +11,7 @@ import { LucidePlus, LucideEdit2, LucideTrash2, LucideX, LucideSave } from '@luc
   templateUrl: './garages.component.html'
 })
 export class GaragesComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private garageService = inject(GarageService);
   private fb = inject(FormBuilder);
 
@@ -42,10 +43,10 @@ export class GaragesComponent implements OnInit {
     this.garageService.getAll().subscribe({
       next: (data) => {
         this.garages = data;
-        this.loading = false;
+        this.loading = false; this.cdr.markForCheck();
       },
       error: () => {
-        this.loading = false;
+        this.loading = false; this.cdr.markForCheck();
       }
     });
   }

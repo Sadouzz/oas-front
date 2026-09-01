@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ClientVehiculeService } from '../services/client-vehicule.service';
@@ -22,6 +22,7 @@ type SortOrder = 'recent' | 'ancien';
   templateUrl: './client-vehicules.component.html',
 })
 export class ClientVehiculesComponent implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private service = inject(ClientVehiculeService);
   private interventionService = inject(ClientInterventionService);
   private factureService = inject(ClientFactureService);
@@ -59,7 +60,7 @@ export class ClientVehiculesComponent implements OnInit {
   load(): void {
     this.loading = true;
     let remaining = 3;
-    const done = () => { remaining -= 1; if (remaining === 0) { this.loading = false; this.applyFilter(); } };
+    const done = () => { remaining -= 1; if (remaining === 0) { this.loading = false; this.cdr.markForCheck(); this.applyFilter(); this.cdr.markForCheck(); } };
 
     this.service.getAll().subscribe({
       next: vehicules => { this.vehicules = vehicules; done(); },
@@ -151,17 +152,17 @@ export class ClientVehiculesComponent implements OnInit {
 
   onSearch(value: string): void {
     this.searchTerm = value;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   onStageFilter(value: string): void {
     this.stageFilter = value;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   onSortChange(value: SortOrder): void {
     this.sortOrder = value;
-    this.applyFilter();
+    this.applyFilter(); this.cdr.markForCheck();
   }
 
   select(vehicule: VehiculeModel): void {

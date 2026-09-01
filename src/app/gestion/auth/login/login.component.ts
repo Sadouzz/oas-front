@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../services/auth.service';
@@ -11,6 +11,7 @@ import { LucideUser, LucideLock, LucideEye, LucideEyeOff, LucideCheck, LucideLoa
   templateUrl: './login.component.html',
 })
 export class LoginComponent {
+  private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private authService = inject(AuthService);
@@ -62,7 +63,7 @@ export class LoginComponent {
       },
       error: (err: any) => {
         console.log(this.form.value)
-        this.loading = false;
+        this.loading = false; this.cdr.markForCheck();
         this.errorMessage = err.error?.message || "Nom d'utilisateur ou mot de passe incorrect.";
       }
     });
