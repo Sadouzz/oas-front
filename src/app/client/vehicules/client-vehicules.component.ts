@@ -1,9 +1,9 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ClientVehiculeService } from '../services/client-vehicule.service';
-import { ClientInterventionService } from '../services/client-intervention.service';
-import { ClientFactureService } from '../services/client-facture.service';
+import { ClientVehiculeService } from './client-vehicule.service';
+import { ClientInterventionService } from '../interventions/client-intervention.service';
+import { ClientFactureService } from '../factures/client-facture.service';
 import { VehiculeModel, FactureModel } from '../../shared/models';
 import { Intervention } from '../models';
 import { AlertComponent } from '../../shared/components/alert/alert.component';

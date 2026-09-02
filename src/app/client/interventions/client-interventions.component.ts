@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ClientInterventionService } from '../services/client-intervention.service';
+import { ClientInterventionService } from './client-intervention.service';
 import { Intervention } from '../models';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { StatusBadgeComponent } from '../ui/status-badge/status-badge.component';

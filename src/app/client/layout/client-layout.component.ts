@@ -3,7 +3,7 @@ import { Router, RouterLink, RouterLinkActive, RouterOutlet, NavigationEnd } fro
 import { CommonModule } from '@angular/common';
 import { filter, Subscription } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
-import { ClientNotificationService } from '../services/client-notification.service';
+import { ClientNotificationService } from '../notifications/client-notification.service';
 import { ClientNotification } from '../models';
 import { CLIENT_PORTAL_PATHS } from '../client-portal.paths';
 import { ClientMessagerieWidgetComponent } from '../messagerie/client-messagerie-widget.component';

@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ClientNotificationService } from '../services/client-notification.service';
+import { ClientNotificationService } from './client-notification.service';
 import { ClientNotification } from '../models';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 

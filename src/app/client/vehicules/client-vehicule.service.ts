@@ -4,15 +4,6 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { VehiculeModel } from '../../shared/models';
 
-export interface ClientVehiculeRequest {
-  immatriculation: string;
-  marque: string;
-  modele: string;
-  annee: number | null;
-  kilometrage: number | null;
-  numeroChassis: string;
-}
-
 @Injectable({ providedIn: 'root' })
 export class ClientVehiculeService {
   private http = inject(HttpClient);
@@ -22,7 +13,19 @@ export class ClientVehiculeService {
     return this.http.get<VehiculeModel[]>(this.api);
   }
 
-  create(payload: ClientVehiculeRequest): Observable<VehiculeModel> {
-    return this.http.post<VehiculeModel>(this.api, payload);
+  getById(id: number): Observable<VehiculeModel> {
+    return this.http.get<VehiculeModel>(`${this.api}/${id}`);
+  }
+
+  create(data: any): Observable<VehiculeModel> {
+    return this.http.post<VehiculeModel>(this.api, data);
+  }
+
+  update(id: number, data: any): Observable<VehiculeModel> {
+    return this.http.put<VehiculeModel>(`${this.api}/${id}`, data);
+  }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.api}/${id}`);
   }
 }

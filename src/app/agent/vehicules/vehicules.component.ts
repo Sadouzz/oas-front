@@ -3,10 +3,9 @@ import { DecimalPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { VehiculeService } from './vehicule.service';
 import { ClientService } from '../clients/client.service';
-import { UserModel, VehiculeModel } from '../../shared/models/index';
+import { UserModel, VehiculeModel, extractContent } from '../../shared/models/index';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
-import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, LucideArchiveRestore, LucideX, LucideCar } from '@lucide/angular';
 
 @Component({
   selector: 'app-vehicules',
@@ -24,6 +23,8 @@ export class VehiculesComponent implements OnInit {
   filtered: VehiculeModel[] = [];
   page = 1;
   readonly pageSize = 10;
+  totalElements = 0;
+  serverTotalPages = 1;
   clients: UserModel[] = [];
   loading = false;
   saving = false;
@@ -97,17 +98,40 @@ export class VehiculesComponent implements OnInit {
   ngOnInit() {
     this.loadVehicules();
     this.clientService.getAll().subscribe({
-      next: (data) => { this.clients = data.filter(c => c.enabled); }
+      next: (res: any) => {
+        const list = extractContent<UserModel>(res);
+        this.clients = list.filter((c: any) => c.enabled);
+        this.cdr.markForCheck();
+      }
     });
   }
 
   loadVehicules() {
     this.loading = true;
-    this.vehiculeService.getAll().subscribe({
-      next: (data) => { this.vehicules = data.sort((a:any, b:any) => b.id - a.id); this.applyFilter(); this.cdr.markForCheck(); this.loading = false; this.cdr.markForCheck(); },
+    const params: any = { page: this.page - 1, size: this.pageSize };
+    if (this.searchTerm) params.keyword = this.searchTerm;
+    if (this.filterMarque) params.marque = this.filterMarque;
+    if (this.filterClientId) params.clientId = this.filterClientId;
+
+    this.vehiculeService.getAll(params).subscribe({
+      next: (res: any) => {
+        const list = extractContent<VehiculeModel>(res);
+        this.vehicules = list.sort((a: any, b: any) => b.id - a.id);
+        if (res && res.totalElements !== undefined) {
+          this.totalElements = res.totalElements;
+          this.serverTotalPages = res.totalPages;
+        } else {
+          this.totalElements = this.vehicules.length;
+          this.serverTotalPages = 1;
+        }
+        this.applyFilter();
+        this.loading = false;
+        this.cdr.markForCheck();
+      },
       error: () => {
-        this.loading = false; this.cdr.markForCheck();
+        this.loading = false;
         this.errorMessage = 'Impossible de charger les véhicules. Vérifiez que le serveur est démarré.';
+        this.cdr.markForCheck();
       }
     });
   }
@@ -130,29 +154,31 @@ export class VehiculesComponent implements OnInit {
       );
     }
     this.filtered = data;
-    this.page = 1;
   }
 
   onSearch(event: Event) {
     this.searchTerm = (event.target as HTMLInputElement).value.toLowerCase().trim();
-    this.applyFilter(); this.cdr.markForCheck();
+    this.page = 1;
+    this.loadVehicules();
   }
 
   onMarqueFilter(event: Event) {
     this.filterMarque = (event.target as HTMLSelectElement).value;
-    this.applyFilter(); this.cdr.markForCheck();
+    this.page = 1;
+    this.loadVehicules();
   }
 
   onClientFilter(event: Event) {
     const val = (event.target as HTMLSelectElement).value;
     this.filterClientId = val ? Number(val) : null;
-    this.applyFilter(); this.cdr.markForCheck();
+    this.page = 1;
+    this.loadVehicules();
   }
 
-  get paged(): VehiculeModel[] { return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize); }
-  get totalPages(): number { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }
-  prevPage(): void { if (this.page > 1) this.page--; }
-  nextPage(): void { if (this.page < this.totalPages) this.page++; }
+  get paged(): VehiculeModel[] { return this.filtered; }
+  get totalPages(): number { return this.serverTotalPages; }
+  prevPage(): void { if (this.page > 1) { this.page--; this.loadVehicules(); } }
+  nextPage(): void { if (this.page < this.totalPages) { this.page++; this.loadVehicules(); } }
 
   // ── CREATE 2-STEP ──────────────────────────────────────────────
   openCreate() {
@@ -184,28 +210,22 @@ export class VehiculesComponent implements OnInit {
   openEdit(v: VehiculeModel) {
     this.isNew = false;
     this.editingId = v.id;
-    this.editingClient = v.client ?? null;
+    this.editingClient = (v.client as any) || null;
+    this.createStep = 1;
+    this.errorMessage = '';
     this.editForm.patchValue({
       immatriculation: v.immatriculation,
       marque: v.marque,
       modele: v.modele,
-      annee: v.annee,
-      kilometrage: v.kilometrage,
-      numeroChassis: v.numeroChassis,
+      annee: v.annee ?? null,
+      kilometrage: v.kilometrage ?? null,
+      numeroChassis: v.numeroChassis ?? '',
     });
-    this.errorMessage = '';
     this.showModal = true;
   }
 
   closeModal() {
     this.showModal = false;
-    this.infoForm.reset();
-    this.clientForm.reset();
-    this.editForm.reset();
-    this.createStep = 1;
-    this.pendingVehicle = null;
-    this.editingClient = null;
-    this.errorMessage = '';
   }
 
   save() {
@@ -215,7 +235,7 @@ export class VehiculesComponent implements OnInit {
       const payload = { ...this.pendingVehicle, clientId: this.clientForm.value.clientId };
       this.vehiculeService.create(payload).subscribe({
         next: () => { this.saving = false; this.showSuccess('Véhicule créé avec succès !'); this.closeModal(); this.loadVehicules(); },
-        error: (err: any) => { this.saving = false; this.errorMessage = err.error?.message || 'Erreur lors de la création.'; }
+        error: (err: any) => { this.saving = false; this.errorMessage = err.error?.message || 'Erreur lors de la création.'; this.cdr.markForCheck(); }
       });
     } else {
       if (this.editForm.invalid || this.saving) { this.editForm.markAllAsTouched(); return; }
@@ -223,7 +243,7 @@ export class VehiculesComponent implements OnInit {
       const payload = { ...this.editForm.value, clientId: this.editingClient?.id ?? null };
       this.vehiculeService.update(this.editingId!, payload as any).subscribe({
         next: () => { this.saving = false; this.showSuccess('Véhicule modifié avec succès !'); this.closeModal(); this.loadVehicules(); },
-        error: (err: any) => { this.saving = false; this.errorMessage = err.error?.message || 'Erreur lors de la modification.'; }
+        error: (err: any) => { this.saving = false; this.errorMessage = err.error?.message || 'Erreur lors de la modification.'; this.cdr.markForCheck(); }
       });
     }
   }
@@ -232,14 +252,15 @@ export class VehiculesComponent implements OnInit {
     if (!confirm(`Supprimer le véhicule ${v.immatriculation} ? Cette action est irréversible.`)) return;
     this.vehiculeService.delete(v.id).subscribe({
       next: () => { this.showSuccess('Véhicule supprimé.'); this.loadVehicules(); },
-      error: (err: any) => { this.errorMessage = err.error?.message || 'Erreur lors de la suppression.'; }
+      error: (err: any) => { this.errorMessage = err.error?.message || 'Erreur lors de la suppression.'; this.cdr.markForCheck(); }
     });
   }
 
   private showSuccess(msg: string) {
     this.successMessage = msg;
     this.errorMessage = '';
-    setTimeout(() => this.successMessage = '', 3500);
+    this.cdr.markForCheck();
+    setTimeout(() => { this.successMessage = ''; this.cdr.markForCheck(); }, 3500);
   }
 
   get fInfo() { return this.infoForm.controls; }

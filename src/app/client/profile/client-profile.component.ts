@@ -1,9 +1,9 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ClientPortalService } from '../services/client-portal.service';
-import { ClientProfileService } from '../services/client-profile.service';
-import { ClientMarketplaceService } from '../services/client-marketplace.service';
+import { ClientPortalService } from '../layout/client-portal.service';
+import { ClientProfileService } from './client-profile.service';
+import { ClientMarketplaceService } from '../marketplace/client-marketplace.service';
 import { DemandeProduit, StatutDemandeProduit } from '../models';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { StatusBadgeComponent, BadgeTone } from '../ui/status-badge/status-badge.component';

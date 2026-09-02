@@ -10,6 +10,7 @@ import { BonDeSortieService, BonDeSortie } from '../bons-de-sortie/bon-de-sortie
 import { OrdreReparationService } from '../ordres-reparation/ordre-reparation.service';
 import { GarageContextService } from '../../core/services/garage-context.service';
 import { GarageService } from '../../services/garage.service';
+import { extractContent } from '../../shared/models/index';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -24,6 +25,7 @@ export class DashboardComponent implements OnInit {
   private stockService = inject(StockService);
   private pieceService = inject(PieceDetacheeService);
   private bonService = inject(BonDeSortieService);
+  private ficheService = inject(OrdreReparationService);
   private garageContext = inject(GarageContextService);
   private garageService = inject(GarageService);
 
@@ -36,7 +38,6 @@ export class DashboardComponent implements OnInit {
   bonsEnAttente: BonDeSortie[] = [];
   recentFiches: any[] = [];
 
-  private ficheService = inject(OrdreReparationService);
   ficheStats = {
     aFaire: 0,
     diagnostic: 0,
@@ -80,7 +81,7 @@ export class DashboardComponent implements OnInit {
     this.loading = true;
     this.garageService.getAll().subscribe({
       next: (data) => {
-        this.garages = data;
+        this.garages = extractContent(data);
         this.loading = false;
         this.cdr.markForCheck();
       },
@@ -99,25 +100,42 @@ export class DashboardComponent implements OnInit {
     this.loading = true;
     this.loaded = 0;
     if (this.isSuperAgent || this.isMaster || this.isAgent) {
-      this.clientService.getAll().subscribe({ next: (d) => { this.totalClients = d.length; this.recentClients = d.slice(0, 5); this.done(); }, error: () => this.done() });
-      this.vehiculeService.getAll().subscribe({ next: (d) => { this.totalVehicules = d.length; this.recentVehicules = d.slice(0, 5); this.done(); }, error: () => this.done() });
+      this.clientService.getAll().subscribe({
+        next: (res: any) => {
+          const list = extractContent<UserModel>(res);
+          this.totalClients = list.length;
+          this.recentClients = list.slice(0, 5);
+          this.done();
+        },
+        error: () => this.done()
+      });
+      this.vehiculeService.getAll().subscribe({
+        next: (res: any) => {
+          const list = extractContent<VehiculeModel>(res);
+          this.totalVehicules = list.length;
+          this.recentVehicules = list.slice(0, 5);
+          this.done();
+        },
+        error: () => this.done()
+      });
     }
     if (this.isSuperAgent || this.isMaster || this.isAgent || this.isChefAtelier) {
       this.ficheService.getAll().subscribe({
-        next: (data) => {
-          this.ficheStats.aFaire = data.filter(f => f.statut === 'A_FAIRE').length;
-          this.ficheStats.diagnostic = data.filter(f => f.statut === 'EN_DIAGNOSTIC').length;
-          this.ficheStats.attenteProforma = data.filter(f => f.statut === 'EN_ATTENTE_PROFORMA').length;
-          this.ficheStats.proformaValide = data.filter(f => f.statut === 'PROFORMA_VALIDE').length;
-          this.ficheStats.attentePieces = data.filter(f => f.statut === 'EN_ATTENTE_COMMANDE').length;
-          this.ficheStats.attenteSortie = data.filter(f => f.statut === 'EN_ATTENTE_SORTIE').length;
-          this.ficheStats.enCours = data.filter(f => f.statut === 'EN_COURS').length;
-          this.ficheStats.attentePaiement = data.filter(f => f.statut === 'EN_ATTENTE_PAIEMENT').length;
-          this.ficheStats.termine = data.filter(f => f.statut === 'TERMINE').length;
-          this.ficheStats.livre = data.filter(f => f.statut === 'LIVRE').length;
+        next: (res: any) => {
+          const data = extractContent<any>(res);
+          this.ficheStats.aFaire = data.filter((f: any) => f.statut === 'A_FAIRE').length;
+          this.ficheStats.diagnostic = data.filter((f: any) => f.statut === 'EN_DIAGNOSTIC').length;
+          this.ficheStats.attenteProforma = data.filter((f: any) => f.statut === 'EN_ATTENTE_PROFORMA').length;
+          this.ficheStats.proformaValide = data.filter((f: any) => f.statut === 'PROFORMA_VALIDE').length;
+          this.ficheStats.attentePieces = data.filter((f: any) => f.statut === 'EN_ATTENTE_COMMANDE').length;
+          this.ficheStats.attenteSortie = data.filter((f: any) => f.statut === 'EN_ATTENTE_SORTIE').length;
+          this.ficheStats.enCours = data.filter((f: any) => f.statut === 'EN_COURS').length;
+          this.ficheStats.attentePaiement = data.filter((f: any) => f.statut === 'EN_ATTENTE_PAIEMENT').length;
+          this.ficheStats.termine = data.filter((f: any) => f.statut === 'TERMINE').length;
+          this.ficheStats.livre = data.filter((f: any) => f.statut === 'LIVRE').length;
 
-          this.ficheStats.totalActives = data.filter(f => f.statut !== 'LIVRE' && f.statut !== 'A_FAIRE').length;
-          this.recentFiches = [...data].sort((a, b) => new Date(b.dateCreation).getTime() - new Date(a.dateCreation).getTime()).slice(0, 5);
+          this.ficheStats.totalActives = data.filter((f: any) => f.statut !== 'LIVRE' && f.statut !== 'A_FAIRE').length;
+          this.recentFiches = [...data].sort((a: any, b: any) => new Date(b.dateCreation).getTime() - new Date(a.dateCreation).getTime()).slice(0, 5);
           this.loadingFiches = false;
           this.done();
         },

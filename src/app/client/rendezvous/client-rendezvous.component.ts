@@ -1,9 +1,9 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ClientRendezVousService } from '../services/client-rendezvous.service';
-import { ClientVehiculeService } from '../services/client-vehicule.service';
-import { ClientInterventionService } from '../services/client-intervention.service';
+import { ClientRendezVousService } from './client-rendezvous.service';
+import { ClientVehiculeService } from '../vehicules/client-vehicule.service';
+import { ClientInterventionService } from '../interventions/client-intervention.service';
 import { GarageService } from '../../services/garage.service';
 import { RendezVous, RendezVousStatus, VehiculeModel, Garage } from '../../shared/models';
 import { Intervention } from '../models';

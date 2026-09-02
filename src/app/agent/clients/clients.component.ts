@@ -6,7 +6,7 @@ import { ClientService } from './client.service';
 import { VehiculeService } from '../vehicules/vehicule.service';
 import { BonDeSortieService } from '../bons-de-sortie/bon-de-sortie.service';
 import { FactureService, FactureModel } from '../factures/facture.service';
-import { UserModel, VehiculeModel } from '../../shared/models/index';
+import { UserModel, VehiculeModel, extractContent } from '../../shared/models/index';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, LucideArchiveRestore, LucideX, LucideCheck, LucideUser, LucideArrowRight } from '@lucide/angular';
@@ -94,13 +94,14 @@ export class ClientsComponent implements OnInit {
   loadAll() {
     this.loading = true;
     this.clientService.getAll().subscribe({
-      next: (clients) => {
-        this.clients = clients.sort((a: any, b: any) => b.id - a.id);
+      next: (res) => {
+        const clientsList = extractContent<UserModel>(res as any);
+        this.clients = clientsList.sort((a: any, b: any) => b.id - a.id);
         this.applyFilter(); this.cdr.markForCheck();
         this.loading = false; this.cdr.markForCheck();
         // Refresh selected client data if one is selected
         if (this.selectedClient) {
-          const updated = clients.find(c => c.id === this.selectedClient!.id);
+          const updated = clientsList.find(c => c.id === this.selectedClient!.id);
           if (updated) this.selectedClient = updated;
         }
       },

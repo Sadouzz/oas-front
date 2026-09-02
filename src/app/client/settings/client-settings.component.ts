@@ -2,7 +2,7 @@ import { Component, inject, ChangeDetectorRef } from '@angular/core';
 
 import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
-import { ClientProfileService } from '../services/client-profile.service';
+import { ClientProfileService } from '../profile/client-profile.service';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 
 function passwordsMatch(control: AbstractControl): ValidationErrors | null {

@@ -11,9 +11,12 @@ export class ClientService {
   private http = inject(HttpClient);
   private api = `${environment.apiUrl}/api/clients`;
 
-  getAll(keyword?: string): Observable<UserModel[]> {
-    const params: Record<string, string> = keyword ? { keyword } : {};
-    return this.http.get<UserModel[]>(this.api, { params });
+  getAll(params: import('../../shared/models').PageParams = {}): Observable<UserModel[]> {
+    const queryParams: Record<string, string> = {};
+    if (params.page !== undefined) queryParams['page'] = params.page.toString();
+    if (params.size !== undefined) queryParams['size'] = params.size.toString();
+    if (params.keyword) queryParams['keyword'] = params.keyword;
+    return this.http.get<any>(this.api, { params: queryParams });
   }
 
   getRecent(): Observable<UserModel[]> {

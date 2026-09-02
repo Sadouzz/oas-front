@@ -8,7 +8,7 @@ import { AgentNotification } from '../../shared/models/agent-notification.model'
   providedIn: 'root'
 })
 export class AgentNotificationService {
-  private apiUrl = `${environment.apiUrl}/api/v1/agent-notifications`;
+  private apiUrl = `${environment.apiUrl}/api/agent-notifications`;
 
   constructor(private http: HttpClient) {}
 

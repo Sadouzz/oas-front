@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ClientMarketplaceService } from '../services/client-marketplace.service';
+import { ClientMarketplaceService } from './client-marketplace.service';
 import { Produit } from '../models';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { ModalComponent } from '../ui/modal/modal.component';

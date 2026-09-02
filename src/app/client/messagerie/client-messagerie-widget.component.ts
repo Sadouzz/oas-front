@@ -1,8 +1,8 @@
 import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ClientMessageService } from '../services/client-message.service';
-import { ClientPortalService } from '../services/client-portal.service';
+import { ClientMessageService } from './client-message.service';
+import { ClientPortalService } from '../layout/client-portal.service';
 import { Message } from '../models';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 
