@@ -7,7 +7,7 @@ export type StatutBonCommande = 'EN_ATTENTE' | 'ENVOYE' | 'INCOMPLET' | 'RECU' |
 
 export interface LigneBonDeCommande {
   id?: number;
-  pieceDetacheeId?: number;
+  pieceDetacheeId?: number | null;
   designationPiece?: string;
   reference?: string;
   categorie?: string;
@@ -15,6 +15,7 @@ export interface LigneBonDeCommande {
   quantiteRecue?: number;
   prixUnitaire: number;
   montant: number;
+  isCustom: boolean;
 }
 
 export interface BonDeCommande {

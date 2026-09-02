@@ -1,7 +1,7 @@
-import { Component, ElementRef, ViewChild, AfterViewInit, HostListener, ChangeDetectorRef, Renderer2, OnInit, OnDestroy, Inject, DOCUMENT } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewInit, HostListener, ChangeDetectorRef, Renderer2, OnInit, OnDestroy, Inject } from '@angular/core';
 
 import { RouterModule } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { WrenchCursorComponent } from '../../../shared/components/wrench-cursor/wrench-cursor';
 
 @Component({

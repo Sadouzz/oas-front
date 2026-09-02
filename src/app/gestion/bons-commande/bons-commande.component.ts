@@ -1,8 +1,8 @@
-import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
-import { BonDeCommandeService, BonDeCommande, StatutBonCommande, ReceptionBonDeCommandeRequest, ReceptionBonDeCommandeLigne } from '../../services/bon-de-commande.service';
+import { BonDeCommandeService, BonDeCommande, StatutBonCommande, ReceptionBonDeCommandeRequest, ReceptionBonDeCommandeLigne, LigneBonDeCommande } from '../../services/bon-de-commande.service';
 import { FournisseurService } from '../../services/fournisseur.service';
 import { VehiculeService } from '../../services/vehicule.service';
 import { PieceDetacheeService } from '../../services/piece-detachee.service';
@@ -68,19 +68,29 @@ export class BonsCommandeComponent implements OnInit {
   successMessage = '';
   errorMessage = '';
 
-  form: FormGroup = this.fb.group({
-    fournisseurId: [null],
-    clientId: [null],
-    vehiculeId: [null],
-    tvaApplicable: [false],
-    observation: [''],
-    lignes: this.fb.array([]),
-  });
+  // form: FormGroup = this.fb.group({
+  //   fournisseurId: [null],
+  //   clientId: [null],
+  //   vehiculeId: [null],
+  //   tvaApplicable: [false],
+  //   observation: [''],
+  //   lignes: this.fb.array([]),
+  // });
 
-  get lignesArray(): FormArray { return this.form.get('lignes') as FormArray; }
+  // get lignesArray(): FormArray { return this.form.get('lignes') as FormArray; }
+
+
+  fournisseurId = signal<number | null>(null);
+  clientId = signal<number | null>(null);
+  vehiculeId = signal<number | null>(null);
+  tvaApplicable = signal<boolean>(false);
+  observation = signal<string>('');
+
+  lignes = signal<LigneBonDeCommande[]>([]);
+
 
   get fournisseurLabel(): string {
-    const id = this.form.get('fournisseurId')?.value;
+    const id = this.fournisseurId();
     if (!id) return '';
     const f = this.fournisseurs.find(x => x.id === Number(id));
     return f ? (f.nomEntreprise || f.nom) : '';
@@ -96,20 +106,20 @@ export class BonsCommandeComponent implements OnInit {
   }
 
   selectFournisseur(f: FournisseurModel) {
-    this.form.patchValue({ fournisseurId: f.id });
+    this.fournisseurId.set(f.id);
     this.fournisseurFilter = '';
     this.fournisseurOpen = false;
   }
 
   get clientLabel(): string {
-    const id = this.form.get('clientId')?.value;
+    const id = this.clientId();
     if (!id) return '';
     const c = this.clients.find(x => x.id === Number(id));
     return c ? `${c.firstName} ${c.lastName}` : '';
   }
 
   get vehiculeLabel(): string {
-    const id = this.form.get('vehiculeId')?.value;
+    const id = this.vehiculeId();
     if (!id) return '';
     const v = this.vehicules.find(x => x.id === Number(id));
     return v ? `${v.immatriculation} — ${v.marque}` : '';
@@ -138,13 +148,13 @@ export class BonsCommandeComponent implements OnInit {
 
   selectClient(c: UserModel | null) {
     this.selectedClientId = c?.id ?? null;
-    this.form.patchValue({ clientId: c?.id ?? null, vehiculeId: null });
+    this.clientId.set(c?.id ?? null);
     this.clientFilter = '';
     this.clientOpen = false;
   }
 
   selectVehicule(v: VehiculeModel | null) {
-    this.form.patchValue({ vehiculeId: v?.id ?? null });
+    this.vehiculeId.set(v?.id ?? null);
     this.vehiculeFilter = '';
     this.vehiculeOpen = false;
   }
@@ -256,26 +266,48 @@ export class BonsCommandeComponent implements OnInit {
     });
   }
 
-  addLigne() { this.lignesArray.push(this.makeLigne()); }
-  removeLigne(i: number) {
-    const ctrl = this.lignesArray.at(i);
-    const qRecue = ctrl.get('quantiteRecue')?.value || 0;
-    if (qRecue > 0) {
-      this.notifyError(`Impossible de supprimer cette ligne car ${qRecue} pièce(s) ont déjà été réceptionnée(s).`);
-      return;
-    }
-    this.lignesArray.removeAt(i);
+  addLigne() {
+    const newLigne: LigneBonDeCommande = {
+      id: Date.now(),
+      pieceDetacheeId: null,
+      designationPiece: '',
+      quantiteRecue: 0,
+      quantite: 1,
+      prixUnitaire: 0,
+      montant: 0,
+      isCustom: false
+    };
+    this.lignes.update(anciennesLignes => [...anciennesLignes, newLigne]);
   }
 
-  toggleCustom(i: number) {
-    const ctrl = this.lignesArray.at(i);
-    const qRecue = ctrl.get('quantiteRecue')?.value || 0;
+  removeLigne(id: number) {
+    const ligne = this.lignes().find(l => l.id === id);
+    const qRecue = ligne?.quantiteRecue ?? 0;
+    if (qRecue > 0) {
+      this.notifyError(`Impossible de supprimer cette ligne...`);
+      return;
+    }
+    this.lignes.update(list => list.filter(l => l.id !== id));
+  }
+
+  toggleCustom(id: number) {
+    const ligne = this.lignes().find(l => l.id === id);
+    const qRecue = ligne?.quantiteRecue ?? 0;
     if (qRecue > 0) {
       this.notifyError('Impossible de modifier le type de pièce d\'une ligne déjà réceptionnée.');
       return;
     }
-    const current = !!ctrl.get('isCustom')?.value;
-    ctrl.patchValue({ isCustom: !current, pieceDetacheeId: null, designationPds: '' });
+    this.lignes.update(list =>
+      list.map(l => {
+        if (l.id !== id) return l;
+        return {
+          ...l,
+          isCustom: !l.isCustom,
+          pieceDetacheeId: null,
+          designationPiece: ''
+        };
+      })
+    );
   }
 
   openNew() {
@@ -289,8 +321,11 @@ export class BonsCommandeComponent implements OnInit {
     this.clientFilter = '';
     this.vehiculeFilter = '';
     this.fournisseurFilter = '';
-    this.form.reset({ tvaApplicable: false, observation: '', clientId: null, vehiculeId: null });
-    while (this.lignesArray.length) this.lignesArray.removeAt(0);
+    this.clientId.set(null);
+    this.vehiculeId.set(null);
+    this.tvaApplicable.set(false);
+    this.observation.set('');
+    this.lignes.set([]);
     this.addLigne();
     this.errorMessage = '';
     this.showModal = true;
@@ -301,6 +336,7 @@ export class BonsCommandeComponent implements OnInit {
     this.isReplenishment = true;
     const piece = this.pieces.find(p => p.id === pieceId);
     if (piece) {
+      const ligne = this.lignes().find()
       const ctrl = this.lignesArray.at(0);
       ctrl.patchValue({
         pieceDetacheeId: piece.id,
