@@ -11,8 +11,12 @@ export class FactureService {
   private http = inject(HttpClient);
   private api = `${environment.apiUrl}/api/factures`;
 
-  getAll(): Observable<FactureModel[]> {
-    return this.http.get<FactureModel[]>(this.api);
+  getAll(params?: import('../../shared/models').PageParams): Observable<FactureModel[]> {
+    const p: Record<string, string> = {};
+    if (params?.page !== undefined) p['page'] = params.page.toString();
+    if (params?.size !== undefined) p['size'] = params.size.toString();
+    if (params?.keyword) p['keyword'] = params.keyword;
+    return this.http.get<any>(this.api, { params: p });
   }
 
   getById(id: number): Observable<FactureModel> {

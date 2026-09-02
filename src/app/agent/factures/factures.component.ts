@@ -10,6 +10,8 @@ import { VehiculeService, VehiculeModel } from '../vehicules/vehicule.service';
 import { OrdreReparationService, OrdreReparation } from '../ordres-reparation/ordre-reparation.service';
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideReceipt, LucideEye, LucidePrinter } from '@lucide/angular';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
+import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
+import { extractContent } from '../../shared/models';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select.component';
 
@@ -19,7 +21,7 @@ import { SearchableSelectComponent } from '../../shared/components/searchable-se
   imports: [ReactiveFormsModule, FormsModule, NgClass, PaginationComponent, LucideSearch, LucidePlus, LucideTrash2, LucideX, LucideDownload, LucideReceipt],
   templateUrl: './factures.component.html',
 })
-export class FacturesComponent implements OnInit {
+export class FacturesComponent extends BasePaginatedComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private service = inject(FactureService);
   private fb = inject(FormBuilder);
@@ -54,9 +56,6 @@ export class FacturesComponent implements OnInit {
   vehiculeFilter = '';
   ficheFilter = '';
 
-  page = 1;
-  readonly pageSize = 10;
-  searchTerm = '';
   filterStatut = '';
   dateDebut = '';
   dateFin = '';
@@ -75,14 +74,14 @@ export class FacturesComponent implements OnInit {
   });
 
   ngOnInit() {
-    this.load();
+    this.loadData();
     forkJoin({
       clients: this.clientService.getAll(),
       fiches: this.ficheService.getAll(),
     }).subscribe({
       next: ({ clients, fiches }) => {
-        this.clients = clients.filter(c => c.enabled);
-        this.ordresReparation = fiches;
+        this.clients = extractContent<UserModel>(clients as any).filter(c => c.enabled);
+        this.ordresReparation = extractContent<OrdreReparation>(fiches as any);
       },
     });
 
@@ -102,10 +101,18 @@ export class FacturesComponent implements OnInit {
     });
   }
 
+  loadData() {
+    this.load();
+  }
+
   load() {
     this.loading = true;
-    this.service.getAll().subscribe({
-      next: data => { this.factures = data.sort((a:any, b:any) => b.id - a.id); this.applyFilter(); this.cdr.markForCheck(); this.loading = false; this.cdr.markForCheck(); },
+    this.service.getAll(this.getPageParams()).subscribe({
+      next: data => {
+        const arr = this.applyPageResponse<FactureModel>(data);
+        this.factures = arr.sort((a:any, b:any) => b.id - a.id);
+        this.applyFilter(); this.cdr.markForCheck(); this.loading = false; this.cdr.markForCheck();
+      },
       error: () => this.loading = false,
     });
   }
@@ -147,7 +154,7 @@ export class FacturesComponent implements OnInit {
     this.applyFilter(); this.cdr.markForCheck();
   }
 
-  onSearch(e: Event) {
+  override onSearch(e: Event) {
     this.searchTerm = (e.target as HTMLInputElement).value.toLowerCase().trim();
     this.applyFilter(); this.cdr.markForCheck();
   }
@@ -382,11 +389,8 @@ export class FacturesComponent implements OnInit {
   fmt(n: number): string { return new Intl.NumberFormat('fr-FR').format(n ?? 0); }
 
   get paged(): FactureModel[] {
-    return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
+    return this.filtered;
   }
-  get totalPages(): number { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }
-  prevPage() { if (this.page > 1) this.page--; }
-  nextPage() { if (this.page < this.totalPages) this.page++; }
 
   private notify(msg: string) {
     this.successMessage = msg;

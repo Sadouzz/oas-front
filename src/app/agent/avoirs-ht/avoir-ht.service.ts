@@ -48,8 +48,12 @@ export class AvoirHTService {
   private http = inject(HttpClient);
   private api = `${environment.apiUrl}/api/avoirs-ht`;
 
-  getAll(): Observable<AvoirHT[]> {
-    return this.http.get<AvoirHT[]>(this.api);
+  getAll(params: import('../../shared/models').PageParams = {}): Observable<AvoirHT[]> {
+    const queryParams: Record<string, string> = {};
+    if (params.page !== undefined) queryParams['page'] = params.page.toString();
+    if (params.size !== undefined) queryParams['size'] = params.size.toString();
+    if (params.keyword) queryParams['keyword'] = params.keyword;
+    return this.http.get<any>(this.api, { params: queryParams });
   }
 
   getById(id: number): Observable<AvoirHT> {

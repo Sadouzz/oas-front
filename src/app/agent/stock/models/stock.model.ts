@@ -6,17 +6,43 @@ export interface StockMouvement {
   stockAtelierAvant: number;
   stockMagasinApres: number;
   stockAtelierApres: number;
-  stockReelApres?: number;
-  prenom?: string;
-  nom?: string;
-  numDocument?: string;
-  typeDocument?: string;
-  numeroSerie?: string;
-  immatriculation?: string;
+  stockReelApres?: number | null;
+  prenom?: string | null;
+  nom?: string | null;
+  numDocument?: string | null;
+  typeDocument?: string | null;
+  numeroSerie?: string | null;
+  immatriculation?: string | null;
   motif: string;
   dateOperation: string;
-  piece: { id: number; designation: string; reference: string; numeroDeSerie?: string; categorie?: any } | null;
-  agent: { id: number; username: string; firstName: string; lastName: string } | null;
+  piece: {
+    id: number;
+    designation: string;
+    reference: string;
+    numero?: string;
+    numeroDeSerie?: string;
+    prixUnitaire?: number | null;
+    prixGros?: number | null;
+    qteReelle?: number;
+    stockMagasin?: number;
+    stockAtelier?: number;
+    seuilMinimum?: number;
+    statut?: string;
+    type?: string;
+    categorie?: any;
+    garage?: any;
+  } | null;
+  agent: {
+    id: number;
+    username: string;
+    firstName: string;
+    lastName: string;
+    email?: string;
+    phone?: string;
+    role?: string;
+    matricule?: string;
+  } | null;
+  garage?: any;
 }
 
 export interface InventaireResponse {

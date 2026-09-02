@@ -2,7 +2,7 @@ import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TechnicienService } from './technicien.service';
 import { GarageService } from '../../services/garage.service';
-import { Technicien, Specialite } from '../../shared/models/index';
+import { Technicien, Specialite, extractContent } from '../../shared/models/index';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideWrench } from '@lucide/angular';
@@ -71,21 +71,32 @@ export class TechniciensComponent implements OnInit {
   ngOnInit() {
     this.load();
     if (this.isSuperAgent) {
-      this.garageService.getAll().subscribe({ next: data => this.garages = data });
+      this.garageService.getAll().subscribe({ next: data => this.garages = extractContent(data) });
     }
   }
 
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: data => { this.techniciens = data; this.filtered = data; this.loading = false; this.cdr.markForCheck(); },
-      error: () => this.loading = false,
+      next: data => {
+        this.techniciens = extractContent(data);
+        this.filtered = this.techniciens;
+        this.loading = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.techniciens = [];
+        this.filtered = [];
+        this.loading = false;
+        this.cdr.markForCheck();
+      },
     });
   }
 
   onSearch(e: Event) {
     const kw = (e.target as HTMLInputElement).value.toLowerCase();
-    this.filtered = this.techniciens.filter(t =>
+    const list = Array.isArray(this.techniciens) ? this.techniciens : [];
+    this.filtered = list.filter(t =>
       `${t.firstName} ${t.lastName}`.toLowerCase().includes(kw) ||
       t.username.toLowerCase().includes(kw) ||
       t.email.toLowerCase().includes(kw) ||
@@ -171,9 +182,13 @@ export class TechniciensComponent implements OnInit {
   }
 
   get paged(): Technicien[] {
-    return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
+    const list = Array.isArray(this.filtered) ? this.filtered : [];
+    return list.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
   }
-  get totalPages(): number { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }
+  get totalPages(): number {
+    const list = Array.isArray(this.filtered) ? this.filtered : [];
+    return Math.max(1, Math.ceil(list.length / this.pageSize));
+  }
   prevPage() { if (this.page > 1) this.page--; }
   nextPage() { if (this.page < this.totalPages) this.page++; }
 

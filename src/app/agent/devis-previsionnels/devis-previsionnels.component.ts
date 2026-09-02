@@ -3,10 +3,11 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { DevisPrevisionnelService, DevisPrevisionnel } from './devis-previsionnel.service';
-import { ClientService, UserModel } from '../clients/client.service';
+import { ClientService, ClientModel } from '../clients/client.service';
 import { VehiculeService, VehiculeModel } from '../vehicules/vehicule.service';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
+import { extractContent } from '../../shared/models';
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideArrowRight } from '@lucide/angular';
 
 @Component({
@@ -25,7 +26,7 @@ export class DevisPrevisionnelsComponent implements OnInit {
 
   devis: DevisPrevisionnel[] = [];
   filtered: DevisPrevisionnel[] = [];
-  clients: UserModel[] = [];
+  clients: ClientModel[] = [];
   vehicules: VehiculeModel[] = [];
   loading = true;
   saving = false;
@@ -50,8 +51,8 @@ export class DevisPrevisionnelsComponent implements OnInit {
 
   ngOnInit() {
     this.load();
-    this.clientService.getAll().subscribe({ next: c => this.clients = c, error: () => {} });
-    this.vehiculeService.getAll().subscribe({ next: v => this.vehicules = v, error: () => {} });
+    this.clientService.getAll().subscribe({ next: c => this.clients = extractContent(c), error: () => {} });
+    this.vehiculeService.getAll().subscribe({ next: v => this.vehicules = extractContent(v), error: () => {} });
 
     this.route.queryParams.subscribe(params => {
       if (params['action'] === 'new') {
@@ -63,7 +64,13 @@ export class DevisPrevisionnelsComponent implements OnInit {
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: data => { this.devis = data.sort((a:any, b:any) => b.id - a.id); this.applyFilter(); this.cdr.markForCheck(); this.loading = false; this.cdr.markForCheck(); },
+      next: data => {
+        this.devis = extractContent(data).sort((a: any, b: any) => b.id - a.id);
+        this.applyFilter();
+        this.cdr.markForCheck();
+        this.loading = false;
+        this.cdr.markForCheck();
+      },
       error: () => this.loading = false,
     });
   }
@@ -72,7 +79,7 @@ export class DevisPrevisionnelsComponent implements OnInit {
     let data = this.devis;
     if (this.filterClientId) data = data.filter(d => String(d.client?.id) === this.filterClientId);
     if (this.searchTerm) {
-      const kw = this.searchTerm;
+      const kw = this.searchTerm.toLowerCase();
       data = data.filter(d =>
         (d.client?.firstName ?? '').toLowerCase().includes(kw) ||
         (d.client?.lastName ?? '').toLowerCase().includes(kw) ||

@@ -9,6 +9,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select.component';
+import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideArchive, LucideArchiveRestore, LucideShoppingCart } from '@lucide/angular';
 
 @Component({
@@ -17,7 +18,7 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideAr
   imports: [ReactiveFormsModule, DecimalPipe, NgClass, AlertComponent, PaginationComponent, SearchableSelectComponent, LucideShoppingCart],
   templateUrl: './pieces-detachees.component.html',
 })
-export class PiecesDetacheesComponent implements OnInit {
+export class PiecesDetacheesComponent extends BasePaginatedComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
   private service = inject(PieceDetacheeService);
@@ -28,8 +29,6 @@ export class PiecesDetacheesComponent implements OnInit {
 
   pieces: PieceDetache[] = [];
   filtered: PieceDetache[] = [];
-  page = 1;
-  readonly pageSize = 10;
   loading = false;
   saving = false;
   successMessage = '';
@@ -88,14 +87,20 @@ export class PiecesDetacheesComponent implements OnInit {
     return this.form.get('type')?.value ?? 'PDP';
   }
 
-  ngOnInit() { this.load(); }
+  ngOnInit() { this.loadData(); }
+
+  loadData() {
+    this.load();
+  }
 
   load() {
     this.loading = true;
-    this.service.getAll().subscribe({
+    const params = this.getPageParams();
+    this.service.getAll(params).subscribe({
       next: (data) => {
-        this.pieces = data.sort((a: any, b: any) => b.id - a.id);
-        this.depotsFilters = [...new Set(data.map((p: any) => p.categorie?.depot?.nom).filter((d: any) => !!d))].sort() as string[];
+        const arr = this.applyPageResponse<PieceDetache>(data);
+        this.pieces = arr.sort((a: any, b: any) => b.id - a.id);
+        this.depotsFilters = [...new Set(arr.map((p: any) => p.categorie?.depot?.nom).filter((d: any) => !!d))].sort() as string[];
         this.applyFilters();
         this.loading = false; this.cdr.markForCheck();
       },
@@ -154,10 +159,7 @@ export class PiecesDetacheesComponent implements OnInit {
     });
   }
 
-  onSearch(event: Event) {
-    const term = (event.target as HTMLInputElement).value.toLowerCase().trim();
-    this.applyFilters(term);
-  }
+  // onSearch inherited from BasePaginatedComponent
 
   applyFilters(keyword = '') {
     let result = this.pieces;
@@ -179,10 +181,7 @@ export class PiecesDetacheesComponent implements OnInit {
     this.applyFilters();
   }
 
-  get paged(): PieceDetache[] { return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize); }
-  get totalPages(): number { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }
-  prevPage(): void { if (this.page > 1) this.page--; }
-  nextPage(): void { if (this.page < this.totalPages) this.page++; }
+  get paged(): PieceDetache[] { return this.filtered; }
 
   onTypeFilter(event: Event) {
     this.filterType = (event.target as HTMLSelectElement).value;

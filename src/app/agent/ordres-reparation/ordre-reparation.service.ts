@@ -12,8 +12,13 @@ export class OrdreReparationService {
   private http = inject(HttpClient);
   private api = `${environment.apiUrl}/api/ordres-reparation`;
 
-  getAll(): Observable<OrdreReparation[]> {
-    return this.http.get<OrdreReparation[]>(this.api);
+  getAll(params?: import('../../shared/models').PageParams & { statut?: string }): Observable<OrdreReparation[]> {
+    const p: Record<string, string> = {};
+    if (params?.statut) p['statut'] = params.statut;
+    if (params?.page !== undefined) p['page'] = params.page.toString();
+    if (params?.size !== undefined) p['size'] = params.size.toString();
+    if (params?.keyword) p['keyword'] = params.keyword;
+    return this.http.get<any>(this.api, { params: p });
   }
 
   getById(id: number): Observable<OrdreReparation> {

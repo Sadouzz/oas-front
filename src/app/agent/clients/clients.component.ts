@@ -6,9 +6,10 @@ import { ClientService } from './client.service';
 import { VehiculeService } from '../vehicules/vehicule.service';
 import { BonDeSortieService } from '../bons-de-sortie/bon-de-sortie.service';
 import { FactureService, FactureModel } from '../factures/facture.service';
-import { UserModel, VehiculeModel, extractContent } from '../../shared/models/index';
+import { ClientModel, ClientListResponse, VehiculeModel, extractContent } from '../../shared/models/index';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
+import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, LucideArchiveRestore, LucideX, LucideCheck, LucideUser, LucideArrowRight } from '@lucide/angular';
 
 @Component({
@@ -17,7 +18,7 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, Lu
   imports: [ReactiveFormsModule, NgClass, DatePipe, DecimalPipe, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, LucideArchiveRestore, LucideX, LucideCheck, LucideUser],
   templateUrl: './clients.component.html',
 })
-export class ClientsComponent implements OnInit {
+export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
   private clientService = inject(ClientService);
@@ -25,11 +26,8 @@ export class ClientsComponent implements OnInit {
   private bonService = inject(BonDeSortieService);
   private factureService = inject(FactureService);
 
-  clients: UserModel[] = [];
-  filtered: UserModel[] = [];
-  allVehicules: VehiculeModel[] = [];
-  page = 1;
-  readonly pageSize = 10;
+  clients: ClientListResponse[] = [];
+  filtered: ClientListResponse[] = [];
   loading = false;
   saving = false;
   successMessage = '';
@@ -37,7 +35,7 @@ export class ClientsComponent implements OnInit {
 
   showCreateModal = false;
   showEditModal = false;
-  editingClient: UserModel | null = null;
+  editingClient: ClientListResponse | null = null;
 
   // 2-step creation
   createStep = 1;
@@ -46,17 +44,16 @@ export class ClientsComponent implements OnInit {
 
   // Risk modal (hard delete)
   showRiskModal = false;
-  riskClient: UserModel | null = null;
+  riskClient: ClientListResponse | null = null;
   riskLoading = false;
   riskVehicleCount = 0;
   riskBonCount = 0;
   riskFactures: FactureModel[] = [];
 
   filterStatut = '';
-  searchTerm = '';
 
   // Detail panel
-  selectedClient: UserModel | null = null;
+  selectedClient: ClientListResponse | null = null;
   detailTab: 'profil' | 'vehicules' = 'profil';
   clientVehicules: VehiculeModel[] = [];
   loadingVehicules = false;
@@ -88,14 +85,19 @@ export class ClientsComponent implements OnInit {
   });
 
   ngOnInit() {
+    this.loadData();
+  }
+
+  loadData() {
     this.loadAll();
   }
 
   loadAll() {
     this.loading = true;
-    this.clientService.getAll().subscribe({
+    const params = this.getPageParams();
+    this.clientService.getAll(params).subscribe({
       next: (res) => {
-        const clientsList = extractContent<UserModel>(res as any);
+        const clientsList = this.applyPageResponse<ClientListResponse>(res);
         this.clients = clientsList.sort((a: any, b: any) => b.id - a.id);
         this.applyFilter(); this.cdr.markForCheck();
         this.loading = false; this.cdr.markForCheck();
@@ -109,9 +111,6 @@ export class ClientsComponent implements OnInit {
         this.loading = false; this.cdr.markForCheck();
         this.errorMessage = 'Impossible de charger les clients. Vérifiez que le serveur est démarré.';
       },
-    });
-    this.vehiculeService.getAll().subscribe({
-      next: (vehicules) => { this.allVehicules = vehicules; },
     });
   }
 
@@ -134,45 +133,30 @@ export class ClientsComponent implements OnInit {
     else if (this.filterStatut === 'archive') data = data.filter(c => !c.enabled);
     if (this.searchTerm) {
       const kw = this.searchTerm.toLowerCase();
-      const clientsWithMatchingVehicles = new Set(
-        this.allVehicules
-          .filter(v =>
-            v.immatriculation.toLowerCase().includes(kw) ||
-            v.marque.toLowerCase().includes(kw) ||
-            v.modele.toLowerCase().includes(kw)
-          )
-          .map(v => v.client?.id)
-          .filter((id): id is number => id != null)
-      );
       data = data.filter(c =>
         `${c.firstName} ${c.lastName}`.toLowerCase().includes(kw) ||
         c.email.toLowerCase().includes(kw) ||
         c.matricule.toLowerCase().includes(kw) ||
-        c.phone.includes(kw) ||
-        clientsWithMatchingVehicles.has(c.id)
+        c.phone.includes(kw)
       );
     }
     this.filtered = data;
     this.page = 1;
   }
 
-  onSearch(event: Event) {
-    this.searchTerm = (event.target as HTMLInputElement).value.trim().toLowerCase();
-    this.applyFilter(); this.cdr.markForCheck();
-  }
+  // onSearch inherited from BasePaginatedComponent
 
   onStatutFilter(event: Event) {
     this.filterStatut = (event.target as HTMLSelectElement).value;
+    this.page = 1;
     this.applyFilter(); this.cdr.markForCheck();
   }
 
-  get paged(): UserModel[] { return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize); }
-  get totalPages(): number { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }
-  prevPage(): void { if (this.page > 1) this.page--; }
-  nextPage(): void { if (this.page < this.totalPages) this.page++; }
+  get paged(): ClientListResponse[] { return this.filtered; }
 
   clientVehicleCount(clientId: number): number {
-    return this.allVehicules.filter(v => v.client?.id === clientId).length;
+    const client = this.clients.find(c => c.id === clientId);
+    return client?.vehiculeNumbers ?? 0;
   }
 
   // Avatar color based on client name
@@ -186,12 +170,12 @@ export class ClientsComponent implements OnInit {
     return colors[Math.abs(hash) % colors.length];
   }
 
-  clientInitials(client: UserModel): string {
+  clientInitials(client: ClientListResponse): string {
     return `${client.firstName[0] ?? ''}${client.lastName[0] ?? ''}`.toUpperCase();
   }
 
   // Detail panel
-  selectClient(client: UserModel) {
+  selectClient(client: ClientListResponse) {
     this.selectedClient = client;
     this.detailTab = 'vehicules';
     this.clientVehicules = [];
@@ -219,7 +203,7 @@ export class ClientsComponent implements OnInit {
   }
 
   // ── ARCHIVE / UNARCHIVE (direct, no modal) ────────────────────────
-  archive(client: UserModel) {
+  archive(client: ClientListResponse) {
     this.clientService.archive(client.id).subscribe({
       next: () => {
         this.showSuccess(`Client ${client.firstName} ${client.lastName} archivé.`);
@@ -231,7 +215,7 @@ export class ClientsComponent implements OnInit {
     });
   }
 
-  unarchive(client: UserModel) {
+  unarchive(client: ClientListResponse) {
     this.clientService.unarchive(client.id).subscribe({
       next: () => {
         this.showSuccess(`Client ${client.firstName} ${client.lastName} désarchivé.`);
@@ -244,7 +228,7 @@ export class ClientsComponent implements OnInit {
   }
 
   // ── RISK MODAL (hard delete) ───────────────────────────────────────
-  openRiskModal(client: UserModel) {
+  openRiskModal(client: ClientListResponse) {
     this.riskClient = client;
     this.riskLoading = true;
     this.riskVehicleCount = 0;
@@ -359,8 +343,9 @@ export class ClientsComponent implements OnInit {
         if (!this.createdClientId) {
           this.clientService.getAll().subscribe({
             next: (clients) => {
+              const list = extractContent<ClientModel>(clients);
               const mat = this.createForm.getRawValue().matricule;
-              const found = clients.find(c => c.matricule === mat);
+              const found = list.find(c => c.matricule === mat);
               this.createdClientId = found?.id ?? null;
             }
           });
@@ -438,7 +423,7 @@ export class ClientsComponent implements OnInit {
   }
 
   // ── EDIT ───────────────────────────────────────────────────────
-  openEdit(client: UserModel) {
+  openEdit(client: ClientListResponse) {
     this.editingClient = client;
     this.editForm.patchValue({
       firstName: client.firstName,

@@ -10,6 +10,8 @@ import { PieceDetacheeService, PieceDetache } from '../pieces-detachees/piece-de
 import { MainDoeuvreService, MainDoeuvreModel } from '../main-doeuvre/main-doeuvre.service';
 import { AuthService } from '../../core/services/auth.service';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
+import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
+import { extractContent } from '../../shared/models';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { LucideSearch, LucidePlus, LucideTrash2, LucideX, LucideDownload, LucideEye, LucideLoader2 } from '@lucide/angular';
 
@@ -20,7 +22,7 @@ import { LucideSearch, LucidePlus, LucideTrash2, LucideX, LucideDownload, Lucide
     LucideSearch, LucidePlus, LucideTrash2, LucideX, LucideDownload, LucideEye, LucideLoader2],
   templateUrl: './avoirs-ht.html',
 })
-export class AvoirsHt implements OnInit {
+export class AvoirsHt extends BasePaginatedComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private service = inject(AvoirHTService);
   private fb = inject(FormBuilder);
@@ -50,9 +52,6 @@ export class AvoirsHt implements OnInit {
   clientFilter = '';
   vehiculeFilter = '';
 
-  page = 1;
-  readonly pageSize = 10;
-  searchTerm = '';
   successMessage = '';
   errorMessage = '';
 
@@ -101,18 +100,18 @@ export class AvoirsHt implements OnInit {
   }
 
   ngOnInit() {
-    this.load();
+    this.loadData();
     forkJoin({
       clients: this.clientService.getAll(),
-      vehicules: this.vehiculeService.getAll(),
+      vehicules: this.vehiculeService.getAll({ size: 1000 }),
       pdps: this.pieceService.getAll({ type: 'PDP' }),
       mos: this.moService.getAll()
     }).subscribe({
       next: ({ clients, vehicules, pdps, mos }) => {
-        this.clients = clients.filter(c => c.enabled);
-        this.allVehicules = vehicules;
-        this.pdps = pdps.filter(p => p.statut === 'ACTIF');
-        this.mainDoeuvres = mos;
+        this.clients = extractContent<UserModel>(clients as any).filter(c => c.enabled);
+        this.allVehicules = extractContent<VehiculeModel>(vehicules as any);
+        this.pdps = extractContent<PieceDetache>(pdps as any).filter(p => p.statut === 'ACTIF');
+        this.mainDoeuvres = extractContent<MainDoeuvreModel>(mos as any);
       }
     });
 
@@ -123,11 +122,16 @@ export class AvoirsHt implements OnInit {
     });
   }
 
+  loadData() {
+    this.load();
+  }
+
   load() {
     this.loading = true;
-    this.service.getAll().subscribe({
+    this.service.getAll(this.getPageParams()).subscribe({
       next: (d) => {
-        this.avoirs = (d || []).sort((a, b) => b.id - a.id);
+        const arr = this.applyPageResponse<AvoirHT>(d);
+        this.avoirs = arr.sort((a, b) => b.id - a.id);
         this.applyFilter(); this.cdr.markForCheck();
         this.loading = false; this.cdr.markForCheck();
       },
@@ -152,21 +156,14 @@ export class AvoirsHt implements OnInit {
     this.page = 1;
   }
 
-  onSearch(e: Event) {
+  override onSearch(e: Event) {
     this.searchTerm = (e.target as HTMLInputElement).value.trim();
     this.applyFilter(); this.cdr.markForCheck();
   }
 
   get paged(): AvoirHT[] {
-    return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
+    return this.filtered;
   }
-
-  get totalPages(): number {
-    return Math.max(1, Math.ceil(this.filtered.length / this.pageSize));
-  }
-
-  prevPage(): void { if (this.page > 1) this.page--; }
-  nextPage(): void { if (this.page < this.totalPages) this.page++; }
 
   selectClient(c: UserModel) {
     this.form.patchValue({ clientId: c.id, vehiculeId: null });

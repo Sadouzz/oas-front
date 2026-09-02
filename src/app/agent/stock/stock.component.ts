@@ -5,6 +5,7 @@ import { PieceDetacheeService, PieceDetache, AlerteStock } from '../pieces-detac
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
+import { extractContent } from '../../shared/models';
 import { LucideSearch } from '@lucide/angular';
 
 type ModalType = 'entree' | 'sortie' | 'ajustement' | null;
@@ -112,8 +113,8 @@ export class StockComponent implements OnInit {
 
   loadAll() {
     this.loading = true;
-    this.stockService.alertes().subscribe({ next: (d) => { this.alertes = d; this.checkDone(); }, error: () => this.checkDone() });
-    this.pieceService.getAll({ type: 'PDP' }).subscribe({ next: (d) => { this.pdps = d; this.checkDone(); }, error: () => this.checkDone() });
+    this.stockService.alertes().subscribe({ next: (d) => { this.alertes = extractContent(d); this.checkDone(); }, error: () => this.checkDone() });
+    this.pieceService.getAll({ type: 'PDP' }).subscribe({ next: (d) => { this.pdps = extractContent(d); this.checkDone(); }, error: () => this.checkDone() });
     this.loadMovementsRecent();
   }
 
@@ -129,8 +130,13 @@ export class StockComponent implements OnInit {
 
     this.stockService.historiqueGlobal(deb, fin, pId, cat, typ).subscribe({
       next: (d) => {
-        this.mouvementsRecents = d;
+        this.mouvementsRecents = extractContent(d);
         this.mouvPage = 1;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.mouvementsRecents = [];
+        this.cdr.markForCheck();
       }
     });
   }
@@ -180,11 +186,11 @@ export class StockComponent implements OnInit {
     this.loadMovementsRecent();
   }
 
-  get ruptures(): AlerteStock[] { return this.alertes.filter(a => a.typeAlerte === 'RUPTURE'); }
-  get stocksFaibles(): AlerteStock[] { return this.alertes.filter(a => a.typeAlerte === 'STOCK_FAIBLE'); }
+  get ruptures(): AlerteStock[] { return (Array.isArray(this.alertes) ? this.alertes : []).filter(a => a.typeAlerte === 'RUPTURE'); }
+  get stocksFaibles(): AlerteStock[] { return (Array.isArray(this.alertes) ? this.alertes : []).filter(a => a.typeAlerte === 'STOCK_FAIBLE'); }
 
-  get pagedAlertes(): AlerteStock[] { return this.alertes.slice((this.alertePage - 1) * this.pageSize, this.alertePage * this.pageSize); }
-  get alertesTotalPages(): number { return Math.max(1, Math.ceil(this.alertes.length / this.pageSize)); }
+  get pagedAlertes(): AlerteStock[] { const list = Array.isArray(this.alertes) ? this.alertes : []; return list.slice((this.alertePage - 1) * this.pageSize, this.alertePage * this.pageSize); }
+  get alertesTotalPages(): number { const list = Array.isArray(this.alertes) ? this.alertes : []; return Math.max(1, Math.ceil(list.length / this.pageSize)); }
   prevAlertePage(): void { if (this.alertePage > 1) this.alertePage--; }
   nextAlertePage(): void { if (this.alertePage < this.alertesTotalPages) this.alertePage++; }
 

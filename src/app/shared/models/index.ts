@@ -19,3 +19,4 @@ export * from '../../agent/fiches-atelier/models/fiche-atelier.model';
 export * from '../../agent/notes-prix/models/note-de-prix.model';
 export * from './api-response.model';
 export * from './page-params.model';
+export * from '../../agent/clients/models/client-model';

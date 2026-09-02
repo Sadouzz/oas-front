@@ -22,6 +22,8 @@ import { PaginationComponent } from '../../shared/components/pagination/paginati
 import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select.component';
 import { MediaUploaderComponent } from '../../shared/components/media-uploader/media-uploader.component';
 import { CloudinaryUploadResult } from '../../shared/models';
+import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
+import { extractContent } from '../../shared/models';
 import { PieceJointeDiagnostic, TypePieceJointeDiagnostic, RemarqueDiagnostic } from './ordre-reparation.service';
 import { LigneReceptionOrdre, LigneTravailOrdre } from './models/ordre-reparation.model';
 
@@ -100,7 +102,7 @@ const STATUT_STEPS: { statut: StatutFiche; label: string }[] = [
   imports: [CommonModule, ReactiveFormsModule, FormsModule, NgClass, NgStyle, RouterLink, AlertComponent, PaginationComponent, SearchableSelectComponent, MediaUploaderComponent],
   templateUrl: './ordres-reparation.component.html',
 })
-export class OrdresReparationComponent implements OnInit, OnDestroy {
+export class OrdresReparationComponent extends BasePaginatedComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private service = inject(OrdreReparationService);
   private vehiculeService = inject(VehiculeService);
@@ -120,8 +122,6 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
   loadedFiche: OrdreReparation | null = null;
   filtered: OrdreReparation[] = [];
   loading = true;
-  page = 1;
-  pageSize = 10;
   successMessage = '';
   errorMessage = '';
   selectedFiche: OrdreReparation | null = null;
@@ -473,7 +473,7 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
   private router = inject(Router);
 
   ngOnInit() {
-    this.load();
+    this.loadData();
 
     this.route.queryParams.subscribe((params: any) => {
       const ficheAtelierId = params['ficheAtelierId'];
@@ -521,12 +521,12 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
       clients: this.clientService.getAll(),
     }).subscribe({
       next: ({ vehicules, techniciens, pieces, mo, fournisseurs, clients }) => {
-        this.vehicules = vehicules;
+        this.vehicules = extractContent<VehiculeModel>(vehicules as any);
         this.allTechniciens = techniciens;
-        this.allPieces = pieces.filter(p => p.statut === 'ACTIF');
-        this.allMO = mo.filter(m => !m.isArchived);
-        this.fournisseurs = fournisseurs.filter(f => !f.archived);
-        this.allClients = clients;
+        this.allPieces = extractContent<PieceDetache>(pieces as any).filter(p => p.statut === 'ACTIF');
+        this.allMO = extractContent<MainDoeuvreModel>(mo as any).filter(m => !m.isArchived);
+        this.fournisseurs = extractContent<FournisseurModel>(fournisseurs as any).filter(f => !f.archived);
+        this.allClients = extractContent<UserModel>(clients as any);
         this.referentielsLoaded = true;
         this.loading = false; this.cdr.markForCheck();
         callback();
@@ -538,11 +538,16 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
     });
   }
 
+  loadData() {
+    this.load();
+  }
+
   load() {
     this.loading = true;
-    this.service.getAll().subscribe({
+    this.service.getAll(this.getPageParams()).subscribe({
       next: (data) => {
-        this.fiches = data.sort((a, b) => b.id - a.id);
+        const arr = this.applyPageResponse<OrdreReparation>(data);
+        this.fiches = arr.sort((a, b) => b.id - a.id);
         this.applyFilter(); this.cdr.markForCheck();
         this.loading = false; this.cdr.markForCheck();
 
@@ -591,7 +596,7 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
     this.page = 1;
   }
 
-  onSearch(e: Event) {
+  override onSearch(e: Event) {
     this.searchKw = (e.target as HTMLInputElement).value;
     this.applyFilter(); this.cdr.markForCheck();
   }
@@ -1394,10 +1399,11 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
     this.clientService.create(payload).subscribe({
       next: () => {
         this.clientService.getAll().subscribe(clients => {
-          this.allClients = clients;
+          const list = extractContent<any>(clients);
+          this.allClients = list;
           this.creatingClient = false;
           this.showCreateClient = false;
-          const newClient = clients.find(c => c.username === payload.username);
+          const newClient = list.find((c: any) => c.username === payload.username);
           if (newClient) {
             this.selectClientForVehicule(newClient);
           }
@@ -1758,11 +1764,8 @@ export class OrdresReparationComponent implements OnInit, OnDestroy {
 
   // ─── Pagination ──────────────────────────────────────
   get paged(): OrdreReparation[] {
-    return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
+    return this.filtered;
   }
-  get totalPages(): number { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }
-  prevPage() { if (this.page > 1) this.page--; }
-  nextPage() { if (this.page < this.totalPages) this.page++; }
 
   // ─── Calculs ─────────────────────────────────────────
   get totalPieces(): number { return this.lignesPieces.reduce((s, l) => s + (l.isCustom ? (l.prixUnitaire ?? 0) : (l.piece?.prix ?? 0)) * l.quantite, 0); }

@@ -6,6 +6,7 @@ import { ClientService } from '../clients/client.service';
 import { UserModel, VehiculeModel, extractContent } from '../../shared/models/index';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
+import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 
 @Component({
   selector: 'app-vehicules',
@@ -13,7 +14,7 @@ import { PaginationComponent } from '../../shared/components/pagination/paginati
   imports: [ReactiveFormsModule, DecimalPipe, AlertComponent, PaginationComponent],
   templateUrl: './vehicules.component.html',
 })
-export class VehiculesComponent implements OnInit {
+export class VehiculesComponent extends BasePaginatedComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
   private vehiculeService = inject(VehiculeService);
@@ -21,10 +22,6 @@ export class VehiculesComponent implements OnInit {
 
   vehicules: VehiculeModel[] = [];
   filtered: VehiculeModel[] = [];
-  page = 1;
-  readonly pageSize = 10;
-  totalElements = 0;
-  serverTotalPages = 1;
   clients: UserModel[] = [];
   loading = false;
   saving = false;
@@ -41,7 +38,6 @@ export class VehiculesComponent implements OnInit {
 
   filterMarque = '';
   filterClientId: number | null = null;
-  searchTerm = '';
 
   // Step 1 form (vehicle info)
   infoForm = this.fb.group({
@@ -96,7 +92,7 @@ export class VehiculesComponent implements OnInit {
   });
 
   ngOnInit() {
-    this.loadVehicules();
+    this.loadData();
     this.clientService.getAll().subscribe({
       next: (res: any) => {
         const list = extractContent<UserModel>(res);
@@ -106,24 +102,20 @@ export class VehiculesComponent implements OnInit {
     });
   }
 
+  loadData() {
+    this.loadVehicules();
+  }
+
   loadVehicules() {
     this.loading = true;
-    const params: any = { page: this.page - 1, size: this.pageSize };
-    if (this.searchTerm) params.keyword = this.searchTerm;
-    if (this.filterMarque) params.marque = this.filterMarque;
-    if (this.filterClientId) params.clientId = this.filterClientId;
+    const params = this.getPageParams();
+    if (this.filterMarque) params['marque'] = this.filterMarque;
+    if (this.filterClientId) params['clientId'] = this.filterClientId;
 
     this.vehiculeService.getAll(params).subscribe({
       next: (res: any) => {
-        const list = extractContent<VehiculeModel>(res);
+        const list = this.applyPageResponse<VehiculeModel>(res);
         this.vehicules = list.sort((a: any, b: any) => b.id - a.id);
-        if (res && res.totalElements !== undefined) {
-          this.totalElements = res.totalElements;
-          this.serverTotalPages = res.totalPages;
-        } else {
-          this.totalElements = this.vehicules.length;
-          this.serverTotalPages = 1;
-        }
         this.applyFilter();
         this.loading = false;
         this.cdr.markForCheck();
@@ -156,11 +148,7 @@ export class VehiculesComponent implements OnInit {
     this.filtered = data;
   }
 
-  onSearch(event: Event) {
-    this.searchTerm = (event.target as HTMLInputElement).value.toLowerCase().trim();
-    this.page = 1;
-    this.loadVehicules();
-  }
+  // onSearch is inherited from BasePaginatedComponent
 
   onMarqueFilter(event: Event) {
     this.filterMarque = (event.target as HTMLSelectElement).value;
@@ -176,9 +164,6 @@ export class VehiculesComponent implements OnInit {
   }
 
   get paged(): VehiculeModel[] { return this.filtered; }
-  get totalPages(): number { return this.serverTotalPages; }
-  prevPage(): void { if (this.page > 1) { this.page--; this.loadVehicules(); } }
-  nextPage(): void { if (this.page < this.totalPages) { this.page++; this.loadVehicules(); } }
 
   // ── CREATE 2-STEP ──────────────────────────────────────────────
   openCreate() {

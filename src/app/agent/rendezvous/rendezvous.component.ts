@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router } from '@angular/router';
 import { RendezVousService } from './rendezvous.service';
 import { TechnicienService } from '../techniciens/technicien.service';
-import { RendezVous, RendezVousStatus, Technicien } from '../../shared/models/index';
+import { RendezVous, RendezVousStatus, Technicien, extractContent } from '../../shared/models/index';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import {
@@ -62,23 +62,33 @@ export class RendezVousComponent implements OnInit {
 
   ngOnInit() {
     this.load();
-    this.technicienService.getAll().subscribe({ next: data => this.techniciens = data });
+    this.technicienService.getAll().subscribe({ next: data => this.techniciens = extractContent(data) });
   }
 
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: data => { this.rdvs = data; this.applyFilters(); this.loading = false; this.cdr.markForCheck(); },
-      error: () => this.loading = false,
+      next: data => {
+        this.rdvs = extractContent(data);
+        this.applyFilters();
+        this.loading = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.rdvs = [];
+        this.filtered = [];
+        this.loading = false;
+        this.cdr.markForCheck();
+      },
     });
   }
 
   applyFilters() {
-    let result = [...this.rdvs];
+    let result = Array.isArray(this.rdvs) ? [...this.rdvs] : [];
     if (this.searchText) {
       const kw = this.searchText.toLowerCase();
       result = result.filter(r =>
-        r.clientName.toLowerCase().includes(kw) ||
+        r.clientName?.toLowerCase().includes(kw) ||
         (r.motif ?? '').toLowerCase().includes(kw) ||
         (r.vehiculeImmatriculation ?? '').toLowerCase().includes(kw)
       );
@@ -121,18 +131,29 @@ export class RendezVousComponent implements OnInit {
     this.editedDate = (e.target as HTMLInputElement).value;
   }
 
-  /** Convertit une date ISO (back) en valeur compatible <input type="datetime-local">. */
-  private toDatetimeLocal(iso: string): string {
-    return iso ? iso.slice(0, 16) : '';
+  closeModals() {
+    this.showStatutModal = false;
+    this.showValiderModal = false;
+    this.editingRdv = null;
+    this.modalErrorMessage = '';
+    this.modalSuccessMessage = '';
   }
 
   saveStatut() {
-    if (this.statutForm.invalid || !this.editingRdv) { this.statutForm.markAllAsTouched(); return; }
+    if (!this.editingRdv || this.statutForm.invalid) return;
     this.saving = true;
+    this.modalErrorMessage = '';
     const { statut, commentaire } = this.statutForm.value;
     this.service.updateStatut(this.editingRdv.id, statut, commentaire || undefined).subscribe({
-      next: () => { this.showStatutModal = false; this.load(); this.notify('Statut mis à jour.'); },
-      error: (err) => { this.saving = false; this.modalErrorMessage = err.error || 'Erreur lors de la mise à jour.'; },
+      next: () => {
+        this.closeModals();
+        this.load();
+        this.notify('Statut mis à jour.');
+      },
+      error: (err: any) => {
+        this.saving = false;
+        this.modalErrorMessage = err.error?.message || 'Erreur lors de la mise à jour.';
+      },
     });
   }
 
@@ -141,20 +162,30 @@ export class RendezVousComponent implements OnInit {
     this.saving = true;
     this.modalErrorMessage = '';
 
-    const dateChanged = this.editedDate !== this.toDatetimeLocal(this.editingRdv.dateRendezVous);
     const technicienIds = Array.from(this.selectedTechnicienIds);
 
     const doValider = () => {
       this.service.valider(this.editingRdv!.id, technicienIds).subscribe({
-        next: () => { this.showValiderModal = false; this.load(); this.notify('Rendez-vous validé. Ordre de réparation créée.'); },
-        error: (err) => { this.saving = false; this.modalErrorMessage = err.error || 'Erreur lors de la validation.'; },
+        next: () => {
+          this.closeModals();
+          this.load();
+          this.notify('Rendez-vous confirmé.');
+        },
+        error: (err: any) => {
+          this.saving = false;
+          this.modalErrorMessage = err.error?.message || 'Erreur lors de la confirmation.';
+        },
       });
     };
 
-    if (dateChanged) {
-      this.service.updateDate(this.editingRdv.id, this.editedDate).subscribe({
+    if (this.editedDate) {
+      const isoDate = new Date(this.editedDate).toISOString();
+      this.service.updateDate(this.editingRdv.id, isoDate).subscribe({
         next: () => doValider(),
-        error: (err) => { this.saving = false; this.modalErrorMessage = err.error || 'Erreur lors de la modification de la date.'; },
+        error: (err: any) => {
+          this.saving = false;
+          this.modalErrorMessage = err.error?.message || 'Erreur lors de la mise à jour de la date.';
+        },
       });
     } else {
       doValider();
@@ -174,9 +205,13 @@ export class RendezVousComponent implements OnInit {
   }
 
   get paged(): RendezVous[] {
-    return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
+    const list = Array.isArray(this.filtered) ? this.filtered : [];
+    return list.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
   }
-  get totalPages(): number { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }
+  get totalPages(): number {
+    const list = Array.isArray(this.filtered) ? this.filtered : [];
+    return Math.max(1, Math.ceil(list.length / this.pageSize));
+  }
   prevPage() { if (this.page > 1) this.page--; }
   nextPage() { if (this.page < this.totalPages) this.page++; }
 
@@ -209,5 +244,12 @@ export class RendezVousComponent implements OnInit {
     this.saving = false;
     this.errorMessage = msg;
     setTimeout(() => this.errorMessage = '', 3500);
+  }
+
+  private toDatetimeLocal(iso: string): string {
+    if (!iso) return '';
+    const d = new Date(iso);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 }

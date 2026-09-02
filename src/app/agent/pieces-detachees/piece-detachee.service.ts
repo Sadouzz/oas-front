@@ -11,11 +11,13 @@ export class PieceDetacheeService {
   private http = inject(HttpClient);
   private api = `${environment.apiUrl}/api/pieces-detachees`;
 
-  getAll(params?: { keyword?: string; statut?: string; type?: string }): Observable<PieceDetache[]> {
+  getAll(params: import('../../shared/models').PageParams = {}): Observable<PieceDetache[]> {
     const p: Record<string, string> = {};
-    if (params?.keyword) p['keyword'] = params.keyword;
-    if (params?.statut) p['statut'] = params.statut;
-    if (params?.type) p['type'] = params.type;
+    if (params.page !== undefined) p['page'] = params.page.toString();
+    if (params.size !== undefined) p['size'] = params.size.toString();
+    if (params.keyword) p['keyword'] = params.keyword;
+    if (params['statut']) p['statut'] = params['statut'];
+    if (params['type']) p['type'] = params['type'];
     return this.http.get<PieceDetache[]>(this.api, { params: p });
   }
 

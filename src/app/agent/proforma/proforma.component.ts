@@ -9,7 +9,7 @@ import { VehiculeService } from '../vehicules/vehicule.service';
 import { PieceDetacheeService } from '../pieces-detachees/piece-detachee.service';
 import { MainDoeuvreService } from '../main-doeuvre/main-doeuvre.service';
 import { NgClass } from '@angular/common';
-import { UserModel, VehiculeModel, PieceDetache, MainDoeuvreModel } from '../../shared/models/index';
+import { ClientModel, VehiculeModel, PieceDetache, MainDoeuvreModel, extractContent } from '../../shared/models/index';
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideArrowRight } from '@lucide/angular';
 
 @Component({
@@ -31,7 +31,7 @@ export class ProformaComponent implements OnInit {
 
   proformas: Proforma[] = [];
   filtered: Proforma[] = [];
-  clients: UserModel[] = [];
+  clients: ClientModel[] = [];
   vehicules: VehiculeModel[] = [];
   clientVehicules: VehiculeModel[] = [];
   bonsCommande: BonDeCommande[] = [];
@@ -93,11 +93,11 @@ export class ProformaComponent implements OnInit {
       bonsCommande: this.bcService.getAll(),
     }).subscribe({
       next: ({ clients, vehicules, pieces, mds, bonsCommande }) => {
-        this.clients = clients;
-        this.vehicules = vehicules;
-        this.pieces = pieces;
-        this.mainsDoeuvre = mds.filter(m => !m.isArchived);
-        this.bonsCommande = bonsCommande;
+        this.clients = extractContent(clients);
+        this.vehicules = extractContent(vehicules);
+        this.pieces = extractContent(pieces);
+        this.mainsDoeuvre = extractContent(mds).filter((m: any) => !m.isArchived);
+        this.bonsCommande = extractContent(bonsCommande);
 
         // Auto-open modal if openId or action is provided in query params
         this.route.queryParams.subscribe(params => {
@@ -111,7 +111,6 @@ export class ProformaComponent implements OnInit {
             if (p) {
               this.openEdit(p);
             } else {
-              // Si pas encore chargé, on peut faire un refetch
               this.service.getById(id).subscribe(prof => {
                 if (prof) this.openEdit(prof);
               });
@@ -125,8 +124,17 @@ export class ProformaComponent implements OnInit {
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: data => { this.proformas = data.sort((a:any, b:any) => b.id - a.id); this.applyFilter(); this.cdr.markForCheck(); this.loading = false; this.cdr.markForCheck(); },
-      error: () => this.loading = false,
+      next: data => {
+        this.proformas = extractContent(data).sort((a: any, b: any) => b.id - a.id);
+        this.applyFilter();
+        this.cdr.markForCheck();
+        this.loading = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.loading = false;
+        this.cdr.markForCheck();
+      },
     });
   }
 
@@ -224,7 +232,7 @@ export class ProformaComponent implements OnInit {
     return v ? `${v.immatriculation} — ${v.marque}` : '';
   }
 
-  get filteredClients(): UserModel[] {
+  get filteredClients(): ClientModel[] {
     if (!this.clientFilter) return this.clients;
     const kw = this.clientFilter.toLowerCase();
     return this.clients.filter(c =>
@@ -242,7 +250,7 @@ export class ProformaComponent implements OnInit {
     );
   }
 
-  selectClient(c: UserModel) {
+  selectClient(c: ClientModel) {
     this.clientVehicules = this.vehicules.filter(v => v.client?.id === c.id);
     this.form.patchValue({ clientId: c.id, vehiculeId: null, immatriculation: '', numeroChassis: '', marque: '', modele: '', annee: null });
     this.clientFilter = '';

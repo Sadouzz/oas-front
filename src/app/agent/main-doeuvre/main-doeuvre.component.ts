@@ -5,6 +5,7 @@ import { MainDoeuvreService, MainDoeuvreModel, MainDoeuvreRequest } from './main
 import { CategorieMainDoeuvreService, CategorieMainDoeuvreModel } from './categorie-main-doeuvre.service';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
+import { extractContent } from '../../shared/models';
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideArchive, LucideArchiveRestore, LucideLoader2 } from '@lucide/angular';
 
 // Pipe inline pour compter par catégorie dans le template
@@ -12,7 +13,7 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideAr
 export class CategorieCountPipe implements PipeTransform {
   private cdr = inject(ChangeDetectorRef);
   transform(items: MainDoeuvreModel[], catId: number): number {
-    return items.filter(i => i.categorie?.id === catId).length;
+    return (Array.isArray(items) ? items : []).filter(i => i.categorie?.id === catId).length;
   }
 }
 
@@ -70,7 +71,7 @@ export class MainDoeuvreComponent implements OnInit {
 
   loadCategories() {
     this.catService.getAll().subscribe({
-      next: (data) => this.categories = data,
+      next: (data) => this.categories = extractContent(data),
       error: () => this.errorMessage = 'Erreur lors du chargement des catégories'
     });
   }
@@ -78,13 +79,24 @@ export class MainDoeuvreComponent implements OnInit {
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: (data) => { this.items = data.sort((a:any, b:any) => b.id - a.id); this.applyFilter(); this.cdr.markForCheck(); this.loading = false; this.cdr.markForCheck(); },
-      error: ()    => { this.loading = false; this.cdr.markForCheck(); }
+      next: (data) => {
+        const list = extractContent<MainDoeuvreModel>(data);
+        this.items = list.sort((a: any, b: any) => b.id - a.id);
+        this.applyFilter();
+        this.loading = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.items = [];
+        this.filtered = [];
+        this.loading = false;
+        this.cdr.markForCheck();
+      }
     });
   }
 
   applyFilter() {
-    let data = this.items;
+    let data = Array.isArray(this.items) ? this.items : [];
     // Filtre archivé
     if (this.filterArchived === 'actif')   data = data.filter(i => !i.isArchived);
     if (this.filterArchived === 'archive') data = data.filter(i =>  i.isArchived);
@@ -121,8 +133,14 @@ export class MainDoeuvreComponent implements OnInit {
   }
 
   // ── Pagination ────────────────────────────────────────
-  get paged(): MainDoeuvreModel[] { return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize); }
-  get totalPages(): number { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }
+  get paged(): MainDoeuvreModel[] {
+    const list = Array.isArray(this.filtered) ? this.filtered : [];
+    return list.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
+  }
+  get totalPages(): number {
+    const list = Array.isArray(this.filtered) ? this.filtered : [];
+    return Math.max(1, Math.ceil(list.length / this.pageSize));
+  }
   prevPage(): void { if (this.page > 1) this.page--; }
   nextPage(): void { if (this.page < this.totalPages) this.page++; }
 
@@ -205,14 +223,16 @@ export class MainDoeuvreComponent implements OnInit {
     obs.subscribe({
       next: () => {
         this.savingCat = false;
+        this.catErrorMessage = '';
+        this.showCatModal = false;
         this.editingCatId = null;
         this.catForm.reset();
+        this.showSuccess('Catégorie enregistrée !');
         this.loadCategories();
-        this.showSuccess('Catégorie enregistrée');
       },
-      error: (err) => {
+      error: (err: any) => {
         this.savingCat = false;
-        this.catErrorMessage = err.error?.message || 'Erreur d\'enregistrement de la catégorie';
+        this.catErrorMessage = err.error?.message || 'Erreur lors de l\'enregistrement de la catégorie.';
       }
     });
   }
@@ -224,7 +244,6 @@ export class MainDoeuvreComponent implements OnInit {
       error: (err) => this.catErrorMessage = err.error?.message || 'Erreur lors de la suppression'
     });
   }
-
 
   // ── Labels & styles ───────────────────────────────────
   categorieBgIcon(c: string | undefined): string {

@@ -154,6 +154,17 @@ export class AuthService {
     return this.cookieService.get('username');
   }
 
+  getUserId(): number | null {
+    const token = this.getToken();
+    if (!token) return null;
+    try {
+      const decoded = jwtDecode<any>(token);
+      return decoded.id ?? decoded.userId ?? null;
+    } catch {
+      return null;
+    }
+  }
+
   getUser(): { username: string; role: string } | null {
     const username = this.getUsername();
     const role = this.getRole();

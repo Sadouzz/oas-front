@@ -101,5 +101,7 @@
         </tbody>
       </table>
     </div>
+    <app-pagination [page]="page" [totalPages]="totalPages" [total]="totalElements" [pageSize]="pageSize"
+      (prev)="prevPage()" (next)="nextPage()" />
   }
 </div>

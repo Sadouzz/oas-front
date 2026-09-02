@@ -11,8 +11,12 @@ export class FicheAtelierService {
 
   constructor(private http: HttpClient) { }
 
-  getAll(): Observable<FicheAtelierResponse[]> {
-    return this.http.get<FicheAtelierResponse[]>(this.apiUrl);
+  getAll(params: import('../../shared/models').PageParams = {}): Observable<FicheAtelierResponse[]> {
+    const queryParams: Record<string, string> = {};
+    if (params.page !== undefined) queryParams['page'] = params.page.toString();
+    if (params.size !== undefined) queryParams['size'] = params.size.toString();
+    if (params.keyword) queryParams['keyword'] = params.keyword;
+    return this.http.get<FicheAtelierResponse[]>(this.apiUrl, { params: queryParams });
   }
 
   getById(id: number): Observable<FicheAtelierResponse> {

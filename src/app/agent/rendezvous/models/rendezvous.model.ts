@@ -7,6 +7,16 @@ export interface RendezVousDateHistory {
   dateModification: string;
 }
 
+export interface RendezVousListResponse {
+  id: number;
+  dateRendezVous: string;
+  clientName: string;
+  vehiculeImmatriculation: string | null;
+  motif: string;
+  statut: RendezVousStatus;
+  hasFicheAtelier?: boolean;
+}
+
 export interface RendezVous {
   id: number;
   clientId: number;

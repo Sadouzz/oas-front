@@ -10,6 +10,8 @@ import { PieceDetacheeService, PieceDetache } from '../pieces-detachees/piece-de
 import { AuthService } from '../../core/services/auth.service';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
+import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
+import { extractContent } from '../../shared/models';
 import { LucidePlus, LucideSearch, LucidePackage, LucideTrash2, LucideX, LucideCheck, LucideCheckCircle, LucideLoader2 } from '@lucide/angular';
 
 @Component({
@@ -18,7 +20,7 @@ import { LucidePlus, LucideSearch, LucidePackage, LucideTrash2, LucideX, LucideC
   imports: [ReactiveFormsModule, FormsModule, PaginationComponent, AlertComponent, LucidePlus, LucideSearch, LucidePackage, LucideTrash2, LucideX, LucideCheck, LucideCheckCircle, LucideLoader2],
   templateUrl: './bons-de-sortie.component.html',
 })
-export class BonsDeSortieComponent implements OnInit {
+export class BonsDeSortieComponent extends BasePaginatedComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
@@ -30,8 +32,6 @@ export class BonsDeSortieComponent implements OnInit {
 
   bons: BonDeSortie[] = [];
   filtered: BonDeSortie[] = [];
-  page = 1;
-  readonly pageSize = 10;
 
   clients: UserModel[] = [];
   allVehicules: VehiculeModel[] = [];
@@ -58,7 +58,6 @@ export class BonsDeSortieComponent implements OnInit {
   vehiculeFilter = '';
 
   filterStatut = '';
-  searchTerm = '';
   dateDebut = '';
   dateFin = '';
   filterVehicule = '';
@@ -127,16 +126,16 @@ export class BonsDeSortieComponent implements OnInit {
   // ── Lifecycle ───────────────────────────────────────────────────
 
   ngOnInit() {
-    this.loadBons();
+    this.loadData();
     forkJoin({
       clients: this.clientService.getAll(),
-      vehicules: this.vehiculeService.getAll(),
+      vehicules: this.vehiculeService.getAll({ size: 1000 }),
       pdps: this.pieceService.getAll({ type: 'PDP' })
     }).subscribe({
       next: ({ clients, vehicules, pdps }) => {
-        this.clients = clients.filter(c => c.enabled);
-        this.allVehicules = vehicules;
-        this.pdps = pdps.filter(p => p.statut === 'ACTIF');
+        this.clients = extractContent<UserModel>(clients as any).filter(c => c.enabled);
+        this.allVehicules = extractContent<VehiculeModel>(vehicules as any);
+        this.pdps = extractContent<PieceDetache>(pdps as any).filter(p => p.statut === 'ACTIF');
       },
     });
 
@@ -156,10 +155,18 @@ export class BonsDeSortieComponent implements OnInit {
     });
   }
 
+  loadData() {
+    this.loadBons();
+  }
+
   loadBons() {
     this.loading = true;
-    this.bonService.getAll().subscribe({
-      next: (d) => { this.bons = d.sort((a: any, b: any) => b.id - a.id); this.applyFilter(); this.cdr.markForCheck(); this.loading = false; this.cdr.markForCheck(); },
+    this.bonService.getAll(this.getPageParams()).subscribe({
+      next: (d) => {
+        const arr = this.applyPageResponse<BonDeSortie>(d);
+        this.bons = arr.sort((a: any, b: any) => b.id - a.id);
+        this.applyFilter(); this.cdr.markForCheck(); this.loading = false; this.cdr.markForCheck();
+      },
       error: () => { this.loading = false; this.cdr.markForCheck(); }
     });
   }
@@ -193,15 +200,12 @@ export class BonsDeSortieComponent implements OnInit {
     this.page = 1;
   }
 
-  onSearch(event: Event) {
+  override onSearch(event: Event) {
     this.searchTerm = (event.target as HTMLInputElement).value.toLowerCase().trim();
     this.applyFilter(); this.cdr.markForCheck();
   }
 
-  get paged(): BonDeSortie[] { return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize); }
-  get totalPages(): number { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }
-  prevPage(): void { if (this.page > 1) this.page--; }
-  nextPage(): void { if (this.page < this.totalPages) this.page++; }
+  get paged(): BonDeSortie[] { return this.filtered; }
 
   onStatutFilter(event: Event) {
     this.filterStatut = (event.target as HTMLSelectElement).value;

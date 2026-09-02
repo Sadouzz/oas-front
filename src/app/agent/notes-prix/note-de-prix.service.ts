@@ -9,8 +9,12 @@ export class NoteDePrixService {
   private http = inject(HttpClient);
   private api = `${environment.apiUrl}/api/notes-de-prix`;
 
-  getAll(): Observable<NoteDePrixModel[]> {
-    return this.http.get<NoteDePrixModel[]>(this.api);
+  getAll(params?: import('../../shared/models').PageParams): Observable<NoteDePrixModel[]> {
+    const p: Record<string, string> = {};
+    if (params?.page !== undefined) p['page'] = params.page.toString();
+    if (params?.size !== undefined) p['size'] = params.size.toString();
+    if (params?.keyword) p['keyword'] = params.keyword;
+    return this.http.get<any>(this.api, { params: p });
   }
 
   getById(id: number): Observable<NoteDePrixModel> {

@@ -9,16 +9,18 @@ import { PieceDetacheeService } from '../pieces-detachees/piece-detachee.service
 import { ClientService, UserModel } from '../clients/client.service';
 import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { FournisseurModel, VehiculeModel, PieceDetache } from '../../shared/models/index';
+import { FournisseurModel, VehiculeModel, PieceDetache, extractContent } from '../../shared/models/index';
+import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
+import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideArrowRight } from '@lucide/angular';
 
 @Component({
   selector: 'app-bons-commande',
   standalone: true,
-  imports: [ReactiveFormsModule, FormsModule, NgClass],
+  imports: [ReactiveFormsModule, FormsModule, NgClass, PaginationComponent],
   templateUrl: './bons-commande.component.html',
 })
-export class BonsCommandeComponent implements OnInit {
+export class BonsCommandeComponent extends BasePaginatedComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private service = inject(BonDeCommandeService);
   private fournisseurService = inject(FournisseurService);
@@ -34,9 +36,6 @@ export class BonsCommandeComponent implements OnInit {
   vehicules: VehiculeModel[] = [];
   pieces: PieceDetache[] = [];
   clients: UserModel[] = [];
-
-  page = 1;
-  readonly pageSize = 10;
 
   selectedClientId: number | null = null;
   clientOpen = false;
@@ -149,7 +148,6 @@ export class BonsCommandeComponent implements OnInit {
     this.vehiculeOpen = false;
   }
 
-  searchTerm = '';
   filterStatut = '';
   dateDebut = '';
   dateFin = '';
@@ -169,10 +167,10 @@ export class BonsCommandeComponent implements OnInit {
       clients: this.clientService.getAll(),
     }).subscribe({
       next: ({ fournisseurs, vehicules, pieces, clients }) => {
-        this.fournisseurs = fournisseurs.filter(f => !f.archived);
-        this.vehicules = vehicules;
-        this.pieces = pieces;
-        this.clients = clients.filter(c => c.enabled);
+        this.fournisseurs = extractContent(fournisseurs).filter((f: any) => !f.archived);
+        this.vehicules = extractContent(vehicules);
+        this.pieces = extractContent(pieces);
+        this.clients = extractContent<any>(clients).filter((c: any) => c.enabled);
 
         // Pre-fill BDC if query parameter pieceId is present
         this.route.queryParams.subscribe(params => {
@@ -192,10 +190,21 @@ export class BonsCommandeComponent implements OnInit {
     });
   }
 
+  loadData() {
+    this.load();
+  }
+
   load() {
     this.loading = true;
-    this.service.getAll().subscribe({
-      next: (d) => { this.bons = d.sort((a: any, b: any) => b.id - a.id); this.applyFilter(); this.cdr.markForCheck(); this.loading = false; this.cdr.markForCheck(); },
+    const params = this.getPageParams();
+    this.service.getAll(params).subscribe({
+      next: (d) => {
+        const arr = this.applyPageResponse<BonDeCommande>(d);
+        this.bons = arr.sort((a: any, b: any) => b.id - a.id);
+        this.applyFilter();
+        this.loading = false;
+        this.cdr.markForCheck();
+      },
       error: () => this.loading = false,
     });
   }
@@ -228,10 +237,7 @@ export class BonsCommandeComponent implements OnInit {
     this.page = 1;
   }
 
-  onSearch(e: Event) {
-    this.searchTerm = (e.target as HTMLInputElement).value.toLowerCase().trim();
-    this.applyFilter(); this.cdr.markForCheck();
-  }
+  // onSearch inherited from BasePaginatedComponent
 
   onFilterStatut(e: Event) {
     this.filterStatut = (e.target as HTMLSelectElement).value;
@@ -572,11 +578,8 @@ export class BonsCommandeComponent implements OnInit {
   fmt(n: number): string { return new Intl.NumberFormat('fr-FR').format(n); }
 
   get paged(): BonDeCommande[] {
-    return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
+    return this.filtered;
   }
-  get totalPages(): number { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }
-  prevPage() { if (this.page > 1) this.page--; }
-  nextPage() { if (this.page < this.totalPages) this.page++; }
 
   private notify(msg: string) {
     this.saving = false; this.successMessage = msg;

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { BonDeSortieService, BonDeSortieHistorique } from '../bons-de-sortie/bon-de-sortie.service';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
+import { extractContent } from '../../shared/models';
 import { LucideSearch, LucideLoader2 } from '@lucide/angular';
 
 @Component({
@@ -37,7 +38,7 @@ export class HistoriqueBsComponent implements OnInit {
     this.loading = true;
     this.bonService.getHistoriqueGlobal().subscribe({
       next: (data) => {
-        this.historiqueList = data;
+        this.historiqueList = extractContent(data);
         this.applyFilter(); this.cdr.markForCheck();
         this.loading = false; this.cdr.markForCheck();
       },

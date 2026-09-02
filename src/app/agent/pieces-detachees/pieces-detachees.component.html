@@ -2,7 +2,7 @@
   <div class="flex items-center justify-between mb-6">
     <div>
       <h1 class="text-2xl font-bold text-oas-ink">Catalogue des pièces détachées</h1>
-      <p class="text-sm text-oas-muted mt-1">{{ filtered.length }} pièce(s) affichée(s)</p>
+      <p class="text-sm text-oas-muted mt-1">{{ paged.length }} pièce(s) affichée(s) sur {{ totalElements }}</p>
     </div>
     @if (canEdit) {
     <button (click)="openCreate()"
@@ -240,8 +240,10 @@
         </tbody>
       </table>
     </div>
-    <app-pagination [page]="page" [totalPages]="totalPages" [total]="filtered.length" [pageSize]="pageSize"
-      (prev)="prevPage()" (next)="nextPage()" />
+    @if (totalElements > 0) {
+      <app-pagination [page]="page" [totalPages]="totalPages" [total]="totalElements" [pageSize]="pageSize"
+        (prev)="prevPage()" (next)="nextPage()" />
+    }
   </div>
 </div>
 

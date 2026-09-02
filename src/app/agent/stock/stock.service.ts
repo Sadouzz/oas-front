@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AlerteStock, InventaireResponse, StockMouvement } from '../../shared/models';
+import { AlerteStock, InventaireResponse, StockMouvement, PageResponse } from '../../shared/models';
 
 export type { AlerteStock, InventaireResponse, StockMouvement };
 
@@ -24,20 +24,32 @@ export class StockService {
     return this.http.post<StockMouvement>(`${this.api}/ajustement`, { pieceId, stockMagasin, stockAtelier, motif });
   }
 
-  historiquePiece(pieceId: number, type?: string): Observable<StockMouvement[]> {
+  historiquePiece(pieceId: number, type?: string, page?: number, size?: number): Observable<PageResponse<StockMouvement> | StockMouvement[]> {
     const params: Record<string, string> = {};
     if (type) params['type'] = type;
-    return this.http.get<StockMouvement[]>(`${this.api}/historique/${pieceId}`, { params });
+    if (page !== undefined) params['page'] = page.toString();
+    if (size !== undefined) params['size'] = size.toString();
+    return this.http.get<PageResponse<StockMouvement> | StockMouvement[]>(`${this.api}/historique/${pieceId}`, { params });
   }
 
-  historiqueGlobal(debut?: string, fin?: string, pieceId?: number, categorie?: string, type?: string): Observable<StockMouvement[]> {
+  historiqueGlobal(
+    debut?: string,
+    fin?: string,
+    pieceId?: number,
+    categorie?: string,
+    type?: string,
+    page?: number,
+    size?: number
+  ): Observable<PageResponse<StockMouvement> | StockMouvement[]> {
     const params: Record<string, string> = {};
     if (debut) params['debut'] = debut;
     if (fin) params['fin'] = fin;
     if (pieceId) params['pieceId'] = pieceId.toString();
     if (categorie) params['categorie'] = categorie;
     if (type) params['type'] = type;
-    return this.http.get<StockMouvement[]>(`${this.api}/historique`, { params });
+    if (page !== undefined) params['page'] = page.toString();
+    if (size !== undefined) params['size'] = size.toString();
+    return this.http.get<PageResponse<StockMouvement> | StockMouvement[]>(`${this.api}/historique`, { params });
   }
 
   alertes(): Observable<AlerteStock[]> {

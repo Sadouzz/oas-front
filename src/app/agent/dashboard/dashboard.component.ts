@@ -146,16 +146,49 @@ export class DashboardComponent implements OnInit {
       });
     }
     if (this.isSuperAgent || this.isMaster || this.isMagasinier) {
-      this.stockService.alertes().subscribe({ next: (d) => { this.alertes = d; this.done(); }, error: () => this.done() });
+      this.stockService.alertes().subscribe({
+        next: (d) => {
+          this.alertes = extractContent(d);
+          this.done();
+        },
+        error: () => {
+          this.alertes = [];
+          this.done();
+        }
+      });
     }
     if (this.isSuperAgent || this.isMaster || this.isAgent || this.isChefAtelier || this.isMagasinier) {
-      this.bonService.getAll({ statut: 'EN_ATTENTE' }).subscribe({ next: (d) => { this.bonsEnAttente = d; this.done(); }, error: () => this.done() });
+      this.bonService.getAll({ statut: 'EN_ATTENTE' }).subscribe({
+        next: (d) => {
+          this.bonsEnAttente = extractContent(d);
+          this.done();
+        },
+        error: () => {
+          this.bonsEnAttente = [];
+          this.done();
+        }
+      });
     }
     if (this.isChefAtelier) {
-      this.vehiculeService.getAll().subscribe({ next: (d) => { this.totalVehicules = d.length; this.recentVehicules = d.slice(0, 5); this.done(); }, error: () => this.done() });
+      this.vehiculeService.getAll().subscribe({
+        next: (d) => {
+          const list = extractContent(d);
+          this.totalVehicules = list.length;
+          this.recentVehicules = list.slice(0, 5);
+          this.done();
+        },
+        error: () => this.done()
+      });
     }
     if (this.isMagasinier) {
-      this.pieceService.getAll({ statut: 'ACTIF' }).subscribe({ next: (d) => { this.totalVehicules = d.length; this.done(); }, error: () => this.done() });
+      this.pieceService.getAll({ statut: 'ACTIF' }).subscribe({
+        next: (d) => {
+          const list = extractContent(d);
+          this.totalVehicules = list.length;
+          this.done();
+        },
+        error: () => this.done()
+      });
     }
     setTimeout(() => {
       this.loading = false;
@@ -171,8 +204,13 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  get ruptures(): AlerteStock[] { return this.alertes.filter(a => a.typeAlerte === 'RUPTURE'); }
-  get stocksFaibles(): AlerteStock[] { return this.alertes.filter(a => a.typeAlerte === 'STOCK_FAIBLE'); }
+  get ruptures(): AlerteStock[] {
+    return (Array.isArray(this.alertes) ? this.alertes : []).filter(a => a.typeAlerte === 'RUPTURE');
+  }
+
+  get stocksFaibles(): AlerteStock[] {
+    return (Array.isArray(this.alertes) ? this.alertes : []).filter(a => a.typeAlerte === 'STOCK_FAIBLE');
+  }
 
   formatDate(d: string): string { return new Date(d).toLocaleString('fr-FR'); }
 }

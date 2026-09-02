@@ -3,6 +3,7 @@ import { Router, RouterLink, RouterLinkActive, RouterOutlet, NavigationEnd } fro
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
 import { AgentNotificationService } from '../../core/services/agent-notification.service';
+import { NotificationWsService } from '../../core/services/notification-ws.service';
 import { AgentNotification } from '../../shared/models/agent-notification.model';
 import { GarageContextService } from '../../core/services/garage-context.service';
 import { filter, Subscription } from 'rxjs';
@@ -31,9 +32,11 @@ export class LayoutComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private authService = inject(AuthService);
   private notificationService = inject(AgentNotificationService);
+  private notificationWsService = inject(NotificationWsService);
   private garageContext = inject(GarageContextService);
   private router = inject(Router);
   private routerSub?: Subscription;
+  private wsSub?: Subscription;
   private notificationInterval: any;
 
   openSection: string | null = null;
@@ -137,9 +140,14 @@ export class LayoutComponent implements OnInit, OnDestroy {
       .subscribe((e: any) => this.syncSection(e.url));
       
     this.loadNotifications();
+    this.initWebSocketNotifications();
+
+    // Polling de repli espacé (toutes les 60 secondes) si le WebSocket est interrompu
     this.notificationInterval = setInterval(() => {
-      this.loadNotifications();
-    }, 10000);
+      if (!this.notificationWsService.active) {
+        this.loadNotifications();
+      }
+    }, 60000);
 
     this.garageContext.activeGarageId$.subscribe(id => {
       if (id) {
@@ -150,6 +158,26 @@ export class LayoutComponent implements OnInit, OnDestroy {
     });
   }
 
+  private initWebSocketNotifications() {
+    const role = this.authService.getRole();
+    const userId = this.authService.getUserId();
+    const username = this.authService.getUsername();
+
+    this.notificationWsService.connect(role, userId, username);
+
+    this.wsSub = this.notificationWsService.notifications$.subscribe({
+      next: (notif) => {
+        if (!notif) return;
+        const exists = this.notifications.some(n => n.id === notif.id);
+        if (!exists) {
+          this.notifications.unshift(notif);
+          this.cdr.markForCheck();
+        }
+      },
+      error: (err) => console.error('Erreur flux notifications WS', err)
+    });
+  }
+
   leaveGarage() {
     this.garageContext.leaveGarage();
     this.router.navigate(['/agent/dashboard'], { replaceUrl: true });
@@ -157,13 +185,16 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     if (this.routerSub) this.routerSub.unsubscribe();
+    if (this.wsSub) this.wsSub.unsubscribe();
     if (this.notificationInterval) clearInterval(this.notificationInterval);
+    this.notificationWsService.disconnect();
   }
 
   loadNotifications() {
     this.notificationService.getNotifications().subscribe({
       next: (notifs) => {
-        this.notifications = notifs;
+        this.notifications = notifs || [];
+        this.cdr.markForCheck();
       },
       error: (err) => console.error('Erreur chargement notifications', err)
     });
@@ -178,6 +209,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
     this.notificationService.markAsRead(notification.id).subscribe({
       next: () => {
         notification.lu = true;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -186,6 +218,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
     this.notificationService.markAllAsRead().subscribe({
       next: () => {
         this.notifications.forEach(n => n.lu = true);
+        this.cdr.markForCheck();
       }
     });
   }
@@ -240,6 +273,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
   }
 
   logout(): void {
+    this.notificationWsService.disconnect();
     this.authService.logout();
     this.router.navigate(['/login'], { replaceUrl: true });
   }

@@ -4,15 +4,17 @@ import { FicheAtelierService } from '../fiches-atelier/fiche-atelier.service';
 import { FicheAtelierResponse } from '../../shared/models';
 import { RouterLink } from '@angular/router';
 import { LucideEye, LucideWrench } from '@lucide/angular';
+import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
+import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 
 @Component({
   selector: 'app-fiches-atelier-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, LucideEye, LucideWrench],
+  imports: [CommonModule, RouterLink, LucideEye, LucideWrench, PaginationComponent],
   templateUrl: './fiches-atelier-list.html',
   styleUrl: './fiches-atelier-list.css'
 })
-export class FichesAtelierList implements OnInit {
+export class FichesAtelierList extends BasePaginatedComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private service = inject(FicheAtelierService);
   
@@ -24,15 +26,17 @@ export class FichesAtelierList implements OnInit {
   searchClient = '';
 
   ngOnInit(): void {
-    this.loadFiches();
+    this.loadData();
   }
 
-  loadFiches() {
+  loadData() {
     this.loading = true;
     this.error = '';
-    this.service.getAll().subscribe({
+    const params = this.getPageParams();
+    this.service.getAll(params).subscribe({
       next: (data) => {
-        this.fiches = data.sort((a, b) => b.id - a.id);
+        const arr = this.applyPageResponse<FicheAtelierResponse>(data);
+        this.fiches = arr.sort((a: any, b: any) => b.id - a.id);
         this.applyFilter(); this.cdr.markForCheck();
         this.loading = false; this.cdr.markForCheck();
       },
@@ -44,23 +48,25 @@ export class FichesAtelierList implements OnInit {
   }
 
   onSearchVehicule(event: Event) {
-    this.searchVehicule = (event.target as HTMLInputElement).value;
+    this.searchVehicule = (event.target as HTMLInputElement).value.toLowerCase().trim();
+    this.page = 1;
     this.applyFilter(); this.cdr.markForCheck();
   }
 
   onSearchClient(event: Event) {
-    this.searchClient = (event.target as HTMLInputElement).value;
+    this.searchClient = (event.target as HTMLInputElement).value.toLowerCase().trim();
+    this.page = 1;
     this.applyFilter(); this.cdr.markForCheck();
   }
 
   applyFilter() {
     let result = this.fiches;
     if (this.searchVehicule) {
-      const kw = this.searchVehicule.toLowerCase();
+      const kw = this.searchVehicule;
       result = result.filter(f => (f.vehiculeImmatriculation || '').toLowerCase().includes(kw));
     }
     if (this.searchClient) {
-      const kw = this.searchClient.toLowerCase();
+      const kw = this.searchClient;
       result = result.filter(f => (f.clientName || '').toLowerCase().includes(kw));
     }
     this.filteredFiches = result;

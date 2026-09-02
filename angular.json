@@ -37,7 +37,9 @@
               }
             },
             "allowedCommonJsDependencies": [
-              "aos"
+              "aos",
+              "@stomp/stompjs",
+              "sockjs-client"
             ]
           },
           "configurations": {
@@ -58,6 +60,9 @@
               "optimization": {
                 "styles": {
                   "inlineCritical": false
+                },
+                "fonts": {
+                  "inline": false
                 }
               },
               "fileReplacements": [

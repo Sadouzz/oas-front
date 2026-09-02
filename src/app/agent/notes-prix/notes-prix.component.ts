@@ -10,6 +10,8 @@ import { VehiculeService, VehiculeModel } from '../vehicules/vehicule.service';
 import { OrdreReparationService, OrdreReparation } from '../ordres-reparation/ordre-reparation.service';
 import { LucideSearch, LucidePlus, LucideTrash2, LucideX, LucideDownload, LucideReceipt } from '@lucide/angular';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
+import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
+import { extractContent } from '../../shared/models';
 
 @Component({
   selector: 'app-notes-prix',
@@ -17,7 +19,7 @@ import { PaginationComponent } from '../../shared/components/pagination/paginati
   imports: [CommonModule, ReactiveFormsModule, FormsModule, NgClass, PaginationComponent, LucideSearch, LucidePlus, LucideTrash2, LucideX, LucideReceipt],
   templateUrl: './notes-prix.component.html',
 })
-export class NotesPrixComponent implements OnInit {
+export class NotesPrixComponent extends BasePaginatedComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private service = inject(NoteDePrixService);
   private fb = inject(FormBuilder);
@@ -52,9 +54,6 @@ export class NotesPrixComponent implements OnInit {
   vehiculeFilter = '';
   ficheFilter = '';
 
-  page = 1;
-  readonly pageSize = 10;
-  searchTerm = '';
   filterStatut = '';
   dateDebut = '';
   dateFin = '';
@@ -73,14 +72,14 @@ export class NotesPrixComponent implements OnInit {
   });
 
   ngOnInit() {
-    this.load();
+    this.loadData();
     forkJoin({
       clients: this.clientService.getAll(),
       fiches: this.ficheService.getAll(),
     }).subscribe({
       next: ({ clients, fiches }) => {
-        this.clients = (clients || []).filter(c => c.enabled);
-        this.ordresReparation = fiches || [];
+        this.clients = extractContent<UserModel>(clients as any).filter(c => c.enabled);
+        this.ordresReparation = extractContent<OrdreReparation>(fiches as any);
       },
       error: () => {},
     });
@@ -101,11 +100,16 @@ export class NotesPrixComponent implements OnInit {
     });
   }
 
+  loadData() {
+    this.load();
+  }
+
   load() {
     this.loading = true;
-    this.service.getAll().subscribe({
+    this.service.getAll(this.getPageParams()).subscribe({
       next: data => {
-        this.notes = (data || []).sort((a: any, b: any) => (b.id ?? 0) - (a.id ?? 0));
+        const arr = this.applyPageResponse<NoteDePrixModel>(data);
+        this.notes = arr.sort((a: any, b: any) => (b.id ?? 0) - (a.id ?? 0));
         this.applyFilter(); this.cdr.markForCheck();
         this.loading = false; this.cdr.markForCheck();
       },
@@ -170,7 +174,7 @@ export class NotesPrixComponent implements OnInit {
     this.applyFilter(); this.cdr.markForCheck();
   }
 
-  onSearch(e: Event) {
+  override onSearch(e: Event) {
     this.searchTerm = (e.target as HTMLInputElement).value.toLowerCase().trim();
     this.applyFilter(); this.cdr.markForCheck();
   }
@@ -408,11 +412,8 @@ export class NotesPrixComponent implements OnInit {
   fmt(n: number | null | undefined): string { return new Intl.NumberFormat('fr-FR').format(n ?? 0); }
 
   get paged(): NoteDePrixModel[] {
-    return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
+    return this.filtered;
   }
-  get totalPages(): number { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }
-  prevPage() { if (this.page > 1) this.page--; }
-  nextPage() { if (this.page < this.totalPages) this.page++; }
 
   private notify(msg: string) {
     this.successMessage = msg;

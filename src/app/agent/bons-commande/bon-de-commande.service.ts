@@ -67,8 +67,12 @@ export class BonDeCommandeService {
   private http = inject(HttpClient);
   private api = `${environment.apiUrl}/api/bons-de-commande`;
 
-  getAll(): Observable<BonDeCommande[]> {
-    return this.http.get<BonDeCommande[]>(this.api);
+  getAll(params: import('../../shared/models').PageParams = {}): Observable<BonDeCommande[]> {
+    const queryParams: Record<string, string> = {};
+    if (params.page !== undefined) queryParams['page'] = params.page.toString();
+    if (params.size !== undefined) queryParams['size'] = params.size.toString();
+    if (params.keyword) queryParams['keyword'] = params.keyword;
+    return this.http.get<BonDeCommande[]>(this.api, { params: queryParams });
   }
 
   getById(id: number): Observable<BonDeCommande> {

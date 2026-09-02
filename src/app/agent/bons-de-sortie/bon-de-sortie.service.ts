@@ -39,12 +39,15 @@ export class BonDeSortieService {
   private http = inject(HttpClient);
   private api = `${environment.apiUrl}/api/bons-de-sortie`;
 
-  getAll(params?: { statut?: string; clientId?: number; vehiculeId?: number }): Observable<BonDeSortie[]> {
+  getAll(params?: import('../../shared/models').PageParams & { statut?: string; clientId?: number; vehiculeId?: number }): Observable<BonDeSortie[]> {
     const p: Record<string, string> = {};
     if (params?.statut) p['statut'] = params.statut;
     if (params?.clientId) p['clientId'] = String(params.clientId);
     if (params?.vehiculeId) p['vehiculeId'] = String(params.vehiculeId);
-    return this.http.get<BonDeSortie[]>(this.api, { params: p });
+    if (params?.page !== undefined) p['page'] = params.page.toString();
+    if (params?.size !== undefined) p['size'] = params.size.toString();
+    if (params?.keyword) p['keyword'] = params.keyword;
+    return this.http.get<any>(this.api, { params: p });
   }
 
   getById(id: number): Observable<BonDeSortie> {

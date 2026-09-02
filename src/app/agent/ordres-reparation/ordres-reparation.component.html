@@ -7,7 +7,7 @@
   <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4 flex items-center justify-between">
     <div>
       <h1 class="text-2xl font-bold text-oas-ink">Ordres de Réparation</h1>
-      <p class="text-sm text-oas-muted mt-1">{{ filtered.length }} fiche(s)</p>
+      <p class="text-sm text-oas-muted mt-1">{{ paged.length }} fiche(s) affichée(s) sur {{ totalElements }}</p>
     </div>
     <button id="btn-nouvelle-fiche" (click)="openNew()"
       class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-11 rounded-xl flex items-center gap-2 transition cursor-pointer shadow-lg shadow-oas-accent/25">
@@ -148,9 +148,11 @@
               </div>
               <!-- Pagination toujours visible -->
               <div class="border-t border-oas-line">
-                <app-pagination [page]="page" [totalPages]="totalPages" [total]="filtered.length" [pageSize]="pageSize"
-                  (prev)="prevPage()" (next)="nextPage()" />
-                </div>
+                @if (totalElements > 0) {
+                  <app-pagination [page]="page" [totalPages]="totalPages" [total]="totalElements" [pageSize]="pageSize"
+                    (prev)="prevPage()" (next)="nextPage()" />
+                }
+              </div>
               }
             </div>
 
