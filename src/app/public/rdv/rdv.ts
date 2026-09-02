@@ -305,7 +305,7 @@ export class RdvComponent implements OnInit {
         
         setTimeout(() => {
           this.closeModal();
-          this.router.navigate(['/espace-client']);
+          this.router.navigate(['/client']);
         }, 1200);
       },
       error: (err) => {

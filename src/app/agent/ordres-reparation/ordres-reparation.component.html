@@ -1,0 +1,1794 @@
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!--  LAYOUT PRINCIPAL                                           -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="space-y-6">
+
+  <!-- Header -->
+  <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4 flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-oas-ink">Ordres de Réparation</h1>
+      <p class="text-sm text-oas-muted mt-1">{{ filtered.length }} fiche(s)</p>
+    </div>
+    <button id="btn-nouvelle-fiche" (click)="openNew()"
+      class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-11 rounded-xl flex items-center gap-2 transition cursor-pointer shadow-lg shadow-oas-accent/25">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+      </svg>
+      Nouvelle fiche
+    </button>
+  </div>
+
+  @if (!showWorkflow) {
+    <app-alert [success]="successMessage" [error]="errorMessage" />
+  }
+
+  <!-- Filtres -->
+  <div class="bg-white rounded-2xl border border-oas-line p-3 shadow-sm">
+    <div class="flex flex-wrap gap-3">
+      <div class="relative flex-1 min-w-48">
+        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-oas-muted">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </span>
+        <input (input)="onSearch($event)" placeholder="Rechercher par numéro, véhicule, statut..."
+          class="w-full pl-9 pr-4 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition" />
+        </div>
+        <div class="flex flex-col">
+          <label class="text-xs font-semibold text-oas-muted mb-1">Statut</label>
+          <select (change)="onFilterStatut($event)"
+            class="px-3 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
+            <option value="">Tous les statuts</option>
+            <option value="A_FAIRE">Réception</option>
+            <option value="EN_DIAGNOSTIC">Diagnostic</option>
+            <option value="EN_ATTENTE_PROFORMA">Proforma</option>
+            <option value="EN_ATTENTE_COMMANDE">Approv.</option>
+            <option value="EN_COURS">Bon sortie</option>
+            <option value="TERMINE">Réparation</option>
+            <option value="LIVRE">Livré</option>
+          </select>
+        </div>
+        <div class="flex flex-col">
+          <label class="text-xs font-semibold text-oas-muted mb-1">Depuis le</label>
+          <input type="date" [(ngModel)]="filterDateDebut" (change)="applyFilter()"
+            class="px-3 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink" />
+          </div>
+          <div class="flex flex-col">
+            <label class="text-xs font-semibold text-oas-muted mb-1">Jusqu'au</label>
+            <input type="date" [(ngModel)]="filterDateFin" (change)="applyFilter()"
+              class="px-3 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Table + Pagination + Detail -->
+        <div class="flex gap-5 items-start">
+          <div class="bg-white rounded-2xl border border-oas-line shadow-sm overflow-hidden flex flex-col"
+            [class.flex-1]="selectedFiche" [class.w-full]="!selectedFiche">
+            @if (loading) {
+              <div class="flex flex-col items-center justify-center py-20 flex-1 text-oas-muted">
+                <svg class="animate-spin h-8 w-8 mx-auto mb-3 text-oas-accent" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                </svg>
+                Chargement...
+              </div>
+            } @else if (filtered.length === 0) {
+              <div class="text-center py-16 text-oas-muted text-sm flex-1 flex items-center justify-center">
+                Aucune ordre de réparation trouvée.
+              </div>
+            } @else {
+              <div class="overflow-x-auto flex-1">
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr class="border-b border-oas-line bg-oas-bg/50">
+                      <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Numéro</th>
+                      <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Véhicule / Client
+                      </th>
+                      <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Statut</th>
+                      <th
+                        class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3 hidden md:table-cell">
+                      Description</th>
+                      <th
+                        class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3 hidden lg:table-cell">
+                      Ouverture</th>
+                      <th
+                        class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3 hidden lg:table-cell">
+                      Sortie</th>
+                      <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (f of paged; track f.id) {
+                      <tr (click)="selectFiche(f)" class="hover:bg-oas-bg/60 transition border-b border-oas-line cursor-pointer"
+                        [ngClass]="{'bg-orange-50 border-l-4 border-l-oas-accent': selectedFiche?.id === f.id}">
+                        <td class="px-5 py-3.5">
+                          <span class="font-bold text-oas-ink text-sm">{{ f.numero }}</span>
+                        </td>
+                        <td class="px-5 py-3.5">
+                          @if (f.vehicule) {
+                            <p class="font-semibold text-oas-ink text-sm">{{ f.vehicule.immatriculation }}</p>
+                            <p class="text-oas-muted text-xs">{{ f.vehicule.marque }} {{ f.vehicule.modele }}</p>
+                            @if (f.vehicule.client) {
+                              <p class="text-[10px] text-oas-info mt-0.5">{{ f.vehicule.client.firstName }} {{
+                              f.vehicule.client.lastName }}</p>
+                            }
+                          } @else {
+                            <span class="text-oas-faint">—</span>
+                          }
+                        </td>
+                        <td class="px-5 py-3.5">
+                          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold"
+                            [ngStyle]="{'background': statutColor(f) + '18', 'color': statutColor(f)}">
+                            <span class="w-1.5 h-1.5 rounded-full inline-block"
+                            [ngStyle]="{'background': statutColor(f)}"></span>
+                            {{ statutLabel(f) }}
+                          </span>
+                        </td>
+                        <td class="px-5 py-3.5 text-sm text-oas-ink2 max-w-xs truncate hidden md:table-cell">{{
+                        f.descriptionTravaux }}</td>
+                        <td class="px-5 py-3.5 text-xs text-oas-muted hidden lg:table-cell">{{ formatDate(f.dateCreation) }}</td>
+                        <td class="px-5 py-3.5 text-xs hidden lg:table-cell"
+                          [ngClass]="f.dateSortie ? 'text-oas-ok font-semibold' : 'text-oas-faint'">
+                          {{ formatDate(f.dateSortie) }}
+                        </td>
+                        <td class="px-5 py-3.5" (click)="$event.stopPropagation()">
+                          <button (click)="openEdit(f)"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-oas-accent/10 text-oas-accent hover:bg-oas-accent/20 transition cursor-pointer">
+                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            Gérer
+                          </button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+              <!-- Pagination toujours visible -->
+              <div class="border-t border-oas-line">
+                <app-pagination [page]="page" [totalPages]="totalPages" [total]="filtered.length" [pageSize]="pageSize"
+                  (prev)="prevPage()" (next)="nextPage()" />
+                </div>
+              }
+            </div>
+
+            <!-- ── Panneau détail ──────────────────────────────────── -->
+            @if (selectedFiche || detailLoading) {
+              <div
+                class="w-[360px] flex-shrink-0 bg-white rounded-2xl border border-oas-line shadow-sm flex flex-col overflow-hidden sticky top-6 max-h-[calc(100vh-2rem)]">
+
+                @if (detailLoading) {
+                  <div class="p-12 flex flex-col items-center justify-center h-full text-oas-muted min-h-[300px]">
+                    <svg class="w-8 h-8 animate-spin text-oas-accent mb-4" xmlns="http://www.w3.org/2000/svg" fill="none"
+                      viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                      </path>
+                    </svg>
+                    <p class="text-sm font-semibold">Chargement des détails...</p>
+                  </div>
+                } @else if (selectedFiche) {
+                  <div class="px-5 py-4 border-b border-oas-line flex items-start justify-between">
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm text-white flex-shrink-0"
+                        [ngStyle]="{'background': statutColor(selectedFiche)}">
+                        {{ ficheInitials(selectedFiche) }}
+                      </div>
+                      <div>
+                        <p class="font-extrabold text-oas-ink text-sm">{{ selectedFiche.numero }}</p>
+                        @if (selectedFiche.vehicule) {
+                          <p class="text-xs text-oas-muted">{{ selectedFiche.vehicule.immatriculation }} · {{
+                          selectedFiche.vehicule.marque }} {{ selectedFiche.vehicule.modele }}</p>
+                        }
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-1">
+                      <button (click)="openEdit(selectedFiche)"
+                        class="p-1.5 rounded-lg hover:bg-oas-accent/10 text-oas-muted hover:text-oas-accent transition cursor-pointer"
+                        title="Workflow">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                      </button>
+                      <button (click)="closeDetail()"
+                        class="p-1.5 rounded-lg hover:bg-oas-bg text-oas-muted transition cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Statut + stepper -->
+                  <div class="px-5 py-4 border-b border-oas-line">
+                    <div class="flex items-center justify-between mb-3">
+                      <p class="text-xs font-bold text-oas-muted uppercase tracking-wide">Progression</p>
+                      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold"
+                        [ngStyle]="{'background': statutColor(selectedFiche) + '18', 'color': statutColor(selectedFiche)}">
+                        {{ statutLabel(selectedFiche) }}
+                      </span>
+                    </div>
+                    <div class="flex items-center">
+                      @for (step of statutSteps; track step.statut; let i = $index) {
+                        @let stepIdx = statutStepIndex(selectedFiche);
+                        @let done = i <= stepIdx; <div class="flex flex-col items-center">
+                        <div
+                          class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 transition-all"
+                          [ngStyle]="{'background': done ? statutColor(selectedFiche) : '#e5e7eb', 'color': done ? 'white' : '#9ca3af'}">
+                          @if (done) {
+                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          } @else { {{ i + 1 }} }
+                          </div>
+                          <span class="text-[8px] font-semibold mt-1 text-center w-11 leading-tight"
+                          [ngStyle]="{'color': done ? statutColor(selectedFiche) : '#9ca3af'}">{{ step.label }}</span>
+                        </div>
+                        @if (i < statutSteps.length - 1) { <div class="flex-1 h-0.5 mx-0.5 mb-3 transition-all"
+                          [ngStyle]="{'background': i < stepIdx ? statutColor(selectedFiche) : '#e5e7eb'}">
+                        </div>
+                      }
+                    }
+                  </div>
+                </div>
+
+                <div class="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+                  <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-oas-bg rounded-lg p-3">
+                      <p class="text-[10px] text-oas-muted font-semibold uppercase tracking-wide mb-1">Ouverture</p>
+                      <p class="text-sm font-bold text-oas-ink">{{ formatDate(selectedFiche.dateCreation) }}</p>
+                    </div>
+                    <div class="bg-oas-bg rounded-lg p-3">
+                      <p class="text-[10px] text-oas-muted font-semibold uppercase tracking-wide mb-1">Sortie prévue</p>
+                      <p class="text-sm font-bold" [ngClass]="selectedFiche.dateSortie ? 'text-oas-ok' : 'text-oas-faint'">
+                        {{ selectedFiche.dateSortie ? formatDate(selectedFiche.dateSortie) : 'Non définie' }}
+                      </p>
+                    </div>
+                  </div>
+
+                  @if (selectedFiche.vehicule?.client) {
+                    <div class="bg-oas-bg rounded-xl p-3 flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-full bg-oas-accent/10 flex items-center justify-center flex-shrink-0">
+                        <svg class="w-4 h-4 text-oas-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p class="text-xs font-bold text-oas-ink">{{ selectedFiche.vehicule!.client!.firstName }} {{
+                          selectedFiche.vehicule!.client!.lastName }}</p>
+                          <p class="text-[10px] text-oas-muted">{{ selectedFiche.vehicule!.client!.phone ?? '—' }}</p>
+                        </div>
+                      </div>
+                    }
+
+                    @if (selectedFiche.techniciens && selectedFiche.techniciens.length) {
+                      <div>
+                        <p class="text-xs font-bold text-oas-ink mb-2">Techniciens</p>
+                        <div class="flex flex-wrap gap-1.5">
+                          @for (m of selectedFiche.techniciens; track m.id) {
+                            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-oas-info-bg text-oas-info">{{ m.firstName }} {{ m.lastName }}</span>
+                          }
+                        </div>
+                      </div>
+                    }
+
+                    <div>
+                      <p class="text-xs font-bold text-oas-ink mb-1.5">Travaux demandés</p>
+                      <div class="bg-oas-bg rounded-xl p-3">
+                        <p class="text-sm text-oas-ink leading-relaxed">{{ selectedFiche.descriptionTravaux }}</p>
+                      </div>
+                    </div>
+
+                    @if (selectedFiche.lignesTravaux && selectedFiche.lignesTravaux.length) {
+                      <div>
+                        <p class="text-xs font-bold text-oas-ink mb-1.5">Travaux demandés (désignations)</p>
+                        <div class="bg-oas-bg rounded-xl p-3 space-y-1">
+                          @for (l of selectedFiche.lignesTravaux; track $index) {
+                            <p class="text-sm text-oas-ink">{{ l.nom }}</p>
+                          }
+                        </div>
+                      </div>
+                    }
+
+                    @if (selectedFiche.listeDefauts) {
+                      <div>
+                        <p class="text-xs font-bold text-oas-ink mb-1.5">Pannes / Défauts</p>
+                        <div class="bg-oas-warn-bg rounded-xl p-3 border border-oas-warn/20">
+                          <p class="text-sm text-oas-ink leading-relaxed">{{ selectedFiche.listeDefauts }}</p>
+                        </div>
+                      </div>
+                    }
+
+                    @if (selectedFiche.lignesReception && selectedFiche.lignesReception.length) {
+                      <div>
+                        <p class="text-xs font-bold text-oas-ink mb-1.5">Réception</p>
+                        <div class="bg-oas-ok-bg rounded-xl p-3 border border-oas-ok/20 space-y-1.5">
+                          @for (l of selectedFiche.lignesReception; track $index) {
+                            <p class="text-sm text-oas-ink flex items-center justify-between gap-2">
+                              <span>{{ l.nom }}</span>
+                              <span class="text-xs font-semibold" [class.text-oas-ok]="l.etat === true" [class.text-oas-bad]="l.etat === false" [class.text-oas-muted]="l.etat === null">
+                                {{ l.etat === true ? 'OK' : (l.etat === false ? 'Non' : '—') }}
+                              </span>
+                            </p>
+                          }
+                        </div>
+                      </div>
+                    }
+
+                    @if (selectedFiche.bonDeSortie) {
+                      <div class="bg-oas-ok-bg rounded-xl p-3 border border-oas-ok/20 flex items-center justify-between">
+                        <div>
+                          <p class="text-xs font-bold text-oas-ok">Bon de sortie lié</p>
+                          <p class="text-[10px] text-oas-muted">{{ selectedFiche.bonDeSortie.reference }}</p>
+                        </div>
+                        <span class="text-xs font-bold px-2 py-1 rounded-full"
+                          [ngClass]="selectedFiche.bonDeSortie.statut === 'VALIDE' ? 'bg-oas-ok text-white' : 'bg-amber-500 text-white'">
+                          {{ selectedFiche.bonDeSortie.statut }}
+                        </span>
+                      </div>
+                    }
+
+                    <!-- Show linked Proforma number if available -->
+                    @if (proformaChargee) {
+                      <div class="bg-oas-bg rounded-xl p-3 border border-oas-line">
+                        <p class="text-xs font-bold text-oas-ink mb-1">Proforma liée</p>
+                        <div class="flex items-center justify-between">
+                          <div>
+                            <p class="font-semibold">{{ proformaChargee.numero || proformaChargee.code || ('DK-' + proformaChargee.id) }}
+                            </p>
+                            <p class="text-xs text-oas-muted">Montant: {{ formatPrice(proformaChargee.montantTTC ||
+                            proformaChargee.montantTotal || 0) }}</p>
+                          </div>
+                          <div>
+                            @if (!invoiceCreated) {
+                              <button (click)="createFactureFromFiche()"
+                                class="px-3 py-1.5 rounded-lg bg-oas-accent text-white text-xs font-bold hover:bg-oas-accent-dark">Créer
+                              facture</button>
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    }
+
+                    <!-- Show linked Facture number if available -->
+                    @if (createdFacture) {
+                      <div class="bg-oas-bg rounded-xl p-3 border border-oas-line">
+                        <p class="text-xs font-bold text-oas-ink mb-1">Facture liée</p>
+                        <div class="flex items-center justify-between">
+                          <div>
+                            <p class="font-semibold">{{ createdFacture.numero }}</p>
+                            <p class="text-xs text-oas-muted">Reste à payer: {{ formatPrice(createdFacture.resteAPayer || 0) }}</p>
+                          </div>
+                          <div>
+                            <span class="px-2 py-1 rounded text-[10px] font-bold"
+                              [ngClass]="(createdFacture.resteAPayer || 0) <= 0 ? 'bg-oas-ok/20 text-oas-ok' : 'bg-amber-100 text-amber-700'">
+                            {{ (createdFacture.resteAPayer || 0) <= 0 ? 'Payée' : 'En attente' }} </span>
+                          </div>
+                        </div>
+                      </div>
+                    }
+
+                    <div class="flex gap-2 pt-1">
+                      <button (click)="openEdit(selectedFiche)"
+                        class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold bg-oas-accent text-white hover:bg-oas-accent-dark transition cursor-pointer">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        Continuer réparation
+                      </button>
+                      <button (click)="delete(selectedFiche.id)"
+                        class="flex items-center justify-center px-3 py-2.5 rounded-xl text-oas-bad hover:bg-oas-bad-bg border border-oas-bad/30 transition cursor-pointer">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                        <!-- <button *ngIf="editingFicheStatus === 'EN_ATTENTE_PAIEMENT' || currentStep === 8" (click)="createFactureFromFiche()"
+                        class="flex items-center justify-center px-3 py-2.5 rounded-xl bg-amber-500 text-white text-xs font-bold hover:bg-amber-600 transition cursor-pointer">
+                        Générer facture
+                      </button> -->
+                    </div>
+
+                  </div> <!-- closes flex-1 -->
+                  } <!-- closes @else if -->
+                </div> <!-- closes w-[360px] -->
+                } <!-- closes @if -->
+
+              </div> <!-- closes layout flex row -->
+            </div> <!-- closes outer page container -->
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            <!--  MODAL WORKFLOW                                             -->
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            @if (showWorkflow) {
+              <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                <div class="bg-white rounded-2xl shadow-2xl flex flex-col max-h-[95vh] overflow-hidden"
+                  [ngClass]="isNew ? 'w-full max-w-xl' : 'w-full max-w-3xl'">
+
+                  <!-- Header -->
+                  <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line flex-shrink-0">
+                    <div>
+                      <h2 class="text-base font-extrabold text-oas-ink">
+                        {{ isNew ? 'Nouvelle fiche — Réception' : 'Réparation · ' + step1Form.value.numero }}
+                      </h2>
+                      <p class="text-xs text-oas-muted mt-0.5">
+                        {{ isNew ? 'Enregistrez la réception du véhicule.' : 'Étape ' + currentStep + ' sur 10' }}
+                      </p>
+                    </div>
+                    <button (click)="closeWorkflow()"
+                      class="p-1.5 rounded-lg hover:bg-oas-bg text-oas-muted cursor-pointer transition">
+                      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <!-- Stepper (seulement en mode édition) -->
+                  @if (!isNew) {
+                    <div class="px-6 py-4 border-b border-oas-line bg-oas-bg flex-shrink-0">
+                      <div class="flex items-center">
+                        @for (step of statutSteps; track step.statut; let i = $index) {
+                          @let done = i < currentStep - 1; @let active=i===currentStep - 1; <button (click)="goToStep(i + 1)"
+                          class="flex flex-col items-center flex-shrink-0 transition" [class.cursor-pointer]="i < currentStep - 1"
+                          [class.cursor-default]="i >= currentStep - 1">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all" [ngClass]="{
+                       'bg-oas-accent text-white shadow-md shadow-oas-accent/40': active,
+                       'bg-oas-ok text-white': done,
+                       'bg-white border-2 border-oas-line text-oas-muted': !done && !active
+                     }">
+                            @if (done) {
+                              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                            } @else { {{ i + 1 }} }
+                            </div>
+                            <span class="text-[10px] font-semibold mt-1.5 whitespace-nowrap"
+                              [ngClass]="active ? 'text-oas-accent' : done ? 'text-oas-ok' : 'text-oas-muted'">
+                              {{ step.label }}
+                            </span>
+                          </button>
+                          @if (i < statutSteps.length - 1) { <div class="flex-1 h-0.5 mx-1 mb-4 transition-all"
+                            [ngClass]="i < currentStep - 1 ? 'bg-oas-ok' : 'bg-oas-line'">
+                          </div>
+                        }
+                      }
+                    </div>
+                  </div>
+                }
+
+                <!-- Contenu étapes -->
+                <div class="flex-1 overflow-y-auto px-6 py-5">
+
+                  <app-alert [success]="successMessage" [error]="errorMessage" />
+
+                  <!-- ═════════════════════════════════════════════ -->
+                  <!-- ÉTAPE 1 — RÉCEPTION                          -->
+                  <!-- ═════════════════════════════════════════════ -->
+                  @if (currentStep === 1) {
+                    <form [formGroup]="step1Form" class="space-y-5">
+
+                      <!-- Numéro de fiche (visible always) -->
+                      <div>
+                        <label class="block text-sm font-semibold text-oas-ink mb-1.5">Numéro de fiche</label>
+                        <input [value]="step1Form.value.numero || 'Généré automatiquement'" disabled
+                          class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-gray-100 text-sm text-oas-ink font-mono font-bold cursor-not-allowed" />
+                        </div>
+
+                        <!-- ─── Sélecteur Véhicule full-UX ─── -->
+                        <div>
+                          <div class="flex items-center justify-between mb-1.5">
+                            <label class="text-sm font-semibold text-oas-ink">Véhicule *</label>
+                            <button type="button" (click)="toggleCreateVehicule()"
+                              class="text-xs font-semibold text-oas-accent hover:underline cursor-pointer flex items-center gap-1">
+                              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                              </svg>
+                              {{ showCreateVehicule ? 'Annuler' : 'Nouveau véhicule' }}
+                            </button>
+                          </div>
+
+                          <!-- Searchable dropdown véhicule -->
+                          @if (!showCreateVehicule) {
+                            <div class="relative">
+                              <div class="flex items-center gap-2">
+                                <div class="relative flex-1">
+                                  <input [(ngModel)]="vehiculeSearch" [ngModelOptions]="{standalone: true}"
+                                    (focus)="showVehiculeDropdown = true" (input)="showVehiculeDropdown = true"
+                                    placeholder="Rechercher par immat., marque, modèle ou client..."
+                                    class="w-full px-3 py-2.5 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                [ngClass]="step1Form.get('vehiculeId')?.invalid && step1Form.get('vehiculeId')?.touched
+                               ? 'border-oas-bad bg-red-50'
+                               : selectedVehicule ? 'border-oas-ok bg-green-50' : 'border-oas-line bg-oas-bg'" />
+                                    @if (selectedVehicule) {
+                                      <button type="button" (click)="clearVehicule()"
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-oas-muted hover:text-oas-bad cursor-pointer">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                      </button>
+                                    }
+                                  </div>
+                                </div>
+
+                                @if (showVehiculeDropdown && vehiculesFiltres.length > 0) {
+                                  <div
+                                    class="absolute z-20 w-full mt-1 bg-white border border-oas-line rounded-xl shadow-xl overflow-hidden max-h-56 overflow-y-auto">
+                                    @for (v of vehiculesFiltres; track v.id) {
+                                      <button type="button" (click)="selectVehicule(v)"
+                                        class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-oas-bg text-left transition cursor-pointer border-b border-oas-line last:border-0">
+                                        <div class="w-8 h-8 rounded-lg bg-oas-accent/10 flex items-center justify-center flex-shrink-0">
+                                          <svg class="w-4 h-4 text-oas-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                            stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                              d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                                              <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10l2 2h8l2-2zM14 16V8a1 1 0 011-1h2l3 3v6l-1 1h-4a1 1 0 01-1-1z" />
+                                              </svg>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                              <p class="font-bold text-oas-ink text-sm">{{ v.immatriculation }}</p>
+                                              <p class="text-xs text-oas-muted truncate">{{ v.marque }} {{ v.modele }} {{ v.annee ? '· ' + v.annee :
+                                              '' }}</p>
+                                              @if (v.client) {
+                                                <p class="text-[10px] text-oas-info mt-0.5">👤 {{ v.client.firstName }} {{ v.client.lastName }}</p>
+                                              } @else {
+                                                <p class="text-[10px] text-oas-faint">Pas de client associé</p>
+                                              }
+                                            </div>
+                                          </button>
+                                        }
+                                      </div>
+                                    }
+                                    @if (showVehiculeDropdown && vehiculesFiltres.length === 0 && vehiculeSearch.length > 1) {
+                                      <div class="absolute z-20 w-full mt-1 bg-white border border-oas-line rounded-xl shadow-xl p-4 text-center">
+                                        <p class="text-sm text-oas-muted">Aucun véhicule trouvé</p>
+                                        <button type="button" (click)="showVehiculeDropdown = false; showCreateVehicule = true"
+                                          class="mt-2 text-xs font-semibold text-oas-accent hover:underline cursor-pointer">
+                                          Créer un nouveau véhicule
+                                        </button>
+                                      </div>
+                                    }
+                                  </div>
+
+                                  @if (selectedVehicule) {
+                                    <div class="mt-2 flex items-center gap-3 px-3 py-2 bg-green-50 border border-oas-ok/30 rounded-xl">
+                                      <svg class="w-4 h-4 text-oas-ok flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                      </svg>
+                                      <div class="flex-1 text-xs">
+                                        <span class="font-bold text-oas-ink">{{ selectedVehicule.immatriculation }}</span>
+                                        <span class="text-oas-muted"> · {{ selectedVehicule.marque }} {{ selectedVehicule.modele }}</span>
+                                        @if (selectedVehicule.client) {
+                                          <span class="text-oas-info"> · {{ selectedVehicule.client.firstName }} {{ selectedVehicule.client.lastName
+                                          }}</span>
+                                        }
+                                      </div>
+                                    </div>
+                                  }
+                                }
+
+                                <!-- ─── Formulaire Nouveau Véhicule ─── -->
+                                @if (showCreateVehicule) {
+                                  <div class="border border-oas-accent/30 bg-orange-50/50 rounded-xl p-4 mt-2 space-y-3">
+                                    <p class="text-xs font-bold text-oas-accent uppercase tracking-wide">✦ Nouveau véhicule</p>
+                                    <form [formGroup]="vehiculeForm" class="space-y-3">
+                                      <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                          <label class="block text-xs font-semibold text-oas-ink mb-1">Immatriculation *</label>
+                                          <input formControlName="immatriculation" placeholder="AA-1234-BB"
+                                            class="w-full px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition uppercase"
+                                            [class.border-oas-bad]="vehiculeForm.get('immatriculation')?.invalid && vehiculeForm.get('immatriculation')?.touched" />
+                                          </div>
+                                          <div>
+                                            <label class="block text-xs font-semibold text-oas-ink mb-1">Marque *</label>
+                                            <input formControlName="marque" placeholder="Toyota"
+                                              class="w-full px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                                              [class.border-oas-bad]="vehiculeForm.get('marque')?.invalid && vehiculeForm.get('marque')?.touched" />
+                                            </div>
+                                            <div>
+                                              <label class="block text-xs font-semibold text-oas-ink mb-1">Modèle *</label>
+                                              <input formControlName="modele" placeholder="Hilux"
+                                                class="w-full px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                                                [class.border-oas-bad]="vehiculeForm.get('modele')?.invalid && vehiculeForm.get('modele')?.touched" />
+                                              </div>
+                                              <div>
+                                                <label class="block text-xs font-semibold text-oas-ink mb-1">Année</label>
+                                                <input formControlName="annee" type="number" placeholder="2022"
+                                                  class="w-full px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition" />
+                                                </div>
+                                                <div>
+                                                  <label class="block text-xs font-semibold text-oas-ink mb-1">Kilométrage *</label>
+                                                  <input formControlName="kilometrage" type="number" placeholder="50000" min="0"
+                                                    class="w-full px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition" />
+                                                  </div>
+                                                  <div>
+                                                    <label class="block text-xs font-semibold text-oas-ink mb-1">N° Châssis</label>
+                                                    <input formControlName="numeroChassis" placeholder="ABC123XYZ"
+                                                      class="w-full px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition" />
+                                                    </div>
+                                                  </div>
+
+                                                  <!-- Client associé (searchable) -->
+                                                  <div>
+                                                    <div class="flex items-center justify-between mb-1">
+                                                      <label class="text-xs font-semibold text-oas-ink">Client propriétaire</label>
+                                                      <button type="button" (click)="toggleCreateClient()"
+                                                        class="text-[10px] font-semibold text-oas-accent hover:underline cursor-pointer">
+                                                        {{ showCreateClient ? 'Annuler' : '+ Nouveau client' }}
+                                                      </button>
+                                                    </div>
+
+                                                    @if (!showCreateClient) {
+                                                      <div class="relative">
+                                                        <input [(ngModel)]="vehiculeClientSearch" [ngModelOptions]="{standalone: true}"
+                                                          (focus)="showVehiculeClientDropdown = true" (input)="showVehiculeClientDropdown = true"
+                                                          placeholder="Rechercher un client..."
+                                                          class="w-full px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition" />
+                                                          @if (showVehiculeClientDropdown && clientsFiltres.length > 0) {
+                                                            <div
+                                                              class="absolute z-30 w-full mt-1 bg-white border border-oas-line rounded-xl shadow-xl overflow-hidden max-h-44 overflow-y-auto">
+                                                              @for (c of clientsFiltres; track c.id) {
+                                                                <button type="button" (click)="selectClientForVehicule(c)"
+                                                                  class="w-full flex items-center gap-3 px-3 py-2 hover:bg-oas-bg text-left transition cursor-pointer border-b border-oas-line last:border-0">
+                                                                  <div
+                                                                    class="w-7 h-7 rounded-full bg-oas-info/10 flex items-center justify-center text-xs font-bold text-oas-info flex-shrink-0">
+                                                                    {{ c.firstName[0] }}{{ c.lastName[0] }}
+                                                                  </div>
+                                                                  <div>
+                                                                    <p class="text-sm font-semibold text-oas-ink">{{ c.firstName }} {{ c.lastName }}</p>
+                                                                    <p class="text-[10px] text-oas-muted">{{ c.phone }}</p>
+                                                                  </div>
+                                                                </button>
+                                                              }
+                                                            </div>
+                                                          }
+                                                        </div>
+                                                        @if (selectedVehiculeClient) {
+                                                          <div class="mt-1 text-xs text-oas-ok font-semibold flex items-center gap-1">
+                                                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                                              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                            {{ selectedVehiculeClient.firstName }} {{ selectedVehiculeClient.lastName }}
+                                                          </div>
+                                                        }
+                                                      }
+                                                    </div>
+
+                                                    <!-- Formulaire Nouveau Client (imbriqué) -->
+                                                    @if (showCreateClient) {
+                                                      <div class="border border-blue-200 bg-blue-50/50 rounded-xl p-3 space-y-2">
+                                                        <p class="text-[10px] font-bold text-oas-info uppercase tracking-wide">Nouveau client</p>
+                                                        <form [formGroup]="clientForm" class="space-y-2">
+                                                          <div class="grid grid-cols-2 gap-2">
+                                                            <input formControlName="firstName" placeholder="Prénom *"
+                                                              class="px-2.5 py-1.5 rounded-lg border border-oas-line bg-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-400/40 transition"
+                                                              [class.border-oas-bad]="clientForm.get('firstName')?.invalid && clientForm.get('firstName')?.touched" />
+                                                              <input formControlName="lastName" placeholder="Nom *"
+                                                                class="px-2.5 py-1.5 rounded-lg border border-oas-line bg-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-400/40 transition"
+                                                                [class.border-oas-bad]="clientForm.get('lastName')?.invalid && clientForm.get('lastName')?.touched" />
+                                                                <input formControlName="phone" placeholder="Téléphone *"
+                                                                  class="px-2.5 py-1.5 rounded-lg border border-oas-line bg-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-400/40 transition"
+                                                                  [class.border-oas-bad]="clientForm.get('phone')?.invalid && clientForm.get('phone')?.touched" />
+                                                                  <input formControlName="email" placeholder="Email"
+                                                                    class="px-2.5 py-1.5 rounded-lg border border-oas-line bg-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-400/40 transition" />
+                                                                    <input formControlName="username" placeholder="Identifiant *"
+                                                                      class="px-2.5 py-1.5 rounded-lg border border-oas-line bg-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-400/40 transition"
+                                                                      [class.border-oas-bad]="clientForm.get('username')?.invalid && clientForm.get('username')?.touched" />
+                                                                      <input formControlName="password" type="password" placeholder="Mot de passe *"
+                                                                        class="px-2.5 py-1.5 rounded-lg border border-oas-line bg-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-400/40 transition"
+                                                                        [class.border-oas-bad]="clientForm.get('password')?.invalid && clientForm.get('password')?.touched" />
+                                                                      </div>
+                                                                      <button type="button" (click)="saveClient()" [disabled]="creatingClient"
+                                                                        class="w-full py-1.5 rounded-lg bg-oas-info text-white text-xs font-bold hover:bg-blue-700 transition cursor-pointer disabled:opacity-60">
+                                                                        {{ creatingClient ? 'Création...' : 'Créer le client' }}
+                                                                      </button>
+                                                                    </form>
+                                                                  </div>
+                                                                }
+
+                                                                <button type="button" (click)="saveVehicule()" [disabled]="creatingVehicule || vehiculeForm.invalid"
+                                                                  class="w-full py-2 rounded-xl bg-oas-accent text-white text-sm font-bold hover:bg-oas-accent-dark transition cursor-pointer disabled:opacity-60">
+                                                                  {{ creatingVehicule ? 'Création en cours...' : '+ Créer et sélectionner ce véhicule' }}
+                                                                </button>
+                                                              </form>
+                                                            </div>
+                                                          }
+                                                        </div>
+
+                                                        <!-- Travaux demandés (Checkboxes) -->
+                                                        <div>
+                                                          <label class="block text-sm font-semibold text-oas-ink mb-2">Travaux demandés *</label>
+                                                          <div class="grid grid-cols-2 gap-2">
+                                                            @for (t of travauxFrequents; track t) {
+                                                              <label class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs cursor-pointer transition"
+                                                                [ngClass]="selectedTravaux.includes(t) ? 'bg-oas-accent/10 text-oas-accent font-semibold border border-oas-accent/30' : 'bg-oas-bg text-oas-ink2 border border-transparent hover:bg-oas-line'">
+                                                                <input type="checkbox" [checked]="selectedTravaux.includes(t)" (change)="toggleTravaux(t)"
+                                                                  class="w-4 h-4 accent-oas-accent rounded" />
+                                                                  {{ t }}
+                                                                </label>
+                                                              }
+                                                            </div>
+                                                            <div class="mt-2">
+                                                              <label class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs cursor-pointer transition"
+                                                                [ngClass]="showAutreTravaux ? 'bg-amber-50 text-amber-700 font-semibold border border-amber-200' : 'bg-oas-bg text-oas-ink2 border border-transparent hover:bg-oas-line'">
+                                                                <input type="checkbox" [checked]="showAutreTravaux" (change)="showAutreTravaux = !showAutreTravaux"
+                                                                  class="w-4 h-4 accent-amber-500 rounded" />
+                                                                  Autre
+                                                                </label>
+                                                                @if (showAutreTravaux) {
+                                                                  <textarea [(ngModel)]="autreTravaux" [ngModelOptions]="{standalone: true}" rows="2"
+                                                                    placeholder="Décrivez les travaux supplémentaires..."
+                                                                  class="w-full mt-2 px-3 py-2 rounded-xl border border-amber-200 bg-amber-50/50 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/40 transition resize-none"></textarea>
+                                                                }
+                                                              </div>
+                                                            </div>
+
+                                                            <!-- Travaux demandés : désignation de la fiche atelier verrouillée + ajout libre d'autres
+                                                            désignations (même pattern que Réception). -->
+                                                            <div>
+                                                              <label class="block text-sm font-semibold text-oas-ink mb-2">Travaux demandés (désignations)</label>
+                                                              <div class="space-y-3" formArrayName="lignesTravaux">
+                                                                @for (ctrl of lignesTravaux.controls; track $index) {
+                                                                  <div [formGroupName]="$index" class="flex items-center gap-4 bg-oas-bg/50 p-2 rounded-lg border border-oas-line/50">
+                                                                    <div class="flex-1">
+                                                                      @if (ctrl.get('verrouille')?.value) {
+                                                                        <p class="text-sm font-medium text-oas-ink flex items-center gap-1.5">
+                                                                          <svg class="w-3.5 h-3.5 text-oas-muted flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                                                          </svg>
+                                                                          {{ ctrl.get('nom')?.value }}
+                                                                        </p>
+                                                                      } @else {
+                                                                        <input type="text" formControlName="nom" class="w-full bg-transparent border-none text-sm outline-none font-medium text-oas-ink" placeholder="Désignation du travail">
+                                                                      }
+                                                                    </div>
+                                                                    @if (!ctrl.get('verrouille')?.value) {
+                                                                      <button type="button" (click)="removeLigneTravail($index)" class="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition cursor-pointer">
+                                                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                          <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                                        </svg>
+                                                                      </button>
+                                                                    }
+                                                                  </div>
+                                                                }
+                                                                @if (!lignesTravaux.controls.length) {
+                                                                  <p class="text-sm text-oas-muted italic">Aucune désignation pour l'instant.</p>
+                                                                }
+                                                              </div>
+                                                              <button type="button" (click)="addLigneTravail()" class="mt-3 flex items-center gap-2 text-sm text-oas-accent font-semibold hover:bg-oas-accent/10 px-3 py-1.5 rounded-lg transition cursor-pointer">
+                                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                                                                </svg>
+                                                                Ajouter une ligne
+                                                              </button>
+                                                            </div>
+
+                                                            <!-- Réception : synthèse des lignes de la fiche atelier d'origine (désignations verrouillées,
+                                                            non modifiables/supprimables), avec possibilité d'ajouter d'autres désignations de
+                                                            travaux via le bouton "Ajouter une ligne" (cf. spec point 1). -->
+                                                            <div>
+                                                              <label class="block text-sm font-semibold text-oas-ink mb-2">Réception</label>
+                                                              <div class="space-y-3" formArrayName="lignesReception">
+                                                                @for (ctrl of lignesReception.controls; track $index) {
+                                                                  <div [formGroupName]="$index" class="flex items-center gap-4 bg-oas-bg/50 p-2 rounded-lg border border-oas-line/50">
+                                                                    <div class="flex-1">
+                                                                      @if (ctrl.get('verrouille')?.value) {
+                                                                        <p class="text-sm font-medium text-oas-ink flex items-center gap-1.5">
+                                                                          <svg class="w-3.5 h-3.5 text-oas-muted flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                                                          </svg>
+                                                                          {{ ctrl.get('nom')?.value }}
+                                                                        </p>
+                                                                      } @else {
+                                                                        <input type="text" formControlName="nom" class="w-full bg-transparent border-none text-sm outline-none font-medium text-oas-ink" placeholder="Désignation">
+                                                                      }
+                                                                    </div>
+                                                                    <div class="flex items-center gap-3">
+                                                                      <label class="flex items-center gap-1.5 text-sm cursor-pointer">
+                                                                        <input type="radio" formControlName="etat" [value]="true" class="w-4 h-4 accent-oas-accent cursor-pointer">
+                                                                        <span>Oui</span>
+                                                                      </label>
+                                                                      <label class="flex items-center gap-1.5 text-sm cursor-pointer">
+                                                                        <input type="radio" formControlName="etat" [value]="false" class="w-4 h-4 accent-oas-accent cursor-pointer">
+                                                                        <span>Non</span>
+                                                                      </label>
+                                                                    </div>
+                                                                    @if (!ctrl.get('verrouille')?.value) {
+                                                                      <button type="button" (click)="removeLigneReception($index)" class="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition cursor-pointer">
+                                                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                          <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                                        </svg>
+                                                                      </button>
+                                                                    }
+                                                                  </div>
+                                                                }
+                                                                @if (!lignesReception.controls.length) {
+                                                                  <p class="text-sm text-oas-muted italic">Aucune ligne pour l'instant.</p>
+                                                                }
+                                                              </div>
+                                                              <button type="button" (click)="addLigneReception()" class="mt-3 flex items-center gap-2 text-sm text-oas-accent font-semibold hover:bg-oas-accent/10 px-3 py-1.5 rounded-lg transition cursor-pointer">
+                                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                                                                </svg>
+                                                                Ajouter une ligne
+                                                              </button>
+                                                            </div>
+
+                                                            @if (isNew) {
+                                                              <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 flex gap-2">
+                                                                <svg class="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                                                  stroke-width="2">
+                                                                  <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                  </svg>
+                                                                  <p class="text-xs text-amber-700">La fiche sera créée en statut <strong>«&nbsp;À faire&nbsp;»</strong>. Le
+                                                                numéro sera généré automatiquement.</p>
+                                                              </div>
+                                                            }
+                                                          </form>
+                                                        }
+
+                                                        <!-- ═════════════════════════════════════════════ -->
+                                                        <!-- ÉTAPE 2 — DIAGNOSTIC                         -->
+                                                        <!-- ═════════════════════════════════════════════ -->
+                                                        @if (currentStep === 2) {
+                                                          <div class="space-y-5">
+
+                                                            <!-- Techniciens : sélection par type (spécialité) à gauche, techniciens de ce type à droite -->
+                                                            <div>
+                                                              <label class="block text-sm font-semibold text-oas-ink mb-2">Techniciens affectés au diagnostic</label>
+                                                              <div class="grid grid-cols-1 sm:grid-cols-[220px_1fr] gap-3">
+                                                                <div>
+                                                                  <select [(ngModel)]="specialiteFiltreDiagnostic" [ngModelOptions]="{standalone: true}"
+                                                                    class="w-full px-3 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition cursor-pointer">
+                                                                    <option value="">Tous les types</option>
+                                                                    @for (s of specialitesTechnicien; track s.value) {
+                                                                      <option [value]="s.value">{{ s.label }}</option>
+                                                                    }
+                                                                  </select>
+                                                                </div>
+                                                                <div class="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+                                                                  @for (technicien of techniciensDiagnosticFiltres; track technicien.id) {
+                                                                    <button type="button" (click)="toggleTechnicienStepper(technicien)" [disabled]="technicienToggling !== null"
+                                                                      class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs transition cursor-pointer text-left disabled:opacity-60"
+                                                                      [ngClass]="isTechnicienSelected(technicien.id) ? 'bg-oas-ok-bg text-oas-ok font-semibold' : 'bg-oas-bg text-oas-ink2 hover:bg-oas-line'">
+                                                                      <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                                                                        [ngClass]="isTechnicienSelected(technicien.id) ? 'bg-oas-ok text-white' : 'bg-oas-line text-oas-muted'">
+                                                                        @if (technicienToggling === technicien.id) { ⟳ } @else if (isTechnicienSelected(technicien.id)) { ✓ } @else { + }
+                                                                        </span>
+                                                                        <span class="truncate">{{ technicien.firstName }} {{ technicien.lastName }}</span>
+                                                                      </button>
+                                                                    }
+                                                                    @if (!techniciensDiagnosticFiltres.length) {
+                                                                      <p class="text-xs text-oas-muted italic col-span-2">Aucun technicien pour ce type.</p>
+                                                                    }
+                                                                  </div>
+                                                                </div>
+                                                                @if (selectedTechniciens.length === 0) {
+                                                                  <p class="text-xs text-oas-bad font-semibold mt-2">Affectez au moins un technicien pour pouvoir démarrer le diagnostic.</p>
+                                                                }
+                                                              </div>
+                                                              <div class="flex gap-2">
+                                                                <button type="button" (click)="startDiagnostic()" [disabled]="!canStartDiagnostic"
+                                                                  [title]="selectedTechniciens.length === 0 ? 'Affectez au moins un technicien avant de démarrer le diagnostic' : ''"
+                                                                  class="px-3 py-2 rounded-lg bg-oas-accent text-white text-xs font-bold hover:bg-oas-accent-dark transition cursor-pointer disabled:opacity-60">
+                                                                  {{ diagnosticStarted ? 'Diagnostic commencé' : 'Commencer le diagnostic' }}
+                                                                </button>
+                                                                <button type="button" (click)="finishDiagnostic()" [disabled]="!diagnosticStarted || diagnosticFinished"
+                                                                  class="px-3 py-2 rounded-lg bg-emerald-500 text-white text-xs font-bold hover:bg-emerald-600 transition cursor-pointer disabled:opacity-60">
+                                                                  {{ diagnosticFinished ? 'Diagnostic terminé' : 'Terminer le diagnostic' }}
+                                                                </button>
+                                                              </div>
+
+                                                              <!-- Remarques des techniciens -->
+                                                              @if (remarquesDiagnostic && remarquesDiagnostic.length > 0) {
+                                                                <div class="border border-amber-200 bg-amber-50 rounded-xl px-4 py-3">
+                                                                  <p class="text-xs font-bold text-amber-700 mb-2 flex items-center gap-1.5">
+                                                                    <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                      <path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+                                                                    </svg>
+                                                                    Remarques du technicien
+                                                                  </p>
+                                                                  <div class="space-y-2">
+                                                                    @for (r of remarquesDiagnostic; track r.id) {
+                                                                      <div class="bg-white/60 border border-amber-100 rounded-lg p-2">
+                                                                        <p class="text-[10px] font-bold text-amber-600 mb-0.5 flex items-center gap-1">
+                                                                          <svg class="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                                                          </svg>
+                                                                          {{ r.technicienNom }}
+                                                                        </p>
+                                                                        <p class="text-sm text-amber-900 whitespace-pre-line">{{ r.contenu }}</p>
+                                                                      </div>
+                                                                    }
+                                                                  </div>
+                                                                </div>
+                                                              }
+
+                                                              <!-- Pièces jointes de diagnostic (photos / PDF) -->
+                                                              <div class="border-t border-oas-line pt-4">
+                                                                <div class="flex items-center justify-between mb-2">
+                                                                  <label class="block text-sm font-semibold text-oas-ink">Pièces jointes de diagnostic</label>
+                                                                  <select [ngModel]="piecesJointesFilterType" [ngModelOptions]="{standalone: true}"
+                                                                    (ngModelChange)="onPiecesJointesFilterChange($event)"
+                                                                    class="px-2 py-1.5 rounded-lg border border-oas-line bg-oas-bg text-xs focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition">
+                                                                    <option value="">Tous types</option>
+                                                                    <option value="PHOTO">Photos</option>
+                                                                    <option value="PDF">PDF</option>
+                                                                  </select>
+                                                                </div>
+
+                                                                <div class="flex flex-col sm:flex-row gap-2 mb-3">
+                                                                  <input [(ngModel)]="pieceJointeRemarque" [ngModelOptions]="{standalone: true}"
+                                                                    placeholder="Remarque (optionnelle)"
+                                                                    class="flex-1 px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-xs focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition" />
+                                                                  </div>
+                                                                  <app-media-uploader folder="oas/ordres-reparation/diagnostic" accept="image/*,application/pdf"
+                                                                    label="Cliquez ou glissez une photo ou un PDF ici"
+                                                                  (uploaded)="onPieceJointeUploaded($event)"></app-media-uploader>
+                                                                  @if (pieceJointeError) {
+                                                                    <p class="text-xs text-oas-bad font-semibold mt-2">{{ pieceJointeError }}</p>
+                                                                  }
+
+                                                                  @if (piecesJointesFiltrees.length > 0) {
+                                                                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-3">
+                                                                      @for (pj of piecesJointesFiltrees; track pj.id) {
+                                                                        <div class="relative border border-oas-line rounded-xl p-2 bg-oas-bg group flex flex-col">
+                                                                          <span class="absolute top-1 left-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-white/90 text-oas-ink2">{{ pj.type }}</span>
+                                                                          <button type="button" (click)="removePieceJointeDiagnostic(pj.id)"
+                                                                          class="absolute top-1 right-1 w-5 h-5 rounded-full bg-white/90 text-oas-bad flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition cursor-pointer">✕</button>
+                                                                          <a [href]="pj.url" target="_blank" rel="noopener" class="block mt-4">
+                                                                            @if (pj.type === 'PHOTO') {
+                                                                              <img [src]="pj.url" class="w-full h-20 object-cover rounded-lg" alt="Pièce jointe diagnostic" />
+                                                                            } @else {
+                                                                              <div class="w-full h-20 rounded-lg bg-white flex items-center justify-center text-xs font-bold text-oas-muted">PDF</div>
+                                                                            }
+                                                                          </a>
+                                                                          @if (pj.remarque) {
+                                                                            <p class="text-[10px] text-oas-muted mt-1 truncate" [title]="pj.remarque">📝 {{ pj.remarque }}</p>
+                                                                          }
+                                                                          @if (pj.technicienNom) {
+                                                                            <p class="text-[10px] font-semibold mt-0.5 flex items-center gap-1" style="color:#ef6c1a;">
+                                                                              <svg class="w-2.5 h-2.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                                                              </svg>
+                                                                              {{ pj.technicienNom }}
+                                                                            </p>
+                                                                          }
+                                                                        </div>
+                                                                      }
+                                                                    </div>
+                                                                  } @else {
+                                                                    <p class="text-xs text-oas-muted">Aucune pièce jointe pour ce filtre.</p>
+                                                                  }
+                                                                </div>
+
+                                                                <!-- Pannes et défauts détectés (déplacé ici depuis étape 3) -->
+                                                                <div class="border-t border-oas-line pt-4">
+                                                                  <label class="block text-sm font-semibold text-oas-ink mb-2">Pannes et défauts détectés</label>
+                                                                  <div class="grid grid-cols-2 gap-2">
+                                                                    @for (p of pannesFrequentes; track p) {
+                                                                      <label class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs cursor-pointer transition"
+                                                                        [ngClass]="selectedPannes.includes(p) ? 'bg-red-50 text-red-700 font-semibold border border-red-200' : 'bg-oas-bg text-oas-ink2 border border-transparent hover:bg-oas-line'">
+                                                                        <input type="checkbox" [checked]="selectedPannes.includes(p)" (change)="togglePannes(p)"
+                                                                          class="w-4 h-4 accent-red-500 rounded" />
+                                                                          {{ p }}
+                                                                        </label>
+                                                                      }
+                                                                    </div>
+                                                                    <div class="mt-2">
+                                                                      <label class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs cursor-pointer transition"
+                                                                        [ngClass]="showAutrePannes ? 'bg-amber-50 text-amber-700 font-semibold border border-amber-200' : 'bg-oas-bg text-oas-ink2 border border-transparent hover:bg-oas-line'">
+                                                                        <input type="checkbox" [checked]="showAutrePannes" (change)="showAutrePannes = !showAutrePannes"
+                                                                          class="w-4 h-4 accent-amber-500 rounded" />
+                                                                          Autre
+                                                                        </label>
+                                                                        @if (showAutrePannes) {
+                                                                          <textarea [(ngModel)]="autrePannes" [ngModelOptions]="{standalone: true}" rows="3"
+                                                                            placeholder="Décrivez les pannes détectées..."
+                                                                          class="w-full mt-2 px-3 py-2.5 rounded-xl border border-amber-200 bg-amber-50/50 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/40 transition resize-none"></textarea>
+                                                                        }
+                                                                      </div>
+                                                                    </div>
+                                                                  </div>
+                                                                }
+
+                                                                <!-- ═════════════════════════════════════════════ -->
+                                                                <!-- ÉTAPE 3 — PIÈCES ET MO                       -->
+                                                                <!-- ═════════════════════════════════════════════ -->
+                                                                @if (currentStep === 3) {
+                                                                  <div class="space-y-6">
+
+                                                                    @if (hasRupture) {
+                                                                      <div class="bg-red-50 border border-red-200 rounded-xl p-3 flex items-center gap-3">
+                                                                        <svg class="w-5 h-5 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                                                          stroke-width="2">
+                                                                          <path stroke-linecap="round" stroke-linejoin="round"
+                                                                            d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                                                                          </svg>
+                                                                          <p class="text-sm text-red-700 font-semibold">Stock insuffisant — un bon de commande sera nécessaire.</p>
+                                                                        </div>
+                                                                      }
+
+                                                                      <div class="flex items-center gap-3 mb-2">
+                                                                        <div class="w-9 h-9 rounded-xl bg-purple-100 flex items-center justify-center">
+                                                                          <svg class="w-4 h-4 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                                            </svg>
+                                                                          </div>
+                                                                          <div>
+                                                                            <p class="font-bold text-oas-ink text-sm">Pièces et Main d'œuvre</p>
+                                                                            <p class="text-xs text-oas-muted">Sélectionnez les pièces et prestations requises</p>
+                                                                          </div>
+                                                                        </div>
+
+                                                                        <!-- Pièces -->
+                                                                        <div>
+                                                                          <div class="flex items-center justify-between mb-2">
+                                                                            <label class="text-sm font-bold text-oas-ink">Pièces détachées</label>
+                                                                            <button type="button" (click)="addPiece()"
+                                                                              class="text-xs font-bold text-oas-accent hover:text-oas-accent-dark flex items-center gap-1 cursor-pointer">
+                                                                              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                                                                              </svg>
+                                                                              Ajouter une ligne
+                                                                            </button>
+                                                                          </div>
+
+                                                                          @if (lignesPieces.length === 0) {
+                                                                            <p class="text-xs text-oas-muted text-center py-4 border border-dashed border-oas-line rounded-lg">
+                                                                              Aucune pièce ajoutée.
+                                                                            </p>
+                                                                          }
+
+                                                                          <div class="space-y-2 mb-3">
+                                                                            @for (l of lignesPieces; track $index; let i = $index) {
+                                                                              <div class="bg-oas-bg rounded-lg p-3 space-y-2">
+                                                                                <div class="flex items-center gap-2">
+                                                                                  <!-- Toggle catalogue / personnalisé -->
+                                                                                  <button type="button" (click)="togglePieceCustom(i)"
+                                                                                    class="flex-shrink-0 px-2 py-1.5 rounded-lg border text-xs font-bold transition cursor-pointer"
+                                                                                    [class.bg-white]="!l.isCustom"
+                                                                                    [class.border-oas-line]="!l.isCustom"
+                                                                                    [class.text-oas-muted]="!l.isCustom"
+                                                                                    [class.bg-orange-100]="l.isCustom"
+                                                                                    [class.border-orange-300]="l.isCustom"
+                                                                                    [class.text-orange-700]="l.isCustom"
+                                                                                    title="{{ l.isCustom ? 'Pièce personnalisée (PDS)' : 'Pièce du catalogue' }}">
+                                                                                    {{ l.isCustom ? 'PDS' : 'CAT' }}
+                                                                                  </button>
+
+                                                                                  <!-- Catalogue select -->
+                                                                                  @if (!l.isCustom) {
+                                                                                    <select [(ngModel)]="l.pieceIdTemp" (ngModelChange)="onSelectCataloguePiece(i, $event)" [ngModelOptions]="{standalone: true}"
+                                                                                      class="flex-1 px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
+                                                                                      <option [ngValue]="undefined" disabled>Pièce du catalogue...</option>
+                                                                                      @for (p of piecesFiltrees; track p.id) {
+                                                                                        <option [value]="p.id">{{ p.reference }} — {{ p.categorie }}</option>
+                                                                                      }
+                                                                                    </select>
+                                                                                  }
+
+                                                                                  <!-- Custom designation -->
+                                                                                  @if (l.isCustom) {
+                                                                                    <input [(ngModel)]="l.designationPds" [ngModelOptions]="{standalone: true}"
+                                                                                      placeholder="Désignation de la pièce..."
+                                                                                      class="flex-1 px-3 py-2 rounded-lg border border-orange-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-300/40 transition"/>
+                                                                                    }
+
+                                                                                    <!-- Quantité -->
+                                                                                    <div class="flex items-center gap-1.5 flex-shrink-0 bg-white border border-oas-line rounded-lg px-2 py-1.5 focus-within:ring-2 focus-within:ring-oas-accent/40 transition">
+                                                                                      <span class="text-xs font-bold text-oas-muted select-none">Qté</span>
+                                                                                      <input [(ngModel)]="l.quantite" (ngModelChange)="updateQtePiece(i, $event)" type="number" min="1" [ngModelOptions]="{standalone: true}"
+                                                                                        class="w-12 bg-transparent text-sm text-center font-semibold focus:outline-none text-oas-ink" />
+                                                                                      </div>
+
+                                                                                      <!-- Prix custom si applicable -->
+                                                                                      @if (l.isCustom) {
+                                                                                        <div class="flex items-center gap-1.5 flex-shrink-0 bg-white border border-orange-300 rounded-lg px-2 py-1.5 focus-within:ring-2 focus-within:ring-orange-300/40 transition">
+                                                                                          <span class="text-xs font-bold text-oas-muted select-none">Prix</span>
+                                                                                          <input [(ngModel)]="l.prixUnitaire" type="number" min="0" [ngModelOptions]="{standalone: true}"
+                                                                                            class="w-20 bg-transparent text-sm text-center font-semibold focus:outline-none text-oas-ink" />
+                                                                                          </div>
+                                                                                        } @else {
+                                                                                          <!-- Prix affiché (read only) ou rien -->
+                                                                                          <div class="flex items-center gap-1.5 flex-shrink-0 px-2 py-1.5 min-w-[80px] justify-end">
+                                                                                            <span class="text-sm font-bold text-oas-ink">{{ formatPrice((l.piece?.prix ?? 0) * l.quantite) }}</span>
+                                                                                          </div>
+                                                                                        }
+
+                                                                                        <button (click)="removePiece(i)"
+                                                                                          class="text-oas-muted hover:text-oas-bad cursor-pointer ml-1 p-1">
+                                                                                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                                                                          </svg>
+                                                                                        </button>
+                                                                                      </div>
+
+                                                                                      <!-- Messages de stock (seulement pour CAT) -->
+                                                                                      @if (!l.isCustom && l.piece) {
+                                                                                        <div class="flex items-center gap-4 px-10">
+                                                                                          <p class="text-[10px]" [ngClass]="l.manquant > 0 ? 'text-red-500 font-bold' : 'text-oas-ok'">
+                                                                                            Stock disp. : {{ l.stockDisponible }}
+                                                                                          </p>
+                                                                                          @if (l.manquant > 0) {
+                                                                                            <p class="text-[10px] text-red-500 font-bold flex items-center gap-1">
+                                                                                              <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                                                                              </svg>
+                                                                                              Manquant: {{ l.manquant }}
+                                                                                            </p>
+                                                                                          }
+                                                                                        </div>
+                                                                                      }
+                                                                                    </div>
+                                                                                  }
+                                                                                </div>
+                                                                              </div>
+
+                                                                              <!-- MO -->
+                                                                              <div>
+                                                                                <p class="text-sm font-bold text-oas-ink mb-2">Main d'œuvre</p>
+                                                                                <div class="flex gap-2 mb-3">
+                                                                                  <app-searchable-select class="flex-1" [(ngModel)]="moAjouter" [options]="moFiltrees" bindValue="id"
+                                                                                  [bindLabel]="formatMO" placeholder="— Rechercher une MO —"></app-searchable-select>
+                                                                                  <input type="number" [(ngModel)]="qteAjouterMO" min="1"
+                                                                                    class="w-16 px-2 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm text-center focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition" />
+                                                                                    <button type="button" (click)="addMO()"
+                                                                                      class="px-3 py-2 rounded-lg bg-oas-accent text-white text-xs font-bold hover:bg-oas-accent-dark transition cursor-pointer">+
+                                                                                    Ajouter</button>
+                                                                                  </div>
+                                                                                  @if (lignesMO.length > 0) {
+                                                                                    <div class="rounded-xl border border-oas-line overflow-hidden">
+                                                                                      <table class="w-full text-xs">
+                                                                                        <thead class="bg-oas-bg">
+                                                                                          <tr>
+                                                                                            <th class="text-left px-3 py-2 font-bold text-oas-muted">MO</th>
+                                                                                            <th class="text-center px-3 py-2 font-bold text-oas-muted">Qté</th>
+                                                                                            <th class="text-right px-3 py-2 font-bold text-oas-muted">Prix</th>
+                                                                                            <th class="px-2 py-2"></th>
+                                                                                          </tr>
+                                                                                        </thead>
+                                                                                        <tbody>
+                                                                                          @for (l of lignesMO; track l.mo.id; let i = $index) {
+                                                                                            <tr class="border-b border-oas-line last:border-0">
+                                                                                              <td class="px-3 py-2 font-semibold text-oas-ink">{{ l.mo.categorie.nom }} ({{ l.mo.nbreHeure }}h)</td>
+                                                                                              <td class="px-3 py-2 text-center">× {{ l.quantite }}</td>
+                                                                                              <td class="px-3 py-2 text-right font-semibold">{{ formatPrice(l.mo.prix * l.quantite) }}</td>
+                                                                                              <td class="px-2 py-2"><button (click)="removeMO(i)"
+                                                                                                class="text-oas-muted hover:text-oas-bad cursor-pointer"><svg class="w-3.5 h-3.5" fill="none"
+                                                                                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                                                                              </svg></button></td>
+                                                                                            </tr>
+                                                                                          }
+                                                                                        </tbody>
+                                                                                      </table>
+                                                                                    </div>
+                                                                                  }
+                                                                                </div>
+
+                                                                                @if (grandTotal > 0) {
+                                                                                  <div class="bg-oas-bg rounded-xl p-4 border border-oas-line flex items-center justify-between">
+                                                                                    <div>
+                                                                                      <p class="text-xs text-oas-muted">Pièces: {{ formatPrice(totalPieces) }} · MO: {{ formatPrice(totalMO) }}</p>
+                                                                                      <p class="font-extrabold text-oas-ink text-base mt-0.5">Total estimé</p>
+                                                                                    </div>
+                                                                                    <p class="text-xl font-extrabold text-oas-accent">{{ formatPrice(grandTotal) }}</p>
+                                                                                  </div>
+                                                                                }
+                                                                              </div>
+                                                                            }
+
+                                                                            <!-- ═════════════════════════════════════════════ -->
+                                                                            <!-- ÉTAPE 4 — PROFORMA                            -->
+                                                                            <!-- ═════════════════════════════════════════════ -->
+                                                                            @if (currentStep === 4) {
+                                                                              <div class="space-y-6">
+                                                                                <div class="flex items-center gap-3 mb-2">
+                                                                                  <div class="w-9 h-9 rounded-xl bg-purple-100 flex items-center justify-center">
+                                                                                    <svg class="w-4 h-4 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                                      <path stroke-linecap="round" stroke-linejoin="round"
+                                                                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                                                      </svg>
+                                                                                    </div>
+                                                                                    <div>
+                                                                                      <p class="font-bold text-oas-ink text-sm">Validation de la Proforma</p>
+                                                                                      <!-- Show the proforma number from the selected fiche when available -->
+                                                                                      @if (proformaChargee || selectedFicheProforma) {
+                                                                                        <p class="text-xs text-oas-muted">Proforma : <span
+                                                                                          class="font-semibold">{{ (proformaChargee?.numero || selectedFicheProforma?.numero ||
+                                                                                        proformaChargee?.code || selectedFicheProforma?.code) }}</span></p>
+                                                                                      }
+                                                                                      <!-- Prominent display of proforma number for clarity -->
+                                                                                      @if (proformaChargee || selectedFicheProforma) {
+                                                                                        <p class="mt-1 text-sm font-mono font-bold text-oas-ink">N°
+                                                                                          Proforma: {{ (proformaChargee?.numero || selectedFicheProforma?.numero || proformaChargee?.code ||
+                                                                                        selectedFicheProforma?.code) }}</p>
+                                                                                      }
+                                                                                      <p class="text-xs text-oas-muted">En attente de la validation du client</p>
+
+                                                                                      @if (proformaChargee || selectedFicheProforma) {
+                                                                                        <a
+                                                                                          routerLink="/agent/proformas"
+                                                                                          [queryParams]="{ openId: proformaChargee?.id || selectedFicheProforma?.id }"
+                                                                                          target="_blank"
+                                                                                          class="inline-flex items-center gap-1 mt-2 px-3 py-1.5 bg-white border border-purple-200 text-purple-700 text-xs font-bold rounded-lg hover:bg-purple-50 transition cursor-pointer">
+                                                                                          Vérifier / Modifier les prix (Module Proformas)
+                                                                                          <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                                                          </svg>
+                                                                                        </a>
+                                                                                      }
+                                                                                    </div>
+                                                                                  </div>
+
+                                                                                  @if (editingFicheStatus === 'PROFORMA_VALIDE' || editingFicheStatus === 'EN_ATTENTE_COMMANDE' || editingFicheStatus === 'EN_ATTENTE_SORTIE' || currentStep > 4) {
+                                                                                    <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-emerald-800 text-sm">
+                                                                                      <p class="font-bold">✓ Proforma validé</p>
+                                                                                      <p class="text-xs mt-1">Passez à l'étape de l'approvisionnement.</p>
+                                                                                    </div>
+                                                                                    @if (editingFicheStatus === 'PROFORMA_VALIDE') {
+                                                                                      <button (click)="advanceToApprov()"
+                                                                                        class="w-full mt-4 py-3 rounded-xl font-bold text-sm bg-purple-500 hover:bg-purple-600 text-white shadow-lg transition cursor-pointer flex items-center justify-center gap-2">
+                                                                                        Passer à l'approvisionnement
+                                                                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                                          <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                                                                        </svg>
+                                                                                      </button>
+                                                                                    }
+                                                                                  } @else {
+                                                                                    @if (!(proformaChargee?.visibleClient || selectedFicheProforma?.visibleClient)) {
+                                                                                      <div class="bg-orange-50 border border-orange-200 rounded-xl p-4 text-orange-800 text-sm">
+                                                                                        <div class="flex items-center gap-2 mb-1">
+                                                                                          <svg class="w-5 h-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                                                                          </svg>
+                                                                                          <p class="font-bold text-base">Proforma non envoyé</p>
+                                                                                        </div>
+                                                                                        <p>Le proforma a été généré avec succès. Vous pouvez encore ajuster les prix dans le module des proformas avant de l'envoyer au client.</p>
+                                                                                        <button (click)="envoyerProforma()" [disabled]="proformaSaving"
+                                                                                          class="mt-4 w-full py-3 rounded-xl font-bold text-sm bg-orange-500 hover:bg-orange-600 text-white shadow-lg transition cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60">
+                                                                                          @if (proformaSaving) { <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> }
+                                                                                          Envoyer au client
+                                                                                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                                                                          </svg>
+                                                                                        </button>
+                                                                                      </div>
+                                                                                    } @else {
+                                                                                      <div class="bg-purple-50 border border-purple-200 rounded-xl p-4 text-purple-800 text-sm">
+                                                                                        <div class="flex items-center gap-2 mb-1">
+                                                                                          <span class="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></span>
+                                                                                          <p class="font-bold text-base">En attente du client</p>
+                                                                                        </div>
+                                                                                        <p>Le proforma a été envoyé. Veuillez patienter jusqu'à ce que le client ou la personne responsable le valide.</p>
+                                                                                        <button (click)="checkProformaValid()" [disabled]="proformaSaving"
+                                                                                          class="mt-3 px-4 py-2 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition disabled:opacity-60 flex items-center justify-center gap-2">
+                                                                                          @if (proformaSaving) { <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> }
+                                                                                          Vérifier le statut
+                                                                                        </button>
+                                                                                      </div>
+                                                                                    }
+                                                                                  }
+                                                                                </div>
+                                                                              }
+
+                                                                              <!-- ═════════════════════════════════════════════ -->
+                                                                              <!-- ÉTAPE 5 — APPROVISIONNEMENT                   -->
+                                                                              <!-- ═════════════════════════════════════════════ -->
+                                                                              @if (currentStep === 5) {
+                                                                                <div class="space-y-6">
+                                                                                  <div class="flex items-center gap-3 mb-2">
+                                                                                    <div class="w-9 h-9 rounded-xl bg-pink-100 flex items-center justify-center">
+                                                                                      <svg class="w-4 h-4 text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                                                          d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                                                                        </svg>
+                                                                                      </div>
+                                                                                      <div>
+                                                                                        <p class="font-bold text-oas-ink text-sm">Approvisionnement & Planification</p>
+                                                                                        <p class="text-xs text-oas-muted">Vérifiez la disponibilité des pièces et planifiez la sortie</p>
+                                                                                      </div>
+                                                                                    </div>
+
+                                                                                    <!-- Disponibilité pièces -->
+                                                                                    @if (lignesPieces.length > 0) {
+                                                                                      <div>
+                                                                                        <p class="text-sm font-bold text-oas-ink mb-2">Disponibilité des pièces</p>
+                                                                                        <div class="rounded-xl border border-oas-line overflow-hidden">
+                                                                                          @for (l of lignesPieces; track $index) {
+                                                                                            <div class="flex items-center justify-between px-4 py-2.5 border-b border-oas-line last:border-0">
+                                                                                              <div class="flex items-center gap-2">
+                                                                                                @if (l.manquant === 0) {
+                                                                                                  <span class="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center"><svg
+                                                                                                    class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                                                                                    stroke-width="3">
+                                                                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                                                                                  </svg></span>
+                                                                                                } @else {
+                                                                                                  <span class="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center"><svg
+                                                                                                    class="w-3.5 h-3.5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                                                                                    stroke-width="3">
+                                                                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                                                                                  </svg></span>
+                                                                                                }
+                                                                                                <div>
+                                                                                                  <p class="text-sm font-semibold text-oas-ink">{{ l.isCustom ? l.designationPds : l.piece?.reference }}</p>
+                                                                                                  <p class="text-xs text-oas-muted">Requis: {{ l.quantite }} | Stock: {{ l.stockDisponible }}</p>
+                                                                                                </div>
+                                                                                              </div>
+                                                                                              @if (l.manquant > 0) {
+                                                                                                <span class="text-xs font-bold text-red-500 bg-red-50 px-2 py-1 rounded-md">Manquant: {{ l.manquant
+                                                                                                }}</span>
+                                                                                              } @else {
+                                                                                                <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">Disponible</span>
+                                                                                              }
+                                                                                            </div>
+                                                                                          }
+                                                                                        </div>
+                                                                                      </div>
+                                                                                    }
+
+
+                                                                                    @if (editingFicheStatus === 'EN_ATTENTE_COMMANDE' && hasRupture) {
+                                                                                      <div class="bg-pink-50 border border-pink-200 rounded-xl p-4 text-pink-700 text-sm mb-4">
+                                                                                        <p class="font-bold mb-1">En attente de pièces</p>
+                                                                                        <p>Un bon de commande a été généré. Allez dans la page « Bons de commande » pour l'assigner à un fournisseur et
+                                                                                        suivre la livraison.</p>
+                                                                                        <button (click)="checkCommandeValid()" [disabled]="saving"
+                                                                                          class="mt-3 w-full py-3 rounded-xl bg-pink-500 hover:bg-pink-600 text-white font-bold text-sm shadow-lg shadow-pink-500/30 transition disabled:opacity-60 flex items-center justify-center gap-2">
+                                                                                          @if (saving) { <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> }
+                                                                                          Vérifier le statut
+                                                                                        </button>
+                                                                                      </div>
+                                                                                    } @else if (hasRupture) {
+                                                                                      <button (click)="showBDCModal = true"
+                                                                                        class="w-full py-3 rounded-xl font-bold text-sm bg-pink-500 hover:bg-pink-600 text-white shadow-lg shadow-pink-500/30 transition cursor-pointer flex items-center justify-center gap-2">
+                                                                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                                          <path stroke-linecap="round" stroke-linejoin="round"
+                                                                                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                                                                          </svg>
+                                                                                          Générer un bon de commande
+                                                                                        </button>
+                                                                                      } @else if (allPiecesDisponibles || lignesPieces.length === 0) {
+                                                                                        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-emerald-800 text-sm">
+                                                                                          <p class="font-bold">✓ Toutes les pièces sont disponibles</p>
+                                                                                          <p class="text-xs mt-1">Passez à l'étape suivante pour créer le bon de sortie et affecter les techniciens.</p>
+                                                                                        </div>
+
+                                                                                      }
+                                                                                    </div>
+                                                                                  }
+
+                                                                                  <!-- ═════════════════════════════════════════════ -->
+                                                                                  <!-- ÉTAPE 6 — BON DE SORTIE                       -->
+                                                                                  <!-- ═════════════════════════════════════════════ -->
+                                                                                  @if (currentStep === 6) {
+                                                                                    <div class="space-y-6">
+                                                                                      <div class="flex items-center gap-3 mb-2">
+                                                                                        <div class="w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center">
+                                                                                          <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                                                                          </svg>
+                                                                                        </div>
+                                                                                        <div>
+                                                                                          <p class="font-bold text-oas-ink text-sm">Attente Bon de Sortie</p>
+                                                                                          <p class="text-xs text-oas-muted">Le magasinier doit valider le bon de sortie.</p>
+                                                                                        </div>
+                                                                                      </div>
+
+                                                                                      @if (editingFicheStatus === 'EN_ATTENTE_SORTIE') {
+                                                                                        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-emerald-800 text-sm">
+                                                                                          <p class="font-bold text-base mb-1">Bon de sortie en attente de validation</p>
+                                                                                          <p>Le bon de sortie @if (loadedFiche?.bonDeSortie) {
+                                                                                            <span
+                                                                                              class="font-mono text-emerald-900 bg-emerald-200/50 px-1.5 py-0.5 rounded font-bold">{{
+                                                                                            loadedFiche!.bonDeSortie!.reference }}</span>
+                                                                                            } a été créé avec succès et est en attente de validation par le
+                                                                                          magasinier. Veuillez vous rendre dans l'onglet « Bons de Sortie » pour le valider.</p>
+                                                                                          <p class="mt-2 text-xs opacity-80">La fiche passera automatiquement à l'étape suivante dès que le bon sera
+                                                                                          validé.</p>
+                                                                                          <button (click)="checkBonDeSortieValid()" [disabled]="saving"
+                                                                                            class="mt-3 px-4 py-2 bg-emerald-500 text-white font-bold rounded-lg hover:bg-emerald-600 transition disabled:opacity-60 flex items-center justify-center gap-2">
+                                                                                            @if (saving) { <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin">
+                                                                                            </div> }
+                                                                                            Vérifier le statut
+                                                                                          </button>
+                                                                                        </div>
+                                                                                      } @else if (editingFicheStatus === 'EN_ATTENTE_COMMANDE' || editingFicheStatus === 'PROFORMA_VALIDE' ||
+                                                                                        currentStep === 6) {
+                                                                                        @if (lignesPieces.length > 0 || lignesMO.length > 0) {
+                                                                                          <div class="rounded-xl border border-oas-line overflow-hidden mt-4">
+                                                                                            @for (l of lignesPieces; track $index) {
+                                                                                              <div class="flex items-center justify-between px-4 py-2.5 border-b border-oas-line last:border-0">
+                                                                                                <div>
+                                                                                                  <p class="text-sm font-semibold text-oas-ink">{{ l.isCustom ? l.designationPds : l.piece?.reference }}</p>
+                                                                                                  <p class="text-xs text-oas-muted">Dispo Atelier: {{ l.stockAtelier ?? 0 }} | Requis: {{ l.quantite }}</p>
+                                                                                                </div>
+                                                                                                <div class="text-right flex items-center gap-2 justify-end">
+                                                                                                  @if (l.manquant > 0) {
+                                                                                                    <span class="text-xs font-bold text-red-500 bg-red-50 px-2 py-1 rounded-md">Rupture: {{ l.manquant }}</span>
+                                                                                                  }
+                                                                                                  @if (!l.isCustom) {
+                                                                                                    <div class="flex items-center gap-1">
+                                                                                                      <label class="text-[10px] text-emerald-700 font-bold uppercase">Du magasin:</label>
+                                                                                                      <input type="number" [(ngModel)]="l.aSortirMagasin" min="0" [max]="l.piece?.stockMagasin || 0"
+                                                                                                        class="w-16 px-2 py-1 text-xs border border-emerald-200 rounded-md bg-emerald-50 text-emerald-800 text-center font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+                                                                                                      </div>
+                                                                                                    }
+                                                                                                  </div>
+                                                                                                </div>
+                                                                                              }
+                                                                                            </div>
+                                                                                          }
+
+                                                                                          @if (getTotalASortir() > 0) {
+                                                                                            <button (click)="generateBonDeSortie()" [disabled]="bdsCreating"
+                                                                                              class="w-full mt-4 py-3 rounded-xl font-bold text-sm text-white shadow-lg transition cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/30">
+                                                                                              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                                                                              </svg>
+                                                                                              @if (bdsCreating) {
+                                                                                                <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                                                                <span>Traitement...</span>
+                                                                                              }
+                                                                                              @else { <span>Générer Bon de Sortie & Continuer</span> }
+                                                                                            </button>
+                                                                                          } @else {
+                                                                                            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-emerald-800 text-sm mt-4">
+                                                                                              <p class="font-bold">✓ Le stock de l'atelier est suffisant</p>
+                                                                                              <p class="text-xs mt-1">Aucun bon de sortie du magasin n'est nécessaire.</p>
+                                                                                            </div>
+                                                                                            <button (click)="generateBonDeSortie()" [disabled]="bdsCreating"
+                                                                                              class="w-full mt-4 py-3 rounded-xl font-bold text-sm bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg transition cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2">
+                                                                                              @if (bdsCreating) {
+                                                                                                <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                                                                <span>Traitement...</span>
+                                                                                              } @else {
+                                                                                                <span>Continuer vers l'affectation</span>
+                                                                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                                                  <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                                                                                </svg>
+                                                                                              }
+                                                                                            </button>
+                                                                                          }
+                                                                                        }
+                                                                                      </div>
+                                                                                    }
+
+                                                                                    <!-- ═════════════════════════════════════════════ -->
+                                                                                    <!-- ÉTAPE 7 — ASSIGNATION MÉCANICIEN                -->
+                                                                                    <!-- ═════════════════════════════════════════════ -->
+                                                                                    @if (currentStep === 7) {
+                                                                                      <div class="space-y-6">
+                                                                                        <div class="flex items-center gap-3 mb-2">
+                                                                                          <div class="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center">
+                                                                                            <svg class="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                                              <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                                                                            </svg>
+                                                                                          </div>
+                                                                                          <div>
+                                                                                            <p class="font-bold text-oas-ink text-sm">Assignation & Planification</p>
+                                                                                            <p class="text-xs text-oas-muted">Assignez les techniciens et définissez la date de sortie.</p>
+                                                                                          </div>
+                                                                                        </div>
+
+                                                                                        <div>
+                                                                                          <label class="block text-sm font-semibold text-oas-ink mb-1.5">Date de sortie estimée *</label>
+                                                                                          <div class="flex gap-2">
+                                                                                            <input type="date" [(ngModel)]="dateSortieEstimee"
+                                                                                              class="flex-1 px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/40 transition" />
+                                                                                              <button (click)="saveDateSortieEstimee()" [disabled]="saving || !dateSortieEstimee"
+                                                                                                class="px-4 py-2.5 rounded-xl bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold transition cursor-pointer disabled:opacity-60 flex items-center gap-2">
+                                                                                                @if (saving) { <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin">
+                                                                                                </div> }
+                                                                                                {{ saving ? 'En cours...' : 'Enregistrer' }}
+                                                                                              </button>
+                                                                                            </div>
+                                                                                          </div>
+
+                                                                                          <div>
+                                                                                            <p class="text-sm font-bold text-oas-ink mb-2">Techniciens assignés à la réparation *</p>
+                                                                                            <div class="grid grid-cols-3 gap-2">
+                                                                                              @for (technicien of allTechniciens; track technicien.id) {
+                                                                                                <button type="button" (click)="toggleTechnicienStepper(technicien)" [disabled]="technicienToggling !== null"
+                                                                                                  class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs transition cursor-pointer text-left disabled:opacity-60"
+                                                                                                  [ngClass]="isTechnicienSelected(technicien.id) ? 'bg-blue-50 text-blue-600 font-semibold' : 'bg-oas-bg text-oas-ink2 hover:bg-oas-line'">
+                                                                                                  <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                                                                                                    [ngClass]="isTechnicienSelected(technicien.id) ? 'bg-blue-500 text-white' : 'bg-oas-line text-oas-muted'">
+                                                                                                    @if (technicienToggling === technicien.id) { ⦿ } @else if (isTechnicienSelected(technicien.id)) { ✓ } @else { + }
+                                                                                                    </span>
+                                                                                                    <span class="truncate">{{ technicien.firstName }} {{ technicien.lastName }}</span>
+                                                                                                  </button>
+                                                                                                }
+                                                                                              </div>
+                                                                                            </div>
+
+                                                                                            <button (click)="checkAndStartReparation()" [disabled]="saving || selectedTechniciens.length === 0 || !dateSortieEstimee"
+                                                                                              class="w-full py-3 rounded-xl font-bold text-sm text-white shadow-lg transition cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 shadow-blue-500/30">
+                                                                                              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                                                  d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                                                                                </svg>
+                                                                                                Démarrer la réparation
+                                                                                              </button>
+                                                                                            </div>
+                                                                                          }
+
+                                                                                          @if (currentStep === 8) {
+                                                                                            <div class="space-y-6">
+                                                                                              <div class="flex items-center gap-3 mb-2">
+                                                                                                <div class="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center">
+                                                                                                  <svg class="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                                                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                                                                                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                                                    </svg>
+                                                                                                  </div>
+                                                                                                  <div>
+                                                                                                    <p class="font-bold text-oas-ink text-sm">Réparation en cours</p>
+                                                                                                    <p class="text-xs text-oas-muted">Les pièces ont été sorties et les techniciens sont au travail.</p>
+                                                                                                  </div>
+                                                                                                </div>
+
+                                                                                                <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-700">
+                                                                                                  Cliquez sur « Terminer la réparation » quand les travaux sont effectivement complétés.
+                                                                                                </div>
+
+                                                                                                <button (click)="terminerReparation()" [disabled]="saving"
+                                                                                                  class="w-full py-3 rounded-xl font-bold text-sm bg-blue-500 hover:bg-blue-600 text-white shadow-lg shadow-blue-500/30 transition cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2">
+                                                                                                  @if (saving) { <span>Enregistrement...</span> }
+                                                                                                  @else {
+                                                                                                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                                                                                  </svg>
+                                                                                                  <span>Terminer la réparation</span>
+                                                                                                }
+                                                                                              </button>
+                                                                                            </div>
+                                                                                          }
+
+                                                                                          <!-- ═════════════════════════════════════════════ -->
+                                                                                          <!-- ÉTAPE 9 — PAIEMENT                           -->
+                                                                                          <!-- ═════════════════════════════════════════════ -->
+                                                                                          @if (currentStep === 9) {
+                                                                                            <div class="space-y-6">
+                                                                                              <div class="flex items-center gap-3 mb-2">
+                                                                                                <div class="w-9 h-9 rounded-xl bg-red-100 flex items-center justify-center">
+                                                                                                  <svg class="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                                                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                                                    </svg>
+                                                                                                  </div>
+                                                                                                  <div>
+                                                                                                    <p class="font-bold text-oas-ink text-sm">Paiement</p>
+                                                                                                    <p class="text-xs text-oas-muted">La facture doit être générée et payée.</p>
+                                                                                                  </div>
+                                                                                                </div>
+
+                                                                                                <!-- Neutral guidance text when invoice not yet created -->
+                                                                                                @if (!(selectedFicheInvoice || createdFacture)) {
+                                                                                                  <div class="bg-oas-bg rounded-xl border border-oas-line p-4 text-sm text-oas-muted">
+                                                                                                    La facture peut être générée directement d'ici pour valider le paiement.
+                                                                                                  </div>
+                                                                                                }
+                                                                                                <!-- Success box after invoice created -->
+                                                                                                @if ((selectedFicheInvoice || createdFacture); as inv) {
+                                                                                                  <div
+                                                                                                    class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-sm text-emerald-800">
+                                                                                                    <p class="font-bold">Facture générée</p>
+                                                                                                    <p class="text-xs">La facture <span class="font-semibold">{{ inv.numero ||
+                                                                                                      inv.reference || inv.code || ('FACT-' + inv.id)
+                                                                                                    }}</span> a été créée.
+                                                                                                    @if (invoiceIsPaid) {
+                                                                                                      <span
+                                                                                                      class="ml-2 bg-emerald-600 text-white px-2 py-0.5 rounded text-xs font-semibold">Payée</span>
+                                                                                                    }
+                                                                                                  </p>
+                                                                                                </div>
+                                                                                              }
+                                                                                              <!-- Button to generate invoice directly from the fiche (hidden when invoice exists) -->
+                                                                                              @if (!(selectedFicheInvoice || createdFacture)) {
+                                                                                                <div class="pt-3">
+                                                                                                  <button (click)="createFactureFromFiche()" [disabled]="saving || isLoadingFacture"
+                                                                                                    class="w-full py-3 rounded-xl font-bold text-sm bg-oas-accent hover:bg-oas-accent-dark text-white shadow-lg transition cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2">
+                                                                                                    @if (isLoadingFacture) {
+                                                                                                      <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                                                                      <span>Vérification...</span>
+                                                                                                    } @else if (saving) {
+                                                                                                      <span>Traitement...</span>
+                                                                                                    } @else {
+                                                                                                      <span>Générer la facture automatiquement</span>
+                                                                                                    }
+                                                                                                  </button>
+                                                                                                </div>
+                                                                                              }
+
+                                                                                              <div class="pt-2">
+                                                                                                <button (click)="checkPaiementValid()" [disabled]="saving"
+                                                                                                  class="w-full py-3 rounded-xl font-bold text-sm bg-indigo-500 hover:bg-indigo-600 text-white shadow-lg transition cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2">
+                                                                                                  @if (saving) {
+                                                                                                    <svg class="animate-spin w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                                                                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                                                                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                                                                                    </svg>
+                                                                                                    <span>Vérification...</span>
+                                                                                                  }
+                                                                                                  @else {
+                                                                                                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                                                                  </svg>
+                                                                                                  <span>Vérifier le statut (Paiement)</span>
+                                                                                                }
+                                                                                              </button>
+                                                                                            </div>
+                                                                                          </div>
+                                                                                        }
+
+                                                                                        <!-- ═════════════════════════════════════════════ -->
+                                                                                        <!-- ÉTAPE 9 & 10 — LIVRAISON                          -->
+                                                                                        <!-- ═════════════════════════════════════════════ -->
+                                                                                        @if (currentStep === 10 || currentStep === 11) {
+                                                                                          <div class="text-center py-8 space-y-6">
+                                                                                            <div class="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto">
+                                                                                              <svg class="w-10 h-10 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                                                                              </svg>
+                                                                                            </div>
+                                                                                            <div>
+                                                                                              <p class="font-extrabold text-oas-ink text-2xl">Prêt pour la livraison !</p>
+                                                                                              <p class="text-sm text-oas-muted mt-2">Confirmez la remise du véhicule au client.</p>
+                                                                                            </div>
+                                                                                            <div class="bg-oas-bg rounded-xl p-4 text-sm grid grid-cols-2 gap-3 text-left">
+                                                                                              <div>
+                                                                                                <p class="text-oas-muted text-xs">Fiche</p>
+                                                                                                <p class="font-bold text-oas-ink">{{ step1Form.value.numero }}</p>
+                                                                                              </div>
+                                                                                              <div>
+                                                                                                <p class="text-oas-muted text-xs">Total</p>
+                                                                                                <p class="font-bold text-oas-accent">{{ formatPrice(grandTotal) }}</p>
+                                                                                              </div>
+                                                                                            </div>
+                                                                                            <button (click)="marquerLivre()" [disabled]="saving"
+                                                                                              class="w-full py-3.5 rounded-xl font-extrabold text-base bg-oas-accent hover:bg-oas-accent-dark text-white shadow-lg shadow-oas-accent/30 transition cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2">
+                                                                                              @if (saving) { <span>Enregistrement...</span> } @else { <span>✓ Confirmer la livraison</span> }
+                                                                                            </button>
+                                                                                          </div>
+                                                                                        }
+
+                                                                                      </div>
+
+                                                                                      <!-- Footer navigation unique -->
+                                                                                      <div class="flex items-center justify-between px-6 py-4 border-t border-oas-line flex-shrink-0 bg-white">
+                                                                                        <button (click)="currentStep === 1 ? closeWorkflow() : prevStep()"
+                                                                                          class="flex items-center gap-2 px-4 h-10 rounded-xl border border-oas-line bg-white hover:bg-oas-bg text-oas-ink font-semibold text-sm transition cursor-pointer">
+                                                                                          @if (currentStep === 1) {
+                                                                                            Annuler
+                                                                                          } @else {
+                                                                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                                              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                                                                                            </svg>
+                                                                                            Précédent
+                                                                                          }
+                                                                                        </button>
+
+                                                                                        <div class="flex items-center gap-1">
+                                                                                          @for (step of statutSteps; track step.statut; let i = $index) {
+                                                                                            <div class="h-2 rounded-full transition-all"
+                                                                                              [ngClass]="i === currentStep - 1 ? 'bg-oas-accent w-4' : i < currentStep - 1 ? 'bg-oas-ok w-2' : 'bg-oas-line w-2'">
+                                                                                            </div>
+                                                                                          }
+                                                                                        </div>
+
+                                                                                        @if (currentStep === 1 || currentStep === 2) {
+                                                                                          <button (click)="handleNextForStep1Or2()" [disabled]="saving || !canNext"
+                                                                                            class="flex items-center gap-2 px-4 h-10 rounded-xl bg-oas-accent hover:bg-oas-accent-dark text-white font-bold text-sm transition cursor-pointer disabled:opacity-60">
+                                                                                            @if (saving) { <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                                                            <span>En cours...</span> }
+                                                                                            @else if (currentStep === 1) {
+                                                                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                                              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                                                                                            </svg>
+                                                                                            <span>Suivant</span>
+                                                                                          } @else if (editingFicheStatus === 'A_FAIRE') {
+                                                                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                                              <path stroke-linecap="round" stroke-linejoin="round"
+                                                                                                d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                                              </svg>
+                                                                                              <span>Commencer le diagnostic</span>
+                                                                                            } @else {
+                                                                                              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                                                                              </svg>
+                                                                                              <span>Terminer le diagnostic</span>
+                                                                                            }
+                                                                                          </button>
+                                                                                        } @else if (currentStep === 3) {
+                                                                                          <button (click)="savePiecesEtMo()" [disabled]="proformaSaving"
+                                                                                            class="flex items-center gap-2 px-4 h-10 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm transition cursor-pointer disabled:opacity-60">
+                                                                                            @if (proformaSaving) { <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin">
+                                                                                              </div> <span>Sauvegarde...</span> } @else { <span>Enregistrer Pièces & MO</span> <svg class="w-4 h-4" fill="none"
+                                                                                              viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                                              <path stroke-linecap="round" stroke-linejoin="round"
+                                                                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                                                              </svg> }
+                                                                                            </button>
+                                                                                          } @else if (currentStep === 5 && !hasRupture) {
+                                                                                            <button (click)="currentStep = 6"
+                                                                                              class="flex items-center gap-2 px-4 h-10 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm transition cursor-pointer">
+                                                                                              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                                                                                              </svg>
+                                                                                              <span>Bon de sortie</span>
+                                                                                            </button>
+                                                                                          } @else { <div class="w-24"></div> }
+                                                                                        </div>
+
+                                                                                      </div>
+                                                                                    </div>
+                                                                                  }
+
+
+                                                                                  <!-- ═══════════════════════════════════════════════════════════ -->
+                                                                                  <!--  POPUP BON DE COMMANDE (sans fournisseur)                   -->
+                                                                                  <!-- ═══════════════════════════════════════════════════════════ -->
+                                                                                  @if (showBDCModal) {
+                                                                                    <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                                                                                      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+
+                                                                                        <div class="bg-pink-500 px-6 py-4 flex items-center justify-between">
+                                                                                          <div>
+                                                                                            <h3 class="font-extrabold text-white text-sm">⚠ Pièces manquantes</h3>
+                                                                                            <p class="text-pink-100 text-xs">Un bon de commande sera créé en attente</p>
+                                                                                          </div>
+                                                                                          <button (click)="closeBDCModal()" class="p-1 rounded-lg hover:bg-white/20 text-white cursor-pointer">
+                                                                                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                                                              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                                                                            </svg>
+                                                                                          </button>
+                                                                                        </div>
+
+                                                                                        <div class="px-6 py-5 space-y-4">
+                                                                                          <div class="rounded-xl border border-pink-200 bg-pink-50 overflow-hidden">
+                                                                                            @for (l of rupturesOnly; track $index) {
+                                                                                              <div class="flex items-center justify-between px-4 py-2.5 border-b border-pink-100 last:border-0">
+                                                                                                <div>
+                                                                                                  <p class="text-sm font-semibold text-oas-ink">{{ l.piece?.reference || l.designationPds }}</p>
+                                                                                                  <p class="text-xs text-oas-muted">{{ l.piece?.categorie }}</p>
+                                                                                                </div>
+                                                                                                <span class="text-sm font-bold text-pink-600">{{ l.manquant }} à commander</span>
+                                                                                              </div>
+                                                                                            }
+                                                                                          </div>
+
+                                                                                          <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 flex gap-2">
+                                                                                            <svg class="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                                                                              stroke-width="2">
+                                                                                              <path stroke-linecap="round" stroke-linejoin="round"
+                                                                                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                                              </svg>
+                                                                                              <p class="text-xs text-amber-700">Le bon sera créé <strong>sans fournisseur</strong>. Vous pourrez l'assigner et
+                                                                                            envoyer la commande depuis la page « Bons de commande ».</p>
+                                                                                          </div>
+
+                                                                                          <div class="flex gap-3">
+                                                                                            <button (click)="closeBDCModal()"
+                                                                                              class="flex-1 py-2.5 rounded-xl border border-oas-line text-oas-ink font-semibold text-sm hover:bg-oas-bg transition cursor-pointer">
+                                                                                              Annuler
+                                                                                            </button>
+                                                                                            <button (click)="createBonDeCommande()" [disabled]="bdcSaving"
+                                                                                              class="flex-1 py-2.5 rounded-xl bg-pink-500 hover:bg-pink-600 text-white font-bold text-sm disabled:opacity-50 transition cursor-pointer">
+                                                                                              {{ bdcSaving ? 'Commande...' : 'Créer le bon de commande' }}
+                                                                                            </button>
+                                                                                          </div>
+                                                                                        </div>
+                                                                                      </div>
+                                                                                    </div>
+                                                                                  }

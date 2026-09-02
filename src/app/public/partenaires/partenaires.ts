@@ -4,7 +4,7 @@ import { RouterModule } from '@angular/router';
 import { register } from 'swiper/element/bundle';
 
 import { PartenaireService, PartenaireModel } from '../../services/partenaire.service';
-import { FournisseurService, FournisseurModel } from '../../services/fournisseur.service';
+import { FournisseurService, FournisseurModel } from '../../agent/fournisseurs/fournisseur.service';
 
 import { IconComponent } from '../../shared/icon/icon';
 import { SectionTitle } from '../../shared/components/section-title/section-title';

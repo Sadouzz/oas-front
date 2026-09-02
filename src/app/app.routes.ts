@@ -1,8 +1,8 @@
 import { Routes } from '@angular/router';
-import { LoginComponent } from './gestion/auth/login/login.component';
-import { RegisterComponent } from './gestion/auth/register/register.component';
-import { ForbiddenComponent } from './gestion/auth/forbidden/forbidden.component';
-import { LayoutComponent } from './gestion/layout/layout.component';
+import { LoginComponent } from './auth/login/login.component';
+import { RegisterComponent } from './auth/register/register.component';
+import { ForbiddenComponent } from './auth/forbidden/forbidden.component';
+import { LayoutComponent } from './agent/layout/layout.component';
 import { roleGuard } from './core/guards/role.guard';
 import { multiRoleGuard } from './core/guards/multi-role.guard';
 import { noAuthGuard } from './core/guards/no-auth.guard';
@@ -49,96 +49,96 @@ export const routes: Routes = [
   { path: 'forbidden', component: ForbiddenComponent },
 
   {
-    path: 'espace-client',
-    loadChildren: () => import('./client-portal/client-portal.routes').then(m => m.CLIENT_PORTAL_ROUTES),
+    path: 'client',
+    loadChildren: () => import('./client/client-portal.routes').then(m => m.CLIENT_PORTAL_ROUTES),
   },
 
   {
-    path: 'espace-technicien',
-    loadChildren: () => import('./espace-technicien/technicien-portal.routes').then(m => m.TECHNICIEN_PORTAL_ROUTES),
+    path: 'technicien',
+    loadChildren: () => import('./technicien/technicien-portal.routes').then(m => m.TECHNICIEN_PORTAL_ROUTES),
   },
 
   {
-    path: 'gestion',
+    path: 'agent',
     component: LayoutComponent,
     canActivate: [staffGuard],
     children: [
       {
         path: 'dashboard',
         loadComponent: () =>
-          import('./gestion/dashboard/dashboard.component').then(m => m.DashboardComponent),
+          import('./agent/dashboard/dashboard.component').then(m => m.DashboardComponent),
       },
       {
         path: 'clients',
         loadComponent: () =>
-          import('./gestion/clients/clients.component').then(m => m.ClientsComponent),
+          import('./agent/clients/clients.component').then(m => m.ClientsComponent),
       },
       {
         path: 'vehicules',
         loadComponent: () =>
-          import('./gestion/vehicules/vehicules.component').then(m => m.VehiculesComponent),
+          import('./agent/vehicules/vehicules.component').then(m => m.VehiculesComponent),
       },
       {
         path: 'pieces-detachees',
         loadComponent: () =>
-          import('./gestion/pieces-detachees/pieces-detachees.component').then(m => m.PiecesDetacheesComponent),
+          import('./agent/pieces-detachees/pieces-detachees.component').then(m => m.PiecesDetacheesComponent),
       },
       {
         path: 'seuil-alertes',
         loadComponent: () =>
-          import('./gestion/seuil-alertes/seuil-alertes').then(m => m.SeuilAlertes),
+          import('./agent/seuil-alertes/seuil-alertes').then(m => m.SeuilAlertes),
       },
       {
         path: 'bons-de-sortie',
         loadComponent: () =>
-          import('./gestion/bons-de-sortie/bons-de-sortie.component').then(m => m.BonsDeSortieComponent),
+          import('./agent/bons-de-sortie/bons-de-sortie.component').then(m => m.BonsDeSortieComponent),
       },
       {
         path: 'historique-bs',
         loadComponent: () =>
-          import('./gestion/historique-bs/historique-bs.component').then(m => m.HistoriqueBsComponent),
+          import('./agent/historique-bs/historique-bs.component').then(m => m.HistoriqueBsComponent),
       },
       {
         path: 'stock',
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_AGENT_MAGASIN'])],
         loadComponent: () =>
-          import('./gestion/stock/stock.component').then(m => m.StockComponent),
+          import('./agent/stock/stock.component').then(m => m.StockComponent),
       },
       {
         path: 'inventaire',
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_AGENT_MAGASIN'])],
         loadComponent: () =>
-          import('./gestion/inventaire/inventaire.component').then(m => m.InventaireComponent),
+          import('./agent/inventaire/inventaire.component').then(m => m.InventaireComponent),
       },
       {
         path: 'fournisseurs',
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_AGENT_MAGASIN'])],
         loadComponent: () =>
-          import('./gestion/fournisseurs/fournisseurs.component').then(m => m.FournisseursComponent),
+          import('./agent/fournisseurs/fournisseurs.component').then(m => m.FournisseursComponent),
       },
       {
         path: 'ordres-reparation',
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER'])],
         loadComponent: () =>
-          import('./gestion/ordres-reparation/ordres-reparation.component').then(m => m.OrdresReparationComponent),
+          import('./agent/ordres-reparation/ordres-reparation.component').then(m => m.OrdresReparationComponent),
       },
       {
         path: 'techniciens',
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER'])],
         loadComponent: () =>
-          import('./gestion/techniciens/techniciens.component').then(m => m.TechniciensComponent),
+          import('./agent/techniciens/techniciens.component').then(m => m.TechniciensComponent),
       },
       {
         path: 'rendezvous',
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER', 'ROLE_AGENT'])],
         loadComponent: () =>
-          import('./gestion/rendezvous/rendezvous.component').then(m => m.RendezVousComponent),
+          import('./agent/rendezvous/rendezvous.component').then(m => m.RendezVousComponent),
       },
       {
         path: 'notes-prix',
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER', 'ROLE_AGENT'])],
         loadComponent: () =>
-          import('./gestion/notes-prix/notes-prix.component').then(m => m.NotesPrixComponent),
+          import('./agent/notes-prix/notes-prix.component').then(m => m.NotesPrixComponent),
       },
       {
         path: 'notes-de-prix',
@@ -149,58 +149,58 @@ export const routes: Routes = [
         path: 'devis-previsionnels',
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER'])],
         loadComponent: () =>
-          import('./gestion/devis-previsionnels/devis-previsionnels.component').then(m => m.DevisPrevisionnelsComponent),
+          import('./agent/devis-previsionnels/devis-previsionnels.component').then(m => m.DevisPrevisionnelsComponent),
       },
       {
         path: 'devis',
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER', 'ROLE_AGENT'])],
         loadComponent: () =>
-          import('./gestion/devis-previsionnels/devis-previsionnels.component').then(m => m.DevisPrevisionnelsComponent),
+          import('./agent/devis-previsionnels/devis-previsionnels.component').then(m => m.DevisPrevisionnelsComponent),
       },
       {
         path: 'bons-commande',
         loadComponent: () =>
-          import('./gestion/bons-commande/bons-commande.component').then(m => m.BonsCommandeComponent),
+          import('./agent/bons-commande/bons-commande.component').then(m => m.BonsCommandeComponent),
       },
       {
         path: 'bons-reception',
         loadComponent: () =>
-          import('./gestion/bons-reception/bons-reception.component').then(m => m.BonsReceptionComponent),
+          import('./agent/bons-reception/bons-reception.component').then(m => m.BonsReceptionComponent),
       },
       {
         path: 'proformas',
         loadComponent: () =>
-          import('./gestion/proformas/proformas.component').then(m => m.ProformasComponent),
+          import('./agent/proforma/proforma.component').then(m => m.ProformaComponent),
       },
       {
         path: 'factures',
         loadComponent: () =>
-          import('./gestion/factures/factures.component').then(m => m.FacturesComponent),
+          import('./agent/factures/factures.component').then(m => m.FacturesComponent),
       },
       {
         path: 'avoirs-ttc',
         loadComponent: () =>
-          import('./gestion/avoirs-ttc/avoirs-ttc').then(m => m.AvoirsTtc),
+          import('./agent/avoirs-ttc/avoirs-ttc').then(m => m.AvoirsTtc),
       },
       {
         path: 'avoirs-ht',
         loadComponent: () =>
-          import('./gestion/avoirs-ht/avoirs-ht').then(m => m.AvoirsHt),
+          import('./agent/avoirs-ht/avoirs-ht').then(m => m.AvoirsHt),
       },
       {
         path: 'notes-prix',
         loadComponent: () =>
-          import('./gestion/notes-prix/notes-prix.component').then(m => m.NotesPrixComponent),
+          import('./agent/notes-prix/notes-prix.component').then(m => m.NotesPrixComponent),
       },
       {
         path: 'gestion-tva',
         loadComponent: () =>
-          import('./gestion/gestion-tva/gestion-tva.component').then(m => m.GestionTvaComponent),
+          import('./agent/gestion-tva/gestion-tva.component').then(m => m.GestionTvaComponent),
       },
       {
         path: 'gestion-recu',
         loadComponent: () =>
-          import('./gestion/gestion-recu/gestion-recu.component').then(m => m.GestionRecuComponent),
+          import('./agent/gestion-recu/gestion-recu.component').then(m => m.GestionRecuComponent),
       },
       {
         path: 'admin',
@@ -209,27 +209,27 @@ export const routes: Routes = [
           {
             path: 'users',
             loadComponent: () =>
-              import('./gestion/admin/users/users.component').then(m => m.UsersComponent),
+              import('./agent/admin/users/users.component').then(m => m.UsersComponent),
           },
           {
             path: 'garages',
             loadComponent: () =>
-              import('./gestion/admin/garages/garages.component').then(m => m.GaragesComponent),
+              import('./agent/admin/garages/garages.component').then(m => m.GaragesComponent),
           },
           {
             path: 'history',
             loadComponent: () =>
-              import('./gestion/admin/history/history.component').then(m => m.HistoryComponent),
+              import('./agent/admin/history/history.component').then(m => m.HistoryComponent),
           },
           {
             path: 'main-doeuvre',
             loadComponent: () =>
-              import('./gestion/main-doeuvre/main-doeuvre.component').then(m => m.MainDoeuvreComponent),
+              import('./agent/main-doeuvre/main-doeuvre.component').then(m => m.MainDoeuvreComponent),
           },
           {
             path: 'parametres',
             loadComponent: () =>
-              import('./gestion/parametres/parametres.component').then(m => m.ParametresComponent),
+              import('./agent/parametres/parametres.component').then(m => m.ParametresComponent),
           },
         ],
       },
@@ -237,19 +237,19 @@ export const routes: Routes = [
         path: 'fiches-atelier',
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER', 'ROLE_AGENT'])],
         loadComponent: () =>
-          import('./gestion/fiches-atelier-list/fiches-atelier-list').then(m => m.FichesAtelierList),
+          import('./agent/fiches-atelier-list/fiches-atelier-list').then(m => m.FichesAtelierList),
       },
       {
         path: 'fiches-atelier/:id',
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER', 'ROLE_AGENT'])],
         loadComponent: () =>
-          import('./gestion/fiche-atelier-details/fiche-atelier-details').then(m => m.FicheAtelierDetails),
+          import('./agent/fiche-atelier-details/fiche-atelier-details').then(m => m.FicheAtelierDetails),
       },
       {
         path: 'admin/fiches-atelier/new/:rendezVousId',
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER', 'ROLE_AGENT'])],
         loadComponent: () =>
-          import('./gestion/admin/fiches-atelier/fiches-atelier').then(m => m.FichesAtelier),
+          import('./agent/admin/fiches-atelier/fiches-atelier').then(m => m.FichesAtelier),
       },
     ],
   },

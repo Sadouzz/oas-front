@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { Observable, tap, map } from 'rxjs';
 import { jwtDecode } from 'jwt-decode';
 import { environment } from '../../../environments/environment';
 import { AuthResponse, LoginRequest, RegisterRequest, CheckAvailabilityResponse } from '../../shared/models';
@@ -22,22 +22,20 @@ export class AuthService {
   }
 
   login(credentials: LoginRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.api}/signin`, credentials, { withCredentials: true }).pipe(
-      tap(response => {
-        // Stockage dans les cookies (7 jours de validité)
-        this.cookieService.set('token', response.token, 7);
-        this.cookieService.set('username', response.username, 7);
-        this.cookieService.set('role', response.role, 7);
+    return this.http.post<any>(`${this.api}/signin`, credentials, { withCredentials: true }).pipe(
+      map(res => (res && res.data) ? res.data : res),
+      tap((response: AuthResponse) => {
+        if (response && response.token) {
+          // Stockage dans les cookies uniquement
+          this.cookieService.set('token', response.token, 7);
+          this.cookieService.set('username', response.username, 7);
+          this.cookieService.set('role', response.role, 7);
 
-        // Nettoyage legacy localStorage
-        localStorage.removeItem('token');
-        localStorage.removeItem('username');
-        localStorage.removeItem('role');
-
-        if (response.garageId && response.garageName) {
-          this.garageContext.enterGarage(response.garageId, response.garageName);
+          if (response.garageId && response.garageName) {
+            this.garageContext.enterGarage(response.garageId, response.garageName);
+          }
+          this.scheduleAutoLogout();
         }
-        this.scheduleAutoLogout();
       })
     );
   }
@@ -78,15 +76,12 @@ export class AuthService {
     this.cookieService.delete('token');
     this.cookieService.delete('username');
     this.cookieService.delete('role');
-    localStorage.removeItem('token');
-    localStorage.removeItem('username');
-    localStorage.removeItem('role');
     this.garageContext.leaveGarage();
     this.clearAutoLogoutTimer();
   }
 
   getToken(): string | null {
-    return this.cookieService.get('token') ?? localStorage.getItem('token');
+    return this.cookieService.get('token');
   }
 
   /**
@@ -95,18 +90,23 @@ export class AuthService {
    */
   isAuthenticated(): boolean {
     const token = this.getToken();
-    if (!token) return false;
-    try {
-      const { exp } = jwtDecode<{ exp: number }>(token);
-      const valid = Date.now() < exp * 1000;
-      if (!valid) {
-        this.logout();
+    const role = this.getRole();
+
+    if (token) {
+      try {
+        const { exp } = jwtDecode<{ exp: number }>(token);
+        const valid = Date.now() < exp * 1000;
+        if (!valid) {
+          this.logout();
+          return false;
+        }
+        return true;
+      } catch {
+        return !!role;
       }
-      return valid;
-    } catch {
-      this.logout();
-      return false;
     }
+
+    return !!role;
   }
 
   private scheduleAutoLogout() {
@@ -143,7 +143,7 @@ export class AuthService {
    * Rôle lu depuis les cookies (valeur fournie par le backend à la connexion).
    */
   getRole(): string | null {
-    return this.cookieService.get('role') ?? localStorage.getItem('role');
+    return this.cookieService.get('role');
   }
 
   hasRole(role: string): boolean {
@@ -151,7 +151,7 @@ export class AuthService {
   }
 
   getUsername(): string | null {
-    return this.cookieService.get('username') ?? localStorage.getItem('username');
+    return this.cookieService.get('username');
   }
 
   getUser(): { username: string; role: string } | null {

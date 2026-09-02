@@ -7,7 +7,7 @@ import { BlogPreviewComponent, BlogArticle } from '../../shared/components/blog-
 import { register } from 'swiper/element/bundle';
 import { BlogService } from '../../services/blog.service';
 import { PartenaireService } from '../../services/partenaire.service';
-import { FournisseurService } from '../../services/fournisseur.service';
+import { FournisseurService } from '../../agent/fournisseurs/fournisseur.service';
 import { PartenaireModel, FournisseurModel } from '../../shared/models';
 
 register();

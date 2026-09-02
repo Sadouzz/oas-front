@@ -25,26 +25,18 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     withCredentials: true
   });
 
-  const isClientArea = router.url.startsWith('/espace-client');
+  const isClientArea = router.url.startsWith('/client');
 
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      // Ignorer les erreurs 401/403 si on est sur le site public ET pas authentifié
-      const isPublicRoute = !router.url.startsWith('/gestion') && !isClientArea;
-      
       if (error.status === 401) {
-        authService.logout();
-        if (isClientArea) {
-          router.navigate(['/espace-client/connexion'], { replaceUrl: true });
-        } else if (!isPublicRoute) {
-          router.navigate(['/login'], { replaceUrl: true });
+        // Ne pas faire logout si c'est la tentative de connexion (signin) qui a échoué
+        if (!req.url.includes('/signin')) {
+          authService.logout();
         }
+        router.navigate(['/login'], { replaceUrl: true });
       } else if (error.status === 403) {
-        if (isClientArea) {
-          router.navigate(['/espace-client'], { replaceUrl: true });
-        } else if (!isPublicRoute) {
-          router.navigate(['/forbidden'], { replaceUrl: true });
-        }
+        router.navigate(['/forbidden'], { replaceUrl: true });
       }
 
       return throwError(() => error);
