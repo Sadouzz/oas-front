@@ -5,7 +5,7 @@ import { ClientRendezVousService } from './client-rendezvous.service';
 import { ClientVehiculeService } from '../vehicules/client-vehicule.service';
 import { ClientInterventionService } from '../interventions/client-intervention.service';
 import { GarageService } from '../../services/garage.service';
-import { RendezVous, RendezVousStatus, VehiculeModel, Garage } from '../../shared/models';
+import { RendezVous, RendezVousStatus, VehiculeModel, Garage, extractContent } from '../../shared/models';
 import { Intervention } from '../models';
 import { isActiveRepair } from '../intervention-stage';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
@@ -179,8 +179,18 @@ export class ClientRendezVousComponent implements OnInit {
   load(): void {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: rdv => { this.rendezvous = rdv; this.loading = false; this.cdr.markForCheck(); this.applyFilter(); this.cdr.markForCheck(); },
-      error: () => { this.loading = false; this.cdr.markForCheck(); this.errorMessage = 'Impossible de charger vos rendez-vous.'; },
+      next: rdv => {
+        this.rendezvous = extractContent(rdv);
+        this.loading = false;
+        this.cdr.markForCheck();
+        this.applyFilter();
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.loading = false;
+        this.cdr.markForCheck();
+        this.errorMessage = 'Impossible de charger vos rendez-vous.';
+      },
     });
   }
 

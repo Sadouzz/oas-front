@@ -9,7 +9,7 @@ import { ClientFactureService } from '../factures/client-facture.service';
 import { ClientVehiculeService } from '../vehicules/client-vehicule.service';
 import { ClientInterventionService } from '../interventions/client-intervention.service';
 import { Intervention } from '../models';
-import { VehiculeModel } from '../../shared/models';
+import { VehiculeModel, extractContent } from '../../shared/models';
 import { CLIENT_PORTAL_PATHS } from '../client-portal.paths';
 import { StatusBadgeComponent } from '../ui/status-badge/status-badge.component';
 import { VehicleAvatarComponent } from '../ui/vehicle-avatar/vehicle-avatar.component';
@@ -98,7 +98,10 @@ export class DashboardHomeComponent implements OnInit {
     });
 
     this.rendezVousService.getAll().subscribe({
-      next: rdv => { rdvAVenir = rdv.filter(r => r.statut === 'EN_ATTENTE' || r.statut === 'CONFIRME').length; done(); },
+      next: rdv => {
+        const list = extractContent(rdv);
+        rdvAVenir = list.filter(r => r.statut === 'EN_ATTENTE' || r.statut === 'CONFIRME').length; done();
+      },
       error: () => done(),
     });
 

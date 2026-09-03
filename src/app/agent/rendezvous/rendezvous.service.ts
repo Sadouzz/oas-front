@@ -9,7 +9,7 @@ export type { RendezVous, RendezVousStatus };
 @Injectable({ providedIn: 'root' })
 export class RendezVousService {
   private http = inject(HttpClient);
-  private api = `${environment.apiUrl}/api/admin/portal/rendezvous`;
+  private api = `${environment.apiUrl}/api/rendez-vous`;
 
   getAll(): Observable<RendezVous[]> {
     return this.http.get<RendezVous[]>(this.api);

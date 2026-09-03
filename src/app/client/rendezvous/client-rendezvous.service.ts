@@ -13,10 +13,10 @@ export interface ClientRendezVousRequest {
 @Injectable({ providedIn: 'root' })
 export class ClientRendezVousService {
   private http = inject(HttpClient);
-  private api = `${environment.apiUrl}/api/client/rendezvous`;
+  private api = `${environment.apiUrl}/api/rendez-vous`;
 
   getAll(): Observable<RendezVous[]> {
-    return this.http.get<RendezVous[]>(this.api);
+    return this.http.get<RendezVous[]>(this.api + '/me');
   }
 
   create(payload: ClientRendezVousRequest): Observable<RendezVous> {
