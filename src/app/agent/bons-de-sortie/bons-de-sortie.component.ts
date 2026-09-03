@@ -356,7 +356,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     return statut === 'VALIDE' ? 'bg-oas-ok-bg text-oas-ok' : 'bg-oas-warn-bg text-oas-warn';
   }
 
-  statutHistoriqueClass(statut: string): string {
+  statutHistoriqueClass(statut?: string): string {
     switch (statut) {
       case 'SORTIE':
         return 'bg-blue-50 text-blue-700 border-blue-200';
@@ -369,7 +369,10 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     }
   }
 
-  formatDate(d: string): string { return new Date(d).toLocaleString('fr-FR'); }
+  formatDate(d?: string): string {
+    if (!d) return '—';
+    return new Date(d).toLocaleString('fr-FR');
+  }
 
   private showSuccess(msg: string) {
     this.successMessage = msg; this.errorMessage = '';

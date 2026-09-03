@@ -59,10 +59,10 @@ export class LoginComponent {
             target = '/technicien';
           }
 
-          console.log('Login success. Role:', role, '-> Navigating to:', target);
+          // console.log('Login success. Role:', role, '-> Navigating to:', target);
           await this.router.navigateByUrl(target);
         } catch (err: any) {
-          console.error('Login error:', err);
+          // console.error('Login error:', err);
           this.errorMessage = err.error?.message || "Nom d'utilisateur ou mot de passe incorrect.";
           this.cdr.markForCheck();
         }

@@ -1,13 +1,10 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { BonDeReceptionService, BonDeReception } from './bon-de-reception.service';
 import { BonDeCommandeService, BonDeCommande } from '../bons-commande/bon-de-commande.service';
-import { PieceDetacheeService } from '../pieces-detachees/piece-detachee.service';
-import { MainDoeuvreService } from '../main-doeuvre/main-doeuvre.service';
 import { VehiculeService } from '../vehicules/vehicule.service';
 import { NgClass } from '@angular/common';
-import { PieceDetache, MainDoeuvreModel, VehiculeModel } from '../../shared/models/index';
+import { VehiculeModel, extractContent } from '../../shared/models/index';
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideTruck } from '@lucide/angular';
 
 @Component({
@@ -42,8 +39,8 @@ export class BonsReceptionComponent implements OnInit {
       vehicules: this.vehiculeService.getAll(),
     }).subscribe({
       next: ({ bonsCommande, vehicules }) => {
-        this.bonsCommande = bonsCommande;
-        this.allVehicules = vehicules;
+        this.bonsCommande = extractContent(bonsCommande);
+        this.allVehicules = extractContent(vehicules);
       },
     });
   }
@@ -51,8 +48,16 @@ export class BonsReceptionComponent implements OnInit {
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: data => { this.bons = data.sort((a: any, b: any) => b.id - a.id); this.applyFilter(); this.cdr.markForCheck(); this.loading = false; this.cdr.markForCheck(); },
-      error: () => this.loading = false,
+      next: data => {
+        this.bons = extractContent(data).sort((a: any, b: any) => b.id - a.id);
+        this.applyFilter();
+        this.loading = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.loading = false;
+        this.cdr.markForCheck();
+      },
     });
   }
 
@@ -69,7 +74,8 @@ export class BonsReceptionComponent implements OnInit {
 
   onSearch(e: Event) {
     this.searchTerm = (e.target as HTMLInputElement).value.toLowerCase().trim();
-    this.applyFilter(); this.cdr.markForCheck();
+    this.applyFilter();
+    this.cdr.markForCheck();
   }
 
   openDetail(bon: BonDeReception) { this.selectedBon = bon; }
@@ -94,9 +100,6 @@ export class BonsReceptionComponent implements OnInit {
     });
   }
 
-
-
-
   totalAvecBC(bon: BonDeReception): number {
     const bcAmount = bon.bonDeCommandeId
       ? this.bonsCommande.find(b => b.id === bon.bonDeCommandeId)?.montantTTC ?? 0
@@ -119,8 +122,6 @@ export class BonsReceptionComponent implements OnInit {
     if (!this.selectedBon?.bonDeCommandeId) return 0;
     return this.bonsCommande.find(b => b.id === this.selectedBon!.bonDeCommandeId)?.montantTTC ?? 0;
   }
-
-
 
   formatDate(d: string): string { return new Date(d).toLocaleDateString('fr-FR'); }
   fmt(n: number): string { return new Intl.NumberFormat('fr-FR').format(n ?? 0); }

@@ -6,7 +6,8 @@ import { BonDeSortie, BonDeSortieRequest, LigneBonDeSortie } from '../../shared/
 
 export interface BonDeSortieHistorique {
   id: number;
-  statut: string;
+  statut?: string;
+  action?: string;
   motif?: string;
   dateAction: string;
   prenom?: string;
@@ -15,6 +16,7 @@ export interface BonDeSortieHistorique {
   numeroSerie?: string;
   immatriculation?: string;
   designation?: string;
+  bonDeSortieId?: number;
   bonDeSortie?: BonDeSortie;
   piece?: {
     id: number;
@@ -72,11 +74,18 @@ export class BonDeSortieService {
     return this.http.put<BonDeSortie>(`${this.api}/${bonId}/retour-piece/${pieceId}`, {});
   }
 
-  getHistorique(bonId: number): Observable<BonDeSortieHistorique[]> {
-    return this.http.get<BonDeSortieHistorique[]>(`${this.api}/${bonId}/historique`);
+  getHistorique(bonId: number, params?: import('../../shared/models').PageParams): Observable<any> {
+    const p: Record<string, string> = {};
+    if (params?.page !== undefined) p['page'] = params.page.toString();
+    if (params?.size !== undefined) p['size'] = params.size.toString();
+    return this.http.get<any>(`${this.api}/${bonId}/historique`, { params: p });
   }
 
-  getHistoriqueGlobal(): Observable<BonDeSortieHistorique[]> {
-    return this.http.get<BonDeSortieHistorique[]>(`${this.api}/historique-global`);
+  getHistoriqueGlobal(params?: import('../../shared/models').PageParams): Observable<any> {
+    const p: Record<string, string> = {};
+    if (params?.page !== undefined) p['page'] = params.page.toString();
+    if (params?.size !== undefined) p['size'] = params.size.toString();
+    if (params?.keyword) p['keyword'] = params.keyword;
+    return this.http.get<any>(`${this.api}/historique-global`, { params: p });
   }
 }

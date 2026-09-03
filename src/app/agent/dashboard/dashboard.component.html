@@ -267,8 +267,8 @@
                 <tr class="hover:bg-oas-bg transition border-b border-oas-line last:border-0 cursor-pointer" [routerLink]="['/ordres-reparation']">
                   <td class="px-5 py-3 font-semibold font-mono text-oas-ink">{{ f.numero }}</td>
                   <td class="px-5 py-3 text-xs">{{ f.statut }}</td>
-                  <td class="px-5 py-3 text-oas-ink2 text-sm">{{ f.vehicule?.immatriculation }}</td>
-                  <td class="px-5 py-3 text-right text-oas-muted text-xs">{{ formatDate(f.dateCreation) }}</td>
+                  <td class="px-5 py-3 text-oas-ink2 text-sm">{{ f.immatriculation || f.vehicule?.immatriculation }}</td>
+                  <td class="px-5 py-3 text-right text-oas-muted text-xs">{{ formatDate(f.date || f.dateCreation) }}</td>
                 </tr>
               }
             </tbody>
@@ -298,11 +298,13 @@
                   <tr class="hover:bg-oas-bg transition border-b border-oas-line last:border-0">
                     <td class="px-5 py-3">
                       <div class="flex items-center gap-2.5">
-                        <span class="w-8 h-8 rounded-full bg-oas-navy text-white flex items-center justify-center text-xs font-bold flex-shrink-0">{{ c.firstName[0] }}{{ c.lastName[0] }}</span>
-                        <p class="font-semibold text-oas-ink text-sm">{{ c.firstName }} {{ c.lastName }}</p>
+                        <span class="w-8 h-8 rounded-full bg-oas-navy text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
+                          {{ (c.firstName ? c.firstName[0] : (c.nom ? c.nom[0] : 'C')) }}
+                        </span>
+                        <p class="font-semibold text-oas-ink text-sm">{{ c.nom || (c.firstName + ' ' + c.lastName) }}</p>
                       </div>
                     </td>
-                    <td class="px-5 py-3 text-oas-ink2 text-sm">{{ c.phone }}</td>
+                    <td class="px-5 py-3 text-oas-ink2 text-sm">{{ c.telephone || c.phone }}</td>
                   </tr>
                 }
               </tbody>
@@ -320,20 +322,20 @@
           <a routerLink="/stock" class="text-xs text-oas-bad hover:text-oas-bad/80 font-semibold transition">Gérer</a>
         </div>
         <div class="divide-y divide-oas-line">
-          @for (a of alertes.slice(0, 6); track a.pieceId) {
+          @for (a of alertes.slice(0, 6); track (a.pieceId || a.id)) {
             <div class="flex items-center justify-between px-5 py-3 hover:bg-oas-bg transition">
               <div class="flex items-center gap-3 min-w-0">
-                <span class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 {{ a.typeAlerte === 'RUPTURE' ? 'bg-oas-bad-bg text-oas-bad' : 'bg-oas-warn-bg text-oas-warn' }}">
+                <span class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 {{ (a.statut === 'RUPTURE' || a.typeAlerte === 'RUPTURE') ? 'bg-oas-bad-bg text-oas-bad' : 'bg-oas-warn-bg text-oas-warn' }}">
                   <svg lucidePackage class="w-4 h-4"></svg>
                 </span>
                 <div class="min-w-0">
                   <p class="text-sm font-semibold text-oas-ink truncate">{{ a.reference }}</p>
-                  <p class="text-xs text-oas-muted">{{ a.categorie }}</p>
+                  <p class="text-xs text-oas-muted truncate">{{ a.designation || a.categorie }}</p>
                 </div>
               </div>
               <div class="text-right flex-shrink-0 ml-3">
-                <p class="text-sm font-bold {{ a.typeAlerte === 'RUPTURE' ? 'text-oas-bad' : 'text-oas-warn' }}">{{ a.stockMagasin }}</p>
-                <p class="text-xs {{ a.typeAlerte === 'RUPTURE' ? 'text-oas-bad' : 'text-oas-warn' }}">{{ a.typeAlerte === 'RUPTURE' ? 'Rupture' : 'Faible' }}</p>
+                <p class="text-sm font-bold {{ (a.statut === 'RUPTURE' || a.typeAlerte === 'RUPTURE') ? 'text-oas-bad' : 'text-oas-warn' }}">{{ a.stockMagasin }}</p>
+                <p class="text-xs {{ (a.statut === 'RUPTURE' || a.typeAlerte === 'RUPTURE') ? 'text-oas-bad' : 'text-oas-warn' }}">{{ a.statut || (a.typeAlerte === 'RUPTURE' ? 'Rupture' : 'Faible') }}</p>
               </div>
             </div>
           } @empty {
@@ -518,10 +520,10 @@
           <a routerLink="/bons-de-sortie" class="text-xs text-oas-accent font-semibold">Voir tout</a>
         </div>
         <ul class="divide-y divide-oas-line">
-          @for (b of bonsEnAttente.slice(0,5); track b.id) {
+          @for (b of bonsEnAttente.slice(0,5); track (b.id || b.reference)) {
             <li class="flex items-center justify-between px-5 py-3 hover:bg-oas-bg transition">
-              <p class="text-xs font-mono font-bold text-oas-accent">{{ b.reference }}</p>
-              <p class="text-xs text-oas-muted">{{ b.client?.firstName }} {{ b.client?.lastName }}</p>
+              <p class="text-xs font-mono font-bold text-oas-accent">{{ b.reference || b.numBs }}</p>
+              <p class="text-xs text-oas-muted">{{ b.client?.firstName ? (b.client?.firstName + ' ' + b.client?.lastName) : (b.client || '') }}</p>
             </li>
           } @empty {
             <li class="px-5 py-8 text-center text-oas-muted text-sm">Aucun bon en attente</li>
@@ -668,13 +670,13 @@
         <a routerLink="/bons-de-sortie" class="text-xs text-oas-accent font-semibold">Voir tout</a>
       </div>
       <ul class="divide-y divide-oas-line">
-        @for (b of bonsEnAttente.slice(0,8); track b.id) {
+        @for (b of bonsEnAttente.slice(0,8); track (b.id || b.reference)) {
           <li class="flex items-center justify-between px-5 py-3 hover:bg-oas-bg transition">
             <div>
-              <p class="text-xs font-mono font-bold text-oas-accent">{{ b.reference }}</p>
-              <p class="text-xs text-oas-muted">{{ b.vehicule?.immatriculation }} — {{ b.client?.firstName }} {{ b.client?.lastName }}</p>
+              <p class="text-xs font-mono font-bold text-oas-accent">{{ b.reference || b.numBs }}</p>
+              <p class="text-xs text-oas-muted">{{ b.immatriculation || b.vehicule?.immatriculation }} — {{ b.client?.firstName ? (b.client?.firstName + ' ' + b.client?.lastName) : (b.client || '') }}</p>
             </div>
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-oas-warn-bg text-oas-warn">{{ b.lignesBonDeSortiePieces?.length ?? 0 }} pièce(s)</span>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-oas-warn-bg text-oas-warn">{{ b.nombrePieces ?? b.lignesBonDeSortiePieces?.length ?? 0 }} pièce(s)</span>
           </li>
         } @empty {
           <li class="px-5 py-10 text-center">

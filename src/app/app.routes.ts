@@ -86,7 +86,7 @@ export const routes: Routes = [
       {
         path: 'seuil-alertes',
         loadComponent: () =>
-          import('./agent/seuil-alertes/seuil-alertes').then(m => m.SeuilAlertes),
+          import('./agent/pieces-detachees/seuil-alertes/seuil-alertes').then(m => m.SeuilAlertes),
       },
       {
         path: 'bons-de-sortie',
@@ -96,13 +96,13 @@ export const routes: Routes = [
       {
         path: 'historique-bs',
         loadComponent: () =>
-          import('./agent/historique-bs/historique-bs.component').then(m => m.HistoriqueBsComponent),
+          import('./agent/bons-de-sortie/historique-bs/historique-bs.component').then(m => m.HistoriqueBsComponent),
       },
       {
         path: 'stock',
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_AGENT_MAGASIN'])],
         loadComponent: () =>
-          import('./agent/stock/stock.component').then(m => m.StockComponent),
+          import('./agent/pieces-detachees/historique/historique.component').then(m => m.HistoriqueComponent),
       },
       {
         path: 'inventaire',
@@ -237,13 +237,13 @@ export const routes: Routes = [
         path: 'fiches-atelier',
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER', 'ROLE_AGENT'])],
         loadComponent: () =>
-          import('./agent/fiches-atelier-list/fiches-atelier-list').then(m => m.FichesAtelierList),
+          import('./agent/fiches-atelier/fiches-atelier-list/fiches-atelier-list').then(m => m.FichesAtelierList),
       },
       {
         path: 'fiches-atelier/:id',
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER', 'ROLE_AGENT'])],
         loadComponent: () =>
-          import('./agent/fiche-atelier-details/fiche-atelier-details').then(m => m.FicheAtelierDetails),
+          import('./agent/fiches-atelier/fiche-atelier-details/fiche-atelier-details').then(m => m.FicheAtelierDetails),
       },
       {
         path: 'admin/fiches-atelier/new/:rendezVousId',

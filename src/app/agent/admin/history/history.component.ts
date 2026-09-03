@@ -1,8 +1,8 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
-import { HistoryService } from '../../historique-bs/history.service';
-import { ConnectionHistoryModel } from '../../../shared/models/index';
+import { HistoryService } from './history.service';
+import { ConnectionHistoryModel, extractContent } from '../../../shared/models/index';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
-import { LucideSearch, LucideX, LucideClock, LucideUser, LucideCheck } from '@lucide/angular';
+import { LucideSearch, LucideClock } from '@lucide/angular';
 
 @Component({
   selector: 'app-history',
@@ -24,13 +24,17 @@ export class HistoryComponent implements OnInit {
     this.loading = true;
     this.historyService.getAll().subscribe({
       next: (data) => {
-        this.history = data.sort((a, b) =>
+        this.history = extractContent(data).sort((a, b) =>
           new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
         );
         this.filtered = this.history;
-        this.loading = false; this.cdr.markForCheck();
+        this.loading = false;
+        this.cdr.markForCheck();
       },
-      error: () => { this.loading = false; this.cdr.markForCheck(); }
+      error: () => {
+        this.loading = false;
+        this.cdr.markForCheck();
+      }
     });
   }
 

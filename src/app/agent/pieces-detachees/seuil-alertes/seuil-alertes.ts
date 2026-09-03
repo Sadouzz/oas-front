@@ -2,11 +2,12 @@ import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { PieceDetacheeService, PieceDetache } from '../pieces-detachees/piece-detachee.service';
-import { AuthService } from '../../core/services/auth.service';
+import { PieceDetacheeService, PieceDetache } from '../piece-detachee.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { LucideShoppingCart } from '@lucide/angular';
-import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
-import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select.component';
+import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
+import { SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
+import { extractContent } from '../../../shared/models';
 
 @Component({
   selector: 'app-seuil-alertes',
@@ -50,8 +51,8 @@ export class SeuilAlertes implements OnInit {
   load() {
     this.loading = true;
     this.service.getAll().subscribe({
-      next: (data: PieceDetache[]) => {
-        this.pieces = data.sort((a: any, b: any) => b.id - a.id);
+      next: (data: any) => {
+        this.pieces = extractContent<PieceDetache>(data).sort((a: any, b: any) => b.id - a.id);
         
         // Extract depots list for filter buttons
         const alertPieces = this.pieces.filter(p =>
@@ -75,10 +76,12 @@ export class SeuilAlertes implements OnInit {
           return typeof c === 'string' ? { id: c, nom: c } : { id: c.nom, nom: c.nom };
         }).sort((a, b) => a.nom.localeCompare(b.nom));
 
-        this.loading = false; this.cdr.markForCheck();
+        this.loading = false;
+        this.cdr.markForCheck();
       },
       error: () => {
-        this.loading = false; this.cdr.markForCheck();
+        this.loading = false;
+        this.cdr.markForCheck();
       }
     });
   }

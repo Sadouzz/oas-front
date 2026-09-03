@@ -496,8 +496,8 @@
           <div
             class="bg-oas-bg rounded-lg p-2.5 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 border border-oas-line/50">
             <div class="flex items-center gap-2 flex-wrap">
-              <span class="px-2 py-0.5 rounded text-[11px] font-bold border {{ statutHistoriqueClass(h.statut) }}">
-                {{ h.statut }}
+              <span class="px-2 py-0.5 rounded text-[11px] font-bold border {{ statutHistoriqueClass(h.action || h.statut) }}">
+                {{ h.action || h.statut }}
               </span>
               @if (h.piece) {
               <span class="font-bold text-oas-ink">{{ h.piece.reference }} (Qté: {{ h.quantite }})</span>

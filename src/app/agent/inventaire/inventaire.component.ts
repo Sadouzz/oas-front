@@ -1,10 +1,11 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { StockService, InventaireResponse } from '../stock/stock.service';
+import { StockService, InventaireResponse } from '../pieces-detachees/stock.service';
 import { PieceDetacheeService, PieceDetache } from '../pieces-detachees/piece-detachee.service';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { LucideSearch, LucideRefreshCw, LucideDownload, LucidePackage, LucideAlertTriangle, LucidePlus, LucideX } from '@lucide/angular';
+import { extractContent } from '../../shared/models';
 
 @Component({
   selector: 'app-inventaire',
@@ -42,14 +43,23 @@ export class InventaireComponent implements OnInit {
   ngOnInit() {
     this.loading = true;
     this.pieceService.getAll({ type: 'PDP', statut: 'ACTIF' }).subscribe({
-      next: (d) => { this.pdps = d.sort((a:any, b:any) => b.id - a.id); this.applyFilter(); this.cdr.markForCheck(); this.loading = false; this.cdr.markForCheck(); },
-      error: () => { this.loading = false; this.cdr.markForCheck(); }
+      next: (d) => {
+        this.pdps = extractContent(d).sort((a: any, b: any) => b.id - a.id);
+        this.applyFilter();
+        this.loading = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.loading = false;
+        this.cdr.markForCheck();
+      }
     });
   }
 
   onSearch(event: Event) {
     this.keyword = (event.target as HTMLInputElement).value.toLowerCase().trim();
-    this.applyFilter(); this.cdr.markForCheck();
+    this.applyFilter();
+    this.cdr.markForCheck();
   }
 
   applyFilter() {

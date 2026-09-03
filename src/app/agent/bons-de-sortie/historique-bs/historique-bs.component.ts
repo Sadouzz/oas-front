@@ -1,10 +1,9 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
-
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { BonDeSortieService, BonDeSortieHistorique } from '../bons-de-sortie/bon-de-sortie.service';
-import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
-import { extractContent } from '../../shared/models';
+import { BonDeSortieService, BonDeSortieHistorique } from '../bon-de-sortie.service';
+import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
+import { extractContent } from '../../../shared/models';
 import { LucideSearch, LucideLoader2 } from '@lucide/angular';
 
 @Component({
@@ -39,18 +38,21 @@ export class HistoriqueBsComponent implements OnInit {
     this.bonService.getHistoriqueGlobal().subscribe({
       next: (data) => {
         this.historiqueList = extractContent(data);
-        this.applyFilter(); this.cdr.markForCheck();
-        this.loading = false; this.cdr.markForCheck();
+        this.applyFilter();
+        this.loading = false;
+        this.cdr.markForCheck();
       },
       error: () => {
-        this.loading = false; this.cdr.markForCheck();
+        this.loading = false;
+        this.cdr.markForCheck();
       }
     });
   }
 
   onSearch(event: Event) {
     this.searchQuery = (event.target as HTMLInputElement).value.toLowerCase();
-    this.applyFilter(); this.cdr.markForCheck();
+    this.applyFilter();
+    this.cdr.markForCheck();
   }
 
   onPresetChange() {
@@ -78,12 +80,14 @@ export class HistoriqueBsComponent implements OnInit {
       this.dateDebut = '';
       this.dateFin = '';
     }
-    this.applyFilter(); this.cdr.markForCheck();
+    this.applyFilter();
+    this.cdr.markForCheck();
   }
 
   applyFilter() {
     this.filtered = this.historiqueList.filter(h => {
       const q = this.searchQuery;
+      const action = h.action || h.statut || '';
       const matchesSearch = !q ||
         h.prenom?.toLowerCase().includes(q) ||
         h.nom?.toLowerCase().includes(q) ||
@@ -91,23 +95,17 @@ export class HistoriqueBsComponent implements OnInit {
         h.numeroSerie?.toLowerCase().includes(q) ||
         h.immatriculation?.toLowerCase().includes(q) ||
         h.designation?.toLowerCase().includes(q) ||
+        action.toLowerCase().includes(q) ||
         h.bonDeSortie?.reference?.toLowerCase().includes(q) ||
-        h.bonDeSortie?.client?.firstName?.toLowerCase().includes(q) ||
-        h.bonDeSortie?.client?.lastName?.toLowerCase().includes(q) ||
-        h.bonDeSortie?.vehicule?.immatriculation?.toLowerCase().includes(q) ||
-        h.piece?.reference?.toLowerCase().includes(q) ||
-        h.piece?.designation?.toLowerCase().includes(q) ||
-        h.motif?.toLowerCase().includes(q) ||
-        h.agent?.firstName?.toLowerCase().includes(q) ||
-        h.agent?.lastName?.toLowerCase().includes(q);
+        h.piece?.reference?.toLowerCase().includes(q);
 
-      const matchesStatut = !this.filterStatut || h.statut === this.filterStatut;
+      const matchesStatut = !this.filterStatut || action === this.filterStatut;
 
       // Filter by Piece
       const matchesPiece = !this.filterPiece ||
         h.numeroSerie?.toLowerCase().includes(this.filterPiece.toLowerCase()) ||
-        h.piece?.reference?.toLowerCase().includes(this.filterPiece.toLowerCase()) ||
         h.designation?.toLowerCase().includes(this.filterPiece.toLowerCase()) ||
+        h.piece?.reference?.toLowerCase().includes(this.filterPiece.toLowerCase()) ||
         h.piece?.designation?.toLowerCase().includes(this.filterPiece.toLowerCase());
 
       // Filter by Dates
@@ -138,7 +136,8 @@ export class HistoriqueBsComponent implements OnInit {
     this.dateDebut = '';
     this.dateFin = '';
     this.filterPiece = '';
-    this.applyFilter(); this.cdr.markForCheck();
+    this.applyFilter();
+    this.cdr.markForCheck();
   }
 
   get paged(): BonDeSortieHistorique[] {
@@ -158,7 +157,7 @@ export class HistoriqueBsComponent implements OnInit {
     if (this.page < this.totalPages) this.page++;
   }
 
-  statutClass(statut: string): string {
+  statutClass(statut?: string): string {
     switch (statut) {
       case 'SORTIE':
         return 'bg-blue-50 text-blue-700 border-blue-200';
@@ -171,12 +170,13 @@ export class HistoriqueBsComponent implements OnInit {
     }
   }
 
-  formatDate(d: string): string {
+  formatDate(d?: string): string {
+    if (!d) return '—';
     return new Date(d).toLocaleString('fr-FR');
   }
 
   exportCSV() {
-    const headers = ['Prenom', 'Nom', 'N° de BS', 'N° de série', "N° d'immatriculation", 'Désignation', 'Action', 'Quantité', 'Stock magasin', 'Stock atelier', 'Stock réel', 'Date'];
+    const headers = ['Prénom', 'Nom', 'N° de BS', 'N° de série', "N° d'immatriculation", 'Désignation', 'Action', 'Quantité', 'Stock magasin', 'Stock atelier', 'Stock réel', 'Date'];
     const rows = this.filtered.map(h => [
       h.prenom || h.bonDeSortie?.client?.firstName || h.agent?.firstName || '',
       h.nom || h.bonDeSortie?.client?.lastName || h.agent?.lastName || '',
@@ -184,7 +184,7 @@ export class HistoriqueBsComponent implements OnInit {
       h.numeroSerie || h.piece?.reference || '',
       h.immatriculation || h.bonDeSortie?.vehicule?.immatriculation || '',
       h.designation || h.piece?.designation || h.piece?.reference || '',
-      h.statut || '',
+      h.action || h.statut || '',
       h.quantite != null ? h.quantite : '',
       h.stockMagasin != null ? h.stockMagasin : '',
       h.stockAtelier != null ? h.stockAtelier : '',

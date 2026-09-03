@@ -1,22 +1,22 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
-import { StockService, StockMouvement } from './stock.service';
-import { PieceDetacheeService, PieceDetache, AlerteStock } from '../pieces-detachees/piece-detachee.service';
-import { AlertComponent } from '../../shared/components/alert/alert.component';
-import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select.component';
-import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
-import { extractContent } from '../../shared/models';
+import { StockService, PieceMouvementListResponse } from '../stock.service';
+import { PieceDetacheeService, PieceDetache, AlerteStock } from '../piece-detachee.service';
+import { AlertComponent } from '../../../shared/components/alert/alert.component';
+import { SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
+import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
+import { extractContent } from '../../../shared/models';
 import { LucideSearch } from '@lucide/angular';
 
 type ModalType = 'entree' | 'sortie' | 'ajustement' | null;
 
 @Component({
-  selector: 'app-stock',
+  selector: 'app-historique-stock',
   standalone: true,
   imports: [ReactiveFormsModule, FormsModule, AlertComponent, SearchableSelectComponent, PaginationComponent, LucideSearch],
-  templateUrl: './stock.component.html',
+  templateUrl: './historique.component.html',
 })
-export class StockComponent implements OnInit {
+export class HistoriqueComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
   private stockService = inject(StockService);
@@ -25,7 +25,7 @@ export class StockComponent implements OnInit {
   alertes: AlerteStock[] = [];
   alertePage = 1;
   readonly pageSize = 10;
-  mouvementsRecents: StockMouvement[] = [];
+  mouvementsRecents: PieceMouvementListResponse[] = [];
   pdps: PieceDetache[] = [];
   loading = false;
   saving = false;
@@ -37,7 +37,7 @@ export class StockComponent implements OnInit {
   filterPieceId = '';
   filterCategorie = '';
   filterType = '';
-  periodePreset = '30days';
+  periodePreset = 'all';
   dateDebut = '';
   dateFin = '';
 
@@ -70,17 +70,7 @@ export class StockComponent implements OnInit {
   });
 
   ngOnInit() {
-    this.initDefaultDates();
     this.loadAll();
-  }
-
-  initDefaultDates() {
-    const now = new Date();
-    const todayStr = now.toISOString().slice(0, 10);
-    const d = new Date();
-    d.setDate(d.getDate() - 30);
-    this.dateDebut = d.toISOString().slice(0, 10);
-    this.dateFin = todayStr;
   }
 
   onPresetChange() {
@@ -141,25 +131,22 @@ export class StockComponent implements OnInit {
     });
   }
 
-  get filteredMouvements(): StockMouvement[] {
+  get filteredMouvements(): PieceMouvementListResponse[] {
     if (!this.searchQuery) return this.mouvementsRecents;
     const q = this.searchQuery.toLowerCase();
     return this.mouvementsRecents.filter(m =>
       m.prenom?.toLowerCase().includes(q) ||
       m.nom?.toLowerCase().includes(q) ||
-      m.numDocument?.toLowerCase().includes(q) ||
-      m.typeDocument?.toLowerCase().includes(q) ||
+      m.numDoc?.toLowerCase().includes(q) ||
+      m.typeDoc?.toLowerCase().includes(q) ||
       m.numeroSerie?.toLowerCase().includes(q) ||
       m.immatriculation?.toLowerCase().includes(q) ||
-      m.piece?.reference?.toLowerCase().includes(q) ||
-      m.piece?.designation?.toLowerCase().includes(q) ||
-      m.motif?.toLowerCase().includes(q) ||
-      m.agent?.firstName?.toLowerCase().includes(q) ||
-      m.agent?.lastName?.toLowerCase().includes(q)
+      m.designation?.toLowerCase().includes(q) ||
+      m.action?.toLowerCase().includes(q)
     );
   }
 
-  get pagedMouvements(): StockMouvement[] {
+  get pagedMouvements(): PieceMouvementListResponse[] {
     const start = (this.mouvPage - 1) * this.mouvPageSize;
     return this.filteredMouvements.slice(start, start + this.mouvPageSize);
   }
@@ -226,7 +213,8 @@ export class StockComponent implements OnInit {
     });
   }
 
-  typeMouvClass(type: string): string {
+  typeMouvClass(type?: string | null): string {
+    if (!type) return 'bg-gray-50 text-gray-700 border-gray-200';
     const c: Record<string, string> = {
       ENTREE: 'bg-emerald-50 text-emerald-700 border-emerald-200',
       RETOUR_MAGASIN: 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -242,7 +230,8 @@ export class StockComponent implements OnInit {
     return c[type] ?? 'bg-gray-50 text-gray-700 border-gray-200';
   }
 
-  typeMouvLabel(type: string): string {
+  typeMouvLabel(type?: string | null): string {
+    if (!type) return '—';
     const labels: Record<string, string> = {
       ENTREE: 'Entrée',
       RETOUR_MAGASIN: 'Retour Magasin',
@@ -258,24 +247,27 @@ export class StockComponent implements OnInit {
     return labels[type] ?? type;
   }
 
-  formatDate(d: string): string { return new Date(d).toLocaleString('fr-FR'); }
+  formatDate(d?: string | null): string {
+    if (!d) return '—';
+    return new Date(d).toLocaleString('fr-FR');
+  }
 
   exportCSV() {
     const headers = ['Prenom', 'Nom', 'Num doc', 'Type doc', 'N° de série', "N° d'immatriculation", 'Désignation', 'Action', 'Quantité', 'Stock magasin', 'Stock atelier', 'Stock réel', 'Date'];
     const rows = this.filteredMouvements.map(m => [
-      m.prenom || m.agent?.firstName || '',
-      m.nom || m.agent?.lastName || '',
-      m.numDocument || '',
-      m.typeDocument || '',
-      m.numeroSerie || m.piece?.numeroDeSerie || m.piece?.reference || '',
+      m.prenom || '',
+      m.nom || '',
+      m.numDoc || '',
+      m.typeDoc || '',
+      m.numeroSerie || '',
       m.immatriculation || '',
-      m.piece?.designation || m.piece?.reference || '',
-      this.typeMouvLabel(m.type),
-      m.quantite,
-      m.stockMagasinApres,
-      m.stockAtelierApres,
-      m.stockReelApres != null ? m.stockReelApres : (m.stockMagasinApres + m.stockAtelierApres),
-      m.dateOperation ? this.formatDate(m.dateOperation) : ''
+      m.designation || '',
+      this.typeMouvLabel(m.action),
+      m.quantite != null ? m.quantite : '',
+      m.stockMagasin != null ? m.stockMagasin : '',
+      m.stockAtelier != null ? m.stockAtelier : '',
+      m.stockReel != null ? m.stockReel : '',
+      m.date ? this.formatDate(m.date) : ''
     ]);
 
     const csvContent = '\uFEFF' + [headers.join(';'), ...rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(';'))].join('\n');
@@ -297,3 +289,6 @@ export class StockComponent implements OnInit {
   get fm() { return this.mouvementForm.controls; }
   get fa() { return this.ajustementForm.controls; }
 }
+
+// Export alias for backward compatibility
+export { HistoriqueComponent as StockComponent };

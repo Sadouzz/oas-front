@@ -93,21 +93,21 @@
   <!-- Table -->
   <div class="bg-white rounded-lg border border-oas-line shadow-card overflow-hidden">
     <div class="overflow-x-auto">
-      <table class="w-full text-xs">
+      <table class="w-full text-xs min-w-[980px]">
         <thead>
-          <tr class="bg-[#2563eb] text-white font-bold text-[11px] uppercase tracking-wider">
-            <th class="text-left px-2.5 py-3 align-middle">Prenom</th>
-            <th class="text-left px-2.5 py-3 align-middle">Nom</th>
-            <th class="text-center px-2.5 py-3 align-middle max-w-[85px] whitespace-normal leading-tight">N° de BS</th>
-            <th class="text-center px-2.5 py-3 align-middle max-w-[90px] whitespace-normal leading-tight">N° de série</th>
-            <th class="text-center px-2.5 py-3 align-middle max-w-[110px] whitespace-normal leading-tight">N° d'immatriculation</th>
-            <th class="text-left px-3 py-3 align-middle min-w-[120px]">Désignation</th>
-            <th class="text-center px-2.5 py-3 align-middle">Action</th>
-            <th class="text-center px-2.5 py-3 align-middle">Quantité</th>
-            <th class="text-right px-2.5 py-3 align-middle max-w-[90px] whitespace-normal leading-tight">Stock magasin</th>
-            <th class="text-right px-2.5 py-3 align-middle max-w-[90px] whitespace-normal leading-tight">Stock atelier</th>
-            <th class="text-right px-2.5 py-3 align-middle max-w-[80px] whitespace-normal leading-tight">Stock réel</th>
-            <th class="text-left px-3 py-3 align-middle">Date</th>
+          <tr class="bg-[#2563eb] text-white font-semibold text-[11px] uppercase tracking-wider">
+            <th class="text-left px-2.5 py-3 align-middle min-w-[70px]">Prénom</th>
+            <th class="text-left px-2.5 py-3 align-middle min-w-[70px]">Nom</th>
+            <th class="text-center px-2 py-3 align-middle min-w-[75px] leading-tight">N° de<br>BS</th>
+            <th class="text-center px-2 py-3 align-middle min-w-[85px] leading-tight">N° de<br>série</th>
+            <th class="text-center px-2 py-3 align-middle min-w-[95px] leading-tight">N° d'immat.</th>
+            <th class="text-left px-3 py-3 align-middle min-w-[130px]">Désignation</th>
+            <th class="text-center px-2 py-3 align-middle min-w-[75px]">Action</th>
+            <th class="text-center px-2 py-3 align-middle min-w-[65px]">Quantité</th>
+            <th class="text-right px-2 py-3 align-middle min-w-[75px] leading-tight">Stock<br>magasin</th>
+            <th class="text-right px-2 py-3 align-middle min-w-[75px] leading-tight">Stock<br>atelier</th>
+            <th class="text-right px-2 py-3 align-middle min-w-[65px] leading-tight">Stock<br>réel</th>
+            <th class="text-left px-2.5 py-3 align-middle min-w-[85px]">Date</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-oas-line">
@@ -120,36 +120,36 @@
               <tr class="hover:bg-blue-50/40 transition border-b border-oas-line last:border-0 text-oas-ink">
                 <!-- Prenom -->
                 <td class="px-3 py-3 font-medium whitespace-nowrap">
-                  {{ h.prenom || h.agent?.firstName || h.bonDeSortie?.agentEmetteur?.firstName || '—' }}
+                  {{ h.prenom || '—' }}
                 </td>
                 <!-- Nom -->
                 <td class="px-3 py-3 font-bold whitespace-nowrap">
-                  {{ h.nom || h.agent?.lastName || h.bonDeSortie?.agentEmetteur?.lastName || '—' }}
+                  {{ h.nom || '—' }}
                 </td>
                 <!-- N° de BS -->
                 <td class="px-3 py-3 text-center font-mono font-bold text-oas-accent whitespace-nowrap">
                   <a [routerLink]="['/agent/bons-de-sortie']" class="hover:underline">
-                    {{ h.numBs || h.bonDeSortie?.reference || '—' }}
+                    {{ h.numBs || '—' }}
                   </a>
                 </td>
                 <!-- N° de série -->
                 <td class="px-3 py-3 text-center font-mono text-xs font-semibold whitespace-nowrap text-oas-ink">
-                  {{ h.numeroSerie || h.piece?.reference || '—' }}
+                  {{ h.numeroSerie || '—' }}
                 </td>
                 <!-- N° d'immatriculation -->
                 <td class="px-3 py-3 text-center font-semibold text-oas-ink2 whitespace-nowrap">
-                  {{ h.immatriculation || h.bonDeSortie?.vehicule?.immatriculation || '—' }}
+                  {{ h.immatriculation || '—' }}
                 </td>
                 <!-- Désignation -->
                 <td class="px-3 py-3 text-oas-ink">
-                  <p class="font-medium truncate max-w-[160px]" [title]="h.designation || h.piece?.designation || ''">
-                    {{ h.designation || h.piece?.designation || h.piece?.reference || '—' }}
+                  <p class="font-medium truncate max-w-[180px]" [title]="h.designation || ''">
+                    {{ h.designation || '—' }}
                   </p>
                 </td>
                 <!-- Action -->
                 <td class="px-3 py-3 text-center whitespace-nowrap">
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border {{ statutClass(h.statut) }}">
-                    {{ h.statut }}
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border {{ statutClass(h.action) }}">
+                    {{ h.action || '—' }}
                   </span>
                 </td>
                 <!-- Quantité -->

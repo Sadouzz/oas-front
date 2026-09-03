@@ -3,7 +3,7 @@ import { DecimalPipe, NgClass } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PieceDetacheeService, PieceDetache } from './piece-detachee.service';
-import { DepotService, Depot } from '../stock/depot.service';
+import { DepotService, Depot } from './depot.service';
 import { CategoriePieceService, CategoriePiece } from './categorie-piece.service';
 import { AuthService } from '../../core/services/auth.service';
 import { AlertComponent } from '../../shared/components/alert/alert.component';

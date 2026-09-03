@@ -4,13 +4,20 @@ import { LucidePlus, LucideUsers, LucideCar, LucideAlertTriangle, LucideClock, L
 import { AuthService } from '../../core/services/auth.service';
 import { ClientService, UserModel } from '../clients/client.service';
 import { VehiculeService, VehiculeModel } from '../vehicules/vehicule.service';
-import { StockService } from '../stock/stock.service';
+import { StockService } from '../pieces-detachees/stock.service';
 import { PieceDetacheeService, AlerteStock } from '../pieces-detachees/piece-detachee.service';
 import { BonDeSortieService, BonDeSortie } from '../bons-de-sortie/bon-de-sortie.service';
 import { OrdreReparationService } from '../ordres-reparation/ordre-reparation.service';
 import { GarageContextService } from '../../core/services/garage-context.service';
 import { GarageService } from '../../services/garage.service';
-import { extractContent } from '../../shared/models/index';
+import { DashboardService } from './dashboard.service';
+import {
+  DashboardSuperAgentResponseDTO,
+  DashboardAgentResponse,
+  DashboardChefAtelierResponse,
+  DashboardAgentMagasinResponse,
+  extractContent
+} from '../../shared/models/index';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -28,14 +35,16 @@ export class DashboardComponent implements OnInit {
   private ficheService = inject(OrdreReparationService);
   private garageContext = inject(GarageContextService);
   private garageService = inject(GarageService);
+  private dashboardService = inject(DashboardService);
 
   garages: any[] = [];
   isGarageSelectionMode = false;
+  superAgentData: DashboardSuperAgentResponseDTO | null = null;
 
-  recentClients: UserModel[] = [];
-  recentVehicules: VehiculeModel[] = [];
-  alertes: AlerteStock[] = [];
-  bonsEnAttente: BonDeSortie[] = [];
+  recentClients: any[] = [];
+  recentVehicules: any[] = [];
+  alertes: any[] = [];
+  bonsEnAttente: any[] = [];
   recentFiches: any[] = [];
 
   ficheStats = {
@@ -53,6 +62,11 @@ export class DashboardComponent implements OnInit {
   };
   totalClients = 0;
   totalVehicules = 0;
+  totalAlertes = 0;
+  totalRuptures = 0;
+  totalStocksFaibles = 0;
+  rupturesList: any[] = [];
+  stocksFaiblesList: any[] = [];
   loading = true;
   loadingFiches = true;
 
@@ -99,96 +113,129 @@ export class DashboardComponent implements OnInit {
   loadDashboardData() {
     this.loading = true;
     this.loaded = 0;
-    if (this.isSuperAgent || this.isMaster || this.isAgent) {
-      this.clientService.getAll().subscribe({
-        next: (res: any) => {
-          const list = extractContent<UserModel>(res);
-          this.totalClients = list.length;
-          this.recentClients = list.slice(0, 5);
-          this.done();
-        },
-        error: () => this.done()
-      });
-      this.vehiculeService.getAll().subscribe({
-        next: (res: any) => {
-          const list = extractContent<VehiculeModel>(res);
-          this.totalVehicules = list.length;
-          this.recentVehicules = list.slice(0, 5);
-          this.done();
-        },
-        error: () => this.done()
-      });
-    }
-    if (this.isSuperAgent || this.isMaster || this.isAgent || this.isChefAtelier) {
-      this.ficheService.getAll().subscribe({
-        next: (res: any) => {
-          const data = extractContent<any>(res);
-          this.ficheStats.aFaire = data.filter((f: any) => f.statut === 'A_FAIRE').length;
-          this.ficheStats.diagnostic = data.filter((f: any) => f.statut === 'EN_DIAGNOSTIC').length;
-          this.ficheStats.attenteProforma = data.filter((f: any) => f.statut === 'EN_ATTENTE_PROFORMA').length;
-          this.ficheStats.proformaValide = data.filter((f: any) => f.statut === 'PROFORMA_VALIDE').length;
-          this.ficheStats.attentePieces = data.filter((f: any) => f.statut === 'EN_ATTENTE_COMMANDE').length;
-          this.ficheStats.attenteSortie = data.filter((f: any) => f.statut === 'EN_ATTENTE_SORTIE').length;
-          this.ficheStats.enCours = data.filter((f: any) => f.statut === 'EN_COURS').length;
-          this.ficheStats.attentePaiement = data.filter((f: any) => f.statut === 'EN_ATTENTE_PAIEMENT').length;
-          this.ficheStats.termine = data.filter((f: any) => f.statut === 'TERMINE').length;
-          this.ficheStats.livre = data.filter((f: any) => f.statut === 'LIVRE').length;
 
-          this.ficheStats.totalActives = data.filter((f: any) => f.statut !== 'LIVRE' && f.statut !== 'A_FAIRE').length;
-          this.recentFiches = [...data].sort((a: any, b: any) => new Date(b.dateCreation).getTime() - new Date(a.dateCreation).getTime()).slice(0, 5);
+    if (this.isSuperAgent || this.isMaster) {
+      this.dashboardService.getSuperAgentDashboard().subscribe({
+        next: (res: any) => {
+          const d: DashboardSuperAgentResponseDTO = res?.data || res;
+          this.superAgentData = d;
+          this.totalClients = d.totalClients ?? 0;
+          this.totalVehicules = d.totalVehicules ?? 0;
+          if (d.etatOrdresReparation) {
+            this.ficheStats.diagnostic = d.etatOrdresReparation.diagnostic ?? 0;
+            this.ficheStats.attenteProforma = d.etatOrdresReparation.attenteProforma ?? 0;
+            this.ficheStats.proformaValide = d.etatOrdresReparation.proformaValide ?? 0;
+            this.ficheStats.attentePieces = d.etatOrdresReparation.attentePieces ?? 0;
+            this.ficheStats.attenteSortie = d.etatOrdresReparation.attenteSortie ?? 0;
+            this.ficheStats.enCours = d.etatOrdresReparation.enReparation ?? 0;
+            this.ficheStats.attentePaiement = d.etatOrdresReparation.attentePaiement ?? 0;
+            this.ficheStats.termine = d.etatOrdresReparation.termine ?? 0;
+            this.ficheStats.totalActives = d.etatOrdresReparation.totalActifs ?? 0;
+          }
+          this.recentFiches = d.ordresRecents ?? [];
+          this.recentClients = (d.clientsRecents ?? []).map((c: any) => ({ id: c.id, firstName: c.nom, lastName: '', phone: c.telephone, role: 'CLIENT' }));
+          this.alertes = (d.alertesStock ?? []).map((a: any) => ({ id: a.id, pieceId: a.id, reference: a.reference, designation: a.designation, stockMagasin: a.stockMagasin, typeAlerte: a.statut }));
+          this.bonsEnAttente = new Array(d.totalBonsDeSortieEnAttente ?? 0);
+          this.loading = false;
           this.loadingFiches = false;
-          this.done();
+          this.cdr.markForCheck();
         },
         error: () => {
+          this.loading = false;
           this.loadingFiches = false;
-          this.done();
+          this.cdr.markForCheck();
         }
       });
+      return;
     }
-    if (this.isSuperAgent || this.isMaster || this.isMagasinier) {
-      this.stockService.alertes().subscribe({
-        next: (d) => {
-          this.alertes = extractContent(d);
-          this.done();
+
+    if (this.isAgent) {
+      this.dashboardService.getAgentDashboard().subscribe({
+        next: (res: any) => {
+          const d: DashboardAgentResponse = res?.data || res;
+          this.totalClients = d.totalClients ?? 0;
+          this.totalVehicules = d.totalVehicules ?? 0;
+          this.bonsEnAttente = d.bonsDeSortieEnAttente ?? [];
+          if (d.etatOrdresReparation) {
+            this.ficheStats.diagnostic = d.etatOrdresReparation.diagnostic ?? 0;
+            this.ficheStats.attenteProforma = d.etatOrdresReparation.attenteProforma ?? 0;
+            this.ficheStats.proformaValide = d.etatOrdresReparation.proformaValide ?? 0;
+            this.ficheStats.attentePieces = d.etatOrdresReparation.attentePieces ?? 0;
+            this.ficheStats.attenteSortie = d.etatOrdresReparation.attenteSortie ?? 0;
+            this.ficheStats.enCours = d.etatOrdresReparation.enReparation ?? 0;
+            this.ficheStats.attentePaiement = d.etatOrdresReparation.attentePaiement ?? 0;
+            this.ficheStats.termine = d.etatOrdresReparation.termine ?? 0;
+            this.ficheStats.totalActives = d.etatOrdresReparation.totalActifs ?? 0;
+          }
+          this.recentClients = (d.clientsRecents ?? []).map((c: any) => ({ id: c.id, firstName: c.nom, lastName: '', phone: c.telephone, role: 'CLIENT' }));
+          this.loading = false;
+          this.loadingFiches = false;
+          this.cdr.markForCheck();
         },
         error: () => {
-          this.alertes = [];
-          this.done();
+          this.loading = false;
+          this.loadingFiches = false;
+          this.cdr.markForCheck();
         }
       });
+      return;
     }
-    if (this.isSuperAgent || this.isMaster || this.isAgent || this.isChefAtelier || this.isMagasinier) {
-      this.bonService.getAll({ statut: 'EN_ATTENTE' }).subscribe({
-        next: (d) => {
-          this.bonsEnAttente = extractContent(d);
-          this.done();
-        },
-        error: () => {
-          this.bonsEnAttente = [];
-          this.done();
-        }
-      });
-    }
+
     if (this.isChefAtelier) {
-      this.vehiculeService.getAll().subscribe({
-        next: (d) => {
-          const list = extractContent(d);
-          this.totalVehicules = list.length;
-          this.recentVehicules = list.slice(0, 5);
-          this.done();
+      this.dashboardService.getChefAtelierDashboard().subscribe({
+        next: (res: any) => {
+          const d: DashboardChefAtelierResponse = res?.data || res;
+          this.totalVehicules = d.totalVehicules ?? 0;
+          this.bonsEnAttente = d.bonsDeSortieEnAttenteValidation ?? [];
+          if (d.etatOrdresReparation) {
+            this.ficheStats.diagnostic = d.etatOrdresReparation.diagnostic ?? 0;
+            this.ficheStats.attenteProforma = d.etatOrdresReparation.attenteProforma ?? 0;
+            this.ficheStats.proformaValide = d.etatOrdresReparation.proformaValide ?? 0;
+            this.ficheStats.attentePieces = d.etatOrdresReparation.attentePieces ?? 0;
+            this.ficheStats.attenteSortie = d.etatOrdresReparation.attenteSortie ?? 0;
+            this.ficheStats.enCours = d.etatOrdresReparation.enReparation ?? 0;
+            this.ficheStats.attentePaiement = d.etatOrdresReparation.attentePaiement ?? 0;
+            this.ficheStats.termine = d.etatOrdresReparation.termine ?? 0;
+            this.ficheStats.totalActives = d.etatOrdresReparation.totalActifs ?? 0;
+          }
+          this.loading = false;
+          this.loadingFiches = false;
+          this.cdr.markForCheck();
         },
-        error: () => this.done()
+        error: () => {
+          this.loading = false;
+          this.loadingFiches = false;
+          this.cdr.markForCheck();
+        }
       });
+      return;
     }
+
     if (this.isMagasinier) {
-      this.pieceService.getAll({ statut: 'ACTIF' }).subscribe({
-        next: (d) => {
-          const list = extractContent(d);
-          this.totalVehicules = list.length;
-          this.done();
+      this.dashboardService.getAgentMagasinDashboard().subscribe({
+        next: (res: any) => {
+          const d: DashboardAgentMagasinResponse = res?.data || res;
+          this.totalAlertes = d.totalAlertes ?? 0;
+          this.totalRuptures = d.totalRuptures ?? 0;
+          this.totalStocksFaibles = d.totalStocksFaibles ?? 0;
+          this.bonsEnAttente = new Array(d.totalBonsEnAttente ?? 0);
+          this.rupturesList = d.rupturesDeStock ?? [];
+          this.stocksFaiblesList = d.stocksFaibles ?? [];
+          this.alertes = [
+            ...(d.rupturesDeStock ?? []).map((r: any) => ({ ...r, pieceId: r.id, typeAlerte: 'RUPTURE' })),
+            ...(d.stocksFaibles ?? []).map((s: any) => ({ ...s, pieceId: s.id, typeAlerte: 'STOCK_FAIBLE' }))
+          ];
+          this.loading = false;
+          this.loadingFiches = false;
+          this.cdr.markForCheck();
         },
-        error: () => this.done()
+        error: () => {
+          this.loading = false;
+          this.loadingFiches = false;
+          this.cdr.markForCheck();
+        }
       });
+      return;
     }
     setTimeout(() => {
       this.loading = false;

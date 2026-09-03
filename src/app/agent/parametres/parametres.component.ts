@@ -1,7 +1,6 @@
-﻿import { inject, Component, OnInit, ChangeDetectorRef } from '@angular/core';
-
+import { inject, Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DepotService, Depot } from '../stock/depot.service';
+import { DepotService, Depot } from '../pieces-detachees/depot.service';
 import { CategoriePieceService, CategoriePiece } from '../pieces-detachees/categorie-piece.service';
 import { FicheAtelierConfigService, FicheAtelierConfigBackend, BriqueConfig } from '../fiches-atelier/fiche-atelier-config.service';
 

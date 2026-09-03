@@ -2,12 +2,12 @@ import { Component, inject, OnInit, ElementRef, ViewChild, ChangeDetectorRef } f
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { FicheAtelierService } from '../fiches-atelier/fiche-atelier.service';
-import { FicheAtelierResponse } from '../../shared/models';
-import { DevisPrevisionnel, DevisPrevisionnelService } from '../devis-previsionnels/devis-previsionnel.service';
+import { FicheAtelierService } from '../fiche-atelier.service';
+import { FicheAtelierResponse } from '../../../shared/models';
+import { DevisPrevisionnel, DevisPrevisionnelService } from '../../devis-previsionnels/devis-previsionnel.service';
 import { LucideArrowLeft, LucideCheck, LucideX } from '@lucide/angular';
-import { OrdreReparationService } from '../ordres-reparation/ordre-reparation.service';
-import { AuthService } from '../../core/services/auth.service';
+import { OrdreReparationService } from '../../ordres-reparation/ordre-reparation.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-fiche-atelier-details',
