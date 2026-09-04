@@ -93,13 +93,13 @@ export class VehiculesComponent extends BasePaginatedComponent implements OnInit
 
   ngOnInit() {
     this.loadData();
-    this.clientService.getAll().subscribe({
-      next: (res: any) => {
-        const list = extractContent<UserModel>(res);
-        this.clients = list.filter((c: any) => c.enabled);
-        this.cdr.markForCheck();
-      }
-    });
+    // this.clientService.getAll().subscribe({
+    //   next: (res: any) => {
+    //     const list = extractContent<UserModel>(res);
+    //     this.clients = list.filter((c: any) => c.enabled);
+    //     this.cdr.markForCheck();
+    //   }
+    // });
   }
 
   loadData() {

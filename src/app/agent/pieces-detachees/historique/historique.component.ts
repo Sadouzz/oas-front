@@ -103,8 +103,8 @@ export class HistoriqueComponent implements OnInit {
 
   loadAll() {
     this.loading = true;
-    this.stockService.alertes().subscribe({ next: (d) => { this.alertes = extractContent(d); this.checkDone(); }, error: () => this.checkDone() });
-    this.pieceService.getAll({ type: 'PDP' }).subscribe({ next: (d) => { this.pdps = extractContent(d); this.checkDone(); }, error: () => this.checkDone() });
+    // this.stockService.alertes().subscribe({ next: (d) => { this.alertes = extractContent(d); this.checkDone(); }, error: () => this.checkDone() });
+    // this.pieceService.getAll({ type: 'PDP' }).subscribe({ next: (d) => { this.pdps = extractContent(d); this.checkDone(); }, error: () => this.checkDone() });
     this.loadMovementsRecent();
   }
 
