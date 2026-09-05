@@ -513,20 +513,20 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
     }
     this.loading = true;
     forkJoin({
-      vehicules: this.vehiculeService.getAll(),
+      // vehicules: this.vehiculeService.getAll(),
       techniciens: this.technicienService.getAll(),
       pieces: this.pieceService.getAll(),
       mo: this.moService.getAll(),
-      fournisseurs: this.fournisseurSvc.getAll(),
-      clients: this.clientService.getAll(),
+      // fournisseurs: this.fournisseurSvc.getAll(),
+      // clients: this.clientService.getAll(),
     }).subscribe({
-      next: ({ vehicules, techniciens, pieces, mo, fournisseurs, clients }) => {
-        this.vehicules = extractContent<VehiculeModel>(vehicules as any);
+      next: ({ techniciens, pieces, mo }) => {
+        // this.vehicules = extractContent<VehiculeModel>(vehicules as any);
         this.allTechniciens = techniciens;
         this.allPieces = extractContent<PieceDetache>(pieces as any).filter(p => p.statut === 'ACTIF');
         this.allMO = extractContent<MainDoeuvreModel>(mo as any).filter(m => !m.isArchived);
-        this.fournisseurs = extractContent<FournisseurModel>(fournisseurs as any).filter(f => !f.archived);
-        this.allClients = extractContent<UserModel>(clients as any);
+        // this.fournisseurs = extractContent<FournisseurModel>(fournisseurs as any).filter(f => !f.archived);
+        // this.allClients = extractContent<UserModel>(clients as any);
         this.referentielsLoaded = true;
         this.loading = false; this.cdr.markForCheck();
         callback();
@@ -715,11 +715,9 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
           .filter((l: any): l is LigneMO => l !== null);
 
         if (f.vehicule) {
-          const v = this.vehicules.find(vv => vv.id === f.vehicule!.id);
-          if (v) {
-            this.selectedVehicule = v;
-            this.vehiculeSearch = v.immatriculation + ' — ' + v.marque + ' ' + v.modele;
-          }
+          // const v = this.vehicules.find(vv => vv.id === f.vehicule!.id);
+          this.selectedVehicule = f.vehicule as any;
+          this.step1Form.patchValue({ vehiculeId: f.vehicule.id });
         }
 
         if (trueStep >= 7) {
@@ -806,11 +804,9 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
               .filter((l: any): l is LigneMO => l !== null);
 
             if (full.vehicule) {
-              const v = this.vehicules.find(vv => vv.id === full.vehicule!.id);
-              if (v) {
-                this.selectedVehicule = v;
-                this.vehiculeSearch = v.immatriculation + ' — ' + v.marque + ' ' + v.modele;
-              }
+              // const v = this.vehicules.find(vv => vv.id === full.vehicule!.id);
+              this.selectedVehicule = full.vehicule as any;
+              this.step1Form.patchValue({ vehiculeId: full.vehicule.id });
             }
 
             if (trueStep >= 7) {
