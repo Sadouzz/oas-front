@@ -15,7 +15,7 @@ function passwordsMatchValidator(): ValidatorFn {
   };
 }
 
-type OngletAuth = 'login' | 'register';
+type OngletAuth = 'login.component' | 'register.component';
 import AOS from 'aos';
 import { register } from 'swiper/element/bundle';
 
@@ -53,7 +53,7 @@ export class Marketplace implements OnInit {
 
   // Modal state
   showModal = false;
-  activeTab: OngletAuth = 'login';
+  activeTab: OngletAuth = 'login.component';
   loginForm!: FormGroup;
   registerForm!: FormGroup;
   isSubmitting = false;
@@ -120,14 +120,14 @@ export class Marketplace implements OnInit {
 
   openLoginModal(product: Product): void {
     this.selectedProduct = product;
-    this.activeTab = 'login';
+    this.activeTab = 'login.component';
     this.showModal = true;
     document.body.classList.add('no-scroll');
     this.resetMessages();
   }
 
   openRegisterModal(): void {
-    this.activeTab = 'register';
+    this.activeTab = 'register.component';
     this.showModal = true;
     document.body.classList.add('no-scroll');
     this.resetMessages();
@@ -195,7 +195,7 @@ export class Marketplace implements OnInit {
       this.isSubmitting = false;
       this.successMessage = 'Compte créé avec succès ! Vous pouvez vous connecter.';
       this.registerForm.reset();
-      this.activeTab = 'login';
+      this.activeTab = 'login.component';
     }, 1200);
   }
 }

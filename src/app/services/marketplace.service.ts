@@ -3,17 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
-import { Product } from '../shared/models/product.model';
-
-export interface BackendProduit {
-  id: number;
-  nom: string;
-  description: string;
-  prix: number;
-  mediaUrl: string;
-  disponible: boolean;
-  archive: boolean;
-}
+import { Product, BackendProduit } from '../shared/models/product.model';
 
 export const MOCK_PRODUCTS: Product[] = [
   {

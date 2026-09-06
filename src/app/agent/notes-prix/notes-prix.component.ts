@@ -5,13 +5,13 @@ import { forkJoin } from 'rxjs';
 import { CommonModule, DecimalPipe, DatePipe, NgClass } from '@angular/common';
 import { NoteDePrixService } from './note-de-prix.service';
 import { NoteDePrixModel, NoteDePrixCreateRequest } from './models/note-de-prix.model';
-import { ClientService, UserModel } from '../clients/client.service';
-import { VehiculeService, VehiculeModel } from '../vehicules/vehicule.service';
-import { OrdreReparationService, OrdreReparation } from '../ordres-reparation/ordre-reparation.service';
+import { ClientService } from '../clients/client.service';
+import { VehiculeService } from '../vehicules/vehicule.service';
+import { OrdreReparationService } from '../ordres-reparation/ordre-reparation.service';
 import { LucideSearch, LucidePlus, LucideTrash2, LucideX, LucideDownload, LucideReceipt } from '@lucide/angular';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
-import { extractContent } from '../../shared/models';
+import { UserModel, VehiculeModel, OrdreReparation, extractContent } from '../../shared/models';
 
 @Component({
   selector: 'app-notes-prix',

@@ -4,7 +4,7 @@
   <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4 flex items-center justify-between">
     <div>
       <h1 class="text-2xl font-bold text-oas-ink">Devis Prévisionnels</h1>
-      <p class="text-sm text-oas-muted mt-1">{{ filtered.length }} devis</p>
+      <p class="text-sm text-oas-muted mt-1">{{ totalElements }} devis</p>
     </div>
     <button (click)="openNew()"
             class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-11 rounded-lg flex items-center gap-2 transition cursor-pointer">
@@ -41,12 +41,13 @@
       <div class="flex items-center justify-center py-16">
         <div class="w-6 h-6 border-2 border-oas-accent border-t-transparent rounded-full animate-spin"></div>
       </div>
-    } @else if (paged.length === 0) {
+    } @else if (devis.length === 0) {
       <div class="text-center py-16 text-oas-muted text-sm">Aucun devis prévisionnel trouvé.</div>
     } @else {
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-oas-line">
+            <th class="text-left text-xs text-oas-muted px-5 py-3">N°</th>
             <th class="text-left text-xs text-oas-muted px-5 py-3">Client</th>
             <th class="text-left text-xs text-oas-muted px-5 py-3">Véhicule</th>
             <th class="text-left text-xs text-oas-muted px-5 py-3">Kilométrage</th>
@@ -57,8 +58,11 @@
           </tr>
         </thead>
         <tbody>
-          @for (d of paged; track d.id) {
+          @for (d of devis; track d.id) {
             <tr class="hover:bg-oas-bg transition border-b border-oas-line">
+              <td class="px-5 py-4 font-semibold text-oas-ink">
+                {{ d.numero || ('#' + d.id) }}
+              </td>
               <td class="px-5 py-4 font-semibold text-oas-ink">
                 @if (d.client) {
                   {{ d.client.firstName }} {{ d.client.lastName }}
@@ -70,22 +74,22 @@
                   <span class="text-oas-muted text-xs ml-1">{{ d.vehicule.marque }}</span>
                 } @else { <span class="text-oas-faint">—</span> }
               </td>
-              <td class="px-5 py-4 text-sm text-oas-ink2">{{ d.kilometrageVehicule | number }} km</td>
+              <td class="px-5 py-4 text-sm text-oas-ink2">{{ (d.kilometrageVehicule || 0) | number }} km</td>
               <td class="px-5 py-4 font-bold text-oas-ink">{{ formatMontant(d.montantTotal) }}</td>
               <td class="px-5 py-4">
                 <span class="px-2 py-1 text-xs rounded-full font-bold"
                       [ngClass]="{
                         'bg-yellow-100 text-yellow-700': d.statut === 'EN_ATTENTE',
-                        'bg-green-100 text-green-700': d.statut === 'ACCEPTE',
+                        'bg-green-100 text-green-700': d.statut === 'ACCEPTE' || d.statut === 'PAYEE',
                         'bg-red-100 text-red-700': d.statut === 'REJETE'
                       }">
-                  {{ d.statut === 'EN_ATTENTE' ? 'EN ATTENTE' : d.statut }}
+                  {{ d.statut }}
                 </span>
               </td>
               <td class="px-5 py-4 text-sm text-oas-muted max-w-xs truncate">{{ d.notesReparation }}</td>
               <td class="px-5 py-4">
                 <div class="flex items-center gap-1 justify-end">
-                  @if (d.statut !== 'ACCEPTE') {
+                  @if (d.statut !== 'ACCEPTE' && d.statut !== 'PAYEE') {
                     <button (click)="valider(d.id)" title="Forcer validation"
                             class="p-1.5 rounded-lg hover:bg-green-100 text-oas-muted hover:text-green-600 transition cursor-pointer">
                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -112,7 +116,7 @@
         </tbody>
       </table>
 
-      <app-pagination [page]="page" [totalPages]="totalPages" [total]="filtered.length" [pageSize]="pageSize" (prev)="prevPage()" (next)="nextPage()" />
+      <app-pagination [page]="page" [totalPages]="totalPages" [total]="totalElements" [pageSize]="pageSize" (prev)="prevPage()" (next)="nextPage()" />
     }
   </div>
 </div>

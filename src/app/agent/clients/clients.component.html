@@ -206,9 +206,9 @@
                   [ngClass]="detailTab === 'profil' ? 'border-oas-accent text-oas-accent' : 'border-transparent text-oas-muted hover:text-oas-ink'">
             Profil
           </button>
-          <button (click)="setDetailTab('vehicules')"
+          <button (click)="setDetailTab('vehicules.component')"
                   class="px-4 py-2.5 text-xs font-bold border-b-2 transition cursor-pointer"
-                  [ngClass]="detailTab === 'vehicules' ? 'border-oas-accent text-oas-accent' : 'border-transparent text-oas-muted hover:text-oas-ink'">
+                  [ngClass]="detailTab === 'vehicules.component' ? 'border-oas-accent text-oas-accent' : 'border-transparent text-oas-muted hover:text-oas-ink'">
             Véhicules ({{ clientVehicleCount(selectedClient.id) }})
           </button>
           <button disabled class="px-4 py-2.5 text-xs font-bold border-b-2 border-transparent text-oas-faint cursor-not-allowed opacity-40">
@@ -251,7 +251,7 @@
           </div>
         }
 
-        @if (detailTab === 'vehicules') {
+        @if (detailTab === 'vehicules.component') {
           <div class="p-5">
             <!-- En-tête véhicules -->
             <div class="flex items-center justify-between mb-4">

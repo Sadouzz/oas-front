@@ -1,10 +1,11 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { BonDeSortieService, BonDeSortieHistorique } from '../bon-de-sortie.service';
+import { BonDeSortieService } from '../bon-de-sortie.service';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { extractContent } from '../../../shared/models';
 import { LucideSearch, LucideLoader2 } from '@lucide/angular';
+import { BonDeSortieHistorique } from '../models/bon-de-sortie.model';
 
 @Component({
   selector: 'app-historique-bs',

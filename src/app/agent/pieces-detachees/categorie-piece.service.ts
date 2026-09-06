@@ -1,14 +1,8 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-
-export interface CategoriePiece {
-  id?: number;
-  nom: string;
-  depot?: { id: number, nom?: string };
-  isArchived?: boolean;
-}
+import { CategoriePiece } from './models/piece-detachee.model';
 
 @Injectable({
   providedIn: 'root'

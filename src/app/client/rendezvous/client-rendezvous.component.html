@@ -76,6 +76,7 @@
               <app-vehicle-avatar></app-vehicle-avatar>
               <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-xs font-bold text-oas-muted">{{ rdv.numero || ('#' + rdv.id) }}</span>
                   <span class="font-mono-data font-semibold text-sm text-oas-ink">{{ rdv.dateRendezVous | date:'dd/MM/yyyy HH:mm' }}</span>
                   <app-status-badge [label]="statutLabels[rdv.statut]" [tone]="statutTones[rdv.statut]"></app-status-badge>
                   @if (rdv.dateHistory?.length) {

@@ -54,7 +54,7 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
 
   // Detail panel
   selectedClient: ClientListResponse | null = null;
-  detailTab: 'profil' | 'vehicules' = 'profil';
+  detailTab: 'profil' | 'vehicules.component' = 'profil';
   clientVehicules: VehiculeModel[] = [];
   loadingVehicules = false;
 
@@ -177,7 +177,7 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   // Detail panel
   selectClient(client: ClientListResponse) {
     this.selectedClient = client;
-    this.detailTab = 'vehicules';
+    this.detailTab = 'vehicules.component';
     this.clientVehicules = [];
     this.loadClientVehicules(client.id);
   }
@@ -187,9 +187,9 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
     this.clientVehicules = [];
   }
 
-  setDetailTab(tab: 'profil' | 'vehicules') {
+  setDetailTab(tab: 'profil' | 'vehicules.component') {
     this.detailTab = tab;
-    if (tab === 'vehicules' && this.selectedClient) {
+    if (tab === 'vehicules.component' && this.selectedClient) {
       this.loadClientVehicules(this.selectedClient.id);
     }
   }

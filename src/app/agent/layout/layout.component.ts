@@ -57,7 +57,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
     '/bons-de-sortie': { label: 'Bon de sortie', section: 'Gestion Stock' },
     '/historique-bs': { label: 'Historique', section: 'Gestion Stock' },
     '/inventaire': { label: 'Inventaire', section: 'Gestion Stock' },
-    '/seuil-alertes': { label: 'Stock', section: 'Gestion Stock' },
+    '/seuil-alertes': { label: 'Seuil alertes', section: 'Piéces dét' },
     '/pieces-detachees': { label: 'Liste des articles', section: 'Piéces dét' },
     '/stock': { label: 'Historique', section: 'Piéces dét' },
     '/bons-reception': { label: 'Bon de réception', section: 'Réapprovisionnement' },
@@ -83,7 +83,9 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
   private getRelativeUrl(url: string): string {
     let rel = url.split('?')[0];
-    if (rel.startsWith('/agent')) {
+    if (rel.startsWith('/app')) {
+      rel = rel.substring('/app'.length);
+    } else if (rel.startsWith('/agent')) {
       rel = rel.substring('/agent'.length);
     }
     return rel === '' ? '/' : rel;
@@ -95,7 +97,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
       return [{ label: 'Tableau de bord' }];
     }
     const entry = this.routeLabels[relUrl];
-    const crumbs: { label: string; link?: string }[] = [{ label: 'Tableau de bord', link: '/agent/dashboard' }];
+    const crumbs: { label: string; link?: string }[] = [{ label: 'Tableau de bord', link: '/app/dashboard' }];
     if (entry.section) crumbs.push({ label: entry.section });
     crumbs.push({ label: entry.label });
     return crumbs;
@@ -180,7 +182,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
   leaveGarage() {
     this.garageContext.leaveGarage();
-    this.router.navigate(['/agent/dashboard'], { replaceUrl: true });
+    this.router.navigate(['/app/dashboard'], { replaceUrl: true });
   }
 
   ngOnDestroy() {
@@ -227,12 +229,12 @@ export class LayoutComponent implements OnInit, OnDestroy {
     const relUrl = this.getRelativeUrl(url);
     if (['/fiches-atelier', '/ordres-reparation', '/techniciens'].some(p => relUrl.startsWith(p))) {
       this.openSection = 'atelier';
-    } else if (['/pieces-detachees', '/stock'].some(p => relUrl.startsWith(p)) && !relUrl.startsWith('/historique-bs')) {
+    } else if (['/pieces-detachees', '/stock', '/seuil-alertes'].some(p => relUrl.startsWith(p)) && !relUrl.startsWith('/historique-bs')) {
       this.openSection = 'pieces';
     } else if (['/bons-de-sortie', '/historique-bs'].some(p => relUrl.startsWith(p))) {
       this.openSection = 'stock';
       this.openSubSection = 'bs';
-    } else if (['/inventaire', '/seuil-alertes'].some(p => relUrl.startsWith(p))) {
+    } else if (['/inventaire'].some(p => relUrl.startsWith(p))) {
       this.openSection = 'stock';
     } else if (['/bons-reception', '/fournisseurs'].some(p => relUrl.startsWith(p))) {
       this.openSection = 'reappro';
@@ -244,7 +246,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
       this.openSubSection = 'bc';
     } else if (relUrl.startsWith('/proformas')) {
       this.openSection = 'facture-ttc';
-      this.openSubSection = 'proforma';
+      this.openSubSection = 'proforma.component';
     } else if (relUrl.startsWith('/avoirs-ttc')) {
       this.openSection = 'facture-ttc';
       this.openSubSection = 'avoir-ttc';

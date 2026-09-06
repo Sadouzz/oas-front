@@ -181,7 +181,7 @@
             }
 
             <!-- ===================== CONNEXION ===================== -->
-            @if(activeTab === 'login'){
+            @if(activeTab === 'login.component'){
                 <form class="auth-form" [formGroup]="loginForm" (ngSubmit)="onSubmitLogin()" novalidate>
                     <h2 class="text-[24px] font-extrabold text-oas-ink mb-[6px] text-center font-sans">Connectez-vous pour acheter</h2>
                     <p class="auth-subtitle text-center text-oas-muted text-[14px] mb-[26px]">Connectez-vous à votre espace client OAS.</p>
@@ -246,13 +246,13 @@
 
                     <p class="auth-switch text-center mt-[22px] text-[13.5px] text-oas-muted">
                         Pas encore de compte ?
-                        <a href="javascript:void(0)" (click)="switchTab('register')" class="text-oas-accent font-bold no-underline cursor-pointer hover:underline">Créer un compte</a>
+                        <a href="javascript:void(0)" (click)="switchTab('register.component')" class="text-oas-accent font-bold no-underline cursor-pointer hover:underline">Créer un compte</a>
                     </p>
                 </form>
             }
 
             <!-- ===================== INSCRIPTION ===================== -->
-            @if(activeTab === 'register'){
+            @if(activeTab === 'register.component'){
                 <form class="auth-form" [formGroup]="registerForm" (ngSubmit)="onSubmitRegister()" novalidate>
                     <h2 class="text-[24px] font-extrabold text-oas-ink mb-[6px] text-center font-sans">Créer votre compte</h2>
                     <p class="auth-subtitle text-center text-oas-muted text-[14px] mb-[26px]">Rejoignez l'espace client OAS en 1 minute.</p>
@@ -371,7 +371,7 @@
 
                     <p class="auth-switch text-center mt-[22px] text-[13.5px] text-oas-muted">
                         Déjà un compte ?
-                        <a href="javascript:void(0)" (click)="switchTab('login')" class="text-oas-accent font-bold no-underline cursor-pointer hover:underline">Se connecter</a>
+                        <a href="javascript:void(0)" (click)="switchTab('login.component')" class="text-oas-accent font-bold no-underline cursor-pointer hover:underline">Se connecter</a>
                     </p>
                 </form>
             }

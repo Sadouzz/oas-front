@@ -2,13 +2,14 @@ import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule, DecimalPipe } from '@angular/common';
-import { DevisPrevisionnelService, DevisPrevisionnel } from './devis-previsionnel.service';
-import { ClientService, ClientModel } from '../clients/client.service';
-import { VehiculeService, VehiculeModel } from '../vehicules/vehicule.service';
+import { DevisPrevisionnelService } from './devis-previsionnel.service';
+import { ClientService } from '../clients/client.service';
+import { VehiculeService } from '../vehicules/vehicule.service';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
-import { extractContent } from '../../shared/models';
-import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideArrowRight } from '@lucide/angular';
+import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
+import { DevisPrevisionnel, ClientModel, VehiculeModel, extractContent } from '../../shared/models';
+import { LucidePlus } from '@lucide/angular';
 
 @Component({
   selector: 'app-devis-previsionnels',
@@ -16,7 +17,7 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDo
   imports: [CommonModule, ReactiveFormsModule, DecimalPipe, AlertComponent, PaginationComponent, LucidePlus],
   templateUrl: './devis-previsionnels.component.html',
 })
-export class DevisPrevisionnelsComponent implements OnInit {
+export class DevisPrevisionnelsComponent extends BasePaginatedComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private service = inject(DevisPrevisionnelService);
   private clientService = inject(ClientService);
@@ -25,7 +26,6 @@ export class DevisPrevisionnelsComponent implements OnInit {
   private route = inject(ActivatedRoute);
 
   devis: DevisPrevisionnel[] = [];
-  filtered: DevisPrevisionnel[] = [];
   clients: ClientModel[] = [];
   vehicules: VehiculeModel[] = [];
   loading = true;
@@ -33,13 +33,11 @@ export class DevisPrevisionnelsComponent implements OnInit {
   showModal = false;
   isNew = true;
   editingId: number | null = null;
-  page = 1;
-  pageSize = 10;
   successMessage = '';
   errorMessage = '';
 
   filterClientId = '';
-  searchTerm = '';
+  private searchTimeout: any;
 
   form: FormGroup = this.fb.group({
     clientId: [null, Validators.required],
@@ -50,7 +48,6 @@ export class DevisPrevisionnelsComponent implements OnInit {
   });
 
   ngOnInit() {
-    this.load();
     this.clientService.getAll().subscribe({ next: c => this.clients = extractContent(c), error: () => {} });
     this.vehiculeService.getAll().subscribe({ next: v => this.vehicules = extractContent(v), error: () => {} });
 
@@ -58,47 +55,51 @@ export class DevisPrevisionnelsComponent implements OnInit {
       if (params['action'] === 'new') {
         this.openNew();
       }
+      if (params['clientId']) {
+        this.filterClientId = params['clientId'];
+      }
+      if (params['search'] || params['keyword']) {
+        this.searchTerm = (params['search'] || params['keyword']).toLowerCase().trim();
+      }
+      this.loadData();
     });
   }
 
-  load() {
+  loadData() {
     this.loading = true;
-    this.service.getAll().subscribe({
+    this.cdr.markForCheck();
+    const params = this.getPageParams({
+      clientId: this.filterClientId ? Number(this.filterClientId) : undefined,
+    });
+    this.service.getAll(params).subscribe({
       next: data => {
-        this.devis = extractContent(data).sort((a: any, b: any) => b.id - a.id);
-        this.applyFilter();
-        this.cdr.markForCheck();
+        this.devis = this.applyPageResponse<DevisPrevisionnel>(data);
         this.loading = false;
         this.cdr.markForCheck();
       },
-      error: () => this.loading = false,
+      error: () => {
+        this.devis = [];
+        this.totalElements = 0;
+        this.serverTotalPages = 1;
+        this.loading = false;
+        this.cdr.markForCheck();
+      },
     });
   }
 
-  applyFilter() {
-    let data = this.devis;
-    if (this.filterClientId) data = data.filter(d => String(d.client?.id) === this.filterClientId);
-    if (this.searchTerm) {
-      const kw = this.searchTerm.toLowerCase();
-      data = data.filter(d =>
-        (d.client?.firstName ?? '').toLowerCase().includes(kw) ||
-        (d.client?.lastName ?? '').toLowerCase().includes(kw) ||
-        (d.vehicule?.immatriculation ?? '').toLowerCase().includes(kw) ||
-        d.notesReparation.toLowerCase().includes(kw)
-      );
-    }
-    this.filtered = data;
-    this.page = 1;
-  }
-
-  onSearch(e: Event) {
+  override onSearch(e: Event) {
     this.searchTerm = (e.target as HTMLInputElement).value.toLowerCase().trim();
-    this.applyFilter(); this.cdr.markForCheck();
+    clearTimeout(this.searchTimeout);
+    this.searchTimeout = setTimeout(() => {
+      this.page = 1;
+      this.loadData();
+    }, 300);
   }
 
   onClientFilter(e: Event) {
     this.filterClientId = (e.target as HTMLSelectElement).value;
-    this.applyFilter(); this.cdr.markForCheck();
+    this.page = 1;
+    this.loadData();
   }
 
   openNew() {
@@ -136,7 +137,7 @@ export class DevisPrevisionnelsComponent implements OnInit {
       ? this.service.create(payload)
       : this.service.update(this.editingId!, payload);
     req$.subscribe({
-      next: () => { this.showModal = false; this.load(); this.notify('Devis enregistré.'); },
+      next: () => { this.showModal = false; this.loadData(); this.notify('Devis enregistré.'); },
       error: () => { this.saving = false; this.notifyError('Erreur lors de la sauvegarde.'); },
     });
   }
@@ -144,7 +145,7 @@ export class DevisPrevisionnelsComponent implements OnInit {
   delete(id: number) {
     if (!confirm('Supprimer ce devis ?')) return;
     this.service.delete(id).subscribe({
-      next: () => { this.load(); this.notify('Devis supprimé.'); },
+      next: () => { this.loadData(); this.notify('Devis supprimé.'); },
       error: () => this.notifyError('Erreur lors de la suppression.'),
     });
   }
@@ -152,17 +153,10 @@ export class DevisPrevisionnelsComponent implements OnInit {
   valider(id: number) {
     if (!confirm('Voulez-vous vraiment forcer la validation de ce devis ?')) return;
     this.service.valider(id).subscribe({
-      next: () => { this.load(); this.notify('Devis validé avec succès.'); },
+      next: () => { this.loadData(); this.notify('Devis validé avec succès.'); },
       error: () => this.notifyError('Erreur lors de la validation du devis.'),
     });
   }
-
-  get paged(): DevisPrevisionnel[] {
-    return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
-  }
-  get totalPages(): number { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }
-  prevPage() { if (this.page > 1) this.page--; }
-  nextPage() { if (this.page < this.totalPages) this.page++; }
 
   formatDate(d: string): string { return new Date(d).toLocaleDateString('fr-FR'); }
   formatMontant(n: number): string { return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF' }).format(n); }

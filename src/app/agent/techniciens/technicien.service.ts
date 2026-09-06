@@ -1,8 +1,8 @@
 import { inject, Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Technicien, TechnicienRequest } from '../../shared/models';
+import { Technicien, TechnicienRequest, PageResponse, PageParams } from '../../shared/models';
 
 export type { Technicien, TechnicienRequest };
 
@@ -11,8 +11,12 @@ export class TechnicienService {
   private http = inject(HttpClient);
   private api = `${environment.apiUrl}/api/techniciens`;
 
-  getAll(keyword?: string): Observable<Technicien[]> {
-    return this.http.get<Technicien[]>(this.api, { params: keyword ? { keyword } : {} });
+  getAll(params: PageParams & { keyword?: string } = {}): Observable<PageResponse<Technicien> | Technicien[]> {
+    let httpParams = new HttpParams();
+    if (params.page !== undefined) httpParams = httpParams.set('page', params.page.toString());
+    if (params.size !== undefined) httpParams = httpParams.set('size', params.size.toString());
+    if (params.keyword) httpParams = httpParams.set('keyword', params.keyword);
+    return this.http.get<PageResponse<Technicien> | Technicien[]>(this.api, { params: httpParams });
   }
 
   getById(id: number): Observable<Technicien> {

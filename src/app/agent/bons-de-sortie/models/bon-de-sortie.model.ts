@@ -5,6 +5,36 @@ export interface LigneBonDeSortie {
 }
 
 
+export interface BonDeSortieHistorique {
+  id: number;
+  statut?: string;
+  action?: string;
+  motif?: string;
+  dateAction: string;
+  prenom?: string;
+  nom?: string;
+  numBs?: string;
+  numeroSerie?: string;
+  immatriculation?: string;
+  designation?: string;
+  bonDeSortieId?: number;
+  bonDeSortie?: BonDeSortie;
+  piece?: {
+    id: number;
+    reference: string;
+    designation?: string;
+  };
+  quantite?: number;
+  stockMagasin?: number;
+  stockAtelier?: number;
+  qteReelle?: number;
+  agent?: {
+    id: number;
+    firstName: string;
+    lastName: string;
+  };
+}
+
 
 export interface BonDeSortie {
   id: number;

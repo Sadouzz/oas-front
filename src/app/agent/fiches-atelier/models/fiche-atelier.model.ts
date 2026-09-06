@@ -1,3 +1,19 @@
+import { DevisPrevisionnelOnFicheAtelier } from "@app/shared/models";
+
+export interface BriqueConfig {
+  id?: number;
+  label: string;
+  type: string;
+  options?: string;
+  ordre?: number;
+  obligatoire?: boolean;
+}
+
+export interface FicheAtelierConfigBackend {
+  id?: number;
+  configJson: string;
+}
+
 export interface LigneReception {
     nom: string;
     etat: boolean | null; // true = OUI, false = NON, null = non renseigné
@@ -28,8 +44,9 @@ export interface FicheAtelierRequest {
     signatureSortieBase64?: string;
 }
 
-export interface FicheAtelierResponse {
+export interface FicheAtelierDetailsResponse {
     id: number;
+    numero?: string;
     rendezVousId?: number | null;
     clientId: number;
     clientName: string;
@@ -52,4 +69,8 @@ export interface FicheAtelierResponse {
     createdAt: string;
     updatedAt: string;
     hasOrdreReparation?: boolean;
+  devisPrevisionnel?: DevisPrevisionnelOnFicheAtelier | null;
 }
+
+export type FicheAtelierResponse = FicheAtelierDetailsResponse;
+

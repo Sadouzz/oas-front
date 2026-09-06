@@ -1,5 +1,4 @@
 import { Component, inject, OnInit, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
-
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FicheAtelierService } from '../../fiches-atelier/fiche-atelier.service';
@@ -142,9 +141,9 @@ export class FichesAtelier implements OnInit {
 
   loadRendezVousData() {
     this.loading = true;
-    this.rdvService.getAll().subscribe({
-      next: (rdvs) => {
-        this.rdvData = rdvs.find(r => r.id === this.rendezVousId) || null;
+    this.rdvService.getById(this.rendezVousId!).subscribe({
+      next: (rdv) => {
+        this.rdvData = rdv || null;
         if (!this.rdvData) {
           this.error = "Rendez-vous introuvable.";
         } else {
@@ -246,7 +245,7 @@ export class FichesAtelier implements OnInit {
         signatureBase64: this.sigClientEl ? this.sigClientEl.nativeElement.toDataURL('image/png') : undefined
       };
 
-    // Format date string correctly if needed, or leave as is if datetime-local provides correct format
+    // Format date string correctly if needed, e.g. from datetime-local
     if (request.dateSortiePrevue) {
       if (request.dateSortiePrevue.length === 10) {
         request.dateSortiePrevue = request.dateSortiePrevue + 'T00:00:00';
@@ -260,7 +259,7 @@ export class FichesAtelier implements OnInit {
         this.saving = false;
         this.success = "Fiche atelier créée avec succès !";
         setTimeout(() => {
-          this.router.navigate(['/agent/rendezvous']);
+          this.router.navigate(['/app/rendezvous']);
         }, 1500);
       },
       error: (err) => {
@@ -271,6 +270,6 @@ export class FichesAtelier implements OnInit {
   }
 
   goBack() {
-    this.router.navigate(['/agent/rendezvous']);
+    this.router.navigate(['/app/rendezvous']);
   }
 }

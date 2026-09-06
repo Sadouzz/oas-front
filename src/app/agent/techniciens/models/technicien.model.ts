@@ -16,9 +16,9 @@ export interface Technicien {
   lastName: string;
   email: string;
   adresse: string | null;
-  specialite: Specialite | null;
-  enabled: boolean;
-  createdAt: string;
+  specialite: string | null;
+  enabled?: boolean;
+  createdAt?: string;
   garage?: { id: number; nom: string } | null;
 }
 

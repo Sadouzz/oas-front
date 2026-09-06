@@ -2,12 +2,14 @@ import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { PieceDetacheeService, PieceDetache } from '../piece-detachee.service';
+import { AlerteService } from '../alerte.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { LucideShoppingCart } from '@lucide/angular';
+import { LucideShoppingCart, LucideAlertTriangle, LucideAlertCircle, LucideLayers } from '@lucide/angular';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
-import { extractContent } from '../../../shared/models';
+import { AlerteStockResponse, TypeAlerte, extractContent } from '../../../shared/models';
+
+type AlertTab = 'ALL' | 'RUPTURE' | 'STOCK_FAIBLE';
 
 @Component({
   selector: 'app-seuil-alertes',
@@ -23,21 +25,23 @@ import { extractContent } from '../../../shared/models';
 })
 export class SeuilAlertes implements OnInit {
   private cdr = inject(ChangeDetectorRef);
-  private service = inject(PieceDetacheeService);
+  private alerteService = inject(AlerteService);
   private authService = inject(AuthService);
   private router = inject(Router);
 
-  pieces: PieceDetache[] = [];
+  alertes: AlerteStockResponse[] = [];
   loading = false;
   readonly Math = Math;
+
+  activeTab: AlertTab = 'ALL';
   searchQuery = '';
-  filterDepot = '';
-  depotsFilters: string[] = [];
-  categoriesOptions: { id: string, nom: string }[] = [];
   selectedCategorie = '';
+  categoriesOptions: { id: string; nom: string }[] = [];
 
   page = 1;
   pageSize = 10;
+  totalElements = 0;
+  totalPages = 1;
 
   get canEdit(): boolean {
     const r = this.authService.getRole();
@@ -50,112 +54,106 @@ export class SeuilAlertes implements OnInit {
 
   load() {
     this.loading = true;
-    this.service.getAll().subscribe({
-      next: (data: any) => {
-        this.pieces = extractContent<PieceDetache>(data).sort((a: any, b: any) => b.id - a.id);
-        
-        // Extract depots list for filter buttons
-        const alertPieces = this.pieces.filter(p =>
-          p.type === 'PDP' &&
-          p.seuilMinimum != null &&
-          (p.qteReelle ?? 0) <= p.seuilMinimum
-        );
-        this.depotsFilters = [...new Set(alertPieces.map((p: any) => p.categorie?.depot?.nom).filter((d: any) => !!d))].sort() as string[];
-        
-        // Extract categories list for filter dropdown
-        const categoriesMap = new Map<string, any>();
-        alertPieces.forEach(p => {
-          if (p.categorie && (p.categorie.nom || typeof p.categorie === 'string')) {
-            const nom = p.categorie.nom || p.categorie;
-            if (!categoriesMap.has(nom)) {
-              categoriesMap.set(nom, p.categorie);
-            }
-          }
+    const pageIndex = this.page - 1;
+
+    let obs$;
+    if (this.activeTab === 'RUPTURE') {
+      obs$ = this.alerteService.getRuptures(pageIndex, this.pageSize);
+    } else if (this.activeTab === 'STOCK_FAIBLE') {
+      obs$ = this.alerteService.getStocksFaibles(pageIndex, this.pageSize);
+    } else {
+      obs$ = this.alerteService.getAlertes(pageIndex, this.pageSize);
+    }
+
+    obs$.subscribe({
+      next: (res: any) => {
+        this.alertes = extractContent<AlerteStockResponse>(res);
+        if (res && typeof res === 'object') {
+          this.totalElements = res.totalElements ?? this.alertes.length;
+          this.totalPages = res.totalPages ?? Math.max(1, Math.ceil(this.totalElements / this.pageSize));
+        } else {
+          this.totalElements = this.alertes.length;
+          this.totalPages = Math.max(1, Math.ceil(this.totalElements / this.pageSize));
+        }
+
+        // Build categories filter options
+        const categoriesSet = new Set<string>();
+        this.alertes.forEach(a => {
+          if (a.categorie) categoriesSet.add(a.categorie);
         });
-        this.categoriesOptions = Array.from(categoriesMap.values()).map(c => {
-          return typeof c === 'string' ? { id: c, nom: c } : { id: c.nom, nom: c.nom };
-        }).sort((a, b) => a.nom.localeCompare(b.nom));
+        this.categoriesOptions = Array.from(categoriesSet)
+          .sort()
+          .map(cat => ({ id: cat, nom: cat }));
 
         this.loading = false;
         this.cdr.markForCheck();
       },
       error: () => {
+        this.alertes = [];
+        this.totalElements = 0;
+        this.totalPages = 1;
         this.loading = false;
         this.cdr.markForCheck();
       }
     });
   }
 
-  get totalPages(): number {
-    return Math.ceil(this.filteredLowStockPieces.length / this.pageSize) || 1;
+  setTab(tab: AlertTab) {
+    if (this.activeTab !== tab) {
+      this.activeTab = tab;
+      this.page = 1;
+      this.load();
+    }
   }
 
-  get pagedLowStockPieces(): PieceDetache[] {
-    return this.filteredLowStockPieces.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
-  }
+  get filteredAlertes(): AlerteStockResponse[] {
+    let list = Array.isArray(this.alertes) ? this.alertes : [];
 
-  prevPage() {
-    if (this.page > 1) this.page--;
-  }
-
-  nextPage() {
-    if (this.page < this.totalPages) this.page++;
-  }
-
-  get lowStockPieces(): PieceDetache[] {
-    return this.pieces.filter(p =>
-      p.type === 'PDP' &&
-      p.seuilMinimum != null &&
-      (p.qteReelle ?? 0) <= p.seuilMinimum
-    );
-  }
-
-  get filteredLowStockPieces(): PieceDetache[] {
-    let result = this.lowStockPieces;
-
-    // Apply search query
     if (this.searchQuery) {
       const q = this.searchQuery.toLowerCase().trim();
-      result = result.filter(p => {
-        const catName = p.categorie?.nom || p.categorie || '';
-        return (p.designation?.toLowerCase().includes(q) ||
-          p.reference?.toLowerCase().includes(q) ||
-          catName.toLowerCase().includes(q));
-      });
+      list = list.filter(a =>
+        a.reference?.toLowerCase().includes(q) ||
+        a.designation?.toLowerCase().includes(q) ||
+        a.numeroDeSerie?.toLowerCase().includes(q) ||
+        a.categorie?.toLowerCase().includes(q)
+      );
     }
 
-    // Apply depot filter
-    if (this.filterDepot) {
-      result = result.filter(p => p.categorie?.depot?.nom === this.filterDepot);
-    }
-
-    // Apply category filter
     if (this.selectedCategorie) {
-      result = result.filter(p => {
-        const catName = p.categorie?.nom || p.categorie || '';
-        return catName === this.selectedCategorie;
-      });
+      list = list.filter(a => a.categorie === this.selectedCategorie);
     }
 
-    return result;
+    return list;
   }
 
   onSearch(event: Event) {
     this.searchQuery = (event.target as HTMLInputElement).value;
-    this.page = 1;
-  }
-
-  setFilterDepot(depot: string) {
-    this.filterDepot = this.filterDepot === depot ? '' : depot;
-    this.page = 1;
   }
 
   onCategorieChange(catNom: string) {
     this.selectedCategorie = catNom || '';
-    this.page = 1;
   }
 
-  commanderPiece(p: PieceDetache) {
-    this.router.navigate(['/agent/bons-commande'], { queryParams: { pieceId: p.id } });
+  onPageChange(newPage: number) {
+    this.page = newPage;
+    this.load();
+  }
+
+  prevPage() {
+    if (this.page > 1) {
+      this.page--;
+      this.load();
+    }
+  }
+
+  nextPage() {
+    if (this.page < this.totalPages) {
+      this.page++;
+      this.load();
+    }
+  }
+
+  commanderPiece(a: AlerteStockResponse) {
+    this.router.navigate(['/app/bons-commande'], { queryParams: { pieceId: a.pieceId } });
   }
 }

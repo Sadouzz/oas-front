@@ -18,7 +18,7 @@
     <nav class="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
 
       <!-- Dashboard -->
-      <a routerLink="/agent/dashboard" routerLinkActive="oas-nav-active"
+      <a routerLink="/app/dashboard" routerLinkActive="oas-nav-active"
         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
         <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round"
@@ -44,16 +44,16 @@
       </button>
       @if (openSection === 'atelier') {
       <div class="ml-3 pl-3 border-l border-white/10 space-y-0.5">
-        <a routerLink="/agent/fiches-atelier" routerLinkActive="oas-sub-active"
+        <a routerLink="/app/fiches-atelier" routerLinkActive="oas-sub-active"
           class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
           Fiches atelier
         </a>
         @if (isChefAtelier() || isSuperAgent() || isMaster()) {
-        <a routerLink="/agent/ordres-reparation" routerLinkActive="oas-sub-active"
+        <a routerLink="/app/ordres-reparation" routerLinkActive="oas-sub-active"
           class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
           Ordres de réparation
         </a>
-        <a routerLink="/agent/techniciens" routerLinkActive="oas-sub-active"
+        <a routerLink="/app/techniciens" routerLinkActive="oas-sub-active"
           class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
           Techniciens
         </a>
@@ -64,7 +64,7 @@
 
       <!-- Rendez-vous — Super Agent + Chef Atelier + Master + Agent -->
       @if (isAgent() || isSuperAgent() || isMaster() || isChefAtelier()) {
-      <a routerLink="/agent/rendezvous" routerLinkActive="oas-nav-active"
+      <a routerLink="/app/rendezvous" routerLinkActive="oas-nav-active"
         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
         <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round"
@@ -76,7 +76,7 @@
 
       <!-- Clients — Agent + Super Agent + Master -->
       @if (isAgent() || isSuperAgent() || isMaster()) {
-      <a routerLink="/agent/clients" routerLinkActive="oas-nav-active"
+      <a routerLink="/app/clients" routerLinkActive="oas-nav-active"
         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
         <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round"
@@ -88,7 +88,7 @@
 
       <!-- Véhicules — tous sauf Magasinier -->
       @if (!isMagasinier()) {
-      <a routerLink="/agent/vehicules" routerLinkActive="oas-nav-active"
+      <a routerLink="/app/vehicules" routerLinkActive="oas-nav-active"
         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
         <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round"
@@ -106,7 +106,7 @@
           <path stroke-linecap="round" stroke-linejoin="round"
             d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
         </svg>
-        <span class="flex-1 text-left">Piéces dét</span>
+        <span class="flex-1 text-left">Pièces détachées</span>
         <svg class="w-3.5 h-3.5 transition-transform" [class.rotate-180]="openSection === 'pieces'" fill="none"
           viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
@@ -114,13 +114,17 @@
       </button>
       @if (openSection === 'pieces') {
       <div class="ml-3 pl-3 border-l border-white/10 space-y-0.5">
-        <a routerLink="/agent/pieces-detachees" routerLinkActive="oas-sub-active"
+        <a routerLink="/app/pieces-detachees" routerLinkActive="oas-sub-active"
           class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
           Liste des articles
         </a>
-        <a routerLink="/agent/stock" routerLinkActive="oas-sub-active"
+        <a routerLink="/app/stock" routerLinkActive="oas-sub-active"
           class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
           Historique
+        </a>
+        <a routerLink="/app/seuil-alertes" routerLinkActive="oas-sub-active"
+          class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
+          Seuil alertes
         </a>
       </div>
       }
@@ -159,22 +163,22 @@
           </button>
           @if (openSubSection === 'note-prix') {
           <div class="ml-3 pl-2.5 border-l border-white/10 space-y-0.5 mt-0.5">
-            <a routerLink="/agent/notes-prix" [queryParams]="{ action: 'new' }" routerLinkActive="oas-sub-active"
+            <a routerLink="/app/notes-prix" [queryParams]="{ action: 'new' }" routerLinkActive="oas-sub-active"
               class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
               <span class="w-1.5 h-1.5 rounded-full bg-oas-accent"></span>
               Nouvelle note de prix
             </a>
-            <a routerLink="/agent/notes-prix" [queryParams]="{ statut: 'EN_COURS' }" routerLinkActive="oas-sub-active"
+            <a routerLink="/app/notes-prix" [queryParams]="{ statut: 'EN_COURS' }" routerLinkActive="oas-sub-active"
               class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
               <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
               Lister les notes de prix en cours
             </a>
-            <a routerLink="/agent/notes-prix" [queryParams]="{ statut: 'PAYE' }" routerLinkActive="oas-sub-active"
+            <a routerLink="/app/notes-prix" [queryParams]="{ statut: 'PAYE' }" routerLinkActive="oas-sub-active"
               class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
               Lister les notes de prix payées
             </a>
-            <a routerLink="/agent/notes-prix" [queryParams]="{ search: 'client-date' }" routerLinkActive="oas-sub-active"
+            <a routerLink="/app/notes-prix" [queryParams]="{ search: 'client-date' }" routerLinkActive="oas-sub-active"
               class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
               <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
               Lister les notes de prix par numéro de client et date
@@ -200,15 +204,15 @@
           </button>
           @if (openSubSection === 'devis-prev') {
           <div class="ml-3 pl-2.5 border-l border-white/10 space-y-0.5 mt-0.5">
-            <a routerLink="/agent/devis-previsionnels" [queryParams]="{ action: 'new' }" routerLinkActive="oas-sub-active"
+            <a routerLink="/app/devis-previsionnels" [queryParams]="{ action: 'new' }" routerLinkActive="oas-sub-active"
               class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
               <span class="w-1.5 h-1.5 rounded-full bg-oas-accent"></span>
               Nouveau devis prévisionnel
             </a>
-            <a routerLink="/agent/devis-previsionnels" routerLinkActive="oas-sub-active" [routerLinkActiveOptions]="{ exact: true }"
+            <a routerLink="/app/devis-previsionnels" routerLinkActive="oas-sub-active" [routerLinkActiveOptions]="{ exact: true }"
               class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
               <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-              Lister les devis prévisionnel
+              Lister les devis prévisionnels
             </a>
           </div>
           }
@@ -231,12 +235,12 @@
           </button>
           @if (openSubSection === 'avoir-ht') {
           <div class="ml-3 pl-2.5 border-l border-white/10 space-y-0.5 mt-0.5">
-            <a routerLink="/agent/avoirs-ht" [queryParams]="{ action: 'new' }" routerLinkActive="oas-sub-active"
+            <a routerLink="/app/avoirs-ht" [queryParams]="{ action: 'new' }" routerLinkActive="oas-sub-active"
               class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
               <span class="w-1.5 h-1.5 rounded-full bg-oas-accent"></span>
               Nouveau avoir note de prix
             </a>
-            <a routerLink="/agent/avoirs-ht" routerLinkActive="oas-sub-active" [routerLinkActiveOptions]="{ exact: true }"
+            <a routerLink="/app/avoirs-ht" routerLinkActive="oas-sub-active" [routerLinkActiveOptions]="{ exact: true }"
               class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
               <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
               Lister les avoirs note de prix
@@ -281,22 +285,22 @@
           </button>
           @if (openSubSection === 'facture') {
           <div class="ml-3 pl-2.5 border-l border-white/10 space-y-0.5 mt-0.5">
-            <a routerLink="/agent/factures" [queryParams]="{ action: 'new' }" routerLinkActive="oas-sub-active"
+            <a routerLink="/app/factures" [queryParams]="{ action: 'new' }" routerLinkActive="oas-sub-active"
               class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
               <span class="w-1.5 h-1.5 rounded-full bg-oas-accent"></span>
               Nouvelle facture
             </a>
-            <a routerLink="/agent/factures" [queryParams]="{ statut: 'EN_COURS' }" routerLinkActive="oas-sub-active"
+            <a routerLink="/app/factures" [queryParams]="{ statut: 'EN_COURS' }" routerLinkActive="oas-sub-active"
               class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
               <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
               Lister les factures en cours
             </a>
-            <a routerLink="/agent/factures" [queryParams]="{ statut: 'PAYE' }" routerLinkActive="oas-sub-active"
+            <a routerLink="/app/factures" [queryParams]="{ statut: 'PAYE' }" routerLinkActive="oas-sub-active"
               class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
               <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>
               Lister les factures payées
             </a>
-            <a routerLink="/agent/factures" [queryParams]="{ search: 'client-date' }" routerLinkActive="oas-sub-active"
+            <a routerLink="/app/factures" [queryParams]="{ search: 'client-date' }" routerLinkActive="oas-sub-active"
               class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
               <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
               Lister par N° client et date
@@ -322,32 +326,32 @@
           </button>
           @if (openSubSection === 'bc') {
           <div class="ml-3 pl-2.5 border-l border-white/10 space-y-0.5 mt-0.5">
-            <a routerLink="/agent/bons-commande" [queryParams]="{ action: 'new' }" routerLinkActive="oas-sub-active"
+            <a routerLink="/app/bons-commande" [queryParams]="{ action: 'new' }" routerLinkActive="oas-sub-active"
               class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
               <span class="w-1.5 h-1.5 rounded-full bg-oas-accent"></span>
               Nouveau bon de commande
             </a>
-            <a routerLink="/agent/bons-commande" routerLinkActive="oas-sub-active" [routerLinkActiveOptions]="{ exact: true }"
+            <a routerLink="/app/bons-commande" routerLinkActive="oas-sub-active" [routerLinkActiveOptions]="{ exact: true }"
               class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
               <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
               Lister les bons de commande
             </a>
-            <a routerLink="/agent/bons-commande" [queryParams]="{ search: 'fournisseur-date' }" routerLinkActive="oas-sub-active"
+            <a routerLink="/app/bons-commande" [queryParams]="{ search: 'fournisseur-date' }" routerLinkActive="oas-sub-active"
               class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
               <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
               Lister par N° fournisseur et date
             </a>
-            <a routerLink="/agent/fournisseurs" routerLinkActive="oas-sub-active"
-              class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
+            <a routerLink="/app/fournisseurs" routerLinkActive="oas-sub-active"
+              class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
               <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
-              Fournisseur
+              Fournisseurs
             </a>
           </div>
           }
         </div>
         <!-- Sous-menu Proforma -->
         <div>
-          <button (click)="toggleSubSection('proforma')"
+          <button (click)="toggleSubSection('proforma.component')"
             class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
             <span class="flex items-center gap-2">
               <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -355,19 +359,19 @@
               </svg>
               Proforma
             </span>
-            <svg class="w-3 h-3 transition-transform text-white/50" [class.rotate-180]="openSubSection === 'proforma'" fill="none"
+            <svg class="w-3 h-3 transition-transform text-white/50" [class.rotate-180]="openSubSection === 'proforma.component'" fill="none"
               viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
             </svg>
           </button>
-          @if (openSubSection === 'proforma') {
+          @if (openSubSection === 'proforma.component') {
           <div class="ml-3 pl-2.5 border-l border-white/10 space-y-0.5 mt-0.5">
-            <a routerLink="/agent/proformas" [queryParams]="{ action: 'new' }" routerLinkActive="oas-sub-active"
+            <a routerLink="/app/proformas" [queryParams]="{ action: 'new' }" routerLinkActive="oas-sub-active"
               class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
               <span class="w-1.5 h-1.5 rounded-full bg-oas-accent"></span>
               Nouveau proforma
             </a>
-            <a routerLink="/agent/proformas" routerLinkActive="oas-sub-active" [routerLinkActiveOptions]="{ exact: true }"
+            <a routerLink="/app/proformas" routerLinkActive="oas-sub-active" [routerLinkActiveOptions]="{ exact: true }"
               class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
               <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
               Lister les proformas
@@ -392,15 +396,15 @@
           </button>
           @if (openSubSection === 'avoir-ttc') {
           <div class="ml-3 pl-2.5 border-l border-white/10 space-y-0.5 mt-0.5">
-            <a routerLink="/agent/avoirs-ttc" [queryParams]="{ action: 'new' }" routerLinkActive="oas-sub-active"
+            <a routerLink="/app/avoirs-ttc" [queryParams]="{ action: 'new' }" routerLinkActive="oas-sub-active"
               class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
               <span class="w-1.5 h-1.5 rounded-full bg-oas-accent"></span>
-              Nouveau avoir ttc
+              Nouveau avoir TTC
             </a>
-            <a routerLink="/agent/avoirs-ttc" routerLinkActive="oas-sub-active" [routerLinkActiveOptions]="{ exact: true }"
+            <a routerLink="/app/avoirs-ttc" routerLinkActive="oas-sub-active" [routerLinkActiveOptions]="{ exact: true }"
               class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
               <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-              Lister les avoirs ttc
+              Lister les avoirs TTC
             </a>
           </div>
           }
@@ -442,22 +446,22 @@
           </button>
           @if (openSubSection === 'bs') {
           <div class="ml-3 pl-2.5 border-l border-white/10 space-y-0.5 mt-0.5">
-            <a routerLink="/agent/bons-de-sortie" [queryParams]="{ action: 'new' }" routerLinkActive="oas-sub-active"
+            <a routerLink="/app/bons-de-sortie" [queryParams]="{ action: 'new' }" routerLinkActive="oas-sub-active"
               class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
               <span class="w-1.5 h-1.5 rounded-full bg-oas-accent"></span>
               Nouveau bon de sortie
             </a>
-            <a routerLink="/agent/bons-de-sortie" [queryParams]="{ statut: 'EN_ATTENTE' }" routerLinkActive="oas-sub-active"
+            <a routerLink="/app/bons-de-sortie" [queryParams]="{ statut: 'EN_ATTENTE' }" routerLinkActive="oas-sub-active"
               class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
               <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
               Liste des bons en cours
             </a>
-            <a routerLink="/agent/bons-de-sortie" [queryParams]="{ statut: 'VALIDE' }" routerLinkActive="oas-sub-active"
+            <a routerLink="/app/bons-de-sortie" [queryParams]="{ statut: 'VALIDE' }" routerLinkActive="oas-sub-active"
               class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
               <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>
               Liste des bons validés
             </a>
-            <a routerLink="/agent/bons-de-sortie" [queryParams]="{ search: 'auto-date' }" routerLinkActive="oas-sub-active"
+            <a routerLink="/app/bons-de-sortie" [queryParams]="{ search: 'auto-date' }" routerLinkActive="oas-sub-active"
               class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
               <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
               Recherche de BS (par numéro auto et date)
@@ -466,17 +470,13 @@
           }
         </div>
 
-        <a routerLink="/agent/historique-bs" routerLinkActive="oas-sub-active"
+        <a routerLink="/app/historique-bs" routerLinkActive="oas-sub-active"
           class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
           Historique BS
         </a>
-        <a routerLink="/agent/inventaire" routerLinkActive="oas-sub-active"
+        <a routerLink="/app/inventaire" routerLinkActive="oas-sub-active"
           class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
           Inventaire
-        </a>
-        <a routerLink="/agent/seuil-alertes" routerLinkActive="oas-sub-active"
-          class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
-          Stock
         </a>
       </div>
       }
@@ -497,11 +497,11 @@
       </button>
       @if (openSection === 'reappro') {
       <div class="ml-3 pl-3 border-l border-white/10 space-y-0.5">
-        <a routerLink="/agent/bons-reception" routerLinkActive="oas-sub-active"
+        <a routerLink="/app/bons-reception" routerLinkActive="oas-sub-active"
           class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
           Bon de réception
         </a>
-        <a routerLink="/agent/fournisseurs" routerLinkActive="oas-sub-active"
+        <a routerLink="/app/fournisseurs" routerLinkActive="oas-sub-active"
           class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
           Fournisseurs
         </a>
@@ -522,7 +522,7 @@
 
       <!-- Gestion reçu — Agent + Super + Master -->
       @if (isAgent() || isSuperAgent() || isMaster()) {
-      <a routerLink="/agent/gestion-recu" routerLinkActive="oas-nav-active"
+      <a routerLink="/app/gestion-recu" routerLinkActive="oas-nav-active"
         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
         <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round"
@@ -534,7 +534,7 @@
 
       <!-- Main d'œuvre — Super Agent et Master -->
       @if (isSuperAgent() || isMaster()) {
-      <a routerLink="/agent/admin/main-doeuvre" routerLinkActive="oas-nav-active"
+      <a routerLink="/app/admin/main-doeuvre" routerLinkActive="oas-nav-active"
         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
         <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round"
@@ -562,20 +562,20 @@
       @if (openSection === 'admin') {
       <div class="ml-3 pl-3 border-l border-white/10 space-y-0.5">
         @if (isSuperAgent()) {
-        <a routerLink="/agent/admin/garages" routerLinkActive="oas-sub-active"
+        <a routerLink="/app/admin/garages" routerLinkActive="oas-sub-active"
           class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
           Garages
         </a>
         }
-        <a routerLink="/agent/admin/users" routerLinkActive="oas-sub-active"
+        <a routerLink="/app/admin/users" routerLinkActive="oas-sub-active"
           class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
           Utilisateurs
         </a>
-        <a routerLink="/agent/admin/history" routerLinkActive="oas-sub-active"
+        <a routerLink="/app/admin/history" routerLinkActive="oas-sub-active"
           class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
           Historique connexions
         </a>
-        <a routerLink="/agent/admin/parametres" routerLinkActive="oas-sub-active"
+        <a routerLink="/app/admin/parametres" routerLinkActive="oas-sub-active"
           class="flex items-center gap-2 px-3 py-2 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm">
           Paramètres
         </a>

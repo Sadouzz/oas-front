@@ -1,7 +1,9 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { forkJoin } from 'rxjs';
-import { BonDeReceptionService, BonDeReception } from './bon-de-reception.service';
-import { BonDeCommandeService, BonDeCommande } from '../bons-commande/bon-de-commande.service';
+import { BonDeReceptionService } from './bon-de-reception.service';
+import { BonDeReception } from './models/bon-de-reception.model';
+import { BonDeCommandeService } from '../bons-commande/bon-de-commande.service';
+import { BonDeCommande } from '../bons-commande/models/bon-de-commande.model';
 import { VehiculeService } from '../vehicules/vehicule.service';
 import { NgClass } from '@angular/common';
 import { VehiculeModel, extractContent } from '../../shared/models/index';

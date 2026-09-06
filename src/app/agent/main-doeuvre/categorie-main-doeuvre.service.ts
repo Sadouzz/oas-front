@@ -2,15 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-
-export interface CategorieMainDoeuvreModel {
-  id: number;
-  nom: string;
-}
-
-export interface CategorieMainDoeuvreRequest {
-  nom: string;
-}
+import { CategorieMainDoeuvreModel, CategorieMainDoeuvreRequest } from './models/main-doeuvre.model';
 
 @Injectable({ providedIn: 'root' })
 export class CategorieMainDoeuvreService {

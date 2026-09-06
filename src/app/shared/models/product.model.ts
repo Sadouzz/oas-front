@@ -8,3 +8,14 @@ export interface Product {
   isVedette?: boolean;
   videos?: string[];
 }
+
+export interface BackendProduit {
+  id: number;
+  nom: string;
+  description: string;
+  prix: number;
+  mediaUrl: string;
+  disponible: boolean;
+  archive: boolean;
+}
+

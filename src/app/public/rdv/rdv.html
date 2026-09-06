@@ -414,7 +414,7 @@
                   ========================================================================
                   Pour réactiver, retirez les commentaires HTML et ajustez le code TS si nécessaire.
 
-                  _if(activeTab === 'login'){
+                  _if(activeTab === 'login.component'){
 
                   <form class="auth-form" [formGroup]="loginForm" (ngSubmit)="onSubmitLogin()" novalidate>
 
@@ -478,14 +478,14 @@
 
                     <p class="auth-switch">
                       Pas encore de compte ?
-                      <a href="javascript:void(0)" (click)="switchTab('register')">Créer un compte</a>
+                      <a href="javascript:void(0)" (click)="switchTab('register.component')">Créer un compte</a>
                     </p>
 
                   </form>
 
                 }
 
-                _if(activeTab === 'register'){
+                _if(activeTab === 'register.component'){
 
                 <form class="auth-form" [formGroup]="registerForm" (ngSubmit)="onSubmitRegister()" novalidate>
 
@@ -626,7 +626,7 @@
 
                 <p class="auth-switch">
                   Déjà un compte ?
-                  <a href="javascript:void(0)" (click)="switchTab('login')">Se connecter</a>
+                  <a href="javascript:void(0)" (click)="switchTab('login.component')">Se connecter</a>
                 </p>
 
               </form>

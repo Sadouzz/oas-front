@@ -1,11 +1,11 @@
 import { Component, inject, OnInit, Pipe, PipeTransform, ChangeDetectorRef } from '@angular/core';
 import { DecimalPipe, NgClass, UpperCasePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MainDoeuvreService, MainDoeuvreModel, MainDoeuvreRequest } from './main-doeuvre.service';
-import { CategorieMainDoeuvreService, CategorieMainDoeuvreModel } from './categorie-main-doeuvre.service';
+import { MainDoeuvreService } from './main-doeuvre.service';
+import { CategorieMainDoeuvreService } from './categorie-main-doeuvre.service';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
-import { extractContent } from '../../shared/models';
+import { MainDoeuvreModel, MainDoeuvreRequest, CategorieMainDoeuvreModel, extractContent } from '../../shared/models';
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideArchive, LucideArchiveRestore, LucideLoader2 } from '@lucide/angular';
 
 // Pipe inline pour compter par catégorie dans le template

@@ -51,10 +51,10 @@ export class LoginComponent {
           );
 
           const role = response?.role || this.authService.getRole();
-          let target = '/agent/dashboard';
+          let target = '/app/dashboard';
 
           if (role === 'ROLE_CLIENT') {
-            target = '/client';
+            target = '/mon-compte';
           } else if (role === 'ROLE_TECHNICIEN') {
             target = '/technicien';
           }

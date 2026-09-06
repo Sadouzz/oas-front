@@ -1,11 +1,11 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
-import { StockService, PieceMouvementListResponse } from '../stock.service';
+import { StockService, PieceMouvementListResponse } from '../../inventaire/inventaire.service';
 import { PieceDetacheeService, PieceDetache, AlerteStock } from '../piece-detachee.service';
 import { AlertComponent } from '../../../shared/components/alert/alert.component';
 import { SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
-import { extractContent } from '../../../shared/models';
+import { extractContent, extractPage } from '../../../shared/models';
 import { LucideSearch } from '@lucide/angular';
 
 type ModalType = 'entree' | 'sortie' | 'ajustement' | null;
@@ -42,7 +42,9 @@ export class HistoriqueComponent implements OnInit {
   dateFin = '';
 
   mouvPage = 1;
-  mouvPageSize = 15;
+  mouvPageSize = 10;
+  totalMouvements = 0;
+  mouvTotalPages = 1;
 
   get categoriesPDP(): string[] {
     return Array.from(new Set(this.pdps.map(p => p.categorie && typeof p.categorie === 'object' ? p.categorie.nom : p.categorie))).filter(c => !!c).sort();
@@ -98,13 +100,11 @@ export class HistoriqueComponent implements OnInit {
       this.dateDebut = '';
       this.dateFin = '';
     }
+    this.mouvPage = 1;
     this.loadMovementsRecent();
   }
 
   loadAll() {
-    this.loading = true;
-    // this.stockService.alertes().subscribe({ next: (d) => { this.alertes = extractContent(d); this.checkDone(); }, error: () => this.checkDone() });
-    // this.pieceService.getAll({ type: 'PDP' }).subscribe({ next: (d) => { this.pdps = extractContent(d); this.checkDone(); }, error: () => this.checkDone() });
     this.loadMovementsRecent();
   }
 
@@ -112,51 +112,79 @@ export class HistoriqueComponent implements OnInit {
   private checkDone() { if (++this.loadCount >= 2) this.loading = false; this.cdr.markForCheck(); }
 
   loadMovementsRecent() {
+    this.loading = true;
+    this.cdr.markForCheck();
+    const kw = this.searchQuery ? this.searchQuery.trim() : undefined;
     const pId = this.filterPieceId ? parseInt(this.filterPieceId, 10) : undefined;
     const cat = this.filterCategorie || undefined;
     const typ = this.filterType || undefined;
     const deb = this.dateDebut ? new Date(this.dateDebut + 'T00:00:00').toISOString() : undefined;
     const fin = this.dateFin ? new Date(this.dateFin + 'T23:59:59').toISOString() : undefined;
 
-    this.stockService.historiqueGlobal(deb, fin, pId, cat, typ).subscribe({
+    this.pieceService.historiqueGlobal(kw, deb, fin, pId, cat, typ, this.mouvPage - 1, this.mouvPageSize).subscribe({
       next: (d) => {
-        this.mouvementsRecents = extractContent(d);
-        this.mouvPage = 1;
+        this.mouvementsRecents = extractContent<PieceMouvementListResponse>(d);
+        const pageInfo = extractPage<PieceMouvementListResponse>(d);
+        if (pageInfo) {
+          this.totalMouvements = pageInfo.totalElements ?? this.mouvementsRecents.length;
+          this.mouvTotalPages = pageInfo.totalPages ?? Math.max(1, Math.ceil(this.totalMouvements / this.mouvPageSize));
+        } else {
+          this.totalMouvements = this.mouvementsRecents.length;
+          this.mouvTotalPages = Math.max(1, Math.ceil(this.totalMouvements / this.mouvPageSize));
+        }
+        this.loading = false;
         this.cdr.markForCheck();
       },
       error: () => {
         this.mouvementsRecents = [];
+        this.totalMouvements = 0;
+        this.mouvTotalPages = 1;
+        this.loading = false;
         this.cdr.markForCheck();
       }
     });
   }
 
+
+  private searchTimeout: any;
+
+  onSearch(value: string) {
+    this.searchQuery = value;
+    this.loading = true;
+    this.cdr.markForCheck();
+    clearTimeout(this.searchTimeout);
+    this.searchTimeout = setTimeout(() => {
+      this.mouvPage = 1;
+      this.loadMovementsRecent();
+    }, 300);
+  }
+
   get filteredMouvements(): PieceMouvementListResponse[] {
-    if (!this.searchQuery) return this.mouvementsRecents;
-    const q = this.searchQuery.toLowerCase();
-    return this.mouvementsRecents.filter(m =>
-      m.prenom?.toLowerCase().includes(q) ||
-      m.nom?.toLowerCase().includes(q) ||
-      m.numDoc?.toLowerCase().includes(q) ||
-      m.typeDoc?.toLowerCase().includes(q) ||
-      m.numeroSerie?.toLowerCase().includes(q) ||
-      m.immatriculation?.toLowerCase().includes(q) ||
-      m.designation?.toLowerCase().includes(q) ||
-      m.action?.toLowerCase().includes(q)
-    );
+    return this.mouvementsRecents;
   }
 
   get pagedMouvements(): PieceMouvementListResponse[] {
-    const start = (this.mouvPage - 1) * this.mouvPageSize;
-    return this.filteredMouvements.slice(start, start + this.mouvPageSize);
+    return this.mouvementsRecents;
   }
 
-  get mouvTotalPages(): number {
-    return Math.max(1, Math.ceil(this.filteredMouvements.length / this.mouvPageSize));
+  onMouvPageChange(page: number): void {
+    this.mouvPage = page;
+    this.loadMovementsRecent();
   }
 
-  prevMouvPage(): void { if (this.mouvPage > 1) this.mouvPage--; }
-  nextMouvPage(): void { if (this.mouvPage < this.mouvTotalPages) this.mouvPage++; }
+  prevMouvPage(): void {
+    if (this.mouvPage > 1) {
+      this.mouvPage--;
+      this.loadMovementsRecent();
+    }
+  }
+
+  nextMouvPage(): void {
+    if (this.mouvPage < this.mouvTotalPages) {
+      this.mouvPage++;
+      this.loadMovementsRecent();
+    }
+  }
 
   get hasActiveFilters(): boolean {
     return !!(this.searchQuery || this.filterPieceId || this.filterCategorie || this.filterType || this.periodePreset !== 'all' || this.dateDebut || this.dateFin);
@@ -170,6 +198,7 @@ export class HistoriqueComponent implements OnInit {
     this.periodePreset = 'all';
     this.dateDebut = '';
     this.dateFin = '';
+    this.mouvPage = 1;
     this.loadMovementsRecent();
   }
 

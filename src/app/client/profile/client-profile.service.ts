@@ -2,13 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { UserModel, UserUpdatePayload } from '../../shared/models';
-
-export interface ChangePasswordPayload {
-  username: string;
-  oldPassword: string;
-  newPassword: string;
-}
+import { UserModel, UserUpdatePayload, ChangePasswordPayload } from '../../shared/models';
 
 @Injectable({ providedIn: 'root' })
 export class ClientProfileService {

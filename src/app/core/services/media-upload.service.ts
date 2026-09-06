@@ -2,15 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, switchMap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CloudinaryUploadResult, MediaUploadEvent } from '../../shared/models';
-
-interface MediaSignature {
-  signature: string;
-  timestamp: number;
-  apiKey: string;
-  cloudName: string;
-  folder: string | null;
-}
+import { CloudinaryUploadResult, MediaUploadEvent, MediaSignature } from '../../shared/models';
 
 /**
  * Upload de médias (images/vidéos) vers Cloudinary.

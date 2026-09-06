@@ -11,7 +11,7 @@ import { SpeedometerComponent } from '../../shared/components/speedometer/speedo
 
 register();
 
-type GalleryCategory = 'atelier' | 'vehicules';
+type GalleryCategory = 'atelier' | 'vehicules.component';
 type GalleryFilter = 'tout' | GalleryCategory;
 
 interface GalleryItem {
@@ -49,18 +49,18 @@ export class Realisations {
   readonly filters: { key: GalleryFilter; label: string }[] = [
     { key: 'tout', label: 'Tout' },
     { key: 'atelier', label: 'Photos atelier' },
-    { key: 'vehicules', label: 'Photos véhicules' },
+    { key: 'vehicules.component', label: 'Photos véhicules' },
   ];
 
   readonly galleryItems: GalleryItem[] = [
     { id: 1, category: 'atelier', title: 'Notre atelier, entre tradition et savoir-faire', src: 'https://res.cloudinary.com/p3dkpqm9/image/upload/v1786449286/oas/website/hpunm2bmu8oxp6jc2m4n.jpg' },
-    { id: 2, category: 'vehicules', title: 'Intervention en cours', src: 'https://res.cloudinary.com/p3dkpqm9/image/upload/v1786449279/oas/website/kwp39f5nl5abncxkjzyj.jpg' },
+    { id: 2, category: 'vehicules.component', title: 'Intervention en cours', src: 'https://res.cloudinary.com/p3dkpqm9/image/upload/v1786449279/oas/website/kwp39f5nl5abncxkjzyj.jpg' },
     { id: 3, category: 'atelier', title: 'Poste de travail équipé', src: 'https://res.cloudinary.com/p3dkpqm9/image/upload/v1786449272/oas/website/gxule2frfbwuhkbij7eb.jpg' },
-    { id: 4, category: 'vehicules', title: 'Précision mécanique', src: 'https://res.cloudinary.com/p3dkpqm9/image/upload/v1786449269/oas/website/wugb99sl4nc5hxhmx0ka.jpg' },
+    { id: 4, category: 'vehicules.component', title: 'Précision mécanique', src: 'https://res.cloudinary.com/p3dkpqm9/image/upload/v1786449269/oas/website/wugb99sl4nc5hxhmx0ka.jpg' },
     { id: 5, category: 'atelier', title: 'Un espace pensé pour l’efficacité', src: 'https://res.cloudinary.com/p3dkpqm9/image/upload/v1786449290/oas/website/sontcoysahukicosznr9.jpg' },
-    { id: 6, category: 'vehicules', title: 'Le bon outil pour chaque intervention', src: 'https://res.cloudinary.com/p3dkpqm9/image/upload/v1786449294/oas/website/ml5vlmldvdlvww2v5u1o.jpg' },
+    { id: 6, category: 'vehicules.component', title: 'Le bon outil pour chaque intervention', src: 'https://res.cloudinary.com/p3dkpqm9/image/upload/v1786449294/oas/website/ml5vlmldvdlvww2v5u1o.jpg' },
     { id: 7, category: 'atelier', title: 'Clés et outils toujours prêts', src: 'https://res.cloudinary.com/p3dkpqm9/image/upload/v1786449306/oas/website/crfhms8eehim75ddasfp.jpg' },
-    { id: 8, category: 'vehicules', title: 'Outils de précision', src: 'https://res.cloudinary.com/p3dkpqm9/image/upload/v1786449303/oas/website/z5rllu92rls3yvwivq2d.jpg' },
+    { id: 8, category: 'vehicules.component', title: 'Outils de précision', src: 'https://res.cloudinary.com/p3dkpqm9/image/upload/v1786449303/oas/website/z5rllu92rls3yvwivq2d.jpg' },
   ];
 
   readonly beforeAfterItems: BeforeAfterItem[] = [

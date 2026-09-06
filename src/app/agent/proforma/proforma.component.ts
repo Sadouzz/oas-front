@@ -2,14 +2,14 @@ import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
-import { ProformaService, Proforma } from './proforma.service';
-import { BonDeCommandeService, BonDeCommande } from '../bons-commande/bon-de-commande.service';
+import { ProformaService } from './proforma.service';
+import { BonDeCommandeService } from '../bons-commande/bon-de-commande.service';
 import { ClientService } from '../clients/client.service';
 import { VehiculeService } from '../vehicules/vehicule.service';
 import { PieceDetacheeService } from '../pieces-detachees/piece-detachee.service';
 import { MainDoeuvreService } from '../main-doeuvre/main-doeuvre.service';
 import { NgClass } from '@angular/common';
-import { ClientModel, VehiculeModel, PieceDetache, MainDoeuvreModel, extractContent } from '../../shared/models/index';
+import { Proforma, BonDeCommande, ClientModel, VehiculeModel, PieceDetache, MainDoeuvreModel, extractContent } from '../../shared/models/index';
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideArrowRight } from '@lucide/angular';
 
 @Component({

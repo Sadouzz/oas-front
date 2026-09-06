@@ -2,46 +2,18 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { BonDeSortie, BonDeSortieRequest, LigneBonDeSortie } from '../../shared/models';
+import { BonDeSortie, BonDeSortieRequest, LigneBonDeSortie, PageParams } from '../../shared/models';
+import { BonDeSortieHistorique } from './models/bon-de-sortie.model';
 
-export interface BonDeSortieHistorique {
-  id: number;
-  statut?: string;
-  action?: string;
-  motif?: string;
-  dateAction: string;
-  prenom?: string;
-  nom?: string;
-  numBs?: string;
-  numeroSerie?: string;
-  immatriculation?: string;
-  designation?: string;
-  bonDeSortieId?: number;
-  bonDeSortie?: BonDeSortie;
-  piece?: {
-    id: number;
-    reference: string;
-    designation?: string;
-  };
-  quantite?: number;
-  stockMagasin?: number;
-  stockAtelier?: number;
-  qteReelle?: number;
-  agent?: {
-    id: number;
-    firstName: string;
-    lastName: string;
-  };
-}
+export type { BonDeSortie, BonDeSortieRequest, LigneBonDeSortie, BonDeSortieHistorique };
 
-export type { BonDeSortie, BonDeSortieRequest, LigneBonDeSortie };
 
 @Injectable({ providedIn: 'root' })
 export class BonDeSortieService {
   private http = inject(HttpClient);
   private api = `${environment.apiUrl}/api/bons-de-sortie`;
 
-  getAll(params?: import('../../shared/models').PageParams & { statut?: string; clientId?: number; vehiculeId?: number }): Observable<BonDeSortie[]> {
+  getAll(params?: PageParams & { statut?: string; clientId?: number; vehiculeId?: number }): Observable<BonDeSortie[]> {
     const p: Record<string, string> = {};
     if (params?.statut) p['statut'] = params.statut;
     if (params?.clientId) p['clientId'] = String(params.clientId);

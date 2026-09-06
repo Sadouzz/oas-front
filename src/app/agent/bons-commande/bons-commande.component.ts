@@ -2,14 +2,15 @@ import { Component, inject, OnInit, ChangeDetectorRef, signal } from '@angular/c
 import { ActivatedRoute } from '@angular/router';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
-import { BonDeCommandeService, BonDeCommande, StatutBonCommande, ReceptionBonDeCommandeRequest, ReceptionBonDeCommandeLigne, LigneBonDeCommande } from './bon-de-commande.service';
+import { BonDeCommande, ReceptionBonDeCommandeRequest, StatutBonCommande } from './models/bon-de-commande.model';
+import { BonDeCommandeService } from './bon-de-commande.service';
 import { FournisseurService } from '../fournisseurs/fournisseur.service';
 import { VehiculeService } from '../vehicules/vehicule.service';
 import { PieceDetacheeService } from '../pieces-detachees/piece-detachee.service';
-import { ClientService, UserModel } from '../clients/client.service';
+import { ClientService } from '../clients/client.service';
 import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { FournisseurModel, VehiculeModel, PieceDetache, extractContent } from '../../shared/models/index';
+import { FournisseurModel, VehiculeModel, PieceDetache, UserModel, extractContent } from '../../shared/models/index';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideArrowRight } from '@lucide/angular';

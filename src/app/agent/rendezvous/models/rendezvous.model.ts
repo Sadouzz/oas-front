@@ -9,6 +9,7 @@ export interface RendezVousDateHistory {
 
 export interface RendezVousListResponse {
   id: number;
+  numero?: string;
   dateRendezVous: string;
   clientName: string;
   vehiculeImmatriculation: string | null;
@@ -19,6 +20,7 @@ export interface RendezVousListResponse {
 
 export interface RendezVous {
   id: number;
+  numero?: string;
   clientId: number;
   clientName: string;
   vehiculeId: number | null;
@@ -31,3 +33,10 @@ export interface RendezVous {
   hasFicheAtelier: boolean;
   dateHistory?: RendezVousDateHistory[];
 }
+
+export interface ClientRendezVousRequest {
+  dateRendezVous: string;
+  motif: string;
+  vehiculeId: number | null;
+}
+

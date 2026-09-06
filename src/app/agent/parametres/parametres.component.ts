@@ -1,8 +1,9 @@
 import { inject, Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DepotService, Depot } from '../pieces-detachees/depot.service';
-import { CategoriePieceService, CategoriePiece } from '../pieces-detachees/categorie-piece.service';
-import { FicheAtelierConfigService, FicheAtelierConfigBackend, BriqueConfig } from '../fiches-atelier/fiche-atelier-config.service';
+import { DepotService } from '../pieces-detachees/depot.service';
+import { CategoriePieceService } from '../pieces-detachees/categorie-piece.service';
+import { FicheAtelierConfigService } from '../fiches-atelier/fiche-atelier-config.service';
+import { Depot, CategoriePiece, FicheAtelierConfigBackend, BriqueConfig } from '../../shared/models';
 
 @Component({
   selector: 'app-parametres',

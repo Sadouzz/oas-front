@@ -31,7 +31,7 @@ function passwordsMatchValidator(): ValidatorFn {
   };
 }
 
-type OngletAuth = 'login' | 'register';
+type OngletAuth = 'login.component' | 'register.component';
 
 import { SectionTitle } from '../../shared/components/section-title/section-title';
 import { TireTrackComponent } from '../../shared/components/tire-track/tire-track';
@@ -151,7 +151,7 @@ export class RdvComponent implements OnInit {
   ========================================================== */
 
   showModal = false;
-  activeTab: OngletAuth = 'login';
+  activeTab: OngletAuth = 'login.component';
 
   loginForm!: FormGroup;
   registerForm!: FormGroup;
@@ -230,14 +230,14 @@ export class RdvComponent implements OnInit {
   }
 
   openLoginModal(): void {
-        this.activeTab = 'login';
+        this.activeTab = 'login.component';
         this.showModal = true;
         document.body.classList.add('no-scroll');
         this.resetMessages();
     }
 
   openRegisterModal(): void {
-    this.activeTab = 'register';
+    this.activeTab = 'register.component';
     this.showModal = true;
     document.body.classList.add('no-scroll');
     this.resetMessages();
@@ -305,7 +305,7 @@ export class RdvComponent implements OnInit {
         
         setTimeout(() => {
           this.closeModal();
-          this.router.navigate(['/client']);
+          this.router.navigate(['/mon-compte']);
         }, 1200);
       },
       error: (err) => {
@@ -357,7 +357,7 @@ export class RdvComponent implements OnInit {
         this.successMessage = 'Compte créé avec succès ! Vous pouvez vous connecter.';
         this.registerForm.reset();
         setTimeout(() => {
-          this.activeTab = 'login';
+          this.activeTab = 'login.component';
         }, 1500);
       },
       error: (err) => {

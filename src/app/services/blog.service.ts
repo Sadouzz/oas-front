@@ -4,17 +4,7 @@ import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
-export interface BlogPostModel {
-  id: number;
-  title: string;
-  metaDescription: string;
-  datePublication: string;
-  description: string;
-  images: string;
-  category: string;
-  readTime: string;
-  featured: boolean;
-}
+import { BlogPostModel } from '../shared/models/blog.model';
 
 const MOCK_BLOG_POSTS: BlogPostModel[] = [
   {
@@ -67,7 +57,7 @@ const MOCK_BLOG_POSTS: BlogPostModel[] = [
     metaDescription: 'Les alertes à ne jamais ignorer et celles qui demandent simplement une vérification.',
     datePublication: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
     description: 'Les voyants lumineux du tableau de bord sont de trois couleurs : rouge (danger immédiat, arrêtez-vous), orange (anomalie à contrôler rapidement sans urgence absolue), et vert/bleu (fonctionnement d\'un équipement). Apprenez à décoder le symbole de pression d\'huile, le témoin moteur, le système de freinage ou le voyant de batterie pour agir avec sérénité.',
-    images: 'dashboard',
+    images: 'dashboard.component',
     category: 'Sécurité',
     readTime: '7 min de lecture',
     featured: false

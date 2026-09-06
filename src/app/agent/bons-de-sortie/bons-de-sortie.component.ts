@@ -3,15 +3,16 @@ import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormArray, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
-import { BonDeSortieService, BonDeSortie, BonDeSortieHistorique } from './bon-de-sortie.service';
-import { ClientService, UserModel } from '../clients/client.service';
-import { VehiculeService, VehiculeModel } from '../vehicules/vehicule.service';
-import { PieceDetacheeService, PieceDetache } from '../pieces-detachees/piece-detachee.service';
+import { BonDeSortieService } from './bon-de-sortie.service';
+import { BonDeSortie, BonDeSortieHistorique } from './models/bon-de-sortie.model';
+import { ClientService } from '../clients/client.service';
+import { VehiculeService } from '../vehicules/vehicule.service';
+import { PieceDetacheeService } from '../pieces-detachees/piece-detachee.service';
 import { AuthService } from '../../core/services/auth.service';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
-import { extractContent } from '../../shared/models';
+import { UserModel, VehiculeModel, PieceDetache, extractContent } from '../../shared/models';
 import { LucidePlus, LucideSearch, LucidePackage, LucideTrash2, LucideX, LucideCheck, LucideCheckCircle, LucideLoader2 } from '@lucide/angular';
 
 @Component({

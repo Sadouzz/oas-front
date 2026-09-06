@@ -21,11 +21,11 @@ export class ForbiddenComponent implements OnInit {
   goBack(): void {
     const role = this.authService.getRole();
     if (role === 'ROLE_CLIENT') {
-      this.router.navigate(['/client'], { replaceUrl: true });
+      this.router.navigate(['/mon-compte'], { replaceUrl: true });
     } else if (role === 'ROLE_TECHNICIEN') {
       this.router.navigate(['/technicien'], { replaceUrl: true });
     } else {
-      this.router.navigate(['/agent/dashboard'], { replaceUrl: true });
+      this.router.navigate(['/app/dashboard'], { replaceUrl: true });
     }
   }
 }

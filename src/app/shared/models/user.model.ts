@@ -42,3 +42,10 @@ export interface AdminUserUpdatePayload {
   role?: string;
   garageId?: number;
 }
+
+export interface ChangePasswordPayload {
+  username: string;
+  oldPassword: string;
+  newPassword: string;
+}
+

@@ -3,17 +3,19 @@ import { FormArray, FormBuilder, ReactiveFormsModule, FormsModule, Validators } 
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { CommonModule, DecimalPipe, DatePipe } from '@angular/common';
-import { AvoirTTCService, AvoirTTC } from './avoir-ttc.service';
-import { ClientService, UserModel } from '../clients/client.service';
-import { VehiculeService, VehiculeModel } from '../vehicules/vehicule.service';
-import { PieceDetacheeService, PieceDetache } from '../pieces-detachees/piece-detachee.service';
-import { MainDoeuvreService, MainDoeuvreModel } from '../main-doeuvre/main-doeuvre.service';
+import { AvoirTTCService } from './avoir-ttc.service';
+import { ClientService } from '../clients/client.service';
+import { VehiculeService } from '../vehicules/vehicule.service';
+import { PieceDetacheeService } from '../pieces-detachees/piece-detachee.service';
+import { MainDoeuvreService } from '../main-doeuvre/main-doeuvre.service';
 import { AuthService } from '../../core/services/auth.service';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
-import { extractContent } from '../../shared/models';
+import { UserModel, VehiculeModel, PieceDetache, MainDoeuvreModel, extractContent } from '../../shared/models';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { LucideSearch, LucidePlus, LucideTrash2, LucideX, LucideDownload, LucideEye, LucideLoader2 } from '@lucide/angular';
+
+import { AvoirTTC, AvoirTTCCreateRequest } from './models/avoit-ttc.model';
 
 @Component({
   selector: 'app-avoirs-ttc',
@@ -21,7 +23,6 @@ import { LucideSearch, LucidePlus, LucideTrash2, LucideX, LucideDownload, Lucide
   imports: [CommonModule, ReactiveFormsModule, FormsModule, DecimalPipe, DatePipe, PaginationComponent, AlertComponent,
     LucideSearch, LucidePlus, LucideTrash2, LucideX, LucideDownload, LucideEye, LucideLoader2],
   templateUrl: './avoirs-ttc.html',
-  styleUrl: './avoirs-ttc.css',
 })
 export class AvoirsTtc extends BasePaginatedComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);

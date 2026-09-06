@@ -1,12 +1,27 @@
 export interface DevisPrevisionnel {
   id: number;
+  numero?: string;
   notesReparation: string;
   montantTotal: number;
-  kilometrageVehicule: number;
-  createdAt: string;
+  kilometrageVehicule?: number;
+  createdAt?: string;
+  dateCreation?: string;
   statut: 'EN_ATTENTE' | 'ACCEPTE' | 'REJETE' | 'PAYEE' | 'PARTIELLEMENT_PAYEE' | 'ANNULEE';
   vehicule: { id: number; immatriculation: string; marque: string; modele: string } | null;
   client: { id: number; firstName: string; lastName: string; phone: string } | null;
+}
+
+export interface DevisPrevisionnelOnFicheAtelier {
+  id: number;
+  numero?: string;
+  notesReparation: string;
+  montantTotal: number;
+  kilometrageVehicule?: number;
+  createdAt?: string;
+  dateCreation?: string;
+  statut: 'EN_ATTENTE' | 'ACCEPTE' | 'REJETE' | 'PAYEE' | 'PARTIELLEMENT_PAYEE' | 'ANNULEE';
+  vehicule?: { id: number; immatriculation: string; marque: string; modele: string } | null;
+  client?: { id: number; firstName: string; lastName: string; phone: string } | null;
 }
 
 export interface DevisPrevisionnelRequest {

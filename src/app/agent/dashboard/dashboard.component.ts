@@ -2,11 +2,11 @@ import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LucidePlus, LucideUsers, LucideCar, LucideAlertTriangle, LucideClock, LucidePackage, LucideArrowRight, LucideCheckCircle, LucideBuilding } from '@lucide/angular';
 import { AuthService } from '../../core/services/auth.service';
-import { ClientService, UserModel } from '../clients/client.service';
-import { VehiculeService, VehiculeModel } from '../vehicules/vehicule.service';
-import { StockService } from '../pieces-detachees/stock.service';
-import { PieceDetacheeService, AlerteStock } from '../pieces-detachees/piece-detachee.service';
-import { BonDeSortieService, BonDeSortie } from '../bons-de-sortie/bon-de-sortie.service';
+import { ClientService } from '../clients/client.service';
+import { VehiculeService } from '../vehicules/vehicule.service';
+import { StockService } from '../inventaire/inventaire.service';
+import { PieceDetacheeService } from '../pieces-detachees/piece-detachee.service';
+import { BonDeSortieService } from '../bons-de-sortie/bon-de-sortie.service';
 import { OrdreReparationService } from '../ordres-reparation/ordre-reparation.service';
 import { GarageContextService } from '../../core/services/garage-context.service';
 import { GarageService } from '../../services/garage.service';
@@ -16,6 +16,10 @@ import {
   DashboardAgentResponse,
   DashboardChefAtelierResponse,
   DashboardAgentMagasinResponse,
+  UserModel,
+  VehiculeModel,
+  AlerteStock,
+  BonDeSortie,
   extractContent
 } from '../../shared/models/index';
 @Component({

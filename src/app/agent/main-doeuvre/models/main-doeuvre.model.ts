@@ -1,6 +1,13 @@
-import { CategorieMainDoeuvreModel } from '../categorie-main-doeuvre.service';
+export interface CategorieMainDoeuvreModel {
+  id: number;
+  nom: string;
+}
 
-export type CategorieMainDoeuvre = string; // For backward compatibility if needed, but we shouldn't need it. We will use CategorieMainDoeuvreModel.
+export interface CategorieMainDoeuvreRequest {
+  nom: string;
+}
+
+export type CategorieMainDoeuvre = string; // For backward compatibility if needed
 
 export interface MainDoeuvreModel {
   id: number;

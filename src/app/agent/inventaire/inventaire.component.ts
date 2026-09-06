@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { StockService, InventaireResponse } from '../pieces-detachees/stock.service';
+import { StockService, InventaireResponse } from './inventaire.service';
 import { PieceDetacheeService, PieceDetache } from '../pieces-detachees/piece-detachee.service';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
@@ -65,10 +65,10 @@ export class InventaireComponent implements OnInit {
   applyFilter() {
     this.filtered = this.keyword
       ? this.pdps.filter(p =>
-          p.designation.toLowerCase().includes(this.keyword) ||
-          p.reference.toLowerCase().includes(this.keyword) ||
-          p.categorie.toLowerCase().includes(this.keyword)
-        )
+        p.designation.toLowerCase().includes(this.keyword) ||
+        p.reference.toLowerCase().includes(this.keyword) ||
+        p.categorie.toLowerCase().includes(this.keyword)
+      )
       : this.pdps;
     this.page = 1;
   }

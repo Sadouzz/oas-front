@@ -1,3 +1,71 @@
+export interface LignePiece {
+  id: number;
+  pieceId?: number;
+  designationPiece?: string;
+  isCustom?: boolean;
+  designationPds?: string;
+  quantite: number;
+  prix: number;
+  montantTotal: number;
+}
+
+export interface LigneMD {
+  id: number;
+  mainDoeuvreId: number;
+  descriptionMainDoeuvre: string;
+  nbreHeure: number;
+  tarifHoraire: number;
+  montantTotal: number;
+}
+
+export interface Proforma {
+  id: number;
+  numero: string;
+  dateCreation: string;
+  dateModification: string;
+  montantHT: number;
+  montantTVA: number;
+  montantTTC: number;
+  montantTimbre: number;
+  montantAutre: number;
+  montantTotal: number;
+  agentNom: string;
+  remarque: string | null;
+  kilometrage: number;
+  clientId: number;
+  clientNom: string;
+  vehiculeId: number | null;
+  immatriculation: string | null;
+  numeroChassis: string | null;
+  marque: string | null;
+  modele: string | null;
+  annee: number | null;
+  numeroBonDeCommande: string | null;
+  statut?: string;
+  visibleClient?: boolean;
+  lignesPieces: LignePiece[];
+  lignesMainDoeuvres: LigneMD[];
+}
+
+export interface ProformaRequest {
+  clientId: number;
+  ordreReparationId?: number | null;
+  vehiculeId?: number | null;
+  kilometrage: number;
+  immatriculation?: string;
+  numeroChassis?: string;
+  marque?: string;
+  modele?: string;
+  annee?: number | null;
+  numeroBonDeCommande?: string;
+  remarque?: string;
+  tvaRate?: number | null;
+  montantTimbre?: number;
+  montantAutre?: number;
+  lignesPieces: { pieceId: number; quantite: number; prix: number }[];
+  lignesMainDoeuvres: { mainDoeuvreId: number; nbreHeure: number; tarifHoraire: number }[];
+}
+
 export interface LignePieceRequest {
   pieceId?: number | null;
   reference?: string | null;
@@ -12,26 +80,6 @@ export interface LigneMainDoeuvreRequest {
   designation?: string | null;
   heures: number;
   prixUnitaire: number;
-}
-
-// Backend expects DevisPrevisionnelRequest:
-// { notesReparation: string, montantTotal: BigDecimal, kilometrageVehicule: Double, vehiculeId: Long, clientId: Long }
-export interface ProformaCreateRequest {
-  notesReparation?: string | null;
-  montantTotal: number;
-  kilometrageVehicule?: number | null;
-  vehiculeId?: number | null;
-  clientId: number;
-}
-
-// Front-end enriched request used when sending a pro-forma from the UI.
-// Backend core fields are kept but we also include optional detailed lines
-// so the front-end can preserve and display them. Many backends ignore
-// unknown properties, but if your backend rejects extra fields you can
-// omit `lignesPieces` and `lignesMainDoeuvre` on send.
-export interface DevisPrevisionnelRequest extends ProformaCreateRequest {
-  lignesPieces?: LignePieceRequest[] | null;
-  lignesMainDoeuvre?: LigneMainDoeuvreRequest[] | null;
 }
 
 export interface ProformaResponse {

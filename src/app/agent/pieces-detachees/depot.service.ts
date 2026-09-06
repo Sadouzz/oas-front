@@ -1,14 +1,8 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-
-export interface Depot {
-  id?: number;
-  nom: string;
-  description?: string;
-  isArchived?: boolean;
-}
+import { Depot } from './models/piece-detachee.model';
 
 @Injectable({
   providedIn: 'root'

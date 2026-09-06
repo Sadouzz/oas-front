@@ -2,12 +2,11 @@ import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { RendezVousService } from './rendezvous.service';
-import { TechnicienService } from '../techniciens/technicien.service';
-import { RendezVous, RendezVousStatus, Technicien, extractContent } from '../../shared/models/index';
+import { RendezVous, RendezVousStatus, extractContent, extractPage } from '../../shared/models/index';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import {
-  LucideSearch, LucideX, LucideCalendar, LucideCheck, LucidePencil, LucideUser, LucideFileText
+  LucideSearch, LucideX, LucideCalendar, LucideCheck, LucidePencil, LucideFileText
 } from '@lucide/angular';
 
 @Component({
@@ -21,14 +20,11 @@ import {
 export class RendezVousComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private service = inject(RendezVousService);
-  private technicienService = inject(TechnicienService);
   private fb = inject(FormBuilder);
   private router = inject(Router);
 
   rdvs: RendezVous[] = [];
   filtered: RendezVous[] = [];
-  techniciens: Technicien[] = [];
-  selectedTechnicienIds = new Set<number>();
   editedDate = '';
 
   loading = true;
@@ -39,9 +35,12 @@ export class RendezVousComponent implements OnInit {
 
   searchText = '';
   filterStatut: RendezVousStatus | '' = '';
+  private searchTimeout: any;
 
   page = 1;
   pageSize = 10;
+  totalElements = 0;
+  totalPages = 1;
   successMessage = '';
   errorMessage = '';
   modalErrorMessage = '';
@@ -62,52 +61,55 @@ export class RendezVousComponent implements OnInit {
 
   ngOnInit() {
     this.load();
-    this.technicienService.getAll().subscribe({ next: data => this.techniciens = extractContent(data) });
   }
 
   load() {
     this.loading = true;
-    this.service.getAll().subscribe({
+    this.cdr.markForCheck();
+    this.service.getAll({
+      page: this.page - 1,
+      size: this.pageSize,
+      keyword: this.searchText ? this.searchText.trim() : undefined,
+      statut: this.filterStatut || undefined,
+    }).subscribe({
       next: data => {
-        this.rdvs = extractContent(data);
-        this.applyFilters();
+        this.rdvs = extractContent<RendezVous>(data);
+        this.filtered = this.rdvs;
+        const pageInfo = extractPage<RendezVous>(data);
+        if (pageInfo) {
+          this.totalElements = pageInfo.totalElements ?? this.rdvs.length;
+          this.totalPages = pageInfo.totalPages ?? Math.max(1, Math.ceil(this.totalElements / this.pageSize));
+        } else {
+          this.totalElements = this.rdvs.length;
+          this.totalPages = Math.max(1, Math.ceil(this.totalElements / this.pageSize));
+        }
         this.loading = false;
         this.cdr.markForCheck();
       },
       error: () => {
         this.rdvs = [];
         this.filtered = [];
+        this.totalElements = 0;
+        this.totalPages = 1;
         this.loading = false;
         this.cdr.markForCheck();
       },
     });
   }
 
-  applyFilters() {
-    let result = Array.isArray(this.rdvs) ? [...this.rdvs] : [];
-    if (this.searchText) {
-      const kw = this.searchText.toLowerCase();
-      result = result.filter(r =>
-        r.clientName?.toLowerCase().includes(kw) ||
-        (r.motif ?? '').toLowerCase().includes(kw) ||
-        (r.vehiculeImmatriculation ?? '').toLowerCase().includes(kw)
-      );
-    }
-    if (this.filterStatut) {
-      result = result.filter(r => r.statut === this.filterStatut);
-    }
-    this.filtered = result;
-    this.page = 1;
-  }
-
   onSearch(e: Event) {
     this.searchText = (e.target as HTMLInputElement).value;
-    this.applyFilters();
+    clearTimeout(this.searchTimeout);
+    this.searchTimeout = setTimeout(() => {
+      this.page = 1;
+      this.load();
+    }, 300);
   }
 
   onStatutFilter(e: Event) {
     this.filterStatut = (e.target as HTMLSelectElement).value as RendezVousStatus | '';
-    this.applyFilters();
+    this.page = 1;
+    this.load();
   }
 
   openStatut(rdv: RendezVous) {
@@ -120,7 +122,6 @@ export class RendezVousComponent implements OnInit {
 
   openValider(rdv: RendezVous) {
     this.editingRdv = rdv;
-    this.selectedTechnicienIds = new Set();
     this.editedDate = this.toDatetimeLocal(rdv.dateRendezVous);
     this.modalErrorMessage = '';
     this.modalSuccessMessage = '';
@@ -162,10 +163,8 @@ export class RendezVousComponent implements OnInit {
     this.saving = true;
     this.modalErrorMessage = '';
 
-    const technicienIds = Array.from(this.selectedTechnicienIds);
-
     const doValider = () => {
-      this.service.valider(this.editingRdv!.id, technicienIds).subscribe({
+      this.service.valider(this.editingRdv!.id).subscribe({
         next: () => {
           this.closeModals();
           this.load();
@@ -192,28 +191,32 @@ export class RendezVousComponent implements OnInit {
     }
   }
 
-  toggleTechnicien(id: number) {
-    if (this.selectedTechnicienIds.has(id)) {
-      this.selectedTechnicienIds.delete(id);
-    } else {
-      this.selectedTechnicienIds.add(id);
-    }
-  }
-
   createFicheAtelier(rdv: RendezVous) {
-    this.router.navigate(['/agent/admin/fiches-atelier/new', rdv.id]);
+    this.router.navigate(['/app/admin/fiches-atelier/new', rdv.id]);
   }
 
   get paged(): RendezVous[] {
-    const list = Array.isArray(this.filtered) ? this.filtered : [];
-    return list.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
+    return Array.isArray(this.filtered) ? this.filtered : [];
   }
-  get totalPages(): number {
-    const list = Array.isArray(this.filtered) ? this.filtered : [];
-    return Math.max(1, Math.ceil(list.length / this.pageSize));
+
+  onPageChange(p: number) {
+    this.page = p;
+    this.load();
   }
-  prevPage() { if (this.page > 1) this.page--; }
-  nextPage() { if (this.page < this.totalPages) this.page++; }
+
+  prevPage() {
+    if (this.page > 1) {
+      this.page--;
+      this.load();
+    }
+  }
+
+  nextPage() {
+    if (this.page < this.totalPages) {
+      this.page++;
+      this.load();
+    }
+  }
 
   formatDateTime(d: string): string {
     return new Date(d).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });

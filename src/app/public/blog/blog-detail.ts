@@ -2,7 +2,8 @@ import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { BlogService, BlogPostModel } from '../../services/blog.service';
+import { BlogService } from '../../services/blog.service';
+import { BlogPostModel } from '../../shared/models';
 import { BoltCornersComponent } from '../../shared/components/bolt-corners/bolt-corners';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 

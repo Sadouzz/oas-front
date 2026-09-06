@@ -2,9 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Proforma } from '../../agent/proforma/proforma.service';
-
-export type { Proforma };
+import { Proforma } from '../../shared/models';
 
 @Injectable({ providedIn: 'root' })
 export class ClientProformaService {

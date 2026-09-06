@@ -1,45 +1,45 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { FicheAtelierRequest, FicheAtelierResponse } from '../../shared/models';
+import { FicheAtelierRequest, FicheAtelierDetailsResponse, PageParams, PageResponse } from '../../shared/models';
+import { environment } from '@env/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class FicheAtelierService {
-  private apiUrl = 'http://localhost:9090/api/admin/fiches-atelier';
+  private http = inject(HttpClient);
+  private api = `${environment.apiUrl}/api/fiches-atelier`;
 
-  constructor(private http: HttpClient) { }
-
-  getAll(params: import('../../shared/models').PageParams = {}): Observable<FicheAtelierResponse[]> {
-    const queryParams: Record<string, string> = {};
-    if (params.page !== undefined) queryParams['page'] = params.page.toString();
-    if (params.size !== undefined) queryParams['size'] = params.size.toString();
-    if (params.keyword) queryParams['keyword'] = params.keyword;
-    return this.http.get<FicheAtelierResponse[]>(this.apiUrl, { params: queryParams });
+  getAll(params: PageParams & { keyword?: string } = {}): Observable<PageResponse<FicheAtelierDetailsResponse> | FicheAtelierDetailsResponse[]> {
+    let httpParams = new HttpParams();
+    if (params.page !== undefined) httpParams = httpParams.set('page', params.page.toString());
+    if (params.size !== undefined) httpParams = httpParams.set('size', params.size.toString());
+    if (params.keyword) httpParams = httpParams.set('keyword', params.keyword);
+    return this.http.get<PageResponse<FicheAtelierDetailsResponse> | FicheAtelierDetailsResponse[]>(this.api, { params: httpParams });
   }
 
-  getById(id: number): Observable<FicheAtelierResponse> {
-    return this.http.get<FicheAtelierResponse>(`${this.apiUrl}/${id}`);
+  getById(id: number): Observable<FicheAtelierDetailsResponse> {
+    return this.http.get<FicheAtelierDetailsResponse>(`${this.api}/${id}`);
   }
 
-  getByRendezVousId(rendezVousId: number): Observable<FicheAtelierResponse> {
-    return this.http.get<FicheAtelierResponse>(`${this.apiUrl}/rendezvous/${rendezVousId}`);
+  getByRendezVousId(rendezVousId: number): Observable<FicheAtelierDetailsResponse> {
+    return this.http.get<FicheAtelierDetailsResponse>(`${this.api}/rendezvous/${rendezVousId}`);
   }
 
-  create(request: FicheAtelierRequest): Observable<FicheAtelierResponse> {
-    return this.http.post<FicheAtelierResponse>(this.apiUrl, request);
+  create(request: FicheAtelierRequest): Observable<FicheAtelierDetailsResponse> {
+    return this.http.post<FicheAtelierDetailsResponse>(this.api, request);
   }
 
-  update(id: number, request: FicheAtelierRequest): Observable<FicheAtelierResponse> {
-    return this.http.put<FicheAtelierResponse>(`${this.apiUrl}/${id}`, request);
+  update(id: number, request: FicheAtelierRequest): Observable<FicheAtelierDetailsResponse> {
+    return this.http.put<FicheAtelierDetailsResponse>(`${this.api}/${id}`, request);
   }
 
   delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    return this.http.delete<void>(`${this.api}/${id}`);
   }
 
-  signForExit(id: number, signature: string): Observable<FicheAtelierResponse> {
-    return this.http.patch<FicheAtelierResponse>(`${this.apiUrl}/${id}/signature-sortie`, { signature });
+  signForExit(id: number, signature: string): Observable<FicheAtelierDetailsResponse> {
+    return this.http.patch<FicheAtelierDetailsResponse>(`${this.api}/${id}/signature-sortie`, { signature });
   }
 }

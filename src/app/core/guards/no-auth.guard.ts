@@ -7,7 +7,14 @@ export const noAuthGuard: CanActivateFn = () => {
   const router = inject(Router);
 
   if (authService.isAuthenticated()) {
-    router.navigate(['/agent/dashboard'], { replaceUrl: true });
+    const role = authService.getRole();
+    if (role === 'ROLE_CLIENT') {
+      router.navigate(['/mon-compte'], { replaceUrl: true });
+    } else if (role === 'ROLE_TECHNICIEN') {
+      router.navigate(['/technicien'], { replaceUrl: true });
+    } else {
+      router.navigate(['/app/dashboard'], { replaceUrl: true });
+    }
     return false;
   }
   return true;

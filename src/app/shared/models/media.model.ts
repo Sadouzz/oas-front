@@ -9,3 +9,12 @@ export interface CloudinaryUploadResult {
 export type MediaUploadEvent =
   | { status: 'progress'; progress: number }
   | { status: 'done'; result: CloudinaryUploadResult };
+
+export interface MediaSignature {
+  signature: string;
+  timestamp: number;
+  apiKey: string;
+  cloudName: string;
+  folder: string | null;
+}
+

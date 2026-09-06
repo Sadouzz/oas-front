@@ -2,9 +2,10 @@ import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { DecimalPipe, NgClass } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { PieceDetacheeService, PieceDetache } from './piece-detachee.service';
-import { DepotService, Depot } from './depot.service';
-import { CategoriePieceService, CategoriePiece } from './categorie-piece.service';
+import { PieceDetacheeService } from './piece-detachee.service';
+import { DepotService } from './depot.service';
+import { CategoriePieceService } from './categorie-piece.service';
+import { PieceDetache, Depot, CategoriePiece } from '../../shared/models';
 import { AuthService } from '../../core/services/auth.service';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
@@ -111,7 +112,7 @@ export class PiecesDetacheesComponent extends BasePaginatedComponent implements 
 
 
   commanderPiece(p: PieceDetache) {
-    this.router.navigate(['/bons-commande'], { queryParams: { pieceId: p.id } });
+    this.router.navigate(['/app/bons-commande'], { queryParams: { pieceId: p.id } });
   }
 
   loadReferences() {

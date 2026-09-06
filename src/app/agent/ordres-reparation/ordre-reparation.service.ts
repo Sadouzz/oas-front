@@ -2,10 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { OrdreReparation, OrdreReparationRequest, StatutFiche, PieceJointeDiagnostic, TypePieceJointeDiagnostic } from '../../shared/models';
-import { RemarqueDiagnostic } from './models/ordre-reparation.model';
-
-export type { OrdreReparation, OrdreReparationRequest, StatutFiche, PieceJointeDiagnostic, TypePieceJointeDiagnostic, RemarqueDiagnostic };
+import { OrdreReparation, OrdreReparationRequest, StatutFiche, PieceJointeDiagnostic, TypePieceJointeDiagnostic, RemarqueDiagnostic } from '../../shared/models';
 
 @Injectable({ providedIn: 'root' })
 export class OrdreReparationService {

@@ -3,10 +3,9 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { FicheAtelierService } from '../fiche-atelier.service';
-import { FicheAtelierResponse } from '../../../shared/models';
+import { FicheAtelierDetailsResponse } from '../../../shared/models';
 import { DevisPrevisionnel, DevisPrevisionnelService } from '../../devis-previsionnels/devis-previsionnel.service';
 import { LucideArrowLeft, LucideCheck, LucideX } from '@lucide/angular';
-import { OrdreReparationService } from '../../ordres-reparation/ordre-reparation.service';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
@@ -19,24 +18,20 @@ export class FicheAtelierDetails implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private service = inject(FicheAtelierService);
-  private ordreReparationService = inject(OrdreReparationService);
+  private ficheAtelierService = inject(FicheAtelierService);
   private authService = inject(AuthService);
   private devisService = inject(DevisPrevisionnelService);
 
-  fiche: FicheAtelierResponse | null = null;
+  fiche: FicheAtelierDetailsResponse | null = null;
   loading = false;
   error = '';
   
   devis: DevisPrevisionnel | null = null;
-  loadingDevis = false;
   creatingDevis = false;
   devisMontant: number | null = null;
   devisNotes = '';
 
   // ─── Bouton "Créer l'ordre de réparation" (cf. spec point 8) ─────────
-  ordreReparationExists = false;
-  checkingOrdreReparation = false;
   creatingOrdreReparation = false;
 
   private readonly rolesAutorisesCreationOR = ['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER'];
@@ -56,37 +51,17 @@ export class FicheAtelierDetails implements OnInit {
 
   loadFiche(id: number) {
     this.loading = true;
-    this.service.getById(id).subscribe({
+    this.ficheAtelierService.getById(id).subscribe({
       next: (data) => {
         this.fiche = data;
-        this.loading = false; this.cdr.markForCheck();
-        this.checkOrdreReparationExists(id);
-        this.loadDevis(id);
+        this.devis = (data.devisPrevisionnel as any) ?? null;
+        this.loading = false;
+        this.cdr.markForCheck();
       },
       error: () => {
         this.error = "Impossible de charger la fiche atelier.";
-        this.loading = false; this.cdr.markForCheck();
-      }
-    });
-  }
-
-  private checkOrdreReparationExists(ficheAtelierId: number) {
-    this.checkingOrdreReparation = true;
-    this.ordreReparationService.existsForFicheAtelier(ficheAtelierId).subscribe({
-      next: (res) => { this.ordreReparationExists = !!res?.exists; this.checkingOrdreReparation = false; },
-      error: () => { this.checkingOrdreReparation = false; }
-    });
-  }
-
-  loadDevis(ficheId: number) {
-    this.loadingDevis = true;
-    this.devisService.getByFicheAtelierId(ficheId).subscribe({
-      next: (devis) => {
-        this.devis = devis;
-        this.loadingDevis = false;
-      },
-      error: () => {
-        this.loadingDevis = false;
+        this.loading = false;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -104,11 +79,16 @@ export class FicheAtelierDetails implements OnInit {
     }).subscribe({
       next: (newDevis) => {
         this.devis = newDevis;
+        if (this.fiche) {
+          this.fiche.devisPrevisionnel = newDevis as any;
+        }
         this.creatingDevis = false;
+        this.cdr.markForCheck();
       },
       error: (err) => {
         this.error = err.error?.message || "Erreur lors de la création du devis.";
         this.creatingDevis = false;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -120,11 +100,21 @@ export class FicheAtelierDetails implements OnInit {
     this.devisService.valider(this.devis.id).subscribe({
       next: (updated) => {
         this.devis = updated;
+        if (this.fiche) {
+          this.fiche.devisPrevisionnel = updated as any;
+        }
+        this.cdr.markForCheck();
       },
       error: (err) => {
         this.error = err.error?.message || "Impossible de valider le devis.";
+        this.cdr.markForCheck();
       }
     });
+  }
+
+  ouvrirOrdreReparation() {
+    if (!this.fiche) return;
+    this.router.navigate(['/app/ordres-reparation'], { queryParams: { ficheAtelierId: this.fiche.id } });
   }
 
   creerOrdreReparation() {
@@ -133,11 +123,18 @@ export class FicheAtelierDetails implements OnInit {
       this.error = "Un devis prévisionnel doit être créé et accepté avant de créer l'ordre de réparation.";
       return;
     }
-    this.router.navigate(['/agent/ordres-reparation'], { queryParams: { ficheAtelierId: this.fiche.id } });
+    this.router.navigate(['/app/ordres-reparation'], { queryParams: { ficheAtelierId: this.fiche.id } });
+  }
+
+
+  voirDevis() {
+    if (!this.devis) return;
+    const query = this.devis.numero || (this.fiche ? this.fiche.vehiculeImmatriculation : '');
+    this.router.navigate(['/app/devis-previsionnels'], { queryParams: { keyword: query } });
   }
 
   goBack() {
-    this.router.navigate(['/agent/fiches-atelier']);
+    this.router.navigate(['/app/fiches-atelier']);
   }
 
   // --- Signature Sortie ---
@@ -203,7 +200,7 @@ export class FicheAtelierDetails implements OnInit {
     this.savingSortie = true;
     const signatureBase64 = this.sigSortieEl.nativeElement.toDataURL('image/png');
 
-    this.service.signForExit(this.fiche.id, signatureBase64).subscribe({
+    this.ficheAtelierService.signForExit(this.fiche.id, signatureBase64).subscribe({
       next: (data) => {
         this.fiche = data;
         this.savingSortie = false;

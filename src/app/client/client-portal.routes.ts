@@ -16,7 +16,7 @@ export const CLIENT_PORTAL_ROUTES: Routes = [
         loadComponent: () => import('./dashboard-home/dashboard-home.component').then(m => m.DashboardHomeComponent),
       },
       {
-        path: 'vehicules',
+        path: 'vehicules.component',
         loadComponent: () => import('./vehicules/client-vehicules.component').then(m => m.ClientVehiculesComponent),
       },
       {
@@ -24,7 +24,7 @@ export const CLIENT_PORTAL_ROUTES: Routes = [
         loadComponent: () => import('./rendezvous/client-rendezvous.component').then(m => m.ClientRendezVousComponent),
       },
       {
-        path: 'marketplace',
+        path: 'marketplace.component',
         loadComponent: () => import('./marketplace/client-marketplace.component').then(m => m.ClientMarketplaceComponent),
       },
       {
@@ -32,11 +32,11 @@ export const CLIENT_PORTAL_ROUTES: Routes = [
         loadComponent: () => import('./proformas/client-proformas.component').then(m => m.ClientProformasComponent),
       },
       {
-        path: 'devis',
+        path: 'devis.component',
         loadComponent: () => import('./devis/client-devis.component').then(m => m.ClientDevisComponent),
       },
       {
-        path: 'factures',
+        path: 'factures.component',
         loadComponent: () => import('./factures/client-factures.component').then(m => m.ClientFacturesComponent),
       },
       {
@@ -52,7 +52,7 @@ export const CLIENT_PORTAL_ROUTES: Routes = [
         loadComponent: () => import('./profile/client-profile.component').then(m => m.ClientProfileComponent),
       },
       {
-        path: 'parametres',
+        path: 'parametres.component',
         loadComponent: () => import('./settings/client-settings.component').then(m => m.ClientSettingsComponent),
       },
     ],

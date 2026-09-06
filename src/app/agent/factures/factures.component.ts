@@ -5,13 +5,13 @@ import { forkJoin } from 'rxjs';
 import { CommonModule, DecimalPipe, DatePipe, NgClass } from '@angular/common';
 import { FactureService } from './facture.service';
 import { FactureModel, FactureCreateRequest } from './models/facture.model';
-import { ClientService, UserModel } from '../clients/client.service';
-import { VehiculeService, VehiculeModel } from '../vehicules/vehicule.service';
-import { OrdreReparationService, OrdreReparation } from '../ordres-reparation/ordre-reparation.service';
+import { ClientService } from '../clients/client.service';
+import { VehiculeService } from '../vehicules/vehicule.service';
+import { OrdreReparationService } from '../ordres-reparation/ordre-reparation.service';
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideReceipt, LucideEye, LucidePrinter } from '@lucide/angular';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
-import { extractContent } from '../../shared/models';
+import { UserModel, VehiculeModel, OrdreReparation, extractContent } from '../../shared/models';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select.component';
 

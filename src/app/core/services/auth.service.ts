@@ -18,7 +18,7 @@ export class AuthService {
   private expirationTimer: any;
 
   constructor() {
-    this.scheduleAutoLogout();
+    this.scheduleAutoRefresh();
   }
 
   login(credentials: LoginRequest): Observable<AuthResponse> {
@@ -34,23 +34,26 @@ export class AuthService {
           if (response.garageId && response.garageName) {
             this.garageContext.enterGarage(response.garageId, response.garageName);
           }
-          this.scheduleAutoLogout();
+          this.scheduleAutoRefresh();
         }
       })
     );
   }
 
   refreshToken(): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.api}/refresh`, {}, { withCredentials: true }).pipe(
-      tap(response => {
-        this.cookieService.set('token', response.token, 7);
-        this.cookieService.set('username', response.username, 7);
-        this.cookieService.set('role', response.role, 7);
+    return this.http.post<any>(`${this.api}/refresh`, {}, { withCredentials: true }).pipe(
+      map(res => (res && res.data) ? res.data : res),
+      tap((response: AuthResponse) => {
+        if (response && response.token) {
+          this.cookieService.set('token', response.token, 7);
+          if (response.username) this.cookieService.set('username', response.username, 7);
+          if (response.role) this.cookieService.set('role', response.role, 7);
 
-        if (response.garageId && response.garageName) {
-          this.garageContext.enterGarage(response.garageId, response.garageName);
+          if (response.garageId && response.garageName) {
+            this.garageContext.enterGarage(response.garageId, response.garageName);
+          }
+          this.scheduleAutoRefresh();
         }
-        this.scheduleAutoLogout();
       })
     );
   }
@@ -77,7 +80,7 @@ export class AuthService {
     this.cookieService.delete('username');
     this.cookieService.delete('role');
     this.garageContext.leaveGarage();
-    this.clearAutoLogoutTimer();
+    this.clearAutoRefreshTimer();
   }
 
   getToken(): string | null {
@@ -85,8 +88,8 @@ export class AuthService {
   }
 
   /**
-   * Vérifie la présence ET l'expiration du JWT.
-   * Auto-logout si le token est expiré ou malformé.
+   * Vérifie la validité du JWT ou la présence d'une session.
+   * Ne force pas le logout immédiat pour permettre le rafraîchissement automatique via le refresh token.
    */
   isAuthenticated(): boolean {
     const token = this.getToken();
@@ -95,12 +98,7 @@ export class AuthService {
     if (token) {
       try {
         const { exp } = jwtDecode<{ exp: number }>(token);
-        const valid = Date.now() < exp * 1000;
-        if (!valid) {
-          this.logout();
-          return false;
-        }
-        return true;
+        return Date.now() < exp * 1000 || !!role;
       } catch {
         return !!role;
       }
@@ -109,7 +107,21 @@ export class AuthService {
     return !!role;
   }
 
-  private scheduleAutoLogout() {
+  isTokenExpired(): boolean {
+    const token = this.getToken();
+    if (!token) return true;
+    try {
+      const { exp } = jwtDecode<{ exp: number }>(token);
+      return Date.now() >= exp * 1000;
+    } catch {
+      return true;
+    }
+  }
+
+  /**
+   * Planifie un rafraîchissement proactif du token avant son expiration (1 minute avant).
+   */
+  private scheduleAutoRefresh() {
     const token = this.getToken();
     if (!token) return;
 
@@ -117,22 +129,41 @@ export class AuthService {
       const { exp } = jwtDecode<{ exp: number }>(token);
       const expiresIn = (exp * 1000) - Date.now();
 
-      this.clearAutoLogoutTimer();
+      this.clearAutoRefreshTimer();
 
       if (expiresIn > 0) {
+        // Rafraîchir 1 minute avant expiration (ou à mi-parcours si le délai est inférieur à 1 minute)
+        const refreshDelay = expiresIn > 60_000 ? expiresIn - 60_000 : Math.max(5_000, expiresIn / 2);
+
         this.expirationTimer = setTimeout(() => {
-          this.logout();
-          this.router.navigate(['/login'], { replaceUrl: true });
-        }, expiresIn);
+          this.refreshToken().subscribe({
+            next: () => {
+              // Nouveau token obtenu et nouveau timer planifié dans le tap()
+            },
+            error: (err) => {
+              console.warn('[AuthService] Échec du rafraîchissement automatique du token:', err);
+              if (this.isTokenExpired()) {
+                this.logout();
+                this.router.navigate(['/login'], { replaceUrl: true });
+              }
+            }
+          });
+        }, refreshDelay);
       } else {
-        this.logout();
+        // Token déjà expiré, tenter un refresh immédiat
+        this.refreshToken().subscribe({
+          next: () => {},
+          error: () => {
+            this.logout();
+          }
+        });
       }
     } catch {
-      this.logout();
+      this.clearAutoRefreshTimer();
     }
   }
 
-  private clearAutoLogoutTimer() {
+  private clearAutoRefreshTimer() {
     if (this.expirationTimer) {
       clearTimeout(this.expirationTimer);
       this.expirationTimer = null;

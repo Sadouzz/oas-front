@@ -5,27 +5,41 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Subject } from 'rxjs';
-import { OrdreReparationService, OrdreReparation, StatutFiche } from './ordre-reparation.service';
-import { VehiculeService, VehiculeModel } from '../vehicules/vehicule.service';
-import { TechnicienService, Technicien } from '../techniciens/technicien.service';
-import { Specialite } from '../techniciens/models/technicien.model';
-import { PieceDetacheeService, PieceDetache } from '../pieces-detachees/piece-detachee.service';
-import { MainDoeuvreService, MainDoeuvreModel } from '../main-doeuvre/main-doeuvre.service';
+import { OrdreReparationService } from './ordre-reparation.service';
+import { VehiculeService } from '../vehicules/vehicule.service';
+import { TechnicienService } from '../techniciens/technicien.service';
+import { PieceDetacheeService } from '../pieces-detachees/piece-detachee.service';
+import { MainDoeuvreService } from '../main-doeuvre/main-doeuvre.service';
 import { BonDeSortieService } from '../bons-de-sortie/bon-de-sortie.service';
-import { BonDeCommandeService, BonDeCommandeRequest } from '../bons-commande/bon-de-commande.service';
+import { BonDeCommandeService } from '../bons-commande/bon-de-commande.service';
 import { ProformaService } from '../proforma/proforma.service';
 import { FactureService } from '../factures/facture.service';
-import { FournisseurService, FournisseurModel } from '../fournisseurs/fournisseur.service';
-import { ClientService, UserModel } from '../clients/client.service';
+import { FournisseurService } from '../fournisseurs/fournisseur.service';
+import { ClientService } from '../clients/client.service';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select.component';
 import { MediaUploaderComponent } from '../../shared/components/media-uploader/media-uploader.component';
-import { CloudinaryUploadResult } from '../../shared/models';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
-import { extractContent } from '../../shared/models';
-import { PieceJointeDiagnostic, TypePieceJointeDiagnostic, RemarqueDiagnostic } from './ordre-reparation.service';
-import { LigneReceptionOrdre, LigneTravailOrdre } from './models/ordre-reparation.model';
+import {
+  OrdreReparation,
+  StatutFiche,
+  VehiculeModel,
+  Technicien,
+  Specialite,
+  PieceDetache,
+  MainDoeuvreModel,
+  BonDeCommandeRequest,
+  FournisseurModel,
+  UserModel,
+  CloudinaryUploadResult,
+  PieceJointeDiagnostic,
+  TypePieceJointeDiagnostic,
+  RemarqueDiagnostic,
+  LigneReceptionOrdre,
+  LigneTravailOrdre,
+  extractContent
+} from '../../shared/models';
 
 export interface LignePiece {
   isCustom?: boolean;
@@ -522,7 +536,7 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
     }).subscribe({
       next: ({ vehicules, techniciens, pieces, mo, fournisseurs, clients }) => {
         this.vehicules = extractContent<VehiculeModel>(vehicules as any);
-        this.allTechniciens = techniciens;
+        this.allTechniciens = extractContent<Technicien>(techniciens as any);
         this.allPieces = extractContent<PieceDetache>(pieces as any).filter(p => p.statut === 'ACTIF');
         this.allMO = extractContent<MainDoeuvreModel>(mo as any).filter(m => !m.isArchived);
         this.fournisseurs = extractContent<FournisseurModel>(fournisseurs as any).filter(f => !f.archived);

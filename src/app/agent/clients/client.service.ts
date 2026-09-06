@@ -5,10 +5,6 @@ import { environment } from '../../../environments/environment';
 import { ClientModel, ClientListResponse, CreateClientPayload, UpdateClientPayload } from './models/client-model';
 import { PageParams } from '../../shared/models';
 
-export type UserModel = ClientListResponse;
-export type UserUpdatePayload = UpdateClientPayload;
-export type { ClientModel, ClientListResponse, CreateClientPayload, UpdateClientPayload };
-
 @Injectable({ providedIn: 'root' })
 export class ClientService {
   private http = inject(HttpClient);

@@ -82,7 +82,7 @@ export class SparksCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private onMouseDown = (e: MouseEvent): void => {
-    if (this.router.url.startsWith('/agent')) {
+    if (this.router.url.startsWith('/app') || this.router.url.startsWith('/agent')) {
       return;
     }
 

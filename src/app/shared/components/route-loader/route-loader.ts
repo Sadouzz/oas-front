@@ -26,7 +26,7 @@ export class RouteLoaderComponent implements OnInit, OnDestroy {
 
     this.subscription = this.router.events.subscribe((event: Event) => {
       if (event instanceof NavigationStart) {
-        if (event.url.startsWith('/agent')) {
+        if (event.url.startsWith('/app') || event.url.startsWith('/agent')) {
           this.isLoading = false;
           return;
         }

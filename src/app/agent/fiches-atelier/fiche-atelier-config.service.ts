@@ -1,21 +1,8 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-
-export interface BriqueConfig {
-  id?: number;
-  label: string;
-  type: string;
-  options?: string;
-  ordre?: number;
-  obligatoire?: boolean;
-}
-
-export interface FicheAtelierConfigBackend {
-  id?: number;
-  configJson: string;
-}
+import { BriqueConfig, FicheAtelierConfigBackend } from './models/fiche-atelier.model';
 
 @Injectable({
   providedIn: 'root'
