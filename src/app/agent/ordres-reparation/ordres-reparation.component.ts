@@ -536,7 +536,7 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
     }).subscribe({
       next: ({ techniciens, pieces, mo }) => {
         // this.vehicules = extractContent<VehiculeModel>(vehicules as any);
-        this.allTechniciens = techniciens;
+        this.allTechniciens = extractContent<Technicien>(techniciens as any);
         this.allPieces = extractContent<PieceDetache>(pieces as any).filter(p => p.statut === 'ACTIF');
         this.allMO = extractContent<MainDoeuvreModel>(mo as any).filter(m => !m.isArchived);
         // this.fournisseurs = extractContent<FournisseurModel>(fournisseurs as any).filter(f => !f.archived);
