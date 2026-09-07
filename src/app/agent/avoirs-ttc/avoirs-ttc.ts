@@ -106,10 +106,10 @@ export class AvoirsTtc extends BasePaginatedComponent implements OnInit {
   ngOnInit() {
     this.loadData();
     forkJoin({
-      clients: this.clientService.getAll(),
-      vehicules: this.vehiculeService.getAll({ size: 1000 }),
-      pdps: this.pieceService.getAll({ type: 'PDP' }),
-      mos: this.moService.getAll()
+      //clients: this.clientService.getAll(),
+      //vehicules: this.vehiculeService.getAll({ size: 1000 }),
+      //pdps: this.pieceService.getAll({ type: 'PDP' }),
+      //mos: this.moService.getAll()
     }).subscribe({
       next: ({ clients, vehicules, pdps, mos }) => {
         this.clients = extractContent<UserModel>(clients as any).filter(c => c.enabled);
@@ -132,16 +132,19 @@ export class AvoirsTtc extends BasePaginatedComponent implements OnInit {
 
   load() {
     this.loading = true;
+    this.cdr.markForCheck();
     this.service.getAll(this.getPageParams()).subscribe({
       next: (d) => {
         const arr = this.applyPageResponse<AvoirTTC>(d);
         this.avoirs = arr.sort((a, b) => b.id - a.id);
-        this.applyFilter(); this.cdr.markForCheck();
-        this.loading = false; this.cdr.markForCheck();
+        this.applyFilter();
+        this.loading = false;
+        this.cdr.markForCheck();
       },
       error: () => {
-        this.loading = false; this.cdr.markForCheck();
+        this.loading = false;
         this.errorMessage = 'Erreur lors du chargement des avoirs TTC.';
+        this.cdr.markForCheck();
       }
     });
   }
@@ -149,7 +152,7 @@ export class AvoirsTtc extends BasePaginatedComponent implements OnInit {
   applyFilter() {
     let data = this.avoirs;
     if (this.searchTerm) {
-      const kw = this.searchTerm.toLowerCase();
+      const kw = this.searchTerm;
       data = data.filter(a =>
         (a.numero ?? '').toLowerCase().includes(kw) ||
         (a.clientNom ?? '').toLowerCase().includes(kw) ||
@@ -157,13 +160,9 @@ export class AvoirsTtc extends BasePaginatedComponent implements OnInit {
       );
     }
     this.filtered = data;
-    this.page = 1;
   }
 
-  override onSearch(e: Event) {
-    this.searchTerm = (e.target as HTMLInputElement).value.trim();
-    this.applyFilter(); this.cdr.markForCheck();
-  }
+  // onSearch is inherited from BasePaginatedComponent
 
   get paged(): AvoirTTC[] {
     return this.filtered;

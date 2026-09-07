@@ -26,13 +26,13 @@
       <input (input)="onSearch($event)" placeholder="Rechercher par client, véhicule ou notes..."
              class="w-full pl-9 pr-4 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
     </div>
-    <select (change)="onClientFilter($event)"
+    <!-- <select (change)="onClientFilter($event)"
             class="px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink min-w-[200px]">
       <option value="">Tous les clients</option>
       @for (c of clients; track c.id) {
         <option [value]="c.id">{{ c.firstName }} {{ c.lastName }}</option>
       }
-    </select>
+    </select> -->
   </div>
 
   <!-- Table -->

@@ -3,7 +3,7 @@
   <!-- Header -->
   <div class="mb-6">
     <h1 class="text-2xl font-bold text-oas-ink">Historique des connexions</h1>
-    <p class="text-sm text-oas-muted mt-1">{{ filtered.length }} entrée(s) affichée(s)</p>
+    <p class="text-sm text-oas-muted mt-1">{{ totalElements }} entrée(s) affichée(s)</p>
   </div>
 
   <!-- Search -->
@@ -71,7 +71,7 @@
         </tbody>
       </table>
     </div>
-    <app-pagination [page]="page" [totalPages]="totalPages" [total]="filtered.length" [pageSize]="pageSize" (prev)="prevPage()" (next)="nextPage()" />
+    <app-pagination [page]="page" [totalPages]="totalPages" [total]="totalElements" [pageSize]="pageSize" (prev)="prevPage()" (next)="nextPage()" />
   </div>
 
 </div>

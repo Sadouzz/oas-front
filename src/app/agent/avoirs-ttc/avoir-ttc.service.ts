@@ -13,7 +13,7 @@ export class AvoirTTCService {
   private http = inject(HttpClient);
   private api = `${environment.apiUrl}/api/avoirs-ttc`;
 
-  getAll(params: import('../../shared/models').PageParams = {}): Observable<AvoirTTC[]> {
+  getAll(params: PageParams = {}): Observable<AvoirTTC[]> {
     const queryParams: Record<string, string> = {};
     if (params.page !== undefined) queryParams['page'] = params.page.toString();
     if (params.size !== undefined) queryParams['size'] = params.size.toString();

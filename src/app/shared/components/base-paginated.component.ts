@@ -1,11 +1,11 @@
 import { Directive } from '@angular/core';
 import { PageParams } from '../models/page-params.model';
-import { extractContent } from '../models/api-response.model';
+import { extractContent, extractPage } from '../models/api-response.model';
 
 @Directive()
 export abstract class BasePaginatedComponent {
   page = 1;
-  readonly pageSize = 10;
+  pageSize = 10;
   totalElements = 0;
   serverTotalPages = 1;
   searchTerm = '';
@@ -47,13 +47,19 @@ export abstract class BasePaginatedComponent {
   }
 
   protected applyPageResponse<T>(res: any): T[] {
+    const page = extractPage<T>(res);
+    if (page) {
+      this.totalElements = page.totalElements ?? page.content?.length ?? 0;
+      this.serverTotalPages = page.totalPages ?? (Math.ceil(this.totalElements / this.pageSize) || 1);
+      return page.content ?? [];
+    }
     const content = extractContent<T>(res);
     if (res && res.totalElements !== undefined) {
       this.totalElements = res.totalElements;
-      this.serverTotalPages = res.totalPages;
+      this.serverTotalPages = res.totalPages ?? (Math.ceil(this.totalElements / this.pageSize) || 1);
     } else {
       this.totalElements = content.length;
-      this.serverTotalPages = 1;
+      this.serverTotalPages = Math.ceil(this.totalElements / this.pageSize) || 1;
     }
     return content;
   }

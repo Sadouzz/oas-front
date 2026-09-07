@@ -2,10 +2,11 @@ import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UserManagementService } from '../user-management.service';
 import { GarageService } from '../../../services/garage.service';
-import { UserModel } from '../../../shared/models/index';
+import { UserModel, extractContent } from '../../../shared/models/index';
 import { AlertComponent } from '../../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
-import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideUser, LucideCheck, LucideArchive } from '@lucide/angular';
+import { BasePaginatedComponent } from '../../../shared/components/base-paginated.component';
+import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideUser, LucideCheck, LucideArchive, LucideLoader2, LucideArchiveRestore, LucideUsers } from '@lucide/angular';
 import { AuthService } from '../../../core/services/auth.service';
 
 const ROLES = ['SUPER_AGENT', 'MASTER', 'AGENT', 'CHEF_ATELIER', 'AGENT_MAGASIN'] as const;
@@ -21,10 +22,10 @@ const ROLE_PREFIX: Record<string, string> = {
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideArchive],
+  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideArchive, LucideLoader2, LucideArchiveRestore, LucideUsers],
   templateUrl: './users.component.html',
 })
-export class UsersComponent implements OnInit {
+export class UsersComponent extends BasePaginatedComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
   private userService = inject(UserManagementService);
@@ -36,8 +37,7 @@ export class UsersComponent implements OnInit {
   users: UserModel[] = [];
   filtered: UserModel[] = [];
   garages: any[] = [];
-  page = 1;
-  readonly pageSize = 10;
+  allUsersForMatricule: UserModel[] = [];
   loading = false;
   saving = false;
   successMessage = '';
@@ -66,8 +66,12 @@ export class UsersComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.loadUsers();
+    this.loadData();
     this.loadGarages();
+  }
+
+  loadData() {
+    this.loadUsers();
   }
 
   loadGarages() {
@@ -81,19 +85,29 @@ export class UsersComponent implements OnInit {
 
   loadUsers() {
     this.loading = true;
-    this.userService.getAll().subscribe({
+    this.userService.getAll(this.getPageParams()).subscribe({
       next: (data) => {
-        this.users = data.filter(u => u.type === 'AGENT');
-        this.filtered = this.users;
-        this.loading = false; this.cdr.markForCheck();
+        const list = this.applyPageResponse<UserModel>(data);
+        this.users = list;
+        this.applyFilter();
+        this.loading = false;
+        this.cdr.markForCheck();
       },
-      error: () => { this.loading = false; this.cdr.markForCheck(); }
+      error: () => {
+        this.users = [];
+        this.filtered = [];
+        this.totalElements = 0;
+        this.serverTotalPages = 1;
+        this.loading = false;
+        this.cdr.markForCheck();
+      }
     });
   }
 
   private nextMatricule(prefix: string): string {
     const p = `${prefix}-`;
-    const nums = this.users
+    const source = this.allUsersForMatricule.length > 0 ? this.allUsersForMatricule : this.users;
+    const nums = source
       .map(u => u.matricule?.startsWith(p) ? parseInt(u.matricule.slice(p.length), 10) : NaN)
       .filter(n => !isNaN(n));
     const next = nums.length > 0 ? Math.max(...nums) + 1 : 1;
@@ -106,23 +120,25 @@ export class UsersComponent implements OnInit {
     this.form.get('matricule')?.setValue(this.nextMatricule(prefix));
   }
 
-  onSearch(event: Event) {
-    const term = (event.target as HTMLInputElement).value.toLowerCase().trim();
-    this.filtered = term
-      ? this.users.filter(u =>
-          `${u.firstName} ${u.lastName}`.toLowerCase().includes(term) ||
-          u.email.toLowerCase().includes(term) ||
-          u.matricule.toLowerCase().includes(term) ||
-          u.username.toLowerCase().includes(term)
-        )
-      : this.users;
-    this.page = 1;
+  applyFilter() {
+    let data = this.users;
+    if (this.searchTerm) {
+      const term = this.searchTerm.toLowerCase();
+      data = data.filter(u =>
+        `${u.firstName} ${u.lastName}`.toLowerCase().includes(term) ||
+        u.email?.toLowerCase().includes(term) ||
+        u.matricule?.toLowerCase().includes(term) ||
+        u.username?.toLowerCase().includes(term)
+      );
+    }
+    this.filtered = data;
   }
 
-  get paged(): UserModel[] { return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize); }
-  get totalPages(): number { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }
-  prevPage(): void { if (this.page > 1) this.page--; }
-  nextPage(): void { if (this.page < this.totalPages) this.page++; }
+  // onSearch is inherited from BasePaginatedComponent
+
+  get paged(): UserModel[] {
+    return this.filtered;
+  }
 
   openCreate() {
     this.isNew = true;
@@ -130,7 +146,13 @@ export class UsersComponent implements OnInit {
     this.form.reset({ role: 'AGENT', garageId: null });
     this.form.get('password')?.setValidators(Validators.required);
     this.form.get('password')?.updateValueAndValidity();
-    this.refreshMatricule();
+    this.userService.getAllUnpaged().subscribe({
+      next: (users) => {
+        this.allUsersForMatricule = extractContent<UserModel>(users);
+        this.refreshMatricule();
+      },
+      error: () => this.refreshMatricule()
+    });
     this.form.get('role')?.valueChanges.subscribe(() => this.refreshMatricule());
     this.showModal = true;
   }
@@ -201,6 +223,16 @@ export class UsersComponent implements OnInit {
     });
   }
 
+  toggleStatus(user: UserModel) {
+    this.userService.toggleStatus(user.id).subscribe({
+      next: (updated) => {
+        this.showSuccess(updated.enabled ? 'Utilisateur activé.' : 'Utilisateur désactivé.');
+        this.loadUsers();
+      },
+      error: (err: any) => { this.errorMessage = err.error?.message || 'Erreur lors du changement de statut.'; }
+    });
+  }
+
   deleteUser(user: UserModel) {
     if (!confirm(`Supprimer ${user.firstName} ${user.lastName} ? Cette action est irréversible.`)) return;
     this.userService.delete(user.id).subscribe({
@@ -222,6 +254,8 @@ export class UsersComponent implements OnInit {
       AGENT: 'Agent',
       CHEF_ATELIER: 'Chef Atelier',
       AGENT_MAGASIN: 'Agent Magasin',
+      TECHNICIEN: 'Technicien',
+      CLIENT: 'Client',
     };
     const role = typeof roleOrUser === 'object' && roleOrUser !== null
       ? this.effectiveRole(roleOrUser)

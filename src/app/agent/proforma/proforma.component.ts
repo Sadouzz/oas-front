@@ -11,6 +11,7 @@ import { MainDoeuvreService } from '../main-doeuvre/main-doeuvre.service';
 import { NgClass } from '@angular/common';
 import { Proforma, BonDeCommande, ClientModel, VehiculeModel, PieceDetache, MainDoeuvreModel, extractContent } from '../../shared/models/index';
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideArrowRight } from '@lucide/angular';
+import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 
 @Component({
   selector: 'app-proforma',
@@ -18,7 +19,7 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDo
   imports: [ReactiveFormsModule, NgClass, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX],
   templateUrl: './proforma.component.html',
 })
-export class ProformaComponent implements OnInit {
+export class ProformaComponent extends BasePaginatedComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private service = inject(ProformaService);
   private bcService = inject(BonDeCommandeService);
@@ -54,9 +55,6 @@ export class ProformaComponent implements OnInit {
   clientFilter = '';
   vehiculeFilter = '';
 
-  page = 1;
-  readonly pageSize = 10;
-  searchTerm = '';
   statutFilter = '';
   successMessage = '';
   errorMessage = '';
@@ -86,17 +84,17 @@ export class ProformaComponent implements OnInit {
   ngOnInit() {
     this.load();
     forkJoin({
-      clients: this.clientService.getAll(),
-      vehicules: this.vehiculeService.getAll(),
-      pieces: this.pieceService.getAll(),
-      mds: this.mdService.getAll(),
-      bonsCommande: this.bcService.getAll(),
+      //clients: this.clientService.getAll(),
+      //vehicules: this.vehiculeService.getAll(),
+      //pieces: this.pieceService.getAll(),
+      //mds: this.mdService.getAll(),
+      //bonsCommande: this.bcService.getAll(),
     }).subscribe({
       next: ({ clients, vehicules, pieces, mds, bonsCommande }) => {
         this.clients = extractContent(clients);
         this.vehicules = extractContent(vehicules);
         this.pieces = extractContent(pieces);
-        this.mainsDoeuvre = extractContent(mds).filter((m: any) => !m.isArchived);
+        //this.mainsDoeuvre = extractContent(mds).filter((m: any) => !m.isArchived);
         this.bonsCommande = extractContent(bonsCommande);
 
         // Auto-open modal if openId or action is provided in query params
@@ -121,17 +119,26 @@ export class ProformaComponent implements OnInit {
     });
   }
 
+  loadData() {
+    this.load();
+  }
+
   load() {
     this.loading = true;
-    this.service.getAll().subscribe({
+    this.cdr.markForCheck();
+    this.service.getAll(this.getPageParams()).subscribe({
       next: data => {
-        this.proformas = extractContent(data).sort((a: any, b: any) => b.id - a.id);
+        const list = this.applyPageResponse<Proforma>(data);
+        this.proformas = list.sort((a: any, b: any) => b.id - a.id);
         this.applyFilter();
-        this.cdr.markForCheck();
         this.loading = false;
         this.cdr.markForCheck();
       },
       error: () => {
+        this.proformas = [];
+        this.filtered = [];
+        this.totalElements = 0;
+        this.serverTotalPages = 1;
         this.loading = false;
         this.cdr.markForCheck();
       },
@@ -140,6 +147,9 @@ export class ProformaComponent implements OnInit {
 
   applyFilter() {
     let list = this.proformas;
+    if (this.statutFilter) {
+      list = list.filter(p => p.statut === this.statutFilter);
+    }
     if (this.searchTerm) {
       const kw = this.searchTerm.toLowerCase();
       list = list.filter(p =>
@@ -148,22 +158,16 @@ export class ProformaComponent implements OnInit {
         (p.immatriculation ?? '').toLowerCase().includes(kw)
       );
     }
-    if (this.statutFilter) {
-      list = list.filter(p => p.statut === this.statutFilter);
-    }
     this.filtered = list;
-    this.page = 1;
-  }
-
-  onSearch(e: Event) {
-    this.searchTerm = (e.target as HTMLInputElement).value.toLowerCase().trim();
-    this.applyFilter(); this.cdr.markForCheck();
   }
 
   onStatutFilterChange(e: Event) {
     this.statutFilter = (e.target as HTMLSelectElement).value;
+    this.page = 1;
     this.applyFilter(); this.cdr.markForCheck();
   }
+
+  // onSearch is inherited from BasePaginatedComponent
 
   get bcLabel(): string {
     const id = this.form.get('bonDeCommandeId')?.value;
@@ -513,11 +517,8 @@ export class ProformaComponent implements OnInit {
   fmt(n: number): string { return new Intl.NumberFormat('fr-FR').format(n ?? 0); }
 
   get paged(): Proforma[] {
-    return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
+    return this.filtered;
   }
-  get totalPages(): number { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }
-  prevPage() { if (this.page > 1) this.page--; }
-  nextPage() { if (this.page < this.totalPages) this.page++; }
 
   private notify(msg: string) {
     this.saving = false; this.successMessage = msg;

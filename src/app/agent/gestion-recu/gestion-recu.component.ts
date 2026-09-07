@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { RecuModel } from './models/recu.model';
 import { RecuService } from './recu.service';
+import { extractContent } from '../../shared/models';
 import { NgClass } from '@angular/common';
 import { LucideSearch, LucideReceipt, LucideDownload } from '@lucide/angular';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
@@ -31,12 +32,16 @@ export class GestionRecuComponent implements OnInit {
     this.loading = true;
     this.recuService.getAll().subscribe({
       next: (data) => {
-        this.recus = data;
-        this.applyFilter(); this.cdr.markForCheck();
-        this.loading = false; this.cdr.markForCheck();
+        this.recus = extractContent<RecuModel>(data);
+        this.applyFilter();
+        this.loading = false;
+        this.cdr.markForCheck();
       },
       error: () => {
-        this.loading = false; this.cdr.markForCheck();
+        this.recus = [];
+        this.filtered = [];
+        this.loading = false;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -58,7 +63,8 @@ export class GestionRecuComponent implements OnInit {
 
   onSearch(e: Event) {
     this.searchTerm = (e.target as HTMLInputElement).value;
-    this.applyFilter(); this.cdr.markForCheck();
+    this.applyFilter();
+    this.cdr.markForCheck();
   }
 
   get paged(): RecuModel[] {

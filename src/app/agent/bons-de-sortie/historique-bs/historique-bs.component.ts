@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { BonDeSortieService } from '../bon-de-sortie.service';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
-import { extractContent } from '../../../shared/models';
+import { BasePaginatedComponent } from '../../../shared/components/base-paginated.component';
 import { LucideSearch, LucideLoader2 } from '@lucide/angular';
 import { BonDeSortieHistorique } from '../models/bon-de-sortie.model';
 
@@ -13,17 +13,15 @@ import { BonDeSortieHistorique } from '../models/bon-de-sortie.model';
   imports: [FormsModule, RouterLink, PaginationComponent, LucideSearch, LucideLoader2],
   templateUrl: './historique-bs.component.html',
 })
-export class HistoriqueBsComponent implements OnInit {
+export class HistoriqueBsComponent extends BasePaginatedComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private bonService = inject(BonDeSortieService);
 
   historiqueList: BonDeSortieHistorique[] = [];
   filtered: BonDeSortieHistorique[] = [];
-  page = 1;
-  pageSize = 15;
+  override readonly pageSize = 15;
 
   loading = false;
-  searchQuery = '';
   filterStatut = '';
   periodePreset = 'all';
   dateDebut = '';
@@ -31,29 +29,33 @@ export class HistoriqueBsComponent implements OnInit {
   filterPiece = '';
 
   ngOnInit() {
+    this.loadData();
+  }
+
+  loadData() {
     this.loadHistorique();
   }
 
   loadHistorique() {
     this.loading = true;
-    this.bonService.getHistoriqueGlobal().subscribe({
+    this.cdr.markForCheck();
+    this.bonService.getHistoriqueGlobal(this.getPageParams()).subscribe({
       next: (data) => {
-        this.historiqueList = extractContent(data);
+        const list = this.applyPageResponse<BonDeSortieHistorique>(data);
+        this.historiqueList = list;
         this.applyFilter();
         this.loading = false;
         this.cdr.markForCheck();
       },
       error: () => {
+        this.historiqueList = [];
+        this.filtered = [];
+        this.totalElements = 0;
+        this.serverTotalPages = 1;
         this.loading = false;
         this.cdr.markForCheck();
       }
     });
-  }
-
-  onSearch(event: Event) {
-    this.searchQuery = (event.target as HTMLInputElement).value.toLowerCase();
-    this.applyFilter();
-    this.cdr.markForCheck();
   }
 
   onPresetChange() {
@@ -87,7 +89,7 @@ export class HistoriqueBsComponent implements OnInit {
 
   applyFilter() {
     this.filtered = this.historiqueList.filter(h => {
-      const q = this.searchQuery;
+      const q = this.searchTerm;
       const action = h.action || h.statut || '';
       const matchesSearch = !q ||
         h.prenom?.toLowerCase().includes(q) ||
@@ -123,39 +125,27 @@ export class HistoriqueBsComponent implements OnInit {
 
       return matchesSearch && matchesStatut && matchesPiece && matchesDate;
     });
-    this.page = 1;
   }
 
   get hasActiveFilters(): boolean {
-    return !!(this.searchQuery || this.filterStatut || this.filterPiece || this.dateDebut || this.dateFin || this.periodePreset !== 'all');
+    return !!(this.searchTerm || this.filterStatut || this.filterPiece || this.dateDebut || this.dateFin || this.periodePreset !== 'all');
   }
 
   resetFilters() {
-    this.searchQuery = '';
+    this.searchTerm = '';
     this.filterStatut = '';
     this.periodePreset = 'all';
     this.dateDebut = '';
     this.dateFin = '';
     this.filterPiece = '';
-    this.applyFilter();
-    this.cdr.markForCheck();
+    this.page = 1;
+    this.loadData();
   }
+
+  // onSearch is inherited from BasePaginatedComponent
 
   get paged(): BonDeSortieHistorique[] {
-    const start = (this.page - 1) * this.pageSize;
-    return this.filtered.slice(start, start + this.pageSize);
-  }
-
-  get totalPages(): number {
-    return Math.max(1, Math.ceil(this.filtered.length / this.pageSize));
-  }
-
-  prevPage() {
-    if (this.page > 1) this.page--;
-  }
-
-  nextPage() {
-    if (this.page < this.totalPages) this.page++;
+    return this.filtered;
   }
 
   statutClass(statut?: string): string {

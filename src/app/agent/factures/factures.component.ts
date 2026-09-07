@@ -76,8 +76,8 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
   ngOnInit() {
     this.loadData();
     forkJoin({
-      clients: this.clientService.getAll(),
-      fiches: this.ficheService.getAll(),
+      //clients: this.clientService.getAll(),
+      //fiches: this.ficheService.getAll(),
     }).subscribe({
       next: ({ clients, fiches }) => {
         this.clients = extractContent<UserModel>(clients as any).filter(c => c.enabled);
@@ -146,18 +146,15 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
       );
     }
     this.filtered = data;
-    this.page = 1;
   }
 
   onStatutFilter(e: Event) {
     this.filterStatut = (e.target as HTMLSelectElement).value;
+    this.page = 1;
     this.applyFilter(); this.cdr.markForCheck();
   }
 
-  override onSearch(e: Event) {
-    this.searchTerm = (e.target as HTMLInputElement).value.toLowerCase().trim();
-    this.applyFilter(); this.cdr.markForCheck();
-  }
+  // onSearch is inherited from BasePaginatedComponent
 
   // ── Wizard ─────────────────────────────────────────────────────
 

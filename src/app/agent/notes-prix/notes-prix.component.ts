@@ -26,7 +26,7 @@ export class NotesPrixComponent extends BasePaginatedComponent implements OnInit
   private route = inject(ActivatedRoute);
   private clientService = inject(ClientService);
   private vehiculeService = inject(VehiculeService);
-  private ficheService = inject(OrdreReparationService);
+  private ordreReparationService = inject(OrdreReparationService);
 
   notes: NoteDePrixModel[] = [];
   filtered: NoteDePrixModel[] = [];
@@ -74,12 +74,11 @@ export class NotesPrixComponent extends BasePaginatedComponent implements OnInit
   ngOnInit() {
     this.loadData();
     forkJoin({
-      clients: this.clientService.getAll(),
-      fiches: this.ficheService.getAll(),
+      //clients: this.clientService.getAll(),
+      //ordresReparation: this.ordreReparationService.getAll(),
     }).subscribe({
-      next: ({ clients, fiches }) => {
-        this.clients = extractContent<UserModel>(clients as any).filter(c => c.enabled);
-        this.ordresReparation = extractContent<OrdreReparation>(fiches as any);
+      next: ({  }) => {
+        //this.ordresReparation = extractContent<OrdreReparation>(ordresReparation as any);
       },
       error: () => {},
     });
@@ -156,7 +155,6 @@ export class NotesPrixComponent extends BasePaginatedComponent implements OnInit
       );
     }
     this.filtered = data;
-    this.page = 1;
   }
 
   private getDateString(d: any): string {
@@ -171,13 +169,11 @@ export class NotesPrixComponent extends BasePaginatedComponent implements OnInit
 
   onStatutFilter(e: Event) {
     this.filterStatut = (e.target as HTMLSelectElement).value;
+    this.page = 1;
     this.applyFilter(); this.cdr.markForCheck();
   }
 
-  override onSearch(e: Event) {
-    this.searchTerm = (e.target as HTMLInputElement).value.toLowerCase().trim();
-    this.applyFilter(); this.cdr.markForCheck();
-  }
+  // onSearch is inherited from BasePaginatedComponent
 
   // ── Wizard ─────────────────────────────────────────────────────
 

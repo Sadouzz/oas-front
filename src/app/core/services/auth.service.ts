@@ -202,5 +202,17 @@ export class AuthService {
     if (!username || !role) return null;
     return { username, role };
   }
+
+  getMe(): Observable<any> {
+    return this.http.get<any>(`${this.api}/me`);
+  }
+
+  updateMe(data: any): Observable<any> {
+    return this.http.put<any>(`${this.api}/me`, data);
+  }
+
+  changePassword(oldPassword: string, newPassword: string): Observable<any> {
+    return this.http.post<any>(`${this.api}/me/change-password`, { oldPassword, newPassword });
+  }
 }
 

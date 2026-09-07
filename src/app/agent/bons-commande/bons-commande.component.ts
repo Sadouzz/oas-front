@@ -162,13 +162,13 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
   ngOnInit() {
     this.load();
     forkJoin({
-      fournisseurs: this.fournisseurService.getAll(),
-      vehicules: this.vehiculeService.getAll(),
-      pieces: this.pieceService.getAll(),
-      clients: this.clientService.getAll(),
+      //fournisseurs: this.fournisseurService.getAll(),
+      //vehicules: this.vehiculeService.getAll(),
+      //pieces: this.pieceService.getAll(),
+      //clients: this.clientService.getAll(),
     }).subscribe({
       next: ({ fournisseurs, vehicules, pieces, clients }) => {
-        this.fournisseurs = extractContent(fournisseurs).filter((f: any) => !f.archived);
+        //this.fournisseurs = extractContent(fournisseurs).filter((f: any) => !f.archived);
         this.vehicules = extractContent(vehicules);
         this.pieces = extractContent(pieces);
         this.clients = extractContent<any>(clients).filter((c: any) => c.enabled);

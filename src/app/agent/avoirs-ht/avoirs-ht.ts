@@ -103,16 +103,16 @@ export class AvoirsHt extends BasePaginatedComponent implements OnInit {
   ngOnInit() {
     this.loadData();
     forkJoin({
-      clients: this.clientService.getAll(),
-      vehicules: this.vehiculeService.getAll({ size: 1000 }),
-      pdps: this.pieceService.getAll({ type: 'PDP' }),
-      mos: this.moService.getAll()
+      //clients: this.clientService.getAll(),
+      //vehicules: this.vehiculeService.getAll({ size: 1000 }),
+      //pdps: this.pieceService.getAll({ type: 'PDP' }),
+      //mos: this.moService.getAll()
     }).subscribe({
-      next: ({ clients, vehicules, pdps, mos }) => {
-        this.clients = extractContent<UserModel>(clients as any).filter(c => c.enabled);
-        this.allVehicules = extractContent<VehiculeModel>(vehicules as any);
-        this.pdps = extractContent<PieceDetache>(pdps as any).filter(p => p.statut === 'ACTIF');
-        this.mainDoeuvres = extractContent<MainDoeuvreModel>(mos as any);
+      next: ({  }) => {
+        //this.clients = extractContent<UserModel>(clients as any).filter(c => c.enabled);
+        //this.allVehicules = extractContent<VehiculeModel>(vehicules as any);
+        //this.pdps = extractContent<PieceDetache>(pdps as any).filter(p => p.statut === 'ACTIF');
+        //this.mainDoeuvres = extractContent<MainDoeuvreModel>(mos as any);
       }
     });
 
@@ -129,16 +129,19 @@ export class AvoirsHt extends BasePaginatedComponent implements OnInit {
 
   load() {
     this.loading = true;
+    this.cdr.markForCheck();
     this.service.getAll(this.getPageParams()).subscribe({
       next: (d) => {
         const arr = this.applyPageResponse<AvoirHT>(d);
         this.avoirs = arr.sort((a, b) => b.id - a.id);
-        this.applyFilter(); this.cdr.markForCheck();
-        this.loading = false; this.cdr.markForCheck();
+        this.applyFilter();
+        this.loading = false;
+        this.cdr.markForCheck();
       },
       error: () => {
-        this.loading = false; this.cdr.markForCheck();
+        this.loading = false;
         this.errorMessage = 'Erreur lors du chargement des avoirs HT.';
+        this.cdr.markForCheck();
       }
     });
   }
@@ -146,7 +149,7 @@ export class AvoirsHt extends BasePaginatedComponent implements OnInit {
   applyFilter() {
     let data = this.avoirs;
     if (this.searchTerm) {
-      const kw = this.searchTerm.toLowerCase();
+      const kw = this.searchTerm;
       data = data.filter(a =>
         (a.numero ?? '').toLowerCase().includes(kw) ||
         (a.clientNom ?? '').toLowerCase().includes(kw) ||
@@ -154,13 +157,9 @@ export class AvoirsHt extends BasePaginatedComponent implements OnInit {
       );
     }
     this.filtered = data;
-    this.page = 1;
   }
 
-  override onSearch(e: Event) {
-    this.searchTerm = (e.target as HTMLInputElement).value.trim();
-    this.applyFilter(); this.cdr.markForCheck();
-  }
+  // onSearch is inherited from BasePaginatedComponent
 
   get paged(): AvoirHT[] {
     return this.filtered;

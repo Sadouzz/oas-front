@@ -4,23 +4,22 @@ import { FournisseurService } from './fournisseur.service';
 import { FournisseurModel } from '../../shared/models/index';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
-import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideBuilding2, LucidePhone, LucideMail } from '@lucide/angular';
+import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
+import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideBuilding2, LucideArchive, LucideArchiveRestore, LucideLoader2 } from '@lucide/angular';
 
 @Component({
   selector: 'app-fournisseurs',
   standalone: true,
-  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideBuilding2],
+  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideBuilding2, LucideArchive, LucideArchiveRestore, LucideLoader2],
   templateUrl: './fournisseurs.component.html',
 })
-export class FournisseursComponent implements OnInit {
+export class FournisseursComponent extends BasePaginatedComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
   private service = inject(FournisseurService);
 
   fournisseurs: FournisseurModel[] = [];
   filtered: FournisseurModel[] = [];
-  page = 1;
-  readonly pageSize = 10;
   loading = false;
   saving = false;
   successMessage = '';
@@ -36,35 +35,53 @@ export class FournisseursComponent implements OnInit {
     prenom: ['', Validators.required],
   });
 
+  ngOnInit() {
+    this.loadData();
+  }
 
-  ngOnInit() { this.load(); }
+  loadData() {
+    this.load();
+  }
 
   load() {
     this.loading = true;
-    this.service.getAll().subscribe({
-      next: (data) => { this.fournisseurs = data; this.filtered = data; this.loading = false; this.cdr.markForCheck(); },
-      error: () => { this.loading = false; this.cdr.markForCheck(); }
+    this.service.getAll(this.getPageParams()).subscribe({
+      next: (res) => {
+        const list = this.applyPageResponse<FournisseurModel>(res);
+        this.fournisseurs = list;
+        this.applyFilter();
+        this.loading = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.fournisseurs = [];
+        this.filtered = [];
+        this.totalElements = 0;
+        this.serverTotalPages = 1;
+        this.loading = false;
+        this.cdr.markForCheck();
+      }
     });
   }
 
-  // La génération du matricule est gérée par le backend
-
-  onSearch(event: Event) {
-    const term = (event.target as HTMLInputElement).value.toLowerCase().trim();
-    this.filtered = term
-      ? this.fournisseurs.filter(f =>
-          f.nomEntreprise.toLowerCase().includes(term) ||
-          f.matricule.toLowerCase().includes(term) ||
-          `${f.prenom} ${f.nom}`.toLowerCase().includes(term)
-        )
-      : this.fournisseurs;
-    this.page = 1;
+  applyFilter() {
+    let data = this.fournisseurs;
+    if (this.searchTerm) {
+      const term = this.searchTerm.toLowerCase();
+      data = data.filter(f =>
+        f.nomEntreprise?.toLowerCase().includes(term) ||
+        f.matricule?.toLowerCase().includes(term) ||
+        `${f.prenom ?? ''} ${f.nom ?? ''}`.toLowerCase().includes(term)
+      );
+    }
+    this.filtered = data;
   }
 
-  get paged(): FournisseurModel[] { return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize); }
-  get totalPages(): number { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }
-  prevPage(): void { if (this.page > 1) this.page--; }
-  nextPage(): void { if (this.page < this.totalPages) this.page++; }
+  // onSearch is inherited from BasePaginatedComponent
+
+  get paged(): FournisseurModel[] {
+    return this.filtered;
+  }
 
   openCreate() {
     this.isNew = true;

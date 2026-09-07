@@ -129,9 +129,9 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
   ngOnInit() {
     this.loadData();
     forkJoin({
-      clients: this.clientService.getAll(),
-      vehicules: this.vehiculeService.getAll({ size: 1000 }),
-      pdps: this.pieceService.getAll({ type: 'PDP' })
+      //clients: this.clientService.getAll(),
+      //vehicules: this.vehiculeService.getAll({ size: 1000 }),
+      //pdps: this.pieceService.getAll({ type: 'PDP' })
     }).subscribe({
       next: ({ clients, vehicules, pdps }) => {
         this.clients = extractContent<UserModel>(clients as any).filter(c => c.enabled);
@@ -198,18 +198,15 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
       );
     }
     this.filtered = data;
-    this.page = 1;
   }
 
-  override onSearch(event: Event) {
-    this.searchTerm = (event.target as HTMLInputElement).value.toLowerCase().trim();
-    this.applyFilter(); this.cdr.markForCheck();
-  }
+  // onSearch is inherited from BasePaginatedComponent
 
   get paged(): BonDeSortie[] { return this.filtered; }
 
   onStatutFilter(event: Event) {
     this.filterStatut = (event.target as HTMLSelectElement).value;
+    this.page = 1;
     this.applyFilter(); this.cdr.markForCheck();
   }
 

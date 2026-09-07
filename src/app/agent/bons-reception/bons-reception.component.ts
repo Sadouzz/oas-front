@@ -7,14 +7,16 @@ import { BonDeCommande } from '../bons-commande/models/bon-de-commande.model';
 import { VehiculeService } from '../vehicules/vehicule.service';
 import { NgClass } from '@angular/common';
 import { VehiculeModel, extractContent } from '../../shared/models/index';
+import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
+import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideTruck } from '@lucide/angular';
 
 @Component({
   selector: 'app-bons-reception',
-  imports: [NgClass],
+  imports: [NgClass, PaginationComponent],
   templateUrl: './bons-reception.component.html',
 })
-export class BonsReceptionComponent implements OnInit {
+export class BonsReceptionComponent extends BasePaginatedComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private service = inject(BonDeReceptionService);
   private bcService = inject(BonDeCommandeService);
@@ -27,18 +29,14 @@ export class BonsReceptionComponent implements OnInit {
 
   loading = true;
   selectedBon: BonDeReception | null = null;
-
-  page = 1;
-  readonly pageSize = 10;
-  searchTerm = '';
   successMessage = '';
   errorMessage = '';
 
   ngOnInit() {
-    this.load();
+    this.loadData();
     forkJoin({
-      bonsCommande: this.bcService.getAll(),
-      vehicules: this.vehiculeService.getAll(),
+      //bonsCommande: this.bcService.getAll(),
+      //vehicules: this.vehiculeService.getAll(),
     }).subscribe({
       next: ({ bonsCommande, vehicules }) => {
         this.bonsCommande = extractContent(bonsCommande);
@@ -47,16 +45,25 @@ export class BonsReceptionComponent implements OnInit {
     });
   }
 
+  loadData() {
+    this.load();
+  }
+
   load() {
     this.loading = true;
-    this.service.getAll().subscribe({
+    this.service.getAll(this.getPageParams()).subscribe({
       next: data => {
-        this.bons = extractContent(data).sort((a: any, b: any) => b.id - a.id);
+        const list = this.applyPageResponse<BonDeReception>(data);
+        this.bons = list.sort((a: any, b: any) => b.id - a.id);
         this.applyFilter();
         this.loading = false;
         this.cdr.markForCheck();
       },
       error: () => {
+        this.bons = [];
+        this.filtered = [];
+        this.totalElements = 0;
+        this.serverTotalPages = 1;
         this.loading = false;
         this.cdr.markForCheck();
       },
@@ -64,21 +71,19 @@ export class BonsReceptionComponent implements OnInit {
   }
 
   applyFilter() {
-    if (!this.searchTerm) { this.filtered = this.bons; this.page = 1; return; }
-    const kw = this.searchTerm;
-    this.filtered = this.bons.filter(b =>
-      b.numero.toLowerCase().includes(kw) ||
-      (b.agentNom ?? '').toLowerCase().includes(kw) ||
-      (b.bonDeCommandeNumero ?? '').toLowerCase().includes(kw)
-    );
-    this.page = 1;
+    let data = this.bons;
+    if (this.searchTerm) {
+      const kw = this.searchTerm.toLowerCase();
+      data = data.filter(b =>
+        b.numero.toLowerCase().includes(kw) ||
+        (b.agentNom ?? '').toLowerCase().includes(kw) ||
+        (b.bonDeCommandeNumero ?? '').toLowerCase().includes(kw)
+      );
+    }
+    this.filtered = data;
   }
 
-  onSearch(e: Event) {
-    this.searchTerm = (e.target as HTMLInputElement).value.toLowerCase().trim();
-    this.applyFilter();
-    this.cdr.markForCheck();
-  }
+  // onSearch is inherited from BasePaginatedComponent
 
   openDetail(bon: BonDeReception) { this.selectedBon = bon; }
   closeDetail() { this.selectedBon = null; }
@@ -129,11 +134,8 @@ export class BonsReceptionComponent implements OnInit {
   fmt(n: number): string { return new Intl.NumberFormat('fr-FR').format(n ?? 0); }
 
   get paged(): BonDeReception[] {
-    return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
+    return this.filtered;
   }
-  get totalPages(): number { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }
-  prevPage() { if (this.page > 1) this.page--; }
-  nextPage() { if (this.page < this.totalPages) this.page++; }
 
   private notify(msg: string) {
     this.successMessage = msg;

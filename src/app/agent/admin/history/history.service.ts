@@ -9,9 +9,17 @@ export type { ConnectionHistoryModel };
 @Injectable({ providedIn: 'root' })
 export class HistoryService {
   private http = inject(HttpClient);
-  private api = `${environment.apiUrl}/api/admin/connection-history`;
+  private api = `${environment.apiUrl}/api/connection-history`;
 
-  getAll(): Observable<ConnectionHistoryModel[]> {
-    return this.http.get<ConnectionHistoryModel[]>(this.api);
+  getAll(params?: import('../../../shared/models').PageParams | string): Observable<any> {
+    const queryParams: Record<string, string> = {};
+    if (typeof params === 'string') {
+      if (params) queryParams['keyword'] = params;
+    } else if (params) {
+      if (params.page !== undefined) queryParams['page'] = params.page.toString();
+      if (params.size !== undefined) queryParams['size'] = params.size.toString();
+      if (params.keyword) queryParams['keyword'] = params.keyword;
+    }
+    return this.http.get<any>(this.api, { params: queryParams });
   }
 }

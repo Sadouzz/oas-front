@@ -48,8 +48,8 @@ export class DevisPrevisionnelsComponent extends BasePaginatedComponent implemen
   });
 
   ngOnInit() {
-    this.clientService.getAll().subscribe({ next: c => this.clients = extractContent(c), error: () => {} });
-    this.vehiculeService.getAll().subscribe({ next: v => this.vehicules = extractContent(v), error: () => {} });
+    //this.clientService.getAll().subscribe({ next: c => this.clients = extractContent(c), error: () => {} });
+    //this.vehiculeService.getAll().subscribe({ next: v => this.vehicules = extractContent(v), error: () => {} });
 
     this.route.queryParams.subscribe(params => {
       if (params['action'] === 'new') {

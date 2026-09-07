@@ -51,6 +51,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
   }
 
   private readonly routeLabels: Record<string, { label: string; section?: string }> = {
+    '/profil': { label: 'Mon profil' },
     '/dashboard': { label: 'Tableau de bord' },
     '/clients': { label: 'Clients' },
     '/vehicules': { label: 'Véhicules' },

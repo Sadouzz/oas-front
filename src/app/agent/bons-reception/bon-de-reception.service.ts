@@ -9,8 +9,12 @@ export class BonDeReceptionService {
   private http = inject(HttpClient);
   private api = `${environment.apiUrl}/api/bons-de-reception`;
 
-  getAll(): Observable<BonDeReception[]> {
-    return this.http.get<BonDeReception[]>(this.api);
+  getAll(params: import('../../shared/models').PageParams = {}): Observable<any> {
+    const queryParams: Record<string, string> = {};
+    if (params.page !== undefined) queryParams['page'] = params.page.toString();
+    if (params.size !== undefined) queryParams['size'] = params.size.toString();
+    if (params.keyword) queryParams['keyword'] = params.keyword;
+    return this.http.get<any>(this.api, { params: queryParams });
   }
 
   getById(id: number): Observable<BonDeReception> {

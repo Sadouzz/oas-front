@@ -9,7 +9,7 @@ import { RecuModel, RecuRequest } from './models/recu.model';
 })
 export class RecuService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/recus`;
+  private apiUrl = `${environment.apiUrl}/api/recus`;
 
   create(request: RecuRequest): Observable<RecuModel> {
     return this.http.post<RecuModel>(this.apiUrl, request);
@@ -20,6 +20,6 @@ export class RecuService {
   }
 
   getAll(): Observable<RecuModel[]> {
-    return this.http.get<RecuModel[]>(`${environment.apiUrl}/api/admin/portal/recus`);
+    return this.http.get<RecuModel[]>(this.apiUrl);
   }
 }

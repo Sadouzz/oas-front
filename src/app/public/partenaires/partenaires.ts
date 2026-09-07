@@ -5,6 +5,7 @@ import { register } from 'swiper/element/bundle';
 
 import { PartenaireService, PartenaireModel } from '../../services/partenaire.service';
 import { FournisseurService, FournisseurModel } from '../../agent/fournisseurs/fournisseur.service';
+import { extractContent } from '../../shared/models';
 
 import { IconComponent } from '../../shared/icon/icon';
 import { SectionTitle } from '../../shared/components/section-title/section-title';
@@ -85,6 +86,7 @@ export class Partenaires implements OnInit, AfterViewInit, OnDestroy {
     }
   ];
 
+
   ngOnInit(): void {
     this.partenaireService.getAll().subscribe(data => {
       this.partenairesLocaux = data.filter(p => p.type === 'LOCAL' && !p.archived);
@@ -92,7 +94,7 @@ export class Partenaires implements OnInit, AfterViewInit, OnDestroy {
     });
 
     this.fournisseurService.getAll().subscribe(data => {
-      this.fournisseurs = data.filter(f => !f.archived);
+      this.fournisseurs = extractContent<FournisseurModel>(data).filter(f => !f.archived);
     });
   }
 

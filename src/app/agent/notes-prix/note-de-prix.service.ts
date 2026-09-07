@@ -2,14 +2,14 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { NoteDePrixModel, NoteDePrixCreateRequest } from '../../shared/models';
+import { NoteDePrixModel, NoteDePrixCreateRequest, PageParams } from '../../shared/models';
 
 @Injectable({ providedIn: 'root' })
 export class NoteDePrixService {
   private http = inject(HttpClient);
   private api = `${environment.apiUrl}/api/notes-de-prix`;
 
-  getAll(params?: import('../../shared/models').PageParams): Observable<NoteDePrixModel[]> {
+  getAll(params?: PageParams): Observable<NoteDePrixModel[]> {
     const p: Record<string, string> = {};
     if (params?.page !== undefined) p['page'] = params.page.toString();
     if (params?.size !== undefined) p['size'] = params.size.toString();

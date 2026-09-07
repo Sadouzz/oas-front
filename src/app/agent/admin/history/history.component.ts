@@ -1,59 +1,73 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { HistoryService } from './history.service';
-import { ConnectionHistoryModel, extractContent } from '../../../shared/models/index';
+import { ConnectionHistoryModel } from '../../../shared/models/index';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
-import { LucideSearch, LucideClock } from '@lucide/angular';
+import { BasePaginatedComponent } from '../../../shared/components/base-paginated.component';
+import { LucideSearch, LucideClock, LucideLoader2 } from '@lucide/angular';
 
 @Component({
   selector: 'app-history',
   standalone: true,
-  imports: [PaginationComponent, LucideSearch, LucideClock],
+  imports: [PaginationComponent, LucideSearch, LucideClock, LucideLoader2],
   templateUrl: './history.component.html',
 })
-export class HistoryComponent implements OnInit {
+export class HistoryComponent extends BasePaginatedComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private historyService = inject(HistoryService);
 
   history: ConnectionHistoryModel[] = [];
   filtered: ConnectionHistoryModel[] = [];
-  page = 1;
-  readonly pageSize = 10;
   loading = false;
 
   ngOnInit() {
+    this.loadData();
+  }
+
+  loadData() {
+    this.load();
+  }
+
+  load() {
     this.loading = true;
-    this.historyService.getAll().subscribe({
+    this.historyService.getAll(this.getPageParams()).subscribe({
       next: (data) => {
-        this.history = extractContent(data).sort((a, b) =>
+        const list = this.applyPageResponse<ConnectionHistoryModel>(data);
+        this.history = list.sort((a, b) =>
           new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
         );
-        this.filtered = this.history;
+        this.applyFilter();
         this.loading = false;
         this.cdr.markForCheck();
       },
       error: () => {
+        this.history = [];
+        this.filtered = [];
+        this.totalElements = 0;
+        this.serverTotalPages = 1;
         this.loading = false;
         this.cdr.markForCheck();
       }
     });
   }
 
-  onSearch(event: Event) {
-    const term = (event.target as HTMLInputElement).value.toLowerCase().trim();
-    this.filtered = term
-      ? this.history.filter(h =>
-          h.username.toLowerCase().includes(term) ||
-          h.ipAddress?.toLowerCase().includes(term) ||
-          h.status?.toLowerCase().includes(term)
-        )
-      : this.history;
-    this.page = 1;
+  applyFilter() {
+    let data = this.history;
+    if (this.searchTerm) {
+      const term = this.searchTerm.toLowerCase();
+      data = data.filter(h =>
+        h.username?.toLowerCase().includes(term) ||
+        h.ipAddress?.toLowerCase().includes(term) ||
+        h.status?.toLowerCase().includes(term)
+      );
+    }
+    this.filtered = data;
   }
 
-  get paged(): ConnectionHistoryModel[] { return this.filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize); }
-  get totalPages(): number { return Math.max(1, Math.ceil(this.filtered.length / this.pageSize)); }
-  prevPage(): void { if (this.page > 1) this.page--; }
-  nextPage(): void { if (this.page < this.totalPages) this.page++; }
+  // onSearch is inherited from BasePaginatedComponent
+
+  get paged(): ConnectionHistoryModel[] {
+    return this.filtered;
+  }
 
   formatDate(ts: string): string {
     if (!ts) return '–';

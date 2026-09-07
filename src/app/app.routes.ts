@@ -69,6 +69,11 @@ export const routes: Routes = [
     canActivate: [staffGuard],
     children: [
       {
+        path: 'profil',
+        loadComponent: () =>
+          import('./agent/profil/profil.component').then(m => m.ProfilComponent),
+      },
+      {
         path: 'dashboard',
         loadComponent: () =>
           import('./agent/dashboard/dashboard.component').then(m => m.DashboardComponent),

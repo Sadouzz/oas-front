@@ -20,7 +20,7 @@
   <div class="bg-white rounded-xl border border-oas-line p-4">
     <div class="relative">
       <svg lucideSearch class="w-4 h-4 text-oas-muted absolute left-3 top-1/2 -translate-y-1/2"></svg>
-      <input type="text" [value]="searchTerm" (input)="onSearch($event)"
+      <input type="text" (input)="onSearch($event)"
         placeholder="Rechercher par numéro d'avoir, client, immatriculation..."
         class="w-full pl-9 pr-4 py-2 text-sm bg-oas-bg rounded-lg border border-oas-line focus:outline-none focus:ring-2 focus:ring-oas-accent/20 focus:border-oas-accent transition" />
     </div>
