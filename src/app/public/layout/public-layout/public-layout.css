@@ -1,0 +1,8 @@
+:host {
+  display: block;
+}
+
+/* Ensure smooth curtain reveal */
+footer {
+  will-change: transform;
+}

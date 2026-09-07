@@ -14,28 +14,28 @@ export const routes: Routes = [
     loadComponent: () => import('./public/layout/public-layout/public-layout').then(m => m.PublicLayout),
     children: [
       { path: '', loadComponent: () => import('./public/home/home').then(m => m.Home) },
-      { path: 'services.component', loadComponent: () => import('./public/services/services').then(m => m.Services) },
+      { path: 'services', loadComponent: () => import('./public/services/services').then(m => m.Services) },
       { path: 'services/:slug', loadComponent: () => import('./public/services/service-detail').then(m => m.ServiceDetail) },
-      { path: 'realisations.component', loadComponent: () => import('./public/realisations/realisations').then(m => m.Realisations) },
-      { path: 'blog.component', loadComponent: () => import('./public/blog/blog').then(m => m.Blog) },
+      { path: 'realisations', loadComponent: () => import('./public/realisations/realisations').then(m => m.Realisations) },
+      { path: 'blog', loadComponent: () => import('./public/blog/blog').then(m => m.Blog) },
       { path: 'blog/:id', loadComponent: () => import('./public/blog/blog-detail').then(m => m.BlogDetailComponent) },
       { path: 'a-propos', loadComponent: () => import('./public/about/about').then(m => m.About) },
-      // { path: 'devis.component', loadComponent: () => import('. /public/devis/devis.component').then(m => m.Devis) },
-      { path: 'marketplace.component', loadComponent: () => import('./public/marketplace/marketplace').then(m => m.Marketplace) },
+      // { path: 'devis', loadComponent: () => import('. /public/devis/devis').then(m => m.Devis) },
+      { path: 'marketplace', loadComponent: () => import('./public/marketplace/marketplace').then(m => m.Marketplace) },
       {
-        path: 'contact.component',
+        path: 'contact',
         loadComponent: () =>
           import('./public/contact/contact').then(m => m.ContactComponent),
       },
       {
-        path: 'rdv.component',
+        path: 'rdv',
         loadComponent: () =>
           import('./public/rdv/rdv').then(m => m.RdvComponent),
       },
-      { path: 'partenaires.component', loadComponent: () => import('./public/partenaires/partenaires').then(m => m.Partenaires) },
-      { path: 'mentions-legales.component', loadComponent: () => import('./public/legal/mentions-legales').then(m => m.MentionsLegalesComponent) },
-      { path: 'confidentialite.component', loadComponent: () => import('./public/legal/confidentialite').then(m => m.ConfidentialiteComponent) },
-      { path: 'cookies.component', loadComponent: () => import('./public/legal/cookies').then(m => m.CookiesComponent) },
+      { path: 'partenaires', loadComponent: () => import('./public/partenaires/partenaires').then(m => m.Partenaires) },
+      { path: 'mentions-legales', loadComponent: () => import('./public/legal/mentions-legales').then(m => m.MentionsLegalesComponent) },
+      { path: 'confidentialite', loadComponent: () => import('./public/legal/confidentialite').then(m => m.ConfidentialiteComponent) },
+      { path: 'cookies', loadComponent: () => import('./public/legal/cookies').then(m => m.CookiesComponent) },
     ]
   },
   {
@@ -44,9 +44,9 @@ export const routes: Routes = [
       import('./temp-media-upload/temp-media-upload.component').then(m => m.TempMediaUploadComponent),
   },
 
-  { path: 'login.component', component: LoginComponent, canActivate: [noAuthGuard] },
-  { path: 'register.component', component: RegisterComponent, canActivate: [noAuthGuard] },
-  { path: 'forbidden.component', component: ForbiddenComponent },
+  { path: 'login', component: LoginComponent, canActivate: [noAuthGuard] },
+  { path: 'register', component: RegisterComponent, canActivate: [noAuthGuard] },
+  { path: 'forbidden', component: ForbiddenComponent },
 
   {
     path: 'mon-compte',
@@ -64,42 +64,42 @@ export const routes: Routes = [
   },
 
   {
-    path: 'app.component',
+    path: 'app',
     component: LayoutComponent,
     canActivate: [staffGuard],
     children: [
       {
-        path: 'dashboard.component',
+        path: 'dashboard',
         loadComponent: () =>
           import('./agent/dashboard/dashboard.component').then(m => m.DashboardComponent),
       },
       {
-        path: 'clients.component',
+        path: 'clients',
         loadComponent: () =>
           import('./agent/clients/clients.component').then(m => m.ClientsComponent),
       },
       {
-        path: 'vehicules.component',
+        path: 'vehicules',
         loadComponent: () =>
           import('./agent/vehicules/vehicules.component').then(m => m.VehiculesComponent),
       },
       {
-        path: 'pieces-detachees.component',
+        path: 'pieces-detachees',
         loadComponent: () =>
           import('./agent/pieces-detachees/pieces-detachees.component').then(m => m.PiecesDetacheesComponent),
       },
       {
-        path: 'seuil-alertes.component',
+        path: 'seuil-alertes',
         loadComponent: () =>
           import('./agent/pieces-detachees/seuil-alertes/seuil-alertes').then(m => m.SeuilAlertes),
       },
       {
-        path: 'bons-de-sortie.component',
+        path: 'bons-de-sortie',
         loadComponent: () =>
           import('./agent/bons-de-sortie/bons-de-sortie.component').then(m => m.BonsDeSortieComponent),
       },
       {
-        path: 'historique-bs.component',
+        path: 'historique-bs',
         loadComponent: () =>
           import('./agent/bons-de-sortie/historique-bs/historique-bs.component').then(m => m.HistoriqueBsComponent),
       },
@@ -110,65 +110,65 @@ export const routes: Routes = [
           import('./agent/pieces-detachees/historique/historique.component').then(m => m.HistoriqueComponent),
       },
       {
-        path: 'inventaire.component',
+        path: 'inventaire',
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_AGENT_MAGASIN'])],
         loadComponent: () =>
           import('./agent/inventaire/inventaire.component').then(m => m.InventaireComponent),
       },
       {
-        path: 'fournisseurs.component',
+        path: 'fournisseurs',
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_AGENT_MAGASIN'])],
         loadComponent: () =>
           import('./agent/fournisseurs/fournisseurs.component').then(m => m.FournisseursComponent),
       },
       {
-        path: 'ordres-reparation.component',
+        path: 'ordres-reparation',
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER'])],
         loadComponent: () =>
           import('./agent/ordres-reparation/ordres-reparation.component').then(m => m.OrdresReparationComponent),
       },
       {
-        path: 'techniciens.component',
+        path: 'techniciens',
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER'])],
         loadComponent: () =>
           import('./agent/techniciens/techniciens.component').then(m => m.TechniciensComponent),
       },
       {
-        path: 'rendezvous.component',
+        path: 'rendezvous',
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER', 'ROLE_AGENT'])],
         loadComponent: () =>
           import('./agent/rendezvous/rendezvous.component').then(m => m.RendezVousComponent),
       },
       {
-        path: 'notes-prix.component',
+        path: 'notes-prix',
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER', 'ROLE_AGENT'])],
         loadComponent: () =>
           import('./agent/notes-prix/notes-prix.component').then(m => m.NotesPrixComponent),
       },
       {
         path: 'notes-de-prix',
-        redirectTo: 'notes-prix.component',
+        redirectTo: 'notes-prix',
         pathMatch: 'full',
       },
       {
-        path: 'devis-previsionnels.component',
+        path: 'devis-previsionnels',
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER'])],
         loadComponent: () =>
           import('./agent/devis-previsionnels/devis-previsionnels.component').then(m => m.DevisPrevisionnelsComponent),
       },
       {
-        path: 'devis.component',
+        path: 'devis',
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER', 'ROLE_AGENT'])],
         loadComponent: () =>
           import('./agent/devis-previsionnels/devis-previsionnels.component').then(m => m.DevisPrevisionnelsComponent),
       },
       {
-        path: 'bons-commande.component',
+        path: 'bons-commande',
         loadComponent: () =>
           import('./agent/bons-commande/bons-commande.component').then(m => m.BonsCommandeComponent),
       },
       {
-        path: 'bons-reception.component',
+        path: 'bons-reception',
         loadComponent: () =>
           import('./agent/bons-reception/bons-reception.component').then(m => m.BonsReceptionComponent),
       },
@@ -178,32 +178,32 @@ export const routes: Routes = [
           import('./agent/proforma/proforma.component').then(m => m.ProformaComponent),
       },
       {
-        path: 'factures.component',
+        path: 'factures',
         loadComponent: () =>
           import('./agent/factures/factures.component').then(m => m.FacturesComponent),
       },
       {
-        path: 'avoirs-ttc.component',
+        path: 'avoirs-ttc',
         loadComponent: () =>
           import('./agent/avoirs-ttc/avoirs-ttc').then(m => m.AvoirsTtc),
       },
       {
-        path: 'avoirs-ht.component',
+        path: 'avoirs-ht',
         loadComponent: () =>
           import('./agent/avoirs-ht/avoirs-ht').then(m => m.AvoirsHt),
       },
       {
-        path: 'notes-prix.component',
+        path: 'notes-prix',
         loadComponent: () =>
           import('./agent/notes-prix/notes-prix.component').then(m => m.NotesPrixComponent),
       },
       {
-        path: 'gestion-tva.component',
+        path: 'gestion-tva',
         loadComponent: () =>
           import('./agent/gestion-tva/gestion-tva.component').then(m => m.GestionTvaComponent),
       },
       {
-        path: 'gestion-recu.component',
+        path: 'gestion-recu',
         loadComponent: () =>
           import('./agent/gestion-recu/gestion-recu.component').then(m => m.GestionRecuComponent),
       },
@@ -212,34 +212,34 @@ export const routes: Routes = [
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER'])],
         children: [
           {
-            path: 'users.component',
+            path: 'users',
             loadComponent: () =>
               import('./agent/admin/users/users.component').then(m => m.UsersComponent),
           },
           {
-            path: 'garages.component',
+            path: 'garages',
             loadComponent: () =>
               import('./agent/admin/garages/garages.component').then(m => m.GaragesComponent),
           },
           {
-            path: 'history.component',
+            path: 'history',
             loadComponent: () =>
               import('./agent/admin/history/history.component').then(m => m.HistoryComponent),
           },
           {
-            path: 'main-doeuvre.component',
+            path: 'main-doeuvre',
             loadComponent: () =>
               import('./agent/main-doeuvre/main-doeuvre.component').then(m => m.MainDoeuvreComponent),
           },
           {
-            path: 'parametres.component',
+            path: 'parametres',
             loadComponent: () =>
               import('./agent/parametres/parametres.component').then(m => m.ParametresComponent),
           },
         ],
       },
       {
-        path: 'fiches-atelier.component',
+        path: 'fiches-atelier',
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER', 'ROLE_AGENT'])],
         loadComponent: () =>
           import('./agent/fiches-atelier/fiches-atelier-list/fiches-atelier-list').then(m => m.FichesAtelierList),
@@ -260,7 +260,7 @@ export const routes: Routes = [
   },
   {
     path: 'agent',
-    redirectTo: 'app.component',
+    redirectTo: 'app',
     pathMatch: 'prefix',
   },
 

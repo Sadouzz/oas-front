@@ -112,9 +112,11 @@ export class Home implements OnInit {
   ngOnInit(): void {
     const rotations = ['rotate-[-6deg]', 'rotate-[3deg]', 'rotate-[-4deg]', 'rotate-[4deg]'];
     this.blogService.getAll().subscribe({
-      next: (data) => {
+      next: (data: any) => {
+        // Normalise: tableau direct OU objet paginé {content: [...]}
+        const items: any[] = Array.isArray(data) ? data : (data?.content ?? []);
         // Prendre les 4 derniers articles du blog
-        this.blogArticles = data.slice(0, 4).map((post, idx) => ({
+        this.blogArticles = items.slice(0, 4).map((post: any, idx: number) => ({
           id: post.id,
           imageSrc: this.getArticleImage(post.images),
           alt: post.title,
@@ -129,8 +131,10 @@ export class Home implements OnInit {
     });
 
     this.partenaireService.getAll().subscribe({
-      next: (data) => {
-        this.partners = data.map(p => ({
+      next: (data: any) => {
+        // Normalise: tableau direct OU objet paginé {content: [...]}
+        const items: any[] = Array.isArray(data) ? data : (data?.content ?? []);
+        this.partners = items.map((p: any) => ({
           name: p.nom,
           logoUrl: p.logo && p.logo !== '' ? p.logo : 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?q=80&w=400&auto=format&fit=crop',
           heightClass: 'h-16 rounded-md'
@@ -142,8 +146,9 @@ export class Home implements OnInit {
     });
 
     this.fournisseurService.getAll().subscribe({
-      next: (data) => {
-        this.fournisseurs = data;
+      next: (data: any) => {
+        // Normalise: tableau direct OU objet paginé {content: [...]}
+        this.fournisseurs = Array.isArray(data) ? data : (data?.content ?? []);
       },
       error: (err) => {
         console.error('Erreur chargement fournisseurs:', err);
