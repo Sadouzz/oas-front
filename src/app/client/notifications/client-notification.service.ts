@@ -7,7 +7,7 @@ import { ClientNotification } from '../models';
 @Injectable({ providedIn: 'root' })
 export class ClientNotificationService {
   private http = inject(HttpClient);
-  private api = `${environment.apiUrl}/api/client/notifications`;
+  private api = `${environment.apiUrl}/api/notifications`;
 
   getAll(): Observable<ClientNotification[]> {
     return this.http.get<ClientNotification[]>(this.api);
