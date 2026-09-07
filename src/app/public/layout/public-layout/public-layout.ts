@@ -1,7 +1,8 @@
 import { Component, ElementRef, ViewChild, AfterViewInit, HostListener, ChangeDetectorRef, Renderer2, OnInit, OnDestroy, Inject } from '@angular/core';
-
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { CommonModule, DOCUMENT } from '@angular/common';
+import { filter } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 import { WrenchCursorComponent } from '../../../shared/components/wrench-cursor/wrench-cursor';
 
 @Component({
@@ -16,6 +17,9 @@ export class PublicLayout implements OnInit, AfterViewInit, OnDestroy {
   footerHeight = 0;
   isCurtain = true;
   isMenuOpen = false;
+
+  private resizeObserver?: ResizeObserver;
+  private routerSub?: Subscription;
 
   headerLeftLinks: { label: string, path: string, exact?: boolean }[] = [
     { label: 'Le garage', path: '/a-propos' },
@@ -93,20 +97,40 @@ export class PublicLayout implements OnInit, AfterViewInit, OnDestroy {
   constructor(
     private cdr: ChangeDetectorRef,
     private renderer: Renderer2,
+    private router: Router,
     @Inject(DOCUMENT) private document: Document
   ) {}
 
   ngOnInit() {
     this.renderer.addClass(this.document.body, 'public-cursor');
+
+    // Re-evaluate footer height upon route changes
+    this.routerSub = this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe(() => {
+        setTimeout(() => this.updateFooterHeight(), 100);
+      });
   }
 
   ngOnDestroy() {
     this.renderer.removeClass(this.document.body, 'public-cursor');
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+    }
+    if (this.routerSub) {
+      this.routerSub.unsubscribe();
+    }
   }
 
   ngAfterViewInit() {
-    // Timeout to ensure rendering is complete before measuring
-    setTimeout(() => this.updateFooterHeight(), 0);
+    this.updateFooterHeight();
+
+    if (typeof ResizeObserver !== 'undefined' && this.footerRef?.nativeElement) {
+      this.resizeObserver = new ResizeObserver(() => {
+        this.updateFooterHeight();
+      });
+      this.resizeObserver.observe(this.footerRef.nativeElement);
+    }
   }
 
   @HostListener('window:resize')
@@ -115,15 +139,20 @@ export class PublicLayout implements OnInit, AfterViewInit, OnDestroy {
   }
 
   updateFooterHeight() {
-    if (!this.footerRef) return;
+    if (!this.footerRef?.nativeElement) return;
     const height = this.footerRef.nativeElement.offsetHeight;
-    
-    if (window.innerWidth < 1024 || height > window.innerHeight * 0.8) {
-      this.isCurtain = false;
-      this.footerHeight = 0;
-    } else {
+    const windowHeight = window.innerHeight;
+
+    // Enable curtain on desktop (>= 1024px) whenever the footer fits within the viewport height
+    const isDesktop = window.innerWidth >= 1024;
+    const fitsViewport = height <= windowHeight;
+
+    if (isDesktop && fitsViewport) {
       this.isCurtain = true;
       this.footerHeight = height;
+    } else {
+      this.isCurtain = false;
+      this.footerHeight = 0;
     }
     this.cdr.detectChanges();
   }
