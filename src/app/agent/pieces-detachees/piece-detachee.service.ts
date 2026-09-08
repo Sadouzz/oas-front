@@ -13,12 +13,11 @@ export class PieceDetacheeService {
 
   getAll(params: import('../../shared/models').PageParams = {}): Observable<PieceDetache[]> {
     const p: Record<string, string> = {};
-
-    if (params.page !== undefined) p['page'] = params.page.toString();
-    if (params.size !== undefined) p['size'] = params.size.toString();
-    if (params.keyword) p['keyword'] = params.keyword;
-    if (params['statut']) p['statut'] = params['statut'];
-    if (params['type']) p['type'] = params['type'];
+    Object.keys(params).forEach(key => {
+      if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+        p[key] = params[key].toString();
+      }
+    });
     return this.http.get<PieceDetache[]>(this.api, { params: p });
   }
 

@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { PieceDetacheeService } from './piece-detachee.service';
 import { DepotService } from './depot.service';
 import { CategoriePieceService } from './categorie-piece.service';
-import { PieceDetache, Depot, CategoriePiece } from '../../shared/models';
+import { PieceDetache, Depot, CategoriePiece, PageParams } from '../../shared/models';
 import { AuthService } from '../../core/services/auth.service';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
@@ -162,36 +162,53 @@ export class PiecesDetacheesComponent extends BasePaginatedComponent implements 
 
   // onSearch inherited from BasePaginatedComponent
 
+  protected override getPageParams(extraParams: Record<string, any> = {}): PageParams {
+    const extra: Record<string, any> = { ...extraParams };
+    if (this.filterStatut) {
+      extra['statut'] = this.filterStatut;
+      extra['status'] = this.filterStatut;
+    }
+    if (this.filterType) {
+      extra['type'] = this.filterType;
+    }
+    if (this.filterDepot) {
+      extra['depot'] = this.filterDepot;
+    }
+    return super.getPageParams(extra);
+  }
+
   applyFilters(keyword = '') {
     let result = this.pieces;
     if (keyword) result = result.filter((p: any) => {
       const catName = p.categorie?.nom || p.categorie || '';
-      return p.designation.toLowerCase().includes(keyword) ||
-        p.reference.toLowerCase().includes(keyword) ||
+      return (p.designation?.toLowerCase().includes(keyword) || false) ||
+        (p.reference?.toLowerCase().includes(keyword) || false) ||
         catName.toLowerCase().includes(keyword);
     });
     if (this.filterType) result = result.filter((p: any) => p.type === this.filterType);
     if (this.filterStatut) result = result.filter((p: any) => p.statut === this.filterStatut);
     if (this.filterDepot) result = result.filter((p: any) => p.categorie?.depot?.nom === this.filterDepot);
     this.filtered = result;
-    this.page = 1;
   }
 
   setFilterDepot(depot: string) {
     this.filterDepot = this.filterDepot === depot ? '' : depot;
-    this.applyFilters();
+    this.page = 1;
+    this.loadData();
   }
 
   get paged(): PieceDetache[] { return this.filtered; }
 
   onTypeFilter(event: Event) {
     this.filterType = (event.target as HTMLSelectElement).value;
-    this.applyFilters();
+    this.page = 1;
+    this.loadData();
   }
 
   onStatutFilter(event: Event) {
     this.filterStatut = (event.target as HTMLSelectElement).value;
-    this.applyFilters();
+    this.page = 1;
+    this.loadData();
   }
 
   openCreate() {

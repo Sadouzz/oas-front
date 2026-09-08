@@ -27,7 +27,7 @@ export interface ClientListResponse {
 }
 
 export interface CreateClientPayload {
-  matricule: string;
+  matricule?: string;
   firstName: string;
   lastName: string;
   email: string;

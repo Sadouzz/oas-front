@@ -119,14 +119,14 @@
           Gérer le stock
         </a>
       </div>
-      <!-- Bons en attente -->
+      <!-- Bons de sortie en attente -->
       <div class="bg-white rounded-lg border border-oas-line shadow-card p-5">
         <div class="flex items-start gap-4">
           <span class="w-11 h-11 rounded-lg bg-oas-warn-bg text-oas-warn flex items-center justify-center flex-shrink-0">
             <svg lucideClock class="w-6 h-6"></svg>
           </span>
           <div class="flex-1 min-w-0">
-            <p class="text-sm text-oas-warn leading-tight">Bons en attente</p>
+            <p class="text-sm text-oas-warn leading-tight">Bons de sortie en attente</p>
             <p class="text-3xl font-bold text-oas-warn leading-none mt-1">{{ bonsEnAttente.length }}</p>
           </div>
         </div>
@@ -389,7 +389,7 @@
             <svg lucideClock class="w-6 h-6"></svg>
           </span>
           <div>
-            <p class="text-sm text-oas-warn">Bons en attente</p>
+            <p class="text-sm text-oas-warn">Bons de sortie en attente</p>
             <p class="text-3xl font-bold text-oas-warn leading-none mt-1">{{ bonsEnAttente.length }}</p>
           </div>
         </div>
@@ -516,7 +516,7 @@
       </div>
       <div class="bg-white rounded-lg border border-oas-line overflow-hidden">
         <div class="flex items-center justify-between px-5 py-4 border-b border-oas-line">
-          <h3 class="font-bold text-oas-ink text-sm">Bons en attente</h3>
+          <h3 class="font-bold text-oas-ink text-sm">Bons de sortie en attente</h3>
           <a routerLink="/app/bons-de-sortie" class="text-xs text-oas-accent font-semibold">Voir tout</a>
         </div>
         <ul class="divide-y divide-oas-line">
@@ -526,7 +526,7 @@
               <p class="text-xs text-oas-muted">{{ b.client?.firstName ? (b.client?.firstName + ' ' + b.client?.lastName) : (b.client || '') }}</p>
             </li>
           } @empty {
-            <li class="px-5 py-8 text-center text-oas-muted text-sm">Aucun bon en attente</li>
+            <li class="px-5 py-8 text-center text-oas-muted text-sm">Aucun bon de sortie en attente</li>
           }
         </ul>
       </div>
@@ -666,7 +666,7 @@
 
     <div class="bg-white rounded-2xl border border-oas-line shadow-sm overflow-hidden">
       <div class="flex items-center justify-between px-5 py-4 border-b border-oas-line">
-        <h3 class="font-bold text-oas-ink text-sm">Bons en attente de validation</h3>
+        <h3 class="font-bold text-oas-ink text-sm">Bons de sortie en attente de validation</h3>
         <a routerLink="/app/bons-de-sortie" class="text-xs text-oas-accent font-semibold">Voir tout</a>
       </div>
       <ul class="divide-y divide-oas-line">
@@ -736,7 +736,7 @@
             <svg lucideClipboardList class="w-6 h-6"></svg>
           </span>
           <div>
-            <p class="text-sm text-oas-muted">Bons en attente</p>
+            <p class="text-sm text-oas-muted">Bons de sortie en attente</p>
             <p class="text-3xl font-bold text-oas-ink leading-none mt-1">{{ bonsEnAttente.length }}</p>
           </div>
         </div>

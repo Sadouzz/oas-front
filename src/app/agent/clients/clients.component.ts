@@ -6,7 +6,7 @@ import { ClientService } from './client.service';
 import { VehiculeService } from '../vehicules/vehicule.service';
 import { BonDeSortieService } from '../bons-de-sortie/bon-de-sortie.service';
 import { FactureService, FactureModel } from '../factures/facture.service';
-import { ClientModel, ClientListResponse, VehiculeModel, extractContent } from '../../shared/models/index';
+import { ClientModel, ClientListResponse, VehiculeModel, extractContent, PageParams } from '../../shared/models/index';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
@@ -59,7 +59,6 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   loadingVehicules = false;
 
   createForm = this.fb.group({
-    matricule: [{ value: '', disabled: true }, Validators.required],
     firstName: ['', Validators.required],
     lastName: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
@@ -95,12 +94,18 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   loadAll() {
     this.loading = true;
     const params = this.getPageParams();
-    this.clientService.getAll(params).subscribe({
+    const req$ = this.filterStatut === 'archive'
+      ? this.clientService.getArchived(params)
+      : this.clientService.getAll(params);
+
+    req$.subscribe({
       next: (res) => {
         const clientsList = this.applyPageResponse<ClientListResponse>(res);
-        this.clients = clientsList.sort((a: any, b: any) => b.id - a.id);
-        this.applyFilter(); this.cdr.markForCheck();
-        this.loading = false; this.cdr.markForCheck();
+        this.clients = clientsList;
+        this.applyFilter();
+        this.cdr.markForCheck();
+        this.loading = false;
+        this.cdr.markForCheck();
         // Refresh selected client data if one is selected
         if (this.selectedClient) {
           const updated = clientsList.find(c => c.id === this.selectedClient!.id);
@@ -108,23 +113,26 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
         }
       },
       error: () => {
-        this.loading = false; this.cdr.markForCheck();
+        this.loading = false;
+        this.cdr.markForCheck();
         this.errorMessage = 'Impossible de charger les clients. Vérifiez que le serveur est démarré.';
       },
     });
   }
 
-  private nextMatricule(prefix: string, existing: string[]): string {
-    const p = `${prefix}-`;
-    const nums = existing
-      .map(m => m?.startsWith(p) ? parseInt(m.slice(p.length), 10) : NaN)
-      .filter(n => !isNaN(n));
-    const next = nums.length > 0 ? Math.max(...nums) + 1 : 1;
-    return `${p}${String(next).padStart(5, '0')}`;
-  }
 
-  get generatedMatricule(): string {
-    return this.createForm.getRawValue().matricule ?? '';
+  protected override getPageParams(extraParams: Record<string, any> = {}): PageParams {
+    const extra: Record<string, any> = { ...extraParams };
+    if (this.filterStatut === 'actif') {
+      extra['enabled'] = true;
+      extra['statut'] = 'actif';
+      extra['status'] = 'actif';
+    } else if (this.filterStatut === 'archive') {
+      extra['enabled'] = false;
+      extra['statut'] = 'archive';
+      extra['status'] = 'archive';
+    }
+    return super.getPageParams(extra);
   }
 
   applyFilter() {
@@ -141,7 +149,6 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
       );
     }
     this.filtered = data;
-    this.page = 1;
   }
 
   // onSearch inherited from BasePaginatedComponent
@@ -149,7 +156,7 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   onStatutFilter(event: Event) {
     this.filterStatut = (event.target as HTMLSelectElement).value;
     this.page = 1;
-    this.applyFilter(); this.cdr.markForCheck();
+    this.loadData();
   }
 
   get paged(): ClientListResponse[] { return this.filtered; }
@@ -300,9 +307,7 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
 
   // ── CREATE (step 1 : client info) ──────────────────────────────
   openCreate() {
-    const mat = this.nextMatricule('CLT', this.clients.map(c => c.matricule));
     this.createForm.reset();
-    this.createForm.get('matricule')?.setValue(mat);
     this.vehicleForm.reset();
     this.errorMessage = '';
     this.createStep = 1;
@@ -321,12 +326,7 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   }
 
   saveCreate() {
-    const active = Object.fromEntries(
-      Object.entries(this.createForm.controls)
-        .filter(([, ctrl]) => ctrl !== this.createForm.get('matricule'))
-        .map(([k, ctrl]) => [k, ctrl.value])
-    );
-    if (Object.values(active).some(v => !v) || this.saving) {
+    if (this.createForm.invalid || this.saving) {
       this.createForm.markAllAsTouched();
       return;
     }
@@ -336,20 +336,11 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
       next: (res: any) => {
         this.saving = false;
         this.errorMessage = '';
+        this.page = 1;
         this.loadAll();
         this.createStep = 2;
         this.addingVehicle = false;
-        this.createdClientId = typeof res === 'object' && res?.id ? res.id : null;
-        if (!this.createdClientId) {
-          this.clientService.getAll().subscribe({
-            next: (clients) => {
-              const list = extractContent<ClientModel>(clients);
-              const mat = this.createForm.getRawValue().matricule;
-              const found = list.find(c => c.matricule === mat);
-              this.createdClientId = found?.id ?? null;
-            }
-          });
-        }
+        this.createdClientId = res?.data?.id ?? res?.id ?? null;
       },
       error: (err: any) => { this.saving = false; this.errorMessage = this.parseError(err); }
     });
@@ -358,6 +349,7 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   skipVehicle() {
     this.showSuccess('Client créé avec succès !');
     this.closeCreate();
+    //this.loadAll();
   }
 
   startAddVehicle() {

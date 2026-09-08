@@ -12,9 +12,11 @@ export class ClientService {
 
   getAll(params: PageParams = {}): Observable<ClientListResponse[]> {
     const queryParams: Record<string, string> = {};
-    if (params.page !== undefined) queryParams['page'] = params.page.toString();
-    if (params.size !== undefined) queryParams['size'] = params.size.toString();
-    if (params.keyword) queryParams['keyword'] = params.keyword;
+    Object.keys(params).forEach(key => {
+      if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+        queryParams[key] = params[key].toString();
+      }
+    });
     return this.http.get<ClientListResponse[]>(this.api, { params: queryParams });
   }
 
@@ -22,12 +24,22 @@ export class ClientService {
     return this.http.get<ClientListResponse[]>(`${this.api}/recent`);
   }
 
+  getArchived(params: PageParams = {}): Observable<ClientListResponse[]> {
+    const queryParams: Record<string, string> = {};
+    Object.keys(params).forEach(key => {
+      if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+        queryParams[key] = params[key].toString();
+      }
+    });
+    return this.http.get<ClientListResponse[]>(`${this.api}/archived`, { params: queryParams });
+  }
+
   getById(id: number): Observable<ClientModel> {
     return this.http.get<ClientModel>(`${this.api}/${id}`);
   }
 
   create(data: CreateClientPayload): Observable<any> {
-    return this.http.post(`${this.api}/create`, data, { responseType: 'text' as 'json' });
+    return this.http.post<any>(`${this.api}/create`, data);
   }
 
   update(id: number, data: UpdateClientPayload): Observable<ClientModel> {
