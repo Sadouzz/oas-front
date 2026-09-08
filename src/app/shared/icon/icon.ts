@@ -245,6 +245,61 @@ import { Component, Input } from '@angular/core';
               <path d="M4.9 4.9l2.5 2.5" opacity=".1"/>
             </ng-container>
           }
+          <!-- Clipboard / Transparence -->
+          @case ('clipboard-list') {
+            <ng-container>
+              <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+              <path d="M12 11h4M12 16h4M8 11h.01M8 16h.01"/>
+            </ng-container>
+          }
+          <!-- Composants / Colis / Pièces -->
+          @case ('package') {
+            <ng-container>
+              <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+              <path d="m3.3 7 8.7 5 8.7-5"/>
+              <path d="M12 22V12"/>
+            </ng-container>
+          }
+          <!-- Utilisateurs / Équipe -->
+          @case ('users') {
+            <ng-container>
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </ng-container>
+          }
+          @case ('users.component') {
+            <ng-container>
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </ng-container>
+          }
+          <!-- Coche simple -->
+          @case ('check') {
+            <ng-container>
+              <path d="M20 6L9 17l-5-5"/>
+            </ng-container>
+          }
+          <!-- Bouclier vérifié -->
+          @case ('shield-check') {
+            <ng-container>
+              <path d="M12 3l7 3v6c0 4.5-3 7.7-7 9-4-1.3-7-4.5-7-9V6l7-3z"/>
+              <path d="m9 12 2 2 4-4"/>
+            </ng-container>
+          }
+          <!-- Recherche fichier -->
+          @case ('file-search') {
+            <ng-container>
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <path d="M14 2v6h6"/>
+              <circle cx="11.5" cy="14.5" r="2.5"/>
+              <path d="m13.5 16.5 2 2"/>
+            </ng-container>
+          }
         }
       </ng-container>
     </svg>
