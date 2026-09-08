@@ -238,8 +238,24 @@ export const routes: Routes = [
           },
           {
             path: 'parametres',
-            loadComponent: () =>
-              import('./agent/parametres/parametres.component').then(m => m.ParametresComponent),
+            children: [
+              { path: '', redirectTo: 'depots', pathMatch: 'full' },
+              {
+                path: 'depots',
+                loadComponent: () =>
+                  import('./agent/parametres/depots/depots.component').then(m => m.DepotsComponent),
+              },
+              {
+                path: 'categories',
+                loadComponent: () =>
+                  import('./agent/parametres/categories/categories.component').then(m => m.CategoriesComponent),
+              },
+              {
+                path: 'fiche-atelier',
+                loadComponent: () =>
+                  import('./agent/parametres/fiche-atelier/fiche-atelier-config.component').then(m => m.FicheAtelierConfigComponent),
+              },
+            ],
           },
         ],
       },

@@ -2,10 +2,10 @@ import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { DecimalPipe, NgClass } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { PieceDetacheeService } from './piece-detachee.service';
+import { PieceDetacheeService, PieceStats } from './piece-detachee.service';
 import { DepotService } from './depot.service';
 import { CategoriePieceService } from './categorie-piece.service';
-import { PieceDetache, Depot, CategoriePiece, PageParams } from '../../shared/models';
+import { PieceDetache, Depot, CategoriePiece, PageParams, extractContent } from '../../shared/models';
 import { AuthService } from '../../core/services/auth.service';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
@@ -66,18 +66,12 @@ export class PiecesDetacheesComponent extends BasePaginatedComponent implements 
     seuilMinimum: [null as number | null],
   });
 
-  get totalArticles(): number { return this.pieces.filter(p => p.type === 'PDP').length; }
-  get valeurStock(): number {
-    return this.pieces
-      .filter(p => p.type === 'PDP')
-      .reduce((sum, p) => sum + (p.stockMagasin ?? 0) * (p.prixUnitaire ?? p.prix ?? 0), 0);
-  }
-  get stockCritique(): number {
-    return this.pieces.filter(p => p.type === 'PDP' && (p.qteReelle ?? 0) > 0 && (p.qteReelle ?? 0) <= (p.seuilMinimum ?? 10)).length;
-  }
-  get ruptures(): number {
-    return this.pieces.filter(p => p.type === 'PDP' && (p.qteReelle ?? 0) === 0).length;
-  }
+  stats: PieceStats = { totalArticles: 0, valeurStock: 0, stockCritique: 0, ruptures: 0 };
+
+  get totalArticles(): number { return this.stats.totalArticles; }
+  get valeurStock(): number { return this.stats.valeurStock; }
+  get stockCritique(): number { return this.stats.stockCritique; }
+  get ruptures(): number { return this.stats.ruptures; }
 
   get canEdit(): boolean {
     const r = this.authService.getRole();
@@ -88,7 +82,12 @@ export class PiecesDetacheesComponent extends BasePaginatedComponent implements 
     return this.form.get('type')?.value ?? 'PDP';
   }
 
-  ngOnInit() { this.loadData(); }
+  ngOnInit() {
+    this.loadData();
+    this.loadReferences();
+    this.loadStats();
+    this.setupFormListeners();
+  }
 
   loadData() {
     this.load();
@@ -101,60 +100,93 @@ export class PiecesDetacheesComponent extends BasePaginatedComponent implements 
       next: (data) => {
         const arr = this.applyPageResponse<PieceDetache>(data);
         this.pieces = arr.sort((a: any, b: any) => b.id - a.id);
-        this.depotsFilters = [...new Set(arr.map((p: any) => p.categorie?.depot?.nom).filter((d: any) => !!d))].sort() as string[];
+        if (this.depotsFilters.length === 0) {
+          const fromPieces = [...new Set(arr.map((p: any) => p.categorie?.depot?.nom || p.depot?.nom || (p as any).depotNom).filter((d: any) => !!d))].sort() as string[];
+          if (fromPieces.length > 0) this.depotsFilters = fromPieces;
+        }
         this.applyFilters();
-        this.loading = false; this.cdr.markForCheck();
+        this.loading = false;
+        this.cdr.markForCheck();
       },
-      error: () => { this.loading = false; this.cdr.markForCheck(); }
+      error: () => {
+        this.loading = false;
+        this.cdr.markForCheck();
+      }
     });
   }
-
-
 
   commanderPiece(p: PieceDetache) {
     this.router.navigate(['/app/bons-commande'], { queryParams: { pieceId: p.id } });
   }
 
-  loadReferences() {
-    this.depotService.getAll().subscribe(res => {
-      this.depots = res;
-      if (this.isNew && this.filterDepot) {
-        const depot = this.depots.find(d => d.nom === this.filterDepot);
-        if (depot) {
-          this.form.patchValue({ depotId: depot.id });
+  loadStats() {
+    this.service.getStats().subscribe({
+      next: (res) => {
+        if (res) {
+          this.stats = res;
+          this.cdr.markForCheck();
         }
-      }
+      },
+      error: () => {}
     });
-    this.categorieService.getAll().subscribe(res => {
-      this.categories = res;
-      const currentDepotId = this.form.get('depotId')?.value;
-      if (currentDepotId) {
-        this.filteredCategories = this.categories.filter(c => c.depot?.id === Number(currentDepotId));
-      } else {
-        this.filteredCategories = res;
-        const categorieNom = this.form.get('categorie')?.value;
-        if (categorieNom) {
-          const cat = this.categories.find(c => c.nom === categorieNom);
-          if (cat && cat.depot?.id) {
-            this.form.patchValue({ depotId: cat.depot.id });
+  }
+
+  loadReferences() {
+    this.loadDepots();
+    this.loadCategories();
+  }
+
+  loadDepots() {
+    this.depotService.getAll().subscribe({
+      next: (res) => {
+        const list = extractContent<Depot>(res);
+        this.depots = list;
+        this.depotsFilters = [...new Set(list.map(d => d.nom).filter(Boolean))].sort();
+        if (this.isNew && this.filterDepot) {
+          const depot = this.depots.find(d => d.nom === this.filterDepot);
+          if (depot) {
+            this.form.patchValue({ depotId: depot.id });
           }
         }
-      }
+        this.cdr.markForCheck();
+      },
+      error: () => {}
     });
+  }
 
-    this.form.get('depotId')?.valueChanges.subscribe(depotId => {
-      if (depotId) {
-        this.filteredCategories = this.categories.filter(c => c.depot?.id === Number(depotId));
-      } else {
-        this.filteredCategories = this.categories;
-      }
+  loadCategories() {
+    this.categorieService.getAll().subscribe({
+      next: (res) => {
+        const list = extractContent<CategoriePiece>(res);
+        this.categories = list;
+        this.updateFilteredCategories();
+        this.cdr.markForCheck();
+      },
+      error: () => {}
+    });
+  }
+
+  updateFilteredCategories() {
+    const currentDepotId = this.form.get('depotId')?.value;
+    if (currentDepotId) {
+      this.filteredCategories = this.categories.filter(c => c.depot?.id === Number(currentDepotId));
+    } else {
+      this.filteredCategories = this.categories;
+    }
+    this.cdr.markForCheck();
+  }
+
+  setupFormListeners() {
+    this.form.get('depotId')?.valueChanges.subscribe(() => {
+      this.updateFilteredCategories();
     });
 
     this.form.get('categorie')?.valueChanges.subscribe(categorieNom => {
       if (categorieNom && !this.form.get('depotId')?.value) {
         const cat = this.categories.find(c => c.nom === categorieNom);
         if (cat && cat.depot?.id) {
-          this.form.patchValue({ depotId: cat.depot.id });
+          this.form.patchValue({ depotId: cat.depot.id }, { emitEvent: false });
+          this.updateFilteredCategories();
         }
       }
     });
@@ -217,22 +249,21 @@ export class PiecesDetacheesComponent extends BasePaginatedComponent implements 
     this.errorMessage = '';
     this.form.reset({ type: 'PDP' });
     this.showModal = true;
-    if (this.depots.length === 0) {
-      this.loadReferences();
-    } else {
-      if (this.filterDepot) {
-        const depot = this.depots.find(d => d.nom === this.filterDepot);
-        if (depot) {
-          this.form.patchValue({ depotId: depot.id });
-        }
+    this.loadReferences();
+    if (this.filterDepot) {
+      const depot = this.depots.find(d => d.nom === this.filterDepot);
+      if (depot) {
+        this.form.patchValue({ depotId: depot.id });
       }
     }
+    this.updateFilteredCategories();
   }
 
   openEdit(p: PieceDetache) {
     this.isNew = false;
     this.editingId = p.id;
     this.errorMessage = '';
+    const depotId = (p.categorie as any)?.depot?.id || null;
     this.form.patchValue({
       type: p.type,
       reference: p.reference,
@@ -242,10 +273,11 @@ export class PiecesDetacheesComponent extends BasePaginatedComponent implements 
       stockAtelier: p.stockAtelier ?? null,
       prix: p.prixUnitaire ?? p.prix ?? null,
       seuilMinimum: p.seuilMinimum ?? null,
-      depotId: null
+      depotId: depotId
     });
     this.showModal = true;
-    if (this.depots.length === 0) this.loadReferences();
+    this.loadReferences();
+    this.updateFilteredCategories();
   }
 
   closeModal() { 
@@ -295,7 +327,7 @@ export class PiecesDetacheesComponent extends BasePaginatedComponent implements 
 
     if (this.isNew) {
       this.service.create(payload).subscribe({
-        next: () => { this.saving = false; this.showSuccess('Pièce créée avec succès !'); this.closeModal(); this.load(); },
+        next: () => { this.saving = false; this.showSuccess('Pièce créée avec succès !'); this.closeModal(); this.load(); this.loadStats(); },
         error: (err: any) => {
           console.error("Erreur backend:", err);
           this.saving = false;
@@ -304,7 +336,7 @@ export class PiecesDetacheesComponent extends BasePaginatedComponent implements 
       });
     } else {
       this.service.update(this.editingId!, payload).subscribe({
-        next: () => { this.saving = false; this.showSuccess('Pièce modifiée avec succès !'); this.closeModal(); this.load(); },
+        next: () => { this.saving = false; this.showSuccess('Pièce modifiée avec succès !'); this.closeModal(); this.load(); this.loadStats(); },
         error: (err: any) => {
           console.error("Erreur backend:", err);
           this.saving = false;
@@ -317,7 +349,7 @@ export class PiecesDetacheesComponent extends BasePaginatedComponent implements 
   deletePiece(p: PieceDetache) {
     if (!confirm(`Supprimer la pièce "${p.reference}" ?`)) return;
     this.service.delete(p.id).subscribe({
-      next: () => { this.showSuccess('Pièce supprimée.'); this.load(); },
+      next: () => { this.showSuccess('Pièce supprimée.'); this.load(); this.loadStats(); },
       error: (err: any) => { this.errorMessage = err.error?.message || 'Erreur.'; }
     });
   }
@@ -325,7 +357,7 @@ export class PiecesDetacheesComponent extends BasePaginatedComponent implements 
   restorePiece(p: PieceDetache) {
     if (!confirm(`Restaurer la pièce archivée "${p.reference}" ?`)) return;
     this.service.restore(p.id).subscribe({
-      next: () => { this.showSuccess('Pièce restaurée avec succès !'); this.load(); },
+      next: () => { this.showSuccess('Pièce restaurée avec succès !'); this.load(); this.loadStats(); },
       error: (err: any) => { this.errorMessage = err.error?.message || 'Erreur lors de la restauration.'; }
     });
   }

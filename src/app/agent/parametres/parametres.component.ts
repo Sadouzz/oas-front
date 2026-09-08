@@ -1,5 +1,7 @@
-import { inject, Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { inject, Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { DepotService } from '../pieces-detachees/depot.service';
 import { CategoriePieceService } from '../pieces-detachees/categorie-piece.service';
 import { FicheAtelierConfigService } from '../fiches-atelier/fiche-atelier-config.service';
@@ -11,8 +13,12 @@ import { Depot, CategoriePiece, FicheAtelierConfigBackend, BriqueConfig } from '
   imports: [FormsModule],
   templateUrl: './parametres.component.html'
 })
-export class ParametresComponent implements OnInit {
+export class ParametresComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private querySub?: Subscription;
+
   activeTab = 'depots';
 
   depots: Depot[] = [];
@@ -33,7 +39,18 @@ export class ParametresComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.querySub = this.route.queryParams.subscribe(params => {
+      const tab = params['tab'];
+      if (tab && ['depots', 'categories', 'configs'].includes(tab)) {
+        this.activeTab = tab;
+        this.cdr.markForCheck();
+      }
+    });
     this.loadData();
+  }
+
+  ngOnDestroy() {
+    this.querySub?.unsubscribe();
   }
 
   loadData() {
@@ -65,6 +82,11 @@ export class ParametresComponent implements OnInit {
 
   setTab(tab: string) {
     this.activeTab = tab;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab },
+      queryParamsHandling: 'merge'
+    });
   }
 
   saveDepot() {

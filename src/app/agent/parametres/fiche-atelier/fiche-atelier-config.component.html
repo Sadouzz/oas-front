@@ -1,0 +1,118 @@
+<div class="p-6 max-w-7xl mx-auto space-y-6">
+  <!-- En-tête -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-oas-ink">Configuration Fiche Atelier</h1>
+      <p class="text-sm text-oas-ink2">Personnalisez les champs et briques dynamiques de la fiche atelier</p>
+    </div>
+  </div>
+
+  <!-- Carte d'ajout brique -->
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
+    <h2 class="text-base font-bold text-oas-ink">Ajouter une nouvelle brique dynamique</h2>
+
+    <form (ngSubmit)="saveConfig()" class="flex flex-wrap items-end gap-4">
+      <div class="flex-1 min-w-[200px]">
+        <label class="block text-xs font-semibold text-slate-500 mb-1">Libellé du champ <span class="text-rose-500">*</span></label>
+        <input type="text" [(ngModel)]="newConfig.label" name="label" required placeholder="Ex: Kilométrage, Niveau d'huile"
+          class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-oas-ink focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition-all outline-none">
+      </div>
+
+      <div class="w-48">
+        <label class="block text-xs font-semibold text-slate-500 mb-1">Type de champ <span class="text-rose-500">*</span></label>
+        <select [(ngModel)]="newConfig.type" name="type" required
+          class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-oas-ink focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition-all outline-none">
+          <option value="text">Texte Court</option>
+          <option value="number">Nombre</option>
+          <option value="textarea">Texte Long (Paragraphe)</option>
+          <option value="select">Liste déroulante</option>
+          <option value="checkbox">Case à cocher</option>
+          <option value="date">Date</option>
+        </select>
+      </div>
+
+      @if (newConfig.type === 'select') {
+        <div class="flex-1 min-w-[220px]">
+          <label class="block text-xs font-semibold text-slate-500 mb-1">Options (séparées par virgule)</label>
+          <input type="text" [(ngModel)]="newConfig.options" name="options" placeholder="Ex: Bon, Moyen, Mauvais"
+            class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-oas-ink focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition-all outline-none">
+        </div>
+      }
+
+      <div class="flex items-center gap-2 mb-3">
+        <input type="checkbox" [(ngModel)]="newConfig.obligatoire" name="obligatoire" id="obl_check"
+          class="w-4 h-4 text-oas-accent rounded focus:ring-oas-accent border-slate-300">
+        <label for="obl_check" class="text-sm font-semibold text-slate-600 cursor-pointer select-none">Obligatoire</label>
+      </div>
+
+      <div>
+        <button type="submit" [disabled]="!newConfig.label"
+          class="px-5 py-2.5 bg-oas-accent text-white font-bold text-sm rounded-xl hover:bg-oas-accent-dark transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+          Ajouter brique
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Table des briques -->
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+      <h3 class="font-bold text-base text-oas-ink">Briques configurées ({{ configs.length }})</h3>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-sm text-slate-600">
+        <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
+          <tr>
+            <th class="py-3.5 px-6">Libellé</th>
+            <th class="py-3.5 px-6">Type</th>
+            <th class="py-3.5 px-6">Options</th>
+            <th class="py-3.5 px-6">Obligatoire</th>
+            <th class="py-3.5 px-6 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          @if (isLoading) {
+            <tr>
+              <td colspan="5" class="py-8 text-center text-slate-400">Chargement de la configuration...</td>
+            </tr>
+          } @else if (configs.length === 0) {
+            <tr>
+              <td colspan="5" class="py-8 text-center text-slate-400">Aucune brique dynamique configurée.</td>
+            </tr>
+          } @else {
+            @for (conf of configs; track conf.id ?? conf.label) {
+              <tr class="hover:bg-slate-50 transition-colors">
+                <td class="py-3.5 px-6 font-semibold text-oas-ink">{{ conf.label }}</td>
+                <td class="py-3.5 px-6">
+                  <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">
+                    {{ conf.type }}
+                  </span>
+                </td>
+                <td class="py-3.5 px-6 text-oas-muted">{{ conf.options || '—' }}</td>
+                <td class="py-3.5 px-6">
+                  @if (conf.obligatoire) {
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Oui</span>
+                  } @else {
+                    <span class="text-slate-400 text-xs">Non</span>
+                  }
+                </td>
+                <td class="py-3.5 px-6 text-right">
+                  @if (conf.id) {
+                    <button (click)="deleteConfig(conf.id)"
+                      class="text-rose-600 hover:text-rose-800 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-rose-50 transition cursor-pointer">
+                      Supprimer
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

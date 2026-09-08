@@ -74,7 +74,10 @@ export class LayoutComponent implements OnInit, OnDestroy {
     '/gestion-tva': { label: 'Gestion TVA' },
     '/gestion-recu': { label: 'Gestion reçu' },
     '/admin/main-doeuvre': { label: "Main d'œuvre" },
-    '/admin/parametres': { label: 'Paramètres' },
+    '/admin/parametres': { label: 'Paramètres', section: 'Administration' },
+    '/admin/parametres/depots': { label: 'Dépôts', section: 'Paramètres' },
+    '/admin/parametres/categories': { label: 'Catégories de Pièces', section: 'Paramètres' },
+    '/admin/parametres/fiche-atelier': { label: 'Fiche Atelier', section: 'Paramètres' },
     '/ordres-reparation': { label: 'Ordres de réparation', section: 'Processus de réparation' },
     '/techniciens': { label: 'Techniciens', section: 'Processus de réparation' },
     '/rendezvous': { label: 'Rendez-vous' },
@@ -260,7 +263,10 @@ export class LayoutComponent implements OnInit, OnDestroy {
     } else if (relUrl.startsWith('/avoirs-ht')) {
       this.openSection = 'facture-ht';
       this.openSubSection = 'avoir-ht';
-    } else if (relUrl.startsWith('/admin') && !relUrl.startsWith('/admin/main-doeuvre') && !relUrl.startsWith('/admin/parametres')) {
+    } else if (relUrl.startsWith('/admin/parametres')) {
+      this.openSection = 'admin';
+      this.openSubSection = 'parametres';
+    } else if (relUrl.startsWith('/admin') && !relUrl.startsWith('/admin/main-doeuvre')) {
       this.openSection = 'admin';
     } else {
       this.openSection = null;

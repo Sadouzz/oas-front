@@ -13,7 +13,7 @@ type ModalType = 'entree' | 'sortie' | 'ajustement' | null;
 @Component({
   selector: 'app-historique-stock',
   standalone: true,
-  imports: [ReactiveFormsModule, FormsModule, AlertComponent, SearchableSelectComponent, PaginationComponent, LucideSearch],
+  imports: [ReactiveFormsModule, FormsModule, AlertComponent, PaginationComponent, LucideSearch],
   templateUrl: './historique.component.html',
 })
 export class HistoriqueComponent implements OnInit {

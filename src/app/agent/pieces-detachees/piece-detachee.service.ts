@@ -2,7 +2,14 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AlerteStock, PageResponse, PieceDetache, PieceDetacheRequest, PieceMouvementListResponse } from '../../shared/models';
+import { AlerteStock, PageParams, PageResponse, PieceDetache, PieceDetacheRequest, PieceMouvementListResponse } from '../../shared/models';
+
+export interface PieceStats {
+  totalArticles: number;
+  valeurStock: number;
+  stockCritique: number;
+  ruptures: number;
+}
 
 export type { AlerteStock, PieceDetache, PieceDetacheRequest };
 
@@ -11,7 +18,7 @@ export class PieceDetacheeService {
   private http = inject(HttpClient);
   private api = `${environment.apiUrl}/api/pieces-detachees`;
 
-  getAll(params: import('../../shared/models').PageParams = {}): Observable<PieceDetache[]> {
+  getAll(params: PageParams = {}): Observable<PieceDetache[]> {
     const p: Record<string, string> = {};
     Object.keys(params).forEach(key => {
       if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
@@ -73,5 +80,9 @@ export class PieceDetacheeService {
 
   alertes(): Observable<AlerteStock[]> {
     return this.http.get<AlerteStock[]>(`${this.api}/alertes`);
+  }
+
+  getStats(): Observable<PieceStats> {
+    return this.http.get<PieceStats>(`${this.api}/stats`);
   }
 }
