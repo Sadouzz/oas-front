@@ -194,17 +194,34 @@ export class RendezVousComponent implements OnInit {
     );
   }
 
+  loadingClientVehicules = false;
+
   selectClient(c: ClientModel) {
     this.createForm.patchValue({ clientId: c.id, vehiculeId: null });
-    this.clientVehicules = this.vehicules.filter(v => v.client?.id === c.id);
     this.clientFilter = '';
     this.clientOpen = false;
+    this.loadingClientVehicules = true;
+    this.clientVehicules = [];
+
+    this.vehiculeService.getByClient(c.id).subscribe({
+      next: (res) => {
+        this.clientVehicules = extractContent<VehiculeModel>(res);
+        this.loadingClientVehicules = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.clientVehicules = this.vehicules.filter(v => v.client?.id === c.id || (v as any).clientId === c.id);
+        this.loadingClientVehicules = false;
+        this.cdr.markForCheck();
+      }
+    });
     this.cdr.markForCheck();
   }
 
   clearClient() {
     this.createForm.patchValue({ clientId: null, vehiculeId: null });
     this.clientVehicules = [];
+    this.loadingClientVehicules = false;
     this.clientFilter = '';
     this.cdr.markForCheck();
   }
@@ -229,6 +246,7 @@ export class RendezVousComponent implements OnInit {
     this.clientFilter = '';
     this.clientOpen = false;
     this.clientVehicules = [];
+    this.loadingClientVehicules = false;
     this.modalErrorMessage = '';
     this.showCreateModal = true;
   }
