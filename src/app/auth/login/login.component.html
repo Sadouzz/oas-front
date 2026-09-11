@@ -65,6 +65,7 @@
               <input
                 id="username"
                 type="text"
+                autocomplete="username"
                 [formField]="loginForm.username"
                 placeholder="Jean Dupond"
                 class="w-full pl-10 pr-4 py-3 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
@@ -85,6 +86,7 @@
               <input
                 id="password"
                 [type]="showPassword ? 'text' : 'password'"
+                autocomplete="current-password"
                 [formField]="loginForm.password"
                 placeholder="••••••"
                 class="w-full pl-10 pr-10 py-3 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
