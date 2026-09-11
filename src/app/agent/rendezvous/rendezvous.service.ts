@@ -2,9 +2,9 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { RendezVous, RendezVousStatus, PageResponse, PageParams } from '../../shared/models';
+import { RendezVous, RendezVousStatus, PageResponse, PageParams, CreateRendezVousRequest } from '../../shared/models';
 
-export type { RendezVous, RendezVousStatus };
+export type { RendezVous, RendezVousStatus, CreateRendezVousRequest };
 
 @Injectable({ providedIn: 'root' })
 export class RendezVousService {
@@ -22,6 +22,10 @@ export class RendezVousService {
 
   getById(id: number): Observable<RendezVous> {
     return this.http.get<RendezVous>(`${this.api}/${id}`);
+  }
+
+  create(payload: CreateRendezVousRequest): Observable<RendezVous> {
+    return this.http.post<RendezVous>(this.api, payload);
   }
 
   updateStatut(id: number, statut: RendezVousStatus, commentaire?: string): Observable<RendezVous> {

@@ -40,3 +40,13 @@ export interface ClientRendezVousRequest {
   vehiculeId: number | null;
 }
 
+export interface CreateRendezVousRequest {
+  clientId: number;
+  vehiculeId?: number | null;
+  dateRendezVous: string;
+  motif: string;
+  statut?: RendezVousStatus;
+  commentaire?: string | null;
+  garageId?: number | null;
+}
+

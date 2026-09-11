@@ -62,11 +62,18 @@
         <h1 class="text-2xl font-bold text-oas-ink">Tableau de bord</h1>
         <p class="text-sm text-oas-muted mt-1">Vue d'ensemble de l'activité du garage.</p>
       </div>
-      <a routerLink="/app/ordres-reparation"
-         class="flex items-center gap-2 bg-oas-accent hover:bg-oas-accent-dark text-white font-semibold px-4 h-10 rounded-lg transition cursor-pointer text-sm">
-        <svg lucidePlus class="w-4 h-4"></svg>
-        Nouvel ordre de réparation
-      </a>
+      <div class="flex items-center gap-2.5">
+        <a routerLink="/app/rendezvous" [queryParams]="{ action: 'new' }"
+           class="flex items-center gap-2 bg-white hover:bg-oas-bg text-oas-ink border border-oas-line font-semibold px-4 h-10 rounded-lg transition cursor-pointer text-sm shadow-sm">
+          <svg lucideCalendar class="w-4 h-4 text-oas-accent"></svg>
+          Nouveau rendez-vous
+        </a>
+        <a routerLink="/app/ordres-reparation"
+           class="flex items-center gap-2 bg-oas-accent hover:bg-oas-accent-dark text-white font-semibold px-4 h-10 rounded-lg transition cursor-pointer text-sm shadow-sm">
+          <svg lucidePlus class="w-4 h-4"></svg>
+          Nouvel ordre de réparation
+        </a>
+      </div>
     </div>
 
     <!-- KPI row -->
@@ -353,9 +360,16 @@
 
   <!-- ══════════════════════════════════════════════ AGENT ══ -->
   @if (isAgent) {
-    <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4 mb-6">
-      <h1 class="text-2xl font-bold text-oas-ink">Tableau de bord</h1>
-      <p class="text-sm text-oas-muted mt-1">Vue d'ensemble de votre activité.</p>
+    <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4 mb-6 flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-oas-ink">Tableau de bord</h1>
+        <p class="text-sm text-oas-muted mt-1">Vue d'ensemble de votre activité.</p>
+      </div>
+      <a routerLink="/app/rendezvous" [queryParams]="{ action: 'new' }"
+         class="flex items-center gap-2 bg-oas-accent hover:bg-oas-accent-dark text-white font-semibold px-4 h-10 rounded-lg transition cursor-pointer text-sm shadow-sm">
+        <svg lucideCalendar class="w-4 h-4"></svg>
+        Nouveau rendez-vous
+      </a>
     </div>
 
     <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">

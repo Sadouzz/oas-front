@@ -6,6 +6,11 @@
       <h1 class="text-2xl font-bold text-oas-ink">Rendez-vous</h1>
       <p class="text-sm text-oas-muted mt-1">{{ totalElements }} rendez-vous</p>
     </div>
+    <button (click)="openCreate()"
+            class="flex items-center gap-2 bg-oas-accent hover:bg-oas-accent-dark text-white font-semibold px-4 h-10 rounded-lg transition cursor-pointer text-sm shadow-sm">
+      <svg lucidePlus class="w-4 h-4"></svg>
+      Nouveau rendez-vous
+    </button>
   </div>
 
   <app-alert [success]="successMessage" [error]="errorMessage" />
@@ -111,9 +116,217 @@
 
 </div>
 
+<!-- ── Modal Nouveau Rendez-vous ── -->
+@if (showCreateModal) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line bg-white sticky top-0 z-10">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-oas-accent/10 text-oas-accent flex items-center justify-center flex-shrink-0">
+            <svg lucideCalendar class="w-5 h-5"></svg>
+          </div>
+          <div>
+            <h2 class="text-base font-bold text-oas-ink">Nouveau rendez-vous</h2>
+            <p class="text-xs text-oas-muted">Planifier un rendez-vous pour un client</p>
+          </div>
+        </div>
+        <button (click)="closeCreate()" class="p-1.5 rounded-lg hover:bg-oas-bg text-oas-muted hover:text-oas-ink cursor-pointer transition">
+          <svg lucideX class="w-5 h-5"></svg>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="px-6 py-5 overflow-y-auto flex-1">
+        @if (modalErrorMessage) {
+          <div class="mb-4 flex items-center gap-2 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            {{ modalErrorMessage }}
+          </div>
+        }
+
+        <form [formGroup]="createForm" (ngSubmit)="saveCreate()" class="space-y-4">
+          
+          <!-- Sélection Client -->
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1.5">
+              Client <span class="text-red-500">*</span>
+            </label>
+            @if (createForm.get('clientId')?.value) {
+              <div class="flex items-center justify-between p-3 rounded-xl border border-oas-accent/40 bg-oas-accent/5">
+                <div class="flex items-center gap-3 min-w-0">
+                  <div class="w-9 h-9 rounded-lg bg-oas-accent/15 text-oas-accent flex items-center justify-center flex-shrink-0 font-bold text-sm">
+                    <svg lucideUser class="w-4 h-4"></svg>
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-sm font-bold text-oas-ink truncate">{{ clientLabel }}</p>
+                    <p class="text-xs text-oas-muted truncate">{{ selectedClient?.phone || selectedClient?.email || 'Client' }}</p>
+                  </div>
+                </div>
+                <button type="button" (click)="clearClient()"
+                        class="text-xs text-red-600 hover:text-red-800 font-semibold px-2.5 py-1 rounded-lg hover:bg-red-50 transition cursor-pointer">
+                  Changer
+                </button>
+              </div>
+            } @else {
+              <div class="relative">
+                <div class="relative">
+                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-oas-muted pointer-events-none">
+                    <svg lucideSearch class="w-4 h-4"></svg>
+                  </span>
+                  <input type="text"
+                         [value]="clientFilter"
+                         (input)="clientFilter = $any($event.target).value; clientOpen = true"
+                         (focus)="clientOpen = true"
+                         placeholder="Rechercher un client (nom, téléphone, email)..."
+                         class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition text-oas-ink"
+                         [class.border-red-500]="createForm.get('clientId')?.invalid && createForm.get('clientId')?.touched"/>
+                </div>
+
+                @if (clientOpen) {
+                  <div class="absolute z-50 w-full mt-1 bg-white border border-oas-line rounded-xl shadow-xl max-h-52 overflow-y-auto">
+                    @for (c of filteredClients; track c.id) {
+                      <div (click)="selectClient(c)"
+                           class="px-4 py-2.5 hover:bg-oas-bg cursor-pointer transition border-b border-oas-line/40 last:border-0">
+                        <p class="text-sm font-semibold text-oas-ink">{{ c.firstName }} {{ c.lastName }}</p>
+                        <p class="text-xs text-oas-muted">{{ c.phone || c.email || 'Aucune coordonnée' }}</p>
+                      </div>
+                    } @empty {
+                      <div class="px-4 py-4 text-center text-xs text-oas-muted">
+                        Aucun client trouvé avec ce terme
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+              @if (createForm.get('clientId')?.invalid && createForm.get('clientId')?.touched) {
+                <p class="text-xs text-red-600 mt-1">Veuillez sélectionner un client.</p>
+              }
+            }
+          </div>
+
+          <!-- Véhicule & Date -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            
+            <!-- Véhicule -->
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1.5">
+                Véhicule <span class="text-xs text-oas-muted font-normal">(optionnel)</span>
+              </label>
+              <div class="relative">
+                <select formControlName="vehiculeId"
+                        class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition text-oas-ink">
+                  <option [ngValue]="null">-- Aucun véhicule sélectionné --</option>
+                  @if (clientVehicules.length > 0) {
+                    @for (v of clientVehicules; track v.id) {
+                      <option [value]="v.id">{{ v.immatriculation }} — {{ v.marque }} {{ v.modele }}</option>
+                    }
+                  } @else {
+                    @for (v of vehicules; track v.id) {
+                      <option [value]="v.id">{{ v.immatriculation }} — {{ v.marque }} {{ v.modele }}</option>
+                    }
+                  }
+                </select>
+              </div>
+              @if (createForm.get('clientId')?.value && clientVehicules.length === 0) {
+                <p class="text-xs text-oas-muted mt-1 italic">Ce client n'a aucun véhicule enregistré.</p>
+              }
+            </div>
+
+            <!-- Date et Heure -->
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1.5">
+                Date et heure <span class="text-red-500">*</span>
+              </label>
+              <input type="datetime-local" formControlName="dateRendezVous" [min]="minDate"
+                     class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition text-oas-ink"
+                     [class.border-red-500]="createForm.get('dateRendezVous')?.invalid && createForm.get('dateRendezVous')?.touched"/>
+              @if (createForm.get('dateRendezVous')?.invalid && createForm.get('dateRendezVous')?.touched) {
+                <p class="text-xs text-red-600 mt-1">La date et l'heure sont requises.</p>
+              }
+            </div>
+
+          </div>
+
+          <!-- Motif du RDV -->
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1.5">
+              Motif du rendez-vous <span class="text-red-500">*</span>
+            </label>
+            <input type="text" formControlName="motif"
+                   placeholder="Ex: Entretien périodique, voyant moteur allumé, bruit au freinage..."
+                   class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition text-oas-ink"
+                   [class.border-red-500]="createForm.get('motif')?.invalid && createForm.get('motif')?.touched"/>
+            @if (createForm.get('motif')?.invalid && createForm.get('motif')?.touched) {
+              <p class="text-xs text-red-600 mt-1">Veuillez renseigner le motif du rendez-vous.</p>
+            }
+
+            <!-- Quick tags -->
+            <div class="mt-2">
+              <p class="text-xs text-oas-muted mb-1.5">Suggestions rapides :</p>
+              <div class="flex flex-wrap gap-1.5">
+                @for (m of quickMotifs; track m) {
+                  <button type="button" (click)="selectMotif(m)"
+                          class="text-xs px-2.5 py-1 rounded-full border border-oas-line bg-oas-bg/70 hover:bg-oas-accent/10 hover:border-oas-accent/40 hover:text-oas-accent text-oas-ink transition cursor-pointer">
+                    {{ m }}
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+
+          <!-- Statut initial & Commentaire -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1.5">
+                Statut initial <span class="text-red-500">*</span>
+              </label>
+              <select formControlName="statut"
+                      class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition text-oas-ink">
+                <option value="EN_ATTENTE">En attente</option>
+                <option value="CONFIRME">Confirmé immédiatement</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1.5">
+                Commentaire / Note <span class="text-xs text-oas-muted font-normal">(optionnel)</span>
+              </label>
+              <textarea formControlName="commentaire" rows="2"
+                        placeholder="Précisions ou instructions particulières..."
+                        class="w-full px-3 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition text-oas-ink resize-none"></textarea>
+            </div>
+          </div>
+
+          <!-- Modal Footer Actions -->
+          <div class="flex items-center justify-end gap-3 pt-3 border-t border-oas-line mt-4">
+            <button type="button" (click)="closeCreate()"
+                    class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-lg border border-oas-line flex items-center transition cursor-pointer text-sm">
+              Annuler
+            </button>
+            <button type="submit" [disabled]="saving"
+                    class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-5 h-10 rounded-lg flex items-center gap-2 transition cursor-pointer disabled:opacity-60 text-sm shadow-sm">
+              @if (saving) {
+                <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Création…</span>
+              } @else {
+                <svg lucidePlus class="w-4 h-4"></svg>
+                <span>Créer le rendez-vous</span>
+              }
+            </button>
+          </div>
+
+        </form>
+      </div>
+
+    </div>
+  </div>
+}
+
 <!-- ── Modal Statut ── -->
 @if (showStatutModal) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
     <div class="bg-white rounded-lg shadow-2xl w-full max-w-md mx-4">
       <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line">
         <h2 class="text-base font-bold text-oas-ink">Modifier le statut</h2>
@@ -173,7 +386,7 @@
 
 <!-- ── Modal Valider ── -->
 @if (showValiderModal) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
     <div class="bg-white rounded-lg shadow-2xl w-full max-w-md mx-4">
       <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line">
         <h2 class="text-base font-bold text-oas-ink">Valider le rendez-vous</h2>

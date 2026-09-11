@@ -120,6 +120,13 @@
             {{ loginForm().submitting() ? 'Connexion...' : 'Se connecter' }}
           </button>
 
+          <p class="text-center text-sm text-oas-muted pt-2">
+            Pas encore de compte ?
+            <a routerLink="/register" class="text-oas-accent hover:text-oas-accent-dark font-semibold ml-1 transition hover:underline">
+              S'inscrire
+            </a>
+          </p>
+
         </form>
 
       </div>

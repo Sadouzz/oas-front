@@ -1,5 +1,5 @@
 import { Component, inject, ChangeDetectorRef, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { form, required, minLength, submit, FormField } from '@angular/forms/signals';
@@ -8,7 +8,7 @@ import { LucideUser, LucideLock, LucideEye, LucideEyeOff, LucideCheck, LucideLoa
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [FormField, LucideUser, LucideLock, LucideEye, LucideEyeOff, LucideCheck, LucideLoader2],
+  imports: [FormField, RouterLink, LucideUser, LucideLock, LucideEye, LucideEyeOff, LucideCheck, LucideLoader2],
   templateUrl: './login.component.html',
 })
 export class LoginComponent {

@@ -1,12 +1,14 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { RendezVousService } from './rendezvous.service';
-import { RendezVous, RendezVousStatus, extractContent, extractPage } from '../../shared/models/index';
+import { ClientService } from '../clients/client.service';
+import { VehiculeService } from '../vehicules/vehicule.service';
+import { RendezVous, RendezVousStatus, ClientModel, VehiculeModel, CreateRendezVousRequest, extractContent, extractPage } from '../../shared/models/index';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import {
-  LucideSearch, LucideX, LucideCalendar, LucideCheck, LucidePencil, LucideFileText
+  LucideSearch, LucideX, LucideCalendar, LucideCheck, LucidePencil, LucideFileText, LucidePlus, LucideUser
 } from '@lucide/angular';
 
 @Component({
@@ -14,24 +16,36 @@ import {
   standalone: true,
   imports: [
     ReactiveFormsModule, AlertComponent, PaginationComponent,
-    LucideSearch, LucideX, LucideCalendar, LucideCheck, LucidePencil, LucideFileText],
+    LucideSearch, LucideX, LucideCalendar, LucideCheck, LucidePencil, LucideFileText, LucidePlus, LucideUser
+  ],
   templateUrl: './rendezvous.component.html',
 })
 export class RendezVousComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private service = inject(RendezVousService);
+  private clientService = inject(ClientService);
+  private vehiculeService = inject(VehiculeService);
   private fb = inject(FormBuilder);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   rdvs: RendezVous[] = [];
   filtered: RendezVous[] = [];
+  clients: ClientModel[] = [];
+  vehicules: VehiculeModel[] = [];
+  clientVehicules: VehiculeModel[] = [];
+
   editedDate = '';
 
   loading = true;
   saving = false;
   showStatutModal = false;
   showValiderModal = false;
+  showCreateModal = false;
   editingRdv: RendezVous | null = null;
+
+  clientOpen = false;
+  clientFilter = '';
 
   searchText = '';
   filterStatut: RendezVousStatus | '' = '';
@@ -54,13 +68,57 @@ export class RendezVousComponent implements OnInit {
     { value: 'ANNULE',     label: 'Annulé' },
   ];
 
+  readonly quickMotifs = [
+    'Entretien périodique & Vidange',
+    'Diagnostic panne / Voyant moteur',
+    'Freinage & Sécurité',
+    'Climatisation / Chauffage',
+    'Courroie de distribution',
+    'Révision générale',
+    'Parallélisme / Pneumatiques',
+  ];
+
   statutForm: FormGroup = this.fb.group({
     statut:      ['', Validators.required],
     commentaire: [''],
   });
 
+  createForm: FormGroup = this.fb.group({
+    clientId:       [null as number | null, Validators.required],
+    vehiculeId:     [null as number | null],
+    dateRendezVous: ['', Validators.required],
+    motif:          ['', [Validators.required, Validators.minLength(3)]],
+    statut:         ['EN_ATTENTE', Validators.required],
+    commentaire:    [''],
+  });
+
   ngOnInit() {
     this.load();
+    this.loadClientsAndVehicles();
+
+    this.route.queryParams.subscribe(params => {
+      if (params['action'] === 'new') {
+        this.openCreate();
+      }
+    });
+  }
+
+  loadClientsAndVehicles() {
+    this.clientService.getAll().subscribe({
+      next: (res) => {
+        this.clients = extractContent<ClientModel>(res);
+        this.cdr.markForCheck();
+      },
+      error: () => {}
+    });
+
+    this.vehiculeService.getAll().subscribe({
+      next: (res) => {
+        this.vehicules = extractContent<VehiculeModel>(res);
+        this.cdr.markForCheck();
+      },
+      error: () => {}
+    });
   }
 
   load() {
@@ -112,6 +170,118 @@ export class RendezVousComponent implements OnInit {
     this.load();
   }
 
+  // ─── Création de RDV ──────────────────────────────
+  get clientLabel(): string {
+    const id = this.createForm.get('clientId')?.value;
+    if (!id) return '';
+    const c = this.clients.find(x => x.id === Number(id));
+    return c ? `${c.firstName} ${c.lastName}` : '';
+  }
+
+  get selectedClient(): ClientModel | undefined {
+    const id = this.createForm.get('clientId')?.value;
+    if (!id) return undefined;
+    return this.clients.find(x => x.id === Number(id));
+  }
+
+  get filteredClients(): ClientModel[] {
+    if (!this.clientFilter) return this.clients;
+    const kw = this.clientFilter.toLowerCase();
+    return this.clients.filter(c =>
+      `${c.firstName} ${c.lastName}`.toLowerCase().includes(kw) ||
+      (c.phone ?? '').toLowerCase().includes(kw) ||
+      (c.email ?? '').toLowerCase().includes(kw)
+    );
+  }
+
+  selectClient(c: ClientModel) {
+    this.createForm.patchValue({ clientId: c.id, vehiculeId: null });
+    this.clientVehicules = this.vehicules.filter(v => v.client?.id === c.id);
+    this.clientFilter = '';
+    this.clientOpen = false;
+    this.cdr.markForCheck();
+  }
+
+  clearClient() {
+    this.createForm.patchValue({ clientId: null, vehiculeId: null });
+    this.clientVehicules = [];
+    this.clientFilter = '';
+    this.cdr.markForCheck();
+  }
+
+  selectMotif(m: string) {
+    this.createForm.patchValue({ motif: m });
+  }
+
+  get minDate(): string {
+    return this.toDatetimeLocal(new Date().toISOString());
+  }
+
+  openCreate() {
+    this.createForm.reset({
+      clientId: null,
+      vehiculeId: null,
+      dateRendezVous: this.getDefaultDate(),
+      motif: '',
+      statut: 'EN_ATTENTE',
+      commentaire: '',
+    });
+    this.clientFilter = '';
+    this.clientOpen = false;
+    this.clientVehicules = [];
+    this.modalErrorMessage = '';
+    this.showCreateModal = true;
+  }
+
+  closeCreate() {
+    this.showCreateModal = false;
+    this.modalErrorMessage = '';
+    this.clientOpen = false;
+  }
+
+  private getDefaultDate(): string {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    d.setHours(9, 0, 0, 0);
+    return this.toDatetimeLocal(d.toISOString());
+  }
+
+  saveCreate() {
+    if (this.createForm.invalid) {
+      this.createForm.markAllAsTouched();
+      this.modalErrorMessage = 'Veuillez remplir tous les champs obligatoires correctement.';
+      return;
+    }
+
+    this.saving = true;
+    this.modalErrorMessage = '';
+    const raw = this.createForm.value;
+
+    const payload: CreateRendezVousRequest = {
+      clientId: Number(raw.clientId),
+      vehiculeId: raw.vehiculeId ? Number(raw.vehiculeId) : null,
+      dateRendezVous: new Date(raw.dateRendezVous).toISOString(),
+      motif: raw.motif.trim(),
+      statut: raw.statut || 'EN_ATTENTE',
+      commentaire: raw.commentaire?.trim() || null,
+    };
+
+    this.service.create(payload).subscribe({
+      next: () => {
+        this.saving = false;
+        this.closeCreate();
+        this.load();
+        this.notify('Rendez-vous créé avec succès.');
+      },
+      error: (err: any) => {
+        this.saving = false;
+        this.modalErrorMessage = err.error?.message || err.error || 'Erreur lors de la création du rendez-vous.';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  // ─── Statut & Validation Modals ──────────────────────────────
   openStatut(rdv: RendezVous) {
     this.editingRdv = rdv;
     this.modalErrorMessage = '';
@@ -135,6 +305,7 @@ export class RendezVousComponent implements OnInit {
   closeModals() {
     this.showStatutModal = false;
     this.showValiderModal = false;
+    this.showCreateModal = false;
     this.editingRdv = null;
     this.modalErrorMessage = '';
     this.modalSuccessMessage = '';
