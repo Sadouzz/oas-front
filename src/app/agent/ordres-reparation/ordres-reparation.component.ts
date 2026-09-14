@@ -23,6 +23,7 @@ import { MediaUploaderComponent } from '../../shared/components/media-uploader/m
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 import {
   OrdreReparation,
+  StatutOrdre,
   StatutFiche,
   VehiculeModel,
   Technicien,
@@ -96,7 +97,7 @@ export const SPECIALITES_TECHNICIEN: { value: Specialite; label: string }[] = [
   { value: 'PNEUMATIQUE', label: 'Pneumatique' },
 ];
 
-const STATUT_STEPS: { statut: StatutFiche; label: string }[] = [
+const STATUT_STEPS: { statut: StatutOrdre; label: string }[] = [
   { statut: 'A_FAIRE', label: 'Réception' },
   { statut: 'EN_DIAGNOSTIC', label: 'Diagnostic' },
   { statut: 'EN_ATTENTE_PROFORMA', label: 'Pièces & MO' },
@@ -132,13 +133,13 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
   private fb = inject(FormBuilder);
 
   // ─── Liste ───────────────────────────────────────────
-  fiches: OrdreReparation[] = [];
-  loadedFiche: OrdreReparation | null = null;
+  ordres: OrdreReparation[] = [];
+  loadedOrdre: OrdreReparation | null = null;
   filtered: OrdreReparation[] = [];
   loading = true;
   successMessage = '';
   errorMessage = '';
-  selectedFiche: OrdreReparation | null = null;
+  selectedOrdre: OrdreReparation | null = null;
 
   // ─── Référentiels ─────────────────────────────────────
   vehicules: VehiculeModel[] = [];
@@ -159,7 +160,7 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
   showWorkflow = false;
   isNew = true;
   editingId: number | null = null;
-  editingFicheStatus: string | null = null;
+  editingOrdreStatus: string | null = null;
   currentStep = 1;
   saving = false;
   detailLoading = false;
@@ -378,29 +379,29 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
   // ─── Bon de Sortie ─────────────────────────────────────
   bdsCreating = false;
 
-  // Track invoice creation from this fiche
+  // Track invoice creation from this ordre
   invoiceCreated = false;
   createdFacture: any = null;
 
-  // Expose a safe proforma accessor for template (selectedFiche may not include proforma in the model)
-  get selectedFicheProforma(): any | null {
-    // prefer explicit proforma attached to the selected fiche, else fallback to the one fetched via service
+  // Expose a safe proforma accessor for template (selectedOrdre may not include proforma in the model)
+  get selectedOrdreProforma(): any | null {
+    // prefer explicit proforma attached to the selected ordre, else fallback to the one fetched via service
     try {
-      const pf = (this.selectedFiche as any)?.proforma;
+      const pf = (this.selectedOrdre as any)?.proforma;
       return pf ?? this.proformaChargee ?? null;
     } catch (e) { return this.proformaChargee ?? null; }
   }
 
-  // Invoice accessor (either created in this session or attached to the selected fiche)
-  get selectedFicheInvoice(): any | null {
+  // Invoice accessor (either created in this session or attached to the selected ordre)
+  get selectedOrdreInvoice(): any | null {
     try {
-      const inv = (this.selectedFiche as any)?.facture;
+      const inv = (this.selectedOrdre as any)?.facture;
       return inv ?? this.createdFacture ?? null;
     } catch (e) { return this.createdFacture ?? null; }
   }
 
   get invoiceIsPaid(): boolean {
-    const inv = this.selectedFicheInvoice ?? this.createdFacture;
+    const inv = this.selectedOrdreInvoice ?? this.createdFacture;
     if (!inv) return false;
     if (inv.statutPaiement && (inv.statutPaiement === 'PAYE' || inv.statutPaiement === 'SOLDEE')) return true;
     if (inv.resteAPayer != null) {
@@ -410,7 +411,7 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
     return false;
   }
 
-  private doSaveFicheData(callback: () => void, errorCallback?: (err: any) => void) {
+  private doSaveOrdreData(callback: () => void, errorCallback?: (err: any) => void) {
     if (!this.editingId) return;
     const listeDefauts = this.composeFromCheckboxes(this.selectedPannes, this.autrePannes);
     const descriptionTravaux = this.composeFromCheckboxes(this.selectedTravaux, this.autreTravaux);
@@ -450,7 +451,7 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
   }
 
   startDiagnostic() {
-    if (!this.editingId) { this.notifyError('Aucune fiche sélectionnée.'); return; }
+    if (!this.editingId) { this.notifyError('Aucun ordre sélectionné.'); return; }
     if (this.diagnosticStarted) return;
     if (this.selectedTechniciens.length === 0) {
       this.notifyError('Veuillez affecter au moins un technicien avant de démarrer le diagnostic.');
@@ -503,7 +504,7 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
           error: (err) => {
             this.router.navigate([], { queryParams: { ficheAtelierId: null }, queryParamsHandling: 'merge' });
             if (err?.status === 409) {
-              this.notifyError("Un ordre de réparation existe déjà pour cette fiche.");
+              this.notifyError("Un ordre de réparation existe déjà pour cette fiche atelier.");
             } else {
               this.notifyError("Erreur lors de la création de l'ordre de réparation.");
             }
@@ -552,72 +553,60 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
     });
   }
 
+  private searchTimeout: any;
+
   loadData() {
     this.load();
   }
 
   load() {
     this.loading = true;
-    this.service.getAll(this.getPageParams()).subscribe({
+    this.cdr.markForCheck();
+
+    const extra: Record<string, any> = {};
+    if (this.filterStatut) extra['statut'] = this.filterStatut;
+    if (this.filterDateDebut) extra['dateDebut'] = this.filterDateDebut;
+    if (this.filterDateFin) extra['dateFin'] = this.filterDateFin;
+
+    this.service.getAll(this.getPageParams(extra)).subscribe({
       next: (data) => {
         const arr = this.applyPageResponse<OrdreReparation>(data);
-        this.fiches = arr.sort((a, b) => b.id - a.id);
-        this.applyFilter(); this.cdr.markForCheck();
-        this.loading = false; this.cdr.markForCheck();
+        this.ordres = arr;
+        this.loading = false;
+        this.cdr.markForCheck();
 
-        if (this.selectedFiche) {
-          this.selectedFiche = data.find(f => f.id === this.selectedFiche!.id) ?? null;
-          if (this.selectedFiche) {
-            this.editingFicheStatus = this.selectedFiche.statut;
+        if (this.selectedOrdre) {
+          const found = arr.find(o => o.id === this.selectedOrdre!.id);
+          if (found) {
+            this.editingOrdreStatus = found.statut;
           }
         }
       },
-      error: () => this.notifyError('Erreur de chargement')
+      error: () => {
+        this.loading = false;
+        this.notifyError('Erreur de chargement des ordres de réparation');
+        this.cdr.markForCheck();
+      }
     });
   }
 
-  // ─── Diagnostic (Étape 2) ────────────────────────────────
-  searchKw = '';
-  applyFilter() {
-    const kw = this.searchKw.toLowerCase();
-    let result = this.fiches;
+  onSearchInput(e: Event) {
+    this.searchTerm = (e.target as HTMLInputElement).value;
+    clearTimeout(this.searchTimeout);
+    this.searchTimeout = setTimeout(() => {
+      this.page = 1;
+      this.load();
+    }, 300);
+  }
 
-    if (kw) {
-      result = result.filter(f =>
-        f.numero.toLowerCase().includes(kw) ||
-        (f.vehicule?.immatriculation ?? '').toLowerCase().includes(kw) ||
-        f.descriptionTravaux.toLowerCase().includes(kw) ||
-        (f.statut ?? '').toLowerCase().includes(kw)
-      );
-    }
-
-    if (this.filterStatut) {
-      result = result.filter(f => f.statut === this.filterStatut);
-    }
-
-    if (this.filterDateDebut) {
-      const debut = new Date(this.filterDateDebut);
-      result = result.filter(f => new Date(f.dateCreation) >= debut);
-    }
-
-    if (this.filterDateFin) {
-      const fin = new Date(this.filterDateFin);
-      fin.setHours(23, 59, 59);
-      result = result.filter(f => new Date(f.dateCreation) <= fin);
-    }
-
-    this.filtered = result;
+  onFilterStatut() {
     this.page = 1;
+    this.load();
   }
 
-  override onSearch(e: Event) {
-    this.searchKw = (e.target as HTMLInputElement).value;
-    this.applyFilter(); this.cdr.markForCheck();
-  }
-
-  onFilterStatut(e: Event) {
-    this.filterStatut = (e.target as HTMLSelectElement).value;
-    this.applyFilter(); this.cdr.markForCheck();
+  onFilterDate() {
+    this.page = 1;
+    this.load();
   }
 
   // ─── Checkbox Toggles ──────────────────────────────────
@@ -663,16 +652,16 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
     });
   }
 
-  openEdit(f: OrdreReparation) {
+  openEdit(o: OrdreReparation) {
     this.loadReferentiels(() => {
       if (this.pollInterval) clearInterval(this.pollInterval);
       this.pollInterval = setInterval(() => { this.pollStatus(); }, 7000);
 
-      const isSame = this.editingId === f.id;
+      const isSame = this.editingId === o.id;
       this.isNew = false;
-      this.editingId = f.id;
-      this.editingFicheStatus = f.statut;
-      const trueStep = this.statutToStep(f.statut);
+      this.editingId = o.id;
+      this.editingOrdreStatus = o.statut;
+      const trueStep = this.statutToStep(o.statut);
 
       if (!isSame || trueStep > this.currentStep) {
         this.currentStep = trueStep;
@@ -681,20 +670,20 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
       if (!isSame) {
         this.resetForms();
         this.step1Form.patchValue({
-          numero: f.numero,
-          vehiculeId: f.vehicule?.id ?? null,
-          descriptionTravaux: f.descriptionTravaux,
+          numero: o.numero,
+          vehiculeId: o.vehicule?.id ?? null,
+          descriptionTravaux: o.descriptionTravaux,
         });
-        this.setLignesReception(f.lignesReception);
-        this.setLignesTravaux(f.lignesTravaux);
+        this.setLignesReception(o.lignesReception);
+        this.setLignesTravaux(o.lignesTravaux);
 
         // Décomposer les checkboxes depuis les textes existants
-        const travauxDecomp = this.decomposeToCheckboxes(f.descriptionTravaux, TRAVAUX_FREQUENTS);
+        const travauxDecomp = this.decomposeToCheckboxes(o.descriptionTravaux, TRAVAUX_FREQUENTS);
         this.selectedTravaux = travauxDecomp.selected;
         this.autreTravaux = travauxDecomp.autre;
         this.showAutreTravaux = this.autreTravaux.length > 0;
 
-        this.lignesPieces = (f.lignesOrdreReparationPieces || []).map((l: any) => {
+        this.lignesPieces = (o.lignesOrdreReparationPieces || []).map((l: any) => {
           return {
             piece: l.piece,
             pieceIdTemp: l.piece?.id,
@@ -708,19 +697,19 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
           };
         });
 
-        const pannesDecomp = this.decomposeToCheckboxes(f.listeDefauts ?? '', PANNES_FREQUENTES);
+        const pannesDecomp = this.decomposeToCheckboxes(o.listeDefauts ?? '', PANNES_FREQUENTES);
         this.selectedPannes = pannesDecomp.selected;
         this.autrePannes = pannesDecomp.autre;
         this.showAutrePannes = this.autrePannes.length > 0;
 
         this.step2Form.patchValue({
-          listeDefauts: f.listeDefauts ?? '',
+          listeDefauts: o.listeDefauts ?? '',
         });
 
-        this.dateSortieEstimee = f.dateSortie ? f.dateSortie.substring(0, 10) : '';
+        this.dateSortieEstimee = o.dateSortie ? o.dateSortie.substring(0, 10) : '';
 
-        // Reconstituer les lignes MO depuis la ordre de réparation
-        this.lignesMO = (f.lignesOrdreReparationMainDoeuvres || [])
+        // Reconstituer les lignes MO depuis l'ordre de réparation
+        this.lignesMO = (o.lignesOrdreReparationMainDoeuvres || [])
           .map((lmd: any) => {
             const mo = this.allMO.find(m => m.id === lmd.mainDoeuvre?.id);
             if (!mo) return null;
@@ -728,25 +717,25 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
           })
           .filter((l: any): l is LigneMO => l !== null);
 
-        if (f.vehicule) {
-          // const v = this.vehicules.find(vv => vv.id === f.vehicule!.id);
-          this.selectedVehicule = f.vehicule as any;
-          this.step1Form.patchValue({ vehiculeId: f.vehicule.id });
+        if (o.vehicule) {
+          // const v = this.vehicules.find(vv => vv.id === o.vehicule!.id);
+          this.selectedVehicule = o.vehicule as any;
+          this.step1Form.patchValue({ vehiculeId: o.vehicule.id });
         }
 
         if (trueStep >= 7) {
-          if (f.techniciensReparation && f.techniciensReparation.length > 0) {
-            this.selectedTechniciens = f.techniciensReparation.map(m => m.id);
+          if (o.techniciensReparation && o.techniciensReparation.length > 0) {
+            this.selectedTechniciens = o.techniciensReparation.map(m => m.id);
           } else {
             // Default to diagnostic mechanics if no reparation mechanics yet
-            this.selectedTechniciens = f.techniciens ? f.techniciens.map(m => m.id) : [];
+            this.selectedTechniciens = o.techniciens ? o.techniciens.map(m => m.id) : [];
           }
         } else {
-          this.selectedTechniciens = f.techniciens ? f.techniciens.map(m => m.id) : [];
+          this.selectedTechniciens = o.techniciens ? o.techniciens.map(m => m.id) : [];
         }
 
         // Restore local state for diagnostic
-        if (f.statut === 'EN_DIAGNOSTIC') {
+        if (o.statut === 'EN_DIAGNOSTIC') {
           this.diagnosticStarted = true;
           this.diagnosticFinished = false;
         } else if (trueStep >= 3) {
@@ -760,13 +749,13 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
 
       this.showWorkflow = true;
 
-      // Charger la fiche complète : la liste (source de `f`) est un DTO allégé qui n'inclut pas
+      // Charger l'ordre complet : la liste (source de `o`) est un DTO allégé qui n'inclut pas
       // lignesReception/lignesTravaux/mecaniciens/lignes — on repatch donc le formulaire et l'état
-      // dérivé avec cette version complète une fois reçue (et pas avec `f`), pour ne pas perdre ces
-      // champs à la réouverture d'une fiche existante.
-      this.service.getById(f.id).subscribe({
+      // dérivé avec cette version complète une fois reçue (et pas avec `o`), pour ne pas perdre ces
+      // champs à la réouverture d'un ordre existant.
+      this.service.getById(o.id).subscribe({
         next: (full) => {
-          this.loadedFiche = full;
+          this.loadedOrdre = full;
           this.loadRemarquesDiagnostic(full.id);
           if (!isSame) {
             this.step1Form.patchValue({
@@ -808,7 +797,7 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
 
             this.dateSortieEstimee = full.dateSortie ? full.dateSortie.substring(0, 10) : '';
 
-            // Reconstituer les lignes MO depuis la ordre de réparation
+            // Reconstituer les lignes MO depuis l'ordre de réparation
             this.lignesMO = (full.lignesOrdreReparationMainDoeuvres || [])
               .map((lmd: any) => {
                 const mo = this.allMO.find(m => m.id === lmd.mainDoeuvre?.id);
@@ -858,11 +847,11 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
       this.createdFacture = null;
       this.isLoadingProforma = true;
       try {
-        this.proformaService.getByOrdreReparationId(f.id).subscribe({
+        this.proformaService.getByOrdreReparationId(o.id).subscribe({
           next: (p) => {
             this.proformaChargee = p;
             this.isLoadingProforma = false;
-            if (this.editingFicheStatus === 'EN_ATTENTE_PROFORMA' && this.currentStep === 3) {
+            if (this.editingOrdreStatus === 'EN_ATTENTE_PROFORMA' && this.currentStep === 3) {
               this.currentStep = 4;
             }
           },
@@ -878,8 +867,8 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
             this.isLoadingFacture = false;
             if (!list || !list.length) return;
             const inv = list.find(it =>
-              (it.ordreReparationId && Number(it.ordreReparationId) === Number(f.id)) ||
-              (it.ordreReparation && Number(it.ordreReparation.id) === Number(f.id))
+              (it.ordreReparationId && Number(it.ordreReparationId) === Number(o.id)) ||
+              (it.ordreReparation && Number(it.ordreReparation.id) === Number(o.id))
             );
             if (inv) {
               this.createdFacture = inv;
@@ -930,14 +919,14 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
   pollStatus() {
     if (!this.editingId || !this.showWorkflow) return;
     this.service.getById(this.editingId).subscribe({
-      next: (f: OrdreReparation) => {
-        this.loadedFiche = f;
-        if (f.statut !== this.editingFicheStatus) {
-          this.editingFicheStatus = f.statut;
-          const trueStep = this.statutToStep(f.statut);
+      next: (o: OrdreReparation) => {
+        this.loadedOrdre = o;
+        if (o.statut !== this.editingOrdreStatus) {
+          this.editingOrdreStatus = o.statut;
+          const trueStep = this.statutToStep(o.statut);
           if (trueStep > this.currentStep) {
             this.currentStep = trueStep;
-            this.notify('Le statut de la fiche a été mis à jour en arrière-plan.');
+            this.notify('Le statut de l\'ordre de réparation a été mis à jour en arrière-plan.');
             this.load();
           }
         }
@@ -961,7 +950,7 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
 
     // Step 9: only allow next if an invoice exists and is fully paid
     if (this.currentStep === 9) {
-      const inv = this.selectedFicheInvoice;
+      const inv = this.selectedOrdreInvoice;
       if (!inv) return false;
       // prefer statutPaiement if available, else check resteAPayer
       if ((inv.statutPaiement && (inv.statutPaiement === 'PAYE' || inv.statutPaiement === 'SOLDEE'))
@@ -1005,7 +994,7 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
       lignesTravaux: this.lignesTravaux.getRawValue() as LigneTravailOrdre[],
       lignesReception: this.lignesReception.getRawValue() as LigneReceptionOrdre[],
       vehiculeId: Number(raw.vehiculeId),
-      statut: 'A_FAIRE' as StatutFiche,
+      statut: 'A_FAIRE' as StatutOrdre,
     };
     this.saving = true;
     const wasNew = this.isNew;
@@ -1014,17 +1003,17 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
       : this.service.update(this.editingId!, { ...payload, statut: undefined });
 
     req$.subscribe({
-      next: (f) => {
+      next: (o) => {
         this.saving = false;
-        this.editingId = f.id;
+        this.editingId = o.id;
         this.isNew = false;
         // Mettre à jour le numéro dans le formulaire
-        this.step1Form.patchValue({ numero: f.numero });
-        // Avancer au step 2 (mécaniciens) mais rester en A_FAIRE
+        this.step1Form.patchValue({ numero: o.numero });
+        // Avancer au step 2 (techniciens) mais rester en A_FAIRE
         this.currentStep = 2;
         this.loadPiecesJointesDiagnostic();
         this.load();
-        if (wasNew) this.notify('Fiche créée. Affectez les mécaniciens.');
+        if (wasNew) this.notify('Ordre créé. Affectez les techniciens.');
       },
       error: (err) => {
         console.error('SAVE STEP 1 ERROR:', JSON.stringify(err.error));
@@ -1056,15 +1045,15 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
     }
 
     this.saving = true;
-    this.doSaveFicheData(() => {
-      if (this.editingFicheStatus === 'A_FAIRE') {
-        this.advanceStatutTo('EN_DIAGNOSTIC' as StatutFiche, () => {
+    this.doSaveOrdreData(() => {
+      if (this.editingOrdreStatus === 'A_FAIRE') {
+        this.advanceStatutTo('EN_DIAGNOSTIC' as StatutOrdre, () => {
           this.saving = false;
           this.notify('Diagnostic commencé et sauvegardé.');
           this.load();
         });
       } else {
-        const trueStep = this.statutToStep(this.editingFicheStatus!);
+        const trueStep = this.statutToStep(this.editingOrdreStatus!);
         if (trueStep <= 2) {
           this.service.updateStatut(this.editingId!, 'EN_ATTENTE_PROFORMA')
             .subscribe(() => {
@@ -1095,7 +1084,7 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
 
     this.proformaSaving = true;
 
-    this.doSaveFicheData(() => {
+    this.doSaveOrdreData(() => {
       this.proformaSaving = false;
       this.proformaService.getByOrdreReparationId(this.editingId!).subscribe({
         next: (p: any) => {
@@ -1106,7 +1095,7 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
           this.load();
         },
         error: () => {
-          this.notify('Pièces et main d\'œuvre enregistrées dans la ordre de réparation.');
+          this.notify('Pièces et main d\'œuvre enregistrées dans l\'ordre de réparation.');
           this.currentStep = 4;
           this.load();
         }
@@ -1122,11 +1111,11 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
     if (!this.editingId) return;
     this.proformaSaving = true;
     this.service.getById(this.editingId).subscribe({
-      next: (f: OrdreReparation) => {
+      next: (o: OrdreReparation) => {
         this.proformaSaving = false;
-        if (f.statut !== 'EN_ATTENTE_PROFORMA') {
-          this.editingFicheStatus = f.statut;
-          this.currentStep = this.statutToStep(f.statut);
+        if (o.statut !== 'EN_ATTENTE_PROFORMA') {
+          this.editingOrdreStatus = o.statut;
+          this.currentStep = this.statutToStep(o.statut);
           this.notify('Le statut a été mis à jour.');
           this.load();
         } else {
@@ -1141,7 +1130,7 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
   }
 
   envoyerProforma() {
-    const profId = this.proformaChargee?.id || this.selectedFicheProforma?.id;
+    const profId = this.proformaChargee?.id || this.selectedOrdreProforma?.id;
     if (!profId) return;
     this.proformaSaving = true;
     this.proformaService.validerEnvoi(profId).subscribe({
@@ -1205,16 +1194,16 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
   }
 
   createBonDeSortie(lignes: LignePiece[]) {
-    const fiche = this.fiches.find(f => f.id === this.editingId);
-    if (!fiche?.vehicule) return;
-    const clientId = fiche.vehicule.client?.id;
+    const ordre = this.ordres.find(o => o.id === this.editingId);
+    if (!ordre?.vehicule) return;
+    const clientId = ordre.vehicule.client?.id;
     if (!clientId) { this.notifyError('Aucun client associé au véhicule.'); return; }
 
     this.bdsCreating = true;
     this.bdsService.creer({
       clientId,
-      vehiculeId: fiche.vehicule!.id,
-      ordreReparationId: fiche.id,
+      vehiculeId: ordre.vehicule!.id,
+      ordreReparationId: ordre.id,
       lignesPieces: lignes.map(l => ({
         pieceId: (l.isCustom ? null : l.piece?.id) as any,
         quantite: l.aSortirMagasin || 0,
@@ -1222,7 +1211,7 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
         isCustom: l.isCustom,
         designationPds: l.designationPds
       })),
-      remarque: `Bon de sortie automatique pour réparation FA-${this.editingId}`,
+      remarque: `Bon de sortie automatique pour ordre #${this.step1Form.value.numero || this.editingId}`,
     }).subscribe({
       next: (bds: any) => {
         this.bdsCreating = false;
@@ -1258,11 +1247,11 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
     if (!this.editingId) return;
     this.saving = true;
     this.service.getById(this.editingId).subscribe({
-      next: (f: OrdreReparation) => {
+      next: (o: OrdreReparation) => {
         this.saving = false;
-        if (f.statut !== 'EN_ATTENTE_COMMANDE') {
-          this.editingFicheStatus = f.statut;
-          this.currentStep = this.statutToStep(f.statut);
+        if (o.statut !== 'EN_ATTENTE_COMMANDE') {
+          this.editingOrdreStatus = o.statut;
+          this.currentStep = this.statutToStep(o.statut);
           this.notify('Le statut a été mis à jour.');
           this.load();
         } else {
@@ -1280,11 +1269,11 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
     if (!this.editingId) return;
     this.saving = true;
     this.service.getById(this.editingId).subscribe({
-      next: (f: OrdreReparation) => {
+      next: (o: OrdreReparation) => {
         this.saving = false;
-        if (f.statut !== 'EN_ATTENTE_SORTIE') {
-          this.editingFicheStatus = f.statut;
-          this.currentStep = this.statutToStep(f.statut);
+        if (o.statut !== 'EN_ATTENTE_SORTIE') {
+          this.editingOrdreStatus = o.statut;
+          this.currentStep = this.statutToStep(o.statut);
           this.notify('Le statut a été mis à jour.');
           this.load();
         } else {
@@ -1299,11 +1288,11 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
     if (!this.editingId) return;
     this.saving = true;
     this.service.getById(this.editingId).subscribe({
-      next: (f: OrdreReparation) => {
+      next: (o: OrdreReparation) => {
         this.saving = false;
-        if (f.statut !== 'EN_ATTENTE_PAIEMENT') {
-          this.editingFicheStatus = f.statut;
-          this.currentStep = this.statutToStep(f.statut);
+        if (o.statut !== 'EN_ATTENTE_PAIEMENT') {
+          this.editingOrdreStatus = o.statut;
+          this.currentStep = this.statutToStep(o.statut);
           this.notify('Le statut a été mis à jour.');
           this.load();
         } else {
@@ -1324,14 +1313,14 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
     });
   }
 
-  private advanceStatutTo(statut: StatutFiche, cb: () => void) {
+  private advanceStatutTo(statut: StatutOrdre, cb: () => void) {
     if (!this.editingId) { cb(); return; }
     this.service.updateStatut(this.editingId, statut).subscribe({
-      next: (f) => {
-        if (f && f.statut) {
-          this.editingFicheStatus = f.statut;
+      next: (o) => {
+        if (o && o.statut) {
+          this.editingOrdreStatus = o.statut;
         } else {
-          this.editingFicheStatus = statut;
+          this.editingOrdreStatus = statut;
         }
         cb();
       },
@@ -1342,14 +1331,14 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
     });
   }
 
-  // ─── Création de facture depuis la ordre de réparation ─────────────────
-  createFactureFromFiche() {
-    if (!this.editingId) { this.notifyError('Fiche non sélectionnée.'); return; }
-    const fiche = this.fiches.find(x => x.id === this.editingId);
-    if (!fiche) { this.notifyError('Fiche introuvable.'); return; }
-    const vehId = fiche.vehicule?.id;
-    const clientId = fiche.vehicule?.client?.id;
-    if (!clientId || !vehId) { this.notifyError('Données client ou véhicule manquantes sur cette fiche.'); return; }
+  // ─── Création de facture depuis l'ordre de réparation ─────────────────
+  createFactureFromOrdre() {
+    if (!this.editingId) { this.notifyError('Ordre de réparation non sélectionné.'); return; }
+    const ordre = this.ordres.find(x => x.id === this.editingId);
+    if (!ordre) { this.notifyError('Ordre de réparation introuvable.'); return; }
+    const vehId = ordre.vehicule?.id;
+    const clientId = ordre.vehicule?.client?.id;
+    if (!clientId || !vehId) { this.notifyError('Données client ou véhicule manquantes sur cet ordre.'); return; }
 
     const payload = {
       clientId: Number(clientId),
@@ -1368,7 +1357,7 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
           this.saving = false;
           this.invoiceCreated = true;
           this.createdFacture = res;
-          this.notify('Facture créée depuis la ordre de réparation.');
+          this.notify('Facture créée depuis l\'ordre de réparation.');
           // refresh lists
           this.load();
           // advance to next step to reflect payment/validation
@@ -1653,12 +1642,12 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
 
   createBonDeCommande() {
     if (!this.editingId) return;
-    const fiche = this.fiches.find(f => f.id === this.editingId);
+    const ordre = this.ordres.find(o => o.id === this.editingId);
     const payload: BonDeCommandeRequest = {
       fournisseurId: null, // Pas de fournisseur — sera assigné plus tard
-      vehiculeId: fiche?.vehicule?.id,
+      vehiculeId: ordre?.vehicule?.id,
       tvaApplicable: false,
-      observation: `Commande liée à la ordre de réparation #${this.step1Form.value.numero}`,
+      observation: `Commande liée à l'ordre de réparation #${this.step1Form.value.numero}`,
       lignes: this.rupturesOnly.map(l => ({
         pieceDetacheeId: l.piece?.id as number,
         quantite: l.manquant,
@@ -1671,7 +1660,7 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
         this.showBDCModal = false;
         this.notify('Bon de commande créé en attente. Allez dans « Bons de commande » pour assigner un fournisseur.');
         this.advanceStatutTo('EN_ATTENTE_COMMANDE', () => {
-          this.editingFicheStatus = 'EN_ATTENTE_COMMANDE';
+          this.editingOrdreStatus = 'EN_ATTENTE_COMMANDE';
           this.currentStep = 5;
           this.bdcSaving = false;
           this.load();
@@ -1689,66 +1678,105 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
   }
 
   // ─── Panneau détail ───────────────────────────────────
-  selectFiche(f: OrdreReparation) {
-    if (this.selectedFiche && this.selectedFiche.id === f.id) {
-      this.selectedFiche = null;
+  selectOrdre(o: OrdreReparation) {
+    if (this.selectedOrdre && this.selectedOrdre.id === o.id) {
+      this.selectedOrdre = null;
+      this.detailLoading = false;
+      this.cdr.markForCheck();
       return;
     }
+    // Set immediate base data so drawer displays immediately
+    this.selectedOrdre = o;
     this.detailLoading = true;
-    this.selectedFiche = null; // Hide current while loading
-    this.service.getById(f.id).subscribe({
-      next: (fullFiche: OrdreReparation) => {
-        this.selectedFiche = fullFiche;
+    this.cdr.markForCheck();
+
+    // Fetch full order details
+    this.service.getById(o.id).subscribe({
+      next: (fullOrdre: OrdreReparation) => {
+        this.selectedOrdre = fullOrdre;
         this.detailLoading = false;
+        this.cdr.markForCheck();
       },
       error: () => {
         this.detailLoading = false;
-        this.notifyError('Erreur de chargement des détails de la fiche');
+        this.cdr.markForCheck();
       }
     });
-  }
-  closeDetail() { this.selectedFiche = null; }
 
-  ficheInitials(f: OrdreReparation): string {
-    return (f.vehicule?.immatriculation ?? 'FA').slice(0, 2).toUpperCase();
+    // Fetch attached proforma & invoice for the details panel
+    try {
+      this.proformaService.getByOrdreReparationId(o.id).subscribe({
+        next: (p) => { this.proformaChargee = p; this.cdr.markForCheck(); },
+        error: () => { this.proformaChargee = null; this.cdr.markForCheck(); }
+      });
+    } catch (e) {}
+
+    try {
+      this.factureService.getAll().subscribe({
+        next: (list: any[]) => {
+          if (list && list.length) {
+            const inv = list.find(it =>
+              (it.ordreReparationId && Number(it.ordreReparationId) === Number(o.id)) ||
+              (it.ordreReparation && Number(it.ordreReparation.id) === Number(o.id))
+            );
+            if (inv) {
+              this.createdFacture = inv;
+              this.invoiceCreated = true;
+              this.cdr.markForCheck();
+            }
+          }
+        },
+        error: () => {}
+      });
+    } catch (e) {}
   }
 
-  hasPiecesOrMo(f: OrdreReparation | any): boolean {
-    if (!f) return false;
+  closeDetail() {
+    this.selectedOrdre = null;
+    this.detailLoading = false;
+    this.cdr.markForCheck();
+  }
+
+  ordreInitials(o: OrdreReparation): string {
+    return (o.vehicule?.immatriculation ?? 'OR').slice(0, 2).toUpperCase();
+  }
+
+  hasPiecesOrMo(o: OrdreReparation | any): boolean {
+    if (!o) return false;
     // from backend light DTO
-    if (f.hasPiecesOrMo === true) return true;
+    if (o.hasPiecesOrMo === true) return true;
 
     // fallback if full detail is loaded
-    return (f.lignesOrdreReparationPieces && f.lignesOrdreReparationPieces.length > 0) ||
-      (f.lignesOrdreReparationMainDoeuvres && f.lignesOrdreReparationMainDoeuvres.length > 0) || false;
+    return (o.lignesOrdreReparationPieces && o.lignesOrdreReparationPieces.length > 0) ||
+      (o.lignesOrdreReparationMainDoeuvres && o.lignesOrdreReparationMainDoeuvres.length > 0) || false;
   }
 
-  statutLabel(f: OrdreReparation): string {
-    if (!f) return '';
-    if (f.statut === 'EN_ATTENTE_PROFORMA' && this.hasPiecesOrMo(f)) return 'Proforma';
-    return STATUT_STEPS.find(st => st.statut === f.statut)?.label ?? f.statut;
+  statutLabel(o: OrdreReparation): string {
+    if (!o) return '';
+    if (o.statut === 'EN_ATTENTE_PROFORMA' && this.hasPiecesOrMo(o)) return 'Proforma';
+    return STATUT_STEPS.find(st => st.statut === o.statut)?.label ?? o.statut;
   }
 
-  statutStepIndex(f: OrdreReparation): number {
-    if (!f) return 0;
-    if (f.statut === 'EN_ATTENTE_PROFORMA' && this.hasPiecesOrMo(f)) return 3; // Index 3 is Proforma
-    return STATUT_STEPS.findIndex(st => st.statut === f.statut);
+  statutStepIndex(o: OrdreReparation): number {
+    if (!o) return 0;
+    if (o.statut === 'EN_ATTENTE_PROFORMA' && this.hasPiecesOrMo(o)) return 3; // Index 3 is Proforma
+    return STATUT_STEPS.findIndex(st => st.statut === o.statut);
   }
 
-  statutColor(f: OrdreReparation): string {
-    if (!f) return '#6b7280';
-    if (f.statut === 'EN_ATTENTE_PROFORMA' && this.hasPiecesOrMo(f)) return '#a855f7';
+  statutColor(o: OrdreReparation): string {
+    if (!o) return '#6b7280';
+    if (o.statut === 'EN_ATTENTE_PROFORMA' && this.hasPiecesOrMo(o)) return '#a855f7';
     const map: Record<string, string> = {
       A_FAIRE: '#6b7280', EN_DIAGNOSTIC: '#f59e0b', EN_ATTENTE_PROFORMA: '#8b5cf6',
       PROFORMA_VALIDE: '#a855f7', EN_ATTENTE_COMMANDE: '#ec4899', EN_ATTENTE_SORTIE: '#eab308',
       EN_COURS: '#3b82f6', EN_ATTENTE_PAIEMENT: '#ef4444', TERMINE: '#10b981', LIVRE: '#22c55e',
     };
-    return map[f.statut] ?? '#6b7280';
+    return map[o.statut] ?? '#6b7280';
   }
 
-  private statutToStep(s: StatutFiche | string): number {
+  private statutToStep(s: StatutOrdre | string): number {
     if (s === 'EN_ATTENTE_PROFORMA') {
-      if (this.proformaChargee || this.selectedFicheProforma) return 4;
+      if (this.proformaChargee || this.selectedOrdreProforma) return 4;
       return 3;
     }
     if (s === 'PROFORMA_VALIDE') return 5;
@@ -1774,7 +1802,7 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
 
   // ─── Pagination ──────────────────────────────────────
   get paged(): OrdreReparation[] {
-    return this.filtered;
+    return this.ordres;
   }
 
   // ─── Calculs ─────────────────────────────────────────
@@ -1786,9 +1814,9 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
   formatDate(d: string | null): string { return d ? new Date(d).toLocaleDateString('fr-FR') : '—'; }
 
   delete(id: number) {
-    if (!confirm('Supprimer cette ordre de réparation ?')) return;
+    if (!confirm('Supprimer cet ordre de réparation ?')) return;
     this.service.delete(id).subscribe({
-      next: () => { this.load(); this.notify('Fiche supprimée.'); if (this.selectedFiche?.id === id) this.selectedFiche = null; },
+      next: () => { this.load(); this.notify('Ordre de réparation supprimé.'); if (this.selectedOrdre?.id === id) this.selectedOrdre = null; },
       error: () => this.notifyError('Erreur lors de la suppression.'),
     });
   }
@@ -1802,10 +1830,11 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
     setTimeout(() => this.errorMessage = '', 4000);
   }
 
-  loadRemarquesDiagnostic(ficheId: number) {
-    this.service.getRemarquesDiagnostic(ficheId).subscribe({
+  loadRemarquesDiagnostic(ordreId: number) {
+    this.service.getRemarquesDiagnostic(ordreId).subscribe({
       next: (list) => { this.remarquesDiagnostic = list; },
       error: () => { this.remarquesDiagnostic = []; },
     });
   }
 }
+

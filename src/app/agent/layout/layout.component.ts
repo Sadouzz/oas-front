@@ -77,6 +77,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
     '/admin/parametres': { label: 'Paramètres', section: 'Administration' },
     '/admin/parametres/depots': { label: 'Dépôts', section: 'Paramètres' },
     '/admin/parametres/categories': { label: 'Catégories de Pièces', section: 'Paramètres' },
+    '/admin/parametres/categories-main-doeuvre': { label: "Catégories Main d'œuvre", section: 'Paramètres' },
     '/admin/parametres/fiche-atelier': { label: 'Fiche Atelier', section: 'Paramètres' },
     '/ordres-reparation': { label: 'Ordres de réparation', section: 'Processus de réparation' },
     '/techniciens': { label: 'Techniciens', section: 'Processus de réparation' },

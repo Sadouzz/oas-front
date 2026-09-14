@@ -4,8 +4,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { DepotService } from '../pieces-detachees/depot.service';
 import { CategoriePieceService } from '../pieces-detachees/categorie-piece.service';
+import { CategorieMainDoeuvreService } from '../main-doeuvre/categorie-main-doeuvre.service';
 import { FicheAtelierConfigService } from '../fiches-atelier/fiche-atelier-config.service';
-import { Depot, CategoriePiece, FicheAtelierConfigBackend, BriqueConfig } from '../../shared/models';
+import { Depot, CategoriePiece, CategorieMainDoeuvreModel, CategorieMainDoeuvreRequest, FicheAtelierConfigBackend, BriqueConfig } from '../../shared/models';
 
 @Component({
   selector: 'app-parametres',
@@ -23,6 +24,7 @@ export class ParametresComponent implements OnInit, OnDestroy {
 
   depots: Depot[] = [];
   categories: CategoriePiece[] = [];
+  categoriesMO: CategorieMainDoeuvreModel[] = [];
   
   // FicheAtelier
   backendConfig: FicheAtelierConfigBackend | null = null;
@@ -30,18 +32,20 @@ export class ParametresComponent implements OnInit, OnDestroy {
 
   newDepot: Depot = { nom: '' };
   newCategorie: CategoriePiece = { nom: '', depot: { id: 0 } };
+  newCategorieMO: CategorieMainDoeuvreRequest = { nom: '' };
   newConfig: BriqueConfig = { label: '', type: 'text' };
 
   constructor(
     private depotService: DepotService,
     private categorieService: CategoriePieceService,
+    private catMOService: CategorieMainDoeuvreService,
     private configService: FicheAtelierConfigService
   ) {}
 
   ngOnInit() {
     this.querySub = this.route.queryParams.subscribe(params => {
       const tab = params['tab'];
-      if (tab && ['depots', 'categories', 'configs'].includes(tab)) {
+      if (tab && ['depots', 'categories', 'categories-mo', 'configs'].includes(tab)) {
         this.activeTab = tab;
         this.cdr.markForCheck();
       }
@@ -61,6 +65,7 @@ export class ParametresComponent implements OnInit, OnDestroy {
       }
     });
     this.categorieService.getAll().subscribe(data => this.categories = data);
+    this.catMOService.getAll().subscribe(data => this.categoriesMO = data || []);
     this.loadConfigs();
   }
 
@@ -105,6 +110,14 @@ export class ParametresComponent implements OnInit, OnDestroy {
     });
   }
 
+  saveCategorieMO() {
+    if(!this.newCategorieMO.nom?.trim()) return;
+    this.catMOService.create({ nom: this.newCategorieMO.nom.trim() }).subscribe(() => {
+      this.loadData();
+      this.newCategorieMO = { nom: '' };
+    });
+  }
+
   saveConfig() {
     if(!this.newConfig.label || !this.newConfig.type) return;
     
@@ -119,6 +132,7 @@ export class ParametresComponent implements OnInit, OnDestroy {
 
   deleteDepot(id: number) { this.depotService.delete(id).subscribe(() => this.loadData()); }
   deleteCategorie(id: number) { this.categorieService.delete(id).subscribe(() => this.loadData()); }
+  deleteCategorieMO(id: number) { this.catMOService.delete(id).subscribe(() => this.loadData()); }
   
   deleteConfig(id: number) {
     this.configs = this.configs.filter(c => c.id !== id);

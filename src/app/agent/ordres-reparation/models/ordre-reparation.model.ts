@@ -1,4 +1,5 @@
-export type StatutFiche = 'A_FAIRE' | 'EN_DIAGNOSTIC' | 'EN_ATTENTE_PROFORMA' | 'PROFORMA_VALIDE' | 'EN_ATTENTE_COMMANDE' | 'EN_ATTENTE_SORTIE' | 'EN_ATTENTE_MECANICIEN' | 'EN_COURS' | 'EN_ATTENTE_PAIEMENT' | 'TERMINE' | 'LIVRE';
+export type StatutOrdre = 'A_FAIRE' | 'EN_DIAGNOSTIC' | 'EN_ATTENTE_PROFORMA' | 'PROFORMA_VALIDE' | 'EN_ATTENTE_COMMANDE' | 'EN_ATTENTE_SORTIE' | 'EN_ATTENTE_MECANICIEN' | 'EN_COURS' | 'EN_ATTENTE_PAIEMENT' | 'TERMINE' | 'LIVRE';
+export type StatutFiche = StatutOrdre;
 
 export type TypePieceJointeDiagnostic = 'PHOTO' | 'PDF';
 
@@ -57,13 +58,15 @@ export interface OrdreReparation {
   bonDeSortie?: { id: number; reference: string; statut: string } | null;
   lignesOrdreReparationPieces?: {
     id: number;
-    piece: { id: number; reference: string; prix?: number };
+    piece?: { id: number; reference?: string; designation?: string; prix?: number };
+    isCustom?: boolean;
+    designationPds?: string;
     quantite: number;
     prix: number;
   }[];
   lignesOrdreReparationMainDoeuvres?: {
     id: number;
-    mainDoeuvre: { id: number; prix: number; nbreHeure: number; categorie?: { nom: string } };
+    mainDoeuvre?: { id: number; prix?: number; nbreHeure?: number; description?: string; categorie?: { nom: string } };
     nbreHeure: number;
     prix: number;
   }[];

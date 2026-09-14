@@ -1,0 +1,133 @@
+<div class="p-6 max-w-7xl mx-auto space-y-6">
+  <!-- En-tête -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-oas-ink">Catégories de Main d'œuvre</h1>
+      <p class="text-sm text-oas-ink2">Gérez les catégories d'interventions et de prestations de main d'œuvre</p>
+    </div>
+  </div>
+
+  @if (successMessage) {
+    <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-sm font-medium flex items-center gap-2">
+      <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+      </svg>
+      {{ successMessage }}
+    </div>
+  }
+
+  @if (errorMessage) {
+    <div class="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl text-sm font-medium flex items-center gap-2">
+      <svg class="w-5 h-5 text-rose-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+      {{ errorMessage }}
+    </div>
+  }
+
+  <!-- Carte d'ajout / édition -->
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
+    <h2 class="text-base font-bold text-oas-ink">
+      {{ editingCategorie ? 'Modifier la catégorie' : 'Ajouter une nouvelle catégorie' }}
+    </h2>
+    
+    @if (!editingCategorie) {
+      <form (ngSubmit)="saveCategorie()" class="flex flex-wrap items-center gap-4">
+        <div class="flex-1 min-w-[260px]">
+          <label class="block text-xs font-semibold text-slate-500 mb-1">Nom de la catégorie <span class="text-rose-500">*</span></label>
+          <input type="text" [(ngModel)]="newCategorie.nom" name="nom" required placeholder="Ex: Mécanique, Tôlerie, Peinture, Électricité"
+            class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-oas-ink focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition-all outline-none">
+        </div>
+        <div class="self-end">
+          <button type="submit" [disabled]="!newCategorie.nom?.trim()"
+            class="px-5 py-2.5 bg-oas-accent text-white font-bold text-sm rounded-xl hover:bg-oas-accent-dark transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            Ajouter
+          </button>
+        </div>
+      </form>
+    } @else {
+      <form (ngSubmit)="updateCategorie()" class="flex flex-wrap items-center gap-4">
+        <div class="flex-1 min-w-[260px]">
+          <label class="block text-xs font-semibold text-slate-500 mb-1">Nom de la catégorie <span class="text-rose-500">*</span></label>
+          <input type="text" [(ngModel)]="editingCategorie.nom" name="editNom" required placeholder="Ex: Mécanique"
+            class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-oas-ink focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition-all outline-none">
+        </div>
+        <div class="self-end flex items-center gap-2">
+          <button type="button" (click)="cancelEdit()"
+            class="px-4 py-2.5 bg-slate-100 text-slate-700 font-semibold text-sm rounded-xl hover:bg-slate-200 transition-colors cursor-pointer">
+            Annuler
+          </button>
+          <button type="submit" [disabled]="!editingCategorie.nom?.trim()"
+            class="px-5 py-2.5 bg-oas-accent text-white font-bold text-sm rounded-xl hover:bg-oas-accent-dark transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-2">
+            Enregistrer
+          </button>
+        </div>
+      </form>
+    }
+  </div>
+
+  <!-- Table des catégories -->
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+    <!-- Barre de recherche et stats -->
+    <div class="px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <h3 class="font-bold text-base text-oas-ink">Liste des catégories ({{ totalElements }})</h3>
+      
+      <div class="relative w-full sm:w-64">
+        <input type="text" [(ngModel)]="search" (ngModelChange)="onSearchChange()" placeholder="Rechercher une catégorie..."
+          class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-oas-ink focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition-all outline-none">
+        <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-sm text-slate-600">
+        <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
+          <tr>
+            <th class="py-3.5 px-6">ID</th>
+            <th class="py-3.5 px-6">Nom de la catégorie</th>
+            <th class="py-3.5 px-6 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          @if (isLoading) {
+            <tr>
+              <td colspan="3" class="py-8 text-center text-slate-400">Chargement des catégories de main d'œuvre...</td>
+            </tr>
+          } @else if (categories.length === 0) {
+            <tr>
+              <td colspan="3" class="py-8 text-center text-slate-400">Aucune catégorie trouvée.</td>
+            </tr>
+          } @else {
+            @for (cat of categories; track cat.id) {
+              <tr class="hover:bg-slate-50 transition-colors">
+                <td class="py-3.5 px-6 text-xs text-slate-400 font-mono">#{{ cat.id }}</td>
+                <td class="py-3.5 px-6 font-semibold text-oas-ink">{{ cat.nom }}</td>
+                <td class="py-3.5 px-6 text-right space-x-2">
+                  <button (click)="startEdit(cat)"
+                    class="text-indigo-600 hover:text-indigo-800 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-indigo-50 transition cursor-pointer">
+                    Modifier
+                  </button>
+                  <button (click)="deleteCategorie(cat.id)"
+                    class="text-rose-600 hover:text-rose-800 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-rose-50 transition cursor-pointer">
+                    Supprimer
+                  </button>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (totalElements > 0) {
+      <app-pagination [page]="page" [totalPages]="totalPages" [total]="totalElements" [pageSize]="pageSize"
+        (prev)="prevPage()" (next)="nextPage()" (pageChange)="onPageChange($event)" />
+    }
+  </div>
+</div>

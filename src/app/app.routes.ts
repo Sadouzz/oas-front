@@ -251,6 +251,11 @@ export const routes: Routes = [
                   import('./agent/parametres/categories/categories.component').then(m => m.CategoriesComponent),
               },
               {
+                path: 'categories-main-doeuvre',
+                loadComponent: () =>
+                  import('./agent/parametres/categories-main-doeuvre/categories-main-doeuvre.component').then(m => m.CategoriesMainDoeuvreComponent),
+              },
+              {
                 path: 'fiche-atelier',
                 loadComponent: () =>
                   import('./agent/parametres/fiche-atelier/fiche-atelier-config.component').then(m => m.FicheAtelierConfigComponent),
@@ -270,6 +275,12 @@ export const routes: Routes = [
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER', 'ROLE_AGENT'])],
         loadComponent: () =>
           import('./agent/fiches-atelier/fiche-atelier-details/fiche-atelier-details').then(m => m.FicheAtelierDetails),
+      },
+      {
+        path: 'admin/fiches-atelier/new',
+        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER', 'ROLE_AGENT'])],
+        loadComponent: () =>
+          import('./agent/admin/fiches-atelier/fiches-atelier').then(m => m.FichesAtelier),
       },
       {
         path: 'admin/fiches-atelier/new/:rendezVousId',

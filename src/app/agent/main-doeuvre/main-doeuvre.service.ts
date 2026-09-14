@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CategorieMainDoeuvre, MainDoeuvreModel, MainDoeuvreRequest } from '../../shared/models';
+import { CategorieMainDoeuvre, MainDoeuvreModel, MainDoeuvreRequest, PageParams } from '../../shared/models';
 
 export type { CategorieMainDoeuvre, MainDoeuvreModel, MainDoeuvreRequest };
 
@@ -11,8 +11,15 @@ export class MainDoeuvreService {
   private http = inject(HttpClient);
   private base = `${environment.apiUrl}/api/main-doeuvres`;
 
-  getAll(): Observable<MainDoeuvreModel[]> {
-    return this.http.get<MainDoeuvreModel[]>(this.base);
+  getAll(params: PageParams & { keyword?: string; categorieId?: number; isArchived?: boolean; archived?: boolean } = {}): Observable<any> {
+    const p: Record<string, string> = {};
+    Object.keys(params).forEach(key => {
+      const val = (params as any)[key];
+      if (val !== undefined && val !== null && val !== '') {
+        p[key] = val.toString();
+      }
+    });
+    return this.http.get<any>(this.base, { params: p });
   }
 
   create(data: MainDoeuvreRequest): Observable<MainDoeuvreModel> {

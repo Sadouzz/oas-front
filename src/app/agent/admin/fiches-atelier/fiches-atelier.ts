@@ -3,13 +3,16 @@ import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } fr
 import { ActivatedRoute, Router } from '@angular/router';
 import { FicheAtelierService } from '../../fiches-atelier/fiche-atelier.service';
 import { RendezVousService } from '../../rendezvous/rendezvous.service';
-import { RendezVous, FicheAtelierRequest } from '../../../shared/models';
+import { ClientService } from '../../clients/client.service';
+import { VehiculeService } from '../../vehicules/vehicule.service';
+import { RendezVous, FicheAtelierRequest, ClientListResponse, VehiculeModel, extractContent } from '../../../shared/models';
 import { LucidePlus, LucideTrash2, LucideArrowLeft, LucideSave, LucideX } from '@lucide/angular';
+import { SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
 
 @Component({
   selector: 'app-fiches-atelier',
   standalone: true,
-  imports: [ReactiveFormsModule, LucidePlus, LucideTrash2, LucideArrowLeft, LucideSave, LucideX],
+  imports: [ReactiveFormsModule, LucidePlus, LucideTrash2, LucideArrowLeft, LucideSave, LucideX, SearchableSelectComponent],
   templateUrl: './fiches-atelier.html',
   styleUrl: './fiches-atelier.css',
 })
@@ -20,10 +23,15 @@ export class FichesAtelier implements OnInit {
   private router = inject(Router);
   private service = inject(FicheAtelierService);
   private rdvService = inject(RendezVousService);
+  private clientService = inject(ClientService);
+  private vehiculeService = inject(VehiculeService);
 
   form!: FormGroup;
   rendezVousId: number | null = null;
   rdvData: RendezVous | null = null;
+  clients: ClientListResponse[] = [];
+  clientVehicules: VehiculeModel[] = [];
+  loadingVehicules = false;
   loading = false;
   saving = false;
   error = '';
@@ -85,7 +93,8 @@ export class FichesAtelier implements OnInit {
       this.rendezVousId = +rdvIdParam;
       this.loadRendezVousData();
     } else {
-      this.error = "Aucun rendez-vous spécifié.";
+      this.rendezVousId = null;
+      this.loadClients();
     }
 
     this.initForm();
@@ -93,6 +102,8 @@ export class FichesAtelier implements OnInit {
 
   initForm() {
     this.form = this.fb.group({
+      clientId: [null, this.rendezVousId ? [] : [Validators.required]],
+      vehiculeId: [null, this.rendezVousId ? [] : [Validators.required]],
       nomChauffeur: ['', Validators.required],
       telephoneChauffeur: [''],
       kilometrage: [null, [Validators.required, Validators.min(0)]],
@@ -107,6 +118,61 @@ export class FichesAtelier implements OnInit {
 
     this.defaultReception.forEach(r => this.addReception(r));
     this.defaultDefauts.forEach(d => this.addDefaut(d));
+  }
+
+  formatClient = (c: ClientListResponse): string => {
+    if (!c) return '';
+    const name = `${c.firstName || ''} ${c.lastName || ''}`.trim();
+    const contact = c.phone || c.email || '';
+    return contact ? `${name} (${contact})` : name;
+  };
+
+  formatVehicule = (v: VehiculeModel): string => {
+    if (!v) return '';
+    const immat = v.immatriculation || '';
+    const details = `${v.marque || ''} ${v.modele || ''}`.trim();
+    return details ? `${immat} — ${details}` : immat;
+  };
+
+  loadClients() {
+    this.clientService.getAll({ size: 200 }).subscribe({
+      next: (data) => {
+        this.clients = extractContent(data);
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.clients = [];
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  onClientChange(val: any) {
+    const clientId = typeof val === 'object' && val !== null && 'target' in val
+      ? (val.target as HTMLSelectElement).value ? +((val.target as HTMLSelectElement).value) : null
+      : (val ? +val : null);
+
+    this.form.patchValue({ clientId: clientId, vehiculeId: null });
+    this.clientVehicules = [];
+
+    if (clientId) {
+      this.loadingVehicules = true;
+      this.vehiculeService.getByClient(clientId).subscribe({
+        next: (data) => {
+          this.clientVehicules = extractContent<VehiculeModel>(data);
+          if (this.clientVehicules.length === 1) {
+            this.form.patchValue({ vehiculeId: this.clientVehicules[0].id });
+          }
+          this.loadingVehicules = false;
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.clientVehicules = [];
+          this.loadingVehicules = false;
+          this.cdr.markForCheck();
+        }
+      });
+    }
   }
 
   get lignesReception() {
@@ -147,8 +213,9 @@ export class FichesAtelier implements OnInit {
         if (!this.rdvData) {
           this.error = "Rendez-vous introuvable.";
         } else {
-          // Pre-fill some data if needed, e.g. from client/vehicule
           this.form.patchValue({
+            clientId: this.rdvData.clientId,
+            vehiculeId: this.rdvData.vehiculeId,
             designationTravaux: this.rdvData.motif
           });
         }
@@ -231,19 +298,27 @@ export class FichesAtelier implements OnInit {
       return;
     }
 
-    if (!this.rdvData) return;
+    const clientId = this.rdvData ? this.rdvData.clientId : Number(this.form.value.clientId);
+    const vehiculeId = this.rdvData ? this.rdvData.vehiculeId : Number(this.form.value.vehiculeId);
+
+    if (!clientId || !vehiculeId) {
+      this.error = "Veuillez sélectionner un client et un véhicule.";
+      return;
+    }
 
     this.saving = true;
     this.error = '';
 
+    const { clientId: _c, vehiculeId: _v, ...formVals } = this.form.value;
+
     const request: FicheAtelierRequest = {
-        rendezVousId: this.rdvData.id,
-        clientId: this.rdvData.clientId,
-        vehiculeId: this.rdvData.vehiculeId,
-        ...this.form.value,
-        signatureReceptionnaireBase64: this.sigRecEl ? this.sigRecEl.nativeElement.toDataURL('image/png') : undefined,
-        signatureBase64: this.sigClientEl ? this.sigClientEl.nativeElement.toDataURL('image/png') : undefined
-      };
+      rendezVousId: this.rdvData ? this.rdvData.id : null,
+      clientId: clientId,
+      vehiculeId: vehiculeId,
+      ...formVals,
+      signatureReceptionnaireBase64: this.sigRecEl ? this.sigRecEl.nativeElement.toDataURL('image/png') : undefined,
+      signatureBase64: this.sigClientEl ? this.sigClientEl.nativeElement.toDataURL('image/png') : undefined
+    };
 
     // Format date string correctly if needed, e.g. from datetime-local
     if (request.dateSortiePrevue) {
@@ -259,17 +334,21 @@ export class FichesAtelier implements OnInit {
         this.saving = false;
         this.success = "Fiche atelier créée avec succès !";
         setTimeout(() => {
-          this.router.navigate(['/app/rendezvous']);
-        }, 1500);
+          this.router.navigate(['/app/fiches-atelier']);
+        }, 1200);
       },
       error: (err) => {
         this.saving = false;
-        this.error = err.error || "Erreur lors de la création de la fiche atelier.";
+        this.error = err.error?.message || err.error || "Erreur lors de la création de la fiche atelier.";
       }
     });
   }
 
   goBack() {
-    this.router.navigate(['/app/rendezvous']);
+    if (this.rendezVousId) {
+      this.router.navigate(['/app/rendezvous']);
+    } else {
+      this.router.navigate(['/app/fiches-atelier']);
+    }
   }
 }

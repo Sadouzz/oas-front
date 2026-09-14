@@ -2,16 +2,18 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { OrdreReparation, OrdreReparationRequest, StatutFiche, PieceJointeDiagnostic, TypePieceJointeDiagnostic, RemarqueDiagnostic } from '../../shared/models';
+import { OrdreReparation, OrdreReparationRequest, StatutOrdre, PieceJointeDiagnostic, TypePieceJointeDiagnostic, RemarqueDiagnostic } from '../../shared/models';
 
 @Injectable({ providedIn: 'root' })
 export class OrdreReparationService {
   private http = inject(HttpClient);
   private api = `${environment.apiUrl}/api/ordres-reparation`;
 
-  getAll(params?: import('../../shared/models').PageParams & { statut?: string }): Observable<OrdreReparation[]> {
+  getAll(params?: import('../../shared/models').PageParams & { statut?: string; dateDebut?: string; dateFin?: string }): Observable<any> {
     const p: Record<string, string> = {};
     if (params?.statut) p['statut'] = params.statut;
+    if (params?.dateDebut) p['dateDebut'] = params.dateDebut;
+    if (params?.dateFin) p['dateFin'] = params.dateFin;
     if (params?.page !== undefined) p['page'] = params.page.toString();
     if (params?.size !== undefined) p['size'] = params.size.toString();
     if (params?.keyword) p['keyword'] = params.keyword;
@@ -34,50 +36,50 @@ export class OrdreReparationService {
     return this.http.delete<string>(`${this.api}/${id}`);
   }
 
-  assignTechnicien(ficheId: number, technicienId: number): Observable<any> {
-    return this.http.post(`${this.api}/${ficheId}/techniciens/${technicienId}`, {}, { responseType: 'text' as 'json' });
+  assignTechnicien(ordreId: number, technicienId: number): Observable<any> {
+    return this.http.post(`${this.api}/${ordreId}/techniciens/${technicienId}`, {}, { responseType: 'text' as 'json' });
   }
 
-  removeTechnicien(ficheId: number, technicienId: number): Observable<any> {
-    return this.http.delete(`${this.api}/${ficheId}/techniciens/${technicienId}`, { responseType: 'text' as 'json' });
+  removeTechnicien(ordreId: number, technicienId: number): Observable<any> {
+    return this.http.delete(`${this.api}/${ordreId}/techniciens/${technicienId}`, { responseType: 'text' as 'json' });
   }
 
-  assignTechnicienReparation(ficheId: number, technicienId: number): Observable<any> {
-    return this.http.post(`${this.api}/${ficheId}/techniciens-reparation/${technicienId}`, {}, { responseType: 'text' as 'json' });
+  assignTechnicienReparation(ordreId: number, technicienId: number): Observable<any> {
+    return this.http.post(`${this.api}/${ordreId}/techniciens-reparation/${technicienId}`, {}, { responseType: 'text' as 'json' });
   }
 
-  removeTechnicienReparation(ficheId: number, technicienId: number): Observable<any> {
-    return this.http.delete(`${this.api}/${ficheId}/techniciens-reparation/${technicienId}`, { responseType: 'text' as 'json' });
+  removeTechnicienReparation(ordreId: number, technicienId: number): Observable<any> {
+    return this.http.delete(`${this.api}/${ordreId}/techniciens-reparation/${technicienId}`, { responseType: 'text' as 'json' });
   }
 
-  updateStatut(ficheId: number, statut: StatutFiche): Observable<OrdreReparation> {
-    return this.http.patch<OrdreReparation>(`${this.api}/${ficheId}/statut`, null, { params: { statut } });
+  updateStatut(ordreId: number, statut: StatutOrdre): Observable<OrdreReparation> {
+    return this.http.patch<OrdreReparation>(`${this.api}/${ordreId}/statut`, null, { params: { statut } });
   }
 
   // ─── Pièces jointes de diagnostic ─────────────────────
-  getPiecesJointesDiagnostic(ficheId: number, type?: TypePieceJointeDiagnostic): Observable<PieceJointeDiagnostic[]> {
-    return this.http.get<PieceJointeDiagnostic[]>(`${this.api}/${ficheId}/diagnostic/pieces-jointes`, {
+  getPiecesJointesDiagnostic(ordreId: number, type?: TypePieceJointeDiagnostic): Observable<PieceJointeDiagnostic[]> {
+    return this.http.get<PieceJointeDiagnostic[]>(`${this.api}/${ordreId}/diagnostic/pieces-jointes`, {
       params: type ? { type } : {},
     });
   }
 
-  addPieceJointeDiagnostic(ficheId: number, data: { url: string; type: TypePieceJointeDiagnostic; remarque?: string | null }): Observable<PieceJointeDiagnostic> {
-    return this.http.post<PieceJointeDiagnostic>(`${this.api}/${ficheId}/diagnostic/pieces-jointes`, data);
+  addPieceJointeDiagnostic(ordreId: number, data: { url: string; type: TypePieceJointeDiagnostic; remarque?: string | null }): Observable<PieceJointeDiagnostic> {
+    return this.http.post<PieceJointeDiagnostic>(`${this.api}/${ordreId}/diagnostic/pieces-jointes`, data);
   }
 
-  deletePieceJointeDiagnostic(ficheId: number, pieceJointeId: number): Observable<any> {
-    return this.http.delete(`${this.api}/${ficheId}/diagnostic/pieces-jointes/${pieceJointeId}`, { responseType: 'text' as 'json' });
+  deletePieceJointeDiagnostic(ordreId: number, pieceJointeId: number): Observable<any> {
+    return this.http.delete(`${this.api}/${ordreId}/diagnostic/pieces-jointes/${pieceJointeId}`, { responseType: 'text' as 'json' });
   }
 
   // ─── Remarques de diagnostic ─────────────────────────────
-  getRemarquesDiagnostic(ficheId: number): Observable<RemarqueDiagnostic[]> {
-    return this.http.get<RemarqueDiagnostic[]>(`${this.api}/${ficheId}/diagnostic/remarques`);
+  getRemarquesDiagnostic(ordreId: number): Observable<RemarqueDiagnostic[]> {
+    return this.http.get<RemarqueDiagnostic[]>(`${this.api}/${ordreId}/diagnostic/remarques`);
   }
-  addRemarqueDiagnostic(ficheId: number, contenu: string): Observable<RemarqueDiagnostic> {
-    return this.http.post<RemarqueDiagnostic>(`${this.api}/${ficheId}/diagnostic/remarques`, { contenu });
+  addRemarqueDiagnostic(ordreId: number, contenu: string): Observable<RemarqueDiagnostic> {
+    return this.http.post<RemarqueDiagnostic>(`${this.api}/${ordreId}/diagnostic/remarques`, { contenu });
   }
-  deleteRemarqueDiagnostic(ficheId: number, remarqueId: number): Observable<any> {
-    return this.http.delete(`${this.api}/${ficheId}/diagnostic/remarques/${remarqueId}`, { responseType: 'text' as 'json' });
+  deleteRemarqueDiagnostic(ordreId: number, remarqueId: number): Observable<any> {
+    return this.http.delete(`${this.api}/${ordreId}/diagnostic/remarques/${remarqueId}`, { responseType: 'text' as 'json' });
   }
 
   // ─── Lien Fiche Atelier → Ordre de réparation ─────────

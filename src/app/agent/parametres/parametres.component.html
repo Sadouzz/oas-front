@@ -11,6 +11,7 @@
       <nav class="flex -mb-px px-6" aria-label="Tabs">
         <button (click)="setTab('depots')" [class]="activeTab === 'depots' ? 'border-oas-accent text-oas-accent font-bold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium'" class="whitespace-nowrap py-4 px-4 border-b-2 text-sm transition cursor-pointer">Dépôts</button>
         <button (click)="setTab('categories')" [class]="activeTab === 'categories' ? 'border-oas-accent text-oas-accent font-bold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium'" class="whitespace-nowrap py-4 px-4 border-b-2 text-sm transition cursor-pointer">Catégories de Pièces</button>
+        <button (click)="setTab('categories-mo')" [class]="activeTab === 'categories-mo' ? 'border-oas-accent text-oas-accent font-bold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium'" class="whitespace-nowrap py-4 px-4 border-b-2 text-sm transition cursor-pointer">Catégories Main d'œuvre</button>
         <button (click)="setTab('configs')" [class]="activeTab === 'configs' ? 'border-oas-accent text-oas-accent font-bold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium'" class="whitespace-nowrap py-4 px-4 border-b-2 text-sm transition cursor-pointer">Fiche Atelier</button>
       </nav>
     </div>
@@ -82,6 +83,37 @@
                   <td class="py-3 px-4 text-right">
                     @if (cat.id) {
                       <button (click)="deleteCategorie(cat.id)" class="text-red-500 hover:text-red-700 font-semibold transition cursor-pointer">Supprimer</button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+      <!-- Categories Main-d'œuvre Tab -->
+      @if (activeTab === 'categories-mo') {
+        <div>
+          <h2 class="text-lg font-bold text-oas-ink mb-4">Catégories de Main d'œuvre</h2>
+          <div class="flex flex-wrap gap-4 mb-6">
+            <input type="text" [(ngModel)]="newCategorieMO.nom" placeholder="Nom de la catégorie (ex: Mécanique, Tôlerie)" class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-oas-ink focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition-all min-w-[260px]">
+            <button (click)="saveCategorieMO()" [disabled]="!newCategorieMO.nom" class="px-5 py-2 bg-oas-accent text-white rounded-lg text-sm font-bold hover:bg-oas-accent-dark transition shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5">
+              + Ajouter
+            </button>
+          </div>
+          <table class="w-full text-left text-sm text-slate-600">
+            <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
+              <tr><th class="py-3 px-4">ID</th><th class="py-3 px-4">Nom de la catégorie</th><th class="py-3 px-4 text-right">Actions</th></tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              @for (catMO of categoriesMO; track catMO.id) {
+                <tr class="hover:bg-slate-50 transition-colors">
+                  <td class="py-3 px-4 font-mono text-xs text-slate-400">#{{ catMO.id }}</td>
+                  <td class="py-3 px-4 font-semibold text-oas-ink">{{ catMO.nom }}</td>
+                  <td class="py-3 px-4 text-right">
+                    @if (catMO.id) {
+                      <button (click)="deleteCategorieMO(catMO.id)" class="text-red-500 hover:text-red-700 font-semibold transition cursor-pointer">Supprimer</button>
                     }
                   </td>
                 </tr>

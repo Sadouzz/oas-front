@@ -66,7 +66,7 @@ export class TechnicienOrdreDetailComponent implements OnInit {
     }).subscribe({
       next: ({ pieces, mo }) => {
         this.allPieces = pieces.filter(p => p.statut === 'ACTIF');
-        this.allMO = mo.filter(m => !m.isArchived);
+        this.allMO = (Array.isArray(mo) ? mo : (mo?.content || mo?.data || [])).filter((m: MainDoeuvreModel) => !m.isArchived);
       },
     });
     this.load();

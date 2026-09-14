@@ -40,6 +40,13 @@ export abstract class BasePaginatedComponent {
     }
   }
 
+  goToPage(p: number): void {
+    if (p >= 1 && p <= this.totalPages && p !== this.page) {
+      this.page = p;
+      this.loadData();
+    }
+  }
+
   protected getPageParams(extraParams: Record<string, any> = {}): PageParams {
     const p: PageParams = { page: this.page - 1, size: this.pageSize };
     if (this.searchTerm) p.keyword = this.searchTerm;

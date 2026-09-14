@@ -1,11 +1,11 @@
-import { Component, inject, OnInit, Pipe, PipeTransform, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, Pipe, PipeTransform, ChangeDetectorRef } from '@angular/core';
 import { DecimalPipe, NgClass, UpperCasePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MainDoeuvreService } from './main-doeuvre.service';
 import { CategorieMainDoeuvreService } from './categorie-main-doeuvre.service';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
-import { MainDoeuvreModel, MainDoeuvreRequest, CategorieMainDoeuvreModel, extractContent } from '../../shared/models';
+import { MainDoeuvreModel, MainDoeuvreRequest, CategorieMainDoeuvreModel, extractContent, extractPage } from '../../shared/models';
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideArchive, LucideArchiveRestore, LucideLoader2 } from '@lucide/angular';
 
 // Pipe inline pour compter par catégorie dans le template
@@ -23,17 +23,18 @@ export class CategorieCountPipe implements PipeTransform {
   imports: [ReactiveFormsModule, DecimalPipe, NgClass, UpperCasePipe, AlertComponent, PaginationComponent, CategorieCountPipe],
   templateUrl: './main-doeuvre.component.html',
 })
-export class MainDoeuvreComponent implements OnInit {
+export class MainDoeuvreComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private fb      = inject(FormBuilder);
   private service = inject(MainDoeuvreService);
   private catService = inject(CategorieMainDoeuvreService);
 
   items:    MainDoeuvreModel[] = [];
-  filtered: MainDoeuvreModel[] = [];
   categories: CategorieMainDoeuvreModel[] = [];
   page = 1;
   readonly pageSize = 10;
+  totalElements = 0;
+  totalPages = 1;
   loading = false;
   saving  = false;
   successMessage = '';
@@ -42,6 +43,7 @@ export class MainDoeuvreComponent implements OnInit {
   filterCategorieId: number | null = null;
   filterArchived  = 'actif';   // 'actif' | 'archive' | 'tous'
   searchTerm      = '';
+  private searchTimeout: any;
 
   // Modal Main Doeuvre
   showModal = false;
@@ -69,6 +71,12 @@ export class MainDoeuvreComponent implements OnInit {
     this.load(); 
   }
 
+  ngOnDestroy() {
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+  }
+
   loadCategories() {
     this.catService.getAll().subscribe({
       next: (data) => this.categories = extractContent(data),
@@ -78,71 +86,124 @@ export class MainDoeuvreComponent implements OnInit {
 
   load() {
     this.loading = true;
-    this.service.getAll().subscribe({
+    this.cdr.markForCheck();
+
+    const params: any = {
+      page: this.page - 1,
+      size: this.pageSize
+    };
+
+    if (this.searchTerm?.trim()) {
+      params.keyword = this.searchTerm.trim();
+    }
+
+    if (this.filterCategorieId) {
+      params.categorieId = this.filterCategorieId;
+    }
+
+    if (this.filterArchived === 'actif') {
+      params.isArchived = false;
+      params.archived = false;
+    } else if (this.filterArchived === 'archive') {
+      params.isArchived = true;
+      params.archived = true;
+    }
+
+    this.service.getAll(params).subscribe({
       next: (data) => {
         const list = extractContent<MainDoeuvreModel>(data);
-        this.items = list.sort((a: any, b: any) => b.id - a.id);
-        this.applyFilter();
+        const pageInfo = extractPage<MainDoeuvreModel>(data);
+
+        if (pageInfo) {
+          this.items = list;
+          this.totalElements = pageInfo.totalElements ?? list.length;
+          this.totalPages = pageInfo.totalPages ?? Math.max(1, Math.ceil(this.totalElements / this.pageSize));
+        } else if (data && data.totalElements !== undefined) {
+          this.items = list;
+          this.totalElements = data.totalElements;
+          this.totalPages = data.totalPages ?? Math.max(1, Math.ceil(this.totalElements / this.pageSize));
+        } else {
+          let filtered = list;
+          if (this.searchTerm?.trim()) {
+            const kw = this.searchTerm.trim().toLowerCase();
+            filtered = filtered.filter(i => 
+              (i.description && i.description.toLowerCase().includes(kw)) ||
+              (i.categorie?.nom && i.categorie.nom.toLowerCase().includes(kw))
+            );
+          }
+          if (this.filterCategorieId) {
+            filtered = filtered.filter(i => i.categorie?.id === this.filterCategorieId);
+          }
+          if (this.filterArchived === 'actif') {
+            filtered = filtered.filter(i => !i.isArchived);
+          } else if (this.filterArchived === 'archive') {
+            filtered = filtered.filter(i => i.isArchived);
+          }
+          this.totalElements = filtered.length;
+          this.totalPages = Math.max(1, Math.ceil(this.totalElements / this.pageSize));
+          this.items = filtered.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
+        }
+
         this.loading = false;
         this.cdr.markForCheck();
       },
       error: () => {
         this.items = [];
-        this.filtered = [];
+        this.totalElements = 0;
+        this.totalPages = 1;
         this.loading = false;
         this.cdr.markForCheck();
       }
     });
   }
 
-  applyFilter() {
-    let data = Array.isArray(this.items) ? this.items : [];
-    // Filtre archivé
-    if (this.filterArchived === 'actif')   data = data.filter(i => !i.isArchived);
-    if (this.filterArchived === 'archive') data = data.filter(i =>  i.isArchived);
-    // Filtre catégorie
-    if (this.filterCategorieId) data = data.filter(i => i.categorie?.id === this.filterCategorieId);
-    // Recherche texte
-    if (this.searchTerm) {
-      const kw = this.searchTerm.toLowerCase();
-      data = data.filter(i => i.categorie?.nom?.toLowerCase().includes(kw));
-    }
-    this.filtered = data;
-    this.page = 1;
-  }
-
   onSearch(event: Event) {
-    this.searchTerm = (event.target as HTMLInputElement).value.toLowerCase().trim();
-    this.applyFilter(); this.cdr.markForCheck();
+    this.searchTerm = (event.target as HTMLInputElement).value;
+    clearTimeout(this.searchTimeout);
+    this.searchTimeout = setTimeout(() => {
+      this.page = 1;
+      this.load();
+    }, 300);
   }
 
   onCategorieFilter(event: Event) {
     const val = (event.target as HTMLSelectElement).value;
     this.filterCategorieId = val ? +val : null;
-    this.applyFilter(); this.cdr.markForCheck();
+    this.page = 1;
+    this.load();
   }
 
   onArchivedFilter(event: Event) {
     this.filterArchived = (event.target as HTMLSelectElement).value;
-    this.applyFilter(); this.cdr.markForCheck();
+    this.page = 1;
+    this.load();
   }
 
   filterByCategorie(catId: number) {
     this.filterCategorieId = this.filterCategorieId === catId ? null : catId;
-    this.applyFilter(); this.cdr.markForCheck();
+    this.page = 1;
+    this.load();
   }
 
   // ── Pagination ────────────────────────────────────────
-  get paged(): MainDoeuvreModel[] {
-    const list = Array.isArray(this.filtered) ? this.filtered : [];
-    return list.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
+  onPageChange(newPage: number) {
+    this.page = newPage;
+    this.load();
   }
-  get totalPages(): number {
-    const list = Array.isArray(this.filtered) ? this.filtered : [];
-    return Math.max(1, Math.ceil(list.length / this.pageSize));
+
+  prevPage(): void {
+    if (this.page > 1) {
+      this.page--;
+      this.load();
+    }
   }
-  prevPage(): void { if (this.page > 1) this.page--; }
-  nextPage(): void { if (this.page < this.totalPages) this.page++; }
+
+  nextPage(): void {
+    if (this.page < this.totalPages) {
+      this.page++;
+      this.load();
+    }
+  }
 
   // ── CRUD MAIN D'OEUVRE ────────────────────────────────
   openCreate() {
