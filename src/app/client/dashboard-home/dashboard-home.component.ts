@@ -84,29 +84,43 @@ export class DashboardHomeComponent implements OnInit {
           { label: 'Montant dû', value: `${montantDu.toLocaleString('fr-FR')} F`, link: this.paths.factures, icon: ICON_FACTURE, iconBg: 'bg-oas-bad-bg', iconColor: 'text-oas-bad' },
         ];
         this.loadingStats = false;
+        this.cdr.markForCheck();
       }
     };
 
     this.devisService.getAll().subscribe({
-      next: devis => { devisEnAttente = devis.filter(d => d.statut === 'EN_ATTENTE').length; done(); },
+      next: devis => {
+        const list = extractContent(devis);
+        devisEnAttente = list.filter(d => d.statut === 'EN_ATTENTE').length;
+        done();
+      },
       error: () => done(),
     });
 
     this.proformaService.getAll().subscribe({
-      next: proformas => { proformasEnAttente = proformas.filter(p => !p.statut || p.statut === 'EN_ATTENTE').length; done(); },
+      next: proformas => {
+        const list = extractContent(proformas);
+        proformasEnAttente = list.filter(p => !p.statut || p.statut === 'EN_ATTENTE').length;
+        done();
+      },
       error: () => done(),
     });
 
     this.rendezVousService.getAll().subscribe({
       next: rdv => {
         const list = extractContent(rdv);
-        rdvAVenir = list.filter(r => r.statut === 'EN_ATTENTE' || r.statut === 'CONFIRME').length; done();
+        rdvAVenir = list.filter(r => r.statut === 'EN_ATTENTE' || r.statut === 'CONFIRME').length;
+        done();
       },
       error: () => done(),
     });
 
     this.factureService.getAll().subscribe({
-      next: factures => { montantDu = factures.reduce((sum, f) => sum + f.resteAPayer, 0); done(); },
+      next: factures => {
+        const list = extractContent(factures);
+        montantDu = list.reduce((sum, f) => sum + (f.resteAPayer || 0), 0);
+        done();
+      },
       error: () => done(),
     });
   }
@@ -116,16 +130,25 @@ export class DashboardHomeComponent implements OnInit {
     let remaining = 2;
     const done = () => {
       remaining -= 1;
-      if (remaining === 0) this.loadingVehicules = false;
+      if (remaining === 0) {
+        this.loadingVehicules = false;
+        this.cdr.markForCheck();
+      }
     };
 
     this.vehiculeService.getAll().subscribe({
-      next: vehicules => { this.vehicules = vehicules; done(); },
+      next: vehicules => {
+        this.vehicules = extractContent(vehicules);
+        done();
+      },
       error: () => done(),
     });
 
     this.interventionService.getAll().subscribe({
-      next: interventions => { this.interventions = interventions; done(); },
+      next: interventions => {
+        this.interventions = extractContent(interventions);
+        done();
+      },
       error: () => done(),
     });
   }

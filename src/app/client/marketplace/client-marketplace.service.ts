@@ -7,7 +7,7 @@ import { Produit, DemandeProduit, DemandeProduitRequest } from '../models';
 @Injectable({ providedIn: 'root' })
 export class ClientMarketplaceService {
   private http = inject(HttpClient);
-  private api = `${environment.apiUrl}/api/client/marketplace`;
+  private api = `${environment.apiUrl}/api/marketplace`;
 
   getProduits(): Observable<Produit[]> {
     return this.http.get<Produit[]>(`${this.api}/produits`);

@@ -7,10 +7,10 @@ import { Intervention } from '../models';
 @Injectable({ providedIn: 'root' })
 export class ClientInterventionService {
   private http = inject(HttpClient);
-  private api = `${environment.apiUrl}/api/client/interventions`;
+  private api = `${environment.apiUrl}/api/ordres-reparation`;
 
   getAll(): Observable<Intervention[]> {
-    return this.http.get<Intervention[]>(this.api);
+    return this.http.get<Intervention[]>(this.api + '/me');
   }
 
   getById(id: number): Observable<Intervention> {
