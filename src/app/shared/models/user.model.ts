@@ -12,6 +12,7 @@ export interface UserModel {
   role?: string;
   garage?: { id: number; nom: string };
   authorities?: { authority: string }[];
+  vehiculeNumbers?: number;
 }
 
 export interface UserUpdatePayload {
