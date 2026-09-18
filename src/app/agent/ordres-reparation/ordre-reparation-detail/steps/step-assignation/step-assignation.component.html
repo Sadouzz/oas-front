@@ -1,0 +1,35 @@
+<app-alert [success]="successMessage" [error]="errorMessage" />
+
+@if (loading) {
+  <div class="flex flex-col items-center justify-center py-12 text-oas-muted">
+    <svg class="animate-spin h-8 w-8 text-oas-accent mb-2" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+    </svg>
+    <span>Chargement des techniciens...</span>
+  </div>
+} @else {
+  <div class="space-y-6">
+    <div class="flex items-center justify-between border-b border-oas-line pb-3">
+      <h2 class="text-lg font-bold text-oas-ink">Étape 7 · Assignation des techniciens de réparation</h2>
+      <span class="text-xs text-oas-muted font-mono">{{ loadedOrdre?.numero }}</span>
+    </div>
+
+    <div>
+      <label class="block text-sm font-bold text-oas-ink mb-3">Sélectionnez les techniciens chargés des travaux</label>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        @for (t of allTechniciens; track t.id) {
+          <button type="button" (click)="toggleTechnicienReparation(t)" [disabled]="technicienToggling !== null"
+            class="flex items-center gap-2.5 p-3 rounded-xl border text-xs font-semibold text-left transition cursor-pointer"
+            [ngClass]="selectedTechniciensReparation.includes(t.id) ? 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold' : 'bg-oas-bg text-oas-ink border-oas-line hover:bg-oas-line/50'">
+            <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
+              [ngClass]="selectedTechniciensReparation.includes(t.id) ? 'bg-emerald-600 text-white' : 'bg-oas-line text-oas-muted'">
+              {{ selectedTechniciensReparation.includes(t.id) ? '✓' : '+' }}
+            </span>
+            <span class="truncate">{{ t.firstName }} {{ t.lastName }}</span>
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,230 @@
+<app-alert [success]="successMessage" [error]="errorMessage" />
+
+@if (loading) {
+  <div class="flex flex-col items-center justify-center py-12 text-oas-muted">
+    <svg class="animate-spin h-8 w-8 text-oas-accent mb-2" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+    </svg>
+    <span>Chargement des données de diagnostic...</span>
+  </div>
+} @else {
+  <div class="space-y-6">
+    <div class="flex items-center justify-between border-b border-oas-line pb-3">
+      <h2 class="text-lg font-bold text-oas-ink">Étape 2 · Diagnostic technique</h2>
+      <span class="text-xs text-oas-muted font-mono">{{ loadedOrdre?.numero }}</span>
+    </div>
+
+    <!-- Statut du diagnostic & Contrôle de passage à l'étape suivante -->
+    <div class="p-5 rounded-2xl border transition-all"
+      [ngClass]="{
+        'bg-emerald-50/80 border-emerald-300': statutDiagnostic === 'VALIDE',
+        'bg-blue-50/80 border-blue-300': statutDiagnostic === 'TERMINE',
+        'bg-amber-50/80 border-amber-300': statutDiagnostic === 'EN_COURS',
+        'bg-slate-50/80 border-slate-300': statutDiagnostic === 'EN_ATTENTE'
+      }">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="space-y-1.5">
+          <div class="flex items-center gap-2.5">
+            <span class="text-xs font-bold uppercase tracking-wider text-oas-muted">Statut du diagnostic</span>
+            
+            <!-- Badges fixes non cliquables sans emojis -->
+            @if (statutDiagnostic === 'EN_ATTENTE') {
+              <span class="px-3 py-1 rounded-full text-xs font-extrabold shadow-xs bg-slate-600 text-white flex items-center gap-1.5">
+                <span>En attente</span>
+              </span>
+            } @else if (statutDiagnostic === 'EN_COURS') {
+              <span class="px-3 py-1 rounded-full text-xs font-extrabold shadow-xs bg-amber-500 text-white flex items-center gap-1.5">
+                <span>En cours</span>
+              </span>
+            } @else if (statutDiagnostic === 'TERMINE') {
+              <span class="px-3 py-1 rounded-full text-xs font-extrabold shadow-xs bg-blue-600 text-white flex items-center gap-1.5">
+                <span>Terminé</span>
+              </span>
+            } @else if (statutDiagnostic === 'VALIDE') {
+              <span class="px-3 py-1 rounded-full text-xs font-extrabold shadow-xs bg-emerald-600 text-white flex items-center gap-1.5">
+                <svg class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Validé</span>
+              </span>
+            }
+          </div>
+          
+          <p class="text-xs">
+            @if (statutDiagnostic === 'VALIDE') {
+              <span class="text-emerald-800 font-semibold">
+                Le diagnostic est validé. Le bouton d'étape suivante ci-dessous est débloqué.
+              </span>
+            } @else if (statutDiagnostic === 'TERMINE') {
+              <span class="text-blue-800 font-semibold">
+                Travaux de diagnostic terminés. Cliquez sur « Valider le diagnostic » pour débloquer l'étape suivante.
+              </span>
+            } @else if (statutDiagnostic === 'EN_COURS') {
+              <span class="text-amber-900 font-semibold">
+                Diagnostic en cours de réalisation par les techniciens. Saisissez les pannes puis cliquez sur « Terminer le diagnostic ».
+              </span>
+            } @else {
+              <span class="text-slate-700 font-semibold">
+                Diagnostic en attente. Veuillez affecter au moins un technicien ci-dessous pour faire passer le diagnostic En cours.
+              </span>
+            }
+          </p>
+        </div>
+
+        <!-- Boutons d'action contextuels -->
+        <div class="flex items-center gap-2.5">
+          <!-- Terminer : n'apparaît que lorsque c'est EN_COURS -->
+          @if (statutDiagnostic === 'EN_COURS') {
+            <button type="button" (click)="marquerTermine()" [disabled]="saving"
+              class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition cursor-pointer flex items-center gap-1.5">
+              <span>Terminer le diagnostic</span>
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </button>
+          }
+
+          <!-- Valider : n'apparaît que lorsque c'est TERMINE -->
+          @if (statutDiagnostic === 'TERMINE') {
+            <button type="button" (click)="marquerValide()" [disabled]="saving"
+              class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition cursor-pointer flex items-center gap-1.5 animate-pulse">
+              <span>Valider le diagnostic</span>
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Affectation techniciens diagnostic -->
+    <div>
+      <label class="block text-sm font-bold text-oas-ink mb-2">Techniciens affectés au diagnostic</label>
+      <div class="grid grid-cols-1 sm:grid-cols-[220px_1fr] gap-3">
+        <div>
+          <select [(ngModel)]="specialiteFiltreDiagnostic"
+            class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition">
+            <option value="">Tous les types / spécialités</option>
+            @for (s of specialitesTechnicien; track s.value) {
+              <option [value]="s.value">{{ s.label }}</option>
+            }
+          </select>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto">
+          @for (t of techniciensDiagnosticFiltres; track t.id) {
+            <button type="button" (click)="toggleTechnicien(t)" [disabled]="technicienToggling !== null"
+              class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs transition cursor-pointer text-left border"
+              [ngClass]="isTechnicienAssigned(t.id) ? 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold' : 'bg-oas-bg text-oas-ink border-oas-line hover:bg-oas-line/60'">
+              <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                [ngClass]="isTechnicienAssigned(t.id) ? 'bg-emerald-600 text-white' : 'bg-oas-line text-oas-muted'">
+                {{ isTechnicienAssigned(t.id) ? '✓' : '+' }}
+              </span>
+              <span class="truncate">{{ t.firstName }} {{ t.lastName }}</span>
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Anomalies & Pannes signalées -->
+    <div class="border-t border-oas-line pt-4 space-y-3">
+      <label class="block text-sm font-bold text-oas-ink">Anomalies constatées / Pannes</label>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+        @for (p of pannesFrequentes; track p) {
+          <label class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition border"
+            [class.bg-red-50]="selectedPannes.includes(p)"
+            [class.border-red-300]="selectedPannes.includes(p)"
+            [class.text-red-700]="selectedPannes.includes(p)"
+            [class.bg-oas-bg]="!selectedPannes.includes(p)"
+            [class.border-oas-line]="!selectedPannes.includes(p)"
+            [class.text-oas-ink]="!selectedPannes.includes(p)">
+            <input type="checkbox" [checked]="selectedPannes.includes(p)" (change)="togglePanne(p)"
+              class="w-4 h-4 accent-red-600 rounded" />
+            <span>{{ p }}</span>
+          </label>
+        }
+      </div>
+
+      <div class="mt-3">
+        <label class="inline-flex items-center gap-2.5 px-3.5 py-2 rounded-xl text-xs font-semibold cursor-pointer border transition"
+          [class.bg-amber-50]="showAutrePannes"
+          [class.border-amber-300]="showAutrePannes"
+          [class.text-amber-800]="showAutrePannes"
+          [class.bg-oas-bg]="!showAutrePannes"
+          [class.border-oas-line]="!showAutrePannes"
+          [class.text-oas-ink]="!showAutrePannes">
+          <input type="checkbox" [checked]="showAutrePannes" (change)="showAutrePannes = !showAutrePannes"
+            class="w-4 h-4 accent-amber-500 rounded" />
+          <span>Autre anomalie constatée</span>
+        </label>
+        @if (showAutrePannes) {
+          <textarea [(ngModel)]="autrePannes" [ngModelOptions]="{standalone: true}"
+            (input)="onAutrePannesChange()" (blur)="saveDiagnosticSilently()" rows="2"
+            placeholder="Précisez les symptômes..."
+            class="w-full mt-2 px-3.5 py-2.5 rounded-xl border border-amber-300 bg-amber-50/40 text-sm text-oas-ink focus:outline-none focus:ring-2 focus:ring-amber-400/40 transition resize-none"></textarea>
+        }
+      </div>
+    </div>
+
+    <!-- Remarques de diagnostic -->
+    <div class="border-t border-oas-line pt-4 space-y-3">
+      <label class="block text-sm font-bold text-oas-ink">Remarques & Observations de diagnostic</label>
+      <div class="flex gap-2">
+        <input type="text" [(ngModel)]="nouvelleRemarque"
+          placeholder="Ajouter une remarque de diagnostic..."
+          (keyup.enter)="addRemarque()"
+          class="flex-1 px-3.5 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm text-oas-ink focus:outline-none focus:ring-2 focus:ring-oas-accent/40" />
+        <button type="button" (click)="addRemarque()"
+          class="px-4 py-2.5 bg-oas-accent hover:bg-oas-accent-dark text-white rounded-xl text-xs font-bold transition cursor-pointer">
+          Ajouter
+        </button>
+      </div>
+
+      @if (remarquesDiagnostic.length > 0) {
+        <div class="space-y-2 pt-2">
+          @for (r of remarquesDiagnostic; track r.id) {
+            <div class="flex items-center justify-between p-3 rounded-xl bg-amber-50/60 border border-amber-200 text-xs">
+              <div>
+                <span class="font-bold text-amber-900 block">{{ r.technicienNom || 'Technicien' }}</span>
+                <p class="text-amber-800 text-sm mt-0.5">{{ r.contenu }}</p>
+              </div>
+              <button type="button" (click)="deleteRemarque(r.id)" class="text-red-500 hover:text-red-700 p-1">
+                ✕
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Pièces jointes / Photos -->
+    <div class="border-t border-oas-line pt-4 space-y-3">
+      <label class="block text-sm font-bold text-oas-ink">Documents & Photos du diagnostic</label>
+      <app-media-uploader folder="oas/ordres-reparation/diagnostic" accept="image/*,application/pdf"
+        label="Déposez une photo ou un document PDF ici"
+        (uploaded)="onPieceJointeUploaded($event)"></app-media-uploader>
+
+      @if (piecesJointesDiagnostic.length > 0) {
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+          @for (pj of piecesJointesDiagnostic; track pj.id) {
+            <div class="relative border border-oas-line rounded-xl p-2 bg-oas-bg group flex flex-col">
+              <button type="button" (click)="deletePieceJointe(pj.id)"
+                class="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition cursor-pointer shadow-sm">
+                ✕
+              </button>
+              <a [href]="pj.url" target="_blank" rel="noopener" class="block">
+                @if (pj.type === 'PHOTO') {
+                  <img [src]="pj.url" class="w-full h-24 object-cover rounded-lg" alt="Document diagnostic" />
+                } @else {
+                  <div class="w-full h-24 rounded-lg bg-white border border-oas-line flex items-center justify-center text-xs font-bold text-oas-muted">PDF</div>
+                }
+              </a>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+}

@@ -11,6 +11,7 @@ export const STAGE_ORDER = ['Prise en charge', 'Diagnostic', 'Préparation', 'R�
 const STAGE_MAP: Record<string, { label: string; tone: BadgeTone }> = {
   A_FAIRE: { label: 'Prise en charge', tone: 'neutral' },
   EN_DIAGNOSTIC: { label: 'Diagnostic', tone: 'info' },
+  EN_ATTENTE_PIECES_MO: { label: 'Préparation', tone: 'pending' },
   EN_ATTENTE_PROFORMA: { label: 'Préparation', tone: 'pending' },
   PROFORMA_VALIDE: { label: 'Préparation', tone: 'pending' },
   EN_ATTENTE_COMMANDE: { label: 'Préparation', tone: 'pending' },

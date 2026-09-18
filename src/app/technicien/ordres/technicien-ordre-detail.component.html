@@ -161,7 +161,7 @@
         <ul class="mt-3 space-y-1">
           @for (lp of ordre.lignesOrdreReparationPieces; track lp.id) {
             <li class="text-sm text-oas-ink2 flex justify-between px-3 py-2 rounded-lg bg-oas-bg">
-              <span>{{ lp.piece.reference }}</span>
+              <span>{{ lp.piece?.reference || lp.piece?.designation || lp.designationPds || 'Pièce' }}</span>
               <span class="text-oas-muted">x{{ lp.quantite }}</span>
             </li>
           }
@@ -193,7 +193,7 @@
         <ul class="mt-3 space-y-1">
           @for (lmd of ordre.lignesOrdreReparationMainDoeuvres; track lmd.id) {
             <li class="text-sm text-oas-ink2 flex justify-between px-3 py-2 rounded-lg bg-oas-bg">
-              <span>{{ lmd.mainDoeuvre.categorie?.nom }}</span>
+              <span>{{ lmd.mainDoeuvre?.description || lmd.mainDoeuvre?.categorie?.nom || 'Prestation' }}</span>
               <span class="text-oas-muted">{{ lmd.nbreHeure }}h</span>
             </li>
           }

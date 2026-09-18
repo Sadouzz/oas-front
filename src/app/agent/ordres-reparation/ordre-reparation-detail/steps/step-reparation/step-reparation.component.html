@@ -1,0 +1,24 @@
+<app-alert [success]="successMessage" [error]="errorMessage" />
+
+@if (loading) {
+  <div class="flex flex-col items-center justify-center py-12 text-oas-muted">
+    <svg class="animate-spin h-8 w-8 text-oas-accent mb-2" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+    </svg>
+    <span>Chargement des informations...</span>
+  </div>
+} @else {
+  <div class="space-y-6">
+    <div class="flex items-center justify-between border-b border-oas-line pb-3">
+      <h2 class="text-lg font-bold text-oas-ink">Étape 8 · Travaux de réparation en cours</h2>
+      <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 animate-pulse">En cours</span>
+    </div>
+
+    <div class="p-6 bg-amber-50/50 border border-amber-200 rounded-2xl space-y-4">
+      <p class="text-sm text-amber-900">
+        Les mécaniciens et techniciens affectés effectuent actuellement les opérations définies sur le véhicule.
+      </p>
+    </div>
+  </div>
+}

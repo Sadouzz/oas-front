@@ -1,0 +1,61 @@
+<app-alert [success]="successMessage" [error]="errorMessage" />
+
+@if (loading) {
+  <div class="flex flex-col items-center justify-center py-12 text-oas-muted">
+    <svg class="animate-spin h-8 w-8 text-oas-accent mb-2" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+    </svg>
+    <span>Vérification des disponibilités en stock...</span>
+  </div>
+} @else {
+  <div class="space-y-6">
+    <div class="flex items-center justify-between border-b border-oas-line pb-3">
+      <h2 class="text-lg font-bold text-oas-ink">Étape 5 · Approvisionnement des pièces</h2>
+      <span class="text-xs text-oas-muted font-mono">{{ loadedOrdre?.numero }}</span>
+    </div>
+
+    @if (hasRuptureStock) {
+      <div class="p-5 bg-amber-50 border border-amber-200 rounded-2xl space-y-3">
+        <p class="text-sm font-bold text-amber-800">Des pièces nécessaires sont actuellement en rupture de stock :</p>
+        <ul class="list-disc pl-5 text-xs text-amber-900 space-y-1">
+          @for (r of rupturesOnly; track $index) {
+            <li><strong>{{ r.piece?.reference }}</strong> ({{ r.piece?.designation }}) : {{ r.manquant }} unité(s) à commander</li>
+          }
+        </ul>
+        <div class="flex gap-3 pt-2">
+          <button type="button" (click)="openBDCModal()"
+            class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition cursor-pointer">
+            Générer le bon de commande fournisseur
+          </button>
+        </div>
+      </div>
+    } @else {
+      <div class="p-6 bg-emerald-50 border border-emerald-200 rounded-2xl text-center space-y-2">
+        <p class="text-base font-bold text-emerald-800">Toutes les pièces requises sont disponibles en stock.</p>
+        <p class="text-xs text-emerald-700">Vous pouvez directement passer à l'étape suivante pour émettre le bon de sortie.</p>
+      </div>
+    }
+  </div>
+
+  <!-- Modal Bon de Commande pièces manquantes -->
+  @if (showBDCModal) {
+    <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+        <div class="bg-amber-600 px-6 py-4 flex items-center justify-between text-white">
+          <h3 class="font-bold text-sm">Génération du Bon de Commande</h3>
+          <button (click)="closeBDCModal()" class="p-1 hover:bg-white/20 rounded-lg">✕</button>
+        </div>
+        <div class="p-6 space-y-4">
+          <p class="text-xs text-oas-muted">Un bon de commande sera créé automatiquement pour approvisionner les pièces manquantes.</p>
+          <div class="flex gap-3 pt-2">
+            <button (click)="closeBDCModal()" class="flex-1 py-2.5 rounded-xl border border-oas-line text-sm font-semibold">Annuler</button>
+            <button (click)="createBonDeCommande()" [disabled]="bdcSaving" class="flex-1 py-2.5 rounded-xl bg-amber-600 text-white text-sm font-bold">
+              {{ bdcSaving ? 'Création...' : 'Confirmer la commande' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+}

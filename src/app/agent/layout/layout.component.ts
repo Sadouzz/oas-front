@@ -80,6 +80,9 @@ export class LayoutComponent implements OnInit, OnDestroy {
     '/admin/parametres/categories-main-doeuvre': { label: "Catégories Main d'œuvre", section: 'Paramètres' },
     '/admin/parametres/fiche-atelier': { label: 'Fiche Atelier', section: 'Paramètres' },
     '/ordres-reparation': { label: 'Ordres de réparation', section: 'Processus de réparation' },
+    '/ordres-reparation/nouveau': { label: 'Nouvel ordre de réparation', section: 'Processus de réparation' },
+    '/diagnostics': { label: 'Diagnostic', section: 'Processus de réparation' },
+    '/diagnostic': { label: 'Diagnostic', section: 'Processus de réparation' },
     '/techniciens': { label: 'Techniciens', section: 'Processus de réparation' },
     '/rendezvous': { label: 'Rendez-vous' },
     '/admin/users': { label: 'Utilisateurs', section: 'Administration' },
@@ -232,7 +235,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
   private syncSection(url: string) {
     const relUrl = this.getRelativeUrl(url);
-    if (['/fiches-atelier', '/ordres-reparation', '/techniciens'].some(p => relUrl.startsWith(p))) {
+    if (['/fiches-atelier', '/ordres-reparation', '/diagnostics', '/diagnostic', '/techniciens'].some(p => relUrl.startsWith(p))) {
       this.openSection = 'atelier';
     } else if (['/pieces-detachees', '/stock', '/seuil-alertes'].some(p => relUrl.startsWith(p)) && !relUrl.startsWith('/historique-bs')) {
       this.openSection = 'pieces';

@@ -1,0 +1,23 @@
+<app-alert [success]="successMessage" [error]="errorMessage" />
+
+@if (loading) {
+  <div class="flex flex-col items-center justify-center py-12 text-oas-muted">
+    <svg class="animate-spin h-8 w-8 text-oas-accent mb-2" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+    </svg>
+    <span>Chargement des informations...</span>
+  </div>
+} @else {
+  <div class="space-y-6">
+    <div class="flex items-center justify-between border-b border-oas-line pb-3">
+      <h2 class="text-lg font-bold text-oas-ink">Étape 10 · Véhicule réparé — Prêt pour livraison</h2>
+      <span class="text-xs text-oas-muted font-mono">{{ loadedOrdre?.numero }}</span>
+    </div>
+
+    <div class="p-6 bg-emerald-50 border border-emerald-200 rounded-2xl space-y-4 text-center">
+      <p class="text-base font-bold text-emerald-900">Le véhicule a été entièrement réparé, testé et nettoyé.</p>
+      <p class="text-xs text-emerald-700">Cliquez sur le bouton ci-dessous pour confirmer et enregistrer la remise du véhicule au client.</p>
+    </div>
+  </div>
+}

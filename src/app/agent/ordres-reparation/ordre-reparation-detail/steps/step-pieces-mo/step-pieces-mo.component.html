@@ -1,0 +1,150 @@
+<app-alert [success]="successMessage" [error]="errorMessage" />
+
+@if (loading) {
+  <div class="flex flex-col items-center justify-center py-12 text-oas-muted">
+    <svg class="animate-spin h-8 w-8 text-oas-accent mb-2" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+    </svg>
+    <span>Chargement des pièces et prestations...</span>
+  </div>
+} @else {
+  <div class="space-y-6">
+    <div class="flex items-center justify-between border-b border-oas-line pb-3">
+      <h2 class="text-lg font-bold text-oas-ink">Étape 3 · Pièces détachées & Main-d'œuvre</h2>
+      <div class="text-right">
+        <span class="text-xs text-oas-muted font-semibold uppercase block">Total estimé</span>
+        <strong class="text-lg font-extrabold text-oas-accent">{{ totalGeneral | number }} FCFA</strong>
+      </div>
+    </div>
+
+    <!-- Exigence : au moins une pièce ou main-d'œuvre -->
+    @if (!hasAtLeastOneItem) {
+      <div class="p-3.5 rounded-xl bg-amber-50/80 border border-amber-200 text-amber-900 text-xs font-semibold flex items-center gap-2.5">
+        <span>Veuillez ajouter au moins une pièce détachée ou une prestation de main-d'œuvre pour pouvoir valider cette étape.</span>
+      </div>
+    }
+
+    <!-- Ajout Pièces Catalogue -->
+    <div class="space-y-3">
+      <label class="block text-sm font-bold text-oas-ink">Ajouter une pièce du catalogue</label>
+      <div class="flex flex-wrap sm:flex-nowrap gap-3 items-center">
+        <div class="flex-1">
+          <app-searchable-select
+            [(ngModel)]="pieceAjouter"
+            [options]="piecesFiltrees"
+            bindValue="id"
+            placeholder="Rechercher une pièce par référence ou désignation..."
+            [bindLabel]="formatPiece">
+          </app-searchable-select>
+        </div>
+        <input type="number" [(ngModel)]="qteAjouter" min="1" placeholder="Qté"
+          class="w-24 px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm font-bold text-center" />
+        <button type="button" (click)="addPiece()" [disabled]="!pieceAjouter"
+          class="px-5 py-2.5 bg-oas-accent hover:bg-oas-accent-dark text-white rounded-xl text-xs font-bold transition cursor-pointer disabled:opacity-50">
+          Ajouter pièce
+        </button>
+      </div>
+    </div>
+
+    <!-- Tableau des Pièces -->
+    @if (lignesPieces.length > 0) {
+      <div class="overflow-x-auto rounded-xl border border-oas-line">
+        <table class="w-full text-xs text-left">
+          <thead class="bg-oas-bg text-oas-muted uppercase font-bold text-[11px] border-b border-oas-line">
+            <tr>
+              <th class="px-4 py-3">Désignation</th>
+              <th class="px-3 py-3 text-center">Qté</th>
+              <th class="px-3 py-3 text-right">Prix unit.</th>
+              <th class="px-3 py-3 text-right">Total</th>
+              <th class="px-3 py-3 text-center">Dispo</th>
+              <th class="px-3 py-3 text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-oas-line">
+            @for (l of lignesPieces; track $index) {
+              <tr>
+                <td class="px-4 py-3 font-semibold text-oas-ink">
+                  {{ l.isCustom ? l.designationPds : (l.piece?.reference + ' — ' + (l.piece?.designation || '')) }}
+                </td>
+                <td class="px-3 py-3 text-center font-bold">{{ l.quantite }}</td>
+                <td class="px-3 py-3 text-right">{{ (l.isCustom ? l.prixUnitaire : l.piece?.prix) | number }} FCFA</td>
+                <td class="px-3 py-3 text-right font-extrabold text-oas-ink">
+                  {{ ((l.isCustom ? (l.prixUnitaire || 0) : (l.piece?.prix || 0)) * l.quantite) | number }} FCFA
+                </td>
+                <td class="px-3 py-3 text-center">
+                  @if (l.manquant > 0) {
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700">
+                      Manque {{ l.manquant }}
+                    </span>
+                  } @else {
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">
+                      En stock
+                    </span>
+                  }
+                </td>
+                <td class="px-3 py-3 text-center">
+                  <button type="button" (click)="removePiece($index)" class="text-red-500 hover:text-red-700 p-1">✕</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- Ajout Main d'œuvre -->
+    <div class="border-t border-oas-line pt-4 space-y-3">
+      <label class="block text-sm font-bold text-oas-ink">Ajouter une prestation de Main-d'œuvre</label>
+      <div class="flex flex-wrap sm:flex-nowrap gap-3 items-center">
+        <div class="flex-1">
+          <app-searchable-select
+            [(ngModel)]="moAjouter"
+            [options]="moFiltrees"
+            bindValue="id"
+            placeholder="Sélectionner une prestation..."
+            [bindLabel]="formatMO">
+          </app-searchable-select>
+        </div>
+        <input type="number" [(ngModel)]="qteAjouterMO" min="1" placeholder="Heures"
+          class="w-24 px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm font-bold text-center" />
+        <button type="button" (click)="addMO()" [disabled]="!moAjouter"
+          class="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition cursor-pointer disabled:opacity-50">
+          Ajouter MO
+        </button>
+      </div>
+    </div>
+
+    <!-- Tableau MO -->
+    @if (lignesMO.length > 0) {
+      <div class="overflow-x-auto rounded-xl border border-oas-line">
+        <table class="w-full text-xs text-left">
+          <thead class="bg-oas-bg text-oas-muted uppercase font-bold text-[11px] border-b border-oas-line">
+            <tr>
+              <th class="px-4 py-3">Prestation</th>
+              <th class="px-3 py-3 text-center">Heures / Qté</th>
+              <th class="px-3 py-3 text-right">Tarif</th>
+              <th class="px-3 py-3 text-right">Total</th>
+              <th class="px-3 py-3 text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-oas-line">
+            @for (m of lignesMO; track $index) {
+              <tr>
+                <td class="px-4 py-3 font-semibold text-oas-ink">{{ m.mo.description }}</td>
+                <td class="px-3 py-3 text-center font-bold">{{ m.quantite }}</td>
+                <td class="px-3 py-3 text-right">{{ m.mo.prix | number }} FCFA</td>
+                <td class="px-3 py-3 text-right font-extrabold text-oas-ink">
+                  {{ ((m.mo.prix || 0) * m.quantite) | number }} FCFA
+                </td>
+                <td class="px-3 py-3 text-center">
+                  <button type="button" (click)="removeMO($index)" class="text-red-500 hover:text-red-700 p-1">✕</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+}

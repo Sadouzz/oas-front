@@ -37,6 +37,7 @@ export class TechnicienOrdresListComponent implements OnInit {
     const labels: Record<string, string> = {
       A_FAIRE: 'À faire',
       EN_DIAGNOSTIC: 'Diagnostic en cours',
+      EN_ATTENTE_PIECES_MO: 'En attente pièces & MO',
       EN_ATTENTE_PROFORMA: 'En attente proforma',
       PROFORMA_VALIDE: 'Proforma validé',
       EN_ATTENTE_COMMANDE: 'En attente commande',

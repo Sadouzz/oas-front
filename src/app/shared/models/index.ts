@@ -28,3 +28,4 @@ export * from '../../agent/fiches-atelier/models/fiche-atelier.model';
 export * from '../../agent/notes-prix/models/note-de-prix.model';
 export * from '../../agent/clients/models/client-model';
 export * from '../../agent/dashboard/models/dashboard.model';
+export * from '../../agent/diagnostics/models/diagnostic.model';

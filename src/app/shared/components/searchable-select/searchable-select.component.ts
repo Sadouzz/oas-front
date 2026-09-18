@@ -62,6 +62,7 @@ export class SearchableSelectComponent implements ControlValueAccessor {
   @Input() bindLabel: string | ((opt: any) => string) = 'nom';
   @Input() placeholder: string = 'Sélectionner...';
   @Output() change = new EventEmitter<any>();
+  @Output() search = new EventEmitter<string>();
 
   value: any = null;
   disabled = false;
@@ -108,6 +109,7 @@ export class SearchableSelectComponent implements ControlValueAccessor {
   onSearchChange(term: string) {
     this.searchTerm = term;
     this.open = true;
+    this.search.emit(term);
     if (term === '') {
       this.selectOption(null);
     }

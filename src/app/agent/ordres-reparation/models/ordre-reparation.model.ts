@@ -1,11 +1,25 @@
-export type StatutOrdre = 'A_FAIRE' | 'EN_DIAGNOSTIC' | 'EN_ATTENTE_PROFORMA' | 'PROFORMA_VALIDE' | 'EN_ATTENTE_COMMANDE' | 'EN_ATTENTE_SORTIE' | 'EN_ATTENTE_MECANICIEN' | 'EN_COURS' | 'EN_ATTENTE_PAIEMENT' | 'TERMINE' | 'LIVRE';
-export type StatutFiche = StatutOrdre;
+export type StatutOrdre =
+  | 'A_FAIRE'
+  | 'EN_DIAGNOSTIC'
+  | 'EN_ATTENTE_PIECES_MO'
+  | 'EN_ATTENTE_PROFORMA'
+  | 'PROFORMA_VALIDE'
+  | 'EN_ATTENTE_COMMANDE'
+  | 'EN_ATTENTE_SORTIE'
+  | 'EN_ATTENTE_MECANICIEN'
+  | 'EN_COURS'
+  | 'EN_ATTENTE_PAIEMENT'
+  | 'TERMINE'
+  | 'LIVRE';
 
 export type TypePieceJointeDiagnostic = 'PHOTO' | 'PDF';
 
+export type StatutDiagnostic = 'EN_ATTENTE' | 'EN_COURS' | 'TERMINE' | 'VALIDE' | 'ANNULE';
+
 export interface PieceJointeDiagnostic {
   id: number;
-  ordreReparationId: number;
+  diagnosticId?: number;
+  ordreReparationId?: number;
   url: string;
   type: TypePieceJointeDiagnostic;
   remarque: string | null;
@@ -15,10 +29,26 @@ export interface PieceJointeDiagnostic {
 
 export interface RemarqueDiagnostic {
   id: number;
-  ordreReparationId: number;
+  diagnosticId?: number;
+  ordreReparationId?: number;
   technicienNom: string | null;
+  technicien?: { id: number; firstName: string; lastName: string; specialite?: string | null } | null;
   contenu: string;
   createdAt: string;
+}
+
+export interface DiagnosticModel {
+  id?: number;
+  technicien?: { id: number; firstName: string; lastName: string; specialite?: string | null } | null;
+  observations?: string | null;
+  pannesDetectees?: string | null;
+  recommandations?: string | null;
+  kilometrage?: number | null;
+  statut?: StatutDiagnostic;
+  dateDebut?: string | null;
+  dateFin?: string | null;
+  piecesJointes?: PieceJointeDiagnostic[];
+  remarques?: RemarqueDiagnostic[];
 }
 
 export interface LigneReceptionOrdre {
@@ -44,7 +74,7 @@ export interface OrdreReparation {
   dateCreation: string;
   updatedAt: string;
   dateSortie: string | null;
-  statut: StatutFiche;
+  statut: StatutOrdre;
   vehicule: {
     id: number;
     immatriculation: string;
@@ -53,8 +83,9 @@ export interface OrdreReparation {
     kilometrage?: number | null;
     client?: { id: number; firstName: string; lastName: string; phone?: string } | null;
   } | null;
-  techniciens: { id: number; firstName: string; lastName: string; specialite?: string | null }[];
-  techniciensReparation: { id: number; firstName: string; lastName: string; specialite?: string | null }[];
+  diagnostic?: DiagnosticModel | null;
+  techniciens?: { id: number; firstName: string; lastName: string; specialite?: string | null }[];
+  techniciensReparation?: { id: number; firstName: string; lastName: string; specialite?: string | null }[];
   bonDeSortie?: { id: number; reference: string; statut: string } | null;
   lignesOrdreReparationPieces?: {
     id: number;
@@ -80,7 +111,7 @@ export interface OrdreReparationRequest {
   listeDefauts?: string;
   dateSortie?: string;
   vehiculeId: number;
-  statut?: StatutFiche;
+  statut?: StatutOrdre;
   lignesPieces?: { 
     pieceId?: number | null; 
     quantite: number; 

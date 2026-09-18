@@ -53,7 +53,7 @@ export class OrdreReparationService {
   }
 
   updateStatut(ordreId: number, statut: StatutOrdre): Observable<OrdreReparation> {
-    return this.http.patch<OrdreReparation>(`${this.api}/${ordreId}/statut`, null, { params: { statut } });
+    return this.http.patch<OrdreReparation>(`${this.api}/${ordreId}/statut`, { statut }, { params: { statut } });
   }
 
   // ─── Pièces jointes de diagnostic ─────────────────────

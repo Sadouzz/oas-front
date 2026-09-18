@@ -1,0 +1,55 @@
+<app-alert [success]="successMessage" [error]="errorMessage" />
+
+@if (loading) {
+  <div class="flex flex-col items-center justify-center py-12 text-oas-muted">
+    <svg class="animate-spin h-8 w-8 text-oas-accent mb-2" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+    </svg>
+    <span>Chargement du devis proforma...</span>
+  </div>
+} @else {
+  <div class="space-y-6">
+    <div class="flex items-center justify-between border-b border-oas-line pb-3">
+      <h2 class="text-lg font-bold text-oas-ink">Étape 4 · Devis Proforma client</h2>
+      <span class="text-xs text-oas-muted font-mono">{{ loadedOrdre?.numero }}</span>
+    </div>
+
+    @if (proformaChargee) {
+      <div class="p-6 bg-oas-bg/50 rounded-2xl border border-oas-line space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="text-xs text-oas-muted font-semibold block uppercase">Proforma N°</span>
+            <strong class="text-xl font-extrabold text-oas-ink font-mono">{{ proformaChargee.numero }}</strong>
+          </div>
+          <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+            {{ proformaChargee.statut || 'Générée' }}
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3 border-t border-oas-line">
+          <div>
+            <span class="text-xs text-oas-muted block">Montant HT</span>
+            <strong class="text-base font-bold text-oas-ink">{{ proformaChargee.montantHT | number }} FCFA</strong>
+          </div>
+          <div>
+            <span class="text-xs text-oas-muted block">TVA ({{ proformaChargee.tva }}%)</span>
+            <strong class="text-base font-bold text-oas-ink">{{ proformaChargee.montantTVA | number }} FCFA</strong>
+          </div>
+          <div>
+            <span class="text-xs text-oas-muted block">Total TTC</span>
+            <strong class="text-lg font-extrabold text-oas-accent">{{ proformaChargee.montantTTC | number }} FCFA</strong>
+          </div>
+        </div>
+      </div>
+    } @else {
+      <div class="text-center py-10 space-y-3">
+        <p class="text-sm text-oas-muted">Aucune proforma générée pour le moment.</p>
+        <button type="button" (click)="genererProforma()" [disabled]="saving"
+          class="px-6 py-3 bg-oas-accent hover:bg-oas-accent-dark text-white rounded-xl text-sm font-bold transition cursor-pointer shadow-lg shadow-oas-accent/25">
+          Générer la proforma automatiquement
+        </button>
+      </div>
+    }
+  </div>
+}

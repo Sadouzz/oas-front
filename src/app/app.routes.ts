@@ -127,10 +127,117 @@ export const routes: Routes = [
           import('./agent/fournisseurs/fournisseurs.component').then(m => m.FournisseursComponent),
       },
       {
+        path: 'diagnostics',
+        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER'])],
+        loadComponent: () =>
+          import('./agent/diagnostics/diagnostics.component').then(m => m.DiagnosticsComponent),
+      },
+      {
+        path: 'diagnostic',
+        redirectTo: 'diagnostics',
+        pathMatch: 'full',
+      },
+      {
         path: 'ordres-reparation',
         canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER'])],
         loadComponent: () =>
           import('./agent/ordres-reparation/ordres-reparation.component').then(m => m.OrdresReparationComponent),
+      },
+      {
+        path: 'ordres-reparation/nouveau',
+        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER'])],
+        loadComponent: () =>
+          import('./agent/ordres-reparation/ordre-reparation-form/ordre-reparation-form.component').then(
+            m => m.OrdreReparationFormComponent
+          ),
+      },
+      {
+        path: 'ordres-reparation/:id',
+        canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER'])],
+        loadComponent: () =>
+          import('./agent/ordres-reparation/ordre-reparation-detail/ordre-reparation-detail.component').then(
+            m => m.OrdreReparationDetailComponent
+          ),
+        children: [
+          { path: '', redirectTo: 'reception', pathMatch: 'full' },
+          {
+            path: 'reception',
+            loadComponent: () =>
+              import('./agent/ordres-reparation/ordre-reparation-detail/steps/step-reception/step-reception.component').then(
+                m => m.StepReceptionComponent
+              ),
+          },
+          {
+            path: 'diagnostic',
+            loadComponent: () =>
+              import('./agent/ordres-reparation/ordre-reparation-detail/steps/step-diagnostic/step-diagnostic.component').then(
+                m => m.StepDiagnosticComponent
+              ),
+          },
+          {
+            path: 'pieces-mo',
+            loadComponent: () =>
+              import('./agent/ordres-reparation/ordre-reparation-detail/steps/step-pieces-mo/step-pieces-mo.component').then(
+                m => m.StepPiecesMoComponent
+              ),
+          },
+          {
+            path: 'proforma',
+            loadComponent: () =>
+              import('./agent/ordres-reparation/ordre-reparation-detail/steps/step-proforma/step-proforma.component').then(
+                m => m.StepProformaComponent
+              ),
+          },
+          {
+            path: 'approvisionnement',
+            loadComponent: () =>
+              import('./agent/ordres-reparation/ordre-reparation-detail/steps/step-approvisionnement/step-approvisionnement.component').then(
+                m => m.StepApprovisionnementComponent
+              ),
+          },
+          {
+            path: 'bon-sortie',
+            loadComponent: () =>
+              import('./agent/ordres-reparation/ordre-reparation-detail/steps/step-bon-sortie/step-bon-sortie.component').then(
+                m => m.StepBonSortieComponent
+              ),
+          },
+          {
+            path: 'assignation',
+            loadComponent: () =>
+              import('./agent/ordres-reparation/ordre-reparation-detail/steps/step-assignation/step-assignation.component').then(
+                m => m.StepAssignationComponent
+              ),
+          },
+          {
+            path: 'reparation',
+            loadComponent: () =>
+              import('./agent/ordres-reparation/ordre-reparation-detail/steps/step-reparation/step-reparation.component').then(
+                m => m.StepReparationComponent
+              ),
+          },
+          {
+            path: 'paiement',
+            loadComponent: () =>
+              import('./agent/ordres-reparation/ordre-reparation-detail/steps/step-paiement/step-paiement.component').then(
+                m => m.StepPaiementComponent
+              ),
+          },
+          {
+            path: 'livraison',
+            loadComponent: () =>
+              import('./agent/ordres-reparation/ordre-reparation-detail/steps/step-livraison/step-livraison.component').then(
+                m => m.StepLivraisonComponent
+              ),
+          },
+          {
+            path: 'cloture',
+            loadComponent: () =>
+              import('./agent/ordres-reparation/ordre-reparation-detail/steps/step-cloture/step-cloture.component').then(
+                m => m.StepClotureComponent
+              ),
+          },
+        ]
       },
       {
         path: 'techniciens',
