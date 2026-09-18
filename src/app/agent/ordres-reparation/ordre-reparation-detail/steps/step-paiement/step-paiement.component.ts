@@ -86,7 +86,7 @@ export class StepPaiementComponent implements OnInit {
 
   validerPaiement(): void {
     this.saving = true;
-    this.ordreService.updateStatut(this.ordreId, 'TERMINE').subscribe({
+    this.ordreService.updateStatut(this.ordreId, 'PRET_A_LIVRER').subscribe({
       next: () => {
         this.saving = false;
         this.successMessage = 'Paiement validé. Véhicule prêt pour livraison.';

@@ -1,8 +1,15 @@
 <div class="space-y-5">
 
-  <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4">
-    <h1 class="text-xl font-bold text-oas-ink">Mes ordres de réparation</h1>
-    <p class="text-sm text-oas-muted mt-1">Ordres où vous êtes assigné (diagnostic ou réparation)</p>
+  <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h1 class="text-xl font-bold text-oas-ink">Mes ordres de réparation</h1>
+      <p class="text-sm text-oas-muted mt-1">Ordres où vous êtes assigné (diagnostic ou réparation)</p>
+    </div>
+    @if (totalElements > 0) {
+      <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-oas-bg text-oas-muted border border-oas-line">
+        {{ totalElements }} ordre{{ totalElements > 1 ? 's' : '' }} au total
+      </span>
+    }
   </div>
 
   @if (errorMessage) {
@@ -34,6 +41,17 @@
           </button>
         }
       </div>
+
+      @if (totalElements > 0) {
+        <app-pagination
+          [page]="page"
+          [totalPages]="totalPages"
+          [total]="totalElements"
+          [pageSize]="pageSize"
+          (prev)="prevPage()"
+          (next)="nextPage()"
+          (pageChange)="onPageChange($event)" />
+      }
     }
   </div>
 </div>

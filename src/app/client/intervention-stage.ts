@@ -9,17 +9,37 @@ import { BadgeTone } from './ui/status-badge/status-badge.component';
 export const STAGE_ORDER = ['Prise en charge', 'Diagnostic', 'Préparation', 'Réparation en cours', 'Terminée'] as const;
 
 const STAGE_MAP: Record<string, { label: string; tone: BadgeTone }> = {
+  RECEPTION: { label: 'Prise en charge', tone: 'neutral' },
   A_FAIRE: { label: 'Prise en charge', tone: 'neutral' },
+
+  DIAGNOSTIC: { label: 'Diagnostic', tone: 'info' },
   EN_DIAGNOSTIC: { label: 'Diagnostic', tone: 'info' },
+
+  PIECES_MO: { label: 'Préparation', tone: 'pending' },
   EN_ATTENTE_PIECES_MO: { label: 'Préparation', tone: 'pending' },
+
+  PROFORMA: { label: 'Préparation', tone: 'pending' },
   EN_ATTENTE_PROFORMA: { label: 'Préparation', tone: 'pending' },
+
   PROFORMA_VALIDE: { label: 'Préparation', tone: 'pending' },
+  BON_DE_COMMANDE: { label: 'Préparation', tone: 'pending' },
   EN_ATTENTE_COMMANDE: { label: 'Préparation', tone: 'pending' },
+
+  BON_DE_SORTIE: { label: 'Préparation', tone: 'pending' },
   EN_ATTENTE_SORTIE: { label: 'Préparation', tone: 'pending' },
+
+  ASSIGN_TECHNICIEN: { label: 'Préparation', tone: 'pending' },
   EN_ATTENTE_MECANICIEN: { label: 'Préparation', tone: 'pending' },
+
+  REPARATION: { label: 'Réparation en cours', tone: 'info' },
   EN_COURS: { label: 'Réparation en cours', tone: 'info' },
+
+  PAIEMENT: { label: 'Terminée', tone: 'success' },
   EN_ATTENTE_PAIEMENT: { label: 'Terminée', tone: 'success' },
+
+  PRET_A_LIVRER: { label: 'Terminée', tone: 'success' },
   TERMINE: { label: 'Terminée', tone: 'success' },
+  
   LIVRE: { label: 'Terminée', tone: 'success' },
 };
 

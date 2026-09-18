@@ -6,19 +6,19 @@ import { OrdreReparationService } from '../ordre-reparation.service';
 import { DiagnosticService } from '../../diagnostics/diagnostic.service';
 import { VehiculeService } from '../../vehicules/vehicule.service';
 import { AlertComponent } from '../../../shared/components/alert/alert.component';
-import { OrdreReparation, StatutOrdre, VehiculeModel } from '../../../shared/models';
+import { OrdreReparation, StatutOrdre, VehiculeModel, STATUT_ETAPES, getEtapeFromStatut } from '../../../shared/models';
 
 export const STEP_ROUTES: { step: number; path: string; statut: StatutOrdre; label: string }[] = [
-  { step: 1, path: 'reception', statut: 'A_FAIRE', label: 'Réception' },
-  { step: 2, path: 'diagnostic', statut: 'EN_DIAGNOSTIC', label: 'Diagnostic' },
-  { step: 3, path: 'pieces-mo', statut: 'EN_ATTENTE_PIECES_MO', label: 'Pièces & MO' },
-  { step: 4, path: 'proforma', statut: 'EN_ATTENTE_PROFORMA', label: 'Proforma' },
-  { step: 5, path: 'approvisionnement', statut: 'EN_ATTENTE_COMMANDE', label: 'Approv.' },
-  { step: 6, path: 'bon-sortie', statut: 'EN_ATTENTE_SORTIE', label: 'Attente BS' },
-  { step: 7, path: 'assignation', statut: 'EN_ATTENTE_MECANICIEN', label: 'Assign. Tech.' },
-  { step: 8, path: 'reparation', statut: 'EN_COURS', label: 'Réparation' },
-  { step: 9, path: 'paiement', statut: 'EN_ATTENTE_PAIEMENT', label: 'Paiement' },
-  { step: 10, path: 'livraison', statut: 'TERMINE', label: 'Prêt' },
+  { step: 1, path: 'reception', statut: 'RECEPTION', label: 'Réception' },
+  { step: 2, path: 'diagnostic', statut: 'DIAGNOSTIC', label: 'Diagnostic' },
+  { step: 3, path: 'pieces-mo', statut: 'PIECES_MO', label: 'Pièces & MO' },
+  { step: 4, path: 'proforma', statut: 'PROFORMA', label: 'Proforma' },
+  { step: 5, path: 'approvisionnement', statut: 'BON_DE_COMMANDE', label: 'Approv.' },
+  { step: 6, path: 'bon-sortie', statut: 'BON_DE_SORTIE', label: 'Attente BS' },
+  { step: 7, path: 'assignation', statut: 'ASSIGN_TECHNICIEN', label: 'Assign. Tech.' },
+  { step: 8, path: 'reparation', statut: 'REPARATION', label: 'Réparation' },
+  { step: 9, path: 'paiement', statut: 'PAIEMENT', label: 'Paiement' },
+  { step: 10, path: 'livraison', statut: 'PRET_A_LIVRER', label: 'Prêt' },
   { step: 11, path: 'cloture', statut: 'LIVRE', label: 'Livré' },
 ];
 
@@ -71,6 +71,9 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
       const nbMO = this.loadedOrdre?.lignesOrdreReparationMainDoeuvres?.length ?? 0;
       return (nbPieces === 0 && nbMO === 0);
     }
+    if (this.currentStep === 4) {
+      return !this.activeChild?.isProformaValide;
+    }
     return false;
   }
 
@@ -93,6 +96,15 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
         return;
       }
     }
+    if (this.currentStep === 4) {
+      if (!this.activeChild?.isProformaValide) {
+        return;
+      }
+      if (this.activeChild && typeof this.activeChild.passerEtapeSuivante === 'function') {
+        this.activeChild.passerEtapeSuivante();
+        return;
+      }
+    }
     if (this.activeChild && typeof this.activeChild.validateStep === 'function') {
       this.activeChild.validateStep();
     } else {
@@ -109,7 +121,7 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
       case 3:
         return 'Valider les pièces & MO';
       case 4:
-        return 'Valider le devis proforma';
+        return 'Suivant';
       case 5:
         return this.activeChild?.hasRuptureStock ? 'Générer le Bon de Commande' : 'Passer au Bon de Sortie';
       case 6:
@@ -198,7 +210,7 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
 
         if (!this.hasAutoRedirected && (lastSegment === this.ordreId.toString() || lastSegment === 'reception')) {
           this.hasAutoRedirected = true;
-          if (o.statut && o.statut !== 'A_FAIRE') {
+          if (o.statut && o.statut !== 'RECEPTION' && o.statut !== 'A_FAIRE') {
             const targetPath = this.statutToPath(o.statut);
             if (targetPath !== lastSegment) {
               this.router.navigate(['/app/ordres-reparation', this.ordreId, targetPath], { replaceUrl: true });
@@ -251,16 +263,26 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
 
   statutToPath(s?: string | null): string {
     switch (s) {
+      case 'RECEPTION':
       case 'A_FAIRE': return 'reception';
+      case 'DIAGNOSTIC':
       case 'EN_DIAGNOSTIC': return 'diagnostic';
+      case 'PIECES_MO':
       case 'EN_ATTENTE_PIECES_MO': return 'pieces-mo';
+      case 'PROFORMA':
       case 'EN_ATTENTE_PROFORMA': return 'proforma';
-      case 'PROFORMA_VALIDE': return 'approvisionnement';
+      case 'BON_DE_COMMANDE':
+      case 'PROFORMA_VALIDE':
       case 'EN_ATTENTE_COMMANDE': return 'approvisionnement';
+      case 'BON_DE_SORTIE':
       case 'EN_ATTENTE_SORTIE': return 'bon-sortie';
+      case 'ASSIGN_TECHNICIEN':
       case 'EN_ATTENTE_MECANICIEN': return 'assignation';
+      case 'REPARATION':
       case 'EN_COURS': return 'reparation';
+      case 'PAIEMENT':
       case 'EN_ATTENTE_PAIEMENT': return 'paiement';
+      case 'PRET_A_LIVRER':
       case 'TERMINE': return 'livraison';
       case 'LIVRE': return 'cloture';
       default: return 'reception';
@@ -268,27 +290,13 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
   }
 
   statutToStep(s?: string | null): number {
-    switch (s) {
-      case 'A_FAIRE': return 1;
-      case 'EN_DIAGNOSTIC': return 2;
-      case 'EN_ATTENTE_PIECES_MO': return 3;
-      case 'EN_ATTENTE_PROFORMA': return 4;
-      case 'PROFORMA_VALIDE': return 5;
-      case 'EN_ATTENTE_COMMANDE': return 5;
-      case 'EN_ATTENTE_SORTIE': return 6;
-      case 'EN_ATTENTE_MECANICIEN': return 7;
-      case 'EN_COURS': return 8;
-      case 'EN_ATTENTE_PAIEMENT': return 9;
-      case 'TERMINE': return 10;
-      case 'LIVRE': return 11;
-      default: return 1;
-    }
+    return getEtapeFromStatut(s);
   }
 
   get maxAllowedStep(): number {
-    let s = this.loadedOrdre?.statut || 'A_FAIRE';
-    if (s === 'A_FAIRE' && (this.hasDiagnostic || this.loadedOrdre?.diagnostic)) {
-      s = 'EN_DIAGNOSTIC';
+    let s = this.loadedOrdre?.statut || 'RECEPTION';
+    if ((s === 'RECEPTION' || s === 'A_FAIRE') && (this.hasDiagnostic || this.loadedOrdre?.diagnostic)) {
+      s = 'DIAGNOSTIC';
     }
     return Math.max(this.statutToStep(s), this.currentStep);
   }

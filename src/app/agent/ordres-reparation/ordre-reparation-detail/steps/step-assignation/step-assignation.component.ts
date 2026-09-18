@@ -117,7 +117,7 @@ export class StepAssignationComponent implements OnInit {
 
   demarrerReparation(): void {
     this.saving = true;
-    this.ordreService.updateStatut(this.ordreId, 'EN_COURS').subscribe({
+    this.ordreService.updateStatut(this.ordreId, 'REPARATION').subscribe({
       next: () => {
         this.saving = false;
         this.successMessage = 'Réparation lancée avec succès. Redirection...';

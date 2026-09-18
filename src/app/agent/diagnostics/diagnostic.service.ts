@@ -6,14 +6,12 @@ import { environment } from '../../../environments/environment';
 import {
   DiagnosticRequest,
   DiagnosticResponse,
-  DiagnosticStepDto
-} from './models/diagnostic.model';
-import {
+  DiagnosticStepDto,
   PieceJointeDiagnostic,
   RemarqueDiagnostic,
   TypePieceJointeDiagnostic,
   StatutDiagnostic
-} from '../ordres-reparation/models/ordre-reparation.model';
+} from './models/diagnostic.model';
 
 @Injectable({ providedIn: 'root' })
 export class DiagnosticService {

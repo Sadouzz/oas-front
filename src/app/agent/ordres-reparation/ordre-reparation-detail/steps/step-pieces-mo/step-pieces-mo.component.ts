@@ -260,12 +260,12 @@ export class StepPiecesMoComponent implements OnInit {
       numero: this.loadedOrdre?.numero || '',
       descriptionTravaux: this.loadedOrdre?.descriptionTravaux || '',
       vehiculeId: this.loadedOrdre?.vehicule?.id || 0,
-      statut: 'EN_ATTENTE_PROFORMA' as StatutOrdre,
+      statut: 'PROFORMA' as StatutOrdre,
       lignesPieces: payloadLignesPieces,
       lignesMainDoeuvres: payloadLignesMO,
     }).subscribe({
       next: () => {
-        this.ordreService.updateStatut(this.ordreId, 'EN_ATTENTE_PROFORMA').subscribe({
+        this.ordreService.updateStatut(this.ordreId, 'PROFORMA').subscribe({
           next: () => {},
           error: () => {}
         });

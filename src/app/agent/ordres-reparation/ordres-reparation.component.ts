@@ -11,20 +11,20 @@ import { BasePaginatedComponent } from '../../shared/components/base-paginated.c
 import {
   OrdreReparation,
   StatutOrdre,
+  getEtapeFromStatut
 } from '../../shared/models';
 
 export const STATUT_STEPS: { statut: StatutOrdre; label: string }[] = [
-  { statut: 'A_FAIRE', label: 'Réception' },
-  { statut: 'EN_DIAGNOSTIC', label: 'Diagnostic' },
-  { statut: 'EN_ATTENTE_PIECES_MO', label: 'Pièces & MO' },
-  { statut: 'EN_ATTENTE_PROFORMA', label: 'Proforma' },
-  { statut: 'PROFORMA_VALIDE', label: 'Devis validé' },
-  { statut: 'EN_ATTENTE_COMMANDE', label: 'Approv.' },
-  { statut: 'EN_ATTENTE_SORTIE', label: 'Attente BS' },
-  { statut: 'EN_ATTENTE_MECANICIEN', label: 'Assign. Tech.' },
-  { statut: 'EN_COURS', label: 'Réparation' },
-  { statut: 'EN_ATTENTE_PAIEMENT', label: 'Paiement' },
-  { statut: 'TERMINE', label: 'Prêt' },
+  { statut: 'RECEPTION', label: 'Réception' },
+  { statut: 'DIAGNOSTIC', label: 'Diagnostic' },
+  { statut: 'PIECES_MO', label: 'Pièces & MO' },
+  { statut: 'PROFORMA', label: 'Proforma' },
+  { statut: 'BON_DE_COMMANDE', label: 'Approv.' },
+  { statut: 'BON_DE_SORTIE', label: 'Attente BS' },
+  { statut: 'ASSIGN_TECHNICIEN', label: 'Assign. Tech.' },
+  { statut: 'REPARATION', label: 'Réparation' },
+  { statut: 'PAIEMENT', label: 'Paiement' },
+  { statut: 'PRET_A_LIVRER', label: 'Prêt' },
   { statut: 'LIVRE', label: 'Livré' },
 ];
 
@@ -123,16 +123,26 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
 
   statutToStepPath(statut?: string | null): string {
     switch (statut) {
+      case 'RECEPTION':
       case 'A_FAIRE': return 'reception';
+      case 'DIAGNOSTIC':
       case 'EN_DIAGNOSTIC': return 'diagnostic';
+      case 'PIECES_MO':
       case 'EN_ATTENTE_PIECES_MO': return 'pieces-mo';
+      case 'PROFORMA':
       case 'EN_ATTENTE_PROFORMA': return 'proforma';
-      case 'PROFORMA_VALIDE': return 'approvisionnement';
+      case 'BON_DE_COMMANDE':
+      case 'PROFORMA_VALIDE':
       case 'EN_ATTENTE_COMMANDE': return 'approvisionnement';
+      case 'BON_DE_SORTIE':
       case 'EN_ATTENTE_SORTIE': return 'bon-sortie';
+      case 'ASSIGN_TECHNICIEN':
       case 'EN_ATTENTE_MECANICIEN': return 'assignation';
+      case 'REPARATION':
       case 'EN_COURS': return 'reparation';
+      case 'PAIEMENT':
       case 'EN_ATTENTE_PAIEMENT': return 'paiement';
+      case 'PRET_A_LIVRER':
       case 'TERMINE': return 'livraison';
       case 'LIVRE': return 'cloture';
       default: return 'reception';
@@ -248,16 +258,26 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
   // ─── Helpers Visuels ──────────────────────────────────
   statutColor(o: OrdreReparation): string {
     switch (o?.statut) {
+      case 'RECEPTION':
       case 'A_FAIRE': return '#ef4444';
+      case 'DIAGNOSTIC':
       case 'EN_DIAGNOSTIC': return '#f59e0b';
+      case 'PIECES_MO':
       case 'EN_ATTENTE_PIECES_MO': return '#8b5cf6';
+      case 'PROFORMA':
       case 'EN_ATTENTE_PROFORMA': return '#6366f1';
-      case 'PROFORMA_VALIDE': return '#10b981';
+      case 'BON_DE_COMMANDE':
+      case 'PROFORMA_VALIDE':
       case 'EN_ATTENTE_COMMANDE': return '#ec4899';
+      case 'BON_DE_SORTIE':
       case 'EN_ATTENTE_SORTIE': return '#6366f1';
+      case 'ASSIGN_TECHNICIEN':
       case 'EN_ATTENTE_MECANICIEN': return '#06b6d4';
+      case 'REPARATION':
       case 'EN_COURS': return '#3b82f6';
+      case 'PAIEMENT':
       case 'EN_ATTENTE_PAIEMENT': return '#f97316';
+      case 'PRET_A_LIVRER':
       case 'TERMINE': return '#10b981';
       case 'LIVRE': return '#059669';
       default: return '#6b7280';
@@ -266,11 +286,22 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
 
   statutLabel(o: OrdreReparation): string {
     const step = STATUT_STEPS.find(s => s.statut === o?.statut);
-    return step ? step.label : (o?.statut ?? '—');
+    if (step) return step.label;
+    if (o?.statut === 'A_FAIRE') return 'Réception';
+    if (o?.statut === 'EN_DIAGNOSTIC') return 'Diagnostic';
+    if (o?.statut === 'EN_ATTENTE_PIECES_MO') return 'Pièces & MO';
+    if (o?.statut === 'EN_ATTENTE_PROFORMA') return 'Proforma';
+    if (o?.statut === 'EN_ATTENTE_COMMANDE' || o?.statut === 'PROFORMA_VALIDE') return 'Approv.';
+    if (o?.statut === 'EN_ATTENTE_SORTIE') return 'Attente BS';
+    if (o?.statut === 'EN_ATTENTE_MECANICIEN') return 'Assign. Tech.';
+    if (o?.statut === 'EN_COURS') return 'Réparation';
+    if (o?.statut === 'EN_ATTENTE_PAIEMENT') return 'Paiement';
+    if (o?.statut === 'TERMINE') return 'Prêt';
+    return o?.statut ?? '—';
   }
 
   statutStepIndex(o: OrdreReparation): number {
-    return STATUT_STEPS.findIndex(s => s.statut === o?.statut);
+    return getEtapeFromStatut(o?.statut) - 1;
   }
 
   ordreInitials(o: OrdreReparation): string {

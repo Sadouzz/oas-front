@@ -98,7 +98,7 @@ export class StepApprovisionnementComponent implements OnInit {
       lignes
     } as any).subscribe({
       next: () => {
-        this.ordreService.updateStatut(this.ordreId, 'EN_ATTENTE_SORTIE').subscribe({
+        this.ordreService.updateStatut(this.ordreId, 'BON_DE_SORTIE').subscribe({
           next: () => {
             this.bdcSaving = false;
             this.showBDCModal = false;
@@ -130,7 +130,7 @@ export class StepApprovisionnementComponent implements OnInit {
   }
 
   passerEtapeSuivante(): void {
-    this.ordreService.updateStatut(this.ordreId, 'EN_ATTENTE_SORTIE').subscribe({
+    this.ordreService.updateStatut(this.ordreId, 'BON_DE_SORTIE').subscribe({
       next: () => {
         this.router.navigate(['/app/ordres-reparation', this.ordreId, 'bon-sortie']);
       },

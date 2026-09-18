@@ -209,14 +209,14 @@ export class StepReceptionComponent implements OnInit {
       lignesTravaux: this.lignesTravaux.getRawValue() as LigneTravailOrdre[],
       lignesReception: this.lignesReception.getRawValue() as LigneReceptionOrdre[],
       vehiculeId: Number(raw.vehiculeId),
-      statut: 'EN_DIAGNOSTIC' as StatutOrdre
+      statut: 'DIAGNOSTIC' as StatutOrdre
     };
 
     this.saving = true;
     this.ordreService.update(this.ordreId, payload).subscribe({
       next: () => {
         // Tente également la mise à jour explicite du statut de l'ordre
-        this.ordreService.updateStatut(this.ordreId, 'EN_DIAGNOSTIC').subscribe({
+        this.ordreService.updateStatut(this.ordreId, 'DIAGNOSTIC').subscribe({
           next: () => {},
           error: () => {}
         });

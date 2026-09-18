@@ -7,8 +7,7 @@ import { TechnicienPortalService } from '../services/technicien-portal.service';
 import { PieceDetacheeService, PieceDetache } from '../../agent/pieces-detachees/piece-detachee.service';
 import { MainDoeuvreService, MainDoeuvreModel } from '../../agent/main-doeuvre/main-doeuvre.service';
 import { MediaUploaderComponent } from '../../shared/components/media-uploader/media-uploader.component';
-import { OrdreReparation, PieceJointeDiagnostic, TypePieceJointeDiagnostic, CloudinaryUploadResult } from '../../shared/models';
-import { RemarqueDiagnostic } from '../../agent/ordres-reparation/models/ordre-reparation.model';
+import { OrdreReparation, PieceJointeDiagnostic, TypePieceJointeDiagnostic, RemarqueDiagnostic, CloudinaryUploadResult } from '../../shared/models';
 
 @Component({
   selector: 'app-technicien-ordre-detail',

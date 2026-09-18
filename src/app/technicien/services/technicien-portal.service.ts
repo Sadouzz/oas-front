@@ -1,9 +1,23 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { OrdreReparation, PieceJointeDiagnostic, TypePieceJointeDiagnostic, Technicien } from '../../shared/models';
-import { RemarqueDiagnostic } from '../../agent/ordres-reparation/models/ordre-reparation.model';
+import { OrdreReparation, PieceJointeDiagnostic, TypePieceJointeDiagnostic, RemarqueDiagnostic, Technicien, extractContent } from '../../shared/models';
+
+export interface VehiculeSummary {
+  id?: number;
+  immatriculation: string;
+  marque: string;
+  modele: string;
+}
+
+export interface OrdreReparationTechnicienSummary {
+  id: number;
+  numero: string;
+  statut: string;
+  dateCreation: string;
+  vehicule?: VehiculeSummary;
+}
 
 @Injectable({ providedIn: 'root' })
 export class TechnicienPortalService {
@@ -14,8 +28,12 @@ export class TechnicienPortalService {
     return this.http.get<Technicien>(`${this.api}/me`);
   }
 
-  getMesOrdresReparation(): Observable<OrdreReparation[]> {
-    return this.http.get<OrdreReparation[]>(`${this.api}/ordres-reparation`);
+  getMesOrdresReparation(page: number = 0, size: number = 10): Observable<any> {
+    const params: Record<string, string> = {
+      page: page.toString(),
+      size: size.toString()
+    };
+    return this.http.get<any>(`${this.api}/ordres-reparation`, { params });
   }
 
   getOrdreReparation(id: number): Observable<OrdreReparation> {

@@ -1,4 +1,43 @@
-import { StatutDiagnostic, TypePieceJointeDiagnostic, PieceJointeDiagnostic, RemarqueDiagnostic, StatutOrdre } from '../../ordres-reparation/models/ordre-reparation.model';
+import { StatutOrdre } from '../../ordres-reparation/models/ordre-reparation.model';
+
+export type TypePieceJointeDiagnostic = 'PHOTO' | 'PDF';
+
+export type StatutDiagnostic = 'EN_ATTENTE' | 'EN_COURS' | 'TERMINE' | 'VALIDE' | 'ANNULE';
+
+export interface PieceJointeDiagnostic {
+  id: number;
+  diagnosticId?: number;
+  ordreReparationId?: number;
+  url: string;
+  type: TypePieceJointeDiagnostic;
+  remarque: string | null;
+  technicienNom: string | null;
+  createdAt: string;
+}
+
+export interface RemarqueDiagnostic {
+  id: number;
+  diagnosticId?: number;
+  ordreReparationId?: number;
+  technicienNom: string | null;
+  technicien?: { id: number; firstName: string; lastName: string; specialite?: string | null } | null;
+  contenu: string;
+  createdAt: string;
+}
+
+export interface DiagnosticModel {
+  id?: number;
+  technicien?: { id: number; firstName: string; lastName: string; specialite?: string | null } | null;
+  observations?: string | null;
+  pannesDetectees?: string | null;
+  recommandations?: string | null;
+  kilometrage?: number | null;
+  statut?: StatutDiagnostic;
+  dateDebut?: string | null;
+  dateFin?: string | null;
+  piecesJointes?: PieceJointeDiagnostic[];
+  remarques?: RemarqueDiagnostic[];
+}
 
 export interface DiagnosticRequest {
   ordreReparationId: number;

@@ -1,55 +1,88 @@
+import type { DiagnosticModel } from '../../diagnostics/models/diagnostic.model';
+
+export enum StatutOrdreReparation {
+  RECEPTION = 'RECEPTION',
+  A_FAIRE = 'A_FAIRE',
+  DIAGNOSTIC = 'DIAGNOSTIC',
+  PIECES_MO = 'PIECES_MO',
+  PROFORMA = 'PROFORMA',
+  BON_DE_COMMANDE = 'BON_DE_COMMANDE',
+  BON_DE_SORTIE = 'BON_DE_SORTIE',
+  ASSIGN_TECHNICIEN = 'ASSIGN_TECHNICIEN',
+  REPARATION = 'REPARATION',
+  PAIEMENT = 'PAIEMENT',
+  PRET_A_LIVRER = 'PRET_A_LIVRER',
+  LIVRE = 'LIVRE'
+}
+
 export type StatutOrdre =
+  | 'RECEPTION'
   | 'A_FAIRE'
+  | 'DIAGNOSTIC'
   | 'EN_DIAGNOSTIC'
+  | 'PIECES_MO'
   | 'EN_ATTENTE_PIECES_MO'
+  | 'PROFORMA'
   | 'EN_ATTENTE_PROFORMA'
   | 'PROFORMA_VALIDE'
+  | 'BON_DE_COMMANDE'
   | 'EN_ATTENTE_COMMANDE'
+  | 'BON_DE_SORTIE'
   | 'EN_ATTENTE_SORTIE'
+  | 'ASSIGN_TECHNICIEN'
   | 'EN_ATTENTE_MECANICIEN'
+  | 'REPARATION'
   | 'EN_COURS'
+  | 'PAIEMENT'
   | 'EN_ATTENTE_PAIEMENT'
+  | 'PRET_A_LIVRER'
   | 'TERMINE'
   | 'LIVRE';
 
-export type TypePieceJointeDiagnostic = 'PHOTO' | 'PDF';
+export const STATUT_ETAPES: Record<string, number> = {
+  RECEPTION: 1,
+  A_FAIRE: 1,
+  DIAGNOSTIC: 2,
+  EN_DIAGNOSTIC: 2,
+  PIECES_MO: 3,
+  EN_ATTENTE_PIECES_MO: 3,
+  PROFORMA: 4,
+  EN_ATTENTE_PROFORMA: 4,
+  PROFORMA_VALIDE: 5,
+  BON_DE_COMMANDE: 5,
+  EN_ATTENTE_COMMANDE: 5,
+  BON_DE_SORTIE: 6,
+  EN_ATTENTE_SORTIE: 6,
+  ASSIGN_TECHNICIEN: 7,
+  EN_ATTENTE_MECANICIEN: 7,
+  REPARATION: 8,
+  EN_COURS: 8,
+  PAIEMENT: 9,
+  EN_ATTENTE_PAIEMENT: 9,
+  PRET_A_LIVRER: 10,
+  TERMINE: 10,
+  LIVRE: 11
+};
 
-export type StatutDiagnostic = 'EN_ATTENTE' | 'EN_COURS' | 'TERMINE' | 'VALIDE' | 'ANNULE';
+export const ETAPES_ORDRE_REPARATION: { etape: number; statut: StatutOrdre; label: string; path: string }[] = [
+  { etape: 1,  statut: 'RECEPTION',         label: 'Réception',     path: 'reception' },
+  { etape: 2,  statut: 'DIAGNOSTIC',        label: 'Diagnostic',    path: 'diagnostic' },
+  { etape: 3,  statut: 'PIECES_MO',         label: 'Pièces & MO',   path: 'pieces-mo' },
+  { etape: 4,  statut: 'PROFORMA',          label: 'Proforma',      path: 'proforma' },
+  { etape: 5,  statut: 'BON_DE_COMMANDE',   label: 'Approv.',       path: 'approvisionnement' },
+  { etape: 6,  statut: 'BON_DE_SORTIE',     label: 'Attente BS',    path: 'bon-sortie' },
+  { etape: 7,  statut: 'ASSIGN_TECHNICIEN', label: 'Assign. Tech.', path: 'assignation' },
+  { etape: 8,  statut: 'REPARATION',        label: 'Réparation',    path: 'reparation' },
+  { etape: 9,  statut: 'PAIEMENT',          label: 'Paiement',      path: 'paiement' },
+  { etape: 10, statut: 'PRET_A_LIVRER',     label: 'Prêt',          path: 'livraison' },
+  { etape: 11, statut: 'LIVRE',             label: 'Livré',         path: 'cloture' }
+];
 
-export interface PieceJointeDiagnostic {
-  id: number;
-  diagnosticId?: number;
-  ordreReparationId?: number;
-  url: string;
-  type: TypePieceJointeDiagnostic;
-  remarque: string | null;
-  technicienNom: string | null;
-  createdAt: string;
+export function getEtapeFromStatut(statut: string | StatutOrdreReparation | null | undefined): number {
+  if (!statut) return 1;
+  return STATUT_ETAPES[statut] || 1;
 }
 
-export interface RemarqueDiagnostic {
-  id: number;
-  diagnosticId?: number;
-  ordreReparationId?: number;
-  technicienNom: string | null;
-  technicien?: { id: number; firstName: string; lastName: string; specialite?: string | null } | null;
-  contenu: string;
-  createdAt: string;
-}
-
-export interface DiagnosticModel {
-  id?: number;
-  technicien?: { id: number; firstName: string; lastName: string; specialite?: string | null } | null;
-  observations?: string | null;
-  pannesDetectees?: string | null;
-  recommandations?: string | null;
-  kilometrage?: number | null;
-  statut?: StatutDiagnostic;
-  dateDebut?: string | null;
-  dateFin?: string | null;
-  piecesJointes?: PieceJointeDiagnostic[];
-  remarques?: RemarqueDiagnostic[];
-}
 
 export interface LigneReceptionOrdre {
   nom: string;

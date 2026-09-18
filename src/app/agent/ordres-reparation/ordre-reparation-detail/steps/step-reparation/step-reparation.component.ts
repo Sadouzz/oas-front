@@ -57,7 +57,7 @@ export class StepReparationComponent implements OnInit {
 
   terminerReparation(): void {
     this.saving = true;
-    this.ordreService.updateStatut(this.ordreId, 'EN_ATTENTE_PAIEMENT').subscribe({
+    this.ordreService.updateStatut(this.ordreId, 'PAIEMENT').subscribe({
       next: () => {
         this.saving = false;
         this.successMessage = 'Travaux terminés avec succès. Redirection vers la facturation...';

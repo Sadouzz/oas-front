@@ -125,7 +125,7 @@ export class StepDiagnosticComponent implements OnInit {
         // Détermine le statut initial du diagnostic
         if (o.diagnostic?.statut) {
           this.statutDiagnostic = o.diagnostic.statut;
-        } else if (o.statut && o.statut !== 'A_FAIRE' && o.statut !== 'EN_DIAGNOSTIC') {
+        } else if (o.statut && o.statut !== 'RECEPTION' && o.statut !== 'A_FAIRE' && o.statut !== 'DIAGNOSTIC' && o.statut !== 'EN_DIAGNOSTIC') {
           this.statutDiagnostic = 'VALIDE';
         } else {
           this.statutDiagnostic = this.selectedTechniciens.length > 0 ? 'EN_COURS' : 'EN_ATTENTE';
@@ -497,7 +497,7 @@ export class StepDiagnosticComponent implements OnInit {
     this.diagnosticService.saveStep(stepDto).subscribe({
       next: (diag) => {
         this.currentDiagnostic = diag;
-        this.ordreService.updateStatut(this.ordreId, 'EN_ATTENTE_PIECES_MO').subscribe({
+        this.ordreService.updateStatut(this.ordreId, 'PIECES_MO').subscribe({
           next: () => {},
           error: () => {}
         });
@@ -511,10 +511,10 @@ export class StepDiagnosticComponent implements OnInit {
           descriptionTravaux: this.loadedOrdre?.descriptionTravaux || '',
           listeDefauts: pannes,
           vehiculeId: this.loadedOrdre?.vehicule?.id || 0,
-          statut: 'EN_ATTENTE_PIECES_MO' as StatutOrdre
+          statut: 'PIECES_MO' as StatutOrdre
         }).subscribe({
           next: () => {
-            this.ordreService.updateStatut(this.ordreId, 'EN_ATTENTE_PIECES_MO').subscribe({
+            this.ordreService.updateStatut(this.ordreId, 'PIECES_MO').subscribe({
               next: () => {},
               error: () => {}
             });
@@ -595,7 +595,7 @@ export class StepDiagnosticComponent implements OnInit {
     this.diagnosticService.saveStep(stepDto).subscribe({
       next: (diag) => {
         this.currentDiagnostic = diag;
-        this.ordreService.updateStatut(this.ordreId, 'EN_ATTENTE_PIECES_MO').subscribe({
+        this.ordreService.updateStatut(this.ordreId, 'PIECES_MO').subscribe({
           next: () => {
             this.saving = false;
             this.notify('Diagnostic validé et étapes Pièces & Devis débloquées.');
@@ -616,7 +616,7 @@ export class StepDiagnosticComponent implements OnInit {
           vehiculeId: this.loadedOrdre?.vehicule?.id || 0
         }).subscribe({
           next: () => {
-            this.ordreService.updateStatut(this.ordreId, 'EN_ATTENTE_PIECES_MO').subscribe({
+            this.ordreService.updateStatut(this.ordreId, 'PIECES_MO').subscribe({
               next: () => {
                 this.saving = false;
                 this.notify('Diagnostic validé et étapes Pièces & Devis débloquées.');

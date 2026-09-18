@@ -130,27 +130,63 @@ export class StepProformaComponent implements OnInit {
     });
   }
 
-  validateStep(): void {
-    if (this.proformaChargee) {
-      this.validerProforma();
-    } else {
-      this.genererProforma();
-    }
+  telechargementEnCours = false;
+
+  get isProformaValide(): boolean {
+    if (!this.proformaChargee) return false;
+    const s = (this.proformaChargee.statut || '').toUpperCase();
+    const isProformaStatusValide = ['ACCEPTE', 'ACCEPTEE', 'VALIDE', 'VALIDEE', 'VALIDEE_CLIENT', 'APPROUVE', 'APPROUVEE'].includes(s);
+    const isOrdrePastProforma = !!(this.loadedOrdre?.statut && !['RECEPTION', 'A_FAIRE', 'DIAGNOSTIC', 'EN_DIAGNOSTIC', 'PIECES_MO', 'EN_ATTENTE_PIECES_MO', 'PROFORMA', 'EN_ATTENTE_PROFORMA'].includes(this.loadedOrdre.statut));
+    return isProformaStatusValide || isOrdrePastProforma;
   }
 
   validerProforma(): void {
+    if (!this.proformaChargee?.id) {
+      this.errorMessage = 'Aucune proforma chargée à valider.';
+      this.cdr.markForCheck();
+      return;
+    }
     this.saving = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.proformaService.valider(this.proformaChargee.id).subscribe({
+      next: (res: any) => {
+        this.saving = false;
+        if (this.proformaChargee) {
+          this.proformaChargee.statut = res?.statut || 'ACCEPTE';
+        }
+        this.successMessage = 'Devis proforma validé avec succès.';
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.saving = false;
+        this.errorMessage = err.error?.message || 'Erreur lors de la validation du proforma.';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  passerEtapeSuivante(): void {
+    if (!this.isProformaValide) {
+      this.errorMessage = 'Veuillez d\'abord valider le devis proforma pour continuer.';
+      this.cdr.markForCheck();
+      return;
+    }
+
+    this.saving = true;
+    this.errorMessage = '';
+
     const hasRupture = (this.loadedOrdre?.lignesOrdreReparationPieces || []).some((l: any) => {
       if (l.isCustom) return false;
       const dispo = (l.piece?.stockMagasin ?? 0) + (l.piece?.stockAtelier ?? 0);
       return (l.quantite ?? 0) > dispo;
     });
 
-    const nextStatut = hasRupture ? 'EN_ATTENTE_COMMANDE' : 'EN_ATTENTE_SORTIE';
+    const nextStatut = hasRupture ? 'BON_DE_COMMANDE' : 'BON_DE_SORTIE';
     this.ordreService.updateStatut(this.ordreId, nextStatut).subscribe({
       next: () => {
         this.saving = false;
-        this.successMessage = 'Proforma validée par le client.';
         this.cdr.markForCheck();
 
         if (hasRupture) {
@@ -161,7 +197,37 @@ export class StepProformaComponent implements OnInit {
       },
       error: (err) => {
         this.saving = false;
-        this.errorMessage = err.error?.message || 'Erreur lors de la validation.';
+        // Si le statut est déjà synchronisé côté backend, on autorise la navigation
+        if (hasRupture) {
+          this.router.navigate(['/app/ordres-reparation', this.ordreId, 'approvisionnement']);
+        } else {
+          this.router.navigate(['/app/ordres-reparation', this.ordreId, 'bon-sortie']);
+        }
+      }
+    });
+  }
+
+  validateStep(): void {
+    this.passerEtapeSuivante();
+  }
+
+  telechargerPdf(): void {
+    if (!this.proformaChargee?.id) return;
+    this.telechargementEnCours = true;
+    this.proformaService.downloadPdf(this.proformaChargee.id).subscribe({
+      next: (blob) => {
+        this.telechargementEnCours = false;
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `proforma-${this.proformaChargee.numero || this.proformaChargee.id}.pdf`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.telechargementEnCours = false;
+        this.errorMessage = 'Impossible de télécharger le PDF du proforma.';
         this.cdr.markForCheck();
       }
     });

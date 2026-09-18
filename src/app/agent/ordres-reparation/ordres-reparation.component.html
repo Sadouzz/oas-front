@@ -39,17 +39,16 @@
           <select [(ngModel)]="filterStatut" (change)="onFilterStatut()"
             class="px-3 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
             <option value="">Tous les statuts</option>
-            <option value="A_FAIRE">Réception</option>
-            <option value="EN_DIAGNOSTIC">Diagnostic</option>
-            <option value="EN_ATTENTE_PIECES_MO">Pièces & MO</option>
-            <option value="EN_ATTENTE_PROFORMA">Proforma</option>
-            <option value="PROFORMA_VALIDE">Proforma validé</option>
-            <option value="EN_ATTENTE_COMMANDE">Approv.</option>
-            <option value="EN_ATTENTE_SORTIE">Attente BS</option>
-            <option value="EN_ATTENTE_MECANICIEN">Assign. Tech.</option>
-            <option value="EN_COURS">Réparation</option>
-            <option value="EN_ATTENTE_PAIEMENT">Paiement</option>
-            <option value="TERMINE">Prêt</option>
+            <option value="RECEPTION">Réception</option>
+            <option value="DIAGNOSTIC">Diagnostic</option>
+            <option value="PIECES_MO">Pièces & MO</option>
+            <option value="PROFORMA">Proforma</option>
+            <option value="BON_DE_COMMANDE">Approv.</option>
+            <option value="BON_DE_SORTIE">Attente BS</option>
+            <option value="ASSIGN_TECHNICIEN">Assign. Tech.</option>
+            <option value="REPARATION">Réparation</option>
+            <option value="PAIEMENT">Paiement</option>
+            <option value="PRET_A_LIVRER">Prêt</option>
             <option value="LIVRE">Livré</option>
           </select>
         </div>

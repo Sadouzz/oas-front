@@ -80,7 +80,7 @@ export class StepBonSortieComponent implements OnInit {
       remarque: `BDS généré pour ordre ${this.loadedOrdre.numero || this.ordreId}`
     }).subscribe({
       next: () => {
-        this.ordreService.updateStatut(this.ordreId, 'EN_ATTENTE_MECANICIEN').subscribe({
+        this.ordreService.updateStatut(this.ordreId, 'ASSIGN_TECHNICIEN').subscribe({
           next: () => {
             this.saving = false;
             this.successMessage = 'Bon de sortie créé avec succès. Redirection vers l\'assignation...';

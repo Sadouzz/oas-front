@@ -365,7 +365,7 @@ export class OrdreReparationFormComponent implements OnInit, OnDestroy {
       lignesReception: (raw.lignesReception as LigneReceptionOrdre[]).filter(l => l.nom && l.nom.trim()),
       listeDefauts: this.buildListeDefauts(),
       dateSortie: formattedDateSortie,
-      statut: 'A_FAIRE'
+      statut: 'RECEPTION'
     };
 
     this.saving = true;
