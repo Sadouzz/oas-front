@@ -2,12 +2,10 @@ import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ClientRendezVousService } from './client-rendezvous.service';
+import { ClientPortalService } from '../layout/client-portal.service';
 import { ClientVehiculeService } from '../vehicules/client-vehicule.service';
-import { ClientInterventionService } from '../interventions/client-intervention.service';
-import { GarageService } from '../../services/garage.service';
-import { RendezVous, RendezVousStatus, VehiculeModel, Garage, extractContent } from '../../shared/models';
-import { Intervention } from '../models';
-import { isActiveRepair } from '../intervention-stage';
+import { RendezVous, RendezVousStatus, extractContent } from '../../shared/models';
+import { ClientBookingContextVehicule, ClientBookingContextGarage } from '../models';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { StatusBadgeComponent, BadgeTone } from '../ui/status-badge/status-badge.component';
 import { ModalComponent } from '../ui/modal/modal.component';
@@ -40,17 +38,15 @@ const STATUT_TONES: Record<RendezVousStatus, BadgeTone> = {
 export class ClientRendezVousComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private service = inject(ClientRendezVousService);
+  private portalService = inject(ClientPortalService);
   private vehiculeService = inject(ClientVehiculeService);
-  private interventionService = inject(ClientInterventionService);
-  private garageService = inject(GarageService);
   private fb = inject(FormBuilder);
 
   rendezvous: RendezVous[] = [];
   filtered: RendezVous[] = [];
   selected: RendezVous | null = null;
-  vehicules: VehiculeModel[] = [];
-  interventions: Intervention[] = [];
-  garages: Garage[] = [];
+  vehicules: ClientBookingContextVehicule[] = [];
+  garages: ClientBookingContextGarage[] = [];
   loading = false;
   showCreateModal = false;
   saving = false;
@@ -90,24 +86,23 @@ export class ClientRendezVousComponent implements OnInit {
 
   ngOnInit(): void {
     this.load();
-    this.vehiculeService.getAll().subscribe({ next: v => this.vehicules = v });
-    this.interventionService.getAll().subscribe({ next: i => this.interventions = i });
-    this.garageService.getAll().subscribe({ next: g => this.garages = g });
   }
 
-  /** Le véhicule a-t-il une réparation en cours (statut actif, hors "Terminée") ? */
-  vehiculeEnReparation(vehiculeId: number): boolean {
-    const derniere = this.interventions
-      .filter(i => i.vehicule?.id === vehiculeId)
-      .sort((a, b) => new Date(b.dateCreation).getTime() - new Date(a.dateCreation).getTime())[0];
-    return !!derniere && isActiveRepair(derniere.statut);
+  loadBookingContext(): void {
+    this.portalService.getBookingContext().subscribe({
+      next: ctx => {
+        this.vehicules = ctx.vehicules ?? [];
+        this.garages = ctx.garages ?? [];
+        this.cdr.markForCheck();
+      }
+    });
   }
 
-  get vehiculesDisponibles(): VehiculeModel[] {
-    return this.vehicules.filter(v => !this.vehiculeEnReparation(v.id));
+  get vehiculesDisponibles(): ClientBookingContextVehicule[] {
+    return this.vehicules.filter(v => v.disponiblePourRdv);
   }
 
-  get vehiculesFiltres(): VehiculeModel[] {
+  get vehiculesFiltres(): ClientBookingContextVehicule[] {
     const term = this.vehiculeSearchTerm.trim().toLowerCase();
     return this.vehiculesDisponibles.filter(v => !term
       || v.immatriculation.toLowerCase().includes(term)
@@ -165,7 +160,17 @@ export class ClientRendezVousComponent implements OnInit {
     this.vehiculeService.create(this.vehiculeForm.value).subscribe({
       next: (vehicule) => {
         this.vehiculeSaving = false;
-        this.vehicules = [...this.vehicules, vehicule];
+        const newV: ClientBookingContextVehicule = {
+          id: vehicule.id,
+          immatriculation: vehicule.immatriculation,
+          marque: vehicule.marque,
+          modele: vehicule.modele,
+          annee: vehicule.annee,
+          kilometrage: vehicule.kilometrage,
+          numeroChassis: vehicule.numeroChassis,
+          disponiblePourRdv: true
+        };
+        this.vehicules = [...this.vehicules, newV];
         this.selectVehicule(vehicule.id);
         this.showVehiculeCreateForm = false;
       },
@@ -235,6 +240,7 @@ export class ClientRendezVousComponent implements OnInit {
     this.showVehiculeCreateForm = false;
     this.modalErrorMessage = '';
     this.showCreateModal = true;
+    this.loadBookingContext();
   }
 
   closeCreate(): void {
@@ -268,8 +274,6 @@ export class ClientRendezVousComponent implements OnInit {
   }
 
   canCancel(statut: RendezVousStatus): boolean {
-    // Un RDV confirmé est immédiatement transformé en ordre de réparation côté back
-    // (même transaction) : au-delà de EN_ATTENTE, il n'est plus annulable.
     return statut === 'EN_ATTENTE';
   }
 

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClientMessageService } from './client-message.service';
@@ -20,6 +20,8 @@ export class ClientMessagerieWidgetComponent implements OnInit, OnDestroy {
   private portalService = inject(ClientPortalService);
   private pollInterval: any;
   private knownIds = new Set<number>();
+
+  @Input() hidden = false;
 
   isOpen = false;
   messages: Message[] = [];
