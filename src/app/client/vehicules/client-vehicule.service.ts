@@ -7,10 +7,10 @@ import { VehiculeModel } from '../../shared/models';
 @Injectable({ providedIn: 'root' })
 export class ClientVehiculeService {
   private http = inject(HttpClient);
-  private api = `${environment.apiUrl}/api/client/vehicules`;
+  private api = `${environment.apiUrl}/api/vehicules`;
 
   getAll(): Observable<VehiculeModel[]> {
-    return this.http.get<VehiculeModel[]>(this.api);
+    return this.http.get<VehiculeModel[]>(this.api + '/me');
   }
 
   getById(id: number): Observable<VehiculeModel> {
@@ -27,5 +27,9 @@ export class ClientVehiculeService {
 
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.api}/${id}`);
+  }
+
+  archive(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.api}/me/${id}`);
   }
 }

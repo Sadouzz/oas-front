@@ -7,7 +7,7 @@ import { Message, MessageRequest } from '../models';
 @Injectable({ providedIn: 'root' })
 export class ClientMessageService {
   private http = inject(HttpClient);
-  private api = `${environment.apiUrl}/api/client/messages`;
+  private api = `${environment.apiUrl}/api/messages`;
 
   getThread(): Observable<Message[]> {
     return this.http.get<Message[]>(this.api);

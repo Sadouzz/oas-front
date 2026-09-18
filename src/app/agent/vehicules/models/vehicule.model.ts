@@ -9,6 +9,7 @@ export interface VehiculeModel {
   kilometrage: number | null;
   numeroChassis: string;
   client: UserModel | null;
+  archiveParClient: boolean;
   createdAt: string;
 }
 
