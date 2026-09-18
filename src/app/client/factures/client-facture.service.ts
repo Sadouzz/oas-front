@@ -7,10 +7,10 @@ import { FactureModel } from '../../shared/models';
 @Injectable({ providedIn: 'root' })
 export class ClientFactureService {
   private http = inject(HttpClient);
-  private api = `${environment.apiUrl}/api/client/factures`;
+  private api = `${environment.apiUrl}/api/factures`;
 
   getAll(): Observable<FactureModel[]> {
-    return this.http.get<FactureModel[]>(this.api);
+    return this.http.get<FactureModel[]>(this.api + '/me');
   }
 
   getById(id: number): Observable<FactureModel> {

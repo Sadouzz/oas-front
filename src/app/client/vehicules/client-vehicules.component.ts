@@ -206,4 +206,20 @@ export class ClientVehiculesComponent implements OnInit {
       },
     });
   }
+
+  archive(vehicule: VehiculeModel): void {
+    if (confirm('Voulez-vous vraiment archiver ce véhicule ?')) {
+      this.service.archive(vehicule.id).subscribe({
+        next: () => {
+          this.successMessage = 'Véhicule archivé avec succès.';
+          setTimeout(() => this.successMessage = '', 4000);
+          if (this.selected?.id === vehicule.id) this.selected = null;
+          this.load();
+        },
+        error: (err: any) => {
+          this.errorMessage = err.error?.message || "Impossible d'archiver le véhicule.";
+        }
+      });
+    }
+  }
 }

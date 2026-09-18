@@ -7,17 +7,17 @@ import { DevisPrevisionnel } from '../models';
 @Injectable({ providedIn: 'root' })
 export class ClientDevisService {
   private http = inject(HttpClient);
-  private api = `${environment.apiUrl}/api/client/devis-previsionnels`;
+  private api = `${environment.apiUrl}/api/devis-previsionnels`;
 
   getAll(): Observable<DevisPrevisionnel[]> {
-    return this.http.get<DevisPrevisionnel[]>(this.api);
+    return this.http.get<DevisPrevisionnel[]>(this.api + '/me');
   }
 
   accepter(id: number): Observable<DevisPrevisionnel> {
-    return this.http.put<DevisPrevisionnel>(`${this.api}/${id}/accepter`, {});
+    return this.http.put<DevisPrevisionnel>(`${this.api}/${id}/client-accepter`, {});
   }
 
   refuser(id: number): Observable<DevisPrevisionnel> {
-    return this.http.put<DevisPrevisionnel>(`${this.api}/${id}/refuser`, {});
+    return this.http.put<DevisPrevisionnel>(`${this.api}/${id}/client-refuser`, {});
   }
 }

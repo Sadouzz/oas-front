@@ -7,17 +7,17 @@ import { Proforma } from '../../shared/models';
 @Injectable({ providedIn: 'root' })
 export class ClientProformaService {
   private http = inject(HttpClient);
-  private api = `${environment.apiUrl}/api/client/proformas`;
+  private api = `${environment.apiUrl}/api/proformas`;
 
   getAll(): Observable<Proforma[]> {
-    return this.http.get<Proforma[]>(this.api);
+    return this.http.get<Proforma[]>(this.api + '/me');
   }
 
   valider(id: number): Observable<void> {
-    return this.http.put<void>(`${this.api}/${id}/valider`, {});
+    return this.http.put<void>(`${this.api}/${id}/client-valider`, {});
   }
 
   refuser(id: number): Observable<void> {
-    return this.http.put<void>(`${this.api}/${id}/refuser`, {});
+    return this.http.put<void>(`${this.api}/${id}/client-refuser`, {});
   }
 }

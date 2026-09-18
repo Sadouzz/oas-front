@@ -7,7 +7,7 @@ import { UserModel } from '../../shared/models';
 @Injectable({ providedIn: 'root' })
 export class ClientPortalService {
   private http = inject(HttpClient);
-  private api = `${environment.apiUrl}/api/client`;
+  private api = `${environment.apiUrl}/api/clients`;
 
   getMe(): Observable<UserModel> {
     return this.http.get<UserModel>(`${this.api}/me`);

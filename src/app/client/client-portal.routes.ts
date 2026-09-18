@@ -5,6 +5,7 @@ import { clientNoAuthGuard } from '../core/guards/client-no-auth.guard';
 export const CLIENT_PORTAL_ROUTES: Routes = [
   { path: 'connexion', redirectTo: '/login', pathMatch: 'full' },
   { path: 'inscription', redirectTo: '/register', pathMatch: 'full' },
+
   {
     path: '',
     loadComponent: () => import('./layout/client-layout.component').then(m => m.ClientLayoutComponent),
@@ -16,7 +17,7 @@ export const CLIENT_PORTAL_ROUTES: Routes = [
         loadComponent: () => import('./dashboard-home/dashboard-home.component').then(m => m.DashboardHomeComponent),
       },
       {
-        path: 'vehicules.component',
+        path: 'vehicules',
         loadComponent: () => import('./vehicules/client-vehicules.component').then(m => m.ClientVehiculesComponent),
       },
       {
@@ -24,7 +25,7 @@ export const CLIENT_PORTAL_ROUTES: Routes = [
         loadComponent: () => import('./rendezvous/client-rendezvous.component').then(m => m.ClientRendezVousComponent),
       },
       {
-        path: 'marketplace.component',
+        path: 'marketplace',
         loadComponent: () => import('./marketplace/client-marketplace.component').then(m => m.ClientMarketplaceComponent),
       },
       {
@@ -32,11 +33,11 @@ export const CLIENT_PORTAL_ROUTES: Routes = [
         loadComponent: () => import('./proformas/client-proformas.component').then(m => m.ClientProformasComponent),
       },
       {
-        path: 'devis.component',
+        path: 'devis',
         loadComponent: () => import('./devis/client-devis.component').then(m => m.ClientDevisComponent),
       },
       {
-        path: 'factures.component',
+        path: 'factures',
         loadComponent: () => import('./factures/client-factures.component').then(m => m.ClientFacturesComponent),
       },
       {
@@ -52,7 +53,7 @@ export const CLIENT_PORTAL_ROUTES: Routes = [
         loadComponent: () => import('./profile/client-profile.component').then(m => m.ClientProfileComponent),
       },
       {
-        path: 'parametres.component',
+        path: 'parametres',
         loadComponent: () => import('./settings/client-settings.component').then(m => m.ClientSettingsComponent),
       },
     ],
