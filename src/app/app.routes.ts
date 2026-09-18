@@ -5,6 +5,7 @@ import { ForbiddenComponent } from './auth/forbidden/forbidden.component';
 import { noAuthGuard } from './core/guards/no-auth.guard';
 
 export const routes: Routes = [
+
   {
     path: 'agent',
     redirectTo: 'app',
@@ -45,8 +46,7 @@ export const routes: Routes = [
         path: 'blog/:id', 
         loadComponent: () => import('./public/blog/blog-detail').then(m => m.BlogDetailComponent) 
       },
-      { 
-        path: 'a-propos', 
+      { path: 'a-propos', 
         loadComponent: () => import('./public/about/about').then(m => m.About) 
       },
       // { path: 'devis', loadComponent: () => import('. /public/devis/devis').then(m => m.Devis) },
@@ -57,29 +57,30 @@ export const routes: Routes = [
       {
         path: 'contact',
         loadComponent: () =>
-          import('./public/contact/contact').then(m => m.Contact),
+          import('./public/contact/contact').then(m => m.ContactComponent),
       },
       {
-        path: 'prendre-rdv',
+        path: 'rdv',
         loadComponent: () =>
-          import('./public/rdv/rdv').then(m => m.Rdv),
+          import('./public/rdv/rdv').then(m => m.RdvComponent),
       },
-      {
-        path: 'simulateur-devis',
-        loadComponent: () =>
-          import('./public/devis/devis').then(m => m.Devis),
+      { 
+        path: 'partenaires', 
+        loadComponent: () => import('./public/partenaires/partenaires').then(m => m.Partenaires) 
       },
-      {
-        path: 'nos-partenaires',
-        loadComponent: () =>
-          import('./public/partenaires/partenaires').then(m => m.Partenaires),
+      { 
+        path: 'mentions-legales', 
+        loadComponent: () => import('./public/legal/mentions-legales').then(m => m.MentionsLegalesComponent) 
       },
-      {
-        path: 'mentions-legales',
-        loadComponent: () =>
-          import('./public/mentions-legales/mentions-legales').then(m => m.MentionsLegales),
+      { 
+        path: 'confidentialite', 
+        loadComponent: () => import('./public/legal/confidentialite').then(m => m.ConfidentialiteComponent) 
       },
-    ],
+      { 
+        path: 'cookies', 
+        loadComponent: () => import('./public/legal/cookies').then(m => m.CookiesComponent) 
+      },
+    ]
   },
 
   {
