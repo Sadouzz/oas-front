@@ -9,7 +9,7 @@ export const TECHNICIEN_PORTAL_ROUTES: Routes = [
     children: [
       { path: '', redirectTo: 'ordres-reparation.component', pathMatch: 'full' },
       {
-        path: 'ordres-reparation.component',
+        path: 'ordres-reparation',
         loadComponent: () => import('./ordres/technicien-ordres-list.component').then(m => m.TechnicienOrdresListComponent),
       },
       {
