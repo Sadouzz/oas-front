@@ -106,12 +106,12 @@ export class StepProformaComponent implements OnInit {
         custom: !!l.isCustom,
         designationPds: l.designationPds,
         quantite: Number(l.quantite),
-        prix: Number(l.isCustom ? (l.prix || 0) : (l.piece?.prix || 0))
+        prix: Number(l.prix != null && l.prix !== 0 ? l.prix : (l.isCustom ? 0 : (l.piece?.prix || 0)))
       })),
       lignesMainDoeuvres: (this.loadedOrdre.lignesOrdreReparationMainDoeuvres || []).map((l: any) => ({
         mainDoeuvreId: Number(l.mainDoeuvre?.id),
         nbreHeure: Number(l.nbreHeure),
-        tarifHoraire: Number(l.mainDoeuvre?.prix || 0)
+        tarifHoraire: Number(l.prix != null && l.prix !== 0 ? l.prix : (l.mainDoeuvre?.prix || 0))
       }))
     };
 

@@ -1,57 +1,283 @@
-<div class="space-y-5">
+<div class="max-w-7xl mx-auto space-y-6">
 
-  <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+  <!-- ─── En-tête / Hero Dashboard ─── -->
+  <div class="bg-white border border-oas-line rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
     <div>
-      <h1 class="text-xl font-bold text-oas-ink">Mes ordres de réparation</h1>
-      <p class="text-sm text-oas-muted mt-1">Ordres où vous êtes assigné (diagnostic ou réparation)</p>
+      <div class="flex items-center gap-2 mb-1">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span class="text-xs font-bold uppercase tracking-wider text-oas-muted">Portail Atelier</span>
+      </div>
+      <h1 class="text-2xl font-black text-oas-ink tracking-tight">Tableau de bord Technicien</h1>
+      <p class="text-sm text-oas-muted mt-1">Consultez vos ordres de réparation assignés, réalisez vos diagnostics et proposez les pièces requises.</p>
     </div>
-    @if (totalElements > 0) {
-      <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-oas-bg text-oas-muted border border-oas-line">
-        {{ totalElements }} ordre{{ totalElements > 1 ? 's' : '' }} au total
-      </span>
-    }
+    <div class="flex items-center gap-3">
+      <button (click)="loadData(); loadAllForStats()" title="Actualiser la liste"
+              class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-oas-line bg-oas-bg hover:bg-white text-oas-ink text-sm font-bold transition shadow-2xs cursor-pointer">
+        <svg class="w-4 h-4 text-oas-muted" [class.animate-spin]="loading" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+        Actualiser
+      </button>
+    </div>
+  </div>
+
+  <!-- ─── Cartes KPI / Statistiques ─── -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Total -->
+    <div (click)="setTab('ALL')"
+         class="bg-white border rounded-2xl p-4 shadow-sm transition cursor-pointer hover:border-oas-accent"
+         [class.border-oas-accent]="activeTab === 'ALL'"
+         [class.border-oas-line]="activeTab !== 'ALL'"
+         [class.ring-2]="activeTab === 'ALL'"
+         [class.ring-oas-accent/20]="activeTab === 'ALL'">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-bold text-oas-muted uppercase">Total assignés</span>
+        <div class="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-700">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+        </div>
+      </div>
+      <p class="text-2xl font-black text-oas-ink">{{ stats.total }}</p>
+      <span class="text-[11px] text-oas-faint font-medium">Toutes vos interventions</span>
+    </div>
+
+    <!-- Diagnostic -->
+    <div (click)="setTab('DIAGNOSTIC')"
+         class="bg-white border rounded-2xl p-4 shadow-sm transition cursor-pointer hover:border-amber-400"
+         [class.border-amber-400]="activeTab === 'DIAGNOSTIC'"
+         [class.border-oas-line]="activeTab !== 'DIAGNOSTIC'"
+         [class.ring-2]="activeTab === 'DIAGNOSTIC'"
+         [class.ring-amber-400/20]="activeTab === 'DIAGNOSTIC'">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-bold text-amber-700 uppercase">Diagnostic</span>
+        <div class="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+        </div>
+      </div>
+      <p class="text-2xl font-black text-amber-900">{{ stats.diagnostic }}</p>
+      <span class="text-[11px] text-amber-700 font-medium">À diagnostiquer</span>
+    </div>
+
+    <!-- Réparation -->
+    <div (click)="setTab('REPARATION')"
+         class="bg-white border rounded-2xl p-4 shadow-sm transition cursor-pointer hover:border-blue-400"
+         [class.border-blue-400]="activeTab === 'REPARATION'"
+         [class.border-oas-line]="activeTab !== 'REPARATION'"
+         [class.ring-2]="activeTab === 'REPARATION'"
+         [class.ring-blue-400/20]="activeTab === 'REPARATION'">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-bold text-blue-700 uppercase">En réparation</span>
+        <div class="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+        </div>
+      </div>
+      <p class="text-2xl font-black text-blue-900">{{ stats.reparation }}</p>
+      <span class="text-[11px] text-blue-700 font-medium">Travaux en cours</span>
+    </div>
+
+    <!-- Terminés -->
+    <div (click)="setTab('TERMINE')"
+         class="bg-white border rounded-2xl p-4 shadow-sm transition cursor-pointer hover:border-emerald-400"
+         [class.border-emerald-400]="activeTab === 'TERMINE'"
+         [class.border-oas-line]="activeTab !== 'TERMINE'"
+         [class.ring-2]="activeTab === 'TERMINE'"
+         [class.ring-emerald-400/20]="activeTab === 'TERMINE'">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-bold text-emerald-700 uppercase">Terminés</span>
+        <div class="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+      </div>
+      <p class="text-2xl font-black text-emerald-900">{{ stats.termine }}</p>
+      <span class="text-[11px] text-emerald-700 font-medium">Prêts ou livrés</span>
+    </div>
+  </div>
+
+  <!-- ─── Barre de Recherche et Filtres ─── -->
+  <div class="bg-white border border-oas-line rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+    <!-- Onglets de filtre -->
+    <div class="flex items-center gap-1.5 p-1 bg-oas-bg rounded-xl border border-oas-line overflow-x-auto">
+      <button (click)="setTab('ALL')"
+              class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap cursor-pointer"
+              [class.bg-white]="activeTab === 'ALL'"
+              [class.text-oas-ink]="activeTab === 'ALL'"
+              [class.shadow-2xs]="activeTab === 'ALL'"
+              [class.text-oas-muted]="activeTab !== 'ALL'">
+        Tous ({{ stats.total }})
+      </button>
+      <button (click)="setTab('DIAGNOSTIC')"
+              class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap cursor-pointer"
+              [class.bg-white]="activeTab === 'DIAGNOSTIC'"
+              [class.text-amber-800]="activeTab === 'DIAGNOSTIC'"
+              [class.shadow-2xs]="activeTab === 'DIAGNOSTIC'"
+              [class.text-oas-muted]="activeTab !== 'DIAGNOSTIC'">
+        Diagnostic ({{ stats.diagnostic }})
+      </button>
+      <button (click)="setTab('REPARATION')"
+              class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap cursor-pointer"
+              [class.bg-white]="activeTab === 'REPARATION'"
+              [class.text-blue-800]="activeTab === 'REPARATION'"
+              [class.shadow-2xs]="activeTab === 'REPARATION'"
+              [class.text-oas-muted]="activeTab !== 'REPARATION'">
+        Réparation ({{ stats.reparation }})
+      </button>
+      <button (click)="setTab('TERMINE')"
+              class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap cursor-pointer"
+              [class.bg-white]="activeTab === 'TERMINE'"
+              [class.text-emerald-800]="activeTab === 'TERMINE'"
+              [class.shadow-2xs]="activeTab === 'TERMINE'"
+              [class.text-oas-muted]="activeTab !== 'TERMINE'">
+        Terminés ({{ stats.termine }})
+      </button>
+    </div>
+
+    <!-- Champ de recherche live -->
+    <div class="relative flex-1 sm:max-w-xs">
+      <input type="text" [(ngModel)]="searchTerm" placeholder="Rechercher (N°, plaque, marque)..."
+             class="w-full pl-9 pr-8 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm text-oas-ink placeholder:text-oas-faint focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:bg-white transition"/>
+      <svg class="w-4 h-4 text-oas-muted absolute left-3 top-2.5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+      </svg>
+      @if (searchTerm) {
+        <button (click)="searchTerm = ''" class="absolute right-2.5 top-2.5 text-oas-muted hover:text-oas-ink text-xs font-bold cursor-pointer">
+          ✕
+        </button>
+      }
+    </div>
   </div>
 
   @if (errorMessage) {
-    <div class="px-4 py-3 rounded-lg bg-oas-bad-bg text-oas-bad text-sm font-semibold">{{ errorMessage }}</div>
+    <div class="px-4 py-3 rounded-xl bg-oas-bad-bg text-oas-bad text-sm font-semibold flex items-center gap-2">
+      <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+      </svg>
+      {{ errorMessage }}
+    </div>
   }
 
-  <div class="bg-white rounded-lg border border-oas-line shadow-card overflow-hidden">
+  <!-- ─── Liste des Ordres ─── -->
+  <div class="space-y-3">
     @if (loading) {
-      <div class="flex items-center justify-center py-16">
-        <div class="w-6 h-6 border-2 border-oas-accent border-t-transparent rounded-full animate-spin"></div>
+      <div class="bg-white rounded-2xl border border-oas-line p-12 flex flex-col items-center justify-center gap-3">
+        <div class="w-8 h-8 border-3 border-oas-accent border-t-transparent rounded-full animate-spin"></div>
+        <p class="text-sm font-medium text-oas-muted">Chargement de vos ordres de réparation...</p>
       </div>
-    } @else if (ordres.length === 0) {
-      <div class="text-center py-16 text-oas-muted text-sm">Aucun ordre de réparation assigné pour le moment.</div>
-    } @else {
-      <div class="divide-y divide-oas-line">
-        @for (o of ordres; track o.id) {
-          <button (click)="open(o.id)"
-                  class="w-full text-left px-5 py-4 hover:bg-oas-bg transition cursor-pointer flex items-center justify-between gap-4">
-            <div class="min-w-0">
-              <p class="font-bold text-oas-ink">{{ o.numero }}</p>
-              <p class="text-sm text-oas-muted truncate">
-                {{ o.vehicule?.marque }} {{ o.vehicule?.modele }} — {{ o.vehicule?.immatriculation }}
-              </p>
-              <p class="text-xs text-oas-faint mt-1">Créé le {{ formatDate(o.dateCreation) }}</p>
-            </div>
-            <span class="flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-bold bg-oas-info-bg text-oas-info">
-              {{ statutLabel(o.statut) }}
-            </span>
+    } @else if (filteredOrdres.length === 0) {
+      <div class="bg-white rounded-2xl border border-oas-line p-12 text-center">
+        <div class="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400 mb-3">
+          <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+          </svg>
+        </div>
+        <h3 class="text-base font-bold text-oas-ink">Aucun ordre de réparation trouvé</h3>
+        <p class="text-sm text-oas-muted mt-1 max-w-sm mx-auto">
+          @if (searchTerm || activeTab !== 'ALL') {
+            Aucun ordre ne correspond à vos filtres actuels.
+          } @else {
+            Vous n'avez aucun ordre assigné actuellement.
+          }
+        </p>
+        @if (searchTerm || activeTab !== 'ALL') {
+          <button (click)="searchTerm = ''; activeTab = 'ALL'"
+                  class="mt-4 px-4 py-2 rounded-xl text-xs font-bold text-oas-accent bg-oas-accent-bg hover:opacity-80 transition cursor-pointer">
+            Réinitialiser les filtres
           </button>
         }
       </div>
+    } @else {
+      <!-- Grille de cartes d'ordres -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        @for (o of filteredOrdres; track o.id) {
+          <div (click)="open(o.id)"
+               class="group bg-white border border-oas-line rounded-2xl p-5 shadow-2xs hover:shadow-md hover:border-oas-accent/60 transition cursor-pointer flex flex-col justify-between relative overflow-hidden">
+            
+            <!-- Décoration latérale subtile selon le statut -->
+            <div class="absolute left-0 top-0 bottom-0 w-1.5"
+                 [class.bg-amber-400]="isDiagnostic(o.statut)"
+                 [class.bg-blue-500]="isReparation(o.statut)"
+                 [class.bg-emerald-500]="isTermine(o.statut)"
+                 [class.bg-slate-300]="!isDiagnostic(o.statut) && !isReparation(o.statut) && !isTermine(o.statut)">
+            </div>
 
-      @if (totalElements > 0) {
-        <app-pagination
-          [page]="page"
-          [totalPages]="totalPages"
-          [total]="totalElements"
-          [pageSize]="pageSize"
-          (prev)="prevPage()"
-          (next)="nextPage()"
-          (pageChange)="onPageChange($event)" />
+            <div>
+              <!-- En-tête de la carte -->
+              <div class="flex items-center justify-between gap-2 mb-3 pl-1">
+                <span class="font-extrabold text-sm text-oas-ink group-hover:text-oas-accent transition tracking-tight">
+                  {{ o.numero }}
+                </span>
+                <span class="px-2.5 py-1 rounded-lg text-[11px] font-extrabold border" [ngClass]="statutBadgeClass(o.statut)">
+                  {{ statutLabel(o.statut) }}
+                </span>
+              </div>
+
+              <!-- Bloc Véhicule -->
+              <div class="pl-1 space-y-2 mb-4">
+                <div class="flex items-center gap-2">
+                  <div class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600 flex-shrink-0">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-1-5a2 2 0 00-2-1.6H8A2 2 0 006 9l-1 5m14 0v4a1 1 0 01-1 1h-2a1 1 0 01-1-1v-1H7v1a1 1 0 01-1 1H4a1 1 0 01-1-1v-4m15 0H5"/>
+                    </svg>
+                  </div>
+                  <div class="min-w-0">
+                    <p class="text-sm font-bold text-oas-ink truncate">
+                      {{ o.vehicule?.marque || 'Véhicule' }} {{ o.vehicule?.modele || '' }}
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Plaque d'immatriculation -->
+                @if (o.vehicule?.immatriculation) {
+                  <div class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-900 text-white rounded-md text-xs font-mono font-black tracking-wider shadow-inner">
+                    <span class="text-[10px] text-blue-400 font-bold">SN</span>
+                    <span>{{ o.vehicule?.immatriculation }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Pied de carte -->
+            <div class="pt-3 border-t border-oas-line flex items-center justify-between text-xs text-oas-muted pl-1">
+              <span class="flex items-center gap-1 text-[11px]">
+                <svg class="w-3.5 h-3.5 text-oas-faint" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                {{ formatDate(o.dateCreation) }}
+              </span>
+
+              <span class="font-bold text-oas-accent group-hover:translate-x-1 transition-transform inline-flex items-center gap-1 text-xs">
+                Ouvrir
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                </svg>
+              </span>
+            </div>
+
+          </div>
+        }
+      </div>
+
+      <!-- Pagination -->
+      @if (totalElements > 0 && !searchTerm && activeTab === 'ALL') {
+        <div class="bg-white rounded-2xl border border-oas-line p-4 shadow-sm mt-4">
+          <app-pagination
+            [page]="page"
+            [totalPages]="totalPages"
+            [total]="totalElements"
+            [pageSize]="pageSize"
+            (prev)="prevPage()"
+            (next)="nextPage()"
+            (pageChange)="onPageChange($event)" />
+        </div>
       }
     }
   </div>
+
 </div>

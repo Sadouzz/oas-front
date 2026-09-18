@@ -32,6 +32,7 @@ export interface LignePiece {
 export interface LigneMO {
   mo: MainDoeuvreModel;
   quantite: number;
+  prixUnitaire?: number;
 }
 
 @Component({
@@ -64,8 +65,11 @@ export class StepPiecesMoComponent implements OnInit {
 
   pieceAjouter: number | null = null;
   qteAjouter = 1;
+  prixAjouter: number | null = null;
+
   moAjouter: number | null = null;
   qteAjouterMO = 1;
+  prixAjouterMO: number | null = null;
 
   pieceCustomDesignation = '';
   pieceCustomPrix: number | null = null;
@@ -79,7 +83,7 @@ export class StepPiecesMoComponent implements OnInit {
     if (!q) return this.allPieces.slice(0, 30);
     return this.allPieces.filter(p =>
       p.reference.toLowerCase().includes(q) ||
-      (p.designation || '').toLowerCase().includes(q)
+      p.designation.toLowerCase().includes(q)
     ).slice(0, 30);
   }
 
@@ -92,15 +96,26 @@ export class StepPiecesMoComponent implements OnInit {
     ).slice(0, 30);
   }
 
+  get lignesPiecesCatalogue(): LignePiece[] {
+    return this.lignesPieces.filter(l => !l.isCustom);
+  }
+
+  get lignesPiecesPds(): LignePiece[] {
+    return this.lignesPieces.filter(l => !!l.isCustom);
+  }
+
   get totalPieces(): number {
     return this.lignesPieces.reduce((sum, l) => {
-      const price = l.isCustom ? (l.prixUnitaire ?? 0) : (l.piece?.prix ?? 0);
-      return sum + price * l.quantite;
+      const price = l.prixUnitaire != null ? l.prixUnitaire : (l.isCustom ? 0 : (l.piece?.prix ?? 0));
+      return sum + price * (l.quantite || 0);
     }, 0);
   }
 
   get totalMO(): number {
-    return this.lignesMO.reduce((sum, l) => sum + (l.mo?.prix ?? 0) * l.quantite, 0);
+    return this.lignesMO.reduce((sum, l) => {
+      const price = l.prixUnitaire != null ? l.prixUnitaire : (l.mo?.prix ?? 0);
+      return sum + price * (l.quantite || 0);
+    }, 0);
   }
 
   get totalGeneral(): number {
@@ -129,26 +144,71 @@ export class StepPiecesMoComponent implements OnInit {
       ordre: this.ordreService.getById(this.ordreId)
     }).subscribe({
       next: ({ pieces, mo, ordre }) => {
-        this.allPieces = extractContent<PieceDetache>(pieces as any).filter(p => p.statut === 'ACTIF');
+        // Catalogue : uniquement PDP et PDG (exclure PDS)
+        this.allPieces = extractContent<PieceDetache>(pieces as any).filter(p => p.statut === 'ACTIF' && p.type !== 'PDS');
         this.allMO = extractContent<MainDoeuvreModel>(mo as any).filter(m => !m.isArchived);
         this.loadedOrdre = ordre;
 
-        this.lignesPieces = (ordre.lignesOrdreReparationPieces || []).map((l: any) => ({
-          piece: l.piece,
-          pieceIdTemp: l.piece?.id,
-          quantite: l.quantite,
-          isCustom: l.isCustom,
-          designationPds: l.designationPds,
-          prixUnitaire: l.prix,
-          stockDisponible: l.isCustom ? 0 : (l.piece?.stockMagasin ?? 0) + (l.piece?.stockAtelier ?? 0),
-          manquant: l.isCustom ? 0 : Math.max(0, l.quantite - (l.piece?.stockAtelier ?? 0)),
-          aSortirMagasin: l.isCustom ? 0 : (Math.max(0, l.quantite - (l.piece?.stockAtelier ?? 0)) > 0 ? 0 : 1)
-        }));
+        // Cumuler les pièces identiques au chargement
+        const piecesMap = new Map<string, any>();
+        for (const l of (ordre.lignesOrdreReparationPieces || [])) {
+          const key = l.isCustom 
+            ? `custom_${(l.designationPds || '').trim().toLowerCase()}`
+            : `cat_${l.piece?.id}`;
 
-        this.lignesMO = (ordre.lignesOrdreReparationMainDoeuvres || []).map((l: any) => ({
-          mo: l.mainDoeuvre,
-          quantite: l.nbreHeure,
-        }));
+          if (piecesMap.has(key)) {
+            const item = piecesMap.get(key);
+            item.quantite += (l.quantite || 1);
+            if ((item.prixUnitaire == null || item.prixUnitaire === 0) && l.prix != null && l.prix > 0) {
+              item.prixUnitaire = l.prix;
+            }
+          } else {
+            const defaultPrice = l.prix != null ? l.prix : (l.isCustom ? 0 : (l.piece?.prix ?? 0));
+            piecesMap.set(key, {
+              piece: l.piece,
+              pieceIdTemp: l.piece?.id,
+              quantite: l.quantite || 1,
+              isCustom: !!l.isCustom,
+              designationPds: l.designationPds,
+              prixUnitaire: defaultPrice,
+              stockDisponible: l.isCustom ? 0 : (l.piece?.stockMagasin ?? 0) + (l.piece?.stockAtelier ?? 0),
+              manquant: 0,
+              aSortirMagasin: 0
+            });
+          }
+        }
+
+        this.lignesPieces = Array.from(piecesMap.values()).map(lp => {
+          if (!lp.isCustom && lp.piece) {
+            lp.manquant = Math.max(0, lp.quantite - (lp.piece?.stockAtelier ?? 0));
+            lp.aSortirMagasin = lp.manquant > 0 ? 0 : 1;
+          }
+          return lp;
+        });
+
+        // Cumuler les MO identiques au chargement
+        const moMap = new Map<number, any>();
+        for (const l of (ordre.lignesOrdreReparationMainDoeuvres || [])) {
+          const moId = l.mainDoeuvre?.id;
+          if (!moId) continue;
+
+          if (moMap.has(moId)) {
+            const item = moMap.get(moId);
+            item.quantite += (l.nbreHeure || 1);
+            if ((item.prixUnitaire == null || item.prixUnitaire === 0) && l.prix != null && l.prix > 0) {
+              item.prixUnitaire = l.prix;
+            }
+          } else {
+            const defaultPrice = l.prix != null ? l.prix : (l.mainDoeuvre?.prix ?? 0);
+            moMap.set(moId, {
+              mo: l.mainDoeuvre,
+              quantite: l.nbreHeure || 1,
+              prixUnitaire: defaultPrice
+            });
+          }
+        }
+
+        this.lignesMO = Array.from(moMap.values());
 
         this.loading = false;
         this.cdr.markForCheck();
@@ -161,44 +221,80 @@ export class StepPiecesMoComponent implements OnInit {
     });
   }
 
+  onPieceSelected(pieceId: any): void {
+    if (!pieceId) {
+      this.prixAjouter = null;
+      return;
+    }
+    const p = this.allPieces.find(item => item.id === Number(pieceId));
+    if (p) {
+      this.prixAjouter = p.prix ?? null;
+    }
+  }
+
+  onMoSelected(moId: any): void {
+    if (!moId) {
+      this.prixAjouterMO = null;
+      return;
+    }
+    const m = this.allMO.find(item => item.id === Number(moId));
+    if (m) {
+      this.prixAjouterMO = m.prix ?? null;
+    }
+  }
+
   addPiece(): void {
     if (!this.pieceAjouter || this.qteAjouter <= 0) return;
     const p = this.allPieces.find(item => item.id === Number(this.pieceAjouter));
     if (!p) return;
 
+    const unitPrice = this.prixAjouter != null && this.prixAjouter >= 0 ? this.prixAjouter : (p.prix ?? 0);
+
     const existing = this.lignesPieces.find(l => !l.isCustom && l.piece?.id === p.id);
     if (existing) {
       existing.quantite += this.qteAjouter;
+      existing.prixUnitaire = unitPrice;
       existing.manquant = Math.max(0, existing.quantite - (existing.piece?.stockAtelier ?? 0));
-      existing.aSortirMagasin = Math.max(0, existing.quantite - (existing.piece?.stockAtelier ?? 0)) > 0 ? 0 : 1;
+      existing.aSortirMagasin = existing.manquant > 0 ? 0 : 1;
     } else {
-      const stockAtelier = p.stockAtelier ?? 0;
-      const stockMagasin = p.stockMagasin ?? 0;
-      const manquant = Math.max(0, this.qteAjouter - stockAtelier);
       this.lignesPieces.push({
-        piece: p,
-        pieceIdTemp: p.id,
-        quantite: this.qteAjouter,
         isCustom: false,
-        stockDisponible: stockMagasin + stockAtelier,
-        manquant,
-        aSortirMagasin: manquant > 0 ? 0 : 1
+        piece: p,
+        quantite: this.qteAjouter,
+        prixUnitaire: unitPrice,
+        stockDisponible: (p.stockMagasin ?? 0) + (p.stockAtelier ?? 0),
+        manquant: Math.max(0, this.qteAjouter - (p.stockAtelier ?? 0)),
+        aSortirMagasin: Math.max(0, this.qteAjouter - (p.stockAtelier ?? 0)) > 0 ? 0 : 1
       });
     }
+
     this.pieceAjouter = null;
     this.qteAjouter = 1;
+    this.prixAjouter = null;
   }
 
   addPieceCustom(): void {
-    if (!this.pieceCustomDesignation.trim() || !this.pieceCustomPrix || this.pieceCustomPrix <= 0 || this.pieceCustomQuantite <= 0) return;
-    this.lignesPieces.push({
-      isCustom: true,
-      designationPds: this.pieceCustomDesignation.trim(),
-      prixUnitaire: this.pieceCustomPrix,
-      quantite: this.pieceCustomQuantite,
-      manquant: 0,
-      aSortirMagasin: 0
-    });
+    if (!this.pieceCustomDesignation.trim() || this.pieceCustomQuantite <= 0) return;
+
+    const unitPrice = this.pieceCustomPrix != null && this.pieceCustomPrix >= 0 ? this.pieceCustomPrix : 0;
+    const des = this.pieceCustomDesignation.trim();
+
+    const existing = this.lignesPieces.find(l => l.isCustom && (l.designationPds || '').trim().toLowerCase() === des.toLowerCase());
+    if (existing) {
+      existing.quantite += this.pieceCustomQuantite;
+      if (unitPrice > 0) {
+        existing.prixUnitaire = unitPrice;
+      }
+    } else {
+      this.lignesPieces.push({
+        isCustom: true,
+        designationPds: des,
+        prixUnitaire: unitPrice,
+        quantite: this.pieceCustomQuantite,
+        manquant: 0,
+        aSortirMagasin: 0
+      });
+    }
     this.pieceCustomDesignation = '';
     this.pieceCustomPrix = null;
     this.pieceCustomQuantite = 1;
@@ -208,22 +304,49 @@ export class StepPiecesMoComponent implements OnInit {
     this.lignesPieces.splice(index, 1);
   }
 
+  removePieceItem(item: LignePiece): void {
+    const idx = this.lignesPieces.indexOf(item);
+    if (idx !== -1) {
+      this.lignesPieces.splice(idx, 1);
+      this.cdr.markForCheck();
+    }
+  }
+
+  onPieceQuantiteChange(l: LignePiece): void {
+    if (!l.isCustom && l.piece) {
+      l.manquant = Math.max(0, (l.quantite || 0) - (l.piece?.stockAtelier ?? 0));
+      l.aSortirMagasin = l.manquant > 0 ? 0 : 1;
+    }
+    this.cdr.markForCheck();
+  }
+
   addMO(): void {
     if (!this.moAjouter || this.qteAjouterMO <= 0) return;
     const m = this.allMO.find(item => item.id === Number(this.moAjouter));
     if (!m) return;
+    const unitPrice = this.prixAjouterMO != null && this.prixAjouterMO >= 0 ? this.prixAjouterMO : (m.prix ?? 0);
     const existing = this.lignesMO.find(l => l.mo?.id === m.id);
     if (existing) {
       existing.quantite += this.qteAjouterMO;
+      existing.prixUnitaire = unitPrice;
     } else {
-      this.lignesMO.push({ mo: m, quantite: this.qteAjouterMO });
+      this.lignesMO.push({ mo: m, quantite: this.qteAjouterMO, prixUnitaire: unitPrice });
     }
     this.moAjouter = null;
     this.qteAjouterMO = 1;
+    this.prixAjouterMO = null;
   }
 
   removeMO(index: number): void {
     this.lignesMO.splice(index, 1);
+  }
+
+  removeMoItem(item: LigneMO): void {
+    const idx = this.lignesMO.indexOf(item);
+    if (idx !== -1) {
+      this.lignesMO.splice(idx, 1);
+      this.cdr.markForCheck();
+    }
   }
 
   get hasAtLeastOneItem(): boolean {
@@ -244,7 +367,7 @@ export class StepPiecesMoComponent implements OnInit {
     const payloadLignesPieces = this.lignesPieces.map(l => ({
       pieceId: l.isCustom ? null : (l.piece?.id ?? null),
       quantite: l.quantite,
-      prix: l.isCustom ? l.prixUnitaire : (l.piece?.prix ?? null),
+      prix: l.prixUnitaire != null ? l.prixUnitaire : (l.isCustom ? 0 : (l.piece?.prix ?? null)),
       isCustom: l.isCustom ?? false,
       designationPds: l.isCustom ? l.designationPds : undefined,
     }));
@@ -252,7 +375,7 @@ export class StepPiecesMoComponent implements OnInit {
     const payloadLignesMO = this.lignesMO.map(l => ({
       mainDoeuvreId: l.mo.id,
       nbreHeure: l.quantite,
-      prix: l.mo.prix ?? null,
+      prix: l.prixUnitaire != null ? l.prixUnitaire : (l.mo.prix ?? null),
     }));
 
     this.saving = true;
@@ -284,6 +407,18 @@ export class StepPiecesMoComponent implements OnInit {
     });
   }
 
-  formatPiece = (p: any) => p?.reference ? `${p.reference} — ${p.designation}` : '';
-  formatMO = (m: any) => m?.description ? `${m.description} (${m.prix} FCFA)` : '';
+  formatPiece = (p: any) => {
+    if (!p) return '';
+    const type = p.type ? `[${p.type}] ` : '';
+    const ref = p.reference ? `${p.reference} — ` : '';
+    const des = p.designation || '';
+    const prix = p.prix != null ? ` (${p.prix} FCFA)` : '';
+    return `${type}${ref}${des}${prix}`;
+  };
+
+  formatMO = (m: any) => {
+    if (!m) return '';
+    const prix = m.prix != null ? ` (${m.prix} FCFA)` : '';
+    return `${m.description || ''}${prix}`;
+  };
 }

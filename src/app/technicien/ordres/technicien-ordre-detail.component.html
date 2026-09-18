@@ -137,35 +137,102 @@
       }
     </div>
 
-    <!-- Pièces proposées (sans prix) -->
-    <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4">
-      <label class="block text-sm font-semibold text-oas-ink mb-2">Proposer une pièce</label>
-      <p class="text-xs text-oas-muted mb-3">Le prix sera défini ensuite par le chef d'atelier.</p>
-      <div class="flex gap-2">
-        <select [(ngModel)]="selectedPieceId"
-                class="flex-1 px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
-          <option [ngValue]="null">-- Choisir une pièce --</option>
-          @for (p of allPieces; track p.id) {
-            <option [ngValue]="p.id">{{ p.reference }} ({{ p.categorie }})</option>
-          }
-        </select>
-        <input type="number" [(ngModel)]="pieceQuantite" min="1"
-               class="w-24 px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
-        <button (click)="proposerPiece()" [disabled]="!selectedPieceId || savingPiece"
-                class="px-4 h-[42px] rounded-lg bg-oas-accent hover:bg-oas-accent-dark text-white text-sm font-bold transition cursor-pointer disabled:opacity-60">
-          Ajouter
-        </button>
+    <!-- 1. Pièce Catalogue (PDP) -->
+    <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4 space-y-3">
+      <div>
+        <label class="block text-sm font-semibold text-oas-ink mb-1 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-oas-accent"></span>
+          Proposer une pièce du catalogue (PDP)
+        </label>
+        <p class="text-xs text-oas-muted mb-2">Sélectionnez une pièce cataloguée en stock (avec ID). Le prix sera validé par le chef d'atelier.</p>
+        <div class="flex gap-2 items-center">
+          <div class="flex-1 min-w-0">
+            <app-searchable-select
+              [(ngModel)]="selectedPieceId"
+              [options]="allPieces"
+              bindValue="id"
+              placeholder="Rechercher une pièce catalogue (PDP) par référence ou désignation..."
+              [bindLabel]="formatPiece">
+            </app-searchable-select>
+          </div>
+          <input type="number" [(ngModel)]="pieceQuantite" min="1" placeholder="Qté" title="Quantité"
+                 class="w-24 px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm text-center font-bold focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition flex-shrink-0"/>
+          <button (click)="proposerPiece()" [disabled]="!selectedPieceId || savingPiece"
+                  class="px-4 h-[42px] rounded-xl bg-oas-accent hover:bg-oas-accent-dark text-white text-sm font-bold transition cursor-pointer disabled:opacity-60 flex-shrink-0">
+            Ajouter
+          </button>
+        </div>
       </div>
 
-      @if (ordre.lignesOrdreReparationPieces && ordre.lignesOrdreReparationPieces.length > 0) {
-        <ul class="mt-3 space-y-1">
-          @for (lp of ordre.lignesOrdreReparationPieces; track lp.id) {
-            <li class="text-sm text-oas-ink2 flex justify-between px-3 py-2 rounded-lg bg-oas-bg">
-              <span>{{ lp.piece?.reference || lp.piece?.designation || lp.designationPds || 'Pièce' }}</span>
-              <span class="text-oas-muted">x{{ lp.quantite }}</span>
-            </li>
-          }
-        </ul>
+      <!-- Pièces Catalogue ajoutées -->
+      @if (lignesPiecesCatalogueGroupes && lignesPiecesCatalogueGroupes.length > 0) {
+        <div class="border-t border-oas-line pt-3">
+          <span class="text-xs font-bold text-oas-muted uppercase block mb-1.5">Pièces catalogue ajoutées</span>
+          <ul class="space-y-1.5">
+            @for (lp of lignesPiecesCatalogueGroupes; track ('cat_' + lp.piece?.id)) {
+              <li class="text-sm text-oas-ink2 flex justify-between items-center px-3 py-2 rounded-lg bg-oas-bg">
+                <div class="flex items-center gap-2">
+                  <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold border bg-blue-100 text-blue-800 border-blue-300">
+                    PDP
+                  </span>
+                  <span>{{ lp.piece?.reference ? (lp.piece?.reference + ' — ' + (lp.piece?.designation || '')) : (lp.piece?.designation || 'Pièce') }}</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="text-oas-muted font-bold text-xs">x{{ lp.quantite }}</span>
+                  <button type="button" (click)="supprimerPiece(lp)" title="Retirer cette pièce"
+                          class="text-red-400 hover:text-red-600 hover:bg-red-50 p-1 rounded transition cursor-pointer text-xs font-bold">
+                    ✕
+                  </button>
+                </div>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+    </div>
+
+    <!-- 2. Pièce à Saisir (PDS — Hors catalogue) -->
+    <div class="bg-white border border-amber-200 rounded-lg shadow-sm px-5 py-4 space-y-3">
+      <div>
+        <label class="block text-sm font-semibold text-oas-ink mb-1 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+          Proposer une pièce à saisir (PDS — Hors catalogue)
+        </label>
+        <p class="text-xs text-oas-muted mb-2">Pour toute pièce spécifique ou hors catalogue (aucun ID catalogue requis). Le prix sera défini par le chef d'atelier.</p>
+        <div class="flex gap-2">
+          <input type="text" [(ngModel)]="pdsDesignation" placeholder="Désignation de la pièce à saisir (ex: Radiateur adaptable, filtre spécifique...)"
+                 class="flex-1 px-3 py-2.5 rounded-lg border border-amber-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-400/40 transition text-oas-ink font-medium"/>
+          <input type="number" [(ngModel)]="pdsQuantite" min="1" placeholder="Qté" title="Quantité"
+                 class="w-24 px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm text-center font-bold focus:outline-none focus:ring-2 focus:ring-amber-400/40 transition"/>
+          <button (click)="proposerPds()" [disabled]="!pdsDesignation.trim() || savingPds"
+                  class="px-4 h-[42px] rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold transition cursor-pointer disabled:opacity-60 flex-shrink-0">
+            Ajouter PDS
+          </button>
+        </div>
+      </div>
+
+      <!-- Pièces PDS ajoutées -->
+      @if (lignesPiecesPdsGroupes && lignesPiecesPdsGroupes.length > 0) {
+        <div class="border-t border-amber-200 pt-3">
+          <span class="text-xs font-bold text-amber-800 uppercase block mb-1.5">Pièces à saisir (PDS) ajoutées</span>
+          <ul class="space-y-1.5">
+            @for (lp of lignesPiecesPdsGroupes; track ('pds_' + lp.designationPds)) {
+              <li class="text-sm text-oas-ink2 flex justify-between items-center px-3 py-2 rounded-lg bg-amber-50/50 border border-amber-100">
+                <div class="flex items-center gap-2">
+                  <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300">PDS</span>
+                  <span class="font-medium text-amber-950">{{ lp.designationPds || 'Pièce personnalisée' }}</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="text-amber-800 font-bold text-xs">x{{ lp.quantite }}</span>
+                  <button type="button" (click)="supprimerPiece(lp)" title="Retirer cette pièce"
+                          class="text-red-400 hover:text-red-600 hover:bg-red-50 p-1 rounded transition cursor-pointer text-xs font-bold">
+                    ✕
+                  </button>
+                </div>
+              </li>
+            }
+          </ul>
+        </div>
       }
     </div>
 
@@ -189,12 +256,18 @@
         </button>
       </div>
 
-      @if (ordre.lignesOrdreReparationMainDoeuvres && ordre.lignesOrdreReparationMainDoeuvres.length > 0) {
+      @if (lignesMOGroupes && lignesMOGroupes.length > 0) {
         <ul class="mt-3 space-y-1">
-          @for (lmd of ordre.lignesOrdreReparationMainDoeuvres; track lmd.id) {
-            <li class="text-sm text-oas-ink2 flex justify-between px-3 py-2 rounded-lg bg-oas-bg">
+          @for (lmd of lignesMOGroupes; track lmd.mainDoeuvre?.id) {
+            <li class="text-sm text-oas-ink2 flex justify-between items-center px-3 py-2 rounded-lg bg-oas-bg">
               <span>{{ lmd.mainDoeuvre?.description || lmd.mainDoeuvre?.categorie?.nom || 'Prestation' }}</span>
-              <span class="text-oas-muted">{{ lmd.nbreHeure }}h</span>
+              <div class="flex items-center gap-3">
+                <span class="text-oas-muted font-bold text-xs">{{ lmd.nbreHeure }}h</span>
+                <button type="button" (click)="supprimerMainDoeuvre(lmd)" title="Retirer cette main d'œuvre"
+                        class="text-red-400 hover:text-red-600 hover:bg-red-50 p-1 rounded transition cursor-pointer text-xs font-bold">
+                  ✕
+                </button>
+              </div>
             </li>
           }
         </ul>

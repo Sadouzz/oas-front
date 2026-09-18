@@ -122,7 +122,7 @@ export interface OrdreReparation {
   bonDeSortie?: { id: number; reference: string; statut: string } | null;
   lignesOrdreReparationPieces?: {
     id: number;
-    piece?: { id: number; reference?: string; designation?: string; prix?: number };
+    piece?: { id: number; reference?: string; designation?: string; prix?: number; type?: string; stockMagasin?: number; stockAtelier?: number };
     isCustom?: boolean;
     designationPds?: string;
     quantite: number;
