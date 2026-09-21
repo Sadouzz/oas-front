@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { FicheAtelierService } from '../fiche-atelier.service';
 import { FicheAtelierDetailsResponse } from '../../../shared/models';
 import { DevisPrevisionnel, DevisPrevisionnelService } from '../../devis-previsionnels/devis-previsionnel.service';
+import { OrdreReparationService } from '../../ordres-reparation/ordre-reparation.service';
 import { LucideArrowLeft, LucideCheck, LucideX } from '@lucide/angular';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -19,6 +20,7 @@ export class FicheAtelierDetails implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private ficheAtelierService = inject(FicheAtelierService);
+  private ordreService = inject(OrdreReparationService);
   private authService = inject(AuthService);
   private devisService = inject(DevisPrevisionnelService);
 
@@ -112,9 +114,52 @@ export class FicheAtelierDetails implements OnInit {
     });
   }
 
+  statutToStepPath(statut?: string | null): string {
+    switch (statut) {
+      case 'RECEPTION':
+      case 'A_FAIRE': return 'reception';
+      case 'DIAGNOSTIC':
+      case 'EN_DIAGNOSTIC': return 'diagnostic';
+      case 'PIECES_MO':
+      case 'EN_ATTENTE_PIECES_MO': return 'pieces-mo';
+      case 'PROFORMA':
+      case 'EN_ATTENTE_PROFORMA': return 'proforma';
+      case 'BON_DE_COMMANDE':
+      case 'PROFORMA_VALIDE':
+      case 'EN_ATTENTE_COMMANDE': return 'approvisionnement';
+      case 'BON_DE_SORTIE':
+      case 'EN_ATTENTE_SORTIE': return 'bon-sortie';
+      case 'ASSIGN_TECHNICIEN':
+      case 'EN_ATTENTE_MECANICIEN': return 'assignation';
+      case 'REPARATION':
+      case 'EN_COURS': return 'reparation';
+      case 'PAIEMENT':
+      case 'EN_ATTENTE_PAIEMENT': return 'paiement';
+      case 'PRET_A_LIVRER':
+      case 'TERMINE': return 'livraison';
+      case 'LIVRE': return 'cloture';
+      default: return 'reception';
+    }
+  }
+
   ouvrirOrdreReparation() {
     if (!this.fiche) return;
-    this.router.navigate(['/app/ordres-reparation'], { queryParams: { ficheAtelierId: this.fiche.id } });
+    this.creatingOrdreReparation = true;
+    this.cdr.markForCheck();
+
+    this.ordreService.createFromFicheAtelier(this.fiche.id).subscribe({
+      next: (ordre) => {
+        this.creatingOrdreReparation = false;
+        this.cdr.markForCheck();
+        const step = this.statutToStepPath(ordre.statut);
+        this.router.navigate(['/app/ordres-reparation', ordre.id, step]);
+      },
+      error: () => {
+        this.creatingOrdreReparation = false;
+        this.cdr.markForCheck();
+        this.router.navigate(['/app/ordres-reparation'], { queryParams: { ficheAtelierId: this.fiche?.id } });
+      }
+    });
   }
 
   creerOrdreReparation() {
@@ -123,7 +168,7 @@ export class FicheAtelierDetails implements OnInit {
       this.error = "Un devis prévisionnel doit être créé et accepté avant de créer l'ordre de réparation.";
       return;
     }
-    this.router.navigate(['/app/ordres-reparation'], { queryParams: { ficheAtelierId: this.fiche.id } });
+    this.ouvrirOrdreReparation();
   }
 
 

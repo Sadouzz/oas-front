@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FicheAtelierService } from '../fiche-atelier.service';
 import { RendezVousService } from '../../rendezvous/rendezvous.service';
+import { OrdreReparationService } from '../../ordres-reparation/ordre-reparation.service';
 import { FicheAtelierDetailsResponse, RendezVous, extractContent } from '../../../shared/models';
 import { Router, RouterLink } from '@angular/router';
 import { LucideEye, LucideWrench, LucidePlus, LucideX, LucideCalendar } from '@lucide/angular';
@@ -19,11 +20,13 @@ export class FichesAtelierList extends BasePaginatedComponent implements OnInit 
   private cdr = inject(ChangeDetectorRef);
   private service = inject(FicheAtelierService);
   private rdvService = inject(RendezVousService);
+  private ordreService = inject(OrdreReparationService);
   private router = inject(Router);
   
   fiches: FicheAtelierDetailsResponse[] = [];
   loading = false;
   error = '';
+  openingOrdreId: number | null = null;
   private searchTimeout: any;
 
   // Modal Nouveau Fiche Atelier (Sélection RDV)
@@ -109,6 +112,75 @@ export class FichesAtelierList extends BasePaginatedComponent implements OnInit 
   selectRendezVous(rdv: RendezVous) {
     this.showNewModal = false;
     this.router.navigate(['/app/admin/fiches-atelier/new', rdv.id]);
+  }
+
+  statutToStepPath(statut?: string | null): string {
+    switch (statut) {
+      case 'RECEPTION':
+      case 'A_FAIRE': return 'reception';
+      case 'DIAGNOSTIC':
+      case 'EN_DIAGNOSTIC': return 'diagnostic';
+      case 'PIECES_MO':
+      case 'EN_ATTENTE_PIECES_MO': return 'pieces-mo';
+      case 'PROFORMA':
+      case 'EN_ATTENTE_PROFORMA': return 'proforma';
+      case 'BON_DE_COMMANDE':
+      case 'PROFORMA_VALIDE':
+      case 'EN_ATTENTE_COMMANDE': return 'approvisionnement';
+      case 'BON_DE_SORTIE':
+      case 'EN_ATTENTE_SORTIE': return 'bon-sortie';
+      case 'ASSIGN_TECHNICIEN':
+      case 'EN_ATTENTE_MECANICIEN': return 'assignation';
+      case 'REPARATION':
+      case 'EN_COURS': return 'reparation';
+      case 'PAIEMENT':
+      case 'EN_ATTENTE_PAIEMENT': return 'paiement';
+      case 'PRET_A_LIVRER':
+      case 'TERMINE': return 'livraison';
+      case 'LIVRE': return 'cloture';
+      default: return 'reception';
+    }
+  }
+
+  openOrdreTravail(fiche: FicheAtelierDetailsResponse) {
+    this.openingOrdreId = fiche.id;
+    this.cdr.markForCheck();
+
+    this.ordreService.createFromFicheAtelier(fiche.id).subscribe({
+      next: (ordre) => {
+        this.openingOrdreId = null;
+        this.cdr.markForCheck();
+        const step = this.statutToStepPath(ordre.statut);
+        this.router.navigate(['/app/ordres-reparation', ordre.id, step]);
+      },
+      error: () => {
+        // Fallback: chercher dans la liste des ordres
+        this.ordreService.getAll({ keyword: fiche.vehiculeImmatriculation || undefined, size: 50 }).subscribe({
+          next: (res: any) => {
+            this.openingOrdreId = null;
+            this.cdr.markForCheck();
+            const list: any[] = extractContent<any>(res);
+            const match = list.find(o => 
+              o.ficheAtelierId === fiche.id || 
+              o.ficheAtelier?.id === fiche.id || 
+              (fiche.vehiculeId && o.vehicule?.id === fiche.vehiculeId) ||
+              (fiche.vehiculeImmatriculation && o.vehicule?.immatriculation === fiche.vehiculeImmatriculation)
+            );
+            if (match) {
+              const step = this.statutToStepPath(match.statut);
+              this.router.navigate(['/app/ordres-reparation', match.id, step]);
+            } else {
+              this.router.navigate(['/app/ordres-reparation'], { queryParams: { ficheAtelierId: fiche.id } });
+            }
+          },
+          error: () => {
+            this.openingOrdreId = null;
+            this.cdr.markForCheck();
+            this.router.navigate(['/app/ordres-reparation'], { queryParams: { ficheAtelierId: fiche.id } });
+          }
+        });
+      }
+    });
   }
 
   createWithoutRdv() {

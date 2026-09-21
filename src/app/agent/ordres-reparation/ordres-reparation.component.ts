@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, NgClass, NgStyle } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { OrdreReparationService } from './ordre-reparation.service';
 import { ProformaService } from '../proforma/proforma.service';
 import { FactureService } from '../factures/facture.service';
@@ -45,6 +45,7 @@ export const STATUT_STEPS: { statut: StatutOrdre; label: string }[] = [
 export class OrdresReparationComponent extends BasePaginatedComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private service = inject(OrdreReparationService);
   private proformaService = inject(ProformaService);
   private factureService = inject(FactureService);
@@ -71,6 +72,20 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
   readonly statutSteps = STATUT_STEPS;
 
   ngOnInit(): void {
+    const qp = this.route.snapshot.queryParams;
+    if (qp && qp['ficheAtelierId']) {
+      const fId = +qp['ficheAtelierId'];
+      this.service.createFromFicheAtelier(fId).subscribe({
+        next: (ordre) => {
+          const target = this.statutToStepPath(ordre.statut);
+          this.router.navigate(['/app/ordres-reparation', ordre.id, target], { replaceUrl: true });
+        },
+        error: () => {
+          this.loadData();
+        }
+      });
+      return;
+    }
     this.loadData();
   }
 

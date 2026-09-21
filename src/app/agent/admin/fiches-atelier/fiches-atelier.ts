@@ -311,8 +311,10 @@ export class FichesAtelier implements OnInit {
 
     const { clientId: _c, vehiculeId: _v, ...formVals } = this.form.value;
 
+    const rdvId = this.rdvData ? this.rdvData.id : this.rendezVousId;
+
     const request: FicheAtelierRequest = {
-      rendezVousId: this.rdvData ? this.rdvData.id : null,
+      rendezVousId: rdvId || null,
       clientId: clientId,
       vehiculeId: vehiculeId,
       ...formVals,
@@ -331,15 +333,38 @@ export class FichesAtelier implements OnInit {
 
     this.service.create(request).subscribe({
       next: () => {
-        this.saving = false;
-        this.success = "Fiche atelier créée avec succès !";
-        setTimeout(() => {
-          this.router.navigate(['/app/fiches-atelier']);
-        }, 1200);
+        if (rdvId) {
+          this.rdvService.updateStatut(rdvId, 'TERMINE').subscribe({
+            next: () => {
+              this.saving = false;
+              this.success = "Fiche atelier créée avec succès !";
+              this.cdr.markForCheck();
+              setTimeout(() => {
+                this.router.navigate(['/app/fiches-atelier']);
+              }, 1200);
+            },
+            error: () => {
+              this.saving = false;
+              this.success = "Fiche atelier créée avec succès !";
+              this.cdr.markForCheck();
+              setTimeout(() => {
+                this.router.navigate(['/app/fiches-atelier']);
+              }, 1200);
+            }
+          });
+        } else {
+          this.saving = false;
+          this.success = "Fiche atelier créée avec succès !";
+          this.cdr.markForCheck();
+          setTimeout(() => {
+            this.router.navigate(['/app/fiches-atelier']);
+          }, 1200);
+        }
       },
       error: (err) => {
         this.saving = false;
         this.error = err.error?.message || err.error || "Erreur lors de la création de la fiche atelier.";
+        this.cdr.markForCheck();
       }
     });
   }

@@ -426,6 +426,20 @@ export class RendezVousComponent implements OnInit {
     return map[s] ?? '';
   }
 
+  getStatutLabel(rdv: RendezVous): string {
+    if (rdv.hasFicheAtelier || rdv.statut === 'TERMINE') {
+      return 'Fiche atelier créée';
+    }
+    return this.statutLabel(rdv.statut);
+  }
+
+  getStatutClass(rdv: RendezVous): string {
+    if (rdv.hasFicheAtelier || rdv.statut === 'TERMINE') {
+      return this.statutClass('TERMINE');
+    }
+    return this.statutClass(rdv.statut);
+  }
+
   private notify(msg: string) {
     this.saving = false;
     this.successMessage = msg;

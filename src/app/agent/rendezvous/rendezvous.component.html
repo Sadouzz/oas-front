@@ -69,8 +69,8 @@
               </td>
               <td class="px-5 py-4 text-oas-ink max-w-[200px] truncate">{{ rdv.motif }}</td>
               <td class="px-5 py-4">
-                <span class="px-2.5 py-1 rounded-full text-xs font-semibold {{ statutClass(rdv.statut) }}">
-                  {{ statutLabel(rdv.statut) }}
+                <span class="px-2.5 py-1 rounded-full text-xs font-semibold {{ getStatutClass(rdv) }}">
+                  {{ getStatutLabel(rdv) }}
                 </span>
               </td>
               <td class="px-5 py-4">
@@ -79,12 +79,10 @@
                           class="p-1.5 rounded-lg hover:bg-oas-info-bg text-oas-muted hover:text-oas-info transition cursor-pointer">
                     <svg lucidePencil class="w-4 h-4"></svg>
                   </button>
-                  @if (rdv.statut === 'CONFIRME') {
+                  @if (rdv.statut === 'CONFIRME' && !rdv.hasFicheAtelier) {
                     <button (click)="createFicheAtelier(rdv)" 
                             title="Créer la fiche atelier"
-                            [disabled]="rdv.hasFicheAtelier"
-                            class="p-1.5 rounded-lg transition"
-                            [class]="!rdv.hasFicheAtelier ? 'text-oas-muted hover:text-oas-accent hover:bg-oas-accent/10 cursor-pointer' : 'opacity-50 cursor-not-allowed text-oas-muted'">
+                            class="p-1.5 rounded-lg transition text-oas-muted hover:text-oas-accent hover:bg-oas-accent/10 cursor-pointer">
                       <svg lucideFileText class="w-4 h-4"></svg>
                     </button>
                   }
