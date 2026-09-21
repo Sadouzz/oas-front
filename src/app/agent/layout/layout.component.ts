@@ -44,6 +44,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
   notifications: AgentNotification[] = [];
   openSubSection: string | null = 'pieces';
   
+  isSidebarOpen = false;
+  
   activeGarageName: string | null = null;
   
   get unreadCount(): number {
@@ -275,6 +277,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
     } else {
       this.openSection = null;
     }
+    this.closeSidebar();
   }
 
   toggleSection(section: string) {
@@ -283,6 +286,14 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
   toggleSubSection(subSection: string) {
     this.openSubSection = this.openSubSection === subSection ? null : subSection;
+  }
+
+  toggleSidebar() {
+    this.isSidebarOpen = !this.isSidebarOpen;
+  }
+
+  closeSidebar() {
+    this.isSidebarOpen = false;
   }
 
   logout(): void {

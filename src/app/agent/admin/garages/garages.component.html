@@ -1,18 +1,18 @@
-﻿<div class="h-full flex flex-col">
+<div class="h-full flex flex-col">
   <!-- Header -->
-  <div class="bg-white border-b border-oas-line px-7 py-5 flex-shrink-0 flex items-center justify-between">
+  <div class="bg-white/80 backdrop-blur-md border-b border-oas-line px-4 sm:px-7 py-5 flex-shrink-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
     <div>
       <h1 class="text-2xl font-bold text-oas-ink">Gestion des Garages</h1>
       <p class="text-sm text-oas-muted mt-1">Liste et configuration des garages de l'entreprise.</p>
     </div>
-    <button (click)="openModal()" class="flex items-center gap-2 bg-oas-accent hover:bg-oas-accent-dark text-white font-semibold px-4 h-10 rounded-lg transition">
+    <button (click)="openModal()" class="flex items-center justify-center gap-2 bg-oas-accent hover:bg-oas-accent-dark text-white font-semibold px-5 h-11 rounded-lg transition shadow-sm hover:shadow-md w-full sm:w-auto">
       <svg lucidePlus class="w-4 h-4"></svg>
       Nouveau Garage
     </button>
   </div>
 
   <!-- Content -->
-  <div class="flex-1 p-7 overflow-y-auto">
+  <div class="flex-1 p-4 sm:p-7 overflow-y-auto">
     @if (loading) {
       <div class="flex justify-center items-center h-40">
         <svg class="animate-spin h-8 w-8 text-oas-accent" fill="none" viewBox="0 0 24 24">
@@ -21,8 +21,9 @@
         </svg>
       </div>
     } @else {
-      <div class="bg-white border border-oas-line rounded-xl shadow-sm overflow-hidden">
-        <table class="w-full text-sm text-left">
+      <div class="bg-white/80 backdrop-blur-md border border-oas-line rounded-xl shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm text-left">
           <thead class="bg-oas-bg text-oas-muted uppercase text-[11px] font-bold tracking-wider">
             <tr>
               <th class="px-6 py-4">Garage</th>
@@ -63,6 +64,7 @@
             }
           </tbody>
         </table>
+        </div>
       </div>
     }
   </div>
@@ -70,19 +72,19 @@
 
 <!-- Modal Formulaire -->
 @if (showModal) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-oas-ink/40 backdrop-blur-sm animate-in fade-in duration-200">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
-      <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line bg-oas-bg/50">
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
+      <div class="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-oas-line bg-white/90 backdrop-blur-md sticky top-0 z-10">
         <h2 class="text-lg font-bold text-oas-ink">{{ editingId ? 'Modifier le Garage' : 'Nouveau Garage' }}</h2>
-        <button (click)="closeModal()" class="text-oas-muted hover:text-oas-ink transition">
+        <button (click)="closeModal()" class="p-2 rounded-xl text-oas-muted hover:text-oas-ink hover:bg-oas-bg transition cursor-pointer">
           <svg lucideX class="w-5 h-5"></svg>
         </button>
       </div>
 
-      <form [formGroup]="garageForm" (ngSubmit)="saveGarage()" class="p-6">
-        <div class="space-y-4">
+      <form [formGroup]="garageForm" (ngSubmit)="saveGarage()" class="p-5 sm:p-6">
+        <div class="space-y-4 sm:space-y-5">
           <!-- Nom & Localité -->
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-xs font-semibold text-oas-muted mb-1">Nom du Garage <span class="text-red-500">*</span></label>
               <input formControlName="nom" type="text" class="w-full px-3 py-2 bg-oas-bg border border-oas-line rounded-lg text-sm text-oas-ink focus:outline-none focus:border-oas-accent focus:ring-1 focus:ring-oas-accent" placeholder="Ex: Garage Dakar">
@@ -100,7 +102,7 @@
           </div>
 
           <!-- Contacts -->
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-xs font-semibold text-oas-muted mb-1">Téléphone Fixe</label>
               <input formControlName="numeroFixe" type="text" class="w-full px-3 py-2 bg-oas-bg border border-oas-line rounded-lg text-sm text-oas-ink focus:outline-none focus:border-oas-accent focus:ring-1 focus:ring-oas-accent">
@@ -118,11 +120,11 @@
           </div>
         </div>
 
-        <div class="mt-8 flex justify-end gap-3">
-          <button type="button" (click)="closeModal()" class="px-4 py-2 text-sm font-semibold text-oas-muted hover:text-oas-ink transition">
+        <div class="mt-8 flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-oas-line">
+          <button type="button" (click)="closeModal()" class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-5 h-11 rounded-lg border border-oas-line flex items-center justify-center transition cursor-pointer text-sm w-full sm:w-auto">
             Annuler
           </button>
-          <button type="submit" [disabled]="submitting" class="flex items-center gap-2 px-5 py-2 rounded-lg bg-oas-accent hover:bg-oas-accent-dark text-white text-sm font-semibold transition disabled:opacity-50">
+          <button type="submit" [disabled]="submitting" class="flex items-center justify-center gap-2 px-5 h-11 rounded-lg bg-oas-accent hover:bg-oas-accent-dark text-white text-sm font-semibold transition disabled:opacity-50 shadow-sm hover:shadow-md w-full sm:w-auto cursor-pointer">
             @if (submitting) {
               <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>

@@ -1,13 +1,13 @@
 <div>
 
   <!-- Header -->
-  <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4 mb-6 flex items-center justify-between">
+  <div class="bg-white/80 backdrop-blur-md border border-oas-line rounded-xl shadow-sm px-5 py-5 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
     <div>
       <h1 class="text-2xl font-bold text-oas-ink">Utilisateurs</h1>
       <p class="text-sm text-oas-muted mt-1">{{ totalElements }} utilisateur(s) au total</p>
     </div>
     <button (click)="openCreate()"
-            class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-11 rounded-lg flex items-center gap-2 transition cursor-pointer">
+            class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-5 h-11 rounded-lg flex items-center gap-2 transition cursor-pointer shadow-sm hover:shadow-md w-full sm:w-auto justify-center">
       <svg lucidePlus class="w-4 h-4"></svg>
       Créer un utilisateur
     </button>
@@ -16,19 +16,19 @@
   <app-alert [success]="successMessage" [error]="errorMessage" />
 
   <!-- Search -->
-  <div class="bg-white rounded-lg border border-oas-line p-3 mb-4 shadow-sm">
+  <div class="bg-white/80 backdrop-blur-md rounded-xl border border-oas-line p-3 mb-4 shadow-sm">
     <div class="relative">
       <span class="absolute left-3 top-1/2 -translate-y-1/2 text-oas-muted">
         <svg lucideSearch class="w-4 h-4"></svg>
       </span>
       <input type="text" (input)="onSearch($event)"
              placeholder="Rechercher par nom, email, matricule ou identifiant..."
-             class="w-full pl-9 pr-4 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
+             class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg/50 text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
     </div>
   </div>
 
   <!-- Table -->
-  <div class="bg-white rounded-lg border border-oas-line shadow-card overflow-hidden">
+  <div class="bg-white/80 backdrop-blur-md rounded-xl border border-oas-line shadow-sm overflow-hidden">
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
         <thead>
@@ -124,17 +124,17 @@
 
 <!-- ── Create / Edit Modal ── -->
 @if (showModal) {
-  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-      <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line sticky top-0 bg-white">
-        <h3 class="font-bold text-oas-ink">{{ isNew ? 'Créer un utilisateur' : 'Modifier l\'utilisateur' }}</h3>
-        <button (click)="closeModal()" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted transition cursor-pointer">
+  <div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
+      <div class="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-oas-line sticky top-0 bg-white/90 backdrop-blur-md z-10">
+        <h3 class="font-bold text-oas-ink text-lg">{{ isNew ? 'Créer un utilisateur' : 'Modifier l\'utilisateur' }}</h3>
+        <button (click)="closeModal()" class="p-2 rounded-xl hover:bg-oas-bg text-oas-muted transition cursor-pointer">
           <svg lucideX class="w-5 h-5"></svg>
         </button>
       </div>
-      <form [formGroup]="form" (ngSubmit)="save()" class="px-6 py-5 space-y-4">
+      <form [formGroup]="form" (ngSubmit)="save()" class="px-5 sm:px-6 py-5 space-y-5">
 
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-semibold text-oas-ink mb-1">Prénom *</label>
             <input type="text" formControlName="firstName"
@@ -156,7 +156,7 @@
         </div>
 
         @if (isNew) {
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-semibold text-oas-ink mb-1">
                 Matricule <span class="text-xs text-oas-muted font-normal">(auto-généré)</span>
@@ -233,13 +233,13 @@
           </div>
         }
 
-        <div class="flex justify-end gap-2 pt-2">
+        <div class="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-oas-line mt-4">
           <button type="button" (click)="closeModal()"
-                  class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-lg border border-oas-line flex items-center transition cursor-pointer text-sm">
+                  class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-5 h-11 rounded-lg border border-oas-line flex items-center justify-center transition cursor-pointer text-sm w-full sm:w-auto">
             Annuler
           </button>
           <button type="submit" [disabled]="saving"
-                  class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-10 rounded-lg flex items-center transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm">
+                  class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-5 h-11 rounded-lg flex items-center justify-center transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm w-full sm:w-auto shadow-sm hover:shadow-md">
             {{ saving ? 'Enregistrement...' : (isNew ? 'Créer' : 'Enregistrer') }}
           </button>
         </div>

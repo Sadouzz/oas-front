@@ -8,7 +8,7 @@
     </div>
     <div class="flex items-center gap-3">
       <button (click)="openNewFicheModal()"
-              class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 transition cursor-pointer shadow-sm text-sm">
+              class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 py-2.5 rounded-xl flex items-center justify-center w-full sm:w-auto gap-2 transition cursor-pointer shadow-sm text-sm">
         <svg lucidePlus class="w-4 h-4"></svg>
         <span>Nouvelle Fiche Atelier</span>
       </button>
@@ -46,62 +46,110 @@
 
   <!-- Table -->
   @if (!loading && !error) {
-    <div class="flex-1 overflow-auto">
-      <table class="w-full text-left border-collapse min-w-[800px]">
-        <thead class="bg-gray-50/80 sticky top-0 z-10 backdrop-blur-sm">
-          <tr>
-            <th class="px-6 py-4 text-xs font-bold text-oas-faint uppercase tracking-wider border-b border-oas-line">N°</th>
-            <th class="px-6 py-4 text-xs font-bold text-oas-faint uppercase tracking-wider border-b border-oas-line">Client</th>
-            <th class="px-6 py-4 text-xs font-bold text-oas-faint uppercase tracking-wider border-b border-oas-line">Véhicule</th>
-            <th class="px-6 py-4 text-xs font-bold text-oas-faint uppercase tracking-wider border-b border-oas-line">Chauffeur</th>
-            <th class="px-6 py-4 text-xs font-bold text-oas-faint uppercase tracking-wider border-b border-oas-line">Date Création</th>
-            <th class="px-6 py-4 text-xs font-bold text-oas-faint uppercase tracking-wider border-b border-oas-line text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-oas-line bg-white">
-          @if (fiches.length === 0) {
+    <div class="flex-1 overflow-y-auto">
+      <!-- Vue Mobile (Cards) -->
+      <div class="md:hidden flex flex-col divide-y divide-oas-line">
+        @if (fiches.length === 0) {
+          <div class="p-6 text-center text-oas-muted text-sm">
+            Aucune fiche atelier trouvée.
+          </div>
+        }
+        @for (fiche of fiches; track fiche.id) {
+          <div class="p-4 bg-white hover:bg-oas-bg/50 transition">
+            <div class="flex items-start justify-between mb-2">
+              <div>
+                <span class="font-bold text-oas-ink text-sm">#{{ fiche.numero || fiche.id }}</span>
+                <p class="font-semibold text-oas-ink2 mt-1">{{ fiche.clientName }}</p>
+              </div>
+              <span class="text-xs text-oas-faint font-medium">{{ fiche.createdAt | date:'dd/MM/yy' }}</span>
+            </div>
+            
+            <div class="bg-oas-bg rounded-lg p-3 mb-3 text-sm">
+              <div class="flex justify-between items-center mb-1.5">
+                <span class="text-xs text-oas-muted">Véhicule</span>
+                <span class="font-medium text-oas-ink2">{{ fiche.vehiculeImmatriculation }}</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-xs text-oas-muted">Chauffeur</span>
+                <span class="font-medium text-oas-ink2">{{ fiche.nomChauffeur || 'N/A' }}</span>
+              </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+              <a [routerLink]="['/app/ordres-reparation']" 
+                 [queryParams]="{ficheAtelierId: fiche.id}"
+                 class="flex-1 flex items-center justify-center gap-1.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl transition text-xs font-semibold">
+                <svg lucideWrench class="w-3.5 h-3.5"></svg>
+                Ordre trav.
+              </a>
+              <a [routerLink]="['/app/fiches-atelier', fiche.id]" 
+                 class="flex-1 flex items-center justify-center gap-1.5 py-2 bg-oas-accent/10 hover:bg-oas-accent/20 text-oas-accent rounded-xl transition text-xs font-semibold">
+                <svg lucideEye class="w-3.5 h-3.5"></svg>
+                Détails
+              </a>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Vue Desktop (Table) -->
+      <div class="hidden md:block overflow-x-auto min-w-full">
+        <table class="w-full text-left border-collapse min-w-[800px]">
+          <thead class="bg-gray-50/80 sticky top-0 z-10 backdrop-blur-sm">
             <tr>
-              <td colspan="6" class="px-6 py-12 text-center text-oas-muted">
-                Aucune fiche atelier trouvée.
-              </td>
+              <th class="px-6 py-4 text-xs font-bold text-oas-faint uppercase tracking-wider border-b border-oas-line">N°</th>
+              <th class="px-6 py-4 text-xs font-bold text-oas-faint uppercase tracking-wider border-b border-oas-line">Client</th>
+              <th class="px-6 py-4 text-xs font-bold text-oas-faint uppercase tracking-wider border-b border-oas-line">Véhicule</th>
+              <th class="px-6 py-4 text-xs font-bold text-oas-faint uppercase tracking-wider border-b border-oas-line">Chauffeur</th>
+              <th class="px-6 py-4 text-xs font-bold text-oas-faint uppercase tracking-wider border-b border-oas-line">Date Création</th>
+              <th class="px-6 py-4 text-xs font-bold text-oas-faint uppercase tracking-wider border-b border-oas-line text-right">Actions</th>
             </tr>
-          }
-          @for (fiche of fiches; track fiche.id) {
-            <tr class="hover:bg-oas-bg/50 transition duration-150">
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-oas-ink">
-                #{{ fiche.numero || fiche.id }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-oas-ink2 font-medium">
-                {{ fiche.clientName }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-oas-ink2">
-                {{ fiche.vehiculeImmatriculation }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-oas-faint">
-                {{ fiche.nomChauffeur || 'N/A' }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-oas-faint">
-                {{ fiche.createdAt | date:'dd/MM/yyyy HH:mm' }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <div class="flex justify-end gap-2">
-                  <a [routerLink]="['/app/ordres-reparation']" 
-                     [queryParams]="{ficheAtelierId: fiche.id}"
-                     class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors duration-200">
-                    <svg lucideWrench class="w-4 h-4"></svg>
-                    <span class="hidden sm:inline">Ordre de travail</span>
-                  </a>
-                  <a [routerLink]="['/app/fiches-atelier', fiche.id]" 
-                     class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-oas-accent/10 hover:bg-oas-accent/20 text-oas-accent rounded-lg transition-colors duration-200">
-                    <svg lucideEye class="w-4 h-4"></svg>
-                    <span class="hidden sm:inline">Détails</span>
-                  </a>
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
+          </thead>
+          <tbody class="divide-y divide-oas-line bg-white">
+            @if (fiches.length === 0) {
+              <tr>
+                <td colspan="6" class="px-6 py-12 text-center text-oas-muted">
+                  Aucune fiche atelier trouvée.
+                </td>
+              </tr>
+            }
+            @for (fiche of fiches; track fiche.id) {
+              <tr class="hover:bg-oas-bg/50 transition duration-150">
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-oas-ink">
+                  #{{ fiche.numero || fiche.id }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-oas-ink2 font-medium">
+                  {{ fiche.clientName }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-oas-ink2">
+                  {{ fiche.vehiculeImmatriculation }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-oas-faint">
+                  {{ fiche.nomChauffeur || 'N/A' }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-oas-faint">
+                  {{ fiche.createdAt | date:'dd/MM/yyyy HH:mm' }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <div class="flex justify-end gap-2">
+                    <a [routerLink]="['/app/ordres-reparation']" 
+                       [queryParams]="{ficheAtelierId: fiche.id}"
+                       class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors duration-200">
+                      <svg lucideWrench class="w-4 h-4"></svg>
+                      <span class="hidden xl:inline">Ordre de travail</span>
+                    </a>
+                    <a [routerLink]="['/app/fiches-atelier', fiche.id]" 
+                       class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-oas-accent/10 hover:bg-oas-accent/20 text-oas-accent rounded-lg transition-colors duration-200">
+                      <svg lucideEye class="w-4 h-4"></svg>
+                      <span class="hidden xl:inline">Détails</span>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     </div>
     <app-pagination [page]="page" [totalPages]="totalPages" [total]="totalElements" [pageSize]="pageSize"
       (prev)="prevPage()" (next)="nextPage()" />
@@ -129,8 +177,8 @@
       <!-- Option Création Sans Rendez-vous -->
       <div class="px-6 pt-4 pb-1 bg-white">
         <div (click)="createWithoutRdv()"
-             class="p-3.5 bg-gradient-to-r from-red-50 to-orange-50/60 border border-red-200/90 rounded-xl flex items-center justify-between hover:border-red-400 hover:shadow-xs transition cursor-pointer group">
-          <div class="flex items-center gap-3">
+             class="p-3.5 bg-gradient-to-r from-red-50 to-orange-50/60 border border-red-200/90 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 hover:border-red-400 hover:shadow-xs transition cursor-pointer group">
+          <div class="flex items-center gap-3 w-full">
             <div class="w-9 h-9 rounded-lg bg-red-600 text-white flex items-center justify-center font-bold shadow-xs">
               <svg lucidePlus class="w-5 h-5"></svg>
             </div>
@@ -143,7 +191,7 @@
             </div>
           </div>
           <button (click)="createWithoutRdv(); $event.stopPropagation()"
-                  class="px-3.5 py-1.5 bg-red-600 group-hover:bg-red-700 text-white text-xs font-bold rounded-lg transition shadow-xs cursor-pointer flex items-center gap-1.5">
+                  class="px-3.5 py-1.5 bg-red-600 group-hover:bg-red-700 text-white text-xs font-bold rounded-lg transition shadow-xs cursor-pointer flex items-center justify-center w-full sm:w-auto gap-1.5">
             <span>Créer sans RDV</span>
             <span>→</span>
           </button>
@@ -185,8 +233,8 @@
         } @else {
           @for (rdv of filteredRendezVous; track rdv.id) {
             <div (click)="selectRendezVous(rdv)"
-                 class="p-4 rounded-xl border border-oas-line hover:border-oas-accent hover:bg-oas-accent/5 transition cursor-pointer flex items-center justify-between group">
-              <div class="space-y-1 min-w-0">
+                 class="p-4 rounded-xl border border-oas-line hover:border-oas-accent hover:bg-oas-accent/5 transition cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 group">
+              <div class="space-y-1 min-w-0 w-full">
                 <div class="flex items-center gap-2">
                   <span class="font-bold text-sm text-oas-ink group-hover:text-oas-accent transition truncate">{{ rdv.clientName }}</span>
                   <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700">{{ rdv.vehiculeImmatriculation }}</span>
@@ -201,8 +249,8 @@
                 </div>
               </div>
 
-              <div class="flex items-center gap-2 flex-shrink-0 ml-4">
-                <button class="px-3 py-1.5 bg-oas-accent text-white text-xs font-bold rounded-lg group-hover:bg-oas-accent-dark transition shadow-xs">
+              <div class="flex items-center gap-2 flex-shrink-0 w-full sm:w-auto sm:ml-4">
+                <button class="px-3 py-1.5 bg-oas-accent text-white text-xs font-bold rounded-lg group-hover:bg-oas-accent-dark transition shadow-xs w-full sm:w-auto">
                   Créer la fiche
                 </button>
               </div>

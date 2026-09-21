@@ -19,7 +19,7 @@
     @if (fiche) {
     @if (fiche.hasOrdreReparation) {
     <button type="button" (click)="ouvrirOrdreReparation()"
-      class="px-4 h-11 rounded-xl bg-oas-accent hover:bg-oas-accent-dark text-white font-bold flex items-center gap-2 transition cursor-pointer shadow-lg shadow-oas-accent/25">
+      class="px-4 h-11 rounded-xl bg-oas-accent hover:bg-oas-accent-dark text-white font-bold flex items-center justify-center w-full sm:w-auto gap-2 transition cursor-pointer shadow-lg shadow-oas-accent/25">
       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round"
           d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -28,7 +28,7 @@
     </button>
     } @else if (canCreateOrdreReparation) {
     <button type="button" (click)="creerOrdreReparation()" [disabled]="creatingOrdreReparation"
-      class="px-4 h-11 rounded-xl bg-oas-accent hover:bg-oas-accent-dark text-white font-bold flex items-center gap-2 transition cursor-pointer disabled:opacity-60 shadow-lg shadow-oas-accent/25">
+      class="px-4 h-11 rounded-xl bg-oas-accent hover:bg-oas-accent-dark text-white font-bold flex items-center justify-center w-full sm:w-auto gap-2 transition cursor-pointer disabled:opacity-60 shadow-lg shadow-oas-accent/25">
       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
       </svg>
@@ -226,9 +226,9 @@
               Devis {{ devis.statut | lowercase }}.
             }
           </p>
-          <div class="flex items-center gap-2">
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
             <button type="button" (click)="voirDevis()"
-              class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-oas-ink rounded-xl font-bold text-sm transition flex items-center gap-2 cursor-pointer">
+              class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-oas-ink rounded-xl font-bold text-sm transition flex items-center justify-center w-full sm:w-auto gap-2 cursor-pointer">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -237,7 +237,7 @@
             </button>
             @if (devis.statut === 'EN_ATTENTE') {
               <button (click)="validerDevis()"
-                class="px-4 py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-xl font-bold text-sm transition flex items-center gap-2 border border-green-200 cursor-pointer">
+                class="px-4 py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-xl font-bold text-sm transition flex items-center justify-center w-full sm:w-auto gap-2 border border-green-200 cursor-pointer">
                 <svg lucideCheck class="w-4 h-4"></svg>
                 Forcer validation (Accord Tél.)
               </button>
@@ -267,7 +267,7 @@
       </div>
       <div class="mt-4 flex justify-end">
         <button (click)="saveDevis()" [disabled]="!devisMontant || creatingDevis"
-          class="px-5 h-10 bg-oas-ink text-white font-bold rounded-xl hover:bg-gray-800 disabled:opacity-50 transition cursor-pointer">
+          class="px-5 h-10 bg-oas-ink text-white font-bold rounded-xl hover:bg-gray-800 disabled:opacity-50 transition cursor-pointer w-full sm:w-auto">
           {{ creatingDevis ? 'Sauvegarde...' : 'Créer le Devis' }}
         </button>
       </div>

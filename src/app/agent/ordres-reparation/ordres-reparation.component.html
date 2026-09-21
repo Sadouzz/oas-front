@@ -4,13 +4,13 @@
 <div class="space-y-6">
 
   <!-- Header -->
-  <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4 flex items-center justify-between">
+  <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
     <div>
       <h1 class="text-2xl font-bold text-oas-ink">Ordres de Réparation</h1>
       <p class="text-sm text-oas-muted mt-1">{{ paged.length }} ordre(s) affiché(s) sur {{ totalElements }}</p>
     </div>
     <a id="btn-nouvel-ordre" routerLink="/app/ordres-reparation/nouveau"
-      class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-11 rounded-xl flex items-center gap-2 transition cursor-pointer shadow-lg shadow-oas-accent/25">
+      class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-11 rounded-xl flex items-center justify-center gap-2 transition cursor-pointer shadow-lg shadow-oas-accent/25 w-full sm:w-auto">
       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
       </svg>
@@ -34,10 +34,10 @@
         <input (input)="onSearchInput($event)" [value]="searchTerm" placeholder="Rechercher par numéro, véhicule, statut..."
           class="w-full pl-9 pr-4 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition" />
         </div>
-        <div class="flex flex-col">
+        <div class="flex flex-col w-full sm:w-auto flex-1 sm:flex-none min-w-[150px]">
           <label class="text-xs font-semibold text-oas-muted mb-1">Statut</label>
           <select [(ngModel)]="filterStatut" (change)="onFilterStatut()"
-            class="px-3 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
+            class="w-full px-3 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
             <option value="">Tous les statuts</option>
             <option value="RECEPTION">Réception</option>
             <option value="DIAGNOSTIC">Diagnostic</option>
@@ -52,21 +52,21 @@
             <option value="LIVRE">Livré</option>
           </select>
         </div>
-        <div class="flex flex-col">
+        <div class="flex flex-col w-full sm:w-auto flex-1 sm:flex-none min-w-[140px]">
           <label class="text-xs font-semibold text-oas-muted mb-1">Depuis le</label>
           <input type="date" [(ngModel)]="filterDateDebut" (change)="onFilterDate()"
-            class="px-3 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink" />
+            class="w-full px-3 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink" />
           </div>
-          <div class="flex flex-col">
+          <div class="flex flex-col w-full sm:w-auto flex-1 sm:flex-none min-w-[140px]">
             <label class="text-xs font-semibold text-oas-muted mb-1">Jusqu'au</label>
             <input type="date" [(ngModel)]="filterDateFin" (change)="onFilterDate()"
-              class="px-3 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink" />
+              class="w-full px-3 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink" />
             </div>
           </div>
         </div>
 
         <!-- Table + Pagination + Detail -->
-        <div class="flex gap-5 items-start">
+        <div class="flex flex-col xl:flex-row gap-5 items-start">
           <div class="bg-white rounded-2xl border border-oas-line shadow-sm overflow-hidden flex flex-col"
             [class.flex-1]="selectedOrdre" [class.w-full]="!selectedOrdre">
             @if (loading) {
@@ -82,7 +82,46 @@
                 Aucun ordre de réparation trouvé.
               </div>
             } @else {
-              <div class="overflow-x-auto flex-1">
+              <!-- Vue Mobile (Cards) -->
+              <div class="md:hidden flex flex-col gap-3 p-3 flex-1 overflow-y-auto">
+                @for (f of paged; track f.id) {
+                  <div (click)="selectOrdre(f)" class="bg-white border border-oas-line rounded-xl p-4 shadow-sm cursor-pointer"
+                    [ngClass]="{'ring-2 ring-oas-accent bg-orange-50': selectedOrdre?.id === f.id}">
+                    <div class="flex items-start justify-between mb-2">
+                      <div>
+                        <span class="font-bold text-oas-ink text-sm">{{ f.numero }}</span>
+                        <div class="mt-1">
+                          @if (f.vehicule) {
+                            <p class="font-semibold text-sm">{{ f.vehicule.immatriculation }}</p>
+                            <p class="text-xs text-oas-muted">{{ f.vehicule.marque }} {{ f.vehicule.modele }}</p>
+                            @if (f.vehicule.client) {
+                              <p class="text-[10px] text-oas-info mt-0.5">{{ f.vehicule.client.firstName }} {{ f.vehicule.client.lastName }}</p>
+                            }
+                          } @else {
+                            <span class="text-oas-faint">—</span>
+                          }
+                        </div>
+                      </div>
+                      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase"
+                        [ngStyle]="{'background': statutColor(f) + '18', 'color': statutColor(f)}">
+                        {{ statutLabel(f) }}
+                      </span>
+                    </div>
+                    <div class="flex items-center justify-end mt-3 pt-3 border-t border-oas-line">
+                      <button (click)="openEdit(f); $event.stopPropagation()"
+                        class="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-oas-accent/10 text-oas-accent hover:bg-oas-accent/20 transition cursor-pointer w-full">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        Gérer
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <!-- Vue Desktop (Table) -->
+              <div class="hidden md:block overflow-x-auto flex-1">
                 <table class="w-full text-sm">
                   <thead>
                     <tr class="border-b border-oas-line bg-oas-bg/50">
@@ -163,7 +202,7 @@
             <!-- ── Panneau détail ──────────────────────────────────── -->
             @if (selectedOrdre) {
               <div
-                class="w-[360px] flex-shrink-0 bg-white rounded-2xl border border-oas-line shadow-sm flex flex-col overflow-hidden sticky top-6 max-h-[calc(100vh-2rem)]">
+                class="w-full xl:w-[360px] flex-shrink-0 bg-white rounded-2xl border border-oas-line shadow-sm flex flex-col overflow-hidden relative xl:sticky top-6 max-h-none xl:max-h-[calc(100vh-2rem)]">
 
                 <!-- Header detail drawer -->
                 <div class="px-5 py-4 border-b border-oas-line flex items-start justify-between relative">
