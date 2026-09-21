@@ -1,6 +1,8 @@
-import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Subject, of } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap, catchError, takeUntil } from 'rxjs/operators';
 import { VehiculeService } from './vehicule.service';
 import { ClientService } from '../clients/client.service';
 import { UserModel, VehiculeModel, extractContent } from '../../shared/models/index';
@@ -14,7 +16,7 @@ import { BasePaginatedComponent } from '../../shared/components/base-paginated.c
   imports: [ReactiveFormsModule, DecimalPipe, AlertComponent, PaginationComponent],
   templateUrl: './vehicules.component.html',
 })
-export class VehiculesComponent extends BasePaginatedComponent implements OnInit {
+export class VehiculesComponent extends BasePaginatedComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
   private vehiculeService = inject(VehiculeService);
@@ -23,6 +25,7 @@ export class VehiculesComponent extends BasePaginatedComponent implements OnInit
   vehicules: VehiculeModel[] = [];
   filtered: VehiculeModel[] = [];
   clients: UserModel[] = [];
+  selectedClient: UserModel | null = null;
   loading = false;
   saving = false;
   successMessage = '';
@@ -30,7 +33,7 @@ export class VehiculesComponent extends BasePaginatedComponent implements OnInit
 
   showModal = false;
   isNew = false;
-  editingId: number | null = null;
+  editingId = null as number | null;
 
   // 2-step creation
   createStep = 1;
@@ -58,27 +61,51 @@ export class VehiculesComponent extends BasePaginatedComponent implements OnInit
 
   clientOpen = false;
   clientFilter = '';
+  loadingClients = false;
+
+  private clientSearch$ = new Subject<string>();
+  private destroy$ = new Subject<void>();
 
   get clientLabel(): string {
+    if (this.selectedClient) {
+      return `${this.selectedClient.firstName || ''} ${this.selectedClient.lastName || ''}`.trim();
+    }
     const id = this.clientForm.get('clientId')?.value;
     if (!id) return '';
     const c = this.clients.find(x => x.id === Number(id));
-    return c ? `${c.firstName} ${c.lastName}` : '';
+    return c ? `${c.firstName || ''} ${c.lastName || ''}`.trim() : '';
   }
 
   get filteredClients(): UserModel[] {
-    if (!this.clientFilter) return this.clients;
-    const kw = this.clientFilter.toLowerCase();
-    return this.clients.filter(c =>
-      `${c.firstName} ${c.lastName}`.toLowerCase().includes(kw) ||
-      (c.phone ?? '').toLowerCase().includes(kw)
-    );
+    return this.clients || [];
   }
 
   selectClient(c: UserModel) {
+    this.selectedClient = c;
     this.clientForm.patchValue({ clientId: c.id });
     this.clientFilter = '';
     this.clientOpen = false;
+    this.cdr.markForCheck();
+  }
+
+  onClientSearch(event: Event) {
+    const val = (event.target as HTMLInputElement).value;
+    this.clientFilter = val;
+    this.clientSearch$.next(val);
+  }
+
+  onClientFocus() {
+    this.clientOpen = true;
+    this.clientFilter = '';
+    this.loadClients();
+  }
+
+  clearSelectedClient() {
+    this.selectedClient = null;
+    this.clientForm.patchValue({ clientId: null });
+    this.clientFilter = '';
+    this.loadClients();
+    this.cdr.markForCheck();
   }
 
   // Edit form (all fields except client — client cannot be changed after creation)
@@ -93,17 +120,57 @@ export class VehiculesComponent extends BasePaginatedComponent implements OnInit
 
   ngOnInit() {
     this.loadData();
-    // this.clientService.getAll().subscribe({
-    //   next: (res: any) => {
-    //     const list = extractContent<UserModel>(res);
-    //     this.clients = list.filter((c: any) => c.enabled);
-    //     this.cdr.markForCheck();
-    //   }
-    // });
+    this.setupClientSearch();
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  setupClientSearch() {
+    this.clientSearch$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(keyword => {
+        this.loadingClients = true;
+        this.cdr.markForCheck();
+        const kw = keyword?.trim() || '';
+        const params: any = { size: 10 };
+        if (kw) params.keyword = kw;
+        return this.clientService.getAll(params).pipe(
+          catchError(() => of([]))
+        );
+      }),
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (res: any) => {
+        this.clients = extractContent<UserModel>(res);
+        this.loadingClients = false;
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   loadData() {
     this.loadVehicules();
+  }
+
+  loadClients(keyword: string = '') {
+    this.loadingClients = true;
+    const params: any = { size: 10 };
+    if (keyword?.trim()) params.keyword = keyword.trim();
+    this.clientService.getAll(params).subscribe({
+      next: (res: any) => {
+        this.clients = extractContent<UserModel>(res);
+        this.loadingClients = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.loadingClients = false;
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   loadVehicules() {
@@ -171,6 +238,7 @@ export class VehiculesComponent extends BasePaginatedComponent implements OnInit
     this.editingId = null;
     this.createStep = 1;
     this.pendingVehicle = null;
+    this.selectedClient = null;
     this.infoForm.reset();
     this.clientForm.reset();
     this.clientOpen = false;
@@ -184,6 +252,8 @@ export class VehiculesComponent extends BasePaginatedComponent implements OnInit
     this.pendingVehicle = this.infoForm.value;
     this.createStep = 2;
     this.errorMessage = '';
+    this.clientFilter = '';
+    this.loadClients();
   }
 
   prevStep() {
@@ -217,15 +287,33 @@ export class VehiculesComponent extends BasePaginatedComponent implements OnInit
     if (this.isNew) {
       if (this.clientForm.invalid || this.saving) { this.clientForm.markAllAsTouched(); return; }
       this.saving = true;
-      const payload = { ...this.pendingVehicle, clientId: this.clientForm.value.clientId };
-      this.vehiculeService.create(payload).subscribe({
+      const formVal = this.pendingVehicle || {};
+      const payload = {
+        immatriculation: formVal.immatriculation?.trim(),
+        marque: formVal.marque?.trim(),
+        modele: formVal.modele?.trim(),
+        annee: formVal.annee ? Number(formVal.annee) : null,
+        kilometrage: formVal.kilometrage != null && formVal.kilometrage !== '' ? Number(formVal.kilometrage) : null,
+        numeroChassis: formVal.numeroChassis?.trim() || null,
+        clientId: this.clientForm.value.clientId ? Number(this.clientForm.value.clientId) : null
+      };
+      this.vehiculeService.create(payload as any).subscribe({
         next: () => { this.saving = false; this.showSuccess('Véhicule créé avec succès !'); this.closeModal(); this.loadVehicules(); },
         error: (err: any) => { this.saving = false; this.errorMessage = err.error?.message || 'Erreur lors de la création.'; this.cdr.markForCheck(); }
       });
     } else {
       if (this.editForm.invalid || this.saving) { this.editForm.markAllAsTouched(); return; }
       this.saving = true;
-      const payload = { ...this.editForm.value, clientId: this.editingClient?.id ?? null };
+      const formVal = this.editForm.value as any;
+      const payload = {
+        immatriculation: formVal.immatriculation?.trim(),
+        marque: formVal.marque?.trim(),
+        modele: formVal.modele?.trim(),
+        annee: formVal.annee ? Number(formVal.annee) : null,
+        kilometrage: formVal.kilometrage != null && formVal.kilometrage !== '' ? Number(formVal.kilometrage) : null,
+        numeroChassis: formVal.numeroChassis?.trim() || null,
+        clientId: this.editingClient?.id ?? null
+      };
       this.vehiculeService.update(this.editingId!, payload as any).subscribe({
         next: () => { this.saving = false; this.showSuccess('Véhicule modifié avec succès !'); this.closeModal(); this.loadVehicules(); },
         error: (err: any) => { this.saving = false; this.errorMessage = err.error?.message || 'Erreur lors de la modification.'; this.cdr.markForCheck(); }

@@ -18,7 +18,7 @@ export class ClientVehiculeService {
   }
 
   create(data: any): Observable<VehiculeModel> {
-    return this.http.post<VehiculeModel>(this.api, data);
+    return this.http.post<VehiculeModel>(`${this.api}/create`, data);
   }
 
   update(id: number, data: any): Observable<VehiculeModel> {
