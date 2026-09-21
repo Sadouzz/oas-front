@@ -1,15 +1,8 @@
 <div class="client-portal-scope flex h-screen bg-oas-bg overflow-hidden">
 
-  <!-- ── Overlay mobile ── -->
-  @if (mobileMenuOpen) {
-    <div class="fixed inset-0 bg-black/40 z-30 lg:hidden" (click)="toggleMobileMenu()"></div>
-  }
-
-  <!-- ── Sidebar ── -->
+  <!-- ── Sidebar (Desktop uniquement) ── -->
   <aside
-    class="oas-sidebar w-64 text-white flex flex-col flex-shrink-0 fixed inset-y-0 left-0 z-40 transition-all duration-300 lg:static lg:translate-x-0"
-    [class.translate-x-0]="mobileMenuOpen"
-    [class.-translate-x-full]="!mobileMenuOpen"
+    class="oas-sidebar text-white hidden lg:flex lg:flex-col lg:flex-shrink-0 lg:static transition-all duration-300"
     [ngClass]="sidebarCollapsed ? 'lg:w-[76px]' : 'lg:w-64'">
 
     <!-- Logo -->
@@ -117,30 +110,24 @@
   <!-- ── Main area ── -->
   <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
 
-    <!-- Topbar 72px -->
-    <header class="h-[72px] bg-oas-bg flex items-center gap-4 px-4 sm:px-7 flex-shrink-0">
+    <!-- Topbar responsive -->
+    <header class="h-16 sm:h-[72px] bg-oas-bg/90 backdrop-blur-md sticky top-0 z-20 flex items-center gap-3 sm:gap-4 px-3.5 sm:px-7 flex-shrink-0 border-b border-oas-line/50">
 
-      <!-- Hamburger mobile -->
-      <button (click)="toggleMobileMenu()" aria-label="Ouvrir le menu"
-        class="lg:hidden w-[42px] h-[42px] rounded-xl border border-oas-line bg-white flex items-center justify-center text-oas-ink2 hover:bg-oas-bg transition cursor-pointer flex-shrink-0">
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
-        </svg>
-      </button>
 
       <div class="flex items-center gap-2 text-sm flex-1 min-w-0">
-        <span class="text-oas-faint font-semibold hidden sm:block">Espace Client</span>
-        <svg class="w-3.5 h-3.5 text-oas-faint hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <span class="text-oas-faint font-semibold hidden md:block">Espace Client</span>
+        <svg class="w-3.5 h-3.5 text-oas-faint hidden md:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 18l6-6-6-6"/>
         </svg>
-        <span class="font-semibold text-oas-ink truncate text-sm">{{ breadcrumb }}</span>
+        <span class="font-bold text-oas-ink truncate text-sm sm:text-base">{{ breadcrumb }}</span>
       </div>
 
-      <div class="flex items-center gap-3 flex-shrink-0">
+      <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
 
         <!-- Cloche notification -->
         <div class="relative">
-          <button (click)="toggleNotifications()" class="relative w-[42px] h-[42px] rounded-xl border border-oas-line bg-white flex items-center justify-center text-oas-ink2 hover:bg-oas-bg transition cursor-pointer">
+          <button (click)="toggleNotifications()" aria-label="Notifications"
+            class="relative w-10 h-10 sm:w-[42px] sm:h-[42px] rounded-xl border border-oas-line bg-white flex items-center justify-center text-oas-ink2 hover:bg-oas-bg transition cursor-pointer shadow-xs">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
             </svg>
@@ -152,27 +139,27 @@
           </button>
 
           @if (notificationsOpen) {
-            <div class="absolute right-0 mt-2 w-80 bg-white border border-oas-line rounded-xl shadow-lg z-50 overflow-hidden flex flex-col max-h-[400px]">
-              <div class="p-3 border-b border-oas-line flex items-center justify-between bg-gray-50 flex-shrink-0">
+            <div class="fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:right-0 sm:top-full mt-2 w-auto sm:w-80 bg-white border border-oas-line rounded-2xl shadow-xl z-50 overflow-hidden flex flex-col max-h-[75vh] sm:max-h-[400px]">
+              <div class="p-3.5 border-b border-oas-line flex items-center justify-between bg-gray-50 flex-shrink-0">
                 <span class="font-bold text-sm text-oas-ink">Notifications</span>
                 @if (unreadCount > 0) {
-                  <button (click)="markAllAsRead()" class="text-xs text-oas-accent hover:underline font-medium">Tout marquer comme lu</button>
+                  <button (click)="markAllAsRead()" class="text-xs text-oas-accent hover:underline font-semibold">Tout marquer comme lu</button>
                 }
               </div>
               <div class="overflow-y-auto flex-1 p-2 space-y-1">
                 @if (notifications.length === 0) {
-                  <div class="text-center p-4 text-sm text-oas-muted">Aucune notification</div>
+                  <div class="text-center p-6 text-sm text-oas-muted">Aucune notification</div>
                 }
                 @for (notif of notifications; track notif.id) {
                   <div (click)="markAsRead(notif)"
-                       class="p-3 rounded-lg cursor-pointer transition-colors border"
-                       [class.bg-white]="notif.lu" [class.bg-blue-50]="!notif.lu"
+                       class="p-3 rounded-xl cursor-pointer transition-colors border"
+                       [class.bg-white]="notif.lu" [class.bg-blue-50/70]="!notif.lu"
                        [class.border-transparent]="notif.lu" [class.border-blue-100]="!notif.lu"
-                       [class.hover:bg-gray-50]="notif.lu" [class.hover:bg-blue-100]="!notif.lu">
+                       [class.hover:bg-gray-50]="notif.lu" [class.hover:bg-blue-100/70]="!notif.lu">
                     <div class="flex items-start justify-between mb-1">
-                      <span class="font-semibold text-sm" [class.text-oas-ink]="notif.lu" [class.text-blue-900]="!notif.lu">{{ notif.titre }}</span>
+                      <span class="font-semibold text-xs sm:text-sm" [class.text-oas-ink]="notif.lu" [class.text-blue-900]="!notif.lu">{{ notif.titre }}</span>
                       @if (!notif.lu) {
-                        <span class="w-2 h-2 rounded-full bg-oas-accent mt-1.5 flex-shrink-0"></span>
+                        <span class="w-2 h-2 rounded-full bg-oas-accent mt-1 flex-shrink-0"></span>
                       }
                     </div>
                     <p class="text-xs text-oas-muted leading-snug">{{ notif.message }}</p>
@@ -187,14 +174,14 @@
         <!-- Profil utilisateur -->
         <div class="relative">
           <button (click)="toggleProfileMenu()" aria-label="Menu profil"
-            class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0 cursor-pointer transition hover:opacity-90"
+            class="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold text-white flex-shrink-0 cursor-pointer transition hover:opacity-90 shadow-xs"
             style="background:#13355c; border:2px solid #ef6c1a;">
             {{ initials }}
           </button>
 
           @if (profileMenuOpen) {
-            <div class="absolute right-0 mt-2 w-64 bg-white border border-oas-line rounded-xl shadow-lg z-50 overflow-hidden">
-              <a [routerLink]="paths.profil" class="flex items-center gap-3 p-3.5 border-b border-oas-line hover:bg-oas-bg transition cursor-pointer">
+            <div class="absolute right-0 mt-2 w-64 bg-white border border-oas-line rounded-2xl shadow-xl z-50 overflow-hidden">
+              <a [routerLink]="paths.profil" (click)="profileMenuOpen = false" class="flex items-center gap-3 p-3.5 border-b border-oas-line hover:bg-oas-bg transition cursor-pointer">
                 <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
                      style="background:#0c2742; border:2px solid #ef6c1a;">
                   {{ initials }}
@@ -204,7 +191,7 @@
                   <p class="text-xs text-oas-muted">Voir mon profil</p>
                 </div>
               </a>
-              <a [routerLink]="paths.parametres" class="flex items-center gap-3 px-3.5 py-3 hover:bg-oas-bg transition cursor-pointer text-sm font-medium text-oas-ink2">
+              <a [routerLink]="paths.parametres" (click)="profileMenuOpen = false" class="flex items-center gap-3 px-3.5 py-3 hover:bg-oas-bg transition cursor-pointer text-sm font-medium text-oas-ink2">
                 <svg class="w-4 h-4 flex-shrink-0 text-oas-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                   <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -224,11 +211,146 @@
       </div>
     </header>
 
-    <main class="flex-1 overflow-auto p-4 sm:p-7 bg-oas-bg">
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-auto p-3.5 sm:p-6 lg:p-7 pb-24 lg:pb-7 bg-oas-bg">
       <router-outlet></router-outlet>
     </main>
   </div>
 
-  <app-client-messagerie-widget></app-client-messagerie-widget>
+  <!-- ── Bottom Navigation Bar (Mobile / Tablette < 1024px) ── -->
+  <nav class="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-oas-line px-1.5 py-1.5 flex items-center justify-around shadow-[0_-4px_25px_rgba(0,0,0,0.07)]">
+    
+    <a [routerLink]="paths.tableauDeBord" routerLinkActive="text-oas-accent" [routerLinkActiveOptions]="{ exact: true }"
+       class="flex flex-col items-center justify-center py-1 px-2 rounded-xl text-oas-muted hover:text-oas-accent transition text-[11px] font-semibold flex-1">
+      <svg class="w-5 h-5 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+      </svg>
+      <span>Accueil</span>
+    </a>
+
+    <a [routerLink]="paths.vehicules" routerLinkActive="text-oas-accent"
+       class="flex flex-col items-center justify-center py-1 px-2 rounded-xl text-oas-muted hover:text-oas-accent transition text-[11px] font-semibold flex-1">
+      <svg class="w-5 h-5 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/>
+      </svg>
+      <span>Véhicules</span>
+    </a>
+
+    <a [routerLink]="paths.rendezVous" routerLinkActive="text-oas-accent"
+       class="flex flex-col items-center justify-center py-1 px-2 rounded-xl text-oas-muted hover:text-oas-accent transition text-[11px] font-semibold flex-1">
+      <svg class="w-5 h-5 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+      </svg>
+      <span>RDV</span>
+    </a>
+
+    <a [routerLink]="paths.interventions" routerLinkActive="text-oas-accent"
+       class="flex flex-col items-center justify-center py-1 px-2 rounded-xl text-oas-muted hover:text-oas-accent transition text-[11px] font-semibold flex-1">
+      <svg class="w-5 h-5 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+      <span>Atelier</span>
+    </a>
+
+    <button (click)="toggleMoreDrawer()"
+       class="flex flex-col items-center justify-center py-1 px-2 rounded-xl text-oas-muted hover:text-oas-accent transition text-[11px] font-semibold flex-1 cursor-pointer"
+       [class.text-oas-accent]="moreDrawerOpen || isSecondaryActive">
+      <svg class="w-5 h-5 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7"/>
+      </svg>
+      <span>Plus</span>
+    </button>
+  </nav>
+
+  <!-- ── Drawer Mobile "Plus" (Bottom Sheet) ── -->
+  @if (moreDrawerOpen) {
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 lg:hidden" (click)="closeMoreDrawer()"></div>
+    <div class="fixed bottom-0 inset-x-0 z-50 bg-white rounded-t-3xl border-t border-oas-line p-5 shadow-2xl lg:hidden max-h-[85vh] overflow-y-auto">
+      <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
+      
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-extrabold text-base text-oas-ink">Menu complet</h3>
+        <button (click)="closeMoreDrawer()" aria-label="Fermer" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-oas-muted cursor-pointer">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 mb-5">
+        <a [routerLink]="paths.devis" (click)="closeMoreDrawer()"
+           class="flex items-center gap-3 p-3.5 rounded-xl border border-oas-line hover:border-oas-accent hover:bg-oas-accent-bg/40 transition">
+          <div class="w-9 h-9 rounded-lg bg-orange-50 text-oas-accent flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          <span class="text-sm font-semibold text-oas-ink">Mes devis</span>
+        </a>
+
+        <a [routerLink]="paths.factures" (click)="closeMoreDrawer()"
+           class="flex items-center gap-3 p-3.5 rounded-xl border border-oas-line hover:border-oas-accent hover:bg-oas-accent-bg/40 transition">
+          <div class="w-9 h-9 rounded-lg bg-blue-50 text-oas-info flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/>
+            </svg>
+          </div>
+          <span class="text-sm font-semibold text-oas-ink">Mes factures</span>
+        </a>
+
+        <a [routerLink]="paths.proformas" (click)="closeMoreDrawer()"
+           class="flex items-center gap-3 p-3.5 rounded-xl border border-oas-line hover:border-oas-accent hover:bg-oas-accent-bg/40 transition">
+          <div class="w-9 h-9 rounded-lg bg-emerald-50 text-oas-ok flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+          </div>
+          <span class="text-sm font-semibold text-oas-ink">Mes proformas</span>
+        </a>
+
+        <a [routerLink]="paths.marketplace" (click)="closeMoreDrawer()"
+           class="flex items-center gap-3 p-3.5 rounded-xl border border-oas-line hover:border-oas-accent hover:bg-oas-accent-bg/40 transition">
+          <div class="w-9 h-9 rounded-lg bg-amber-50 text-oas-warn flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m-.75 11.25h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9a2.25 2.25 0 00-2.25 2.25v9a2.25 2.25 0 002.25 2.25z"/>
+            </svg>
+          </div>
+          <span class="text-sm font-semibold text-oas-ink">Marketplace</span>
+        </a>
+
+        <a [routerLink]="paths.profil" (click)="closeMoreDrawer()"
+           class="flex items-center gap-3 p-3.5 rounded-xl border border-oas-line hover:border-oas-accent hover:bg-oas-accent-bg/40 transition">
+          <div class="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+          </div>
+          <span class="text-sm font-semibold text-oas-ink">Mon profil</span>
+        </a>
+
+        <a [routerLink]="paths.parametres" (click)="closeMoreDrawer()"
+           class="flex items-center gap-3 p-3.5 rounded-xl border border-oas-line hover:border-oas-accent hover:bg-oas-accent-bg/40 transition">
+          <div class="w-9 h-9 rounded-lg bg-gray-100 text-oas-ink2 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </div>
+          <span class="text-sm font-semibold text-oas-ink">Paramètres</span>
+        </a>
+      </div>
+
+      <button (click)="logout()"
+        class="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-red-50 text-oas-bad font-bold text-sm hover:bg-red-100 transition cursor-pointer">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+        </svg>
+        Déconnexion
+      </button>
+    </div>
+  }
+
+  <app-client-messagerie-widget [hidden]="moreDrawerOpen"></app-client-messagerie-widget>
 
 </div>

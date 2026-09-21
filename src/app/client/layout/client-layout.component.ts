@@ -25,14 +25,24 @@ export class ClientLayoutComponent implements OnInit, OnDestroy {
   notificationsOpen = false;
   profileMenuOpen = false;
   notifications: ClientNotification[] = [];
-  mobileMenuOpen = false;
   sidebarCollapsed = false;
+  moreDrawerOpen = false;
 
   get unreadCount(): number {
     return this.notifications.filter(n => !n.lu).length;
   }
 
   readonly paths = CLIENT_PORTAL_PATHS;
+
+  get isSecondaryActive(): boolean {
+    const url = this.router.url;
+    return url.includes(this.paths.devis) ||
+           url.includes(this.paths.factures) ||
+           url.includes(this.paths.proformas) ||
+           url.includes(this.paths.marketplace) ||
+           url.includes(this.paths.profil) ||
+           url.includes(this.paths.parametres);
+  }
 
   private readonly routeLabels: Record<string, string> = {
     [CLIENT_PORTAL_PATHS.tableauDeBord]: 'Tableau de bord',
@@ -70,16 +80,20 @@ export class ClientLayoutComponent implements OnInit, OnDestroy {
     this.routerSub = this.router.events
       .pipe(filter(e => e instanceof NavigationEnd))
       .subscribe(() => {
-        this.mobileMenuOpen = false;
         this.profileMenuOpen = false;
+        this.moreDrawerOpen = false;
       });
 
     this.loadNotifications();
     this.notificationInterval = setInterval(() => this.loadNotifications(), 10000);
   }
 
-  toggleMobileMenu(): void {
-    this.mobileMenuOpen = !this.mobileMenuOpen;
+  toggleMoreDrawer(): void {
+    this.moreDrawerOpen = !this.moreDrawerOpen;
+  }
+
+  closeMoreDrawer(): void {
+    this.moreDrawerOpen = false;
   }
 
   toggleSidebar(): void {

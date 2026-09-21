@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ClientInterventionService } from './client-intervention.service';
-import { Intervention } from '../models';
+import { ClientPortalService } from '../layout/client-portal.service';
+import { ClientInterventionItem } from '../models';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { StatusBadgeComponent } from '../ui/status-badge/status-badge.component';
 import { VehicleAvatarComponent } from '../ui/vehicle-avatar/vehicle-avatar.component';
@@ -16,11 +16,11 @@ type SortOrder = 'recent' | 'ancien';
 })
 export class ClientInterventionsComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
-  private service = inject(ClientInterventionService);
+  private portalService = inject(ClientPortalService);
 
-  interventions: Intervention[] = [];
-  filtered: Intervention[] = [];
-  selected: Intervention | null = null;
+  interventions: ClientInterventionItem[] = [];
+  filtered: ClientInterventionItem[] = [];
+  selected: ClientInterventionItem | null = null;
   loading = false;
   errorMessage = '';
 
@@ -43,9 +43,19 @@ export class ClientInterventionsComponent implements OnInit {
 
   load(): void {
     this.loading = true;
-    this.service.getAll().subscribe({
-      next: interventions => { this.interventions = interventions; this.loading = false; this.cdr.markForCheck(); this.applyFilter(); this.cdr.markForCheck(); },
-      error: () => { this.loading = false; this.cdr.markForCheck(); this.errorMessage = 'Impossible de charger votre historique.'; },
+    this.portalService.getInterventions().subscribe({
+      next: interventions => {
+        this.interventions = interventions;
+        this.loading = false;
+        this.cdr.markForCheck();
+        this.applyFilter();
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.loading = false;
+        this.cdr.markForCheck();
+        this.errorMessage = 'Impossible de charger votre historique.';
+      },
     });
   }
 
@@ -62,20 +72,23 @@ export class ClientInterventionsComponent implements OnInit {
 
   onSearch(value: string): void {
     this.searchTerm = value;
-    this.applyFilter(); this.cdr.markForCheck();
+    this.applyFilter();
+    this.cdr.markForCheck();
   }
 
   onStatutFilter(value: string): void {
     this.statutFilter = value;
-    this.applyFilter(); this.cdr.markForCheck();
+    this.applyFilter();
+    this.cdr.markForCheck();
   }
 
   onSortChange(value: SortOrder): void {
     this.sortOrder = value;
-    this.applyFilter(); this.cdr.markForCheck();
+    this.applyFilter();
+    this.cdr.markForCheck();
   }
 
-  select(intervention: Intervention): void {
+  select(intervention: ClientInterventionItem): void {
     this.selected = intervention;
   }
 

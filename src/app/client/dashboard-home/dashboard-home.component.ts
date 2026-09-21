@@ -2,19 +2,13 @@ import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
-import { ClientDevisService } from '../devis/client-devis.service';
-import { ClientProformaService } from '../proformas/client-proforma.service';
-import { ClientRendezVousService } from '../rendezvous/client-rendezvous.service';
-import { ClientFactureService } from '../factures/client-facture.service';
-import { ClientVehiculeService } from '../vehicules/client-vehicule.service';
-import { ClientInterventionService } from '../interventions/client-intervention.service';
-import { Intervention } from '../models';
-import { VehiculeModel, extractContent } from '../../shared/models';
+import { ClientPortalService } from '../layout/client-portal.service';
+import { ClientDashboardVehicule, ClientInterventionSummary } from '../models';
 import { CLIENT_PORTAL_PATHS } from '../client-portal.paths';
-import { StatusBadgeComponent } from '../ui/status-badge/status-badge.component';
+import { StatusBadgeComponent, BadgeTone } from '../ui/status-badge/status-badge.component';
 import { VehicleAvatarComponent } from '../ui/vehicle-avatar/vehicle-avatar.component';
 import { ProgressStepperComponent } from '../ui/progress-stepper/progress-stepper.component';
-import { interventionStage, interventionStageIndex, isActiveRepair, AUCUN_HISTORIQUE, STAGE_ORDER } from '../intervention-stage';
+import { interventionStage, STAGE_ORDER } from '../intervention-stage';
 
 interface StatCard {
   label: string;
@@ -39,162 +33,103 @@ const ICON_FACTURE = 'M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2
 export class DashboardHomeComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private authService = inject(AuthService);
-  private devisService = inject(ClientDevisService);
-  private proformaService = inject(ClientProformaService);
-  private rendezVousService = inject(ClientRendezVousService);
-  private factureService = inject(ClientFactureService);
-  private vehiculeService = inject(ClientVehiculeService);
-  private interventionService = inject(ClientInterventionService);
+  private portalService = inject(ClientPortalService);
 
   readonly paths = CLIENT_PORTAL_PATHS;
+  readonly stageOrder = STAGE_ORDER;
 
   get firstName(): string {
     return this.authService.getUsername() ?? '';
   }
 
   loadingStats = true;
-  stats: StatCard[] = [];
-
   loadingVehicules = true;
-  vehicules: VehiculeModel[] = [];
-  interventions: Intervention[] = [];
-  selected: VehiculeModel | null = null;
+  stats: StatCard[] = [];
+  vehicules: ClientDashboardVehicule[] = [];
+  selected: ClientDashboardVehicule | null = null;
+  selectedHistorique: ClientInterventionSummary[] = [];
 
   ngOnInit(): void {
-    this.loadStats();
-    this.loadVehiculesEtInterventions();
+    this.loadDashboard();
   }
 
-  private loadStats(): void {
+  private loadDashboard(): void {
     this.loadingStats = true;
+    this.loadingVehicules = true;
 
-    let devisEnAttente = 0;
-    let proformasEnAttente = 0;
-    let rdvAVenir = 0;
-    let montantDu = 0;
-    let remaining = 4;
-
-    const done = () => {
-      remaining -= 1;
-      if (remaining === 0) {
+    this.portalService.getDashboard().subscribe({
+      next: data => {
+        const s = data.stats;
         this.stats = [
-          { label: 'Devis en attente', value: String(devisEnAttente), link: this.paths.devis, icon: ICON_DEVIS, iconBg: 'bg-oas-info-bg', iconColor: 'text-oas-info' },
-          { label: 'Proformas en attente', value: String(proformasEnAttente), link: this.paths.proformas, icon: ICON_PROFORMA, iconBg: 'bg-oas-warn-bg', iconColor: 'text-oas-warn' },
-          { label: 'Rendez-vous à venir', value: String(rdvAVenir), link: this.paths.rendezVous, icon: ICON_RDV, iconBg: 'bg-oas-accent-bg', iconColor: 'text-oas-accent' },
-          { label: 'Montant dû', value: `${montantDu.toLocaleString('fr-FR')} F`, link: this.paths.factures, icon: ICON_FACTURE, iconBg: 'bg-oas-bad-bg', iconColor: 'text-oas-bad' },
+          { label: 'Devis en attente', value: String(s.devisEnAttente ?? 0), link: this.paths.devis, icon: ICON_DEVIS, iconBg: 'bg-oas-info-bg', iconColor: 'text-oas-info' },
+          { label: 'Proformas en attente', value: String(s.proformasEnAttente ?? 0), link: this.paths.proformas, icon: ICON_PROFORMA, iconBg: 'bg-oas-warn-bg', iconColor: 'text-oas-warn' },
+          { label: 'Rendez-vous à venir', value: String(s.rdvAVenir ?? 0), link: this.paths.rendezVous, icon: ICON_RDV, iconBg: 'bg-oas-accent-bg', iconColor: 'text-oas-accent' },
+          { label: 'Montant dû', value: `${(s.montantDu ?? 0).toLocaleString('fr-FR')} F`, link: this.paths.factures, icon: ICON_FACTURE, iconBg: 'bg-oas-bad-bg', iconColor: 'text-oas-bad' },
         ];
         this.loadingStats = false;
+
+        this.vehicules = data.vehicules ?? [];
+        this.loadingVehicules = false;
         this.cdr.markForCheck();
-      }
-    };
-
-    this.devisService.getAll().subscribe({
-      next: devis => {
-        const list = extractContent(devis);
-        devisEnAttente = list.filter(d => d.statut === 'EN_ATTENTE').length;
-        done();
       },
-      error: () => done(),
-    });
-
-    this.proformaService.getAll().subscribe({
-      next: proformas => {
-        const list = extractContent(proformas);
-        proformasEnAttente = list.filter(p => !p.statut || p.statut === 'EN_ATTENTE').length;
-        done();
-      },
-      error: () => done(),
-    });
-
-    this.rendezVousService.getAll().subscribe({
-      next: rdv => {
-        const list = extractContent(rdv);
-        rdvAVenir = list.filter(r => r.statut === 'EN_ATTENTE' || r.statut === 'CONFIRME').length;
-        done();
-      },
-      error: () => done(),
-    });
-
-    this.factureService.getAll().subscribe({
-      next: factures => {
-        const list = extractContent(factures);
-        montantDu = list.reduce((sum, f) => sum + (f.resteAPayer || 0), 0);
-        done();
-      },
-      error: () => done(),
-    });
-  }
-
-  private loadVehiculesEtInterventions(): void {
-    this.loadingVehicules = true;
-    let remaining = 2;
-    const done = () => {
-      remaining -= 1;
-      if (remaining === 0) {
+      error: () => {
+        this.loadingStats = false;
         this.loadingVehicules = false;
         this.cdr.markForCheck();
       }
+    });
+  }
+
+  vehiculeStage(vehicule: ClientDashboardVehicule): { label: string; tone: BadgeTone } {
+    return {
+      label: vehicule.stageLabel || 'Aucun historique',
+      tone: (vehicule.stageTone as BadgeTone) || 'neutral'
     };
-
-    this.vehiculeService.getAll().subscribe({
-      next: vehicules => {
-        this.vehicules = extractContent(vehicules);
-        done();
-      },
-      error: () => done(),
-    });
-
-    this.interventionService.getAll().subscribe({
-      next: interventions => {
-        this.interventions = extractContent(interventions);
-        done();
-      },
-      error: () => done(),
-    });
   }
 
-  private interventionsFor(vehiculeId: number): Intervention[] {
-    return this.interventions
-      .filter(i => i.vehicule?.id === vehiculeId)
-      .sort((a, b) => new Date(b.dateCreation).getTime() - new Date(a.dateCreation).getTime());
+  vehiculeStageIndex(vehicule: ClientDashboardVehicule): number {
+    return vehicule.stageIndex ?? -1;
   }
 
-  readonly stageOrder = STAGE_ORDER;
-
-  vehiculeStage(vehicule: VehiculeModel) {
-    const derniere = this.interventionsFor(vehicule.id)[0];
-    return derniere ? interventionStage(derniere.statut) : AUCUN_HISTORIQUE;
+  historiqueFor(_vehicule: ClientDashboardVehicule): ClientInterventionSummary[] {
+    return this.selectedHistorique;
   }
 
-  vehiculeStageIndex(vehicule: VehiculeModel): number {
-    const derniere = this.interventionsFor(vehicule.id)[0];
-    return derniere ? interventionStageIndex(derniere.statut) : -1;
-  }
-
-  historiqueFor(vehicule: VehiculeModel): Intervention[] {
-    return this.interventionsFor(vehicule.id);
-  }
-
-  get activeRepairs(): { vehicule: VehiculeModel | undefined; intervention: Intervention }[] {
-    return this.interventions
-      .filter(i => isActiveRepair(i.statut))
-      .sort((a, b) => new Date(b.dateCreation).getTime() - new Date(a.dateCreation).getTime())
+  get activeRepairs(): { vehicule: ClientDashboardVehicule; intervention: { id: number; numero: string; statut: string } }[] {
+    return this.vehicules
+      .filter(v => v.stageIndex >= 0 && v.stageIndex < 4 && !!v.ordreReparationId)
       .slice(0, 5)
-      .map(intervention => ({
-        intervention,
-        vehicule: this.vehicules.find(v => v.id === intervention.vehicule?.id),
+      .map(v => ({
+        vehicule: v,
+        intervention: {
+          id: v.ordreReparationId!,
+          numero: v.ordreReparationNumero || '',
+          statut: v.stage
+        }
       }));
   }
 
-  stageOf(statut: string) {
+  stageOf(statut: string): { label: string; tone: BadgeTone } {
     return interventionStage(statut);
   }
 
-  select(vehicule: VehiculeModel): void {
+  select(vehicule: ClientDashboardVehicule): void {
     this.selected = vehicule;
+    this.selectedHistorique = [];
+    this.portalService.getVehiculeHistorique(vehicule.id).subscribe({
+      next: h => {
+        this.selectedHistorique = h;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.selectedHistorique = [];
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   closeDetail(): void {
     this.selected = null;
+    this.selectedHistorique = [];
   }
 }

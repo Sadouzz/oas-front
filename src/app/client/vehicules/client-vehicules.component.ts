@@ -1,38 +1,35 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ClientPortalService } from '../layout/client-portal.service';
 import { ClientVehiculeService } from './client-vehicule.service';
-import { ClientInterventionService } from '../interventions/client-intervention.service';
-import { ClientFactureService } from '../factures/client-facture.service';
-import { VehiculeModel, FactureModel } from '../../shared/models';
-import { Intervention } from '../models';
+import { ClientVehiculeCard, ClientInterventionSummary, FicheEnCoursSummary } from '../models';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { VehicleAvatarComponent } from '../ui/vehicle-avatar/vehicle-avatar.component';
-import { StatusBadgeComponent } from '../ui/status-badge/status-badge.component';
+import { StatusBadgeComponent, BadgeTone } from '../ui/status-badge/status-badge.component';
 import { ProgressStepperComponent } from '../ui/progress-stepper/progress-stepper.component';
-import { interventionStage, interventionStageIndex, isActiveRepair, stageExplanation, AUCUN_HISTORIQUE, STAGE_ORDER } from '../intervention-stage';
+import { stageExplanation, STAGE_ORDER, interventionStage } from '../intervention-stage';
 import { vehiclePhotoFor } from '../vehicle-photos';
+
+import { ModalComponent } from '../ui/modal/modal.component';
 
 type SortOrder = 'recent' | 'ancien';
 
 @Component({
   selector: 'app-client-vehicules',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, AlertComponent, VehicleAvatarComponent, StatusBadgeComponent, ProgressStepperComponent],
+  imports: [CommonModule, ReactiveFormsModule, AlertComponent, VehicleAvatarComponent, StatusBadgeComponent, ProgressStepperComponent, ModalComponent],
   templateUrl: './client-vehicules.component.html',
 })
 export class ClientVehiculesComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
-  private service = inject(ClientVehiculeService);
-  private interventionService = inject(ClientInterventionService);
-  private factureService = inject(ClientFactureService);
+  private portalService = inject(ClientPortalService);
+  private vehiculeService = inject(ClientVehiculeService);
   private fb = inject(FormBuilder);
 
-  vehicules: VehiculeModel[] = [];
-  filtered: VehiculeModel[] = [];
-  interventions: Intervention[] = [];
-  factures: FactureModel[] = [];
-  selected: VehiculeModel | null = null;
+  vehicules: ClientVehiculeCard[] = [];
+  filtered: ClientVehiculeCard[] = [];
+  selected: ClientVehiculeCard | null = null;
   loading = false;
   showCreateForm = false;
   saving = false;
@@ -59,84 +56,56 @@ export class ClientVehiculesComponent implements OnInit {
 
   load(): void {
     this.loading = true;
-    let remaining = 3;
-    const done = () => { remaining -= 1; if (remaining === 0) { this.loading = false; this.cdr.markForCheck(); this.applyFilter(); this.cdr.markForCheck(); } };
-
-    this.service.getAll().subscribe({
-      next: vehicules => { this.vehicules = vehicules; done(); },
-      error: () => { this.errorMessage = 'Impossible de charger vos véhicules.'; done(); },
-    });
-
-    this.interventionService.getAll().subscribe({
-      next: interventions => { this.interventions = interventions; done(); },
-      error: () => done(),
-    });
-
-    this.factureService.getAll().subscribe({
-      next: factures => { this.factures = factures; done(); },
-      error: () => done(),
+    this.portalService.getVehicules().subscribe({
+      next: vehicules => {
+        this.vehicules = vehicules;
+        this.loading = false;
+        this.cdr.markForCheck();
+        this.applyFilter();
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.loading = false;
+        this.cdr.markForCheck();
+        this.errorMessage = 'Impossible de charger vos véhicules.';
+      },
     });
   }
 
-  private interventionsFor(vehiculeId: number): Intervention[] {
-    return this.interventions
-      .filter(i => i.vehicule?.id === vehiculeId)
-      .sort((a, b) => new Date(b.dateCreation).getTime() - new Date(a.dateCreation).getTime());
+  vehiculeStage(vehicule: ClientVehiculeCard): { label: string; tone: BadgeTone } {
+    return {
+      label: vehicule.stageLabel || 'Aucun historique',
+      tone: (vehicule.stageTone as BadgeTone) || 'neutral'
+    };
   }
 
-  vehiculeStage(vehicule: VehiculeModel) {
-    const derniere = this.interventionsFor(vehicule.id)[0];
-    return derniere ? interventionStage(derniere.statut) : AUCUN_HISTORIQUE;
+  vehiculeStageIndex(vehicule: ClientVehiculeCard): number {
+    return vehicule.stageIndex ?? -1;
   }
 
-  vehiculeStageIndex(vehicule: VehiculeModel): number {
-    const derniere = this.interventionsFor(vehicule.id)[0];
-    return derniere ? interventionStageIndex(derniere.statut) : -1;
+  historiqueFor(vehicule: ClientVehiculeCard): ClientInterventionSummary[] {
+    return vehicule.historique ?? [];
   }
 
-  historiqueFor(vehicule: VehiculeModel): Intervention[] {
-    return this.interventionsFor(vehicule.id);
+  ficheEnCoursFor(vehicule: ClientVehiculeCard): FicheEnCoursSummary | null {
+    return vehicule.ficheEnCours;
   }
 
-  /**
-   * Fiche de réparation à afficher comme "en cours". Reste affichée après la fin de la
-   * réparation (statut "Terminée") tant qu'on n'est pas au lendemain de la date de sortie
-   * ET qu'au moins un paiement partiel a été effectué sur la facture liée. Sans paiement,
-   * elle ne disparaît jamais via cette règle (le véhicule n'a probablement pas encore été repris).
-   */
   formatLignesReception(lignes: { nom: string; etat: boolean | null }[] | null | undefined): string {
     if (!lignes || !lignes.length) return '—';
     return lignes.map(l => l.nom + (l.etat === true ? ' (OK)' : l.etat === false ? ' (Non)' : '')).join(', ');
   }
 
-  ficheEnCoursFor(vehicule: VehiculeModel): Intervention | null {
-    const derniere = this.interventionsFor(vehicule.id)[0];
-    if (!derniere) return null;
-    if (isActiveRepair(derniere.statut)) return derniere;
-    if (interventionStage(derniere.statut).label !== 'Terminée') return null;
-
-    if (!derniere.dateSortie) return derniere;
-
-    const facture = this.factures.find(f => f.ordreReparationId === derniere.id);
-    const aPaiementPartiel = !!facture && facture.montantPaye > 0;
-    if (!aPaiementPartiel) return derniere;
-
-    const lendemainSortie = new Date(derniere.dateSortie);
-    lendemainSortie.setDate(lendemainSortie.getDate() + 1);
-    lendemainSortie.setHours(0, 0, 0, 0);
-    return new Date() < lendemainSortie ? derniere : null;
-  }
-
-  stageOf(statut: string) {
-    return interventionStage(statut);
-  }
-
-  photoFor(vehicule: VehiculeModel): string {
+  photoFor(vehicule: ClientVehiculeCard): string {
     return vehiclePhotoFor(vehicule.id);
   }
 
-  explanationFor(vehicule: VehiculeModel, stageLabel: string): string {
+  explanationFor(vehicule: ClientVehiculeCard, stageLabel: string): string {
     return stageExplanation(stageLabel, vehicule.marque, vehicule.modele);
+  }
+
+  stageOf(statut: string): { label: string; tone: BadgeTone } {
+    return interventionStage(statut);
   }
 
   applyFilter(): void {
@@ -152,20 +121,23 @@ export class ClientVehiculesComponent implements OnInit {
 
   onSearch(value: string): void {
     this.searchTerm = value;
-    this.applyFilter(); this.cdr.markForCheck();
+    this.applyFilter();
+    this.cdr.markForCheck();
   }
 
   onStageFilter(value: string): void {
     this.stageFilter = value;
-    this.applyFilter(); this.cdr.markForCheck();
+    this.applyFilter();
+    this.cdr.markForCheck();
   }
 
   onSortChange(value: SortOrder): void {
     this.sortOrder = value;
-    this.applyFilter(); this.cdr.markForCheck();
+    this.applyFilter();
+    this.cdr.markForCheck();
   }
 
-  select(vehicule: VehiculeModel): void {
+  select(vehicule: ClientVehiculeCard): void {
     this.selected = vehicule;
   }
 
@@ -191,7 +163,7 @@ export class ClientVehiculesComponent implements OnInit {
     this.saving = true;
     this.errorMessage = '';
 
-    this.service.create(this.form.value).subscribe({
+    this.vehiculeService.create(this.form.value).subscribe({
       next: () => {
         this.saving = false;
         this.form.reset();
@@ -207,9 +179,9 @@ export class ClientVehiculesComponent implements OnInit {
     });
   }
 
-  archive(vehicule: VehiculeModel): void {
+  archive(vehicule: ClientVehiculeCard): void {
     if (confirm('Voulez-vous vraiment archiver ce véhicule ?')) {
-      this.service.archive(vehicule.id).subscribe({
+      this.vehiculeService.archive(vehicule.id).subscribe({
         next: () => {
           this.successMessage = 'Véhicule archivé avec succès.';
           setTimeout(() => this.successMessage = '', 4000);
