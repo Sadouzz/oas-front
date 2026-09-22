@@ -1,17 +1,26 @@
 import { inject, Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { DepotService } from '../pieces-detachees/depot.service';
 import { CategoriePieceService } from '../pieces-detachees/categorie-piece.service';
 import { CategorieMainDoeuvreService } from '../main-doeuvre/categorie-main-doeuvre.service';
 import { FicheAtelierConfigService } from '../fiches-atelier/fiche-atelier-config.service';
-import { Depot, CategoriePiece, CategorieMainDoeuvreModel, CategorieMainDoeuvreRequest, FicheAtelierConfigBackend, BriqueConfig } from '../../shared/models';
+import {
+  Depot,
+  CategoriePiece,
+  CategorieMainDoeuvreModel,
+  CategorieMainDoeuvreRequest,
+  FicheAtelierConfigBackend,
+  BriqueConfig,
+  FicheAtelierFullConfig,
+  parseFicheAtelierConfig
+} from '../../shared/models';
 
 @Component({
   selector: 'app-parametres',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   templateUrl: './parametres.component.html'
 })
 export class ParametresComponent implements OnInit, OnDestroy {
@@ -28,6 +37,7 @@ export class ParametresComponent implements OnInit, OnDestroy {
   
   // FicheAtelier
   backendConfig: FicheAtelierConfigBackend | null = null;
+  fullConfig: FicheAtelierFullConfig = parseFicheAtelierConfig();
   configs: BriqueConfig[] = [];
 
   newDepot: Depot = { nom: '' };
@@ -73,15 +83,14 @@ export class ParametresComponent implements OnInit, OnDestroy {
     this.configService.getAll().subscribe(data => {
       if (data && data.length > 0) {
         this.backendConfig = data[0];
-        try {
-          this.configs = JSON.parse(this.backendConfig.configJson || '[]');
-        } catch(e) {
-          this.configs = [];
-        }
+        this.fullConfig = parseFicheAtelierConfig(this.backendConfig.configJson);
+        this.configs = this.fullConfig.briques;
       } else {
         this.backendConfig = null;
+        this.fullConfig = parseFicheAtelierConfig();
         this.configs = [];
       }
+      this.cdr.markForCheck();
     });
   }
 
@@ -140,7 +149,8 @@ export class ParametresComponent implements OnInit, OnDestroy {
   }
 
   private syncConfigWithBackend() {
-    const configJson = JSON.stringify(this.configs);
+    this.fullConfig.briques = this.configs;
+    const configJson = JSON.stringify(this.fullConfig);
     if (this.backendConfig && this.backendConfig.id) {
       this.backendConfig.configJson = configJson;
       this.configService.update(this.backendConfig.id, this.backendConfig).subscribe(() => {

@@ -1,118 +1,510 @@
 <div class="p-6 max-w-7xl mx-auto space-y-6">
+
   <!-- En-tête -->
   <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
     <div>
-      <h1 class="text-2xl font-bold text-oas-ink">Configuration Fiche Atelier</h1>
-      <p class="text-sm text-oas-ink2">Personnalisez les champs et briques dynamiques de la fiche atelier</p>
+      <h1 class="text-2xl font-bold text-oas-ink">Configuration de la Fiche Atelier</h1>
+      <p class="text-sm text-oas-muted mt-1">
+        Définissez les points de contrôle à la réception, les rubriques de défauts et les champs dynamiques.
+      </p>
     </div>
   </div>
 
-  <!-- Carte d'ajout brique -->
-  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
-    <h2 class="text-base font-bold text-oas-ink">Ajouter une nouvelle brique dynamique</h2>
+  <!-- Messages d'alerte -->
+  @if (successMessage) {
+    <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center gap-2 animate-in fade-in duration-200">
+      <svg lucideCheck class="w-5 h-5 text-emerald-600 flex-shrink-0"></svg>
+      <span>{{ successMessage }}</span>
+    </div>
+  }
+  @if (errorMessage) {
+    <div class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-start gap-2 animate-in fade-in duration-200">
+      <svg lucideAlertTriangle class="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5"></svg>
+      <span>{{ errorMessage }}</span>
+    </div>
+  }
 
-    <form (ngSubmit)="saveConfig()" class="flex flex-wrap items-end gap-4">
-      <div class="flex-1 min-w-[200px]">
-        <label class="block text-xs font-semibold text-slate-500 mb-1">Libellé du champ <span class="text-rose-500">*</span></label>
-        <input type="text" [(ngModel)]="newConfig.label" name="label" required placeholder="Ex: Kilométrage, Niveau d'huile"
-          class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-oas-ink focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition-all outline-none">
-      </div>
+  <!-- Onglets de configuration -->
+  <div class="flex border-b border-slate-200 gap-2">
+    <button type="button" (click)="activeTab = 'reception'"
+      class="px-5 py-3 text-sm font-bold border-b-2 flex items-center gap-2 transition cursor-pointer"
+      [class.border-oas-accent]="activeTab === 'reception'"
+      [class.text-oas-accent]="activeTab === 'reception'"
+      [class.border-transparent]="activeTab !== 'reception'"
+      [class.text-slate-500]="activeTab !== 'reception'"
+      [class.hover:text-slate-700]="activeTab !== 'reception'">
+      <svg lucideClipboardList class="w-4 h-4"></svg>
+      <span>Points de Réception</span>
+      <span class="px-2 py-0.5 rounded-full text-xs"
+        [class.bg-oas-accent/15]="activeTab === 'reception'"
+        [class.text-oas-accent]="activeTab === 'reception'"
+        [class.bg-slate-100]="activeTab !== 'reception'"
+        [class.text-slate-600]="activeTab !== 'reception'">
+        {{ activeReceptionCount }}
+      </span>
+    </button>
 
-      <div class="w-48">
-        <label class="block text-xs font-semibold text-slate-500 mb-1">Type de champ <span class="text-rose-500">*</span></label>
-        <select [(ngModel)]="newConfig.type" name="type" required
-          class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-oas-ink focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition-all outline-none">
-          <option value="text">Texte Court</option>
-          <option value="number">Nombre</option>
-          <option value="textarea">Texte Long (Paragraphe)</option>
-          <option value="select">Liste déroulante</option>
-          <option value="checkbox">Case à cocher</option>
-          <option value="date">Date</option>
-        </select>
-      </div>
+    <button type="button" (click)="activeTab = 'defauts'"
+      class="px-5 py-3 text-sm font-bold border-b-2 flex items-center gap-2 transition cursor-pointer"
+      [class.border-oas-accent]="activeTab === 'defauts'"
+      [class.text-oas-accent]="activeTab === 'defauts'"
+      [class.border-transparent]="activeTab !== 'defauts'"
+      [class.text-slate-500]="activeTab !== 'defauts'"
+      [class.hover:text-slate-700]="activeTab !== 'defauts'">
+      <svg lucideAlertTriangle class="w-4 h-4"></svg>
+      <span>Rubriques Défauts constatés</span>
+      <span class="px-2 py-0.5 rounded-full text-xs"
+        [class.bg-oas-accent/15]="activeTab === 'defauts'"
+        [class.text-oas-accent]="activeTab === 'defauts'"
+        [class.bg-slate-100]="activeTab !== 'defauts'"
+        [class.text-slate-600]="activeTab !== 'defauts'">
+        {{ activeDefautsCount }}
+      </span>
+    </button>
 
-      @if (newConfig.type === 'select') {
-        <div class="flex-1 min-w-[220px]">
-          <label class="block text-xs font-semibold text-slate-500 mb-1">Options (séparées par virgule)</label>
-          <input type="text" [(ngModel)]="newConfig.options" name="options" placeholder="Ex: Bon, Moyen, Mauvais"
-            class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-oas-ink focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition-all outline-none">
+    <button type="button" (click)="activeTab = 'briques'"
+      class="px-5 py-3 text-sm font-bold border-b-2 flex items-center gap-2 transition cursor-pointer"
+      [class.border-oas-accent]="activeTab === 'briques'"
+      [class.text-oas-accent]="activeTab === 'briques'"
+      [class.border-transparent]="activeTab !== 'briques'"
+      [class.text-slate-500]="activeTab !== 'briques'"
+      [class.hover:text-slate-700]="activeTab !== 'briques'">
+      <svg lucideLayers class="w-4 h-4"></svg>
+      <span>Briques dynamiques</span>
+      <span class="px-2 py-0.5 rounded-full text-xs"
+        [class.bg-oas-accent/15]="activeTab === 'briques'"
+        [class.text-oas-accent]="activeTab === 'briques'"
+        [class.bg-slate-100]="activeTab !== 'briques'"
+        [class.text-slate-600]="activeTab !== 'briques'">
+        {{ configs.length }}
+      </span>
+    </button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- TAB 1 : POINTS DE RÉCEPTION                                -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  @if (activeTab === 'reception') {
+    <div class="space-y-6 animate-in fade-in duration-200">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
+        
+        <!-- Header section -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
+          <div>
+            <h2 class="text-base font-bold text-oas-ink">Points de contrôle à la Réception</h2>
+            <p class="text-xs text-oas-muted mt-0.5">
+              Éléments vérifiés systématiquement lors de l'arrivée du véhicule. Les éléments déjà utilisés au moins une fois <strong>ne peuvent pas être supprimés</strong> (seul l'archivage est possible afin de préserver l'intégrité de l'historique). Les éléments jamais utilisés peuvent être supprimés définitivement.
+            </p>
+          </div>
+          <button type="button" (click)="resetLignesReception()" [disabled]="saving"
+            class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-oas-accent px-3 py-1.5 rounded-lg border border-slate-200 hover:border-oas-accent/40 hover:bg-slate-50 transition cursor-pointer">
+            <svg lucideRotateCcw class="w-3.5 h-3.5"></svg>
+            Rétablir par défaut
+          </button>
         </div>
-      }
 
-      <div class="flex items-center gap-2 mb-3">
-        <input type="checkbox" [(ngModel)]="newConfig.obligatoire" name="obligatoire" id="obl_check"
-          class="w-4 h-4 text-oas-accent rounded focus:ring-oas-accent border-slate-300">
-        <label for="obl_check" class="text-sm font-semibold text-slate-600 cursor-pointer select-none">Obligatoire</label>
-      </div>
+        <!-- Formulaire d'ajout rapide -->
+        <form (ngSubmit)="addLigneReception()" class="flex gap-3">
+          <input type="text" [(ngModel)]="newLigneReception" name="newLigneReception"
+            placeholder="Ex : État des rétroviseurs, Tapis de sol, Roue de secours..."
+            class="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-oas-ink focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition outline-none">
+          <button type="submit" [disabled]="!newLigneReception.trim() || saving"
+            class="px-5 py-2.5 bg-oas-accent hover:bg-oas-accent-dark text-white font-bold text-sm rounded-xl transition shadow-sm disabled:opacity-50 cursor-pointer flex items-center gap-2 flex-shrink-0">
+            <svg lucidePlus class="w-4 h-4"></svg>
+            <span>Ajouter</span>
+          </button>
+        </form>
 
-      <div>
-        <button type="submit" [disabled]="!newConfig.label"
-          class="px-5 py-2.5 bg-oas-accent text-white font-bold text-sm rounded-xl hover:bg-oas-accent-dark transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-2">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-          Ajouter brique
-        </button>
-      </div>
-    </form>
-  </div>
+        <!-- Filtres Actif / Archivé -->
+        <div class="flex items-center justify-between pt-2">
+          <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs font-semibold">
+            <button type="button" (click)="filterReceptionStatus = 'ALL'"
+              class="px-3 py-1 rounded-lg transition cursor-pointer"
+              [class.bg-white]="filterReceptionStatus === 'ALL'"
+              [class.text-oas-ink]="filterReceptionStatus === 'ALL'"
+              [class.shadow-xs]="filterReceptionStatus === 'ALL'"
+              [class.text-slate-500]="filterReceptionStatus !== 'ALL'">
+              Tous ({{ lignesReception.length }})
+            </button>
+            <button type="button" (click)="filterReceptionStatus = 'ACTIVE'"
+              class="px-3 py-1 rounded-lg transition cursor-pointer"
+              [class.bg-white]="filterReceptionStatus === 'ACTIVE'"
+              [class.text-emerald-700]="filterReceptionStatus === 'ACTIVE'"
+              [class.shadow-xs]="filterReceptionStatus === 'ACTIVE'"
+              [class.text-slate-500]="filterReceptionStatus !== 'ACTIVE'">
+              Actifs ({{ activeReceptionCount }})
+            </button>
+            <button type="button" (click)="filterReceptionStatus = 'ARCHIVED'"
+              class="px-3 py-1 rounded-lg transition cursor-pointer"
+              [class.bg-white]="filterReceptionStatus === 'ARCHIVED'"
+              [class.text-amber-700]="filterReceptionStatus === 'ARCHIVED'"
+              [class.shadow-xs]="filterReceptionStatus === 'ARCHIVED'"
+              [class.text-slate-500]="filterReceptionStatus !== 'ARCHIVED'">
+              Archivés ({{ archivedReceptionCount }})
+            </button>
+          </div>
 
-  <!-- Table des briques -->
-  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-      <h3 class="font-bold text-base text-oas-ink">Briques configurées ({{ configs.length }})</h3>
-    </div>
+          <p class="text-xs text-slate-400">
+            Seuls les éléments <strong>Actifs</strong> apparaissent sur les nouvelles fiches atelier.
+          </p>
+        </div>
 
-    <div class="overflow-x-auto">
-      <table class="w-full text-left text-sm text-slate-600">
-        <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
-          <tr>
-            <th class="py-3.5 px-6">Libellé</th>
-            <th class="py-3.5 px-6">Type</th>
-            <th class="py-3.5 px-6">Options</th>
-            <th class="py-3.5 px-6">Obligatoire</th>
-            <th class="py-3.5 px-6 text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100">
-          @if (isLoading) {
-            <tr>
-              <td colspan="5" class="py-8 text-center text-slate-400">Chargement de la configuration...</td>
-            </tr>
-          } @else if (configs.length === 0) {
-            <tr>
-              <td colspan="5" class="py-8 text-center text-slate-400">Aucune brique dynamique configurée.</td>
-            </tr>
+        <!-- Liste des lignes -->
+        <div class="divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden mt-3">
+          @if (filteredLignesReception.length === 0) {
+            <div class="p-8 text-center text-slate-400 text-sm">
+              Aucun point de réception dans cette vue.
+            </div>
           } @else {
-            @for (conf of configs; track conf.id ?? conf.label) {
-              <tr class="hover:bg-slate-50 transition-colors">
-                <td class="py-3.5 px-6 font-semibold text-oas-ink">{{ conf.label }}</td>
-                <td class="py-3.5 px-6">
-                  <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">
-                    {{ conf.type }}
+            @for (row of filteredLignesReception; track row.item.nom) {
+              <div class="px-5 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50 transition"
+                [class.bg-slate-50/60]="row.item.archive">
+                
+                <div class="flex items-center gap-3">
+                  <span class="w-6 h-6 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                    {{ row.originalIndex + 1 }}
                   </span>
-                </td>
-                <td class="py-3.5 px-6 text-oas-muted">{{ conf.options || '—' }}</td>
-                <td class="py-3.5 px-6">
-                  @if (conf.obligatoire) {
-                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Oui</span>
+                  
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-sm font-semibold" [class.text-slate-400]="row.item.archive" [class.line-through]="row.item.archive" [class.text-oas-ink]="!row.item.archive">
+                        {{ row.item.nom }}
+                      </span>
+
+                      <!-- Statut Actif / Archivé -->
+                      @if (row.item.archive) {
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                          Archivé
+                        </span>
+                      } @else {
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          Actif
+                        </span>
+                      }
+
+                      <!-- Usage count badge -->
+                      @if (isReceptionUsed(row.item.nom)) {
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200"
+                              title="Cet élément est présent dans {{ getReceptionUsageCount(row.item.nom) }} fiche(s) ou ordre(s). Suppression interdite : archivage uniquement.">
+                          <svg lucideLock class="w-3 h-3"></svg>
+                          <span>Utilisé ({{ getReceptionUsageCount(row.item.nom) }}) • Archivage seul</span>
+                        </span>
+                      } @else {
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-500 border border-slate-200">
+                          Non utilisé
+                        </span>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex items-center gap-2 self-end sm:self-auto">
+                  <!-- Bouton Archiver / Restaurer -->
+                  @if (!row.item.archive) {
+                    <button type="button" (click)="archiveLigneReception(row.originalIndex, true)" [disabled]="saving"
+                      title="Archiver ce point (ne sera plus proposé pour les nouvelles fiches)"
+                      class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 text-amber-700 hover:bg-amber-50 rounded-lg border border-amber-200 transition cursor-pointer">
+                      <svg lucideArchive class="w-3.5 h-3.5"></svg>
+                      <span>Archiver</span>
+                    </button>
                   } @else {
-                    <span class="text-slate-400 text-xs">Non</span>
-                  }
-                </td>
-                <td class="py-3.5 px-6 text-right">
-                  @if (conf.id) {
-                    <button (click)="deleteConfig(conf.id)"
-                      class="text-rose-600 hover:text-rose-800 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-rose-50 transition cursor-pointer">
-                      Supprimer
+                    <button type="button" (click)="archiveLigneReception(row.originalIndex, false)" [disabled]="saving"
+                      title="Restaurer ce point (sera à nouveau disponible pour les nouvelles fiches)"
+                      class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 text-emerald-700 hover:bg-emerald-50 rounded-lg border border-emerald-200 transition cursor-pointer">
+                      <svg lucideArchiveRestore class="w-3.5 h-3.5"></svg>
+                      <span>Restaurer</span>
                     </button>
                   }
-                </td>
-              </tr>
+
+                  <!-- Bouton Supprimer : UNIQUEMENT pour les éléments JAMAIS utilisés -->
+                  @if (!isReceptionUsed(row.item.nom)) {
+                    <button type="button" (click)="removeLigneReception(row.originalIndex)" [disabled]="saving"
+                      title="Supprimer définitivement (non utilisé)"
+                      class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 text-rose-600 hover:bg-rose-50 rounded-lg border border-rose-200 transition cursor-pointer">
+                      <svg lucideTrash2 class="w-3.5 h-3.5"></svg>
+                      <span>Supprimer</span>
+                    </button>
+                  }
+                </div>
+
+              </div>
             }
           }
-        </tbody>
-      </table>
+        </div>
+
+      </div>
     </div>
-  </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- TAB 2 : RUBRIQUES DÉFAUTS CONSTATÉS                        -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  @if (activeTab === 'defauts') {
+    <div class="space-y-6 animate-in fade-in duration-200">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
+        
+        <!-- Header section -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
+          <div>
+            <h2 class="text-base font-bold text-oas-ink">Rubriques de Défauts constatés à la réception</h2>
+            <p class="text-xs text-oas-muted mt-0.5">
+              Catégories de pannes à relever lors de la réception. Les rubriques déjà utilisées au moins une fois <strong>ne peuvent pas être supprimées</strong> (seul l'archivage est possible afin de préserver l'intégrité de l'historique). Les rubriques jamais utilisées peuvent être supprimées définitivement.
+            </p>
+          </div>
+          <button type="button" (click)="resetRubriquesDefauts()" [disabled]="saving"
+            class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-oas-accent px-3 py-1.5 rounded-lg border border-slate-200 hover:border-oas-accent/40 hover:bg-slate-50 transition cursor-pointer">
+            <svg lucideRotateCcw class="w-3.5 h-3.5"></svg>
+            Rétablir par défaut
+          </button>
+        </div>
+
+        <!-- Formulaire d'ajout rapide -->
+        <form (ngSubmit)="addRubriqueDefaut()" class="flex gap-3">
+          <input type="text" [(ngModel)]="newRubriqueDefaut" name="newRubriqueDefaut"
+            placeholder="Ex : Pneumatiques & Freinage, Carrosserie & Peinture, Diagnostic électronique..."
+            class="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-oas-ink focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition outline-none">
+          <button type="submit" [disabled]="!newRubriqueDefaut.trim() || saving"
+            class="px-5 py-2.5 bg-oas-accent hover:bg-oas-accent-dark text-white font-bold text-sm rounded-xl transition shadow-sm disabled:opacity-50 cursor-pointer flex items-center gap-2 flex-shrink-0">
+            <svg lucidePlus class="w-4 h-4"></svg>
+            <span>Ajouter</span>
+          </button>
+        </form>
+
+        <!-- Filtres Actif / Archivé -->
+        <div class="flex items-center justify-between pt-2">
+          <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs font-semibold">
+            <button type="button" (click)="filterDefautsStatus = 'ALL'"
+              class="px-3 py-1 rounded-lg transition cursor-pointer"
+              [class.bg-white]="filterDefautsStatus === 'ALL'"
+              [class.text-oas-ink]="filterDefautsStatus === 'ALL'"
+              [class.shadow-xs]="filterDefautsStatus === 'ALL'"
+              [class.text-slate-500]="filterDefautsStatus !== 'ALL'">
+              Toutes ({{ rubriquesDefauts.length }})
+            </button>
+            <button type="button" (click)="filterDefautsStatus = 'ACTIVE'"
+              class="px-3 py-1 rounded-lg transition cursor-pointer"
+              [class.bg-white]="filterDefautsStatus === 'ACTIVE'"
+              [class.text-emerald-700]="filterDefautsStatus === 'ACTIVE'"
+              [class.shadow-xs]="filterDefautsStatus === 'ACTIVE'"
+              [class.text-slate-500]="filterDefautsStatus !== 'ACTIVE'">
+              Actives ({{ activeDefautsCount }})
+            </button>
+            <button type="button" (click)="filterDefautsStatus = 'ARCHIVED'"
+              class="px-3 py-1 rounded-lg transition cursor-pointer"
+              [class.bg-white]="filterDefautsStatus === 'ARCHIVED'"
+              [class.text-amber-700]="filterDefautsStatus === 'ARCHIVED'"
+              [class.shadow-xs]="filterDefautsStatus === 'ARCHIVED'"
+              [class.text-slate-500]="filterDefautsStatus !== 'ARCHIVED'">
+              Archivées ({{ archivedDefautsCount }})
+            </button>
+          </div>
+
+          <p class="text-xs text-slate-400">
+            Seules les rubriques <strong>Actives</strong> apparaissent sur les nouvelles fiches atelier.
+          </p>
+        </div>
+
+        <!-- Liste des rubriques -->
+        <div class="divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden mt-3">
+          @if (filteredRubriquesDefauts.length === 0) {
+            <div class="p-8 text-center text-slate-400 text-sm">
+              Aucune rubrique de défauts dans cette vue.
+            </div>
+          } @else {
+            @for (row of filteredRubriquesDefauts; track row.item.nom) {
+              <div class="px-5 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50 transition"
+                [class.bg-slate-50/60]="row.item.archive">
+                
+                <div class="flex items-center gap-3">
+                  <span class="w-6 h-6 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                    {{ row.originalIndex + 1 }}
+                  </span>
+                  
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-sm font-semibold" [class.text-slate-400]="row.item.archive" [class.line-through]="row.item.archive" [class.text-oas-ink]="!row.item.archive">
+                        {{ row.item.nom }}
+                      </span>
+
+                      <!-- Statut Actif / Archivé -->
+                      @if (row.item.archive) {
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                          Archivée
+                        </span>
+                      } @else {
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          Active
+                        </span>
+                      }
+
+                      <!-- Usage count badge -->
+                      @if (isDefautUsed(row.item.nom)) {
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200"
+                              title="Cette rubrique est présente dans {{ getDefautUsageCount(row.item.nom) }} fiche(s) ou ordre(s). Suppression interdite : archivage uniquement.">
+                          <svg lucideLock class="w-3 h-3"></svg>
+                          <span>Utilisée ({{ getDefautUsageCount(row.item.nom) }}) • Archivage seul</span>
+                        </span>
+                      } @else {
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-500 border border-slate-200">
+                          Non utilisée
+                        </span>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex items-center gap-2 self-end sm:self-auto">
+                  <!-- Bouton Archiver / Restaurer -->
+                  @if (!row.item.archive) {
+                    <button type="button" (click)="archiveRubriqueDefaut(row.originalIndex, true)" [disabled]="saving"
+                      title="Archiver cette rubrique (ne sera plus proposée pour les nouvelles fiches)"
+                      class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 text-amber-700 hover:bg-amber-50 rounded-lg border border-amber-200 transition cursor-pointer">
+                      <svg lucideArchive class="w-3.5 h-3.5"></svg>
+                      <span>Archiver</span>
+                    </button>
+                  } @else {
+                    <button type="button" (click)="archiveRubriqueDefaut(row.originalIndex, false)" [disabled]="saving"
+                      title="Restaurer cette rubrique (sera à nouveau disponible pour les nouvelles fiches)"
+                      class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 text-emerald-700 hover:bg-emerald-50 rounded-lg border border-emerald-200 transition cursor-pointer">
+                      <svg lucideArchiveRestore class="w-3.5 h-3.5"></svg>
+                      <span>Restaurer</span>
+                    </button>
+                  }
+
+                  <!-- Bouton Supprimer : UNIQUEMENT pour les rubriques JAMAIS utilisées -->
+                  @if (!isDefautUsed(row.item.nom)) {
+                    <button type="button" (click)="removeRubriqueDefaut(row.originalIndex)" [disabled]="saving"
+                      title="Supprimer définitivement (non utilisée)"
+                      class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 text-rose-600 hover:bg-rose-50 rounded-lg border border-rose-200 transition cursor-pointer">
+                      <svg lucideTrash2 class="w-3.5 h-3.5"></svg>
+                      <span>Supprimer</span>
+                    </button>
+                  }
+                </div>
+
+              </div>
+            }
+          }
+        </div>
+
+      </div>
+    </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- TAB 3 : BRIQUES DYNAMIQUES                                  -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  @if (activeTab === 'briques') {
+    <div class="space-y-6 animate-in fade-in duration-200">
+      <!-- Carte d'ajout brique -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
+        <h2 class="text-base font-bold text-oas-ink">Ajouter une nouvelle brique dynamique</h2>
+
+        <form (ngSubmit)="saveConfig()" class="flex flex-wrap items-end gap-4">
+          <div class="flex-1 min-w-[200px]">
+            <label class="block text-xs font-semibold text-slate-500 mb-1">Libellé du champ <span class="text-rose-500">*</span></label>
+            <input type="text" [(ngModel)]="newConfig.label" name="label" required placeholder="Ex: Kilométrage, Niveau d'huile"
+              class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-oas-ink focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition-all outline-none">
+          </div>
+
+          <div class="w-48">
+            <label class="block text-xs font-semibold text-slate-500 mb-1">Type de champ <span class="text-rose-500">*</span></label>
+            <select [(ngModel)]="newConfig.type" name="type" required
+              class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-oas-ink focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition-all outline-none">
+              <option value="text">Texte Court</option>
+              <option value="number">Nombre</option>
+              <option value="textarea">Texte Long (Paragraphe)</option>
+              <option value="select">Liste déroulante</option>
+              <option value="checkbox">Case à cocher</option>
+              <option value="date">Date</option>
+            </select>
+          </div>
+
+          @if (newConfig.type === 'select') {
+            <div class="flex-1 min-w-[220px]">
+              <label class="block text-xs font-semibold text-slate-500 mb-1">Options (séparées par virgule)</label>
+              <input type="text" [(ngModel)]="newConfig.options" name="options" placeholder="Ex: Bon, Moyen, Mauvais"
+                class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-oas-ink focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition-all outline-none">
+            </div>
+          }
+
+          <div class="flex items-center gap-2 mb-3">
+            <input type="checkbox" [(ngModel)]="newConfig.obligatoire" name="obligatoire" id="obl_check"
+              class="w-4 h-4 text-oas-accent rounded focus:ring-oas-accent border-slate-300">
+            <label for="obl_check" class="text-sm font-semibold text-slate-600 cursor-pointer select-none">Obligatoire</label>
+          </div>
+
+          <div>
+            <button type="submit" [disabled]="!newConfig.label || saving"
+              class="px-5 py-2.5 bg-oas-accent text-white font-bold text-sm rounded-xl hover:bg-oas-accent-dark transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-2">
+              <svg lucidePlus class="w-4 h-4"></svg>
+              Ajouter brique
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Table des briques -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+          <h3 class="font-bold text-base text-oas-ink">Briques configurées ({{ configs.length }})</h3>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-600">
+            <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
+              <tr>
+                <th class="py-3.5 px-6">Libellé</th>
+                <th class="py-3.5 px-6">Type</th>
+                <th class="py-3.5 px-6">Options</th>
+                <th class="py-3.5 px-6">Obligatoire</th>
+                <th class="py-3.5 px-6 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              @if (isLoading) {
+                <tr>
+                  <td colspan="5" class="py-8 text-center text-slate-400">Chargement de la configuration...</td>
+                </tr>
+              } @else if (configs.length === 0) {
+                <tr>
+                  <td colspan="5" class="py-8 text-center text-slate-400">Aucune brique dynamique configurée.</td>
+                </tr>
+              } @else {
+                @for (conf of configs; track conf.id ?? conf.label) {
+                  <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="py-3.5 px-6 font-semibold text-oas-ink">{{ conf.label }}</td>
+                    <td class="py-3.5 px-6">
+                      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">
+                        {{ conf.type }}
+                      </span>
+                    </td>
+                    <td class="py-3.5 px-6 text-oas-muted">{{ conf.options || '—' }}</td>
+                    <td class="py-3.5 px-6">
+                      @if (conf.obligatoire) {
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Oui</span>
+                      } @else {
+                        <span class="text-slate-400 text-xs">Non</span>
+                      }
+                    </td>
+                    <td class="py-3.5 px-6 text-right">
+                      @if (conf.id) {
+                        <button (click)="deleteConfig(conf.id)" [disabled]="saving"
+                          class="text-rose-600 hover:text-rose-800 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-rose-50 transition cursor-pointer">
+                          Supprimer
+                        </button>
+                      }
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
+
 </div>

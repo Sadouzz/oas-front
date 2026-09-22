@@ -2,10 +2,20 @@ import { Component, inject, OnInit, ViewChild, ElementRef, ChangeDetectorRef } f
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FicheAtelierService } from '../../fiches-atelier/fiche-atelier.service';
+import { FicheAtelierConfigService } from '../../fiches-atelier/fiche-atelier-config.service';
 import { RendezVousService } from '../../rendezvous/rendezvous.service';
 import { ClientService } from '../../clients/client.service';
 import { VehiculeService } from '../../vehicules/vehicule.service';
-import { RendezVous, FicheAtelierRequest, ClientListResponse, VehiculeModel, extractContent } from '../../../shared/models';
+import {
+  RendezVous,
+  FicheAtelierRequest,
+  ClientListResponse,
+  VehiculeModel,
+  extractContent,
+  DEFAULT_LIGNES_RECEPTION,
+  DEFAULT_RUBRIQUES_DEFAUTS,
+  parseFicheAtelierConfig
+} from '../../../shared/models';
 import { LucidePlus, LucideTrash2, LucideArrowLeft, LucideSave, LucideX } from '@lucide/angular';
 import { SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
 
@@ -22,6 +32,7 @@ export class FichesAtelier implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private service = inject(FicheAtelierService);
+  private configService = inject(FicheAtelierConfigService);
   private rdvService = inject(RendezVousService);
   private clientService = inject(ClientService);
   private vehiculeService = inject(VehiculeService);
@@ -71,21 +82,8 @@ export class FichesAtelier implements OnInit {
   private isDrawingRec = false;
   private isDrawingClient = false;
 
-  defaultReception = [
-    'Carrosserie',
-    'Intérieur / Habitacle',
-    'Vitrage / Pare-brise',
-    'Eclairage',
-    'Accessoires (Cric, roue de secours...)'
-  ];
-
-  defaultDefauts = [
-    'Mécanique',
-    'Électrique',
-    'Climatisation',
-    'Peinture',
-    'Tôlerie'
-  ];
+  defaultReception: string[] = [...DEFAULT_LIGNES_RECEPTION];
+  defaultDefauts: string[] = [...DEFAULT_RUBRIQUES_DEFAUTS];
 
   ngOnInit(): void {
     const rdvIdParam = this.route.snapshot.paramMap.get('rendezVousId');
@@ -98,6 +96,7 @@ export class FichesAtelier implements OnInit {
     }
 
     this.initForm();
+    this.loadConfigAndLines();
   }
 
   initForm() {
@@ -116,6 +115,41 @@ export class FichesAtelier implements OnInit {
       lignesDefauts: this.fb.array([])
     });
 
+    this.populateDefaultLines();
+  }
+
+  loadConfigAndLines() {
+    this.configService.getAll().subscribe({
+      next: (data) => {
+        if (data && data.length > 0) {
+          const cfg = parseFicheAtelierConfig(data[0].configJson);
+          if (cfg.lignesReception && cfg.lignesReception.length > 0) {
+            this.defaultReception = cfg.lignesReception
+              .filter(item => !item.archive)
+              .map(item => item.nom);
+          }
+          if (cfg.rubriquesDefauts && cfg.rubriquesDefauts.length > 0) {
+            this.defaultDefauts = cfg.rubriquesDefauts
+              .filter(item => !item.archive)
+              .map(item => item.nom);
+          }
+          this.populateDefaultLines();
+          this.cdr.markForCheck();
+        }
+      },
+      error: () => {
+        // En cas d'erreur de chargement, les lignes par défaut sont déjà présentes
+      }
+    });
+  }
+
+  populateDefaultLines() {
+    while (this.lignesReception.length > 0) {
+      this.lignesReception.removeAt(0);
+    }
+    while (this.lignesDefauts.length > 0) {
+      this.lignesDefauts.removeAt(0);
+    }
     this.defaultReception.forEach(r => this.addReception(r));
     this.defaultDefauts.forEach(d => this.addDefaut(d));
   }

@@ -15,8 +15,10 @@ import {
   LigneReceptionOrdre,
   LigneTravailOrdre,
   OrdreReparationRequest,
-  extractContent
+  extractContent,
+  parseFicheAtelierConfig
 } from '../../../shared/models';
+import { FicheAtelierConfigService } from '../../fiches-atelier/fiche-atelier-config.service';
 
 export const TRAVAUX_FREQUENTS = [
   'Vidange moteur',
@@ -74,6 +76,7 @@ export class OrdreReparationFormComponent implements OnInit, OnDestroy {
   private ordreService = inject(OrdreReparationService);
   private vehiculeService = inject(VehiculeService);
   private clientService = inject(ClientService);
+  private configService = inject(FicheAtelierConfigService);
   private destroy$ = new Subject<void>();
 
   form!: FormGroup;
@@ -211,12 +214,29 @@ export class OrdreReparationFormComponent implements OnInit, OnDestroy {
     this.loading = true;
     forkJoin({
       clients: this.clientService.getAll({ size: 300 }),
-      vehicules: this.vehiculeService.getAll({ size: 300 })
+      vehicules: this.vehiculeService.getAll({ size: 300 }),
+      configs: this.configService.getAll()
     }).subscribe({
-      next: ({ clients, vehicules }) => {
+      next: ({ clients, vehicules, configs }) => {
         this.clients = extractContent(clients as any);
         this.allVehicules = extractContent(vehicules as any);
         this.filteredVehicules = [...this.allVehicules];
+
+        if (configs && configs.length > 0) {
+          const cfg = parseFicheAtelierConfig(configs[0].configJson);
+          const activeReception = cfg.lignesReception.filter(i => !i.archive).map(i => i.nom);
+          if (activeReception.length > 0) {
+            this.lignesReception.clear();
+            activeReception.forEach(nom => {
+              this.lignesReception.push(this.fb.group({
+                nom: [nom, Validators.required],
+                etat: [null],
+                verrouille: [false]
+              }));
+            });
+          }
+        }
+
         this.loading = false;
         this.cdr.markForCheck();
       },
