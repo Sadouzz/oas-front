@@ -6,14 +6,14 @@ import { RendezVousService } from '../../rendezvous/rendezvous.service';
 import { OrdreReparationService } from '../../ordres-reparation/ordre-reparation.service';
 import { FicheAtelierDetailsResponse, RendezVous, extractContent } from '../../../shared/models';
 import { Router, RouterLink } from '@angular/router';
-import { LucideEye, LucideWrench, LucidePlus, LucideX, LucideCalendar } from '@lucide/angular';
+import { LucideEye, LucideWrench, LucidePlus, LucideX, LucideCalendar, LucideLock } from '@lucide/angular';
 import { BasePaginatedComponent } from '../../../shared/components/base-paginated.component';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 
 @Component({
   selector: 'app-fiches-atelier-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, LucideEye, LucideWrench, LucidePlus, LucideX, LucideCalendar, PaginationComponent],
+  imports: [CommonModule, FormsModule, RouterLink, LucideEye, LucideWrench, LucidePlus, LucideX, LucideCalendar, LucideLock, PaginationComponent],
   templateUrl: './fiches-atelier-list.html'
 })
 export class FichesAtelierList extends BasePaginatedComponent implements OnInit {
@@ -109,7 +109,19 @@ export class FichesAtelierList extends BasePaginatedComponent implements OnInit 
     );
   }
 
+  isRdvTodayOrPast(dateStr?: string | null): boolean {
+    if (!dateStr) return false;
+    const rdv = new Date(dateStr);
+    const now = new Date();
+    const rdvMidnight = new Date(rdv.getFullYear(), rdv.getMonth(), rdv.getDate()).getTime();
+    const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    return todayMidnight >= rdvMidnight;
+  }
+
   selectRendezVous(rdv: RendezVous) {
+    if (!this.isRdvTodayOrPast(rdv.dateRendezVous)) {
+      return;
+    }
     this.showNewModal = false;
     this.router.navigate(['/app/admin/fiches-atelier/new', rdv.id]);
   }

@@ -2,16 +2,26 @@ import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angula
 import { CommonModule, NgClass, NgStyle } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { OrdreReparationService } from './ordre-reparation.service';
 import { ProformaService } from '../proforma/proforma.service';
 import { FactureService } from '../factures/facture.service';
+import { PieceDetacheeService } from '../pieces-detachees/piece-detachee.service';
+import { MainDoeuvreService } from '../main-doeuvre/main-doeuvre.service';
+import { DevisPrevisionnelService } from '../devis-previsionnels/devis-previsionnel.service';
+import { DevisPrevisionnelRequest } from '../devis-previsionnels/models/devis-previsionnel.model';
+import { VehiculeService } from '../vehicules/vehicule.service';
+import { ClientService } from '../clients/client.service';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 import {
   OrdreReparation,
   StatutOrdre,
-  getEtapeFromStatut
+  getEtapeFromStatut,
+  PieceDetache,
+  MainDoeuvreModel,
+  extractContent
 } from '../../shared/models';
 
 export const STATUT_STEPS: { statut: StatutOrdre; label: string }[] = [
@@ -49,6 +59,23 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
   private service = inject(OrdreReparationService);
   private proformaService = inject(ProformaService);
   private factureService = inject(FactureService);
+  private pieceService = inject(PieceDetacheeService);
+  private moService = inject(MainDoeuvreService);
+  private devisPrevisionnelService = inject(DevisPrevisionnelService);
+  private vehiculeService = inject(VehiculeService);
+  private clientService = inject(ClientService);
+
+  allPieces: PieceDetache[] = [];
+  allMO: MainDoeuvreModel[] = [];
+
+  // ─── Modal Devis Prévisionnel ─────────────────────────
+  showDevisModal = false;
+  selectedOrdreForDevis: OrdreReparation | null = null;
+  devisMontant: number | null = null;
+  devisKilometrage: number | null = null;
+  devisNotes = '';
+  creatingDevis = false;
+  devisModalError = '';
 
   // ─── Liste & Filtres ──────────────────────────────────
   ordres: OrdreReparation[] = [];
@@ -72,6 +99,15 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
   readonly statutSteps = STATUT_STEPS;
 
   ngOnInit(): void {
+    this.pieceService.getAll().subscribe({
+      next: res => { this.allPieces = extractContent<PieceDetache>(res as any); this.cdr.markForCheck(); },
+      error: () => {}
+    });
+    this.moService.getAll().subscribe({
+      next: res => { this.allMO = extractContent<MainDoeuvreModel>(res as any); this.cdr.markForCheck(); },
+      error: () => {}
+    });
+
     const qp = this.route.snapshot.queryParams;
     if (qp && qp['ficheAtelierId']) {
       const fId = +qp['ficheAtelierId'];
@@ -343,6 +379,206 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
   formatPrice(p?: number | null): string {
     if (p == null) return '0 FCFA';
     return p.toLocaleString('fr-FR') + ' FCFA';
+  }
+
+  getLpPrice(lp: any): number {
+    if (lp?.prix != null && Number(lp.prix) > 0) return Number(lp.prix);
+    if (lp?.piece?.prix != null && Number(lp.piece.prix) > 0) return Number(lp.piece.prix);
+    const cat = this.allPieces.find(p => p.id === (lp?.piece?.id || lp?.pieceId));
+    return cat?.prix ? Number(cat.prix) : 0;
+  }
+
+  getLmPrice(lm: any): number {
+    if (lm?.prix != null && Number(lm.prix) > 0) return Number(lm.prix);
+    if (lm?.mainDoeuvre?.prix != null && Number(lm.mainDoeuvre.prix) > 0) return Number(lm.mainDoeuvre.prix);
+    const cat = this.allMO.find(m => m.id === (lm?.mainDoeuvre?.id || lm?.mainDoeuvreId));
+    return cat?.prix ? Number(cat.prix) : 0;
+  }
+
+  // ─── Modal Devis Prévisionnel ─────────────────────────
+  openCreateDevis(f: OrdreReparation): void {
+    this.selectedOrdreForDevis = f;
+    this.devisModalError = '';
+    this.devisNotes = f.descriptionTravaux || '';
+    this.devisKilometrage = f.vehicule?.kilometrage ?? (f.diagnostic?.kilometrage ?? 0);
+
+    // Calculer un montant suggéré basé sur les pièces & main d'œuvre actuelles si présentes
+    let totalSuggere = 0;
+    if (f.lignesOrdreReparationPieces?.length) {
+      for (const lp of f.lignesOrdreReparationPieces) {
+        const p = this.getLpPrice(lp);
+        totalSuggere += p * (lp.quantite || 1);
+      }
+    }
+    if (f.lignesOrdreReparationMainDoeuvres?.length) {
+      for (const lm of f.lignesOrdreReparationMainDoeuvres) {
+        const p = this.getLmPrice(lm);
+        totalSuggere += p * (lm.nbreHeure || 1);
+      }
+    }
+    this.devisMontant = totalSuggere > 0 ? totalSuggere : null;
+    this.showDevisModal = true;
+    this.cdr.markForCheck();
+
+    // Charger l'ordre complet en arrière-plan pour disposer de toutes les relations et identifiants
+    this.service.getById(f.id).subscribe({
+      next: (fullOrdre) => {
+        if (fullOrdre) {
+          this.selectedOrdreForDevis = fullOrdre;
+          if (this.devisKilometrage == null && fullOrdre.vehicule?.kilometrage != null) {
+            this.devisKilometrage = fullOrdre.vehicule.kilometrage;
+          }
+          this.cdr.markForCheck();
+        }
+      },
+      error: () => {}
+    });
+  }
+
+  closeDevisModal(): void {
+    this.showDevisModal = false;
+    this.selectedOrdreForDevis = null;
+    this.devisMontant = null;
+    this.devisKilometrage = null;
+    this.devisNotes = '';
+    this.devisModalError = '';
+    this.creatingDevis = false;
+    this.cdr.markForCheck();
+  }
+
+  async saveDevisPrevisionnel(): Promise<void> {
+    if (!this.selectedOrdreForDevis) return;
+    let o = this.selectedOrdreForDevis;
+
+    if (this.devisMontant == null || this.devisMontant <= 0) {
+      this.devisModalError = "Veuillez saisir un montant estimé supérieur à 0 FCFA.";
+      this.cdr.markForCheck();
+      return;
+    }
+
+    this.creatingDevis = true;
+    this.devisModalError = '';
+    this.cdr.markForCheck();
+
+    let vehiculeId: number = Number(
+      o.vehicule?.id || (o as any).vehiculeId || (o.vehicule as any)?.vehiculeId || 0
+    );
+    let clientId: number = Number(
+      o.vehicule?.client?.id ||
+      (o.vehicule as any)?.clientId ||
+      (o.vehicule?.client as any)?.userId ||
+      (o.vehicule?.client as any)?.clientId ||
+      (o as any).clientId ||
+      0
+    );
+
+    // 1) Si vehiculeId ou clientId manque, charger l'ordre complet par getById
+    if (!vehiculeId || !clientId) {
+      try {
+        const full = await firstValueFrom(this.service.getById(o.id));
+        if (full) {
+          o = full;
+          this.selectedOrdreForDevis = full;
+          vehiculeId = vehiculeId || Number(full.vehicule?.id || (full as any).vehiculeId || 0);
+          clientId = clientId || Number(
+            full.vehicule?.client?.id ||
+            (full.vehicule as any)?.clientId ||
+            (full.vehicule?.client as any)?.userId ||
+            (full.vehicule?.client as any)?.clientId ||
+            (full as any).clientId ||
+            0
+          );
+        }
+      } catch (e) {
+        console.warn('Erreur chargement ordre complet', e);
+      }
+    }
+
+    // 2) Si vehiculeId est présent mais clientId manque, charger le véhicule complet
+    if (vehiculeId && !clientId) {
+      try {
+        const v = await firstValueFrom(this.vehiculeService.getById(vehiculeId));
+        if (v) {
+          clientId = Number(v.client?.id || (v as any).clientId || (v.client as any)?.userId || 0);
+        }
+      } catch (e) {
+        console.warn('Erreur chargement véhicule', e);
+      }
+    }
+
+    // 3) Si le clientId est toujours 0 mais qu'on a le prénom/nom du client, faire une correspondance avec la liste clients
+    if (!clientId && (o.vehicule?.client?.firstName || o.vehicule?.client?.lastName)) {
+      try {
+        const clients = await firstValueFrom(this.clientService.getAll());
+        if (clients && clients.length) {
+          const fn = (o.vehicule?.client?.firstName || '').trim().toLowerCase();
+          const ln = (o.vehicule?.client?.lastName || '').trim().toLowerCase();
+          const found = clients.find(c =>
+            (c.firstName?.trim().toLowerCase() === fn && c.lastName?.trim().toLowerCase() === ln) ||
+            (c.firstName?.trim().toLowerCase() === ln && c.lastName?.trim().toLowerCase() === fn) ||
+            (c.phone && o.vehicule?.client?.phone && c.phone.trim() === o.vehicule.client.phone.trim())
+          );
+          if (found) {
+            clientId = found.id;
+          }
+        }
+      } catch (e) {
+        console.warn('Erreur correspondance client', e);
+      }
+    }
+
+    // 4) Si le vehiculeId est toujours 0 mais qu'on a l'immatriculation, chercher dans la liste des véhicules
+    if (!vehiculeId && o.vehicule?.immatriculation) {
+      try {
+        const immat = o.vehicule.immatriculation.trim().toLowerCase();
+        const vRes = await firstValueFrom(this.vehiculeService.getAll({ size: 100 }));
+        const vList = extractContent<any>(vRes);
+        const foundV = vList.find((v: any) => v.immatriculation?.trim().toLowerCase() === immat);
+        if (foundV) {
+          vehiculeId = foundV.id;
+          if (!clientId) {
+            clientId = Number(foundV.client?.id || foundV.clientId || 0);
+          }
+        }
+      } catch (e) {
+        console.warn('Erreur correspondance véhicule', e);
+      }
+    }
+
+    if (!vehiculeId || !clientId) {
+      this.creatingDevis = false;
+      this.devisModalError = "Le véhicule et le client doivent être associés à cet ordre pour générer un devis.";
+      this.cdr.markForCheck();
+      return;
+    }
+
+    const payload: DevisPrevisionnelRequest = {
+      clientId,
+      vehiculeId,
+      notesReparation: this.devisNotes?.trim() || o.descriptionTravaux || `Devis prévisionnel pour l'ordre ${o.numero}`,
+      montantTotal: Number(this.devisMontant),
+      kilometrageVehicule: Number(this.devisKilometrage ?? o.vehicule?.kilometrage ?? 0),
+      ordreReparationId: o.id
+    };
+
+    this.devisPrevisionnelService.create(payload).subscribe({
+      next: (res) => {
+        this.creatingDevis = false;
+        this.closeDevisModal();
+        this.notify(`Devis prévisionnel ${res.numero || ''} créé avec succès.`);
+        this.loadData();
+      },
+      error: (err) => {
+        this.creatingDevis = false;
+        this.devisModalError = err.error?.message || "Erreur lors de la création du devis prévisionnel.";
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  allerAuProforma(ordreId: number): void {
+    this.closeDevisModal();
+    this.router.navigate(['/app/ordres-reparation', ordreId, 'proforma']);
   }
 
   private notify(msg: string): void {

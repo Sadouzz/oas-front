@@ -1,4 +1,5 @@
 import { Component, inject, OnInit, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FicheAtelierService } from '../../fiches-atelier/fiche-atelier.service';
@@ -22,7 +23,7 @@ import { SearchableSelectComponent } from '../../../shared/components/searchable
 @Component({
   selector: 'app-fiches-atelier',
   standalone: true,
-  imports: [ReactiveFormsModule, LucidePlus, LucideTrash2, LucideArrowLeft, LucideSave, LucideX, SearchableSelectComponent],
+  imports: [ReactiveFormsModule, LucidePlus, LucideTrash2, LucideArrowLeft, LucideSave, LucideX, SearchableSelectComponent, DatePipe],
   templateUrl: './fiches-atelier.html',
   styleUrl: './fiches-atelier.css',
 })
@@ -97,6 +98,39 @@ export class FichesAtelier implements OnInit {
 
     this.initForm();
     this.loadConfigAndLines();
+  }
+
+  get minDateSortie(): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const now = new Date();
+    const today = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+
+    if (this.rdvData?.dateRendezVous) {
+      const d = new Date(this.rdvData.dateRendezVous);
+      if (!isNaN(d.getTime())) {
+        const rdvDate = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+        return rdvDate > today ? rdvDate : today;
+      }
+    }
+    return today;
+  }
+
+  formatDateFr(ymd: string): string {
+    if (!ymd) return '';
+    const parts = ymd.split('-');
+    if (parts.length === 3) {
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    return ymd;
+  }
+
+  isRdvTodayOrPast(dateStr?: string | null): boolean {
+    if (!dateStr) return true;
+    const rdv = new Date(dateStr);
+    const now = new Date();
+    const rdvMidnight = new Date(rdv.getFullYear(), rdv.getMonth(), rdv.getDate()).getTime();
+    const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    return todayMidnight >= rdvMidnight;
   }
 
   initForm() {
@@ -246,6 +280,10 @@ export class FichesAtelier implements OnInit {
         this.rdvData = rdv || null;
         if (!this.rdvData) {
           this.error = "Rendez-vous introuvable.";
+        } else if (!this.isRdvTodayOrPast(this.rdvData.dateRendezVous)) {
+          const rdvDateStr = new Date(this.rdvData.dateRendezVous).toLocaleDateString('fr-FR');
+          this.error = `Impossible de générer la fiche atelier avant le jour du rendez-vous (prévu le ${rdvDateStr}).`;
+          this.form.disable();
         } else {
           this.form.patchValue({
             clientId: this.rdvData.clientId,
@@ -337,6 +375,20 @@ export class FichesAtelier implements OnInit {
 
     if (!clientId || !vehiculeId) {
       this.error = "Veuillez sélectionner un client et un véhicule.";
+      return;
+    }
+
+    if (this.rdvData && !this.isRdvTodayOrPast(this.rdvData.dateRendezVous)) {
+      this.error = "Impossible de générer la fiche atelier avant le jour du rendez-vous.";
+      return;
+    }
+
+    if (this.form.value.dateSortiePrevue && this.form.value.dateSortiePrevue < this.minDateSortie) {
+      if (this.rdvData?.dateRendezVous) {
+        this.error = `La date de sortie prévue doit être après celle du rendez-vous (au plus tôt le ${this.formatDateFr(this.minDateSortie)}).`;
+      } else {
+        this.error = `La date de sortie prévue ne peut pas être dans le passé (au plus tôt le ${this.formatDateFr(this.minDateSortie)}).`;
+      }
       return;
     }
 

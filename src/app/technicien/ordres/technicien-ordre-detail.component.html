@@ -178,6 +178,9 @@
                   <span>{{ lp.piece?.reference ? (lp.piece?.reference + ' — ' + (lp.piece?.designation || '')) : (lp.piece?.designation || 'Pièce') }}</span>
                 </div>
                 <div class="flex items-center gap-3">
+                  @if (getPiecePrice(lp) > 0) {
+                    <span class="text-xs font-semibold text-oas-ink">{{ getPiecePrice(lp) | number }} FCFA</span>
+                  }
                   <span class="text-oas-muted font-bold text-xs">x{{ lp.quantite }}</span>
                   <button type="button" (click)="supprimerPiece(lp)" title="Retirer cette pièce"
                           class="text-red-400 hover:text-red-600 hover:bg-red-50 p-1 rounded transition cursor-pointer text-xs font-bold">
@@ -262,6 +265,9 @@
             <li class="text-sm text-oas-ink2 flex justify-between items-center px-3 py-2 rounded-lg bg-oas-bg">
               <span>{{ lmd.mainDoeuvre?.description || lmd.mainDoeuvre?.categorie?.nom || 'Prestation' }}</span>
               <div class="flex items-center gap-3">
+                @if (getMOPrice(lmd) > 0) {
+                  <span class="text-xs font-semibold text-oas-ink">{{ getMOPrice(lmd) | number }} FCFA/h</span>
+                }
                 <span class="text-oas-muted font-bold text-xs">{{ lmd.nbreHeure }}h</span>
                 <button type="button" (click)="supprimerMainDoeuvre(lmd)" title="Retirer cette main d'œuvre"
                         class="text-red-400 hover:text-red-600 hover:bg-red-50 p-1 rounded transition cursor-pointer text-xs font-bold">

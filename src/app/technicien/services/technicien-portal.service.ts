@@ -58,7 +58,7 @@ export class TechnicienPortalService {
     return this.http.put<OrdreReparation>(`${this.api}/ordres-reparation/${id}/pannes`, { listeDefauts });
   }
 
-  proposerPiece(id: number, data: { pieceId?: number | null; quantite: number; isCustom?: boolean; designationPds?: string }): Observable<any> {
+  proposerPiece(id: number, data: { pieceId?: number | null; quantite: number; isCustom?: boolean; designationPds?: string; prix?: number }): Observable<any> {
     return this.http.post(`${this.api}/ordres-reparation/${id}/pieces`, data, { responseType: 'text' as 'json' });
   }
 
@@ -66,7 +66,7 @@ export class TechnicienPortalService {
     return this.http.delete(`${this.api}/ordres-reparation/${id}/pieces/${pieceLigneId}`, { responseType: 'text' as 'json' });
   }
 
-  proposerMainDoeuvre(id: number, data: { mainDoeuvreId: number; nbreHeure: number }): Observable<any> {
+  proposerMainDoeuvre(id: number, data: { mainDoeuvreId: number; nbreHeure: number; prix?: number }): Observable<any> {
     return this.http.post(`${this.api}/ordres-reparation/${id}/main-doeuvre`, data, { responseType: 'text' as 'json' });
   }
 

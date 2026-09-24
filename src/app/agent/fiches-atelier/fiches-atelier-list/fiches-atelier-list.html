@@ -144,7 +144,7 @@
                       } @else {
                         <svg lucideWrench class="w-4 h-4"></svg>
                       }
-                      <span class="hidden xl:inline">Ordre de travail</span>
+                      <span class="hidden xl:inline">Ordre de réparation</span>
                     </button>
                     <a [routerLink]="['/app/fiches-atelier', fiche.id]" 
                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-oas-accent/10 hover:bg-oas-accent/20 text-oas-accent rounded-lg transition-colors duration-200">
@@ -241,26 +241,43 @@
         } @else {
           @for (rdv of filteredRendezVous; track rdv.id) {
             <div (click)="selectRendezVous(rdv)"
-                 class="p-4 rounded-xl border border-oas-line hover:border-oas-accent hover:bg-oas-accent/5 transition cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 group">
+                 [class.opacity-60]="!isRdvTodayOrPast(rdv.dateRendezVous)"
+                 [class.cursor-not-allowed]="!isRdvTodayOrPast(rdv.dateRendezVous)"
+                 [class.cursor-pointer]="isRdvTodayOrPast(rdv.dateRendezVous)"
+                 class="p-4 rounded-xl border border-oas-line hover:border-oas-accent hover:bg-oas-accent/5 transition flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 group">
               <div class="space-y-1 min-w-0 w-full">
                 <div class="flex items-center gap-2">
                   <span class="font-bold text-sm text-oas-ink group-hover:text-oas-accent transition truncate">{{ rdv.clientName }}</span>
                   <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700">{{ rdv.vehiculeImmatriculation }}</span>
                 </div>
                 <p class="text-xs text-oas-muted truncate">{{ rdv.motif || 'Aucun motif spécifié' }}</p>
-                <div class="flex items-center gap-3 text-[11px] text-oas-faint pt-0.5">
-                  <span class="flex items-center gap-1">
+                <div class="flex items-center flex-wrap gap-2 text-[11px] text-oas-faint pt-0.5">
+                  <span class="flex items-center gap-1 font-medium">
                     <svg lucideCalendar class="w-3.5 h-3.5"></svg>
                     {{ rdv.dateRendezVous | date:'dd/MM/yyyy HH:mm' }}
                   </span>
                   <span class="font-semibold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">{{ rdv.statut }}</span>
+                  @if (!isRdvTodayOrPast(rdv.dateRendezVous)) {
+                    <span class="font-semibold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded flex items-center gap-1">
+                      <svg lucideLock class="w-3 h-3 text-slate-500"></svg>
+                      Disponible le {{ rdv.dateRendezVous | date:'dd/MM/yyyy' }}
+                    </span>
+                  }
                 </div>
               </div>
 
               <div class="flex items-center gap-2 flex-shrink-0 w-full sm:w-auto sm:ml-4">
-                <button class="px-3 py-1.5 bg-oas-accent text-white text-xs font-bold rounded-lg group-hover:bg-oas-accent-dark transition shadow-xs w-full sm:w-auto">
-                  Créer la fiche
-                </button>
+                @if (isRdvTodayOrPast(rdv.dateRendezVous)) {
+                  <button class="px-3 py-1.5 bg-oas-accent text-white text-xs font-bold rounded-lg group-hover:bg-oas-accent-dark transition shadow-xs w-full sm:w-auto cursor-pointer">
+                    Créer la fiche
+                  </button>
+                } @else {
+                  <button type="button" [disabled]="true"
+                          class="px-3 py-1.5 bg-slate-100 text-slate-400 text-xs font-medium rounded-lg border border-slate-200 cursor-not-allowed w-full sm:w-auto flex items-center justify-center gap-1">
+                    <svg lucideLock class="w-3.5 h-3.5 text-slate-400"></svg>
+                    <span>Dès le {{ rdv.dateRendezVous | date:'dd/MM' }}</span>
+                  </button>
+                }
               </div>
             </div>
           }

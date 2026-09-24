@@ -288,6 +288,7 @@ export class TechnicienOrdreDetailComponent implements OnInit {
     const pieceId = this.selectedPieceId;
     const quantite = this.pieceQuantite;
     const pieceObj = this.allPieces.find(p => p.id === pieceId);
+    const piecePrix = pieceObj?.prix != null ? pieceObj.prix : 0;
 
     // Reset formulaire immédiatement
     this.selectedPieceId = null;
@@ -299,14 +300,15 @@ export class TechnicienOrdreDetailComponent implements OnInit {
       id: tempId,
       quantite,
       isCustom: false,
-      piece: pieceObj ? { id: pieceObj.id, reference: pieceObj.reference, designation: pieceObj.designation, type: pieceObj.type } : { id: pieceId }
+      prix: piecePrix,
+      piece: pieceObj ? { id: pieceObj.id, reference: pieceObj.reference, designation: pieceObj.designation, type: pieceObj.type, prix: piecePrix } : { id: pieceId }
     };
     if (this.ordre) {
       this.ordre.lignesOrdreReparationPieces = [...(this.ordre.lignesOrdreReparationPieces || []), tempLigne];
     }
     this.cdr.markForCheck();
 
-    this.service.proposerPiece(this.ordreId, { pieceId, quantite }).subscribe({
+    this.service.proposerPiece(this.ordreId, { pieceId, quantite, prix: piecePrix }).subscribe({
       next: () => {
         this.notify('Pièce catalogue proposée.');
         this.load(true);
@@ -369,12 +371,13 @@ export class TechnicienOrdreDetailComponent implements OnInit {
     });
   }
 
-  // ─── Proposer Main d'Œuvre (Instantané) ───
+  // ─── Proposer Main-d'œuvre (Instantané) ───
   proposerMainDoeuvre() {
     if (!this.selectedMainDoeuvreId || this.moNbreHeure < 1) return;
     const moId = this.selectedMainDoeuvreId;
     const heures = this.moNbreHeure;
     const moObj = this.allMO.find(m => m.id === moId);
+    const moPrix = moObj?.prix != null ? moObj.prix : 0;
 
     // Reset formulaire immédiatement
     this.selectedMainDoeuvreId = null;
@@ -385,14 +388,15 @@ export class TechnicienOrdreDetailComponent implements OnInit {
     const tempLigne: any = {
       id: tempId,
       nbreHeure: heures,
-      mainDoeuvre: moObj ? { id: moObj.id, description: moObj.description, categorie: moObj.categorie } : { id: moId }
+      prix: moPrix,
+      mainDoeuvre: moObj ? { id: moObj.id, description: moObj.description, categorie: moObj.categorie, prix: moPrix } : { id: moId }
     };
     if (this.ordre) {
       this.ordre.lignesOrdreReparationMainDoeuvres = [...(this.ordre.lignesOrdreReparationMainDoeuvres || []), tempLigne];
     }
     this.cdr.markForCheck();
 
-    this.service.proposerMainDoeuvre(this.ordreId, { mainDoeuvreId: moId, nbreHeure: heures }).subscribe({
+    this.service.proposerMainDoeuvre(this.ordreId, { mainDoeuvreId: moId, nbreHeure: heures, prix: moPrix }).subscribe({
       next: () => {
         this.notify('Main d\'œuvre proposée au chef d\'atelier.');
         this.load(true);
@@ -472,6 +476,20 @@ export class TechnicienOrdreDetailComponent implements OnInit {
         this.notifyError(err.error?.message || 'Erreur lors de la suppression de la main d\'œuvre.');
       }
     });
+  }
+
+  getPiecePrice(lp: any): number {
+    if (lp?.prix != null && Number(lp.prix) > 0) return Number(lp.prix);
+    if (lp?.piece?.prix != null && Number(lp.piece.prix) > 0) return Number(lp.piece.prix);
+    const cat = this.allPieces.find(p => p.id === (lp?.piece?.id || lp?.pieceId));
+    return cat?.prix ? Number(cat.prix) : 0;
+  }
+
+  getMOPrice(lm: any): number {
+    if (lm?.prix != null && Number(lm.prix) > 0) return Number(lm.prix);
+    if (lm?.mainDoeuvre?.prix != null && Number(lm.mainDoeuvre.prix) > 0) return Number(lm.mainDoeuvre.prix);
+    const cat = this.allMO.find(m => m.id === (lm?.mainDoeuvre?.id || lm?.mainDoeuvreId));
+    return cat?.prix ? Number(cat.prix) : 0;
   }
 
   private notify(msg: string) {

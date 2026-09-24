@@ -31,4 +31,5 @@ export interface DevisPrevisionnelRequest {
   vehiculeId: number;
   clientId: number;
   ficheAtelierId?: number;
+  ordreReparationId?: number;
 }
