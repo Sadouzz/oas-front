@@ -164,10 +164,6 @@ export class FicheAtelierDetails implements OnInit {
 
   creerOrdreReparation() {
     if (!this.fiche) return;
-    if (!this.devis || (this.devis.statut !== 'ACCEPTE' && this.devis.statut !== 'PAYEE')) {
-      this.error = "Un devis prévisionnel doit être créé et accepté avant de créer l'ordre de réparation.";
-      return;
-    }
     this.ouvrirOrdreReparation();
   }
 

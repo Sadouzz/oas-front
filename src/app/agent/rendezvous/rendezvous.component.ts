@@ -7,16 +7,18 @@ import { VehiculeService } from '../vehicules/vehicule.service';
 import { RendezVous, RendezVousStatus, ClientModel, VehiculeModel, CreateRendezVousRequest, extractContent, extractPage } from '../../shared/models/index';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
+import { DatePipe } from '@angular/common';
 import {
-  LucideSearch, LucideX, LucideCalendar, LucideCheck, LucidePencil, LucideFileText, LucidePlus, LucideUser
+  LucideSearch, LucideX, LucideCalendar, LucideCheck, LucideFileText, LucidePlus, LucideUser, LucideLock
 } from '@lucide/angular';
 
 @Component({
   selector: 'app-rendezvous',
   standalone: true,
   imports: [
+    DatePipe,
     ReactiveFormsModule, AlertComponent, PaginationComponent,
-    LucideSearch, LucideX, LucideCalendar, LucideCheck, LucidePencil, LucideFileText, LucidePlus, LucideUser
+    LucideSearch, LucideX, LucideCalendar, LucideCheck, LucideFileText, LucidePlus, LucideUser, LucideLock
   ],
   templateUrl: './rendezvous.component.html',
 })
@@ -231,7 +233,9 @@ export class RendezVousComponent implements OnInit {
   }
 
   get minDate(): string {
-    return this.toDatetimeLocal(new Date().toISOString());
+    const d = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
   openCreate() {
@@ -268,6 +272,11 @@ export class RendezVousComponent implements OnInit {
     if (this.createForm.invalid) {
       this.createForm.markAllAsTouched();
       this.modalErrorMessage = 'Veuillez remplir tous les champs obligatoires correctement.';
+      return;
+    }
+
+    if (this.createForm.value.dateRendezVous && this.createForm.value.dateRendezVous < this.minDate) {
+      this.modalErrorMessage = 'La date du rendez-vous ne peut pas être dans le passé.';
       return;
     }
 
@@ -308,7 +317,19 @@ export class RendezVousComponent implements OnInit {
     this.showStatutModal = true;
   }
 
+  isValiderAction = true;
+
   openValider(rdv: RendezVous) {
+    this.isValiderAction = true;
+    this.editingRdv = rdv;
+    this.editedDate = this.toDatetimeLocal(rdv.dateRendezVous);
+    this.modalErrorMessage = '';
+    this.modalSuccessMessage = '';
+    this.showValiderModal = true;
+  }
+
+  openEditDate(rdv: RendezVous) {
+    this.isValiderAction = false;
     this.editingRdv = rdv;
     this.editedDate = this.toDatetimeLocal(rdv.dateRendezVous);
     this.modalErrorMessage = '';
@@ -349,6 +370,10 @@ export class RendezVousComponent implements OnInit {
 
   saveValider() {
     if (!this.editingRdv) return;
+    if (this.editedDate && this.editedDate < this.minDate) {
+      this.modalErrorMessage = 'La date du rendez-vous ne peut pas être dans le passé.';
+      return;
+    }
     this.saving = true;
     this.modalErrorMessage = '';
 
@@ -369,18 +394,63 @@ export class RendezVousComponent implements OnInit {
     if (this.editedDate) {
       const isoDate = new Date(this.editedDate).toISOString();
       this.service.updateDate(this.editingRdv.id, isoDate).subscribe({
-        next: () => doValider(),
+        next: () => {
+          if (this.isValiderAction && this.editingRdv?.statut === 'EN_ATTENTE') {
+            doValider();
+          } else {
+            this.closeModals();
+            this.load();
+            this.notify('Date du rendez-vous modifiée avec succès.');
+          }
+        },
         error: (err: any) => {
           this.saving = false;
           this.modalErrorMessage = err.error?.message || 'Erreur lors de la mise à jour de la date.';
         },
       });
     } else {
-      doValider();
+      if (this.isValiderAction && this.editingRdv?.statut === 'EN_ATTENTE') {
+        doValider();
+      } else {
+        this.closeModals();
+      }
     }
   }
 
+  isRdvTodayOrPast(dateStr: string): boolean {
+    if (!dateStr) return false;
+    const rdv = new Date(dateStr);
+    const now = new Date();
+    const rdvMidnight = new Date(rdv.getFullYear(), rdv.getMonth(), rdv.getDate()).getTime();
+    const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    return todayMidnight >= rdvMidnight;
+  }
+
+  canCreateFiche(rdv: RendezVous): boolean {
+    if (rdv.hasFicheAtelier || rdv.statut === 'TERMINE') return false;
+    if (rdv.statut !== 'CONFIRME') return false;
+    return this.isRdvTodayOrPast(rdv.dateRendezVous);
+  }
+
+  notifyNotToday(rdv: RendezVous) {
+    const formatted = new Date(rdv.dateRendezVous).toLocaleDateString('fr-FR');
+    this.notifyError(`Impossible de générer la fiche atelier avant le jour du rendez-vous (${formatted}).`);
+  }
+
+  formatRdvDateShort(dateStr: string): string {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+  }
+
   createFicheAtelier(rdv: RendezVous) {
+    if (!this.canCreateFiche(rdv)) {
+      if (!this.isRdvTodayOrPast(rdv.dateRendezVous)) {
+        this.notifyNotToday(rdv);
+      } else {
+        this.notifyError("Ce rendez-vous n'est pas éligible pour créer une fiche atelier.");
+      }
+      return;
+    }
     this.router.navigate(['/app/admin/fiches-atelier/new', rdv.id]);
   }
 

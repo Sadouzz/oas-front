@@ -270,6 +270,21 @@
 
       <div class="grid grid-cols-2 gap-4">
         <div>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Dépôt (optionnel)</label>
+          <app-searchable-select formControlName="depotId" [options]="depots" bindValue="id" bindLabel="nom"
+            placeholder="Filtrer les catégories par dépôt...">
+          </app-searchable-select>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Catégorie *</label>
+          <app-searchable-select formControlName="categorie" [options]="filteredCategories" bindValue="nom"
+            bindLabel="nom" placeholder="Sélectionner une catégorie...">
+          </app-searchable-select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
           <label class="block text-sm font-semibold text-oas-ink mb-1">Type *</label>
           <select formControlName="type"
             class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
@@ -288,20 +303,6 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-semibold text-oas-ink mb-1">Dépôt (optionnel)</label>
-          <app-searchable-select formControlName="depotId" [options]="depots" bindValue="id" bindLabel="nom"
-            placeholder="Filtrer les catégories par dépôt...">
-          </app-searchable-select>
-        </div>
-        <div>
-          <label class="block text-sm font-semibold text-oas-ink mb-1">Catégorie *</label>
-          <app-searchable-select formControlName="categorie" [options]="filteredCategories" bindValue="nom"
-            bindLabel="nom" placeholder="Sélectionner une catégorie...">
-          </app-searchable-select>
-        </div>
-      </div>
 
       <div class="grid grid-cols-2 gap-4">
         <div>

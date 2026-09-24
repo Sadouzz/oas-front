@@ -152,26 +152,44 @@ export class StepPiecesMoComponent implements OnInit {
         // Cumuler les pièces identiques au chargement
         const piecesMap = new Map<string, any>();
         for (const l of (ordre.lignesOrdreReparationPieces || [])) {
+          const pieceId = l.piece?.id ?? (l as any).pieceId;
           const key = l.isCustom 
             ? `custom_${(l.designationPds || '').trim().toLowerCase()}`
-            : `cat_${l.piece?.id}`;
+            : `cat_${pieceId}`;
+
+          const catalogPiece = !l.isCustom && pieceId
+            ? this.allPieces.find(p => p.id === pieceId)
+            : null;
+          const resolvedPiece = catalogPiece || l.piece;
+
+          // Résolution du prix unitaire :
+          // 1. Si un prix explicite > 0 a déjà été fixé, on le conserve
+          // 2. Sinon, on prend directement le prix du catalogue
+          // 3. Sinon, le prix de la pièce imbriquée
+          let unitPrice = 0;
+          if (l.prix != null && Number(l.prix) > 0) {
+            unitPrice = Number(l.prix);
+          } else if (catalogPiece?.prix != null && Number(catalogPiece.prix) > 0) {
+            unitPrice = Number(catalogPiece.prix);
+          } else if (l.piece?.prix != null && Number(l.piece.prix) > 0) {
+            unitPrice = Number(l.piece.prix);
+          }
 
           if (piecesMap.has(key)) {
             const item = piecesMap.get(key);
             item.quantite += (l.quantite || 1);
-            if ((item.prixUnitaire == null || item.prixUnitaire === 0) && l.prix != null && l.prix > 0) {
-              item.prixUnitaire = l.prix;
+            if ((item.prixUnitaire == null || item.prixUnitaire === 0) && unitPrice > 0) {
+              item.prixUnitaire = unitPrice;
             }
           } else {
-            const defaultPrice = l.prix != null ? l.prix : (l.isCustom ? 0 : (l.piece?.prix ?? 0));
             piecesMap.set(key, {
-              piece: l.piece,
-              pieceIdTemp: l.piece?.id,
+              piece: resolvedPiece,
+              pieceIdTemp: pieceId,
               quantite: l.quantite || 1,
               isCustom: !!l.isCustom,
               designationPds: l.designationPds,
-              prixUnitaire: defaultPrice,
-              stockDisponible: l.isCustom ? 0 : (l.piece?.stockMagasin ?? 0) + (l.piece?.stockAtelier ?? 0),
+              prixUnitaire: unitPrice,
+              stockDisponible: l.isCustom ? 0 : ((resolvedPiece?.stockMagasin ?? 0) + (resolvedPiece?.stockAtelier ?? 0)),
               manquant: 0,
               aSortirMagasin: 0
             });
@@ -189,21 +207,32 @@ export class StepPiecesMoComponent implements OnInit {
         // Cumuler les MO identiques au chargement
         const moMap = new Map<number, any>();
         for (const l of (ordre.lignesOrdreReparationMainDoeuvres || [])) {
-          const moId = l.mainDoeuvre?.id;
+          const moId = l.mainDoeuvre?.id ?? (l as any).mainDoeuvreId;
           if (!moId) continue;
+
+          const catalogMO = this.allMO.find(m => m.id === moId);
+          const resolvedMO = catalogMO || l.mainDoeuvre;
+
+          let unitPrice = 0;
+          if (l.prix != null && Number(l.prix) > 0) {
+            unitPrice = Number(l.prix);
+          } else if (catalogMO?.prix != null && Number(catalogMO.prix) > 0) {
+            unitPrice = Number(catalogMO.prix);
+          } else if (l.mainDoeuvre?.prix != null && Number(l.mainDoeuvre.prix) > 0) {
+            unitPrice = Number(l.mainDoeuvre.prix);
+          }
 
           if (moMap.has(moId)) {
             const item = moMap.get(moId);
             item.quantite += (l.nbreHeure || 1);
-            if ((item.prixUnitaire == null || item.prixUnitaire === 0) && l.prix != null && l.prix > 0) {
-              item.prixUnitaire = l.prix;
+            if ((item.prixUnitaire == null || item.prixUnitaire === 0) && unitPrice > 0) {
+              item.prixUnitaire = unitPrice;
             }
           } else {
-            const defaultPrice = l.prix != null ? l.prix : (l.mainDoeuvre?.prix ?? 0);
             moMap.set(moId, {
-              mo: l.mainDoeuvre,
+              mo: resolvedMO,
               quantite: l.nbreHeure || 1,
-              prixUnitaire: defaultPrice
+              prixUnitaire: unitPrice
             });
           }
         }
@@ -364,19 +393,45 @@ export class StepPiecesMoComponent implements OnInit {
       return;
     }
 
-    const payloadLignesPieces = this.lignesPieces.map(l => ({
-      pieceId: l.isCustom ? null : (l.piece?.id ?? null),
-      quantite: l.quantite,
-      prix: l.prixUnitaire != null ? l.prixUnitaire : (l.isCustom ? 0 : (l.piece?.prix ?? null)),
-      isCustom: l.isCustom ?? false,
-      designationPds: l.isCustom ? l.designationPds : undefined,
-    }));
+    const payloadLignesPieces = this.lignesPieces.map(l => {
+      const pieceId = l.isCustom ? null : (l.piece?.id ?? null);
+      const catPiece = pieceId ? this.allPieces.find(p => p.id === pieceId) : null;
+      let finalPrice = 0;
+      if (l.prixUnitaire != null && Number(l.prixUnitaire) >= 0) {
+        finalPrice = Number(l.prixUnitaire);
+      } else if (catPiece?.prix != null) {
+        finalPrice = Number(catPiece.prix);
+      } else if (l.piece?.prix != null) {
+        finalPrice = Number(l.piece.prix);
+      }
 
-    const payloadLignesMO = this.lignesMO.map(l => ({
-      mainDoeuvreId: l.mo.id,
-      nbreHeure: l.quantite,
-      prix: l.prixUnitaire != null ? l.prixUnitaire : (l.mo.prix ?? null),
-    }));
+      return {
+        pieceId,
+        quantite: l.quantite,
+        prix: finalPrice,
+        isCustom: l.isCustom ?? false,
+        designationPds: l.isCustom ? l.designationPds : undefined,
+      };
+    });
+
+    const payloadLignesMO = this.lignesMO.map(l => {
+      const moId = l.mo.id;
+      const catMO = this.allMO.find(m => m.id === moId);
+      let finalPrice = 0;
+      if (l.prixUnitaire != null && Number(l.prixUnitaire) >= 0) {
+        finalPrice = Number(l.prixUnitaire);
+      } else if (catMO?.prix != null) {
+        finalPrice = Number(catMO.prix);
+      } else if (l.mo?.prix != null) {
+        finalPrice = Number(l.mo.prix);
+      }
+
+      return {
+        mainDoeuvreId: moId,
+        nbreHeure: l.quantite,
+        prix: finalPrice,
+      };
+    });
 
     this.saving = true;
     this.ordreService.update(this.ordreId, {
