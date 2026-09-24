@@ -184,16 +184,13 @@
   }
 
   @if (showCreateModal) {
-    <app-modal title="Prendre rendez-vous" (close)="closeCreate()">
-        <form [formGroup]="form" (ngSubmit)="save()" class="space-y-4">
-          <div>
-            <label class="block text-xs font-semibold text-oas-ink mb-1.5">Date et heure souhaitées</label>
-            <input 
-            type="datetime-local" 
-            formControlName="dateRendezVous"
-            [min]="minDateTime"
-              class="w-full px-3.5 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition font-mono-data" />
-          </div>
+  <app-modal title="Prendre rendez-vous" (close)="closeCreate()">
+    <form [formGroup]="form" (ngSubmit)="save()" class="space-y-4">
+      <div>
+        <label class="block text-xs font-semibold text-oas-ink mb-1.5">Date et heure souhaitées</label>
+        <input type="datetime-local" formControlName="dateRendezVous"
+          class="w-full px-3.5 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition font-mono-data" />
+      </div>
 
       <div>
         <label class="block text-xs font-semibold text-oas-ink mb-1.5">Garage</label>
