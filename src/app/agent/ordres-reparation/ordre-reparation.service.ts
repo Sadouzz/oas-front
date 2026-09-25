@@ -9,14 +9,26 @@ export class OrdreReparationService {
   private http = inject(HttpClient);
   private api = `${environment.apiUrl}/api/ordres-reparation`;
 
-  getAll(params?: import('../../shared/models').PageParams & { statut?: string; dateDebut?: string; dateFin?: string }): Observable<any> {
+  getAll(params?: import('../../shared/models').PageParams & { statut?: string; dateDebut?: string; dateFin?: string; search?: string }): Observable<any> {
     const p: Record<string, string> = {};
-    if (params?.statut) p['statut'] = params.statut;
-    if (params?.dateDebut) p['dateDebut'] = params.dateDebut;
-    if (params?.dateFin) p['dateFin'] = params.dateFin;
+    if (params?.statut) {
+      p['statut'] = params.statut;
+      p['status'] = params.statut;
+    }
+    if (params?.dateDebut) {
+      p['dateDebut'] = params.dateDebut;
+      p['startDate'] = params.dateDebut;
+    }
+    if (params?.dateFin) {
+      p['dateFin'] = params.dateFin;
+      p['endDate'] = params.dateFin;
+    }
     if (params?.page !== undefined) p['page'] = params.page.toString();
     if (params?.size !== undefined) p['size'] = params.size.toString();
-    if (params?.keyword) p['keyword'] = params.keyword;
+    if (params?.keyword) {
+      p['keyword'] = params.keyword;
+      p['search'] = params.keyword;
+    }
     return this.http.get<any>(this.api, { params: p });
   }
 

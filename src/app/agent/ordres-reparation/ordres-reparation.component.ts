@@ -78,6 +78,8 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
   devisModalError = '';
 
   // ─── Liste & Filtres ──────────────────────────────────
+  rawOrdres: OrdreReparation[] = [];
+  filteredOrdres: OrdreReparation[] = [];
   ordres: OrdreReparation[] = [];
   loading = false;
   successMessage = '';
@@ -109,18 +111,26 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
     });
 
     const qp = this.route.snapshot.queryParams;
-    if (qp && qp['ficheAtelierId']) {
-      const fId = +qp['ficheAtelierId'];
-      this.service.createFromFicheAtelier(fId).subscribe({
-        next: (ordre) => {
-          const target = this.statutToStepPath(ordre.statut);
-          this.router.navigate(['/app/ordres-reparation', ordre.id, target], { replaceUrl: true });
-        },
-        error: () => {
-          this.loadData();
-        }
-      });
-      return;
+    if (qp) {
+      if (qp['ficheAtelierId']) {
+        const fId = +qp['ficheAtelierId'];
+        this.service.createFromFicheAtelier(fId).subscribe({
+          next: (ordre) => {
+            const target = this.statutToStepPath(ordre.statut);
+            this.router.navigate(['/app/ordres-reparation', ordre.id, target], { replaceUrl: true });
+          },
+          error: () => {
+            this.loadData();
+          }
+        });
+        return;
+      }
+      if (qp['statut']) {
+        this.filterStatut = qp['statut'];
+      }
+      if (qp['keyword'] || qp['search']) {
+        this.searchTerm = qp['keyword'] || qp['search'];
+      }
     }
     this.loadData();
   }
@@ -136,20 +146,43 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
     this.cdr.markForCheck();
 
     const extra: Record<string, any> = {};
-    if (this.filterStatut) extra['statut'] = this.filterStatut;
-    if (this.filterDateDebut) extra['dateDebut'] = this.filterDateDebut;
-    if (this.filterDateFin) extra['dateFin'] = this.filterDateFin;
+    if (this.filterStatut) {
+      extra['statut'] = this.filterStatut;
+      extra['status'] = this.filterStatut;
+    }
+    if (this.filterDateDebut) {
+      extra['dateDebut'] = this.filterDateDebut;
+      extra['startDate'] = this.filterDateDebut;
+    }
+    if (this.filterDateFin) {
+      extra['dateFin'] = this.filterDateFin;
+      extra['endDate'] = this.filterDateFin;
+    }
+    if (this.searchTerm && this.searchTerm.trim()) {
+      extra['keyword'] = this.searchTerm.trim();
+      extra['search'] = this.searchTerm.trim();
+      extra['q'] = this.searchTerm.trim();
+    }
 
-    const params = this.getPageParams(extra);
+    const params = {
+      page: 0,
+      size: 1000,
+      ...extra
+    };
 
     this.service.getAll(params).subscribe({
       next: (res: any) => {
-        this.ordres = this.applyPageResponse<OrdreReparation>(res);
+        const items = extractContent<OrdreReparation>(res);
+        this.rawOrdres = (items && items.length) ? items : (this.applyPageResponse<OrdreReparation>(res) || []);
+        this.rawOrdres.sort((a, b) => (b.id ?? 0) - (a.id ?? 0));
+
+        this.applyFilter();
+
         this.loading = false;
         this.cdr.markForCheck();
 
         if (this.selectedOrdre) {
-          const found = this.ordres.find(o => o.id === this.selectedOrdre?.id);
+          const found = this.rawOrdres.find(o => o.id === this.selectedOrdre?.id);
           if (found) {
             this.selectedOrdre = found;
           }
@@ -164,7 +197,33 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
   }
 
   get paged(): OrdreReparation[] {
-    return this.ordres;
+    const start = (this.page - 1) * this.pageSize;
+    return this.filteredOrdres.slice(start, start + this.pageSize);
+  }
+
+  override get totalPages(): number {
+    return Math.max(1, Math.ceil(this.totalElements / this.pageSize));
+  }
+
+  override prevPage(): void {
+    if (this.page > 1) {
+      this.page--;
+      this.cdr.markForCheck();
+    }
+  }
+
+  override nextPage(): void {
+    if (this.page < this.totalPages) {
+      this.page++;
+      this.cdr.markForCheck();
+    }
+  }
+
+  override goToPage(p: number): void {
+    if (p >= 1 && p <= this.totalPages && p !== this.page) {
+      this.page = p;
+      this.cdr.markForCheck();
+    }
   }
 
   // ─── Actions Navigation ───────────────────────────────
@@ -285,7 +344,101 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
     this.openEdit(this.selectedOrdre);
   }
 
-  // ─── Filtres & Recherche ──────────────────────────────
+  // ─── Filtres & Recherche (recherche directe en base de données) ──────────────────
+  applyFilter(): void {
+    let list = [...this.rawOrdres];
+
+    // 1. Filtrage statut (supporte les étapes et les alias stockés en base)
+    if (this.filterStatut) {
+      list = list.filter(o => this.matchesStatut(o.statut, this.filterStatut));
+    }
+
+    // 2. Recherche textuelle (numéro, véhicule, client, défauts, description, libellé statut)
+    if (this.searchTerm && this.searchTerm.trim()) {
+      const q = this.searchTerm.toLowerCase().trim();
+      list = list.filter(o => {
+        const num = (o.numero || '').toLowerCase();
+        const immat = (o.vehicule?.immatriculation || '').toLowerCase();
+        const marque = (o.vehicule?.marque || '').toLowerCase();
+        const modele = (o.vehicule?.modele || '').toLowerCase();
+        const clientFirst = (o.vehicule?.client?.firstName || '').toLowerCase();
+        const clientLast = (o.vehicule?.client?.lastName || '').toLowerCase();
+        const clientFullName = `${clientFirst} ${clientLast}`.trim();
+        const clientPhone = (o.vehicule?.client?.phone || '').toLowerCase();
+        const desc = (o.descriptionTravaux || '').toLowerCase();
+        const defauts = (o.listeDefauts || '').toLowerCase();
+        const label = this.statutLabel(o).toLowerCase();
+        const rawStatut = (o.statut || '').toLowerCase();
+
+        return (
+          num.includes(q) ||
+          immat.includes(q) ||
+          marque.includes(q) ||
+          modele.includes(q) ||
+          clientFullName.includes(q) ||
+          clientFirst.includes(q) ||
+          clientLast.includes(q) ||
+          clientPhone.includes(q) ||
+          desc.includes(q) ||
+          defauts.includes(q) ||
+          label.includes(q) ||
+          rawStatut.includes(q)
+        );
+      });
+    }
+
+    // 3. Date début
+    if (this.filterDateDebut) {
+      list = list.filter(o => {
+        const d = this.getDateString(o.dateCreation || (o as any).createdAt || (o as any).dateOuverture);
+        return d ? d >= this.filterDateDebut : false;
+      });
+    }
+
+    // 4. Date fin
+    if (this.filterDateFin) {
+      list = list.filter(o => {
+        const d = this.getDateString(o.dateCreation || (o as any).createdAt || (o as any).dateOuverture);
+        return d ? d <= this.filterDateFin : false;
+      });
+    }
+
+    this.filteredOrdres = list;
+    this.ordres = list;
+    this.totalElements = list.length;
+    this.serverTotalPages = Math.max(1, Math.ceil(this.totalElements / this.pageSize));
+
+    if (this.page > this.serverTotalPages) {
+      this.page = 1;
+    }
+  }
+
+  matchesStatut(statut: string | undefined | null, filter: string): boolean {
+    if (!filter) return true;
+    if (!statut) return false;
+    if (statut === filter) return true;
+
+    const aliases: Record<string, string[]> = {
+      RECEPTION: ['RECEPTION', 'A_FAIRE'],
+      DIAGNOSTIC: ['DIAGNOSTIC', 'EN_DIAGNOSTIC'],
+      PIECES_MO: ['PIECES_MO', 'EN_ATTENTE_PIECES_MO'],
+      PROFORMA: ['PROFORMA', 'EN_ATTENTE_PROFORMA'],
+      BON_DE_COMMANDE: ['BON_DE_COMMANDE', 'PROFORMA_VALIDE', 'EN_ATTENTE_COMMANDE'],
+      BON_DE_SORTIE: ['BON_DE_SORTIE', 'EN_ATTENTE_SORTIE'],
+      ASSIGN_TECHNICIEN: ['ASSIGN_TECHNICIEN', 'EN_ATTENTE_MECANICIEN'],
+      REPARATION: ['REPARATION', 'EN_COURS'],
+      PAIEMENT: ['PAIEMENT', 'EN_ATTENTE_PAIEMENT'],
+      PRET_A_LIVRER: ['PRET_A_LIVRER', 'TERMINE'],
+      LIVRE: ['LIVRE']
+    };
+
+    const group = aliases[filter];
+    if (group) {
+      return group.includes(statut);
+    }
+    return statut.toUpperCase() === filter.toUpperCase();
+  }
+
   onFilterStatut(): void {
     this.page = 1;
     this.loadData();
@@ -303,7 +456,30 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
     this.searchTimeout = setTimeout(() => {
       this.page = 1;
       this.loadData();
-    }, 400);
+    }, 350);
+  }
+
+  override onSearch(event: Event): void {
+    this.onSearchInput(event);
+  }
+
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.page = 1;
+    this.loadData();
+  }
+
+  resetFilters(): void {
+    this.searchTerm = '';
+    this.filterStatut = '';
+    this.filterDateDebut = '';
+    this.filterDateFin = '';
+    this.page = 1;
+    this.loadData();
+  }
+
+  get hasActiveFilters(): boolean {
+    return !!(this.searchTerm?.trim() || this.filterStatut || this.filterDateDebut || this.filterDateFin);
   }
 
   // ─── Helpers Visuels ──────────────────────────────────
@@ -361,19 +537,34 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
     return parts.length >= 2 ? parts.slice(-2).join('') : o.numero.substring(0, 3).toUpperCase();
   }
 
-  formatDate(d?: string | null): string {
+  formatDate(d?: any): string {
     if (!d) return '—';
     try {
-      const date = new Date(d);
-      if (isNaN(date.getTime())) return d;
+      const dateStr = this.getDateString(d);
+      if (!dateStr) return '—';
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return String(d);
       return date.toLocaleDateString('fr-FR', {
         day: '2-digit',
         month: 'short',
         year: 'numeric'
       });
     } catch {
-      return d;
+      return String(d);
     }
+  }
+
+  private getDateString(d: any): string {
+    if (!d) return '';
+    if (typeof d === 'string') return d.slice(0, 10);
+    if (Array.isArray(d)) {
+      const [year, month, day] = d;
+      return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    }
+    if (d instanceof Date && !isNaN(d.getTime())) {
+      return d.toISOString().slice(0, 10);
+    }
+    return '';
   }
 
   formatPrice(p?: number | null): string {
