@@ -11,11 +11,12 @@ export class TechnicienService {
   private http = inject(HttpClient);
   private api = `${environment.apiUrl}/api/techniciens`;
 
-  getAll(params: PageParams & { keyword?: string } = {}): Observable<PageResponse<Technicien> | Technicien[]> {
+  getAll(params: PageParams & { keyword?: string; specialite?: string } = {}): Observable<PageResponse<Technicien> | Technicien[]> {
     let httpParams = new HttpParams();
     if (params.page !== undefined) httpParams = httpParams.set('page', params.page.toString());
     if (params.size !== undefined) httpParams = httpParams.set('size', params.size.toString());
     if (params.keyword) httpParams = httpParams.set('keyword', params.keyword);
+    if (params.specialite) httpParams = httpParams.set('specialite', params.specialite);
     return this.http.get<PageResponse<Technicien> | Technicien[]>(this.api, { params: httpParams });
   }
 

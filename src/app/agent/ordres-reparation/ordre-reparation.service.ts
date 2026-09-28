@@ -2,14 +2,14 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { OrdreReparation, OrdreReparationRequest, StatutOrdre, PieceJointeDiagnostic, TypePieceJointeDiagnostic, RemarqueDiagnostic } from '../../shared/models';
+import { OrdreReparation, OrdreReparationRequest, StatutOrdre, PieceJointeDiagnostic, TypePieceJointeDiagnostic, RemarqueDiagnostic, PageParams } from '../../shared/models';
 
 @Injectable({ providedIn: 'root' })
 export class OrdreReparationService {
   private http = inject(HttpClient);
   private api = `${environment.apiUrl}/api/ordres-reparation`;
 
-  getAll(params?: import('../../shared/models').PageParams & { statut?: string; dateDebut?: string; dateFin?: string; search?: string }): Observable<any> {
+  getAll(params?: PageParams & { statut?: string; dateDebut?: string; dateFin?: string; search?: string }): Observable<any> {
     const p: Record<string, string> = {};
     if (params?.statut) {
       p['statut'] = params.statut;
