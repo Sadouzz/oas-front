@@ -9,7 +9,7 @@ export class OrdreReparationService {
   private http = inject(HttpClient);
   private api = `${environment.apiUrl}/api/ordres-reparation`;
 
-  getAll(params?: import('../../shared/models').PageParams & { statut?: string; dateDebut?: string; dateFin?: string; search?: string }): Observable<any> {
+  getAll(params?: PageParams & { statut?: string; dateDebut?: string; dateFin?: string; search?: string }): Observable<any> {
     const p: Record<string, string> = {};
     if (params?.statut) {
       p['statut'] = params.statut;
