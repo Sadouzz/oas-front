@@ -1,4 +1,6 @@
-import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef, HostListener } from '@angular/core';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { CommonModule, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -69,8 +71,152 @@ export class StepDiagnosticComponent implements OnInit {
   allTechniciens: Technicien[] = [];
   readonly specialitesTechnicien = SPECIALITES_TECHNICIEN;
   specialiteFiltreDiagnostic: Specialite | '' = '';
+  specialiteDropdownOpen = false;
+  specialiteSearchTerm = '';
+
+  technicienDropdownOpen = false;
+  technicienSearchTerm = '';
+  technicienSearchSubject = new Subject<string>();
+  techniciensLoading = false;
+  knownTechniciensMap = new Map<number, { id: number; firstName: string; lastName: string; specialite?: string | null; matricule?: string; phone?: string }>();
+
   selectedTechniciens: number[] = [];
   technicienToggling: number | null = null;
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    this.specialiteDropdownOpen = false;
+    this.technicienDropdownOpen = false;
+  }
+
+  get selectedSpecialiteLabel(): string {
+    if (!this.specialiteFiltreDiagnostic) return 'Toutes les spécialités';
+    const found = this.specialitesTechnicien.find(s => s.value === this.specialiteFiltreDiagnostic);
+    return found ? found.label : this.specialiteFiltreDiagnostic;
+  }
+
+  get filteredSpecialites(): { value: Specialite | ''; label: string }[] {
+    const list: { value: Specialite | ''; label: string }[] = [
+      { value: '', label: 'Toutes les spécialités' },
+      ...this.specialitesTechnicien
+    ];
+    if (!this.specialiteSearchTerm || !this.specialiteSearchTerm.trim()) {
+      return list;
+    }
+    const term = this.specialiteSearchTerm.trim().toLowerCase();
+    return list.filter(s => s.label.toLowerCase().includes(term));
+  }
+
+  toggleSpecialiteDropdown(): void {
+    this.specialiteDropdownOpen = !this.specialiteDropdownOpen;
+    if (this.specialiteDropdownOpen) {
+      this.technicienDropdownOpen = false;
+      this.specialiteSearchTerm = '';
+    }
+  }
+
+  selectSpecialite(val: Specialite | ''): void {
+    this.specialiteFiltreDiagnostic = val;
+    this.specialiteDropdownOpen = false;
+    this.specialiteSearchTerm = '';
+    this.loadTechniciensFromBackend();
+  }
+
+  clearSpecialite(event?: MouseEvent): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.specialiteFiltreDiagnostic = '';
+    this.specialiteSearchTerm = '';
+    this.loadTechniciensFromBackend();
+  }
+
+  toggleTechnicienDropdown(): void {
+    this.technicienDropdownOpen = !this.technicienDropdownOpen;
+    if (this.technicienDropdownOpen) {
+      this.specialiteDropdownOpen = false;
+      this.technicienSearchTerm = '';
+      this.loadTechniciensFromBackend();
+    }
+  }
+
+  onTechnicienSearchChange(term: string): void {
+    this.technicienSearchTerm = term;
+    this.technicienSearchSubject.next(term);
+  }
+
+  loadTechniciensFromBackend(): void {
+    this.techniciensLoading = true;
+    this.cdr.markForCheck();
+
+    const params: { page?: number; size?: number; keyword?: string; specialite?: string } = {
+      page: 0,
+      size: 50,
+    };
+    if (this.technicienSearchTerm && this.technicienSearchTerm.trim()) {
+      params.keyword = this.technicienSearchTerm.trim();
+    }
+    if (this.specialiteFiltreDiagnostic) {
+      params.specialite = this.specialiteFiltreDiagnostic;
+    }
+
+    this.technicienService.getAll(params).subscribe({
+      next: (res) => {
+        this.techniciensLoading = false;
+        const fetched = extractContent<Technicien>(res as any);
+        this.allTechniciens = fetched;
+        fetched.forEach(t => this.knownTechniciensMap.set(t.id, t));
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.techniciensLoading = false;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  get techniciensDiagnosticFiltres(): Technicien[] {
+    return this.allTechniciens;
+  }
+
+  get assignedTechniciens(): { id: number; firstName: string; lastName: string; specialite?: string | null; matricule?: string; phone?: string }[] {
+    return this.selectedTechniciens
+      .map(id => {
+        if (this.knownTechniciensMap.has(id)) {
+          return this.knownTechniciensMap.get(id)!;
+        }
+        const fromAll = this.allTechniciens.find(t => t.id === id);
+        if (fromAll) {
+          this.knownTechniciensMap.set(id, fromAll);
+          return fromAll;
+        }
+        const fromOrdre = this.loadedOrdre?.techniciens?.find(t => t.id === id);
+        if (fromOrdre) {
+          this.knownTechniciensMap.set(id, fromOrdre);
+          return fromOrdre;
+        }
+        return {
+          id,
+          firstName: 'Technicien',
+          lastName: `#${id}`,
+          specialite: null,
+          matricule: `#${id}`,
+          phone: ''
+        };
+      });
+  }
+
+  getSpecialiteLabel(spec?: string | null): string {
+    if (!spec) return 'Générale';
+    const found = this.specialitesTechnicien.find(s => s.value === spec);
+    return found ? found.label : spec;
+  }
+
+  getInitials(firstName?: string | null, lastName?: string | null): string {
+    const f = (firstName || '').trim().charAt(0).toUpperCase();
+    const l = (lastName || '').trim().charAt(0).toUpperCase();
+    return (f + l) || 'T';
+  }
 
   pannesFrequentes = PANNES_FREQUENTES;
   selectedPannes: string[] = [];
@@ -83,11 +229,6 @@ export class StepDiagnosticComponent implements OnInit {
   nouvelleRemarque = '';
   piecesJointesDiagnostic: PieceJointeDiagnostic[] = [];
 
-  get techniciensDiagnosticFiltres(): Technicien[] {
-    if (!this.specialiteFiltreDiagnostic) return this.allTechniciens;
-    return this.allTechniciens.filter(t => t.specialite === this.specialiteFiltreDiagnostic);
-  }
-
   ngOnInit(): void {
     const idParam = this.route.snapshot.paramMap.get('id') || this.route.parent?.snapshot.paramMap.get('id');
     if (!idParam) {
@@ -95,14 +236,31 @@ export class StepDiagnosticComponent implements OnInit {
       return;
     }
     this.ordreId = +idParam;
+
+    this.technicienSearchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(() => {
+      this.loadTechniciensFromBackend();
+    });
+
     this.loadData();
   }
 
   loadData(): void {
     this.loading = true;
-    this.technicienService.getAll().subscribe({
+    const params: { page?: number; size?: number; keyword?: string; specialite?: string } = {
+      page: 0,
+      size: 50
+    };
+    if (this.specialiteFiltreDiagnostic) {
+      params.specialite = this.specialiteFiltreDiagnostic;
+    }
+    this.technicienService.getAll(params).subscribe({
       next: (res) => {
-        this.allTechniciens = extractContent<Technicien>(res as any);
+        const fetched = extractContent<Technicien>(res as any);
+        this.allTechniciens = fetched;
+        fetched.forEach(t => this.knownTechniciensMap.set(t.id, t));
         this.loadOrdre();
       },
       error: () => {
@@ -115,6 +273,7 @@ export class StepDiagnosticComponent implements OnInit {
     this.ordreService.getById(this.ordreId).subscribe({
       next: (o: OrdreReparation) => {
         this.loadedOrdre = o;
+        (o.techniciens || []).forEach(t => this.knownTechniciensMap.set(t.id, t));
         this.selectedTechniciens = (o.techniciens || []).map(t => t.id);
 
         const pannesDecomp = this.decomposeToCheckboxes(o.listeDefauts ?? '', PANNES_FREQUENTES);
@@ -529,6 +688,101 @@ export class StepDiagnosticComponent implements OnInit {
         });
       }
     });
+  }
+
+  revenirEnCours(): void {
+    this.saving = true;
+    this.statutDiagnostic = 'EN_COURS';
+
+    const pannes = this.composeFromCheckboxes(this.selectedPannes, this.autrePannes);
+    const stepDto: DiagnosticStepDto = {
+      ordreReparationId: this.ordreId,
+      listeDefauts: pannes,
+      technicienIds: this.selectedTechniciens,
+      statut: 'EN_COURS'
+    };
+
+    if (this.currentDiagnostic?.id) {
+      this.diagnosticService.updateStatut(this.currentDiagnostic.id, 'EN_COURS').subscribe({
+        next: (d) => {
+          if (d) this.currentDiagnostic = d;
+          this.syncOrdreStatutDiagnostic();
+        },
+        error: () => {
+          this.diagnosticService.saveStep(stepDto).subscribe({
+            next: (d) => {
+              if (d) this.currentDiagnostic = d;
+              this.syncOrdreStatutDiagnostic();
+            },
+            error: () => this.syncOrdreStatutDiagnostic()
+          });
+        }
+      });
+    } else {
+      this.diagnosticService.saveStep(stepDto).subscribe({
+        next: (d) => {
+          if (d) this.currentDiagnostic = d;
+          this.syncOrdreStatutDiagnostic();
+        },
+        error: () => this.syncOrdreStatutDiagnostic()
+      });
+    }
+  }
+
+  revenirTermine(): void {
+    this.saving = true;
+    this.statutDiagnostic = 'TERMINE';
+    if (this.currentDiagnostic?.id) {
+      this.diagnosticService.updateStatut(this.currentDiagnostic.id, 'TERMINE').subscribe({
+        next: (d) => {
+          if (d) this.currentDiagnostic = d;
+          this.syncOrdreStatutDiagnostic();
+        },
+        error: () => this.syncOrdreStatutDiagnostic()
+      });
+    } else {
+      this.syncOrdreStatutDiagnostic();
+    }
+  }
+
+  private syncOrdreStatutDiagnostic(): void {
+    this.ordreService.updateStatut(this.ordreId, 'DIAGNOSTIC').subscribe({
+      next: (o) => {
+        if (o) this.loadedOrdre = o;
+        this.saving = false;
+        this.notify('Statut mis à jour. Vous pouvez modifier le diagnostic.');
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.saving = false;
+        this.notify('Statut mis à jour.');
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  revenirEnAttente(): void {
+    this.saving = true;
+    this.statutDiagnostic = 'EN_ATTENTE';
+    if (this.currentDiagnostic?.id) {
+      this.diagnosticService.updateStatut(this.currentDiagnostic.id, 'EN_ATTENTE').subscribe({
+        next: (d) => {
+          if (d) this.currentDiagnostic = d;
+          this.saving = false;
+          this.notify('Diagnostic repassé « En attente ».');
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.saving = false;
+          this.notify('Diagnostic repassé « En attente ».');
+          this.cdr.markForCheck();
+        }
+      });
+    } else {
+      this.saving = false;
+      this.notify('Diagnostic repassé « En attente ».');
+      this.cdr.markForCheck();
+    }
   }
 
   saveDiagnosticSeul(): void {
