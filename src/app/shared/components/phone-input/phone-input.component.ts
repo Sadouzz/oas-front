@@ -13,7 +13,27 @@ import { CommonModule } from '@angular/common';
       multi: true
     }
   ],
-  templateUrl: './phone-input.component.html'
+  template: `
+    <div class="relative flex items-center rounded-lg border border-oas-line bg-oas-bg focus-within:ring-2 focus-within:ring-oas-accent/40 focus-within:border-oas-accent focus-within:bg-white transition overflow-hidden"
+         [class.opacity-60]="disabled" [class.pointer-events-none]="disabled">
+      <!-- Indicatif pays verrouillé Sénégal +221 -->
+      <div class="flex items-center gap-1.5 px-3 py-2 bg-slate-100 border-r border-oas-line text-oas-ink select-none font-semibold text-sm flex-shrink-0"
+           title="Sénégal (+221)">
+        <span class="text-base leading-none">🇸🇳</span>
+        <span class="text-xs font-bold text-slate-700 tracking-tight">+221</span>
+      </div>
+
+      <!-- Saisie du numéro local -->
+      <input type="tel"
+             [value]="displayValue"
+             (input)="onInput($event)"
+             (blur)="onBlur()"
+             [placeholder]="placeholder"
+             [disabled]="disabled"
+             maxlength="12"
+             class="w-full px-3 py-2 bg-transparent outline-none transition text-sm font-medium text-oas-ink placeholder:text-oas-muted/60" />
+    </div>
+  `
 })
 export class PhoneInputComponent implements ControlValueAccessor {
   @Input() placeholder = '77 000 00 00';
