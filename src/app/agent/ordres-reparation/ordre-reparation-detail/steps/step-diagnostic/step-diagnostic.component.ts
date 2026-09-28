@@ -136,7 +136,9 @@ export class StepDiagnosticComponent implements OnInit {
     if (this.technicienDropdownOpen) {
       this.specialiteDropdownOpen = false;
       this.technicienSearchTerm = '';
-      this.loadTechniciensFromBackend();
+      if (this.allTechniciens.length === 0) {
+        this.loadTechniciensFromBackend();
+      }
     }
   }
 
@@ -146,8 +148,10 @@ export class StepDiagnosticComponent implements OnInit {
   }
 
   loadTechniciensFromBackend(): void {
-    this.techniciensLoading = true;
-    this.cdr.markForCheck();
+    if (this.allTechniciens.length === 0) {
+      this.techniciensLoading = true;
+      this.cdr.markForCheck();
+    }
 
     const params: { page?: number; size?: number; keyword?: string; specialite?: string } = {
       page: 0,
@@ -164,8 +168,13 @@ export class StepDiagnosticComponent implements OnInit {
       next: (res) => {
         this.techniciensLoading = false;
         const fetched = extractContent<Technicien>(res as any);
-        this.allTechniciens = fetched;
-        fetched.forEach(t => this.knownTechniciensMap.set(t.id, t));
+        if (fetched && fetched.length > 0) {
+          const map = new Map<number, Technicien>();
+          this.allTechniciens.forEach(t => map.set(t.id, t));
+          fetched.forEach(t => map.set(t.id, t));
+          this.allTechniciens = Array.from(map.values());
+          fetched.forEach(t => this.knownTechniciensMap.set(t.id, t));
+        }
         this.cdr.markForCheck();
       },
       error: () => {
@@ -176,7 +185,23 @@ export class StepDiagnosticComponent implements OnInit {
   }
 
   get techniciensDiagnosticFiltres(): Technicien[] {
-    return this.allTechniciens;
+    let list = this.allTechniciens;
+    if (this.specialiteFiltreDiagnostic) {
+      console.log("this.allTechniciens", list[0].specialite)
+      list = list.filter(t => t.specialiteCode === this.specialiteFiltreDiagnostic);
+    }
+    if (this.technicienSearchTerm && this.technicienSearchTerm.trim()) {
+      const term = this.technicienSearchTerm.trim().toLowerCase();
+      list = list.filter(t => {
+        const fullName = `${t.firstName || ''} ${t.lastName || ''}`.toLowerCase();
+        const matricule = (t.matricule || '').toLowerCase();
+        const phone = (t.phone || '').toLowerCase();
+        const email = (t.email || '').toLowerCase();
+        return fullName.includes(term) || matricule.includes(term) || phone.includes(term) || email.includes(term);
+      });
+    }
+    
+    return list;
   }
 
   get assignedTechniciens(): { id: number; firstName: string; lastName: string; specialite?: string | null; matricule?: string; phone?: string }[] {

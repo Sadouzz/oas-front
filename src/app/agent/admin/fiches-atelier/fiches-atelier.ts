@@ -19,11 +19,12 @@ import {
 } from '../../../shared/models';
 import { LucidePlus, LucideTrash2, LucideArrowLeft, LucideSave, LucideX } from '@lucide/angular';
 import { SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
+import { PhoneInputComponent } from '../../../shared/components/phone-input/phone-input.component';
 
 @Component({
   selector: 'app-fiches-atelier',
   standalone: true,
-  imports: [ReactiveFormsModule, LucidePlus, LucideTrash2, LucideArrowLeft, LucideSave, LucideX, SearchableSelectComponent, DatePipe],
+  imports: [ReactiveFormsModule, LucidePlus, LucideTrash2, LucideArrowLeft, LucideSave, LucideX, SearchableSelectComponent, PhoneInputComponent, DatePipe],
   templateUrl: './fiches-atelier.html',
   styleUrl: './fiches-atelier.css',
 })
