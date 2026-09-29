@@ -98,6 +98,17 @@ export class ClientRendezVousComponent implements OnInit {
     });
   }
 
+  get minDateTime(): string {
+    const now = new Date();
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const year = now.getFullYear();
+    const month = pad(now.getMonth() + 1);
+    const day = pad(now.getDate());
+    const hours = pad(now.getHours());
+    const minutes = pad(now.getMinutes());
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  }
+
   get vehiculesDisponibles(): ClientBookingContextVehicule[] {
     return this.vehicules.filter(v => v.disponiblePourRdv);
   }

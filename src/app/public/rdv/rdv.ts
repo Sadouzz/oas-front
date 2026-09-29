@@ -75,6 +75,17 @@ export class RdvComponent implements OnInit {
 
   }
 
+  get minDate(): string {
+    const now = new Date();
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const year = now.getFullYear();
+    const month = pad(now.getMonth() + 1);
+    const day = pad(now.getDate());
+    // const hours = pad(now.getHours());
+    // const minutes = pad(now.getMinutes());
+    return `${year}-${month}-${day}`;
+  }
+
   /**
    * Temporaire
    * Plus tard les données seront chargées via une API.
@@ -190,6 +201,7 @@ export class RdvComponent implements OnInit {
       nom: ['', [Validators.required, Validators.minLength(2)]],
       telephone: ['', [Validators.required]],
       vehicule: ['', [Validators.required]],
+      matricule: ['', [Validators.required]],
       motif: ['', [Validators.required]],
       date: ['', [Validators.required]],
       heure: ['', [Validators.required]],
@@ -217,6 +229,7 @@ export class RdvComponent implements OnInit {
       `- *Nom* : ${val.nom}\n` +
       `- *Téléphone* : ${val.telephone}\n` +
       `- *Véhicule* : ${val.vehicule}\n` +
+      `- *Matricule* : ${val.matricule}\n` +
       `- *Motif* : ${val.motif}\n` +
       `- *Date souhaitée* : ${val.date}\n` +
       `- *Heure souhaitée* : ${val.heure}\n` +

@@ -19,10 +19,20 @@ export interface OrdreReparationTechnicienSummary {
   vehicule?: VehiculeSummary;
 }
 
+export interface TechnicienDashboardMetrics {
+  totalDiagnostics: number;
+  totalReparations: number;
+  totalTermines: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class TechnicienPortalService {
   private http = inject(HttpClient);
   private api = `${environment.apiUrl}/api/technicien/portal`;
+
+  getDashboard(): Observable<TechnicienDashboardMetrics> {
+    return this.http.get<TechnicienDashboardMetrics>(`${this.api}/dashboard`);
+  }
 
   getMe(): Observable<Technicien> {
     return this.http.get<Technicien>(`${this.api}/me`);

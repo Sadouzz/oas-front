@@ -22,7 +22,7 @@ export class LoginComponent {
   });
 
   readonly loginForm = form(this.loginModel, (schemaPath) => {
-    required(schemaPath.username, { message: 'Le nom d\'utilisateur est obligatoire' });
+    required(schemaPath.username, { message: 'L\'addresse mail est obligatoire' });
     required(schemaPath.password, { message: 'Le mot de passe est obligatoire' });
     minLength(schemaPath.password, 4, { message: 'Le mot de passe doit contenir au moins 4 caractères' });
   });
