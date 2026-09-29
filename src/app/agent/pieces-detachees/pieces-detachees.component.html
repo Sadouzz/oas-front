@@ -162,7 +162,7 @@
             <td class="px-5 py-4 font-semibold text-oas-ink">{{ p.reference }}</td>
             <td class="px-5 py-4 font-mono text-xs text-oas-accent">{{ p.numero }}</td>
             <td class="px-5 py-4 font-mono text-xs text-oas-muted">{{ p.designation }}</td>
-            <td class="px-5 py-4 text-sm text-oas-ink2">{{ p.categorie?.depot?.nom || '-' }}</td>
+            <td class="px-5 py-4 text-sm text-oas-ink2">{{ p.depot?.nom || p.categorie?.depot?.nom || '-' }}</td>
             <td class="px-5 py-4 text-sm text-oas-ink2">{{ p.categorie?.nom || p.categorie }}</td>
             <td class="px-5 py-4">
               @if (p.type === 'PDP') {

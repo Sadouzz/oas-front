@@ -101,7 +101,7 @@ export class PiecesDetacheesComponent extends BasePaginatedComponent implements 
         const arr = this.applyPageResponse<PieceDetache>(data);
         this.pieces = arr.sort((a: any, b: any) => b.id - a.id);
         if (this.depotsFilters.length === 0) {
-          const fromPieces = [...new Set(arr.map((p: any) => p.categorie?.depot?.nom || p.depot?.nom || (p as any).depotNom).filter((d: any) => !!d))].sort() as string[];
+          const fromPieces = [...new Set(arr.map((p: any) => p.depot?.nom || p.categorie?.depot?.nom || (p as any).depotNom).filter((d: any) => !!d))].sort() as string[];
           if (fromPieces.length > 0) this.depotsFilters = fromPieces;
         }
         this.applyFilters();
@@ -205,6 +205,11 @@ export class PiecesDetacheesComponent extends BasePaginatedComponent implements 
     }
     if (this.filterDepot) {
       extra['depot'] = this.filterDepot;
+      extra['depotNom'] = this.filterDepot;
+      const dObj = this.depots.find(d => d.nom?.trim().toLowerCase() === this.filterDepot.trim().toLowerCase());
+      if (dObj?.id) {
+        extra['depotId'] = dObj.id;
+      }
     }
     return super.getPageParams(extra);
   }
@@ -219,7 +224,19 @@ export class PiecesDetacheesComponent extends BasePaginatedComponent implements 
     });
     if (this.filterType) result = result.filter((p: any) => p.type === this.filterType);
     if (this.filterStatut) result = result.filter((p: any) => p.statut === this.filterStatut);
-    if (this.filterDepot) result = result.filter((p: any) => p.categorie?.depot?.nom === this.filterDepot);
+    if (this.filterDepot) {
+      const targetDepot = this.filterDepot.trim().toLowerCase();
+      result = result.filter((p: any) => {
+        const depotNom = (
+          p.depot?.nom ||
+          p.categorie?.depot?.nom ||
+          (typeof p.depot === 'string' ? p.depot : '') ||
+          (p as any).depotNom ||
+          ''
+        ).trim().toLowerCase();
+        return depotNom === targetDepot;
+      });
+    }
     this.filtered = result;
   }
 
@@ -263,7 +280,7 @@ export class PiecesDetacheesComponent extends BasePaginatedComponent implements 
     this.isNew = false;
     this.editingId = p.id;
     this.errorMessage = '';
-    const depotId = (p.categorie as any)?.depot?.id || null;
+    const depotId = (p as any).depot?.id || (p.categorie as any)?.depot?.id || null;
     this.form.patchValue({
       type: p.type,
       reference: p.reference,
