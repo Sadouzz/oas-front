@@ -19,6 +19,7 @@ export interface PieceDetache {
   reference: string;
   designation: string;
   categorie: any;
+  depot?: Depot | { id?: number; nom?: string } | null;
   pourcentage?: number;
   statut?: 'ACTIF' | 'ARCHIVE';
   createdAt: string;
