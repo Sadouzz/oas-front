@@ -7,7 +7,7 @@ export const TECHNICIEN_PORTAL_ROUTES: Routes = [
     loadComponent: () => import('./layout/technicien-layout.component').then(m => m.TechnicienLayoutComponent),
     canActivate: [technicienGuard],
     children: [
-      { path: '', redirectTo: 'ordres-reparation.component', pathMatch: 'full' },
+      { path: '', redirectTo: 'ordres-reparation', pathMatch: 'full' },
       {
         path: 'ordres-reparation',
         loadComponent: () => import('./ordres/technicien-ordres-list.component').then(m => m.TechnicienOrdresListComponent),

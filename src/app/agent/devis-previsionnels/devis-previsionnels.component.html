@@ -129,11 +129,12 @@
               <th class="text-left text-xs text-oas-muted px-5 py-3">N°</th>
               <th class="text-left text-xs text-oas-muted px-5 py-3">Client</th>
               <th class="text-left text-xs text-oas-muted px-5 py-3">Véhicule</th>
+              <th class="text-left text-xs text-oas-muted px-5 py-3">Agent</th>
               <th class="text-left text-xs text-oas-muted px-5 py-3">Kilométrage</th>
               <th class="text-left text-xs text-oas-muted px-5 py-3">Montant</th>
               <th class="text-left text-xs text-oas-muted px-5 py-3">Statut</th>
               <th class="text-left text-xs text-oas-muted px-5 py-3">Notes</th>
-              <th class="px-5 py-3"></th>
+              <th class="px-5 py-3">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -152,6 +153,13 @@
                     <span class="font-medium">{{ d.vehicule.immatriculation }}</span>
                     <span class="text-oas-muted text-xs ml-1">{{ d.vehicule.marque }}</span>
                   } @else { <span class="text-oas-faint">—</span> }
+                </td>
+                <td class="px-5 py-4 text-sm text-oas-ink2">
+                  @if (d.agent) {
+                  {{ d.agent.firstName }} {{ d.agent.lastName }}
+                  } @else {
+                  <span class="text-oas-faint">—</span>
+                  }
                 </td>
                 <td class="px-5 py-4 text-sm text-oas-ink2">{{ (d.kilometrageVehicule || 0) | number }} km</td>
                 <td class="px-5 py-4 font-bold text-oas-ink">{{ formatMontant(d.montantTotal) }}</td>

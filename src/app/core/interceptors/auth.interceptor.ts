@@ -49,7 +49,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
         return handle401Error(req, next, authService, router, garageContextService);
       } else if (error.status === 403) {
-        router.navigate(['/forbidden'], { replaceUrl: true });
+        if (!req.url.includes('/api/technicien/')) {
+          router.navigate(['/forbidden'], { replaceUrl: true });
+        }
       }
 
       return throwError(() => error);

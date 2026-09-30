@@ -2,7 +2,7 @@ import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { TechnicienPortalService, OrdreReparationTechnicienSummary } from '../services/technicien-portal.service';
+import { TechnicienPortalService, OrdreReparationTechnicienSummary, TechnicienDashboardMetrics } from '../services/technicien-portal.service';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 
@@ -20,7 +20,7 @@ export class TechnicienOrdresListComponent extends BasePaginatedComponent implem
   private router = inject(Router);
 
   ordres: OrdreReparationTechnicienSummary[] = [];
-  allOrdresForStats: OrdreReparationTechnicienSummary[] = [];
+  dashboardMetrics: TechnicienDashboardMetrics | null = null;
   loading = true;
   errorMessage = '';
 
@@ -50,9 +50,9 @@ export class TechnicienOrdresListComponent extends BasePaginatedComponent implem
   }
 
   loadAllForStats() {
-    this.service.getMesOrdresReparation(0, 100).subscribe({
-      next: res => {
-        this.allOrdresForStats = (res?.content || res || []) as OrdreReparationTechnicienSummary[];
+    this.service.getDashboard().subscribe({
+      next: metrics => {
+        this.dashboardMetrics = metrics;
         this.cdr.markForCheck();
       },
       error: () => {}
@@ -60,8 +60,19 @@ export class TechnicienOrdresListComponent extends BasePaginatedComponent implem
   }
 
   get stats() {
-    const list = this.allOrdresForStats.length > 0 ? this.allOrdresForStats : this.ordres;
-    const total = list.length;
+    if (this.dashboardMetrics) {
+      const total = Number(this.dashboardMetrics.totalDiagnostics || 0) +
+                    Number(this.dashboardMetrics.totalReparations || 0) +
+                    Number(this.dashboardMetrics.totalTermines || 0);
+      return {
+        total,
+        diagnostic: Number(this.dashboardMetrics.totalDiagnostics || 0),
+        reparation: Number(this.dashboardMetrics.totalReparations || 0),
+        termine: Number(this.dashboardMetrics.totalTermines || 0)
+      };
+    }
+    const list = this.ordres;
+    const total = this.totalElements || list.length;
     const diagnostic = list.filter(o => this.isDiagnostic(o.statut)).length;
     const reparation = list.filter(o => this.isReparation(o.statut)).length;
     const termine = list.filter(o => this.isTermine(o.statut)).length;

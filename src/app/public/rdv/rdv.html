@@ -336,6 +336,21 @@
                     <span class="form-error">Véhicule requis.</span>
                   }
                 </div>
+                
+              <div class="form-group">
+                <label for="rdv-vehiculeMatricule">Matricule du vehicule<span class="text-rose-500">*</span></label>
+                <div class="input-icon">
+                  <input
+                    id="rdv-vehiculeMatricule"
+                    type="text"
+                    formControlName="matricule"
+                    placeholder="ex: KJSJ4.."
+                    [class.is-invalid]="rdvWhatsappForm.get('matricule')?.invalid && rdvWhatsappForm.get('matricule')?.touched">
+                  </div>
+                  @if(rdvWhatsappForm.get('matricule')?.invalid && rdvWhatsappForm.get('matricule')?.touched){
+                    <span class="form-error">Matricule requis.</span>
+                  }
+                </div>
 
                 <div class="form-group">
                   <label for="rdv-motif">Motif / Prestation <span class="text-rose-500">*</span></label>
@@ -362,6 +377,7 @@
                         id="rdv-date"
                         type="date"
                         formControlName="date"
+                        [min]="minDate"
                         [class.is-invalid]="rdvWhatsappForm.get('date')?.invalid && rdvWhatsappForm.get('date')?.touched">
                       </div>
                       @if(rdvWhatsappForm.get('date')?.invalid && rdvWhatsappForm.get('date')?.touched){

@@ -55,19 +55,19 @@
           <legend class="text-3xl font-extrabold text-oas-ink mb-1">Connexion</legend>
           <p class="text-oas-muted text-sm mb-6">Accédez à votre espace de gestion</p>
 
-          <!-- Nom d'utilisateur -->
+          <!-- Adrresse mail -->
           <div>
-            <label class="block text-sm font-semibold text-oas-ink mb-1.5" for="username">Nom d'utilisateur</label>
+            <label class="block text-sm font-semibold text-oas-ink mb-1.5" for="email">E-mail</label>
             <div class="relative">
               <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-oas-faint">
                 <svg lucideUser class="w-4 h-4" stroke-width="2"></svg>
               </span>
               <input
-                id="username"
+                id="email"
                 type="text"
-                autocomplete="username"
+                autocomplete="email"
                 [formField]="loginForm.username"
-                placeholder="Jean Dupond"
+                placeholder="amadou@exemple.com"
                 class="w-full pl-10 pr-4 py-3 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
               />
             </div>
