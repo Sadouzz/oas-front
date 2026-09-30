@@ -8,15 +8,16 @@ import { ClientService } from '../clients/client.service';
 import { VehiculeService } from '../vehicules/vehicule.service';
 import { PieceDetacheeService } from '../pieces-detachees/piece-detachee.service';
 import { MainDoeuvreService } from '../main-doeuvre/main-doeuvre.service';
-import { NgClass } from '@angular/common';
+import { CommonModule, NgClass } from '@angular/common';
 import { Proforma, BonDeCommande, ClientModel, VehiculeModel, PieceDetache, MainDoeuvreModel, extractContent } from '../../shared/models/index';
-import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideArrowRight } from '@lucide/angular';
+import { LucidePencil, LucideTrash2 } from '@lucide/angular';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
+import { ProformaPrintComponent, montantEnLettresFCFA } from '../../shared/document-print';
 
 @Component({
   selector: 'app-proforma',
   standalone: true,
-  imports: [ReactiveFormsModule, NgClass, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX],
+  imports: [CommonModule, ReactiveFormsModule, NgClass, LucidePencil, LucideTrash2, ProformaPrintComponent],
   templateUrl: './proforma.component.html',
 })
 export class ProformaComponent extends BasePaginatedComponent implements OnInit {
@@ -49,6 +50,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
   isNew = true;
   editingId: number | null = null;
   selectedProforma: Proforma | null = null;
+  selectedProformaForPrint: any = null;
 
   clientOpen = false;
   vehiculeOpen = false;
@@ -485,6 +487,63 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
       a.click();
       URL.revokeObjectURL(url);
     });
+  }
+
+  ouvrirPdf(id: number) {
+    this.service.downloadPdf(id).subscribe({
+      next: (blob) => {
+        const file = new Blob([blob], { type: 'application/pdf' });
+        const fileURL = URL.createObjectURL(file);
+        window.open(fileURL, '_blank');
+      },
+      error: () => {
+        window.open(`/document-viewer/proforma/${id}`, '_blank');
+      }
+    });
+  }
+
+  imprimerProforma(p?: any) {
+    const target = p || this.selectedProforma;
+    if (!target) return;
+    this.selectedProformaForPrint = {
+      ...target,
+      numero: target.numero || ('DK/' + target.id),
+      date: target.dateCreation || target.createdAt || new Date().toISOString(),
+      agentNom: target.agentNom || 'EL HAJ',
+      client: {
+        id: target.clientId || (target.client ? target.client.id : undefined),
+        nom: target.clientNom || (target.client ? `${target.client.firstName || ''} ${target.client.lastName || ''}`.trim() : '-'),
+        telephone: target.clientTelephone || target.client?.phone || '-',
+        email: target.clientEmail || target.client?.email || '-',
+        adresse: target.clientAdresse || target.client?.address || 'Dakar'
+      },
+      vehicule: {
+        annee: target.annee || target.vehicule?.annee || '-',
+        marque: target.marque || target.vehicule?.marque || '-',
+        modele: target.modele || target.vehicule?.modele || '-',
+        immatriculation: target.immatriculation || target.vehicule?.immatriculation || '-',
+        kilometrage: target.kilometrage || target.vehicule?.kilometrage || '-',
+        chassis: target.numeroChassis || target.vehicule?.numeroChassis || target.vehicule?.chassis || '-'
+      },
+      lignes: (target.lignesPieces || []).map((lp: any) => ({
+        reference: lp.referencePiece || lp.reference || '-',
+        designation: lp.designationPiece || lp.designationPds || lp.designation || '-',
+        quantite: lp.quantite,
+        remise: lp.remise || 0,
+        prixUnitaire: lp.prixUnitaire || (lp.quantite ? (lp.montantTotal / lp.quantite) : 0),
+        totalLigne: lp.montantTotal
+      })),
+      remarques: target.remarque || '',
+      totalHT: target.totalHt,
+      tva: target.montantTva,
+      timbre: target.timbre || 0,
+      totalTTC: target.totalTtc,
+      montantEnLettres: montantEnLettresFCFA(target.totalTtc)
+    };
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      window.print();
+    }, 50);
   }
 
   get totalPieces(): number {

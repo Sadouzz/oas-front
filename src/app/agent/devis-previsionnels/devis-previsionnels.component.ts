@@ -2,6 +2,7 @@ import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule, DecimalPipe } from '@angular/common';
+import { environment } from '../../../environments/environment';
 import { DevisPrevisionnelService } from './devis-previsionnel.service';
 import { ClientService } from '../clients/client.service';
 import { VehiculeService } from '../vehicules/vehicule.service';
@@ -10,11 +11,12 @@ import { PaginationComponent } from '../../shared/components/pagination/paginati
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 import { DevisPrevisionnel, ClientModel, VehiculeModel, extractContent } from '../../shared/models';
 import { LucidePlus } from '@lucide/angular';
+import { DevisPrevisionnelPrintComponent } from '../../shared/document-print';
 
 @Component({
   selector: 'app-devis-previsionnels',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, DecimalPipe, AlertComponent, PaginationComponent, LucidePlus],
+  imports: [CommonModule, ReactiveFormsModule, DecimalPipe, AlertComponent, PaginationComponent, LucidePlus, DevisPrevisionnelPrintComponent],
   templateUrl: './devis-previsionnels.component.html',
 })
 export class DevisPrevisionnelsComponent extends BasePaginatedComponent implements OnInit {
@@ -35,6 +37,7 @@ export class DevisPrevisionnelsComponent extends BasePaginatedComponent implemen
   editingId: number | null = null;
   successMessage = '';
   errorMessage = '';
+  selectedDevisForPrint: any = null;
 
   filterClientId = '';
   private searchTimeout: any;
@@ -156,6 +159,45 @@ export class DevisPrevisionnelsComponent extends BasePaginatedComponent implemen
       next: () => { this.loadData(); this.notify('Devis validé avec succès.'); },
       error: () => this.notifyError('Erreur lors de la validation du devis.'),
     });
+  }
+
+  imprimerDevis(d: DevisPrevisionnel) {
+    const c = d.client as any;
+    const v = d.vehicule as any;
+    this.selectedDevisForPrint = {
+      ...d,
+      numero: d.numero || ('DK/' + d.id),
+      date: (d as any).date || (d as any).dateCreation || (d as any).createdAt || new Date().toISOString(),
+      agentNom: (d as any).agentNom
+        || (d.agent ? `${d.agent.firstName || ''} ${d.agent.lastName || ''}`.trim() : '')
+        || 'EL HAJ',
+      client: {
+        id: c?.id,
+        nom: c ? `${c.firstName || ''} ${c.lastName || ''}`.trim() : '-',
+        telephone: c?.phone || c?.telephone || '-',
+        email: c?.email || '-',
+        adresse: c?.address || c?.adresse || 'Dakar'
+      },
+      vehicule: {
+        annee: v?.annee || '-',
+        marque: v?.marque || '-',
+        modele: v?.modele || '-',
+        immatriculation: v?.immatriculation || '-',
+        kilometrage: d.kilometrageVehicule || v?.kilometrage || '-',
+        chassis: v?.numeroChassis || v?.chassis || '-'
+      },
+      montantEstime: d.montantTotal || 0,
+      remarques: (d as any).remarques || 'Sous réserve de vises cachés',
+      reparations: d.notesReparation || '-'
+    };
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      window.print();
+    }, 50);
+  }
+
+  ouvrirPdf(id: number) {
+    window.open(`${environment.apiUrl}/api/devis-previsionnels/${id}/pdf`, '_blank');
   }
 
   formatDate(d: string): string { return new Date(d).toLocaleDateString('fr-FR'); }

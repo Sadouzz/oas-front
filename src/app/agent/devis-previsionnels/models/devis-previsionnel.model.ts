@@ -9,7 +9,9 @@ export interface DevisPrevisionnel {
   statut: 'EN_ATTENTE' | 'ACCEPTE' | 'REJETE' | 'PAYEE' | 'PARTIELLEMENT_PAYEE' | 'ANNULEE';
   vehicule: { id: number; immatriculation: string; marque: string; modele: string } | null;
   client: { id: number; firstName: string; lastName: string; phone: string } | null;
+  agent?: { id: number; firstName: string; lastName: string } | null;
 }
+
 
 export interface DevisPrevisionnelOnFicheAtelier {
   id: number;
@@ -22,6 +24,7 @@ export interface DevisPrevisionnelOnFicheAtelier {
   statut: 'EN_ATTENTE' | 'ACCEPTE' | 'REJETE' | 'PAYEE' | 'PARTIELLEMENT_PAYEE' | 'ANNULEE';
   vehicule?: { id: number; immatriculation: string; marque: string; modele: string } | null;
   client?: { id: number; firstName: string; lastName: string; phone: string } | null;
+  agent?: { id: number; firstName: string; lastName: string } | null;
 }
 
 export interface DevisPrevisionnelRequest {

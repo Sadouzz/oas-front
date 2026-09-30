@@ -103,6 +103,14 @@
                   Valider
                 </button>
               }
+              <button (click)="ouvrirPdf(d.id)" title="Visualiser / Exporter PDF"
+                      class="flex items-center justify-center gap-1.5 flex-1 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs border border-red-200 transition cursor-pointer">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                PDF
+              </button>
               <button (click)="openEdit(d)"
                       class="flex items-center justify-center gap-1.5 flex-1 py-2 rounded-xl bg-oas-info-bg text-oas-info font-semibold text-xs border border-oas-info/20 transition cursor-pointer">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -133,6 +141,7 @@
               <th class="text-left text-xs text-oas-muted px-5 py-3">Kilométrage</th>
               <th class="text-left text-xs text-oas-muted px-5 py-3">Montant</th>
               <th class="text-left text-xs text-oas-muted px-5 py-3">Statut</th>
+              <th class="text-left text-xs text-oas-muted px-5 py-3">Agent</th>
               <th class="text-left text-xs text-oas-muted px-5 py-3">Notes</th>
               <th class="px-5 py-3">Actions</th>
             </tr>
@@ -174,6 +183,13 @@
                   </span>
                 </td>
                 <td class="px-5 py-4 text-sm text-oas-muted max-w-xs truncate">{{ d.notesReparation }}</td>
+                <td class="px-5 py-4 text-sm text-oas-ink2">
+                  @if (d.agent) {
+                    {{ d.agent.firstName }} {{ d.agent.lastName }}
+                  } @else {
+                    <span class="text-oas-faint">—</span>
+                  }
+                </td>
                 <td class="px-5 py-4">
                   <div class="flex items-center gap-1 justify-end">
                     @if (d.statut !== 'ACCEPTE' && d.statut !== 'PAYEE') {
@@ -184,6 +200,14 @@
                         </svg>
                       </button>
                     }
+                    <button (click)="ouvrirPdf(d.id)" title="Visualiser / Exporter PDF (nouvel onglet)"
+                            class="px-2 py-1 rounded bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs border border-red-200 transition cursor-pointer flex items-center gap-1">
+                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                      </svg>
+                      PDF
+                    </button>
                     <button (click)="openEdit(d)" title="Modifier"
                             class="p-1.5 rounded-lg hover:bg-oas-info-bg text-oas-muted hover:text-oas-info transition cursor-pointer">
                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -287,4 +311,8 @@
       </div>
     </div>
   </div>
+}
+
+@if (selectedDevisForPrint) {
+  <app-devis-previsionnel-print [data]="selectedDevisForPrint"></app-devis-previsionnel-print>
 }
