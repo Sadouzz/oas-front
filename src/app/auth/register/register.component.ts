@@ -21,7 +21,7 @@ export class RegisterComponent {
     lastName: ['', Validators.required],
     phone: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
-    login: ['', Validators.required],
+    // login: ['', Validators.required],
     password: ['', [Validators.required, Validators.minLength(6)]],
   });
 
@@ -46,8 +46,16 @@ export class RegisterComponent {
     this.errorMessage = '';
 
     const raw = this.form.value;
+    
+    // const firstName = (raw.firstName || '').trim();
+    // const lastName = (raw.lastName || '').trim();
+
+    // const cleanFirst = firstName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+    // const cleanLast = lastName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+
+
     const payload = {
-      login: raw.login.trim(),
+      login: raw.email,
       firstName: raw.firstName.trim(),
       lastName: raw.lastName.trim(),
       phone: raw.phone.trim(),

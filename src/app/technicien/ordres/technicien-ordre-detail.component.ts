@@ -46,6 +46,10 @@ export class TechnicienOrdreDetailComponent implements OnInit {
   listeDefauts = '';
   savingPannes = false;
 
+  get isEditable(): boolean {
+    return this.ordre?.statut === 'DIAGNOSTIC';
+  }
+
   // Diagnostic — pièces jointes
   piecesJointesDiagnostic: PieceJointeDiagnostic[] = [];
   pieceJointeRemarque = '';
