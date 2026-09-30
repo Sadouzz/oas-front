@@ -89,6 +89,12 @@ export const routes: Routes = [
       import('./temp-media-upload/temp-media-upload.component').then(m => m.TempMediaUploadComponent),
   },
 
+  {
+    path: 'document-viewer/:type/:id',
+    loadComponent: () =>
+      import('./shared/document-print/viewer/document-viewer.component').then(m => m.DocumentViewerComponent),
+  },
+
   { path: 'login', component: LoginComponent, canActivate: [noAuthGuard] },
   { path: 'register', component: RegisterComponent, canActivate: [noAuthGuard] },
   { path: 'forbidden', component: ForbiddenComponent },

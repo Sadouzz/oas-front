@@ -44,4 +44,9 @@ export class DevisPrevisionnelService {
   valider(id: number): Observable<DevisPrevisionnel> {
     return this.http.put<DevisPrevisionnel>(`${this.api}/${id}/valider`, {});
   }
+
+  downloadPdf(id: number): Observable<Blob> {
+    return this.http.get(`${this.api}/${id}/pdf`, { responseType: 'blob' });
+  }
 }
+

@@ -1,0 +1,100 @@
+<div id="document-to-print" class="document-page">
+
+  <!-- EN-TETE : 3 colonnes exactement comme le PHP -->
+  <table class="header-table">
+    <tr>
+      <!-- Colonne gauche : titre + numéro -->
+      <th class="header-th header-left">
+        <u>DEVIS PREVISIONNEL :</u><br>
+        Num. {{ data?.numero }}<br><br>
+      </th>
+      <!-- Colonne centre : agent -->
+      <th class="header-th header-center">
+        Agent : {{ data?.agentNom || data?.agentEmetteur || data?.agent?.nom || 'EL HAJ' }}
+      </th>
+      <!-- Colonne droite : date + client -->
+      <th class="header-th header-right">
+        Dakar le {{ (data?.date || data?.dateCreation || data?.createdAt) | date:'dd-MM-yyyy HH:mm:ss' }}
+        <br><br>
+        <u>CLIENT</u> Num. {{ data?.client?.id || data?.client?.numero || data?.clientId || '-' }}<br>
+        Nom : {{ getClientNom() }}<br>
+        Tél : {{ getClientTelephone() }}<br>
+        Email : {{ getClientEmail() }}<br>
+        Adresse : {{ getClientAdresse() }}
+      </th>
+    </tr>
+  </table>
+
+  <br>
+
+  <!-- TABLEAU VEHICULE -->
+  <table class="table-doc">
+    <thead>
+      <tr style="background-color:#f5f5f0;">
+        <th style="width:14%">Année</th>
+        <th style="width:16%">Marque</th>
+        <th style="width:16%">Modèle</th>
+        <th style="width:17%">No. immatriculation</th>
+        <th style="width:10%">Kilométrage</th>
+        <th style="width:25%">No. chassie</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>{{ data?.vehicule?.annee || data?.annee || '-' }}</td>
+        <td>{{ data?.vehicule?.marque || data?.marque || '-' }}</td>
+        <td>{{ data?.vehicule?.modele || data?.modele || '-' }}</td>
+        <td>{{ data?.vehicule?.immatriculation || data?.immatriculation || '-' }}</td>
+        <td>{{ data?.vehicule?.kilometrage || data?.kilometrageVehicule || data?.kilometrage || '-' }}</td>
+        <td>{{ data?.vehicule?.chassis || data?.vehicule?.numeroChassis || data?.numeroChassis || '-' }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <br>
+
+  <!-- TEXTE ESTIMATION -->
+  <p class="text-estimation">
+    Cher client,<br>
+    Suivant un premier diagnostic opéré par la Société OAS, le montant <br>
+    des réparations sera compris dans une fourchette allant de:
+    <span class="montant-highlight"> {{ getMontantEstime() | number:'1.0-0':'fr' }} Frs CFA HT.</span>
+  </p>
+
+  <br>
+
+  <!-- REMARQUES -->
+  <p class="section-remarques">
+    <span class="remarques-label"><b><u>Remarques:</u></b></span>
+    <span class="remarques-valeur"><b>{{ data?.remarques || 'Sous réserve de vises cachés' }}</b></span>
+  </p>
+
+  <br><br>
+
+  <!-- REPARATIONS -->
+  <table class="sign-table">
+    <tr>
+      <td class="reparations-cell">
+        <b><u>Réparations:</u></b> <br>
+        <b class="reparations-text" [innerHTML]="getReparationsHtml()"></b>
+      </td>
+    </tr>
+  </table>
+
+  <br><br>
+
+  <!-- SIGNATURES -->
+  <table class="sign-table">
+    <tr>
+      <td class="sign-client">
+        SIGNATURE DU CLIENT <br>
+        précédée de la mention <br>
+        LU &amp; APPROUVE
+      </td>
+      <td class="sign-receptionniste">
+        VISA DU RECEPTIONNISTE:
+      </td>
+    </tr>
+  </table>
+
+</div>

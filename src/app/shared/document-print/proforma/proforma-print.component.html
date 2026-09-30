@@ -1,0 +1,114 @@
+<div id="document-to-print" class="document-page">
+  <!-- EN-TETE -->
+  <div class="header-row">
+    <div class="header-left">
+      <div class="doc-title">PROFORMA :</div>
+      <div class="doc-num">Num. {{ data?.numero }}</div>
+      <div class="doc-title" style="margin-top: 15px;">BON DE COMMANDE :</div>
+    </div>
+    <div class="header-center">
+      Agent : {{ data?.agentNom || data?.agentEmetteur || data?.agent?.nom || 'EL HAJ' }}
+    </div>
+    <div class="header-right">
+      <div class="date-line">Dakar le {{ (data?.date || data?.dateCreation || data?.createdAt) | date:'dd-MM-yyyy HH:mm:ss' }}</div>
+      <div><span class="client-badge">CLIENT</span> Num. {{ data?.client?.id || data?.client?.numero || data?.clientId || '-' }}</div>
+      <div><b>Nom :</b> {{ getClientNom() }}</div>
+      <div><b>Tél :</b> {{ getClientTelephone() }}</div>
+      <div><b>Email :</b> {{ getClientEmail() }}</div>
+      <div><b>Adresse :</b> {{ getClientAdresse() }}</div>
+    </div>
+  </div>
+
+  <!-- TABLEAU VEHICULE -->
+  <table class="table-doc">
+    <thead>
+      <tr>
+        <th style="width: 13%;">Année</th>
+        <th style="width: 17%;">Marque</th>
+        <th style="width: 17%;">Modèle</th>
+        <th style="width: 22%;">No. immatriculation</th>
+        <th style="width: 13%;">Kilométrage</th>
+        <th style="width: 18%;">No. chassie</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>{{ data?.vehicule?.annee || data?.annee || '-' }}</td>
+        <td>{{ data?.vehicule?.marque || data?.marque || '-' }}</td>
+        <td>{{ data?.vehicule?.modele || data?.modele || '-' }}</td>
+        <td>{{ data?.vehicule?.immatriculation || data?.immatriculation || '-' }}</td>
+        <td>{{ data?.vehicule?.kilometrage || data?.kilometrage || '-' }}</td>
+        <td>{{ data?.vehicule?.chassis || data?.vehicule?.numeroChassis || data?.numeroChassis || '-' }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- TABLEAU PIECES DETACHEES -->
+  <table class="table-doc">
+    <thead>
+      <tr>
+        <th style="width: 18%;">Référence</th>
+        <th style="width: 42%;">Désignation</th>
+        <th style="width: 8%;">Qté</th>
+        <th style="width: 10%;">Rem.(%)</th>
+        <th style="width: 11%;">Prix unitaire</th>
+        <th style="width: 11%;">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let ligne of getLignes()">
+        <td>{{ ligne.reference || ligne.referencePiece || '-' }}</td>
+        <td class="text-left">{{ ligne.designation || ligne.designationPiece || ligne.designationPds || '-' }}</td>
+        <td>{{ ligne.quantite }}</td>
+        <td>{{ ligne.remise || 0 }}</td>
+        <td class="text-right">{{ getLignePrix(ligne) | number:'1.0-0' }}</td>
+        <td class="text-right">{{ getLigneTotal(ligne) | number:'1.0-0' }}</td>
+      </tr>
+      <tr *ngIf="getLignes().length === 0">
+        <td colspan="6" style="padding: 10px;">Aucune pièce</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- SECTION MAIN D'OEUVRE & REMARQUES -->
+  <div style="text-align: center; font-weight: bold; margin: 15px 0;">Mains d'oeuvre</div>
+  
+  <table class="table-doc">
+    <thead>
+      <tr>
+        <th>Remarques</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="height: 32px;">{{ data?.remarques || data?.remarque || '' }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- TABLEAU DES TOTAUX -->
+  <div class="totals-wrapper">
+    <table class="table-doc">
+      <thead>
+        <tr>
+          <th style="width: 25%;">Total HT</th>
+          <th style="width: 25%;">TVA (18%)</th>
+          <th style="width: 25%;">Timbre</th>
+          <th style="width: 25%;">Montant Total TTC</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>{{ getTotalHT() | number:'1.0-0' }}</td>
+          <td>{{ getTVA() | number:'1.0-0' }}</td>
+          <td>{{ getTimbre() | number:'1.0-0' }}</td>
+          <td>{{ getTotalTTC() | number:'1.0-0' }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <!-- MONTANT EN TOUTES LETTRES -->
+    <div class="montant-lettres-box">
+      {{ getMontantEnLettres() }}
+    </div>
+  </div>
+</div>

@@ -1,0 +1,10 @@
+:host {
+  display: block;
+  background-color: #ffffff;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

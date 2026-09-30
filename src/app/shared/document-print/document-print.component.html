@@ -1,0 +1,5 @@
+@if (typeDocument === 'DEVIS_PREVISIONNEL') {
+  <app-devis-previsionnel-print [data]="data"></app-devis-previsionnel-print>
+} @else if (typeDocument === 'PROFORMA') {
+  <app-proforma-print [data]="data"></app-proforma-print>
+}
