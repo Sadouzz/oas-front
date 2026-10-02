@@ -460,6 +460,18 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   }
 
   // ── FIDELITE ───────────────────────────────────────────────────
+  onFileSelected(event: Event, field: string) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      // On simule l'upload en générant une fausse URL. 
+      // Dans un cas réel, vous feriez un appel API vers votre service de stockage
+      // et vous mettriez l'URL retournée dans le formulaire.
+      const fakeUrl = `https://stockage.oas.sn/documents/${field}/${file.name}`;
+      this.fideleForm.patchValue({ [field]: fakeUrl });
+    }
+  }
+
   openFideleModal(client: ClientListResponse) {
     this.fideleClient = client;
     this.fideleForm.patchValue({
