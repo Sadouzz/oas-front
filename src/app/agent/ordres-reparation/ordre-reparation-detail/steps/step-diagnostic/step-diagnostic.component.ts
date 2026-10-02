@@ -772,8 +772,7 @@ export class StepDiagnosticComponent implements OnInit {
 
   private syncOrdreStatutDiagnostic(): void {
     this.ordreService.updateStatut(this.ordreId, 'DIAGNOSTIC').subscribe({
-      next: (o) => {
-        if (o) this.loadedOrdre = o;
+      next: () => {
         this.saving = false;
         this.notify('Statut mis à jour. Vous pouvez modifier le diagnostic.');
         this.cdr.markForCheck();
