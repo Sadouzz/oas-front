@@ -133,7 +133,7 @@ export class StepApprovisionnementComponent implements OnInit {
     const lignes = this.rupturesOnly.map(l => ({
       pieceDetacheeId: l.piece!.id,
       quantite: l.manquant,
-      prixUnitaire: l.piece!.prix || 0
+      prixUnitaire: l.piece!.prixUnitaire || 0
     }));
 
     this.bdcSaving = true;

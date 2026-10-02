@@ -104,7 +104,11 @@ export class OrdreReparationFormComponent implements OnInit, OnDestroy {
   autrePannes = '';
   showAutrePannes = false;
 
+  todayDate: string = '';
+
   ngOnInit(): void {
+    const today = new Date();
+    this.todayDate = today.toISOString().split('T')[0];
     this.initForm();
     this.loadData();
     this.setupSearchSubjects();
