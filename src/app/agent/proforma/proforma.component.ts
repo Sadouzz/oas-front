@@ -86,17 +86,17 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
   ngOnInit() {
     this.load();
     forkJoin({
-      //clients: this.clientService.getAll(),
-      //vehicules: this.vehiculeService.getAll(),
-      //pieces: this.pieceService.getAll(),
-      //mds: this.mdService.getAll(),
-      //bonsCommande: this.bcService.getAll(),
+      clients: this.clientService.getAll(),
+      vehicules: this.vehiculeService.getAll(),
+      pieces: this.pieceService.getAll(),
+      mds: this.mdService.getAll(),
+      bonsCommande: this.bcService.getAll(),
     }).subscribe({
       next: ({ clients, vehicules, pieces, mds, bonsCommande }) => {
         this.clients = extractContent(clients);
         this.vehicules = extractContent(vehicules);
         this.pieces = extractContent(pieces);
-        //this.mainsDoeuvre = extractContent(mds).filter((m: any) => !m.isArchived);
+        this.mainsDoeuvre = extractContent(mds).filter((m: any) => !m.isArchived);
         this.bonsCommande = extractContent(bonsCommande);
 
         // Auto-open modal if openId or action is provided in query params

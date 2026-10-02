@@ -35,8 +35,8 @@ export class BonsReceptionComponent extends BasePaginatedComponent implements On
   ngOnInit() {
     this.loadData();
     forkJoin({
-      //bonsCommande: this.bcService.getAll(),
-      //vehicules: this.vehiculeService.getAll(),
+      bonsCommande: this.bcService.getAll(),
+      vehicules: this.vehiculeService.getAll(),
     }).subscribe({
       next: ({ bonsCommande, vehicules }) => {
         this.bonsCommande = extractContent(bonsCommande);
