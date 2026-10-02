@@ -8,6 +8,7 @@ import { ClientMarketplaceService } from '../marketplace/client-marketplace.serv
 import { DemandeProduit, StatutDemandeProduit } from '../models';
 import { UserModel } from '../../shared/models/user.model';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
+import { PhoneInputComponent } from '../../shared/components/phone-input/phone-input.component';
 import { StatusBadgeComponent, BadgeTone } from '../ui/status-badge/status-badge.component';
 import { CLIENT_PORTAL_PATHS } from '../client-portal.paths';
 
@@ -44,7 +45,7 @@ function passwordsMatch(control: AbstractControl): ValidationErrors | null {
 @Component({
   selector: 'app-client-profile',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, AlertComponent, StatusBadgeComponent],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, AlertComponent, StatusBadgeComponent, PhoneInputComponent],
   templateUrl: './client-profile.component.html',
 })
 export class ClientProfileComponent implements OnInit {

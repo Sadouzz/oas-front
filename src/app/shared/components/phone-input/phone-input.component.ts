@@ -1,37 +1,93 @@
-import { Component, forwardRef, Input } from '@angular/core';
-import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/forms';
+import { Component, ElementRef, forwardRef, ViewChild, AfterViewInit, OnDestroy, Input } from '@angular/core';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR, NG_VALIDATORS, Validator, AbstractControl, ValidationErrors, ReactiveFormsModule } from '@angular/forms';
+import intlTelInput from 'intl-tel-input';
 import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-phone-input',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule],
+  styles: [':host { display: block; width: 100%; }'],
+  template: `
+    <div class="relative w-full">
+      <input
+        #phoneInput
+        type="tel"
+        class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
+        [class.border-oas-bad]="invalid"
+        (input)="onInputChange()"
+        (blur)="onTouched()"
+        [disabled]="disabled"
+      />
+    </div>
+  `,
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
       useExisting: forwardRef(() => PhoneInputComponent),
       multi: true
+    },
+    {
+      provide: NG_VALIDATORS,
+      useExisting: forwardRef(() => PhoneInputComponent),
+      multi: true
     }
-  ],
-  templateUrl: './phone-input.component.html'
+  ]
 })
-export class PhoneInputComponent implements ControlValueAccessor {
-  @Input() placeholder = '77 000 00 00';
-  @Input() defaultCountryCode = '+221';
-
-  displayValue = '';
+export class PhoneInputComponent implements ControlValueAccessor, Validator, AfterViewInit, OnDestroy {
+  @ViewChild('phoneInput') phoneInputRef!: ElementRef<HTMLInputElement>;
+  @Input() invalid = false;
+  
+  private iti: any;
   disabled = false;
+  value = '';
 
-  private onChange: (val: string) => void = () => {};
-  private onTouched: () => void = () => {};
+  onChange: any = () => {};
+  onTouched: any = () => {};
 
-  writeValue(val: any): void {
-    if (!val) {
-      this.displayValue = '';
-      return;
+  ngAfterViewInit() {
+    this.iti = intlTelInput(this.phoneInputRef.nativeElement, {
+      initialCountry: 'sn',
+      strictMode: true,
+      separateDialCode: true,
+      loadUtils: () => import('intl-tel-input/utils')
+    });
+
+    if (this.value) {
+      this.iti.setNumber(this.value);
     }
-    const str = String(val);
-    this.displayValue = this.extractAndFormatLocal(str);
+
+    this.phoneInputRef.nativeElement.addEventListener('countrychange', () => {
+      this.onInputChange();
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.iti) {
+      this.iti.destroy();
+    }
+  }
+
+  onInputChange() {
+    if (this.iti) {
+      const isValid = this.iti.isValidNumber();
+      if (isValid) {
+        this.value = this.iti.getNumber();
+      } else {
+        // You can return the raw value or null if you want it strict
+        this.value = this.phoneInputRef.nativeElement.value;
+      }
+      this.onChange(this.value);
+    }
+  }
+
+  writeValue(value: any): void {
+    this.value = value;
+    if (this.iti && value) {
+      this.iti.setNumber(value);
+    } else if (this.phoneInputRef) {
+      this.phoneInputRef.nativeElement.value = value || '';
+    }
   }
 
   registerOnChange(fn: any): void {
@@ -46,45 +102,20 @@ export class PhoneInputComponent implements ControlValueAccessor {
     this.disabled = isDisabled;
   }
 
-  onInput(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const raw = input.value || '';
-
-    const formatted = this.extractAndFormatLocal(raw);
-    this.displayValue = formatted;
-    input.value = formatted;
-
-    const digitsOnly = formatted.replace(/\s+/g, '');
-    if (digitsOnly.length > 0) {
-      this.onChange(`${this.defaultCountryCode} ${formatted}`);
-    } else {
-      this.onChange('');
+  validate(control: AbstractControl): ValidationErrors | null {
+    if (!this.iti) {
+      return null; // Not initialized yet, assume valid for now or wait
     }
-  }
-
-  onBlur(): void {
-    this.onTouched();
-  }
-
-  private extractAndFormatLocal(val: string): string {
-    if (!val) return '';
-    // Nettoie: supprime indicatif si déjà présent au début (+221, 00221, 221)
-    let clean = val.trim();
-    clean = clean.replace(/^(\+221|00221|221)/, '');
-    // Ne garde que les chiffres
-    clean = clean.replace(/[^0-9]/g, '');
-    // Limite à 9 chiffres (standard mobile/fixe sénégalais : 70, 75, 76, 77, 78, 33...)
-    clean = clean.slice(0, 9);
-
-    // Formatage espacé progressif: XX XXX XX XX
-    if (clean.length <= 2) {
-      return clean;
-    } else if (clean.length <= 5) {
-      return `${clean.slice(0, 2)} ${clean.slice(2)}`;
-    } else if (clean.length <= 7) {
-      return `${clean.slice(0, 2)} ${clean.slice(2, 5)} ${clean.slice(5)}`;
-    } else {
-      return `${clean.slice(0, 2)} ${clean.slice(2, 5)} ${clean.slice(5, 7)} ${clean.slice(7, 9)}`;
+    
+    const value = control.value;
+    if (!value) {
+      return null; // required validation is handled by Angular's required validator
     }
+
+    if (this.iti.isValidNumber()) {
+      return null;
+    }
+
+    return { invalidPhone: true };
   }
 }

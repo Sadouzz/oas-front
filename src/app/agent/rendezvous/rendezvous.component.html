@@ -126,6 +126,17 @@
                       <span>Reporter</span>
                     </button>
                   }
+                  
+                  <!-- Annuler (si pas de fiche atelier et non terminé/annulé) -->
+                  @if (!rdv.hasFicheAtelier && rdv.statut !== 'ANNULE' && rdv.statut !== 'REFUSE' && rdv.statut !== 'TERMINE') {
+                    <button type="button"
+                            (click)="cancelRdv(rdv)"
+                            title="Annuler le rendez-vous"
+                            class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 border border-red-200/80 font-semibold text-xs transition cursor-pointer shadow-2xs hover:shadow-xs active:scale-95">
+                      <svg lucideX class="w-3.5 h-3.5 text-red-600"></svg>
+                      <span>Annuler</span>
+                    </button>
+                  }
 
                   <!-- Modifier Statut -->
                   <!-- <button type="button"

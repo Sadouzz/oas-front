@@ -6,6 +6,7 @@ import { UserModel, extractContent } from '../../../shared/models/index';
 import { AlertComponent } from '../../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { BasePaginatedComponent } from '../../../shared/components/base-paginated.component';
+import { PhoneInputComponent } from '../../../shared/components/phone-input/phone-input.component';
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideUser, LucideCheck, LucideArchive, LucideLoader2, LucideArchiveRestore, LucideUsers } from '@lucide/angular';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -22,7 +23,7 @@ const ROLE_PREFIX: Record<string, string> = {
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideArchive, LucideLoader2, LucideArchiveRestore, LucideUsers],
+  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent, PhoneInputComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideArchive, LucideLoader2, LucideArchiveRestore, LucideUsers],
   templateUrl: './users.component.html',
 })
 export class UsersComponent extends BasePaginatedComponent implements OnInit {
@@ -57,6 +58,7 @@ export class UsersComponent extends BasePaginatedComponent implements OnInit {
     lastName: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
     password: [''],
+    confirmPassword: [''],
     role: ['AGENT', Validators.required],
     garageId: [null as number | null],
   });
@@ -77,7 +79,7 @@ export class UsersComponent extends BasePaginatedComponent implements OnInit {
   loadGarages() {
     if (this.isSuperAgent) {
       this.garageService.getAll().subscribe({
-        next: (data) => this.garages = data,
+        next: (data) => this.garages = extractContent(data),
         error: (err) => console.error('Erreur lors du chargement des garages', err)
       });
     }
@@ -190,6 +192,10 @@ export class UsersComponent extends BasePaginatedComponent implements OnInit {
     const anyEmpty = requiredKeys.some(k => !raw[k as keyof typeof raw]);
     if (anyEmpty || this.saving) {
       this.form.markAllAsTouched();
+      return;
+    }
+    if (this.isNew && raw.password !== raw.confirmPassword) {
+      this.errorMessage = 'Les mots de passe ne correspondent pas.';
       return;
     }
     this.saving = true;

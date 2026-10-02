@@ -38,6 +38,7 @@ import { TireTrackComponent } from '../../shared/components/tire-track/tire-trac
 import { SheetMetalCardComponent } from '../../shared/components/sheet-metal-card/sheet-metal-card';
 import { BoltCornersComponent } from '../../shared/components/bolt-corners/bolt-corners';
 import { SpeedometerComponent } from '../../shared/components/speedometer/speedometer';
+import { PhoneInputComponent } from '../../shared/components/phone-input/phone-input.component';
 
 @Component({
   selector: 'app-rdv',
@@ -49,7 +50,8 @@ import { SpeedometerComponent } from '../../shared/components/speedometer/speedo
     TireTrackComponent,
     SheetMetalCardComponent,
     BoltCornersComponent,
-    SpeedometerComponent
+    SpeedometerComponent,
+    PhoneInputComponent
 ],
   templateUrl: './rdv.html',
   styleUrl: './rdv.css'

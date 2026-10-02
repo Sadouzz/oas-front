@@ -141,6 +141,7 @@
               <th class="text-left text-xs text-oas-muted px-5 py-3">Kilométrage</th>
               <th class="text-left text-xs text-oas-muted px-5 py-3">Montant</th>
               <th class="text-left text-xs text-oas-muted px-5 py-3">Statut</th>
+              <th class="text-left text-xs text-oas-muted px-5 py-3">Agent</th>
               <th class="text-left text-xs text-oas-muted px-5 py-3">Notes</th>
               <th class="px-5 py-3">Actions</th>
             </tr>
@@ -182,6 +183,13 @@
                   </span>
                 </td>
                 <td class="px-5 py-4 text-sm text-oas-muted max-w-xs truncate">{{ d.notesReparation }}</td>
+                <td class="px-5 py-4 text-sm text-oas-ink2">
+                  @if (d.agent) {
+                    {{ d.agent.firstName }} {{ d.agent.lastName }}
+                  } @else {
+                    <span class="text-oas-faint">—</span>
+                  }
+                </td>
                 <td class="px-5 py-4">
                   <div class="flex items-center gap-1 justify-end">
                     @if (d.statut !== 'ACCEPTE' && d.statut !== 'PAYEE') {

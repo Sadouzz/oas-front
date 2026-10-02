@@ -9,6 +9,7 @@ import { SectionTitle } from '../../shared/components/section-title/section-titl
 import { TireTrackComponent } from '../../shared/components/tire-track/tire-track';
 import { BoltCornersComponent } from '../../shared/components/bolt-corners/bolt-corners';
 import { PistonAccordionComponent } from '../../shared/components/piston-accordion/piston-accordion';
+import { PhoneInputComponent } from '../../shared/components/phone-input/phone-input.component';
 
 register();
 
@@ -22,7 +23,8 @@ register();
     SectionTitle,
     TireTrackComponent,
     BoltCornersComponent,
-    PistonAccordionComponent
+    PistonAccordionComponent,
+    PhoneInputComponent
 ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './contact.html',

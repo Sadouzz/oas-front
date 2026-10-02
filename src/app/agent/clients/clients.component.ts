@@ -10,12 +10,13 @@ import { ClientModel, ClientListResponse, VehiculeModel, extractContent, PagePar
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
-import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, LucideArchiveRestore, LucideX, LucideCheck, LucideUser, LucideArrowRight, LucideAward, LucideShieldOff, LucideShieldCheck } from '@lucide/angular';
+import { PhoneInputComponent } from '../../shared/components/phone-input/phone-input.component';
+import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, LucideArchiveRestore, LucideX, LucideCheck, LucideUser, LucideArrowRight } from '@lucide/angular';
 
 @Component({
   selector: 'app-clients',
   standalone: true,
-  imports: [ReactiveFormsModule, NgClass, DatePipe, DecimalPipe, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, LucideArchiveRestore, LucideX, LucideCheck, LucideUser, LucideAward, LucideShieldOff],
+  imports: [ReactiveFormsModule, NgClass, DatePipe, DecimalPipe, AlertComponent, PaginationComponent, PhoneInputComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, LucideArchiveRestore, LucideX, LucideCheck, LucideUser],
   templateUrl: './clients.component.html',
 })
 export class ClientsComponent extends BasePaginatedComponent implements OnInit {
@@ -69,6 +70,7 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
     phone: ['', Validators.required],
     username: ['', Validators.required],
     password: ['', Validators.required],
+    confirmPassword: ['', Validators.required],
   });
 
   vehicleForm = this.fb.group({
@@ -343,8 +345,12 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
       this.createForm.markAllAsTouched();
       return;
     }
-    this.saving = true;
     const raw = this.createForm.getRawValue() as any;
+    if (raw.password !== raw.confirmPassword) {
+      this.errorMessage = 'Les mots de passe ne correspondent pas.';
+      return;
+    }
+    this.saving = true;
     this.clientService.create({ ...raw, type: 'CLIENT' }).subscribe({
       next: (res: any) => {
         this.saving = false;
