@@ -34,7 +34,7 @@ export class OrdreReparationService {
   }
 
   getById(id: number): Observable<OrdreReparation> {
-    return this.http.get<OrdreReparation>(`${this.api}/${id}`);
+    return this.http.get<OrdreReparation>(`${this.api}/${id}/dto`);
   }
 
   create(data: OrdreReparationRequest): Observable<OrdreReparation> {

@@ -129,14 +129,15 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
   ngOnInit() {
     this.loadData();
     forkJoin({
-      //clients: this.clientService.getAll(),
-      //vehicules: this.vehiculeService.getAll({ size: 1000 }),
-      //pdps: this.pieceService.getAll({ type: 'PDP' })
+      clients: this.clientService.getAll({ size: 500 }),
+      vehicules: this.vehiculeService.getAll({ size: 1000 }),
+      pdps: this.pieceService.getAll({ type: 'PDP' })
     }).subscribe({
       next: ({ clients, vehicules, pdps }) => {
         this.clients = extractContent<UserModel>(clients as any).filter(c => c.enabled);
         this.allVehicules = extractContent<VehiculeModel>(vehicules as any);
         this.pdps = extractContent<PieceDetache>(pdps as any).filter(p => p.statut === 'ACTIF');
+        this.cdr.markForCheck();
       },
     });
 
