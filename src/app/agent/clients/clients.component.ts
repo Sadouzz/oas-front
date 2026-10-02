@@ -66,6 +66,7 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
     phone: ['', Validators.required],
     username: ['', Validators.required],
     password: ['', Validators.required],
+    confirmPassword: ['', Validators.required],
   });
 
   vehicleForm = this.fb.group({
@@ -331,8 +332,12 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
       this.createForm.markAllAsTouched();
       return;
     }
-    this.saving = true;
     const raw = this.createForm.getRawValue() as any;
+    if (raw.password !== raw.confirmPassword) {
+      this.errorMessage = 'Les mots de passe ne correspondent pas.';
+      return;
+    }
+    this.saving = true;
     this.clientService.create({ ...raw, type: 'CLIENT' }).subscribe({
       next: (res: any) => {
         this.saving = false;

@@ -58,6 +58,7 @@ export class UsersComponent extends BasePaginatedComponent implements OnInit {
     lastName: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
     password: [''],
+    confirmPassword: [''],
     role: ['AGENT', Validators.required],
     garageId: [null as number | null],
   });
@@ -191,6 +192,10 @@ export class UsersComponent extends BasePaginatedComponent implements OnInit {
     const anyEmpty = requiredKeys.some(k => !raw[k as keyof typeof raw]);
     if (anyEmpty || this.saving) {
       this.form.markAllAsTouched();
+      return;
+    }
+    if (this.isNew && raw.password !== raw.confirmPassword) {
+      this.errorMessage = 'Les mots de passe ne correspondent pas.';
       return;
     }
     this.saving = true;
