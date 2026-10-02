@@ -454,6 +454,20 @@ export class RendezVousComponent implements OnInit {
     this.router.navigate(['/app/admin/fiches-atelier/new', rdv.id]);
   }
 
+  cancelRdv(rdv: RendezVous) {
+    if (confirm(`Êtes-vous sûr de vouloir annuler ce rendez-vous ?`)) {
+      this.service.updateStatut(rdv.id, 'ANNULE', 'Annulé par l\'agent').subscribe({
+        next: () => {
+          this.notify('Rendez-vous annulé avec succès.');
+          this.load();
+        },
+        error: (err: any) => {
+          this.notifyError(err.error?.message || 'Erreur lors de l\'annulation du rendez-vous.');
+        }
+      });
+    }
+  }
+
   get paged(): RendezVous[] {
     return Array.isArray(this.filtered) ? this.filtered : [];
   }

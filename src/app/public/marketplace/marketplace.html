@@ -308,14 +308,13 @@
                         <div class="form-group mb-[18px]">
                             <label for="register-tel" class="block text-[13px] font-bold text-oas-ink2 mb-[8px]">Téléphone</label>
                             <div class="input-icon relative flex items-center">
-                                <i class="fa-solid fa-phone absolute left-[16px] text-oas-faint text-[15px]"></i>
-                                <input id="register-tel" type="tel" formControlName="telephone" placeholder="+221 77 000 00 00"
-                                    class="w-full p-[13px_16px_13px_44px] border-[1.5px] border-oas-line rounded-[12px] font-inherit text-[14px] text-oas-ink bg-oas-bg transition-all duration-200 focus:outline-none focus:border-oas-accent focus:bg-white focus:shadow-[0_0_0_4px_var(--color-oas-accent-bg)]"
-                                    [class.border-oas-bad]="rf['telephone'].invalid && rf['telephone'].touched"
-                                    [class.bg-oas-bad-bg]="rf['telephone'].invalid && rf['telephone'].touched">
+                                <app-phone-input id="register-tel" formControlName="telephone" [invalid]="rf['telephone'].invalid && rf['telephone'].touched" class="w-full"></app-phone-input>
                             </div>
-                            @if(rf['telephone'].invalid && rf['telephone'].touched){
-                                <span class="form-error block mt-[7px] text-[12.5px] text-oas-bad font-semibold">Numéro de téléphone invalide.</span>
+                            @if(rf['telephone'].hasError('required') && rf['telephone'].touched){
+                                <span class="form-error block mt-[7px] text-[12.5px] text-oas-bad font-semibold">Numéro de téléphone requis.</span>
+                            }
+                            @if(rf['telephone'].hasError('invalidPhone') && rf['telephone'].touched){
+                                <span class="form-error block mt-[7px] text-[12.5px] text-oas-bad font-semibold">Numéro de téléphone invalide pour ce pays.</span>
                             }
                         </div>
                     </div>

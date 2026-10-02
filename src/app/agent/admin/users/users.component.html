@@ -202,9 +202,7 @@
 
         <div>
           <label class="block text-sm font-semibold text-oas-ink mb-1">Téléphone *</label>
-          <input type="text" formControlName="phone"
-                 class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
-                 [class.border-oas-bad]="f['phone'].invalid && f['phone'].touched"/>
+          <app-phone-input formControlName="phone" [invalid]="!!(f['phone'].invalid && f['phone'].touched)"></app-phone-input>
           @if (f['phone'].invalid && f['phone'].touched) {
             <p class="text-oas-bad text-xs mt-1">Champ requis</p>
           }

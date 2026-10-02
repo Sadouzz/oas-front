@@ -153,9 +153,10 @@
                       [class.border-red-400]="f['email'].invalid && f['email'].touched">
                     </div>
                     <div>
-                      <input type="tel" formControlName="telephone" placeholder="Téléphone"
-                        class="w-full px-5 py-4 border border-oas-line bg-oas-bg text-oas-ink placeholder-oas-faint focus:outline-none focus:border-oas-accent transition-colors"
-                        [class.border-red-400]="f['telephone'].invalid && f['telephone'].touched">
+                      <app-phone-input formControlName="telephone" [invalid]="f['telephone'].invalid && f['telephone'].touched"></app-phone-input>
+                      @if (f['telephone'].hasError('invalidPhone') && f['telephone'].touched) {
+                        <p class="text-red-500 text-xs mt-1">Numéro invalide.</p>
+                      }
                       </div>
                     </div>
                     <div class="mb-5">

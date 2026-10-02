@@ -85,16 +85,15 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-semibold text-oas-ink mb-1.5">Téléphone <span class="text-red-500">*</span></label>
-            <input
-              type="tel"
-              autocomplete="tel"
+            <app-phone-input
               formControlName="phone"
-              placeholder="+221 77 123 45 67"
-              class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
-              [class.border-oas-bad]="f('phone')?.invalid && f('phone')?.touched"
-            />
-            @if (f('phone')?.invalid && f('phone')?.touched) {
+              [invalid]="f('phone')?.invalid && f('phone')?.touched || false"
+            ></app-phone-input>
+            @if (f('phone')?.hasError('required') && f('phone')?.touched) {
               <p class="text-oas-bad text-xs mt-1">Le téléphone est obligatoire.</p>
+            }
+            @if (f('phone')?.hasError('invalidPhone') && f('phone')?.touched) {
+              <p class="text-oas-bad text-xs mt-1">Le numéro de téléphone n'est pas valide pour ce pays.</p>
             }
           </div>
 
@@ -161,6 +160,41 @@
             <p class="text-oas-bad text-xs mt-1">
               @if (f('password')?.errors?.['required']) { Le mot de passe est obligatoire. }
               @else if (f('password')?.errors?.['minlength']) { Minimum 6 caractères. }
+            </p>
+          }
+        </div>
+
+        <!-- Confirmer le mot de passe -->
+        <div>
+          <label class="block text-sm font-semibold text-oas-ink mb-1.5">Confirmer le mot de passe <span class="text-red-500">*</span></label>
+          <div class="relative">
+            <input
+              [type]="showConfirmPassword ? 'text' : 'password'"
+              autocomplete="new-password"
+              formControlName="confirmPassword"
+              placeholder="Minimum 6 caractères"
+              class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint pr-10"
+              [class.border-oas-bad]="(f('confirmPassword')?.invalid || form.hasError('mismatch')) && f('confirmPassword')?.touched"
+            />
+            <button
+              type="button"
+              (click)="showConfirmPassword = !showConfirmPassword"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-oas-muted hover:text-oas-ink transition"
+            >
+              @if (showConfirmPassword) {
+                <svg lucideEyeOff class="h-5 w-5" [strokeWidth]="2"></svg>
+              } @else {
+                <svg lucideEye class="h-5 w-5" [strokeWidth]="2"></svg>
+              }
+            </button>
+          </div>
+          @if (f('confirmPassword')?.invalid && f('confirmPassword')?.touched) {
+            <p class="text-oas-bad text-xs mt-1">
+              La confirmation du mot de passe est obligatoire.
+            </p>
+          } @else if (form.hasError('mismatch') && f('confirmPassword')?.touched) {
+            <p class="text-oas-bad text-xs mt-1">
+              Les mots de passe ne correspondent pas.
             </p>
           }
         </div>

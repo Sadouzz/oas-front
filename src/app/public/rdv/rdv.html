@@ -307,15 +307,13 @@
             <div class="form-group">
               <label for="rdv-tel">Téléphone <span class="text-rose-500">*</span></label>
               <div class="input-icon">
-                <input
-                  id="rdv-tel"
-                  type="tel"
-                  formControlName="telephone"
-                  placeholder="ex: 77 123 45 67"
-                  [class.is-invalid]="rdvWhatsappForm.get('telephone')?.invalid && rdvWhatsappForm.get('telephone')?.touched">
+                <app-phone-input formControlName="telephone" [invalid]="rdvWhatsappForm.get('telephone')?.invalid && rdvWhatsappForm.get('telephone')?.touched || false"></app-phone-input>
                 </div>
-                @if(rdvWhatsappForm.get('telephone')?.invalid && rdvWhatsappForm.get('telephone')?.touched){
+                @if(rdvWhatsappForm.get('telephone')?.hasError('required') && rdvWhatsappForm.get('telephone')?.touched){
                   <span class="form-error">Téléphone requis.</span>
+                }
+                @if(rdvWhatsappForm.get('telephone')?.hasError('invalidPhone') && rdvWhatsappForm.get('telephone')?.touched){
+                  <span class="form-error">Numéro invalide pour ce pays.</span>
                 }
               </div>
             </div>
@@ -568,17 +566,15 @@
                     <div class="form-group">
                       <label for="register-tel">Téléphone</label>
                       <div class="input-icon">
-                        <i class="fa-solid fa-phone"></i>
-                        <input
-                          id="register-tel"
-                          type="tel"
-                          formControlName="telephone"
-                          placeholder="+221 77 000 00 00"
-                          [class.is-invalid]="rf['telephone'].invalid && rf['telephone'].touched">
+                        <app-phone-input formControlName="telephone" [invalid]="rf['telephone'].invalid && rf['telephone'].touched" class="w-full"></app-phone-input>
                         </div>
-                        _if(rf['telephone'].invalid && rf['telephone'].touched){
-                        <span class="form-error">Numéro de téléphone invalide.</span>
-                      }
+                        @if(rf['telephone'].hasError('required') && rf['telephone'].touched){
+                          <span class="form-error">Téléphone requis.</span>
+                        }
+                        @if(rf['telephone'].hasError('invalidPhone') && rf['telephone'].touched){
+                          <span class="form-error">Numéro invalide.</span>
+                        }
+                      </div>
                     </div>
 
                   </div>
