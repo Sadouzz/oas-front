@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { UserModel } from '../../shared/models';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
+import { PhoneInputComponent } from '../../shared/components/phone-input/phone-input.component';
 import {
   LucideUser,
   LucideMail,
@@ -40,6 +41,7 @@ import {
     LucideShieldCheck,
     LucideKey,
     LucideSave,
+    PhoneInputComponent
   ],
   templateUrl: './profil.component.html',
 })

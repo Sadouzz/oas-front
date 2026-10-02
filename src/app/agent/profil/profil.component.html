@@ -170,15 +170,13 @@
                   Téléphone <span class="text-oas-bad">*</span>
                 </label>
                 <div class="relative flex items-center">
-                  <span class="absolute left-3.5 text-oas-muted pointer-events-none">
-                    <svg lucidePhone class="w-4 h-4"></svg>
-                  </span>
-                  <input type="tel" formControlName="phone" placeholder="ex: 77 123 45 67"
-                    class="font-mono text-sm w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-oas-ink focus:bg-white focus:outline-none focus:ring-2 focus:ring-oas-accent/30 focus:border-oas-accent transition"
-                    [class.border-rose-400]="profileForm.get('phone')?.invalid && profileForm.get('phone')?.touched" />
+                  <app-phone-input formControlName="phone" [invalid]="profileForm.get('phone')?.invalid && profileForm.get('phone')?.touched || false"></app-phone-input>
                 </div>
-                @if (profileForm.get('phone')?.invalid && profileForm.get('phone')?.touched) {
+                @if (profileForm.get('phone')?.hasError('required') && profileForm.get('phone')?.touched) {
                   <p class="text-xs text-rose-500 mt-1">Le numéro de téléphone est requis.</p>
+                }
+                @if (profileForm.get('phone')?.hasError('invalidPhone') && profileForm.get('phone')?.touched) {
+                  <p class="text-xs text-rose-500 mt-1">Le numéro de téléphone n'est pas valide pour ce pays.</p>
                 }
               </div>
             </div>

@@ -5,6 +5,7 @@ import { Product } from '../../shared/models/product.model';
 import { SectionTitle } from '../../shared/components/section-title/section-title';
 import { IconComponent } from '../../shared/icon/icon';
 import { MarketplaceService } from '../../services/marketplace.service';
+import { PhoneInputComponent } from '../../shared/components/phone-input/phone-input.component';
 
 function passwordsMatchValidator(): ValidatorFn {
   return (group: AbstractControl): ValidationErrors | null => {
@@ -24,7 +25,7 @@ register();
 @Component({
   selector: 'app-marketplace',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, SectionTitle, IconComponent],
+  imports: [CommonModule, ReactiveFormsModule, SectionTitle, IconComponent, PhoneInputComponent],
   templateUrl: './marketplace.html',
   styleUrl: './marketplace.css',
   schemas: [CUSTOM_ELEMENTS_SCHEMA]

@@ -28,6 +28,7 @@
               }
             ],
             "styles": [
+              "node_modules/intl-tel-input/dist/css/intlTelInput.css",
               "src/styles.css"
             ],
             "scripts": [],

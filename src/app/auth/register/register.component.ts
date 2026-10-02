@@ -4,10 +4,12 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { LucideEye, LucideEyeOff, LucideLoader2, LucideCheck } from '@lucide/angular';
 
+import { PhoneInputComponent } from '../../shared/components/phone-input/phone-input.component';
+
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, LucideEye, LucideEyeOff, LucideLoader2, LucideCheck],
+  imports: [ReactiveFormsModule, RouterLink, LucideEye, LucideEyeOff, LucideLoader2, LucideCheck, PhoneInputComponent],
   templateUrl: './register.component.html',
 })
 export class RegisterComponent {
@@ -23,9 +25,16 @@ export class RegisterComponent {
     email: ['', [Validators.required, Validators.email]],
     // login: ['', Validators.required],
     password: ['', [Validators.required, Validators.minLength(6)]],
-  });
+    confirmPassword: ['', Validators.required],
+  }, { validators: this.passwordMatchValidator });
+
+  passwordMatchValidator(g: FormGroup) {
+    return g.get('password')?.value === g.get('confirmPassword')?.value
+      ? null : { mismatch: true };
+  }
 
   showPassword = false;
+  showConfirmPassword = false;
   loading = false;
   errorMessage = '';
   successMessage = '';
@@ -39,6 +48,9 @@ export class RegisterComponent {
   onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      if (this.form.hasError('mismatch')) {
+        this.errorMessage = 'Le mot de passe et la confirmation ne correspondent pas.';
+      }
       return;
     }
 
@@ -46,13 +58,6 @@ export class RegisterComponent {
     this.errorMessage = '';
 
     const raw = this.form.value;
-    
-    // const firstName = (raw.firstName || '').trim();
-    // const lastName = (raw.lastName || '').trim();
-
-    // const cleanFirst = firstName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
-    // const cleanLast = lastName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
-
 
     const payload = {
       login: raw.email,
@@ -61,6 +66,7 @@ export class RegisterComponent {
       phone: raw.phone.trim(),
       email: raw.email.trim(),
       password: raw.password,
+      confirmPassword: raw.confirmPassword,
       type: 'CLIENT',
     };
 
