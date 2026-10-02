@@ -7,10 +7,14 @@ import { AlertComponent } from '../../../../../shared/components/alert/alert.com
 import { OrdreReparation } from '../../../../../shared/models';
 import { LignePiece } from '../step-pieces-mo/step-pieces-mo.component';
 
+import { FormsModule } from '@angular/forms';
+import { FournisseurService } from '../../../../fournisseurs/fournisseur.service';
+import { FournisseurModel } from '../../../../../shared/models';
+
 @Component({
   selector: 'app-step-approvisionnement',
   standalone: true,
-  imports: [CommonModule, AlertComponent],
+  imports: [CommonModule, AlertComponent, FormsModule],
   templateUrl: './step-approvisionnement.component.html'
 })
 export class StepApprovisionnementComponent implements OnInit {
@@ -18,11 +22,36 @@ export class StepApprovisionnementComponent implements OnInit {
   private router = inject(Router);
   private ordreService = inject(OrdreReparationService);
   private bdcService = inject(BonDeCommandeService);
+  private fournisseurService = inject(FournisseurService);
   private cdr = inject(ChangeDetectorRef);
 
   ordreId!: number;
   loadedOrdre: OrdreReparation | null = null;
   lignesPieces: LignePiece[] = [];
+  fournisseurs: FournisseurModel[] = [];
+  selectedFournisseurId: number | null = null;
+  showFournisseurDropdown = false;
+  fournisseurSearchQuery = '';
+
+  get filteredFournisseurs(): FournisseurModel[] {
+    if (!this.fournisseurSearchQuery) return this.fournisseurs;
+    const q = this.fournisseurSearchQuery.toLowerCase();
+    return this.fournisseurs.filter(f => 
+      (f.nomEntreprise || '').toLowerCase().includes(q) || 
+      ((f.prenom || '') + ' ' + (f.nom || '')).toLowerCase().includes(q)
+    );
+  }
+
+  get selectedFournisseurLabel(): string {
+    const f = this.fournisseurs.find(x => x.id === this.selectedFournisseurId);
+    if (!f) return 'Sélectionner un fournisseur...';
+    return f.nomEntreprise || ((f.prenom || '') + ' ' + (f.nom || ''));
+  }
+
+  selectFournisseur(f: FournisseurModel): void {
+    this.selectedFournisseurId = f.id;
+    this.showFournisseurDropdown = false;
+  }
 
   loading = true;
   saving = false;
@@ -47,6 +76,13 @@ export class StepApprovisionnementComponent implements OnInit {
     }
     this.ordreId = +idParam;
     this.loadData();
+    
+    this.fournisseurService.getAll().subscribe({
+      next: (res: any) => {
+        this.fournisseurs = (res.content || res) as FournisseurModel[];
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   loadData(): void {
@@ -62,8 +98,8 @@ export class StepApprovisionnementComponent implements OnInit {
           designationPds: l.designationPds,
           prixUnitaire: l.prix,
           stockDisponible: l.isCustom ? 0 : (l.piece?.stockMagasin ?? 0) + (l.piece?.stockAtelier ?? 0),
-          manquant: l.isCustom ? 0 : Math.max(0, l.quantite - (l.piece?.stockAtelier ?? 0)),
-          aSortirMagasin: l.isCustom ? 0 : (Math.max(0, l.quantite - (l.piece?.stockAtelier ?? 0)) > 0 ? 0 : 1)
+          manquant: l.isCustom ? 0 : Math.max(0, l.quantite - (l.piece?.stockMagasin ?? 0)),
+          aSortirMagasin: l.isCustom ? 0 : (Math.max(0, l.quantite - (l.piece?.stockMagasin ?? 0)) > 0 ? 0 : 1)
         }));
         this.loading = false;
         this.cdr.markForCheck();
@@ -82,18 +118,27 @@ export class StepApprovisionnementComponent implements OnInit {
 
   closeBDCModal(): void {
     this.showBDCModal = false;
+    this.selectedFournisseurId = null;
+    this.showFournisseurDropdown = false;
+    this.fournisseurSearchQuery = '';
   }
 
   createBonDeCommande(): void {
+    if (!this.selectedFournisseurId) {
+      this.errorMessage = 'Veuillez sélectionner un fournisseur.';
+      this.cdr.markForCheck();
+      return;
+    }
+    
     const lignes = this.rupturesOnly.map(l => ({
-      pieceId: l.piece!.id,
-      quantiteCommandee: l.manquant,
+      pieceDetacheeId: l.piece!.id,
+      quantite: l.manquant,
       prixUnitaire: l.piece!.prix || 0
     }));
 
     this.bdcSaving = true;
     this.bdcService.create({
-      fournisseurId: null as any,
+      fournisseurId: this.selectedFournisseurId,
       ordreReparationId: this.ordreId,
       lignes
     } as any).subscribe({

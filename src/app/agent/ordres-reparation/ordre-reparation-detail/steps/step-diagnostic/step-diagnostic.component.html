@@ -12,6 +12,13 @@
   <div class="space-y-6">
     <div class="flex items-center justify-between border-b border-oas-line pb-3">
       <h2 class="text-lg font-bold text-oas-ink">Étape 2 · Diagnostic technique</h2>
+      <button type="button" (click)="marquerValide()" [disabled]="saving"
+        class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-xs transition cursor-pointer flex items-center gap-1.5">
+        <span>Sauter le diagnostic</span>
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+      </button>
       <span class="text-xs text-oas-muted font-mono">{{ loadedOrdre?.numero }}</span>
     </div>
 

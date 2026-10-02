@@ -6,14 +6,14 @@
       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
       <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
     </svg>
-    <span>Chargement du devis proforma...</span>
+    <span>Chargement de la facture proforma...</span>
   </div>
 } @else {
   <div class="space-y-6">
     <!-- En-tête de l'étape -->
     <div class="flex items-center justify-between border-b border-oas-line pb-3">
       <div>
-        <h2 class="text-lg font-bold text-oas-ink">Étape 4 · Devis Proforma client</h2>
+        <h2 class="text-lg font-bold text-oas-ink">Étape 4 · Facture Proforma client</h2>
         <p class="text-xs text-oas-muted mt-0.5">Consultez le détail des articles chiffrés (pièces et main-d'œuvre) et validez l'accord du client.</p>
       </div>
       <span class="text-xs text-oas-muted font-mono bg-oas-bg px-2.5 py-1 rounded-lg border border-oas-line">
@@ -34,7 +34,7 @@
               </svg>
             </div>
             <div>
-              <span class="text-[11px] text-oas-muted font-semibold block uppercase tracking-wider">Devis Proforma</span>
+              <span class="text-[11px] text-oas-muted font-semibold block uppercase tracking-wider">Facture Proforma</span>
               <strong class="text-lg font-black text-oas-ink font-mono">{{ proformaChargee.numero }}</strong>
             </div>
           </div>
@@ -288,7 +288,7 @@
               </svg>
             </div>
             <div>
-              <p class="font-bold">Devis proforma validé par le client</p>
+              <p class="font-bold">Facture proforma validé par le client</p>
               <p class="text-xs text-emerald-600 font-normal">Toutes les conditions sont remplies pour engager les travaux ou approvisionner les pièces.</p>
             </div>
           </div>
@@ -317,6 +317,14 @@
             </div>
           </div>
           <div class="flex items-center gap-3">
+            <!-- <button type="button" (click)="actualiserProforma()" [disabled]="saving"
+              title="Actualiser le proforma avec les dernières pièces et main d'œuvre"
+              class="px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span>Actualiser</span>
+            </button> -->
             <button type="button" (click)="telechargerPdf()" [disabled]="telechargementEnCours"
               class="px-4 py-2.5 border border-oas-line hover:bg-oas-bg text-oas-ink rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer">
               <svg class="w-4 h-4 text-oas-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -358,7 +366,7 @@
             <div>
               <p class="text-sm font-bold text-amber-900">Aucune proforma générée pour le moment</p>
               <p class="text-xs text-amber-700 mt-0.5">
-                Vérifiez les articles et prestations ci-dessous issus de l'étape 3 avant de générer le devis proforma officiel.
+                Vérifiez les articles et prestations ci-dessous issus de l'étape 3 avant de générer la facture proforma officiel.
               </p>
             </div>
           </div>

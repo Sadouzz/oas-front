@@ -198,7 +198,7 @@ export class StepPiecesMoComponent implements OnInit {
 
         this.lignesPieces = Array.from(piecesMap.values()).map(lp => {
           if (!lp.isCustom && lp.piece) {
-            lp.manquant = Math.max(0, lp.quantite - (lp.piece?.stockAtelier ?? 0));
+            lp.manquant = Math.max(0, lp.quantite - (lp.piece?.stockMagasin ?? 0));
             lp.aSortirMagasin = lp.manquant > 0 ? 0 : 1;
           }
           return lp;
@@ -283,7 +283,7 @@ export class StepPiecesMoComponent implements OnInit {
     if (existing) {
       existing.quantite += this.qteAjouter;
       existing.prixUnitaire = unitPrice;
-      existing.manquant = Math.max(0, existing.quantite - (existing.piece?.stockAtelier ?? 0));
+      existing.manquant = Math.max(0, existing.quantite - (existing.piece?.stockMagasin ?? 0));
       existing.aSortirMagasin = existing.manquant > 0 ? 0 : 1;
     } else {
       this.lignesPieces.push({
@@ -292,8 +292,8 @@ export class StepPiecesMoComponent implements OnInit {
         quantite: this.qteAjouter,
         prixUnitaire: unitPrice,
         stockDisponible: (p.stockMagasin ?? 0) + (p.stockAtelier ?? 0),
-        manquant: Math.max(0, this.qteAjouter - (p.stockAtelier ?? 0)),
-        aSortirMagasin: Math.max(0, this.qteAjouter - (p.stockAtelier ?? 0)) > 0 ? 0 : 1
+        manquant: Math.max(0, this.qteAjouter - (p.stockMagasin ?? 0)),
+        aSortirMagasin: Math.max(0, this.qteAjouter - (p.stockMagasin ?? 0)) > 0 ? 0 : 1
       });
     }
 
@@ -343,7 +343,7 @@ export class StepPiecesMoComponent implements OnInit {
 
   onPieceQuantiteChange(l: LignePiece): void {
     if (!l.isCustom && l.piece) {
-      l.manquant = Math.max(0, (l.quantite || 0) - (l.piece?.stockAtelier ?? 0));
+      l.manquant = Math.max(0, (l.quantite || 0) - (l.piece?.stockMagasin ?? 0));
       l.aSortirMagasin = l.manquant > 0 ? 0 : 1;
     }
     this.cdr.markForCheck();

@@ -41,14 +41,45 @@
   <!-- Modal Bon de Commande pièces manquantes -->
   @if (showBDCModal) {
     <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
-        <div class="bg-amber-600 px-6 py-4 flex items-center justify-between text-white">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-visible">
+        <div class="bg-amber-600 px-6 py-4 flex items-center justify-between text-white rounded-t-2xl">
           <h3 class="font-bold text-sm">Génération du Bon de Commande</h3>
           <button (click)="closeBDCModal()" class="p-1 hover:bg-white/20 rounded-lg">✕</button>
         </div>
         <div class="p-6 space-y-4">
           <p class="text-xs text-oas-muted">Un bon de commande sera créé automatiquement pour approvisionner les pièces manquantes.</p>
-          <div class="flex gap-3 pt-2">
+          
+          <div class="mt-4 relative">
+            <label class="block text-xs font-bold text-oas-ink mb-1.5">Fournisseur <span class="text-red-500">*</span></label>
+            <div 
+               class="w-full h-10 px-3 rounded-xl border border-oas-line text-sm bg-white cursor-pointer flex items-center justify-between hover:border-amber-500 transition-colors"
+               (click)="showFournisseurDropdown = !showFournisseurDropdown">
+              <span [class.text-oas-muted]="!selectedFournisseurId" class="truncate">{{ selectedFournisseurLabel }}</span>
+              <svg class="w-4 h-4 text-oas-muted flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </div>
+            
+            @if (showFournisseurDropdown) {
+              <div class="absolute z-10 w-full mt-1 bg-white border border-oas-line rounded-xl shadow-lg flex flex-col" style="max-height: 240px;">
+                <div class="p-2 border-b border-oas-line sticky top-0 bg-white rounded-t-xl z-20">
+                  <input type="text" [(ngModel)]="fournisseurSearchQuery" 
+                    class="w-full px-3 py-2 rounded-lg border border-oas-line text-xs focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500" 
+                    placeholder="Rechercher un fournisseur..." autofocus>
+                </div>
+                <div class="overflow-y-auto p-1 flex-1">
+                  @for (f of filteredFournisseurs; track f.id) {
+                    <div (click)="selectFournisseur(f)" class="px-3 py-2.5 hover:bg-amber-50 rounded-lg cursor-pointer text-sm" [class.bg-amber-50]="f.id === selectedFournisseurId">
+                      {{ f.nomEntreprise || (f.prenom + ' ' + f.nom) }}
+                    </div>
+                  }
+                  @if (filteredFournisseurs.length === 0) {
+                    <div class="px-3 py-3 text-xs text-oas-muted italic text-center">Aucun fournisseur trouvé.</div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="flex gap-3 pt-4">
             <button (click)="closeBDCModal()" class="flex-1 py-2.5 rounded-xl border border-oas-line text-sm font-semibold">Annuler</button>
             <button (click)="createBonDeCommande()" [disabled]="bdcSaving" class="flex-1 py-2.5 rounded-xl bg-amber-600 text-white text-sm font-bold">
               {{ bdcSaving ? 'Création...' : 'Confirmer la commande' }}

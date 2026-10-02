@@ -76,8 +76,12 @@ export class StepProformaComponent implements OnInit {
     this.proformaService.getByOrdreReparationId(this.ordreId).subscribe({
       next: (p) => {
         this.proformaChargee = p;
-        this.loading = false;
-        this.cdr.markForCheck();
+        if (!this.isProformaValide) {
+          this.actualiserProformaSilently();
+        } else {
+          this.loading = false;
+          this.cdr.markForCheck();
+        }
       },
       error: () => {
         this.proformaChargee = null;
@@ -87,9 +91,29 @@ export class StepProformaComponent implements OnInit {
     });
   }
 
-  genererProforma(): void {
-    if (!this.loadedOrdre) return;
-    this.saving = true;
+  private actualiserProformaSilently(): void {
+    const payload = this.buildPayload();
+    if (!payload || !this.proformaChargee?.id) {
+      this.loading = false;
+      this.cdr.markForCheck();
+      return;
+    }
+
+    this.proformaService.update(this.proformaChargee.id, payload).subscribe({
+      next: (p) => {
+        this.proformaChargee = p;
+        this.loading = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.loading = false;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  private buildPayload(): ProformaRequest | null {
+    if (!this.loadedOrdre) return null;
 
     const vehicule = this.loadedOrdre.vehicule;
     const client = vehicule?.client;
@@ -97,13 +121,12 @@ export class StepProformaComponent implements OnInit {
     const kilometrage = vehicule?.kilometrage ?? (this.loadedOrdre?.diagnostic?.kilometrage ?? 0);
 
     if (!clientId) {
-      this.saving = false;
       this.errorMessage = 'Impossible de générer le proforma : aucun client associé au véhicule.';
       this.cdr.markForCheck();
-      return;
+      return null;
     }
 
-    const payload: ProformaRequest = {
+    return {
       clientId,
       ordreReparationId: this.ordreId,
       vehiculeId: vehicule?.id || null,
@@ -156,7 +179,13 @@ export class StepProformaComponent implements OnInit {
         };
       })
     };
+  }
 
+  genererProforma(): void {
+    const payload = this.buildPayload();
+    if (!payload) return;
+    
+    this.saving = true;
     this.proformaService.create(payload).subscribe({
       next: (p) => {
         this.saving = false;
@@ -167,6 +196,27 @@ export class StepProformaComponent implements OnInit {
       error: (err) => {
         this.saving = false;
         this.errorMessage = err.error?.message || 'Erreur lors de la génération de la proforma.';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  actualiserProforma(): void {
+    if (!this.proformaChargee?.id) return;
+    const payload = this.buildPayload();
+    if (!payload) return;
+
+    this.saving = true;
+    this.proformaService.update(this.proformaChargee.id, payload).subscribe({
+      next: (p) => {
+        this.saving = false;
+        this.proformaChargee = p;
+        this.successMessage = 'Proforma actualisée avec succès.';
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.saving = false;
+        this.errorMessage = err.error?.message || 'Erreur lors de l\'actualisation de la proforma.';
         this.cdr.markForCheck();
       }
     });

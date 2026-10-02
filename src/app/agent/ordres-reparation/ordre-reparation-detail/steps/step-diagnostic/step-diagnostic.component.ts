@@ -640,10 +640,6 @@ export class StepDiagnosticComponent implements OnInit {
   }
 
   marquerTermine(): void {
-    if (this.selectedTechniciens.length === 0) {
-      this.notifyError('Veuillez affecter au moins un technicien avant de terminer le diagnostic.');
-      return;
-    }
     this.statutDiagnostic = 'TERMINE';
     if (this.currentDiagnostic?.id) {
       this.diagnosticService.updateStatut(this.currentDiagnostic.id, 'TERMINE').subscribe({
@@ -663,10 +659,6 @@ export class StepDiagnosticComponent implements OnInit {
   }
 
   marquerValide(): void {
-    if (this.selectedTechniciens.length === 0) {
-      this.notifyError('Veuillez affecter au moins un technicien avant de valider le diagnostic.');
-      return;
-    }
     this.statutDiagnostic = 'VALIDE';
     this.saving = true;
 
