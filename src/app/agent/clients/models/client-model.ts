@@ -11,6 +11,13 @@ export interface ClientModel {
   vehiculeNumbers?: number;
   type?: string;
   role?: string;
+  clientFidele?: boolean;
+  montantRemise?: number | null;
+  montantPlafond?: number | null;
+  echeance?: number | null;
+  ninea?: string | null;
+  rccm?: string | null;
+  rib?: string | null;
 }
 
 export interface ClientListResponse {
@@ -24,6 +31,13 @@ export interface ClientListResponse {
     enabled: boolean;
     createdAt: string;
     vehiculeNumbers?: number;
+    clientFidele?: boolean;
+    montantRemise?: number | null;
+    montantPlafond?: number | null;
+    echeance?: number | null;
+    ninea?: string | null;
+    rccm?: string | null;
+    rib?: string | null;
 }
 
 export interface CreateClientPayload {
@@ -42,4 +56,13 @@ export interface UpdateClientPayload {
   lastName?: string;
   email?: string;
   phone?: string;
+}
+
+export interface FidelePayload {
+  montantRemise?: number | null;
+  montantPlafond?: number | null;
+  echeance?: number | null;
+  ninea?: string | null;
+  rccm?: string | null;
+  rib?: string | null;
 }

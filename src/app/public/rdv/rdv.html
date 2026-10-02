@@ -338,17 +338,17 @@
                 </div>
                 
               <div class="form-group">
-                <label for="rdv-vehiculeMatricule">Matricule du vehicule<span class="text-rose-500">*</span></label>
+                <label for="rdv-vehiculeImmatriculation">Immatriculation du véhicule <span class="text-rose-500">*</span></label>
                 <div class="input-icon">
                   <input
-                    id="rdv-vehiculeMatricule"
+                    id="rdv-vehiculeImmatriculation"
                     type="text"
-                    formControlName="matricule"
-                    placeholder="ex: KJSJ4.."
-                    [class.is-invalid]="rdvWhatsappForm.get('matricule')?.invalid && rdvWhatsappForm.get('matricule')?.touched">
+                    formControlName="immatriculation"
+                    placeholder="ex: AA-123-AA"
+                    [class.is-invalid]="rdvWhatsappForm.get('immatriculation')?.invalid && rdvWhatsappForm.get('immatriculation')?.touched">
                   </div>
-                  @if(rdvWhatsappForm.get('matricule')?.invalid && rdvWhatsappForm.get('matricule')?.touched){
-                    <span class="form-error">Matricule requis.</span>
+                  @if(rdvWhatsappForm.get('immatriculation')?.invalid && rdvWhatsappForm.get('immatriculation')?.touched){
+                    <span class="form-error">L'immatriculation est requise.</span>
                   }
                 </div>
 

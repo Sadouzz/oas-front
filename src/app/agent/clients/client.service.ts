@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ClientModel, ClientListResponse, CreateClientPayload, UpdateClientPayload } from './models/client-model';
+import { ClientModel, ClientListResponse, CreateClientPayload, UpdateClientPayload, FidelePayload } from './models/client-model';
 import { PageParams } from '../../shared/models';
 
 @Injectable({ providedIn: 'root' })
@@ -56,5 +56,13 @@ export class ClientService {
 
   delete(id: number): Observable<any> {
     return this.http.delete(`${this.api}/${id}`, { responseType: 'text' as 'json' });
+  }
+
+  passerFidele(id: number, payload: FidelePayload): Observable<ClientModel> {
+    return this.http.patch<ClientModel>(`${this.api}/${id}/fidele`, payload);
+  }
+
+  retirerFidele(id: number): Observable<any> {
+    return this.http.delete(`${this.api}/${id}/fidele`, { responseType: 'text' as 'json' });
   }
 }

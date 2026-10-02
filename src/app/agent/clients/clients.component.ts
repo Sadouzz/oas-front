@@ -10,12 +10,12 @@ import { ClientModel, ClientListResponse, VehiculeModel, extractContent, PagePar
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
-import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, LucideArchiveRestore, LucideX, LucideCheck, LucideUser, LucideArrowRight } from '@lucide/angular';
+import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, LucideArchiveRestore, LucideX, LucideCheck, LucideUser, LucideArrowRight, LucideAward, LucideShieldOff, LucideShieldCheck } from '@lucide/angular';
 
 @Component({
   selector: 'app-clients',
   standalone: true,
-  imports: [ReactiveFormsModule, NgClass, DatePipe, DecimalPipe, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, LucideArchiveRestore, LucideX, LucideCheck, LucideUser],
+  imports: [ReactiveFormsModule, NgClass, DatePipe, DecimalPipe, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, LucideArchiveRestore, LucideX, LucideCheck, LucideUser, LucideAward, LucideShieldOff],
   templateUrl: './clients.component.html',
 })
 export class ClientsComponent extends BasePaginatedComponent implements OnInit {
@@ -41,6 +41,10 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   createStep = 1;
   createdClientId: number | null = null;
   addingVehicle = false;
+
+  // Fidele modal
+  showFideleModal = false;
+  fideleClient: ClientListResponse | null = null;
 
   // Risk modal (hard delete)
   showRiskModal = false;
@@ -81,6 +85,15 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
     lastName: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
     phone: ['', Validators.required],
+  });
+
+  fideleForm = this.fb.group({
+    montantRemise: [null as number | null],
+    montantPlafond: [null as number | null],
+    echeance: [null as number | null],
+    ninea: [''],
+    rccm: [''],
+    rib: [''],
   });
 
   ngOnInit() {
@@ -446,6 +459,64 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
     });
   }
 
+  // ── FIDELITE ───────────────────────────────────────────────────
+  openFideleModal(client: ClientListResponse) {
+    this.fideleClient = client;
+    this.fideleForm.patchValue({
+      montantRemise: client.montantRemise ?? 0,
+      montantPlafond: client.montantPlafond ?? null,
+      echeance: client.echeance ?? null,
+      ninea: client.ninea ?? '',
+      rccm: client.rccm ?? '',
+      rib: client.rib ?? ''
+    });
+    this.errorMessage = '';
+    this.showFideleModal = true;
+  }
+
+  closeFideleModal() {
+    this.showFideleModal = false;
+    this.fideleClient = null;
+    this.fideleForm.reset();
+    this.errorMessage = '';
+  }
+
+  saveFidele() {
+    if (this.fideleForm.invalid || !this.fideleClient || this.saving) return;
+    this.saving = true;
+    const raw = this.fideleForm.getRawValue();
+    this.clientService.passerFidele(this.fideleClient.id, raw).subscribe({
+      next: (res) => {
+        this.saving = false;
+        this.showSuccess(`Client ${this.fideleClient!.firstName} est maintenant fidèle !`);
+        this.closeFideleModal();
+        this.loadAll();
+      },
+      error: (err: any) => {
+        this.saving = false;
+        this.errorMessage = err.error?.message || 'Erreur lors de la mise à jour de fidélité.';
+      }
+    });
+  }
+
+  retirerFidele(client: ClientListResponse) {
+    if (this.saving) return;
+    if (!confirm(`Voulez-vous retirer le statut fidèle de ${client.firstName} ${client.lastName} ?`)) return;
+    
+    this.saving = true;
+    this.clientService.retirerFidele(client.id).subscribe({
+      next: () => {
+        this.saving = false;
+        this.showSuccess(`Le statut fidèle a été retiré.`);
+        this.loadAll();
+      },
+      error: (err: any) => {
+        this.saving = false;
+        this.errorMessage = err.error?.message || 'Erreur lors du retrait du statut.';
+      }
+    });
+  }
+
   parseError(err: any): string {
     const raw: string = err?.error?.message ?? (typeof err?.error === 'string' ? err.error : '');
     if (!raw) return 'Une erreur est survenue.';
@@ -472,4 +543,5 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   get fCreate() { return this.createForm.controls; }
   get fEdit() { return this.editForm.controls; }
   get fVehicle() { return this.vehicleForm.controls; }
+  get fFidele() { return this.fideleForm.controls; }
 }

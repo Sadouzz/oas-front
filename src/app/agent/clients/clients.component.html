@@ -114,6 +114,19 @@
                               class="p-1.5 rounded-lg hover:bg-oas-info-bg text-oas-muted hover:text-oas-info transition cursor-pointer">
                         <svg lucidePencil class="w-4 h-4"></svg>
                       </button>
+                      @if (!client.clientFidele) {
+                        <button (click)="openFideleModal(client)"
+                                class="flex items-center gap-1 px-2.5 py-1 rounded-lg border border-orange-200 hover:bg-orange-50 text-orange-500 transition cursor-pointer text-xs font-bold mr-1">
+                          <svg lucideAward class="w-3.5 h-3.5"></svg>
+                          Rendre Fidèle
+                        </button>
+                      } @else {
+                        <button (click)="openFideleModal(client)"
+                                class="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-orange-100 border border-orange-200 text-orange-600 hover:bg-orange-200 transition cursor-pointer text-xs font-bold mr-1">
+                          <svg lucideAward class="w-3.5 h-3.5"></svg>
+                          Fidèle
+                        </button>
+                      }
                       @if (client.enabled) {
                         <button (click)="archive(client)" title="Archiver"
                                 class="p-1.5 rounded-lg hover:bg-oas-warn-bg text-oas-muted hover:text-oas-warn transition cursor-pointer">
@@ -237,6 +250,48 @@
                 <p class="text-sm font-semibold text-oas-ink">&#64;{{ selectedClient.username }}</p>
               </div>
             </div>
+            <div class="pt-4 border-t border-oas-line space-y-3">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm font-semibold text-oas-ink">Statut de Fidélité</p>
+                  <p class="text-xs text-oas-muted mt-0.5">Avantages et remises accordés</p>
+                </div>
+                @if (selectedClient.clientFidele) {
+                  <span class="inline-flex items-center gap-1 text-xs font-bold text-orange-500 bg-orange-50 px-2 py-1 rounded-md border border-orange-100">
+                    <svg lucideAward class="w-3.5 h-3.5"></svg>Fidèle
+                  </span>
+                } @else {
+                  <span class="inline-flex items-center gap-1 text-xs font-bold text-oas-muted bg-oas-bg px-2 py-1 rounded-md border border-oas-line">
+                    Standard
+                  </span>
+                }
+              </div>
+              @if (selectedClient.clientFidele) {
+                <div class="grid grid-cols-2 gap-3 mb-2">
+                  <div class="bg-oas-bg p-2 rounded border border-oas-line">
+                    <p class="text-[10px] text-oas-muted uppercase">Remise</p>
+                    <p class="text-sm font-semibold text-oas-ink">{{ selectedClient.montantRemise || 0 }}%</p>
+                  </div>
+                  <div class="bg-oas-bg p-2 rounded border border-oas-line">
+                    <p class="text-[10px] text-oas-muted uppercase">Plafond Crédit</p>
+                    <p class="text-sm font-semibold text-oas-ink">{{ selectedClient.montantPlafond ? (selectedClient.montantPlafond | number) + ' F' : 'Illimité' }}</p>
+                  </div>
+                </div>
+                <div class="flex gap-2">
+                  <button (click)="openFideleModal(selectedClient)" class="flex-1 border border-orange-200 text-orange-500 hover:bg-orange-50 text-xs font-bold px-3 py-2 rounded-lg transition cursor-pointer text-center">
+                    Modifier avantages
+                  </button>
+                  <button (click)="retirerFidele(selectedClient)" title="Retirer" class="p-2 border border-oas-bad/40 text-oas-bad hover:bg-oas-bad-bg rounded-lg transition cursor-pointer">
+                    <svg lucideShieldOff class="w-4 h-4"></svg>
+                  </button>
+                </div>
+              } @else {
+                <button (click)="openFideleModal(selectedClient)" class="w-full flex items-center justify-center gap-1.5 bg-orange-50 text-orange-600 hover:bg-orange-100 border border-orange-200 text-xs font-bold px-3 py-2.5 rounded-lg transition cursor-pointer">
+                  <svg lucideAward class="w-3.5 h-3.5"></svg>Créer un compte fidèle
+                </button>
+              }
+            </div>
+            
             <div class="pt-4 border-t border-oas-line flex items-center justify-between">
               <div>
                 <p class="text-sm font-semibold text-oas-ink">Zone de danger</p>
@@ -782,6 +837,77 @@
         }
       </div>
 
+    </div>
+  </div>
+}
+
+<!-- Modal Fidele -->
+@if (showFideleModal) {
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line sticky top-0 bg-white">
+        <h3 class="font-bold text-oas-ink flex items-center gap-2">
+          <svg lucideAward class="w-5 h-5 text-orange-500"></svg>
+          Paramètres Client Fidèle
+        </h3>
+        <button (click)="closeFideleModal()" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted transition cursor-pointer">
+          <svg lucideX class="w-5 h-5"></svg>
+        </button>
+      </div>
+      <form [formGroup]="fideleForm" (ngSubmit)="saveFidele()" class="px-6 py-5 space-y-4">
+        @if (errorMessage) {
+          <div class="px-3 py-2 bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-xs rounded-lg">{{ errorMessage }}</div>
+        }
+        
+        <div>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Remise client (%)</label>
+          <input type="number" formControlName="montantRemise" placeholder="0" min="0" max="100"
+                 class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition"/>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1">Plafond Crédit max</label>
+            <input type="number" formControlName="montantPlafond" placeholder="ex: 5000000" min="0"
+                   class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition"/>
+            <p class="text-[10px] text-oas-muted mt-1">Laissez vide si illimité</p>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1">Échéance (jours)</label>
+            <input type="number" formControlName="echeance" placeholder="ex: 30" min="0"
+                   class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition"/>
+          </div>
+        </div>
+        
+        <div class="pt-3 border-t border-oas-line space-y-4">
+          <p class="text-sm font-bold text-oas-ink">Documents professionnels</p>
+          
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1">NINEA</label>
+            <input type="text" formControlName="ninea" placeholder="Numéro ou URL"
+                   class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition"/>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1">RCCM</label>
+            <input type="text" formControlName="rccm" placeholder="Numéro ou URL"
+                   class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition"/>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1">RIB (PDF/Photo URL)</label>
+            <input type="text" formControlName="rib" placeholder="URL du document uploadé"
+                   class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition"/>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-4">
+          <button type="button" (click)="closeFideleModal()"
+                  class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-lg border border-oas-line flex items-center transition cursor-pointer text-sm">Annuler</button>
+          <button type="submit" [disabled]="saving"
+                  class="bg-orange-500 hover:bg-orange-600 text-white font-bold px-4 h-10 rounded-lg flex items-center transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm">
+            {{ saving ? 'Enregistrement...' : (fideleClient?.clientFidele ? 'Mettre à jour' : 'Activer Client Fidèle') }}
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 }
