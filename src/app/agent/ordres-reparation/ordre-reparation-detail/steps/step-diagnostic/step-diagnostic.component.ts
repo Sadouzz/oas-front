@@ -200,7 +200,7 @@ export class StepDiagnosticComponent implements OnInit {
         return fullName.includes(term) || matricule.includes(term) || phone.includes(term) || email.includes(term);
       });
     }
-    
+
     return list;
   }
 
@@ -355,11 +355,11 @@ export class StepDiagnosticComponent implements OnInit {
                   this.statutDiagnostic = created.statut || 'EN_ATTENTE';
                   this.cdr.markForCheck();
                 },
-                error: () => {}
+                error: () => { }
               });
             }
           },
-          error: () => {}
+          error: () => { }
         });
 
         this.loadPiecesJointes();
@@ -613,7 +613,7 @@ export class StepDiagnosticComponent implements OnInit {
       next: (diag) => {
         if (diag) this.currentDiagnostic = diag;
       },
-      error: () => {}
+      error: () => { }
     });
   }
 
@@ -674,8 +674,8 @@ export class StepDiagnosticComponent implements OnInit {
       next: (diag) => {
         this.currentDiagnostic = diag;
         this.ordreService.updateStatut(this.ordreId, 'PIECES_MO').subscribe({
-          next: () => {},
-          error: () => {}
+          next: () => { },
+          error: () => { }
         });
         this.saving = false;
         this.notify('Diagnostic validé avec succès ! Le bouton d’étape suivante est maintenant débloqué.');
@@ -691,8 +691,8 @@ export class StepDiagnosticComponent implements OnInit {
         }).subscribe({
           next: () => {
             this.ordreService.updateStatut(this.ordreId, 'PIECES_MO').subscribe({
-              next: () => {},
-              error: () => {}
+              next: () => { },
+              error: () => { }
             });
             this.saving = false;
             this.notify('Diagnostic validé avec succès ! Le bouton d’étape suivante est maintenant débloqué.');
