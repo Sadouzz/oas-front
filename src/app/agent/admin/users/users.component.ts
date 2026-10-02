@@ -7,7 +7,7 @@ import { AlertComponent } from '../../../shared/components/alert/alert.component
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
 import { BasePaginatedComponent } from '../../../shared/components/base-paginated.component';
 import { PhoneInputComponent } from '../../../shared/components/phone-input/phone-input.component';
-import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideUser, LucideCheck, LucideArchive, LucideLoader2, LucideArchiveRestore, LucideUsers } from '@lucide/angular';
+import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideUser, LucideCheck, LucideArchive, LucideLoader2, LucideArchiveRestore, LucideUsers, LucideEye, LucideEyeOff } from '@lucide/angular';
 import { AuthService } from '../../../core/services/auth.service';
 
 const ROLES = ['SUPER_AGENT', 'MASTER', 'AGENT', 'CHEF_ATELIER', 'AGENT_MAGASIN'] as const;
@@ -23,7 +23,7 @@ const ROLE_PREFIX: Record<string, string> = {
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent, PhoneInputComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideArchive, LucideLoader2, LucideArchiveRestore, LucideUsers],
+  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent, PhoneInputComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideArchive, LucideLoader2, LucideArchiveRestore, LucideUsers, LucideEye, LucideEyeOff],
   templateUrl: './users.component.html',
 })
 export class UsersComponent extends BasePaginatedComponent implements OnInit {
@@ -47,6 +47,9 @@ export class UsersComponent extends BasePaginatedComponent implements OnInit {
   showModal = false;
   isNew = false;
   editingId: number | null = null;
+
+  showPassword = false;
+  showConfirmPassword = false;
 
   readonly roles = ROLES;
 

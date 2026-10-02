@@ -11,12 +11,12 @@ import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 import { PhoneInputComponent } from '../../shared/components/phone-input/phone-input.component';
-import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, LucideArchiveRestore, LucideX, LucideCheck, LucideUser, LucideArrowRight } from '@lucide/angular';
+import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, LucideArchiveRestore, LucideX, LucideCheck, LucideUser, LucideArrowRight, LucideEye, LucideEyeOff } from '@lucide/angular';
 
 @Component({
   selector: 'app-clients',
   standalone: true,
-  imports: [ReactiveFormsModule, NgClass, DatePipe, DecimalPipe, AlertComponent, PaginationComponent, PhoneInputComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, LucideArchiveRestore, LucideX, LucideCheck, LucideUser],
+  imports: [ReactiveFormsModule, NgClass, DatePipe, DecimalPipe, AlertComponent, PaginationComponent, PhoneInputComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, LucideArchiveRestore, LucideX, LucideCheck, LucideUser, LucideEye, LucideEyeOff],
   templateUrl: './clients.component.html',
 })
 export class ClientsComponent extends BasePaginatedComponent implements OnInit {
@@ -43,9 +43,13 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   createdClientId: number | null = null;
   addingVehicle = false;
 
+  showPassword = false;
+  showConfirmPassword = false;
+
   // Fidele modal
   showFideleModal = false;
   fideleClient: ClientListResponse | null = null;
+  
 
   // Risk modal (hard delete)
   showRiskModal = false;
@@ -68,7 +72,7 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
     lastName: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
     phone: ['', Validators.required],
-    username: ['', Validators.required],
+    username: [''],
     password: ['', Validators.required],
     confirmPassword: ['', Validators.required],
   });
@@ -341,6 +345,14 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   }
 
   saveCreate() {
+    const fName = this.createForm.get('firstName')?.value || '';
+    const lName = this.createForm.get('lastName')?.value || '';
+    if (!this.createForm.get('username')?.value && fName && lName) {
+      let generated = `${fName.charAt(0).toLowerCase()}${lName.toLowerCase()}`.replace(/[^a-z0-9]/g, '');
+      generated += Math.floor(100 + Math.random() * 900);
+      this.createForm.patchValue({ username: generated });
+    }
+
     if (this.createForm.invalid || this.saving) {
       this.createForm.markAllAsTouched();
       return;
