@@ -76,8 +76,8 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
   ngOnInit() {
     this.loadData();
     forkJoin({
-      //clients: this.clientService.getAll(),
-      //fiches: this.ficheService.getAll(),
+      clients: this.clientService.getAll(),
+      fiches: this.ficheService.getAll(),
     }).subscribe({
       next: ({ clients, fiches }) => {
         this.clients = extractContent<UserModel>(clients as any).filter(c => c.enabled);

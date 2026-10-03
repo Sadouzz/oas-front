@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { OrdreReparation, OrdreReparationRequest, StatutOrdre, PieceJointeDiagnostic, TypePieceJointeDiagnostic, RemarqueDiagnostic, PageParams } from '../../shared/models';
 
@@ -40,8 +41,8 @@ export class OrdreReparationService {
     return this.http.post<OrdreReparation>(`${this.api}/create`, data);
   }
 
-  update(id: number, data: OrdreReparationRequest): Observable<OrdreReparation> {
-    return this.http.put<OrdreReparation>(`${this.api}/${id}`, data);
+  update(id: number, data: OrdreReparationRequest): Observable<void> {
+    return this.http.put(`${this.api}/${id}`, data, { responseType: 'text' }).pipe(map(() => void 0));
   }
 
   delete(id: number): Observable<string> {
@@ -64,8 +65,8 @@ export class OrdreReparationService {
     return this.http.delete(`${this.api}/${ordreId}/techniciens-reparation/${technicienId}`, { responseType: 'text' as 'json' });
   }
 
-  updateStatut(ordreId: number, statut: StatutOrdre): Observable<OrdreReparation> {
-    return this.http.patch<OrdreReparation>(`${this.api}/${ordreId}/statut`, { statut }, { params: { statut } });
+  updateStatut(ordreId: number, statut: StatutOrdre): Observable<void> {
+    return this.http.patch(`${this.api}/${ordreId}/statut`, { statut }, { params: { statut }, responseType: 'text' }).pipe(map(() => void 0));
   }
 
   // ─── Pièces jointes de diagnostic ─────────────────────
