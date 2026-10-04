@@ -26,11 +26,16 @@ export interface FicheAtelierFullConfig {
 }
 
 export const DEFAULT_LIGNES_RECEPTION: string[] = [
-  'Carrosserie',
-  'Intérieur / Habitacle',
-  'Vitrage / Pare-brise',
-  'Eclairage',
-  'Accessoires (Cric, roue de secours...)'
+  'Voyants allumés',
+  'Climatisation',
+  'Phares',
+  'Feux',
+  'Poste radio',
+  'Rétroviseurs',
+  'Klaxon',
+  'Contrôle des lève-vitres',
+  'État du pare-brise',
+  'Lunette arrière'
 ];
 
 export const DEFAULT_RUBRIQUES_DEFAUTS: string[] = [
@@ -140,4 +145,3 @@ export interface FicheAtelierDetailsResponse {
 }
 
 export type FicheAtelierResponse = FicheAtelierDetailsResponse;
-
