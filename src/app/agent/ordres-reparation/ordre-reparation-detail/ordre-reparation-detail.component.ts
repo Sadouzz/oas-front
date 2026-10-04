@@ -67,9 +67,8 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
       if (this.activeChild) {
         return !this.activeChild.hasAtLeastOneItem;
       }
-      const nbPieces = this.loadedOrdre?.lignesOrdreReparationPieces?.length ?? 0;
-      const nbMO = this.loadedOrdre?.lignesOrdreReparationMainDoeuvres?.length ?? 0;
-      return (nbPieces === 0 && nbMO === 0);
+      // On utilise le flag hasPiecesMo du résumé (si renvoyé par le backend)
+      return !(this.loadedOrdre?.hasPiecesMo);
     }
     if (this.currentStep === 4) {
       return !this.activeChild?.isProformaValide;
@@ -174,8 +173,8 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
 
   loadOrdreSilently(): void {
     if (!this.ordreId) return;
-    this.service.getById(this.ordreId).subscribe({
-      next: (o: OrdreReparation) => {
+    this.service.getSummary(this.ordreId).subscribe({
+      next: (o: any) => {
         this.loadedOrdre = o;
         this.cdr.markForCheck();
       }
@@ -186,8 +185,8 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
 
   loadOrdre(): void {
     this.loading = true;
-    this.service.getById(this.ordreId).subscribe({
-      next: (o: OrdreReparation) => {
+    this.service.getSummary(this.ordreId).subscribe({
+      next: (o: any) => {
         this.loadedOrdre = o;
         this.selectedVehicule = o.vehicule as any;
 

@@ -22,6 +22,7 @@ import {
   CloudinaryUploadResult,
   extractContent
 } from '../../../../../shared/models';
+import { StepDiagnosticResponseDto } from '../../../models/responses/step-diagnostic-response.dto';
 
 export const SPECIALITES_TECHNICIEN: { value: Specialite; label: string }[] = [
   { value: 'MECANIQUE_GENERALE', label: 'Mécanique générale' },
@@ -60,8 +61,8 @@ export class StepDiagnosticComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
 
   ordreId!: number;
-  loadedOrdre: OrdreReparation | null = null;
-  currentDiagnostic: DiagnosticResponse | null = null;
+  loadedOrdre: StepDiagnosticResponseDto | null = null;
+  currentDiagnostic: any = null;
 
   loading = true;
   saving = false;
@@ -215,7 +216,7 @@ export class StepDiagnosticComponent implements OnInit {
           this.knownTechniciensMap.set(id, fromAll);
           return fromAll;
         }
-        const fromOrdre = this.loadedOrdre?.techniciens?.find(t => t.id === id);
+        const fromOrdre = this.loadedOrdre?.techniciensAssocies?.find(t => t.id === id);
         if (fromOrdre) {
           this.knownTechniciensMap.set(id, fromOrdre);
           return fromOrdre;
@@ -295,11 +296,11 @@ export class StepDiagnosticComponent implements OnInit {
   }
 
   loadOrdre(): void {
-    this.ordreService.getById(this.ordreId).subscribe({
-      next: (o: OrdreReparation) => {
+    this.ordreService.getStepDiagnostic(this.ordreId).subscribe({
+      next: (o: StepDiagnosticResponseDto) => {
         this.loadedOrdre = o;
-        (o.techniciens || []).forEach(t => this.knownTechniciensMap.set(t.id, t));
-        this.selectedTechniciens = (o.techniciens || []).map(t => t.id);
+        (o.techniciensAssocies || []).forEach(t => this.knownTechniciensMap.set(t.id, t));
+        this.selectedTechniciens = (o.techniciensAssocies || []).map(t => t.id);
 
         const pannesDecomp = this.decomposeToCheckboxes(o.listeDefauts ?? '', PANNES_FREQUENTES);
         this.selectedPannes = pannesDecomp.selected;
@@ -315,55 +316,31 @@ export class StepDiagnosticComponent implements OnInit {
           this.statutDiagnostic = this.selectedTechniciens.length > 0 ? 'EN_COURS' : 'EN_ATTENTE';
         }
 
-        // Récupère les données depuis le contrôleur dédié /api/diagnostics/ordre-reparation/{id}
-        this.diagnosticService.getByOrdreReparationId(this.ordreId).subscribe({
-          next: (diag) => {
-            if (diag) {
-              this.currentDiagnostic = diag;
-              if (diag.statut) {
-                this.statutDiagnostic = diag.statut;
-              } else {
-                this.statutDiagnostic = this.selectedTechniciens.length > 0 ? 'EN_COURS' : 'EN_ATTENTE';
-              }
-              if (diag.technicienIds && diag.technicienIds.length > 0) {
-                this.selectedTechniciens = [...diag.technicienIds];
-              } else if (diag.technicienId && !this.selectedTechniciens.includes(diag.technicienId)) {
-                this.selectedTechniciens.push(diag.technicienId);
-              }
-              if (diag.pannesDetectees) {
-                const p = this.decomposeToCheckboxes(diag.pannesDetectees, PANNES_FREQUENTES);
-                this.selectedPannes = p.selected;
-                this.autrePannes = p.autre;
-                this.showAutrePannes = this.autrePannes.length > 0;
-              }
-              if (diag.piecesJointes && diag.piecesJointes.length > 0) {
-                this.piecesJointesDiagnostic = diag.piecesJointes;
-              }
-              if (diag.remarques && diag.remarques.length > 0) {
-                this.remarquesDiagnostic = diag.remarques;
-              }
-              this.cdr.markForCheck();
-            } else {
-              // Si aucun diagnostic n'existe encore pour cet OR, on le crée en statut 'EN_ATTENTE'
-              this.diagnosticService.create({
-                ordreReparationId: this.ordreId,
-                statut: 'EN_ATTENTE',
-                pannesDetectees: o.listeDefauts || o.descriptionTravaux
-              }).subscribe({
-                next: (created) => {
-                  this.currentDiagnostic = created;
-                  this.statutDiagnostic = created.statut || 'EN_ATTENTE';
-                  this.cdr.markForCheck();
-                },
-                error: () => { }
-              });
-            }
-          },
-          error: () => { }
-        });
-
-        this.loadPiecesJointes();
-        this.loadRemarques();
+        // On utilise directement les infos du DTO renvoyé par le backend
+        if (o.diagnostic) {
+          this.currentDiagnostic = o.diagnostic;
+          
+          if (o.diagnostic.statut) {
+            this.statutDiagnostic = o.diagnostic.statut;
+          }
+          if (o.diagnostic.pannesDetectees) {
+            const p = this.decomposeToCheckboxes(o.diagnostic.pannesDetectees, PANNES_FREQUENTES);
+            this.selectedPannes = p.selected;
+            this.autrePannes = p.autre;
+            this.showAutrePannes = this.autrePannes.length > 0;
+          }
+          if (o.diagnostic.piecesJointes && o.diagnostic.piecesJointes.length > 0) {
+            this.piecesJointesDiagnostic = o.diagnostic.piecesJointes;
+          }
+          if (o.diagnostic.remarques && o.diagnostic.remarques.length > 0) {
+            this.remarquesDiagnostic = o.diagnostic.remarques;
+          }
+        } else {
+          // Si aucun diagnostic n'existe, on reste en attente
+          if (!this.statutDiagnostic) {
+            this.statutDiagnostic = 'EN_ATTENTE';
+          }
+        }
 
         this.loading = false;
         this.cdr.markForCheck();
@@ -682,13 +659,15 @@ export class StepDiagnosticComponent implements OnInit {
         this.cdr.markForCheck();
       },
       error: () => {
-        this.ordreService.update(this.ordreId, {
+        // En cas d'erreur avec le endpoint diagnostic, on tente la mise à jour via l'ordre
+        const payload: any = {
           numero: this.loadedOrdre?.numero || '',
-          descriptionTravaux: this.loadedOrdre?.descriptionTravaux || '',
           listeDefauts: pannes,
-          vehiculeId: this.loadedOrdre?.vehicule?.id || 0,
-          statut: 'PIECES_MO' as StatutOrdre
-        }).subscribe({
+          vehiculeId: this.loadedOrdre?.vehiculeId || 0,
+          statut: 'PIECES_MO'
+        };
+        
+        this.ordreService.update(this.ordreId, payload).subscribe({
           next: () => {
             this.ordreService.updateStatut(this.ordreId, 'PIECES_MO').subscribe({
               next: () => { },
@@ -821,13 +800,12 @@ export class StepDiagnosticComponent implements OnInit {
         this.notify(`Diagnostic synchronisé et enregistré (Statut : ${libelle}).`);
       },
       error: () => {
-        // Fallback vers update ordre
-        this.ordreService.update(this.ordreId, {
+        const payload: any = {
           numero: this.loadedOrdre?.numero || '',
-          descriptionTravaux: this.loadedOrdre?.descriptionTravaux || '',
           listeDefauts: pannes,
-          vehiculeId: this.loadedOrdre?.vehicule?.id || 0
-        }).subscribe({
+          vehiculeId: this.loadedOrdre?.vehiculeId || 0
+        };
+        this.ordreService.update(this.ordreId, payload).subscribe({
           next: () => {
             this.saving = false;
             const libelle = this.statutDiagnostic === 'VALIDE' ? 'Validé' : this.statutDiagnostic === 'TERMINE' ? 'Terminé' : this.statutDiagnostic === 'EN_COURS' ? 'En cours' : 'En attente';
@@ -878,13 +856,12 @@ export class StepDiagnosticComponent implements OnInit {
         });
       },
       error: () => {
-        // Fallback
-        this.ordreService.update(this.ordreId, {
+        const payload: any = {
           numero: this.loadedOrdre?.numero || '',
-          descriptionTravaux: this.loadedOrdre?.descriptionTravaux || '',
           listeDefauts: pannes,
-          vehiculeId: this.loadedOrdre?.vehicule?.id || 0
-        }).subscribe({
+          vehiculeId: this.loadedOrdre?.vehiculeId || 0
+        };
+        this.ordreService.update(this.ordreId, payload).subscribe({
           next: () => {
             this.ordreService.updateStatut(this.ordreId, 'PIECES_MO').subscribe({
               next: () => {

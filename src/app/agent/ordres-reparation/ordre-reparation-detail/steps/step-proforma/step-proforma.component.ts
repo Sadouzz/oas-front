@@ -4,16 +4,14 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { OrdreReparationService } from '../../../ordre-reparation.service';
 import { ProformaService } from '../../../../proforma/proforma.service';
-import { PieceDetacheeService } from '../../../../pieces-detachees/piece-detachee.service';
-import { MainDoeuvreService } from '../../../../main-doeuvre/main-doeuvre.service';
+
 import { AlertComponent } from '../../../../../shared/components/alert/alert.component';
 import {
   OrdreReparation,
   ProformaRequest,
-  PieceDetache,
-  MainDoeuvreModel,
   extractContent
 } from '../../../../../shared/models';
+import { StepProformaResponseDto } from '../../../models/responses';
 
 @Component({
   selector: 'app-step-proforma',
@@ -26,15 +24,11 @@ export class StepProformaComponent implements OnInit {
   private router = inject(Router);
   private ordreService = inject(OrdreReparationService);
   private proformaService = inject(ProformaService);
-  private pieceService = inject(PieceDetacheeService);
-  private moService = inject(MainDoeuvreService);
   private cdr = inject(ChangeDetectorRef);
 
   ordreId!: number;
-  loadedOrdre: OrdreReparation | null = null;
+  loadedOrdre: StepProformaResponseDto | null = null;
   proformaChargee: any = null;
-  allPieces: PieceDetache[] = [];
-  allMO: MainDoeuvreModel[] = [];
 
   loading = true;
   saving = false;
@@ -53,16 +47,12 @@ export class StepProformaComponent implements OnInit {
 
   loadData(): void {
     this.loading = true;
-    forkJoin({
-      ordre: this.ordreService.getById(this.ordreId),
-      pieces: this.pieceService.getAll(),
-      mo: this.moService.getAll()
-    }).subscribe({
-      next: ({ ordre, pieces, mo }) => {
-        this.loadedOrdre = ordre;
-        this.allPieces = extractContent<PieceDetache>(pieces as any);
-        this.allMO = extractContent<MainDoeuvreModel>(mo as any);
-        this.chargerProforma();
+    this.ordreService.getStepProforma(this.ordreId).subscribe({
+      next: (res) => {
+        this.loadedOrdre = res;
+        this.proformaChargee = res.proforma || null;
+        this.loading = false;
+        this.cdr.markForCheck();
       },
       error: (err) => {
         this.loading = false;
@@ -72,126 +62,14 @@ export class StepProformaComponent implements OnInit {
     });
   }
 
-  chargerProforma(): void {
-    this.proformaService.getByOrdreReparationId(this.ordreId).subscribe({
-      next: (p) => {
-        this.proformaChargee = p;
-        if (!this.isProformaValide) {
-          this.actualiserProformaSilently();
-        } else {
-          this.loading = false;
-          this.cdr.markForCheck();
-        }
-      },
-      error: () => {
-        this.proformaChargee = null;
-        this.loading = false;
-        this.cdr.markForCheck();
-      }
-    });
-  }
-
-  private actualiserProformaSilently(): void {
-    const payload = this.buildPayload();
-    if (!payload || !this.proformaChargee?.id) {
-      this.loading = false;
-      this.cdr.markForCheck();
-      return;
-    }
-
-    this.proformaService.update(this.proformaChargee.id, payload).subscribe({
-      next: (p) => {
-        this.proformaChargee = p;
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-      error: () => {
-        this.loading = false;
-        this.cdr.markForCheck();
-      }
-    });
-  }
-
-  private buildPayload(): ProformaRequest | null {
-    if (!this.loadedOrdre) return null;
-
-    const vehicule = this.loadedOrdre.vehicule;
-    const client = vehicule?.client;
-    const clientId = client?.id || (vehicule as any)?.clientId || (this.loadedOrdre as any)?.clientId || 0;
-    const kilometrage = vehicule?.kilometrage ?? (this.loadedOrdre?.diagnostic?.kilometrage ?? 0);
-
-    if (!clientId) {
-      this.errorMessage = 'Impossible de générer le proforma : aucun client associé au véhicule.';
-      this.cdr.markForCheck();
-      return null;
-    }
-
-    return {
-      clientId,
-      ordreReparationId: this.ordreId,
-      vehiculeId: vehicule?.id || null,
-      kilometrage: Number(kilometrage) || 0,
-      immatriculation: vehicule?.immatriculation || '',
-      numeroChassis: (vehicule as any)?.numeroChassis || '',
-      marque: vehicule?.marque || '',
-      modele: vehicule?.modele || '',
-      annee: (vehicule as any)?.annee || null,
-      tvaRate: 18,
-      montantTimbre: 0,
-      montantAutre: 0,
-      lignesPieces: (this.loadedOrdre.lignesOrdreReparationPieces || []).map((l: any) => {
-        const pieceId = l.isCustom ? null : (l.piece?.id || (l as any).pieceId || null);
-        const catPiece = pieceId ? this.allPieces.find(p => p.id === pieceId) : null;
-        let finalPrice = 0;
-        if (l.prix != null && Number(l.prix) > 0) {
-          finalPrice = Number(l.prix);
-        } else if (catPiece?.prix != null && Number(catPiece.prix) > 0) {
-          finalPrice = Number(catPiece.prix);
-        } else if (l.piece?.prix != null && Number(l.piece.prix) > 0) {
-          finalPrice = Number(l.piece.prix);
-        }
-
-        return {
-          pieceId,
-          isCustom: !!l.isCustom,
-          custom: !!l.isCustom,
-          designationPds: l.designationPds,
-          quantite: Number(l.quantite),
-          prix: finalPrice
-        };
-      }),
-      lignesMainDoeuvres: (this.loadedOrdre.lignesOrdreReparationMainDoeuvres || []).map((l: any) => {
-        const moId = Number(l.mainDoeuvre?.id || (l as any).mainDoeuvreId);
-        const catMO = this.allMO.find(m => m.id === moId);
-        let finalPrice = 0;
-        if (l.prix != null && Number(l.prix) > 0) {
-          finalPrice = Number(l.prix);
-        } else if (catMO?.prix != null && Number(catMO.prix) > 0) {
-          finalPrice = Number(catMO.prix);
-        } else if (l.mainDoeuvre?.prix != null && Number(l.mainDoeuvre.prix) > 0) {
-          finalPrice = Number(l.mainDoeuvre.prix);
-        }
-
-        return {
-          mainDoeuvreId: moId,
-          nbreHeure: Number(l.nbreHeure),
-          tarifHoraire: finalPrice
-        };
-      })
-    };
-  }
-
   genererProforma(): void {
-    const payload = this.buildPayload();
-    if (!payload) return;
-    
+    // Avec la nouvelle architecture, la génération ou synchronisation se fait côté backend.
+    // On appelle updateStepProforma pour déclencher la synchro.
     this.saving = true;
-    this.proformaService.create(payload).subscribe({
-      next: (p) => {
-        this.saving = false;
-        this.proformaChargee = p;
-        this.successMessage = 'Proforma générée avec succès.';
-        this.cdr.markForCheck();
+    this.ordreService.updateStepProforma(this.ordreId, { numero: this.loadedOrdre?.numero || '' }).subscribe({
+      next: () => {
+        this.loadData(); // Recharger les données complètes avec la proforma mise à jour
+        this.successMessage = 'Proforma générée/actualisée avec succès.';
       },
       error: (err) => {
         this.saving = false;
@@ -202,24 +80,7 @@ export class StepProformaComponent implements OnInit {
   }
 
   actualiserProforma(): void {
-    if (!this.proformaChargee?.id) return;
-    const payload = this.buildPayload();
-    if (!payload) return;
-
-    this.saving = true;
-    this.proformaService.update(this.proformaChargee.id, payload).subscribe({
-      next: (p) => {
-        this.saving = false;
-        this.proformaChargee = p;
-        this.successMessage = 'Proforma actualisée avec succès.';
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        this.saving = false;
-        this.errorMessage = err.error?.message || 'Erreur lors de l\'actualisation de la proforma.';
-        this.cdr.markForCheck();
-      }
-    });
+    this.genererProforma();
   }
 
   telechargementEnCours = false;
@@ -231,7 +92,11 @@ export class StepProformaComponent implements OnInit {
     if (this.proformaChargee?.lignesPiece && this.proformaChargee.lignesPiece.length > 0) {
       return this.proformaChargee.lignesPiece;
     }
-    return this.loadedOrdre?.lignesOrdreReparationPieces || [];
+    // Tolérance si le backend renvoie les lignes à la racine du DTO
+    if ((this.loadedOrdre as any)?.lignesPieces && (this.loadedOrdre as any).lignesPieces.length > 0) {
+      return (this.loadedOrdre as any).lignesPieces;
+    }
+    return [];
   }
 
   get lignesMainDoeuvreAffichees(): any[] {
@@ -241,7 +106,11 @@ export class StepProformaComponent implements OnInit {
     if (this.proformaChargee?.lignesMainDoeuvre && this.proformaChargee.lignesMainDoeuvre.length > 0) {
       return this.proformaChargee.lignesMainDoeuvre;
     }
-    return this.loadedOrdre?.lignesOrdreReparationMainDoeuvres || [];
+    // Tolérance si le backend renvoie les lignes à la racine du DTO
+    if ((this.loadedOrdre as any)?.lignesMainDoeuvres && (this.loadedOrdre as any).lignesMainDoeuvres.length > 0) {
+      return (this.loadedOrdre as any).lignesMainDoeuvres;
+    }
+    return [];
   }
 
   get hasArticles(): boolean {
@@ -249,7 +118,7 @@ export class StepProformaComponent implements OnInit {
   }
 
   getPieceDesignation(ligne: any): string {
-    return ligne?.designationPiece || ligne?.designationPds || ligne?.piece?.designation || ligne?.piece?.reference || 'Pièce';
+    return ligne?.nom || ligne?.designationPiece || ligne?.designationPds || ligne?.piece?.designation || ligne?.piece?.reference || 'Pièce';
   }
 
   getPieceReference(ligne: any): string {
@@ -258,7 +127,7 @@ export class StepProformaComponent implements OnInit {
 
   getPieceType(ligne: any): string {
     if (ligne?.isCustom || ligne?.designationPds) return 'PDS';
-    return ligne?.piece?.type || 'CAT';
+    return ligne?.type || ligne?.piece?.type || 'CAT';
   }
 
   getPieceQuantite(ligne: any): number {
@@ -268,11 +137,6 @@ export class StepProformaComponent implements OnInit {
   getPiecePrixUnitaire(ligne: any): number {
     if (ligne?.prix != null && Number(ligne.prix) > 0) return Number(ligne.prix);
     if (ligne?.prixUnitaire != null && Number(ligne.prixUnitaire) > 0) return Number(ligne.prixUnitaire);
-    const pieceId = ligne?.piece?.id ?? (ligne as any)?.pieceId;
-    if (pieceId) {
-      const cat = this.allPieces.find(p => p.id === pieceId);
-      if (cat?.prix != null && Number(cat.prix) > 0) return Number(cat.prix);
-    }
     if (ligne?.piece?.prix != null && Number(ligne.piece.prix) > 0) return Number(ligne.piece.prix);
     return 0;
   }
@@ -284,7 +148,7 @@ export class StepProformaComponent implements OnInit {
   }
 
   getMODescription(ligne: any): string {
-    return ligne?.descriptionMainDoeuvre || ligne?.description || ligne?.mainDoeuvre?.description || ligne?.mainDoeuvre?.categorie?.nom || 'Prestation main-d’œuvre';
+    return ligne?.nom || ligne?.descriptionMainDoeuvre || ligne?.description || ligne?.mainDoeuvre?.description || ligne?.mainDoeuvre?.categorie?.nom || 'Prestation main-d’œuvre';
   }
 
   getMOCategorie(ligne: any): string {
@@ -299,11 +163,6 @@ export class StepProformaComponent implements OnInit {
     if (ligne?.tarifHoraire != null && Number(ligne.tarifHoraire) > 0) return Number(ligne.tarifHoraire);
     if (ligne?.prix != null && Number(ligne.prix) > 0) return Number(ligne.prix);
     if (ligne?.prixUnitaire != null && Number(ligne.prixUnitaire) > 0) return Number(ligne.prixUnitaire);
-    const moId = ligne?.mainDoeuvre?.id ?? (ligne as any)?.mainDoeuvreId;
-    if (moId) {
-      const cat = this.allMO.find(m => m.id === moId);
-      if (cat?.prix != null && Number(cat.prix) > 0) return Number(cat.prix);
-    }
     if (ligne?.mainDoeuvre?.prix != null && Number(ligne.mainDoeuvre.prix) > 0) return Number(ligne.mainDoeuvre.prix);
     return 0;
   }
@@ -392,7 +251,7 @@ export class StepProformaComponent implements OnInit {
     this.saving = true;
     this.errorMessage = '';
 
-    const hasRupture = (this.loadedOrdre?.lignesOrdreReparationPieces || []).some((l: any) => {
+    const hasRupture = this.lignesPiecesAffichees.some((l: any) => {
       if (l.isCustom) return false;
       const dispo = (l.piece?.stockMagasin ?? 0) + (l.piece?.stockAtelier ?? 0);
       return (l.quantite ?? 0) > dispo;

@@ -11,8 +11,10 @@ import {
   VehiculeModel,
   LigneReceptionOrdre,
   LigneTravailOrdre,
-  StatutOrdre
+  StatutOrdre,
+  StepReceptionDto
 } from '../../../../../shared/models';
+import { StepReceptionResponseDto } from '../../../models/responses/step-reception-response.dto';
 
 export const TRAVAUX_FREQUENTS = [
   'Vidange moteur',
@@ -43,8 +45,8 @@ export class StepReceptionComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
 
   ordreId!: number;
-  loadedOrdre: OrdreReparation | null = null;
-  selectedVehicule: VehiculeModel | null = null;
+  loadedOrdre: StepReceptionResponseDto | null = null;
+  selectedVehicule: any = null;
 
   loading = true;
   saving = false;
@@ -84,20 +86,10 @@ export class StepReceptionComponent implements OnInit {
 
   loadData(): void {
     this.loading = true;
-    this.ordreService.getById(this.ordreId).subscribe({
-      next: (o: OrdreReparation) => {
+    this.ordreService.getStepReception(this.ordreId).subscribe({
+      next: (o: StepReceptionResponseDto) => {
         this.loadedOrdre = o;
-        this.selectedVehicule = o.vehicule as any;
-
-        if (o.vehicule?.id) {
-          this.vehiculeService.getById(o.vehicule.id).subscribe({
-            next: (fullV) => {
-              this.selectedVehicule = fullV;
-              this.cdr.markForCheck();
-            },
-            error: () => {}
-          });
-        }
+        this.selectedVehicule = o.vehicule;
 
         this.step1Form.patchValue({
           numero: o.numero,
@@ -108,7 +100,7 @@ export class StepReceptionComponent implements OnInit {
         this.setLignesReception(o.lignesReception);
         this.setLignesTravaux(o.lignesTravaux);
 
-        const travauxDecomp = this.decomposeToCheckboxes(o.descriptionTravaux, TRAVAUX_FREQUENTS);
+        const travauxDecomp = this.decomposeToCheckboxes(o.descriptionTravaux || '', TRAVAUX_FREQUENTS);
         this.selectedTravaux = travauxDecomp.selected;
         this.autreTravaux = travauxDecomp.autre;
         this.showAutreTravaux = this.autreTravaux.length > 0;
@@ -203,7 +195,7 @@ export class StepReceptionComponent implements OnInit {
   saveStep1ThenGoNext(): void {
     const descriptionTravaux = this.composeFromCheckboxes(this.selectedTravaux, this.autreTravaux);
     const raw = this.step1Form.value;
-    const payload = {
+    const payload: StepReceptionDto = {
       numero: raw.numero,
       descriptionTravaux: descriptionTravaux,
       lignesTravaux: this.lignesTravaux.getRawValue() as LigneTravailOrdre[],
@@ -213,7 +205,7 @@ export class StepReceptionComponent implements OnInit {
     };
 
     this.saving = true;
-    this.ordreService.update(this.ordreId, payload).subscribe({
+    this.ordreService.updateStepReception(this.ordreId, payload).subscribe({
       next: () => {
         // Tente également la mise à jour explicite du statut de l'ordre
         this.ordreService.updateStatut(this.ordreId, 'DIAGNOSTIC').subscribe({

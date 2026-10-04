@@ -134,6 +134,8 @@ export interface OrdreReparation {
     nbreHeure: number;
     prix: number;
   }[];
+  hasDiagnostic?: boolean;
+  hasPiecesMo?: boolean;
 }
 
 export interface OrdreReparationRequest {
@@ -154,3 +156,8 @@ export interface OrdreReparationRequest {
   }[];
   lignesMainDoeuvres?: { mainDoeuvreId: number; nbreHeure: number; prix?: number | null }[];
 }
+
+// ==========================================
+// DTOs par étape (Exportés depuis le dossier steps)
+// ==========================================
+export * from './steps';

@@ -13,8 +13,10 @@ import {
   PieceDetache,
   MainDoeuvreModel,
   StatutOrdre,
+  StepPiecesMoDto,
   extractContent
 } from '../../../../../shared/models';
+import { StepPiecesMoResponseDto } from '../../../models/responses';
 
 export interface LignePiece {
   isCustom?: boolean;
@@ -50,7 +52,7 @@ export class StepPiecesMoComponent implements OnInit {
   cdr = inject(ChangeDetectorRef);
 
   ordreId!: number;
-  loadedOrdre: OrdreReparation | null = null;
+  loadedOrdre: StepPiecesMoResponseDto | null = null;
 
   loading = true;
   saving = false;
@@ -63,9 +65,13 @@ export class StepPiecesMoComponent implements OnInit {
   lignesPieces: LignePiece[] = [];
   lignesMO: LigneMO[] = [];
 
-  pieceAjouter: number | null = null;
-  qteAjouter = 1;
-  prixAjouter: number | null = null;
+  piecePdpAjouter: number | null = null;
+  qteAjouterPdp = 1;
+  prixAjouterPdp: number | null = null;
+
+  piecePdgAjouter: number | null = null;
+  qteAjouterPdg = 1;
+  prixAjouterPdg: number | null = null;
 
   moAjouter: number | null = null;
   qteAjouterMO = 1;
@@ -75,13 +81,25 @@ export class StepPiecesMoComponent implements OnInit {
   pieceCustomPrix: number | null = null;
   pieceCustomQuantite = 1;
 
-  pieceSearch = '';
+  piecePdpSearch = '';
+  piecePdgSearch = '';
   moSearch = '';
 
-  get piecesFiltrees(): PieceDetache[] {
-    const q = this.pieceSearch.toLowerCase();
-    if (!q) return this.allPieces.slice(0, 30);
-    return this.allPieces.filter(p =>
+  get piecesPdpFiltrees(): PieceDetache[] {
+    const q = this.piecePdpSearch.toLowerCase();
+    const pdpPieces = this.allPieces.filter(p => p.type === 'PDP');
+    if (!q) return pdpPieces.slice(0, 30);
+    return pdpPieces.filter(p =>
+      p.reference.toLowerCase().includes(q) ||
+      p.designation.toLowerCase().includes(q)
+    ).slice(0, 30);
+  }
+
+  get piecesPdgFiltrees(): PieceDetache[] {
+    const q = this.piecePdgSearch.toLowerCase();
+    const pdgPieces = this.allPieces.filter(p => p.type === 'PDG');
+    if (!q) return pdgPieces.slice(0, 30);
+    return pdgPieces.filter(p =>
       p.reference.toLowerCase().includes(q) ||
       p.designation.toLowerCase().includes(q)
     ).slice(0, 30);
@@ -96,8 +114,12 @@ export class StepPiecesMoComponent implements OnInit {
     ).slice(0, 30);
   }
 
-  get lignesPiecesCatalogue(): LignePiece[] {
-    return this.lignesPieces.filter(l => !l.isCustom);
+  get lignesPiecesPdp(): LignePiece[] {
+    return this.lignesPieces.filter(l => !l.isCustom && l.piece?.type === 'PDP');
+  }
+
+  get lignesPiecesPdg(): LignePiece[] {
+    return this.lignesPieces.filter(l => !l.isCustom && l.piece?.type === 'PDG');
   }
 
   get lignesPiecesPds(): LignePiece[] {
@@ -141,7 +163,7 @@ export class StepPiecesMoComponent implements OnInit {
     forkJoin({
       pieces: this.pieceService.getAll(),
       mo: this.moService.getAll(),
-      ordre: this.ordreService.getById(this.ordreId)
+      ordre: this.ordreService.getStepPiecesMo(this.ordreId)
     }).subscribe({
       next: ({ pieces, mo, ordre }) => {
         // Catalogue : uniquement PDP et PDG (exclure PDS)
@@ -151,7 +173,8 @@ export class StepPiecesMoComponent implements OnInit {
 
         // Cumuler les pièces identiques au chargement
         const piecesMap = new Map<string, any>();
-        for (const l of (ordre.lignesOrdreReparationPieces || [])) {
+        const fetchedPieces = ordre.lignesOrdreReparationPieces || (ordre as any).lignesPieces || [];
+        for (const l of fetchedPieces) {
           const pieceId = l.piece?.id ?? (l as any).pieceId;
           const key = l.isCustom 
             ? `custom_${(l.designationPds || '').trim().toLowerCase()}`
@@ -206,32 +229,40 @@ export class StepPiecesMoComponent implements OnInit {
 
         // Cumuler les MO identiques au chargement
         const moMap = new Map<number, any>();
-        for (const l of (ordre.lignesOrdreReparationMainDoeuvres || [])) {
-          const moId = l.mainDoeuvre?.id ?? (l as any).mainDoeuvreId;
-          if (!moId) continue;
+        const fetchedMo = ordre.lignesOrdreReparationMainDoeuvres || (ordre as any).lignesMainDoeuvres || [];
+        for (const l of fetchedMo) {
+          let catalogMO = null;
+          
+          if (l.mainDoeuvre?.id) {
+            catalogMO = this.allMO.find(m => m.id === l.mainDoeuvre.id);
+          } else if ((l as any).mainDoeuvreId) {
+            catalogMO = this.allMO.find(m => m.id === (l as any).mainDoeuvreId);
+          } else if (l.description) {
+            catalogMO = this.allMO.find(m => m.description === l.description);
+          }
 
-          const catalogMO = this.allMO.find(m => m.id === moId);
-          const resolvedMO = catalogMO || l.mainDoeuvre;
+          const resolvedMO = catalogMO || l.mainDoeuvre || { id: l.id || Date.now(), description: l.description, prix: l.prix };
+          const moId = resolvedMO.id;
+
+          if (!moId) continue;
 
           let unitPrice = 0;
           if (l.prix != null && Number(l.prix) > 0) {
             unitPrice = Number(l.prix);
-          } else if (catalogMO?.prix != null && Number(catalogMO.prix) > 0) {
-            unitPrice = Number(catalogMO.prix);
-          } else if (l.mainDoeuvre?.prix != null && Number(l.mainDoeuvre.prix) > 0) {
-            unitPrice = Number(l.mainDoeuvre.prix);
+          } else if (resolvedMO?.prix != null && Number(resolvedMO.prix) > 0) {
+            unitPrice = Number(resolvedMO.prix);
           }
 
           if (moMap.has(moId)) {
             const item = moMap.get(moId);
-            item.quantite += (l.nbreHeure || 1);
+            item.quantite += (l.nbreHeure ?? l.heures ?? 1);
             if ((item.prixUnitaire == null || item.prixUnitaire === 0) && unitPrice > 0) {
               item.prixUnitaire = unitPrice;
             }
           } else {
             moMap.set(moId, {
               mo: resolvedMO,
-              quantite: l.nbreHeure || 1,
+              quantite: l.nbreHeure ?? l.heures ?? 1,
               prixUnitaire: unitPrice
             });
           }
@@ -250,14 +281,25 @@ export class StepPiecesMoComponent implements OnInit {
     });
   }
 
-  onPieceSelected(pieceId: any): void {
+  onPiecePdpSelected(pieceId: any): void {
     if (!pieceId) {
-      this.prixAjouter = null;
+      this.prixAjouterPdp = null;
       return;
     }
     const p = this.allPieces.find(item => item.id === Number(pieceId));
     if (p) {
-      this.prixAjouter = p.prix ?? null;
+      this.prixAjouterPdp = p.prix ?? null;
+    }
+  }
+
+  onPiecePdgSelected(pieceId: any): void {
+    if (!pieceId) {
+      this.prixAjouterPdg = null;
+      return;
+    }
+    const p = this.allPieces.find(item => item.id === Number(pieceId));
+    if (p) {
+      this.prixAjouterPdg = p.prix ?? null;
     }
   }
 
@@ -272,16 +314,16 @@ export class StepPiecesMoComponent implements OnInit {
     }
   }
 
-  addPiece(): void {
-    if (!this.pieceAjouter || this.qteAjouter <= 0) return;
-    const p = this.allPieces.find(item => item.id === Number(this.pieceAjouter));
+  addPiecePdp(): void {
+    if (!this.piecePdpAjouter || this.qteAjouterPdp <= 0) return;
+    const p = this.allPieces.find(item => item.id === Number(this.piecePdpAjouter));
     if (!p) return;
 
-    const unitPrice = this.prixAjouter != null && this.prixAjouter >= 0 ? this.prixAjouter : (p.prix ?? 0);
+    const unitPrice = this.prixAjouterPdp != null && this.prixAjouterPdp >= 0 ? this.prixAjouterPdp : (p.prix ?? 0);
 
     const existing = this.lignesPieces.find(l => !l.isCustom && l.piece?.id === p.id);
     if (existing) {
-      existing.quantite += this.qteAjouter;
+      existing.quantite += this.qteAjouterPdp;
       existing.prixUnitaire = unitPrice;
       existing.manquant = Math.max(0, existing.quantite - (existing.piece?.stockMagasin ?? 0));
       existing.aSortirMagasin = existing.manquant > 0 ? 0 : 1;
@@ -289,17 +331,47 @@ export class StepPiecesMoComponent implements OnInit {
       this.lignesPieces.push({
         isCustom: false,
         piece: p,
-        quantite: this.qteAjouter,
+        quantite: this.qteAjouterPdp,
         prixUnitaire: unitPrice,
         stockDisponible: (p.stockMagasin ?? 0) + (p.stockAtelier ?? 0),
-        manquant: Math.max(0, this.qteAjouter - (p.stockMagasin ?? 0)),
-        aSortirMagasin: Math.max(0, this.qteAjouter - (p.stockMagasin ?? 0)) > 0 ? 0 : 1
+        manquant: Math.max(0, this.qteAjouterPdp - (p.stockMagasin ?? 0)),
+        aSortirMagasin: Math.max(0, this.qteAjouterPdp - (p.stockMagasin ?? 0)) > 0 ? 0 : 1
       });
     }
 
-    this.pieceAjouter = null;
-    this.qteAjouter = 1;
-    this.prixAjouter = null;
+    this.piecePdpAjouter = null;
+    this.qteAjouterPdp = 1;
+    this.prixAjouterPdp = null;
+  }
+
+  addPiecePdg(): void {
+    if (!this.piecePdgAjouter || this.qteAjouterPdg <= 0) return;
+    const p = this.allPieces.find(item => item.id === Number(this.piecePdgAjouter));
+    if (!p) return;
+
+    const unitPrice = this.prixAjouterPdg != null && this.prixAjouterPdg >= 0 ? this.prixAjouterPdg : (p.prix ?? 0);
+
+    const existing = this.lignesPieces.find(l => !l.isCustom && l.piece?.id === p.id);
+    if (existing) {
+      existing.quantite += this.qteAjouterPdg;
+      existing.prixUnitaire = unitPrice;
+      existing.manquant = Math.max(0, existing.quantite - (existing.piece?.stockMagasin ?? 0));
+      existing.aSortirMagasin = existing.manquant > 0 ? 0 : 1;
+    } else {
+      this.lignesPieces.push({
+        isCustom: false,
+        piece: p,
+        quantite: this.qteAjouterPdg,
+        prixUnitaire: unitPrice,
+        stockDisponible: (p.stockMagasin ?? 0) + (p.stockAtelier ?? 0),
+        manquant: Math.max(0, this.qteAjouterPdg - (p.stockMagasin ?? 0)),
+        aSortirMagasin: Math.max(0, this.qteAjouterPdg - (p.stockMagasin ?? 0)) > 0 ? 0 : 1
+      });
+    }
+
+    this.piecePdgAjouter = null;
+    this.qteAjouterPdg = 1;
+    this.prixAjouterPdg = null;
   }
 
   addPieceCustom(): void {
@@ -433,15 +505,13 @@ export class StepPiecesMoComponent implements OnInit {
       };
     });
 
-    this.saving = true;
-    this.ordreService.update(this.ordreId, {
-      numero: this.loadedOrdre?.numero || '',
-      descriptionTravaux: this.loadedOrdre?.descriptionTravaux || '',
-      vehiculeId: this.loadedOrdre?.vehicule?.id || 0,
-      statut: 'PROFORMA' as StatutOrdre,
+    const payload: StepPiecesMoDto = {
       lignesPieces: payloadLignesPieces,
       lignesMainDoeuvres: payloadLignesMO,
-    }).subscribe({
+    };
+
+    this.saving = true;
+    this.ordreService.updateStepPiecesMo(this.ordreId, payload).subscribe({
       next: () => {
         this.ordreService.updateStatut(this.ordreId, 'PROFORMA').subscribe({
           next: () => {},
