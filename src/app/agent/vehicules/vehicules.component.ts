@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subject, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, catchError, takeUntil } from 'rxjs/operators';
@@ -9,11 +9,12 @@ import { UserModel, VehiculeModel, extractContent } from '../../shared/models/in
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
+import { VehicleTransferService, VehicleTransferRequest } from './vehicle-transfer.service';
 
 @Component({
   selector: 'app-vehicules',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, AlertComponent, PaginationComponent],
+  imports: [ReactiveFormsModule, DecimalPipe, DatePipe, AlertComponent, PaginationComponent],
   templateUrl: './vehicules.component.html',
 })
 export class VehiculesComponent extends BasePaginatedComponent implements OnInit, OnDestroy {
@@ -21,6 +22,7 @@ export class VehiculesComponent extends BasePaginatedComponent implements OnInit
   private fb = inject(FormBuilder);
   private vehiculeService = inject(VehiculeService);
   private clientService = inject(ClientService);
+  private transferService = inject(VehicleTransferService);
 
   vehicules: VehiculeModel[] = [];
   filtered: VehiculeModel[] = [];
@@ -30,6 +32,8 @@ export class VehiculesComponent extends BasePaginatedComponent implements OnInit
   saving = false;
   successMessage = '';
   errorMessage = '';
+  transferRequests: VehicleTransferRequest[] = [];
+  loadingTransfers = false;
 
   showModal = false;
   isNew = false;
@@ -120,7 +124,27 @@ export class VehiculesComponent extends BasePaginatedComponent implements OnInit
 
   ngOnInit() {
     this.loadData();
+    this.loadTransfers();
     this.setupClientSearch();
+  }
+
+  loadTransfers() {
+    this.loadingTransfers = true;
+    this.transferService.pending().subscribe({
+      next: requests => { this.transferRequests = requests; this.loadingTransfers = false; this.cdr.markForCheck(); },
+      error: () => { this.transferRequests = []; this.loadingTransfers = false; this.cdr.markForCheck(); }
+    });
+  }
+
+  decideTransfer(request: VehicleTransferRequest, approved: boolean) {
+    const action = approved ? 'valider' : 'refuser';
+    const response = window.prompt(`Motif pour ${action} le transfert de ${request.immatriculation} (facultatif) :`);
+    if (response === null) return;
+    const note = response;
+    this.transferService.decide(request.id, approved, note).subscribe({
+      next: () => { this.showSuccess(approved ? 'Transfert validé.' : 'Demande refusée.'); this.loadTransfers(); this.loadVehicules(); },
+      error: (err: any) => { this.errorMessage = err.error?.message || 'Impossible de traiter cette demande.'; this.cdr.markForCheck(); }
+    });
   }
 
   ngOnDestroy() {

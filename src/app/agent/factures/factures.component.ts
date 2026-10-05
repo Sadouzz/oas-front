@@ -14,6 +14,7 @@ import { BasePaginatedComponent } from '../../shared/components/base-paginated.c
 import { UserModel, VehiculeModel, OrdreReparation, extractContent } from '../../shared/models';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select.component';
+import { PdfTemplate, PdfTemplateService } from '../admin/pdf-templates/pdf-template.service';
 
 @Component({
   selector: 'app-factures',
@@ -29,6 +30,7 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
   private clientService = inject(ClientService);
   private vehiculeService = inject(VehiculeService);
   private ficheService = inject(OrdreReparationService);
+  private pdfTemplateService = inject(PdfTemplateService);
 
   factures: FactureModel[] = [];
   filtered: FactureModel[] = [];
@@ -48,6 +50,7 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
   vehiculesFiltres: VehiculeModel[] = [];
   ordresReparation: OrdreReparation[] = [];
   fichesFiltrees: OrdreReparation[] = [];
+  invoiceTemplates: PdfTemplate[] = [];
 
   clientOpen = false;
   vehiculeOpen = false;
@@ -71,6 +74,8 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
     kilometrage: [null as number | null],
     remarque: [''],
     modePaiement: ['ESPECE', Validators.required],
+    pdfLayoutKey: ['AVEC_ENTETE'],
+    pdfTemplateId: [null as number | null],
   });
 
   ngOnInit() {
@@ -170,6 +175,7 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
     this.vehiculeOpen = false;
     this.errorMessage = '';
     this.showCreateModal = true;
+    this.loadInvoiceTemplates(String(this.form.get('pdfLayoutKey')?.value || 'AVEC_ENTETE'));
   }
 
   closeCreate() {
@@ -266,6 +272,7 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
     this.form.patchValue({ ordreReparationId: f.id });
     this.ficheOpen = false;
     this.ficheFilter = '';
+    this.loadInvoiceTemplates(String(this.form.get('pdfLayoutKey')?.value || 'AVEC_ENTETE'));
   }
 
   // ── Save ────────────────────────────────────────────────────────
@@ -289,6 +296,8 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
       ordreReparationId: Number(val.ordreReparationId),
       remarque: val.remarque || null,
       modePaiement: val.modePaiement,
+      pdfLayoutKey: val.pdfLayoutKey || 'AVEC_ENTETE',
+      pdfTemplateId: val.pdfTemplateId ? Number(val.pdfTemplateId) : null,
     };
 
     this.service.create(request).subscribe({
@@ -307,6 +316,15 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
       },
     });
   }
+
+  loadInvoiceTemplates(layoutKey: string): void {
+    this.pdfTemplateService.activeInvoiceTemplates(layoutKey).subscribe({
+      next: templates => { this.invoiceTemplates = templates; const chosen = templates.some(t => t.id === Number(this.form.get('pdfTemplateId')?.value)); if (!chosen) this.form.patchValue({ pdfTemplateId: templates[0]?.id ?? null }); this.cdr.markForCheck(); },
+      error: () => { this.invoiceTemplates = []; this.cdr.markForCheck(); }
+    });
+  }
+
+  changeInvoiceLayout(layoutKey: string): void { this.form.patchValue({ pdfLayoutKey: layoutKey, pdfTemplateId: null }); this.loadInvoiceTemplates(layoutKey); }
 
   // ── Detail ──────────────────────────────────────────────────────
 

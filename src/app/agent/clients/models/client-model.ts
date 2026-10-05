@@ -18,6 +18,11 @@ export interface ClientModel {
   ninea?: string | null;
   rccm?: string | null;
   rib?: string | null;
+  typeClient?: 'PARTICULIER' | 'ENTREPRISE';
+  raisonSociale?: string | null;
+  numeroEntreprise?: string | null;
+  emailEntreprise?: string | null;
+  adresseEntreprise?: string | null;
 }
 
 export interface ClientListResponse {
@@ -38,6 +43,11 @@ export interface ClientListResponse {
     ninea?: string | null;
     rccm?: string | null;
     rib?: string | null;
+    typeClient?: 'PARTICULIER' | 'ENTREPRISE';
+    raisonSociale?: string | null;
+    numeroEntreprise?: string | null;
+    emailEntreprise?: string | null;
+    adresseEntreprise?: string | null;
 }
 
 export interface CreateClientPayload {
@@ -49,6 +59,12 @@ export interface CreateClientPayload {
   username: string;
   password: string;
   type?: string;
+  typeClient?: 'PARTICULIER' | 'ENTREPRISE';
+  raisonSociale?: string;
+  numeroEntreprise?: string;
+  emailEntreprise?: string;
+  telephoneEntreprise?: string;
+  adresseEntreprise?: string;
 }
 
 export interface UpdateClientPayload {

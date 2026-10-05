@@ -35,6 +35,8 @@ export class ClientVehiculesComponent implements OnInit {
   saving = false;
   successMessage = '';
   errorMessage = '';
+  duplicateVehicleData: { immatriculation: string; numeroChassis?: string | null } | null = null;
+  requestingTransfer = false;
 
   searchTerm = '';
   stageFilter = '';
@@ -152,6 +154,7 @@ export class ClientVehiculesComponent implements OnInit {
   closeCreate(): void {
     this.form.reset();
     this.showCreateForm = false;
+    this.duplicateVehicleData = null;
   }
 
   save(): void {
@@ -174,8 +177,37 @@ export class ClientVehiculesComponent implements OnInit {
       },
       error: (err: any) => {
         this.saving = false;
-        this.errorMessage = err.error?.message || "Une erreur est survenue lors de l'enregistrement.";
+        const message = err.error?.message || err.message || "Une erreur est survenue lors de l'enregistrement.";
+        if (err.status === 409 || /immatriculation.*(exist|déjà)|déjà exist/i.test(message)) {
+          this.duplicateVehicleData = {
+            immatriculation: String(this.form.value.immatriculation || '').trim().toUpperCase(),
+            numeroChassis: this.form.value.numeroChassis || null,
+          };
+          this.errorMessage = 'Ce véhicule est déjà enregistré. Vous pouvez demander son transfert à votre compte.';
+        } else {
+          this.errorMessage = message;
+        }
       },
+    });
+  }
+
+  requestVehicleTransfer(): void {
+    if (!this.duplicateVehicleData || this.requestingTransfer) return;
+    this.requestingTransfer = true;
+    this.vehiculeService.requestTransfer(this.duplicateVehicleData).subscribe({
+      next: () => {
+        this.requestingTransfer = false;
+        this.successMessage = 'Votre demande de transfert a été envoyée aux agents.';
+        this.errorMessage = '';
+        this.duplicateVehicleData = null;
+        this.form.reset();
+        this.showCreateForm = false;
+        setTimeout(() => this.successMessage = '', 5000);
+      },
+      error: (err: any) => {
+        this.requestingTransfer = false;
+        this.errorMessage = err.error?.message || 'Impossible d’envoyer la demande de transfert.';
+      }
     });
   }
 

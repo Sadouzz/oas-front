@@ -159,9 +159,34 @@ export class FichesAtelier implements OnInit {
         if (data && data.length > 0) {
           const cfg = parseFicheAtelierConfig(data[0].configJson);
           if (cfg.lignesReception && cfg.lignesReception.length > 0) {
-            this.defaultReception = cfg.lignesReception
+            const activeReception = cfg.lignesReception
               .filter(item => !item.archive)
-              .map(item => item.nom);
+              .map(item => item.nom.trim())
+              .filter(Boolean);
+            const anciennesRubriquesRemplacees = new Set([
+              'carrosserie',
+              'intérieur / habitacle',
+              'vitrage / pare-brise',
+              'eclairage',
+              'accessoires (cric, roue de secours...)'
+            ]);
+            const rubriquesReference = new Set(
+              DEFAULT_LIGNES_RECEPTION.map(nom => nom.toLocaleLowerCase('fr'))
+            );
+            const rubriquesManuelles = new Map<string, string>();
+            for (const nom of activeReception) {
+              const cle = nom.toLocaleLowerCase('fr');
+              if (!rubriquesReference.has(cle) && !anciennesRubriquesRemplacees.has(cle)) {
+                rubriquesManuelles.set(cle, nom);
+              }
+            }
+
+            // Remplacer les anciennes rubriques par la liste de référence et
+            // conserver seulement les lignes personnalisées actives du garage.
+            this.defaultReception = [
+              ...DEFAULT_LIGNES_RECEPTION,
+              ...rubriquesManuelles.values()
+            ];
           }
           if (cfg.rubriquesDefauts && cfg.rubriquesDefauts.length > 0) {
             this.defaultDefauts = cfg.rubriquesDefauts
