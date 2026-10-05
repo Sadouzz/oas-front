@@ -1,7 +1,7 @@
-import { Component, inject, OnInit, ChangeDetectorRef, signal } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Subject, debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs';
 import { BonDeCommande, ReceptionBonDeCommandeRequest, StatutBonCommande } from './models/bon-de-commande.model';
 import { BonDeCommandeService } from './bon-de-commande.service';
 import { FournisseurService } from '../fournisseurs/fournisseur.service';
@@ -10,18 +10,19 @@ import { PieceDetacheeService } from '../pieces-detachees/piece-detachee.service
 import { ClientService } from '../clients/client.service';
 import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { FournisseurModel, VehiculeModel, PieceDetache, UserModel, extractContent } from '../../shared/models/index';
+import { FournisseurModel, VehiculeModel, PieceDetache, UserModel, ClientModel, extractContent } from '../../shared/models/index';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideArrowRight } from '@lucide/angular';
+import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select.component';
 
 @Component({
   selector: 'app-bons-commande',
   standalone: true,
-  imports: [ReactiveFormsModule, FormsModule, NgClass, PaginationComponent],
+  imports: [ReactiveFormsModule, FormsModule, NgClass, PaginationComponent, SearchableSelectComponent],
   templateUrl: './bons-commande.component.html',
 })
-export class BonsCommandeComponent extends BasePaginatedComponent implements OnInit {
+export class BonsCommandeComponent extends BasePaginatedComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private service = inject(BonDeCommandeService);
   private fournisseurService = inject(FournisseurService);
@@ -36,7 +37,11 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
   fournisseurs: FournisseurModel[] = [];
   vehicules: VehiculeModel[] = [];
   pieces: PieceDetache[] = [];
-  clients: UserModel[] = [];
+  clients: (UserModel | ClientModel)[] = [];
+  clientsLoading = false;
+  vehiculesLoading = false;
+  private readonly clientSearch$ = new Subject<string>();
+  private readonly destroy$ = new Subject<void>();
 
   selectedClientId: number | null = null;
   clientOpen = false;
@@ -49,6 +54,7 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
   loading = true;
   saving = false;
   showModal = false;
+  loadingEdit = false;
   isNew = true;
   isReplenishment = false;
   editingId: number | null = null;
@@ -78,6 +84,11 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
   });
 
   get lignesArray(): FormArray { return this.form.get('lignes') as FormArray; }
+
+  piecePdpAjouter: number | null = null;
+  qteAjouterPdp = 1;
+  prixAjouterPdp: number | null = null;
+  private lignesNonPdpExistantes: any[] = [];
 
   get fournisseurLabel(): string {
     const id = this.form.get('fournisseurId')?.value;
@@ -115,19 +126,13 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
     return v ? `${v.immatriculation} — ${v.marque}` : '';
   }
 
-  get filteredClients(): UserModel[] {
-    if (!this.clientFilter) return this.clients;
-    const kw = this.clientFilter.toLowerCase();
-    return this.clients.filter(c =>
-      `${c.firstName} ${c.lastName}`.toLowerCase().includes(kw) ||
-      (c.phone ?? '').toLowerCase().includes(kw)
-    );
+  get filteredClients(): (UserModel | ClientModel)[] {
+    return this.clients;
   }
 
   get filteredVehicules(): VehiculeModel[] {
-    const base = this.selectedClientId
-      ? this.vehicules.filter(v => v.client?.id === this.selectedClientId)
-      : this.vehicules;
+    if (!this.selectedClientId) return [];
+    const base = this.vehicules;
     if (!this.vehiculeFilter) return base;
     const kw = this.vehiculeFilter.toLowerCase();
     return base.filter(v =>
@@ -136,11 +141,40 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
     );
   }
 
-  selectClient(c: UserModel | null) {
+  selectClient(c: UserModel | ClientModel | null) {
     this.selectedClientId = c?.id ?? null;
     this.form.patchValue({ clientId: c?.id ?? null, vehiculeId: null });
+    this.vehicules = [];
     this.clientFilter = '';
     this.clientOpen = false;
+    this.vehiculeFilter = '';
+    this.vehiculeOpen = false;
+    if (!c) return;
+
+    this.loadVehiculesClient(c.id);
+  }
+
+  private loadVehiculesClient(clientId: number) {
+    this.vehiculesLoading = true;
+    this.vehiculeService.getByClient(clientId).subscribe({
+      next: vehicules => {
+        if (this.selectedClientId !== clientId) return;
+        this.vehicules = vehicules;
+        this.vehiculesLoading = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        if (this.selectedClientId !== clientId) return;
+        this.vehiculesLoading = false;
+        this.notifyError('Impossible de charger les véhicules de ce client.');
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  onClientSearch(value: string) {
+    this.clientFilter = value;
+    this.clientSearch$.next(value.trim());
   }
 
   selectVehicule(v: VehiculeModel | null) {
@@ -155,23 +189,49 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
   filterFournisseur = '';
   showDateFilter = false;
 
-  get displayedPieces(): PieceDetache[] {
-    return this.pieces.filter(p => p.type !== 'PDS' && p.statut === 'ACTIF');
+  get piecesPdp(): PieceDetache[] { return this.pieces.filter(p => p.type === 'PDP' && p.statut === 'ACTIF'); }
+
+  getLignesPdp(): { index: number; group: FormGroup }[] {
+    return this.lignesArray.controls.flatMap((control, index) => {
+      const group = control as FormGroup;
+      return group.get('pieceType')?.value === 'PDP' ? [{ index, group }] : [];
+    });
+  }
+
+  formatPiece(piece: PieceDetache): string {
+    return `${piece.reference} — ${piece.designation}`;
   }
 
   ngOnInit() {
+    this.clientSearch$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(keyword => {
+        this.clientsLoading = true;
+        return this.clientService.getAll({ page: 0, size: 10, ...(keyword ? { keyword } : {}) });
+      }),
+      takeUntil(this.destroy$),
+    ).subscribe({
+      next: response => {
+        this.clients = extractContent<UserModel>(response).filter(client => client.enabled);
+        this.clientsLoading = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.clientsLoading = false;
+        this.notifyError('Impossible de charger les clients.');
+        this.cdr.markForCheck();
+      },
+    });
+    this.loadClients('');
     this.load();
     forkJoin({
       fournisseurs: this.fournisseurService.getAll(),
-      vehicules: this.vehiculeService.getAll(),
       pieces: this.pieceService.getAll(),
-      clients: this.clientService.getAll(),
     }).subscribe({
-      next: ({ fournisseurs, vehicules, pieces, clients }) => {
+      next: ({ fournisseurs, pieces }) => {
         this.fournisseurs = extractContent(fournisseurs).filter((f: any) => !f.archived);
-        this.vehicules = extractContent(vehicules);
         this.pieces = extractContent(pieces);
-        this.clients = extractContent<any>(clients).filter((c: any) => c.enabled);
 
         // Pre-fill BDC if query parameter pieceId is present
         this.route.queryParams.subscribe(params => {
@@ -189,6 +249,16 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
         });
       },
     });
+  }
+
+  private loadClients(keyword: string) {
+    this.clientSearch$.next(keyword);
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+    this.clientSearch$.complete();
   }
 
   loadData() {
@@ -255,7 +325,7 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
     return this.fb.group({
       id: [id],
       quantiteRecue: [quantiteRecue],
-      isCustom: [false],
+      pieceType: ['PDP'],
       pieceDetacheeId: [null],
       designationPds: [''],
       quantite: [minQty, [Validators.required, Validators.min(minQty)]],
@@ -263,7 +333,17 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
     });
   }
 
-  addLigne() { this.lignesArray.push(this.makeLigne()); }
+  addPieceCatalogue() {
+    const piece = this.piecesPdp.find(p => p.id === Number(this.piecePdpAjouter));
+    if (!piece) return;
+
+    const ligne = this.makeLigne();
+    ligne.patchValue({ pieceDetacheeId: piece.id, quantite: Math.max(1, Number(this.qteAjouterPdp) || 1), prixUnitaire: Number(this.prixAjouterPdp) || 0 });
+    this.lignesArray.push(ligne);
+    this.piecePdpAjouter = null;
+    this.qteAjouterPdp = 1;
+    this.prixAjouterPdp = null;
+  }
 
   removeLigne(i: number) {
     const ctrl = this.lignesArray.at(i);
@@ -275,23 +355,13 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
     this.lignesArray.removeAt(i);
   }
 
-  toggleCustom(i: number) {
-    const ctrl = this.lignesArray.at(i);
-    if (!ctrl) return;
-    const qRecue = ctrl.get('quantiteRecue')?.value || 0;
-    if (qRecue > 0) {
-      this.notifyError('Impossible de modifier le type de pièce d\'une ligne déjà réceptionnée.');
-      return;
-    }
-    const current = !!ctrl.get('isCustom')?.value;
-    ctrl.patchValue({ isCustom: !current, pieceDetacheeId: null, designationPds: '' });
-  }
 
   openNew() {
     this.isNew = true;
     this.isReplenishment = false;
     this.editingId = null;
     this.selectedClientId = null;
+    this.vehicules = [];
     this.clientOpen = false;
     this.vehiculeOpen = false;
     this.fournisseurOpen = false;
@@ -300,7 +370,10 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
     this.fournisseurFilter = '';
     this.form.reset({ tvaApplicable: false, observation: '', clientId: null, vehiculeId: null });
     while (this.lignesArray.length) this.lignesArray.removeAt(0);
-    this.addLigne();
+    this.lignesNonPdpExistantes = [];
+    this.piecePdpAjouter = null;
+    this.qteAjouterPdp = 1;
+    this.prixAjouterPdp = null;
     this.errorMessage = '';
     this.showModal = true;
   }
@@ -310,16 +383,47 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
     this.isReplenishment = true;
     const piece = this.pieces.find(p => p.id === pieceId);
     if (piece) {
-      const ctrl = this.lignesArray.at(0);
+      if (piece.type !== 'PDP') {
+        this.notifyError('Seules les pièces de rechange (PDP) peuvent être commandées.');
+        return;
+      }
+      const ctrl = this.makeLigne();
       ctrl.patchValue({
         pieceDetacheeId: piece.id,
         prixUnitaire: piece.prix ?? 0,
         quantite: piece.seuilMinimum ? Math.max(1, piece.seuilMinimum - (piece.qteReelle ?? 0)) : 10
       });
+      this.lignesArray.push(ctrl);
     }
   }
 
   openEdit(bon: BonDeCommande) {
+    // La liste paginée renvoie un DTO résumé sans lignes ; le formulaire a besoin du détail complet.
+    if (!Array.isArray(bon.lignes)) {
+      this.isNew = false;
+      this.editingId = bon.id;
+      this.loadingEdit = true;
+      this.errorMessage = '';
+      this.showModal = true;
+      this.service.getById(bon.id).subscribe({
+        next: detail => {
+          this.loadingEdit = false;
+          this.populateEditForm(detail);
+          this.cdr.markForCheck();
+        },
+        error: err => {
+          this.loadingEdit = false;
+          this.showModal = false;
+          this.notifyError(err?.error?.message || 'Impossible de charger le bon de commande.');
+        },
+      });
+      return;
+    }
+    this.populateEditForm(bon);
+  }
+
+  private populateEditForm(bon: BonDeCommande) {
+    this.loadingEdit = false;
     this.isNew = false;
     this.isReplenishment = false;
     this.editingId = bon.id;
@@ -337,18 +441,53 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
       tvaApplicable: bon.tvaApplicable,
       observation: bon.observation ?? '',
     });
+    this.vehicules = [];
+    if (bon.vehiculeId) {
+      this.vehiculesLoading = true;
+      this.vehiculeService.getById(bon.vehiculeId).subscribe({
+        next: vehicule => {
+          this.vehiculesLoading = false;
+          if (!vehicule.client?.id) {
+            this.vehicules = [vehicule];
+            this.cdr.markForCheck();
+            return;
+          }
+          const clientId = vehicule.client.id;
+          this.selectedClientId = clientId;
+          this.form.patchValue({ clientId });
+          if (!this.clients.some(client => client.id === clientId)) {
+            this.clientService.getById(clientId).subscribe({
+              next: client => {
+                if (this.selectedClientId !== clientId) return;
+                this.clients = [client, ...this.clients];
+                this.cdr.markForCheck();
+              },
+            });
+          }
+          this.loadVehiculesClient(clientId);
+        },
+        error: () => {
+          this.vehiculesLoading = false;
+          this.cdr.markForCheck();
+        },
+      });
+    }
     while (this.lignesArray.length) this.lignesArray.removeAt(0);
+    this.lignesNonPdpExistantes = [];
     for (const l of bon.lignes) {
-      const matchingPiece = this.pieces.find(p => p.id === l.pieceDetacheeId && p.type !== 'PDS');
-      const isCustom = !matchingPiece;
+      const matchingPiece = this.pieces.find(p => p.id === l.pieceDetacheeId);
+      if (matchingPiece?.type !== 'PDP') {
+        this.lignesNonPdpExistantes.push(l);
+        continue;
+      }
       const qRecue = l.quantiteRecue || 0;
       const minQty = qRecue > 0 ? qRecue : 1;
       this.lignesArray.push(this.fb.group({
         id: [l.id],
         quantiteRecue: [qRecue],
-        isCustom: [isCustom],
-        pieceDetacheeId: [isCustom ? null : l.pieceDetacheeId],
-        designationPds: [isCustom ? (l.designationPiece || l.reference || '') : ''],
+        pieceType: ['PDP'],
+        pieceDetacheeId: [l.pieceDetacheeId],
+        designationPds: [''],
         quantite: [l.quantite, [Validators.required, Validators.min(minQty)]],
         prixUnitaire: [l.prixUnitaire, [Validators.required, Validators.min(0)]],
       }));
@@ -367,12 +506,8 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
     }
     const lignesRaw = this.form.value.lignes as any[];
     for (const l of lignesRaw) {
-      if (l.isCustom && !l.designationPds?.trim()) {
-        this.notifyError('Saisissez une désignation pour les pièces personnalisées.');
-        return;
-      }
-      if (!l.isCustom && !l.pieceDetacheeId) {
-        this.notifyError('Sélectionnez une pièce pour chaque ligne du catalogue.');
+      if (!l.pieceDetacheeId) {
+        this.notifyError('Sélectionnez une pièce PDP pour chaque ligne.');
         return;
       }
       const qRecue = Number(l.quantiteRecue || 0);
@@ -388,23 +523,15 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
       vehiculeId: raw.vehiculeId ? Number(raw.vehiculeId) : null,
       tvaApplicable: !!raw.tvaApplicable,
       observation: raw.observation || undefined,
-      lignes: lignesRaw.map((l: any) => {
-        if (l.isCustom) {
-          return {
-            id: l.id ? Number(l.id) : undefined,
-            designationPds: l.designationPds.trim(),
-            typePiece: 'PDS',
-            quantite: Number(l.quantite),
-            prixUnitaire: Number(l.prixUnitaire),
-          };
-        }
-        return {
+      lignes: [
+        ...this.lignesNonPdpExistantes,
+        ...lignesRaw.map((l: any) => ({
           id: l.id ? Number(l.id) : undefined,
           pieceDetacheeId: Number(l.pieceDetacheeId),
           quantite: Number(l.quantite),
           prixUnitaire: Number(l.prixUnitaire),
-        };
-      }),
+        })),
+      ],
     };
     const req$ = this.isNew
       ? this.service.create(payload)
