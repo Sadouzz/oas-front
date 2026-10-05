@@ -1,8 +1,7 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
-
-import { FormBuilder, FormArray, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { forkJoin } from 'rxjs';
 import { BonDeSortieService } from './bon-de-sortie.service';
 import { BonDeSortie, BonDeSortieHistorique } from './models/bon-de-sortie.model';
 import { ClientService } from '../clients/client.service';
@@ -12,13 +11,39 @@ import { AuthService } from '../../core/services/auth.service';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
+import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select.component';
 import { UserModel, VehiculeModel, PieceDetache, extractContent } from '../../shared/models';
-import { LucidePlus, LucideSearch, LucidePackage, LucideTrash2, LucideX, LucideCheck, LucideCheckCircle, LucideLoader2 } from '@lucide/angular';
+import { LucidePlus, LucideSearch, LucideTrash2, LucideX, LucideCheck, LucideCheckCircle, LucideLoader2, LucideUser, LucideCar, LucideClock, LucidePackage, LucideFileText } from '@lucide/angular';
+
+export interface LignePieceBS {
+  piece: PieceDetache;
+  quantite: number;
+  prix?: number | null;
+}
 
 @Component({
   selector: 'app-bons-de-sortie',
   standalone: true,
-  imports: [ReactiveFormsModule, FormsModule, PaginationComponent, AlertComponent, LucidePlus, LucideSearch, LucidePackage, LucideTrash2, LucideX, LucideCheck, LucideCheckCircle, LucideLoader2],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    PaginationComponent,
+    AlertComponent,
+    SearchableSelectComponent,
+    LucidePlus,
+    LucideSearch,
+    LucideTrash2,
+    LucideX,
+    LucideCheck,
+    LucideCheckCircle,
+    LucideLoader2,
+    LucideUser,
+    LucideCar,
+    LucideClock,
+    LucidePackage,
+    LucideFileText
+  ],
   templateUrl: './bons-de-sortie.component.html',
 })
 export class BonsDeSortieComponent extends BasePaginatedComponent implements OnInit {
@@ -35,14 +60,22 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
   filtered: BonDeSortie[] = [];
 
   clients: UserModel[] = [];
-  allVehicules: VehiculeModel[] = [];
   vehiculesFiltres: VehiculeModel[] = [];
-  pdps: PieceDetache[] = [];
+  piecesPdp: PieceDetache[] = [];
+  lignesPieces: LignePieceBS[] = [];
+
+  piecePdpAjouter: number | null = null;
+  qteAjouterPdp = 1;
+  prixAjouterPdp: number | null = null;
 
   loading = false;
   saving = false;
+  loadingVehicules = false;
+  loadingPdp = false;
   successMessage = '';
   errorMessage = '';
+
+  private pdpSearchDebounce: any;
 
   historique: BonDeSortieHistorique[] = [];
   loadingHistorique = false;
@@ -68,18 +101,22 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     clientId: [null as number | null, Validators.required],
     vehiculeId: [null as number | null, Validators.required],
     remarque: [''],
-    lignesPieces: this.fb.array([]),
   });
-
-  get lignesPieces(): FormArray { return this.form.get('lignesPieces') as FormArray; }
 
   get role(): string { return this.authService.getRole() ?? ''; }
   get canCreate(): boolean { return ['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_AGENT', 'ROLE_AGENT_MAGASIN'].includes(this.role); }
   get canValidate(): boolean { return ['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_AGENT_MAGASIN'].includes(this.role); }
 
+  selectedClient: UserModel | null = null;
+  loadingClients = false;
+  private clientSearchDebounce: any;
+
   // ── Searchable selects ──────────────────────────────────────────
 
   get clientLabel(): string {
+    if (this.selectedClient) {
+      return `${this.selectedClient.firstName} ${this.selectedClient.lastName}`;
+    }
     const id = this.form.get('clientId')?.value;
     if (!id) return '';
     const c = this.clients.find(x => x.id === Number(id));
@@ -89,17 +126,12 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
   get vehiculeLabel(): string {
     const id = this.form.get('vehiculeId')?.value;
     if (!id) return '';
-    const v = this.allVehicules.find(x => x.id === Number(id));
+    const v = this.vehiculesFiltres.find(x => x.id === Number(id));
     return v ? `${v.immatriculation} — ${v.marque} ${v.modele}` : '';
   }
 
   get filteredClients(): UserModel[] {
-    if (!this.clientFilter) return this.clients;
-    const kw = this.clientFilter.toLowerCase();
-    return this.clients.filter(c =>
-      `${c.firstName} ${c.lastName}`.toLowerCase().includes(kw) ||
-      (c.phone ?? '').toLowerCase().includes(kw)
-    );
+    return this.clients;
   }
 
   get filteredVehicules(): VehiculeModel[] {
@@ -111,11 +143,186 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     );
   }
 
+  loadPdpPieces(keyword: string = '') {
+    this.loadingPdp = true;
+    const params: any = { page: 0, size: 10, type: 'PDP' };
+    if (keyword && keyword.trim()) {
+      params.keyword = keyword.trim();
+    }
+    this.pieceService.getAll(params).subscribe({
+      next: (res) => {
+        this.piecesPdp = extractContent<PieceDetache>(res as any).filter(p => p.statut === 'ACTIF');
+        this.loadingPdp = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.loadingPdp = false;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  onPdpSearch(term: string) {
+    clearTimeout(this.pdpSearchDebounce);
+    this.pdpSearchDebounce = setTimeout(() => {
+      this.loadPdpPieces(term);
+    }, 300);
+  }
+
+  get lignesPiecesPdp(): LignePieceBS[] {
+    return this.lignesPieces.filter(l => l.piece.type === 'PDP');
+  }
+
+  get totalPdp(): number {
+    return this.lignesPiecesPdp.reduce((sum, l) => {
+      const price = l.prix != null && l.prix !== ('' as any) ? Number(l.prix) : (l.piece?.prix != null ? Number(l.piece.prix) : 0);
+      return sum + (price * (Number(l.quantite) || 0));
+    }, 0);
+  }
+
+  get totalGeneral(): number {
+    return this.totalPdp;
+  }
+
+  formatPiece = (p: PieceDetache) => {
+    const stock = p.stockMagasin != null ? `(Stock: ${p.stockMagasin})` : '';
+    const prix = p.prix != null ? `— ${p.prix} FCFA` : '';
+    return `${p.reference} — ${p.designation} ${prix} ${stock}`.trim();
+  };
+
+  get selectedPiecePdp(): PieceDetache | undefined {
+    if (!this.piecePdpAjouter) return undefined;
+    return this.piecesPdp.find(p => p.id === Number(this.piecePdpAjouter));
+  }
+
+  onPiecePdpSelected(pieceId: any) {
+    if (!pieceId) {
+      this.prixAjouterPdp = null;
+      return;
+    }
+    const p = this.piecesPdp.find(x => x.id === +pieceId);
+    if (p) {
+      this.prixAjouterPdp = p.prix != null ? Number(p.prix) : null;
+      this.qteAjouterPdp = 1;
+      this.errorMessage = '';
+    }
+  }
+
+  addPiecePdp() {
+    this.errorMessage = '';
+    if (!this.piecePdpAjouter) return;
+    const piece = this.piecesPdp.find(p => p.id === Number(this.piecePdpAjouter));
+    if (!piece) return;
+
+    const stock = piece.stockMagasin ?? 0;
+    if (stock <= 0) {
+      this.errorMessage = `La pièce "${piece.designation || piece.reference}" est en rupture de stock magasin (0 disponible).`;
+      return;
+    }
+
+    const qteDemandee = Number(this.qteAjouterPdp) || 1;
+    if (qteDemandee <= 0) {
+      this.errorMessage = 'La quantité doit être supérieure à 0.';
+      return;
+    }
+
+    const existing = this.lignesPieces.find(l => l.piece.id === piece.id);
+    const currentQte = existing ? (Number(existing.quantite) || 0) : 0;
+
+    if (currentQte + qteDemandee > stock) {
+      this.errorMessage = `Stock magasin insuffisant pour "${piece.designation || piece.reference}" : seulement ${stock} disponible(s) (${currentQte} déjà ajouté(s)).`;
+      return;
+    }
+
+    const prix = this.prixAjouterPdp != null && this.prixAjouterPdp !== ('' as any)
+      ? Number(this.prixAjouterPdp)
+      : (piece.prix != null ? Number(piece.prix) : 0);
+
+    if (existing) {
+      existing.quantite = currentQte + qteDemandee;
+      if (this.prixAjouterPdp != null && this.prixAjouterPdp !== ('' as any)) {
+        existing.prix = Number(this.prixAjouterPdp);
+      }
+    } else {
+      this.lignesPieces.push({
+        piece,
+        quantite: qteDemandee,
+        prix: prix
+      });
+    }
+    this.piecePdpAjouter = null;
+    this.qteAjouterPdp = 1;
+    this.prixAjouterPdp = null;
+    this.cdr.markForCheck();
+  }
+
+  onLineQteChange(l: LignePieceBS) {
+    const stock = l.piece.stockMagasin ?? 0;
+    const qte = Number(l.quantite) || 0;
+    if (qte > stock) {
+      this.errorMessage = `Attention : la quantité pour "${l.piece.designation || l.piece.reference}" (${qte}) dépasse le stock magasin disponible (${stock}).`;
+    } else if (qte <= 0) {
+      this.errorMessage = `La quantité pour "${l.piece.designation || l.piece.reference}" doit être au moins de 1.`;
+    } else {
+      this.errorMessage = '';
+    }
+    this.cdr.markForCheck();
+  }
+
+  removePiece(item: LignePieceBS) {
+    this.lignesPieces = this.lignesPieces.filter(l => l !== item);
+    this.errorMessage = '';
+  }
+
+  loadClients(keyword: string = '') {
+    this.loadingClients = true;
+    const params: any = { page: 0, size: 10 };
+    if (keyword && keyword.trim()) {
+      params.keyword = keyword.trim();
+    }
+    this.clientService.getAll(params).subscribe({
+      next: (res) => {
+        this.clients = extractContent<UserModel>(res as any).filter(c => c.enabled !== false);
+        this.loadingClients = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.loadingClients = false;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  onClientSearch(keyword: string) {
+    this.clientFilter = keyword;
+    this.clientOpen = true;
+    clearTimeout(this.clientSearchDebounce);
+    this.clientSearchDebounce = setTimeout(() => {
+      this.loadClients(keyword);
+    }, 300);
+  }
+
   selectClient(c: UserModel) {
+    this.selectedClient = c;
     this.form.patchValue({ clientId: c.id, vehiculeId: null });
-    this.vehiculesFiltres = this.allVehicules.filter(v => v.client?.id === c.id);
+    this.vehiculesFiltres = [];
     this.clientFilter = '';
     this.clientOpen = false;
+    if (c.id) {
+      this.loadingVehicules = true;
+      this.vehiculeService.getByClient(c.id).subscribe({
+        next: (vList) => {
+          this.vehiculesFiltres = extractContent<VehiculeModel>(vList as any);
+          this.loadingVehicules = false;
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.vehiculesFiltres = [];
+          this.loadingVehicules = false;
+          this.cdr.markForCheck();
+        }
+      });
+    }
   }
 
   selectVehicule(v: VehiculeModel) {
@@ -128,18 +335,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
 
   ngOnInit() {
     this.loadData();
-    forkJoin({
-      clients: this.clientService.getAll({ size: 500 }),
-      vehicules: this.vehiculeService.getAll({ size: 1000 }),
-      pdps: this.pieceService.getAll({ type: 'PDP' })
-    }).subscribe({
-      next: ({ clients, vehicules, pdps }) => {
-        this.clients = extractContent<UserModel>(clients as any).filter(c => c.enabled);
-        this.allVehicules = extractContent<VehiculeModel>(vehicules as any);
-        this.pdps = extractContent<PieceDetache>(pdps as any).filter(p => p.statut === 'ACTIF');
-        this.cdr.markForCheck();
-      },
-    });
+    this.loadPdpPieces('');
 
     this.route.queryParams.subscribe(params => {
       if (params['action'] === 'new') {
@@ -215,8 +411,11 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
 
   openCreate() {
     this.form.reset({ remarque: '' });
-    while (this.lignesPieces.length) this.lignesPieces.removeAt(0);
-    this.addPiece();
+    this.lignesPieces = [];
+    this.piecePdpAjouter = null;
+    this.qteAjouterPdp = 1;
+    this.prixAjouterPdp = null;
+    this.selectedClient = null;
     this.vehiculesFiltres = [];
     this.clientOpen = false;
     this.vehiculeOpen = false;
@@ -225,6 +424,8 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     this.createStep = 1;
     this.errorMessage = '';
     this.showCreateModal = true;
+    this.loadClients('');
+    this.loadPdpPieces('');
   }
 
   closeCreate() { this.showCreateModal = false; this.errorMessage = ''; this.createStep = 1; }
@@ -234,7 +435,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
       if (this.form.get('clientId')!.invalid || this.form.get('vehiculeId')!.invalid) {
         this.form.get('clientId')!.markAsTouched();
         this.form.get('vehiculeId')!.markAsTouched();
-        this.errorMessage = 'Veuillez selectionner un client et un vehicule.';
+        this.errorMessage = 'Veuillez sélectionner un client et un véhicule.';
         return;
       }
     }
@@ -242,40 +443,37 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     this.errorMessage = '';
   }
 
-  // ── Lignes pieces ──
-
-  addPiece() {
-    this.lignesPieces.push(this.fb.group({
-      pieceId: [null as number | null],
-      pieceRef: [''],
-      quantite: [1, [Validators.required, Validators.min(1)]],
-      prix: [null as number | null],
-    }));
-  }
-
-  removePiece(i: number) { if (this.lignesPieces.length > 1) this.lignesPieces.removeAt(i); }
-
-  onPieceInput(index: number, event: Event) {
-    const ref = (event.target as HTMLInputElement).value.trim();
-    const found = this.pdps.find(p => p.reference === ref);
-    const ctrl = this.lignesPieces.at(index);
-    if (found) {
-      ctrl.patchValue({ pieceId: found.id, prix: found.prix ?? null }, { emitEvent: false });
-    } else {
-      ctrl.patchValue({ pieceId: null }, { emitEvent: false });
-    }
-  }
-
   save() {
     const val = this.form.value as any;
-    const lignesPieces = (val.lignesPieces ?? [])
-      .filter((l: any) => l.pieceId)
-      .map((l: any) => ({ pieceId: l.pieceId, quantite: l.quantite, prix: l.prix }));
+    const lignesPieces = this.lignesPieces.map(l => {
+      const price = l.prix != null && l.prix !== ('' as any)
+        ? Number(l.prix)
+        : (l.piece?.prix != null ? Number(l.piece.prix) : null);
+      return {
+        pieceId: l.piece.id,
+        quantite: Number(l.quantite) || 1,
+        prix: price,
+        prixUnitaire: price
+      };
+    });
 
     if (lignesPieces.length === 0) {
-      this.errorMessage = 'Ajoutez au moins une piece.';
+      this.errorMessage = 'Ajoutez au moins une pièce de rechange (PDP).';
       return;
     }
+
+    const depassement = this.lignesPieces.find(l => (Number(l.quantite) || 0) > (l.piece.stockMagasin ?? 0));
+    if (depassement) {
+      this.errorMessage = `La quantité pour "${depassement.piece.designation || depassement.piece.reference}" (${depassement.quantite}) dépasse le stock magasin disponible (${depassement.piece.stockMagasin ?? 0}).`;
+      return;
+    }
+
+    const quantiteInvalide = this.lignesPieces.find(l => (Number(l.quantite) || 0) <= 0);
+    if (quantiteInvalide) {
+      this.errorMessage = `La quantité pour "${quantiteInvalide.piece.designation || quantiteInvalide.piece.reference}" doit être supérieure à 0.`;
+      return;
+    }
+
     if (this.form.get('clientId')!.invalid || this.form.get('vehiculeId')!.invalid || this.saving) {
       this.form.markAllAsTouched();
       return;
@@ -288,11 +486,16 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
       remarque: val.remarque,
       lignesPieces
     } as any).subscribe({
-      next: () => { this.saving = false; this.showSuccess('Bon de sortie cree !'); this.closeCreate(); this.loadBons(); },
+      next: () => {
+        this.saving = false;
+        this.showSuccess('Bon de sortie créé !');
+        this.closeCreate();
+        this.loadBons();
+      },
       error: (err: any) => {
         this.saving = false;
         const msg = err.error?.message ?? (typeof err.error === 'string' ? err.error : '');
-        this.errorMessage = msg || 'Erreur lors de la creation.';
+        this.errorMessage = msg || 'Erreur lors de la création.';
       }
     });
   }
@@ -300,6 +503,15 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
   openDetail(bon: BonDeSortie) {
     this.selectedBon = bon;
     this.showDetailModal = true;
+    this.bonService.getById(bon.id).subscribe({
+      next: (fullBon) => {
+        if (fullBon) {
+          this.selectedBon = fullBon;
+          this.cdr.markForCheck();
+        }
+      },
+      error: () => {}
+    });
     this.loadHistorique(bon.id);
   }
   closeDetail() {
@@ -368,6 +580,35 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     }
   }
 
+  getNombreTotalPieces(bon: BonDeSortie): number {
+    if (!bon.lignesBonDeSortiePieces || bon.lignesBonDeSortiePieces.length === 0) return 0;
+    return bon.lignesBonDeSortiePieces.reduce((sum, l) => sum + (Number(l.quantite) || 0), 0);
+  }
+
+  get totalPiecesSelectedBon(): number {
+    return this.selectedBon ? this.getNombreTotalPieces(this.selectedBon) : 0;
+  }
+
+  get totalSelectedBon(): number {
+    if (!this.selectedBon?.lignesBonDeSortiePieces) return 0;
+    return this.selectedBon.lignesBonDeSortiePieces.reduce((sum, l) => {
+      const price = this.getLignePrix(l);
+      return sum + price * (Number(l.quantite) || 0);
+    }, 0);
+  }
+
+  getLignePrix(l: any): number {
+    if (!l) return 0;
+    if (l.prix != null && l.prix !== '') return Number(l.prix);
+    if (l.prixUnitaire != null && l.prixUnitaire !== '') return Number(l.prixUnitaire);
+    if (l.piece?.prix != null && l.piece?.prix !== '') return Number(l.piece.prix);
+    return 0;
+  }
+
+  getLigneTotal(l: any): number {
+    return this.getLignePrix(l) * (Number(l?.quantite) || 0);
+  }
+
   formatDate(d?: string): string {
     if (!d) return '—';
     return new Date(d).toLocaleString('fr-FR');
@@ -377,6 +618,4 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     this.successMessage = msg; this.errorMessage = '';
     setTimeout(() => this.successMessage = '', 3500);
   }
-
-  get fPieces() { return this.lignesPieces.controls; }
 }
