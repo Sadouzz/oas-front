@@ -324,7 +324,7 @@
 <!-- Create / Edit Modal -->
 @if (showModal) {
 <div class="fixed inset-0 z-50 flex items-start justify-center bg-black/50 overflow-y-auto py-6">
-  <div class="bg-white rounded-lg shadow-2xl w-full max-w-2xl mx-4 my-auto">
+  <div class="bg-white rounded-lg shadow-2xl w-full max-w-4xl mx-4 my-auto">
 
     <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line">
       <h2 class="text-base font-bold text-oas-ink">{{ isNew ? 'Nouveau bon de commande' : 'Modifier le bon' }}</h2>
@@ -340,6 +340,12 @@
       }}</div>
     }
 
+    @if (loadingEdit) {
+    <div class="px-6 py-14 flex flex-col items-center justify-center gap-3 text-oas-muted">
+      <div class="w-7 h-7 border-2 border-oas-accent border-t-transparent rounded-full animate-spin"></div>
+      <p class="text-sm">Chargement du bon de commande...</p>
+    </div>
+    } @else {
     <div class="px-6 py-5">
       <form [formGroup]="form" (ngSubmit)="save()" class="space-y-5">
 
@@ -348,7 +354,7 @@
         <div>
           <label class="block text-sm font-semibold text-oas-ink mb-1">Fournisseur <span
               class="font-normal text-oas-muted text-xs">(optionnel — assignable plus tard)</span></label>
-          <div class="relative z-[10]">
+          <div class="relative z-[20]">
             <input type="text" [value]="fournisseurOpen ? fournisseurFilter : (fournisseurLabel || '')"
               (focus)="fournisseurOpen = true; fournisseurFilter = ''"
               (input)="fournisseurFilter = $any($event.target).value; fournisseurOpen = true"
@@ -356,7 +362,7 @@
               class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition" />
             @if (fournisseurOpen) {
             <div
-              class="absolute top-full left-0 right-0 mt-1 bg-white border border-oas-line rounded-xl shadow-xl z-[10] max-h-56 overflow-y-auto"
+              class="absolute top-full left-0 right-0 mt-1 bg-white border border-oas-line rounded-xl shadow-2xl z-[30] max-h-56 overflow-y-auto"
               (click)="$event.stopPropagation()">
               <!-- Option Aucun fournisseur -->
               <button type="button"
@@ -434,16 +440,19 @@
             <label class="block text-sm font-semibold text-oas-ink mb-1">Client (pour filtrer les véhicules)</label>
             <div class="relative z-[10]">
               <input type="text" [value]="clientOpen ? clientFilter : clientLabel"
-                (focus)="clientOpen = true; clientFilter = ''" (input)="clientFilter = $any($event.target).value"
+                (focus)="clientOpen = true; onClientSearch('')" (input)="onClientSearch($any($event.target).value)"
                 placeholder="Rechercher un client..."
                 class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition" />
               @if (clientOpen) {
               <div
                 class="absolute top-full left-0 right-0 mt-1 bg-white border border-oas-line rounded-lg shadow-xl z-[10] max-h-52 overflow-y-auto"
                 (click)="$event.stopPropagation()">
+                @if (clientsLoading) {
+                <div class="px-3 py-3 text-sm text-oas-muted text-center">Recherche des clients...</div>
+                } @else {
                 <div (click)="selectClient(null)"
                   class="px-3 py-2.5 hover:bg-oas-bg cursor-pointer text-sm text-oas-muted border-b border-oas-line">
-                  Aucun client (tous les véhicules)
+                  Aucun client
                 </div>
                 @for (c of filteredClients; track c.id) {
                 <div (click)="selectClient(c)"
@@ -455,6 +464,7 @@
                 @if (filteredClients.length === 0) {
                 <div class="px-3 py-3 text-sm text-oas-muted text-center">Aucun résultat</div>
                 }
+                }
               </div>
               }
             </div>
@@ -463,13 +473,17 @@
             <label class="block text-sm font-semibold text-oas-ink mb-1">Véhicule (optionnel)</label>
             <div class="relative z-[10]">
               <input type="text" [value]="vehiculeOpen ? vehiculeFilter : vehiculeLabel"
-                (focus)="vehiculeOpen = true; vehiculeFilter = ''" (input)="vehiculeFilter = $any($event.target).value"
-                placeholder="Rechercher un véhicule..."
-                class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition" />
+                (focus)="vehiculeOpen = !!selectedClientId; vehiculeFilter = ''" (input)="vehiculeFilter = $any($event.target).value"
+                [disabled]="!selectedClientId || vehiculesLoading"
+                [placeholder]="!selectedClientId ? 'Sélectionnez d’abord un client' : 'Rechercher un véhicule...'"
+                class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition disabled:opacity-60" />
               @if (vehiculeOpen) {
               <div
                 class="absolute top-full left-0 right-0 mt-1 bg-white border border-oas-line rounded-lg shadow-xl z-[10] max-h-52 overflow-y-auto"
                 (click)="$event.stopPropagation()">
+                @if (vehiculesLoading) {
+                <div class="px-3 py-3 text-sm text-oas-muted text-center">Chargement des véhicules...</div>
+                } @else {
                 <div (click)="selectVehicule(null)"
                   class="px-3 py-2.5 hover:bg-oas-bg cursor-pointer text-sm text-oas-muted border-b border-oas-line">
                   Aucun véhicule
@@ -483,6 +497,7 @@
                 }
                 @if (filteredVehicules.length === 0) {
                 <div class="px-3 py-3 text-sm text-oas-muted text-center">Aucun véhicule trouvé</div>
+                }
                 }
               </div>
               }
@@ -505,111 +520,77 @@
           </div>
         </div>
 
-        <!-- Lignes -->
-        <div>
-          <div class="flex items-center justify-between mb-2">
-            <label class="text-sm font-bold text-oas-ink">Lignes de commande *</label>
-            <button type="button" (click)="addLigne()"
-              class="text-xs font-bold text-oas-accent hover:text-oas-accent-dark flex items-center gap-1 cursor-pointer">
-              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
-              Ajouter une ligne
-            </button>
-          </div>
-
+        <!-- Lignes de commande par type de pièce -->
+        <div formArrayName="lignes" class="space-y-4">
           @if (lignesArray.length === 0) {
-          <p class="text-xs text-oas-muted text-center py-4 border border-dashed border-oas-line rounded-lg">
-            Ajoutez au moins une ligne.
+          <p class="text-xs text-oas-muted text-center py-3 border border-dashed border-oas-line rounded-xl">
+            Ajoutez au moins une ligne pour enregistrer le bon de commande.
           </p>
           }
 
-          <div formArrayName="lignes" class="space-y-2">
-            @for (ligne of lignesArray.controls; track $index) {
-            <div [formGroupName]="$index" class="bg-oas-bg rounded-lg p-3 space-y-2">
-              <!-- Toggle + input -->
-              <div class="flex items-center gap-2">
-                <!-- Toggle catalogue / personnalisé -->
-                <button type="button" (click)="toggleCustom($index)"
-                  class="flex-shrink-0 px-2 py-1.5 rounded-lg border text-xs font-bold transition cursor-pointer"
-                  [class.bg-white]="!ligne.get('isCustom')?.value"
-                  [class.border-oas-line]="!ligne.get('isCustom')?.value"
-                  [class.text-oas-muted]="!ligne.get('isCustom')?.value"
-                  [class.bg-orange-100]="ligne.get('isCustom')?.value"
-                  [class.border-orange-300]="ligne.get('isCustom')?.value"
-                  [class.text-orange-700]="ligne.get('isCustom')?.value"
-                  title="{{ ligne.get('isCustom')?.value ? 'Pièce personnalisée (PDS)' : 'Pièce du catalogue — cliquer pour personnaliser' }}">
-                  {{ ligne.get('isCustom')?.value ? 'PDS' : 'CAT' }}
-                </button>
-
-                <!-- Catalogue select -->
-                @if (!ligne.get('isCustom')?.value) {
-                <select formControlName="pieceDetacheeId"
-                  class="flex-1 px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
-                  <option [ngValue]="null" disabled>Pièce du catalogue...</option>
-                  @for (p of displayedPieces; track p.id) {
-                  <option [value]="p.id">{{ p.designation }} — {{ p.reference }}</option>
-                  }
-                </select>
-                }
-
-                <!-- Custom designation -->
-                @if (ligne.get('isCustom')?.value) {
-                <input formControlName="designationPds" placeholder="Désignation de la pièce personnalisée..."
-                  class="flex-1 px-3 py-2 rounded-lg border border-orange-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-300/40 transition" />
-                }
-
-                <!-- Quantité + Prix + Supprimer -->
-                <div
-                  class="flex items-center gap-1.5 flex-shrink-0 bg-white border border-oas-line rounded-lg px-2 py-1.5 focus-within:ring-2 focus-within:ring-oas-accent/40 transition">
-                  <span class="text-xs font-bold text-oas-muted select-none">Qté</span>
-                  <input formControlName="quantite" type="number" [min]="ligne.get('quantiteRecue')?.value > 0 ? (ligne.get('quantiteRecue')?.value ?? 1) : 1"
-                    class="w-12 bg-transparent text-sm text-center font-semibold focus:outline-none text-oas-ink" />
-                </div>
-
-                @if (ligne.get('quantiteRecue')?.value > 0) {
-                <span class="px-2 py-1 bg-green-100 border border-green-300 text-green-800 rounded-lg text-xs font-bold whitespace-nowrap"
-                  title="Déjà reçu (quantité minimale: {{ ligne.get('quantiteRecue')?.value }})">
-                  Reçu: {{ ligne.get('quantiteRecue')?.value }}
-                </span>
-                }
-
-                <div
-                  class="flex items-center gap-1.5 flex-shrink-0 bg-white border border-oas-line rounded-lg px-2 py-1.5 focus-within:ring-2 focus-within:ring-oas-accent/40 transition">
-                  <span class="text-xs font-bold text-oas-muted select-none">Prix</span>
-                  <input formControlName="prixUnitaire" type="number" min="0"
-                    class="w-20 bg-transparent text-sm text-right font-semibold focus:outline-none text-oas-ink" />
-                </div>
-
-                <div
-                  class="flex items-center justify-end w-24 flex-shrink-0 bg-oas-bg/50 border border-oas-line rounded-lg px-2 py-1.5">
-                  <span class="text-xs font-bold text-oas-ink">
-                    {{ fmt((ligne.get('quantite')?.value || 0) * (ligne.get('prixUnitaire')?.value || 0)) }}
-                  </span>
-                </div>
-                @if ((ligne.get('quantiteRecue')?.value || 0) === 0) {
-                <button type="button" (click)="removeLigne($index)"
-                  class="p-1.5 rounded-lg hover:bg-red-50 text-oas-muted hover:text-red-500 transition cursor-pointer flex-shrink-0"
-                  title="Supprimer la ligne">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-                } @else {
-                <span class="p-1.5 text-gray-300 flex-shrink-0" title="Cette ligne a déjà été reçue et ne peut pas être supprimée">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                </span>
-                }
-              </div>
+          <!-- Pièces de rechange (PDP) -->
+          <section class="bg-white border border-blue-200 rounded-2xl p-4 space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-bold text-oas-ink flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                1. Pièces de Rechange (PDP)
+              </h3>
+              <span class="text-xs font-bold text-oas-muted">{{ getLignesPdp().length }} pièce{{ getLignesPdp().length === 1 ? '' : 's' }}</span>
             </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_5rem_9rem_auto] gap-2 items-end">
+              <div class="min-w-0">
+                <label class="block text-xs font-bold text-oas-muted mb-1">Pièce</label>
+                <app-searchable-select [(ngModel)]="piecePdpAjouter" [ngModelOptions]="{standalone: true}"
+                  [options]="piecesPdp" bindValue="id" [bindLabel]="formatPiece"
+                  placeholder="Rechercher une pièce de rechange par référence ou désignation...">
+                </app-searchable-select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-oas-muted mb-1">Qté.</label>
+                <input type="number" min="1" [(ngModel)]="qteAjouterPdp" [ngModelOptions]="{standalone: true}"
+                  class="w-full px-3 py-2.5 rounded-xl border border-blue-200 bg-white text-sm font-bold text-center focus:outline-none focus:ring-2 focus:ring-blue-400/40" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-oas-muted mb-1">Prix</label>
+                <input type="number" min="0" [(ngModel)]="prixAjouterPdp" [ngModelOptions]="{standalone: true}"
+                  placeholder="Prix (FCFA)" class="w-full px-3 py-2.5 rounded-xl border border-blue-200 bg-white text-sm font-bold text-center focus:outline-none focus:ring-2 focus:ring-blue-400/40" />
+              </div>
+              <button type="button" (click)="addPieceCatalogue()" [disabled]="!piecePdpAjouter"
+                class="px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-xs font-bold transition cursor-pointer disabled:opacity-50">
+                Ajouter PDP
+              </button>
+            </div>
+
+            @if (getLignesPdp().length > 0) {
+            <div class="space-y-2">
+              @for (item of getLignesPdp(); track item.index) {
+              <div [formGroupName]="item.index" class="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_5rem_9rem_auto] gap-2 items-center rounded-xl border border-blue-100 bg-blue-50/30 p-2.5">
+                <select formControlName="pieceDetacheeId" class="min-w-0 w-full px-3 py-2 rounded-lg border border-blue-200 bg-white text-sm text-oas-ink focus:outline-none focus:ring-2 focus:ring-blue-400/40">
+                  <option [ngValue]="null" disabled>Choisir une pièce PDP...</option>
+                  @for (piece of piecesPdp; track piece.id) { <option [value]="piece.id">{{ formatPiece(piece) }}</option> }
+                </select>
+                <input formControlName="quantite" type="number" [min]="item.group.get('quantiteRecue')?.value || 1" class="w-full px-2 py-2 rounded-lg border border-blue-200 bg-white text-sm font-bold text-center focus:outline-none focus:ring-2 focus:ring-blue-400/40" aria-label="Quantité PDP" />
+                <input formControlName="prixUnitaire" type="number" min="0" class="w-full px-2 py-2 rounded-lg border border-blue-200 bg-white text-sm font-bold text-right focus:outline-none focus:ring-2 focus:ring-blue-400/40" aria-label="Prix unitaire PDP" />
+                <div class="flex items-center justify-end gap-2">
+                  <span class="text-xs font-bold text-blue-900 whitespace-nowrap">{{ fmt((item.group.get('quantite')?.value || 0) * (item.group.get('prixUnitaire')?.value || 0)) }} FCFA</span>
+                  @if ((item.group.get('quantiteRecue')?.value || 0) === 0) {
+                  <button type="button" (click)="removeLigne(item.index)" class="p-1.5 rounded-lg text-red-400 hover:text-red-700 hover:bg-red-50" title="Supprimer la ligne PDP">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                  } @else { <span class="text-[10px] font-bold text-emerald-700">Reçu : {{ item.group.get('quantiteRecue')?.value }}</span> }
+                </div>
+              </div>
+              }
+            </div>
+            } @else {
+            <p class="text-xs text-oas-muted italic">Aucune pièce de rechange (PDP) ajoutée.</p>
             }
-          </div>
+          </section>
 
           <!-- Totaux form -->
           @if (lignesArray.length > 0) {
-          <div class="mt-3 bg-oas-bg rounded-lg p-4 space-y-1.5 text-sm">
+          <div class="bg-oas-bg rounded-xl p-4 space-y-1.5 text-sm">
             <div class="flex justify-between">
               <span class="text-oas-muted">Montant HT</span>
               <span class="font-semibold">{{ fmt(montantHTForm) }} FCFA</span>
@@ -644,6 +625,7 @@
 
       </form>
     </div>
+    }
   </div>
 </div>
 }
