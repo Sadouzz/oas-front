@@ -230,7 +230,7 @@
                   </span>
                   <input type="text"
                          [value]="clientFilter"
-                         (input)="clientFilter = $any($event.target).value; clientOpen = true"
+                         (input)="onClientSearch($any($event.target).value)"
                          (focus)="clientOpen = true"
                          placeholder="Rechercher un client (nom, téléphone, email)..."
                          class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition text-oas-ink"
@@ -238,17 +238,25 @@
                 </div>
 
                 @if (clientOpen) {
-                  <div class="absolute z-50 w-full mt-1 bg-white border border-oas-line rounded-xl shadow-xl max-h-52 overflow-y-auto">
-                    @for (c of filteredClients; track c.id) {
-                      <div (click)="selectClient(c)"
-                           class="px-4 py-2.5 hover:bg-oas-bg cursor-pointer transition border-b border-oas-line/40 last:border-0">
-                        <p class="text-sm font-semibold text-oas-ink">{{ c.firstName }} {{ c.lastName }}</p>
-                        <p class="text-xs text-oas-muted">{{ c.phone || c.email || 'Aucune coordonnée' }}</p>
+                  <div class="absolute z-50 w-full mt-1 bg-white border border-oas-line rounded-xl shadow-xl max-h-52 overflow-y-auto"
+                       (click)="$event.stopPropagation()">
+                    @if (loadingClients) {
+                      <div class="px-4 py-3 text-center text-xs text-oas-muted flex items-center justify-center gap-2">
+                        <div class="w-4 h-4 border-2 border-oas-accent border-t-transparent rounded-full animate-spin"></div>
+                        <span>Recherche des clients...</span>
                       </div>
-                    } @empty {
-                      <div class="px-4 py-4 text-center text-xs text-oas-muted">
-                        Aucun client trouvé avec ce terme
-                      </div>
+                    } @else {
+                      @for (c of filteredClients; track c.id) {
+                        <div (click)="selectClient(c)"
+                             class="px-4 py-2.5 hover:bg-oas-bg cursor-pointer transition border-b border-oas-line/40 last:border-0">
+                          <p class="text-sm font-semibold text-oas-ink">{{ c.firstName }} {{ c.lastName }}</p>
+                          <p class="text-xs text-oas-muted">{{ c.phone || c.email || 'Aucune coordonnée' }}</p>
+                        </div>
+                      } @empty {
+                        <div class="px-4 py-4 text-center text-xs text-oas-muted">
+                          Aucun client trouvé
+                        </div>
+                      }
                     }
                   </div>
                 }
