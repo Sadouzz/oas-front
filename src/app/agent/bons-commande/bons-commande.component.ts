@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { forkJoin, Subject, debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs';
+import { forkJoin, Observable, of, Subject, debounceTime, distinctUntilChanged, switchMap, takeUntil, map } from 'rxjs';
 import { BonDeCommande, ReceptionBonDeCommandeRequest, StatutBonCommande } from './models/bon-de-commande.model';
 import { BonDeCommandeService } from './bon-de-commande.service';
 import { FournisseurService } from '../fournisseurs/fournisseur.service';
@@ -10,7 +10,7 @@ import { PieceDetacheeService } from '../pieces-detachees/piece-detachee.service
 import { ClientService } from '../clients/client.service';
 import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { FournisseurModel, VehiculeModel, PieceDetache, UserModel, ClientModel, extractContent } from '../../shared/models/index';
+import { FournisseurModel, VehiculeModel, PieceDetache, UserModel, ClientModel, extractContent, extractPage } from '../../shared/models/index';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideArrowRight } from '@lucide/angular';
@@ -40,7 +40,9 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
   clients: (UserModel | ClientModel)[] = [];
   clientsLoading = false;
   vehiculesLoading = false;
+  piecesLoading = false;
   private readonly clientSearch$ = new Subject<string>();
+  private readonly pieceSearch$ = new Subject<string>();
   private readonly destroy$ = new Subject<void>();
 
   selectedClientId: number | null = null;
@@ -199,7 +201,8 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
   }
 
   formatPiece(piece: PieceDetache): string {
-    return `${piece.reference} — ${piece.designation}`;
+    const depotNom = piece.depot?.nom ?? piece.categorie?.depot?.nom;
+    return `${piece.reference} — ${piece.designation}${depotNom ? ` (${depotNom})` : ''}`;
   }
 
   ngOnInit() {
@@ -224,14 +227,35 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
       },
     });
     this.loadClients('');
+    this.pieceSearch$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(keyword => {
+        this.piecesLoading = true;
+        return this.searchPdp(keyword);
+      }),
+      takeUntil(this.destroy$),
+    ).subscribe({
+      next: pieces => {
+        const piecesById = new Map<number, PieceDetache>();
+        [...this.pieces, ...pieces].forEach(piece => piecesById.set(piece.id, piece));
+        this.pieces = [...piecesById.values()];
+        this.piecesLoading = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.piecesLoading = false;
+        this.notifyError('Impossible de charger les pièces de rechange.');
+        this.cdr.markForCheck();
+      },
+    });
+    this.pieceSearch$.next('');
     this.load();
     forkJoin({
       fournisseurs: this.fournisseurService.getAll(),
-      pieces: this.pieceService.getAll(),
     }).subscribe({
-      next: ({ fournisseurs, pieces }) => {
+      next: ({ fournisseurs }) => {
         this.fournisseurs = extractContent(fournisseurs).filter((f: any) => !f.archived);
-        this.pieces = extractContent(pieces);
 
         // Pre-fill BDC if query parameter pieceId is present
         this.route.queryParams.subscribe(params => {
@@ -255,10 +279,47 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
     this.clientSearch$.next(keyword);
   }
 
+  onPieceSearch(keyword: string) {
+    this.pieceSearch$.next(keyword.trim());
+  }
+
+  private searchPdp(keyword: string): Observable<PieceDetache[]> {
+    const base = { page: 0, size: 10, type: 'PDP', statut: 'ACTIF' };
+    if (!keyword) {
+      return this.pieceService.getAll(base).pipe(map(response => extractContent<PieceDetache>(response)));
+    }
+
+    const keywordResults$ = this.pieceService.getAll({ ...base, keyword }).pipe(
+      map(response => extractContent<PieceDetache>(response)),
+    );
+    const depotResults$ = this.pieceService.getAll({ ...base, size: 100, depotNom: keyword }).pipe(
+      switchMap(response => {
+        const firstPage = extractContent<PieceDetache>(response);
+        const page = extractPage<PieceDetache>(response);
+        if (!page || page.totalPages <= 1) return of(firstPage);
+        const remainingPages = Array.from({ length: page.totalPages - 1 }, (_, index) =>
+          this.pieceService.getAll({ ...base, size: 100, page: index + 1, depotNom: keyword }).pipe(
+            map(nextResponse => extractContent<PieceDetache>(nextResponse)),
+          ),
+        );
+        return forkJoin(remainingPages).pipe(map(pages => [...firstPage, ...pages.flat()]));
+      }),
+    );
+
+    return forkJoin({ keyword: keywordResults$, depot: depotResults$ }).pipe(
+      map(({ keyword: matchingPieces, depot }) => {
+        const piecesById = new Map<number, PieceDetache>();
+        [...matchingPieces, ...depot].forEach(piece => piecesById.set(piece.id, piece));
+        return [...piecesById.values()];
+      }),
+    );
+  }
+
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
     this.clientSearch$.complete();
+    this.pieceSearch$.complete();
   }
 
   loadData() {
@@ -383,18 +444,31 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
     this.isReplenishment = true;
     const piece = this.pieces.find(p => p.id === pieceId);
     if (piece) {
-      if (piece.type !== 'PDP') {
-        this.notifyError('Seules les pièces de rechange (PDP) peuvent être commandées.');
-        return;
-      }
-      const ctrl = this.makeLigne();
-      ctrl.patchValue({
-        pieceDetacheeId: piece.id,
-        prixUnitaire: piece.prix ?? 0,
-        quantite: piece.seuilMinimum ? Math.max(1, piece.seuilMinimum - (piece.qteReelle ?? 0)) : 10
-      });
-      this.lignesArray.push(ctrl);
+      this.prefillReplenishmentPiece(piece);
+      return;
     }
+    this.pieceService.getById(pieceId).subscribe({
+      next: fetchedPiece => {
+        this.pieces = [fetchedPiece, ...this.pieces.filter(p => p.id !== fetchedPiece.id)];
+        this.prefillReplenishmentPiece(fetchedPiece);
+        this.cdr.markForCheck();
+      },
+      error: () => this.notifyError('Impossible de charger la pièce demandée.'),
+    });
+  }
+
+  private prefillReplenishmentPiece(piece: PieceDetache) {
+    if (piece.type !== 'PDP') {
+      this.notifyError('Seules les pièces de rechange (PDP) peuvent être commandées.');
+      return;
+    }
+    const ctrl = this.makeLigne();
+    ctrl.patchValue({
+      pieceDetacheeId: piece.id,
+      prixUnitaire: piece.prix ?? 0,
+      quantite: piece.seuilMinimum ? Math.max(1, piece.seuilMinimum - (piece.qteReelle ?? 0)) : 10
+    });
+    this.lignesArray.push(ctrl);
   }
 
   openEdit(bon: BonDeCommande) {
@@ -406,11 +480,7 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
       this.errorMessage = '';
       this.showModal = true;
       this.service.getById(bon.id).subscribe({
-        next: detail => {
-          this.loadingEdit = false;
-          this.populateEditForm(detail);
-          this.cdr.markForCheck();
-        },
+        next: detail => this.prepareEditForm(detail),
         error: err => {
           this.loadingEdit = false;
           this.showModal = false;
@@ -419,7 +489,34 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
       });
       return;
     }
-    this.populateEditForm(bon);
+    this.prepareEditForm(bon);
+  }
+
+  private prepareEditForm(bon: BonDeCommande) {
+    const missingPieceIds = [...new Set((bon.lignes ?? [])
+      .map(line => line.pieceDetacheeId)
+      .filter((id): id is number => id != null && !this.pieces.some(piece => piece.id === id)))];
+    if (missingPieceIds.length === 0) {
+      this.populateEditForm(bon);
+      return;
+    }
+
+    this.loadingEdit = true;
+    this.showModal = true;
+    forkJoin(missingPieceIds.map(id => this.pieceService.getById(id))).subscribe({
+      next: fetchedPieces => {
+        const piecesById = new Map<number, PieceDetache>();
+        [...this.pieces, ...fetchedPieces].forEach(piece => piecesById.set(piece.id, piece));
+        this.pieces = [...piecesById.values()];
+        this.populateEditForm(bon);
+        this.cdr.markForCheck();
+      },
+      error: err => {
+        this.loadingEdit = false;
+        this.showModal = false;
+        this.notifyError(err?.error?.message || 'Impossible de charger les pièces du bon.');
+      },
+    });
   }
 
   private populateEditForm(bon: BonDeCommande) {
