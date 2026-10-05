@@ -543,8 +543,10 @@
                 <label class="block text-xs font-bold text-oas-muted mb-1">Pièce</label>
                 <app-searchable-select [(ngModel)]="piecePdpAjouter" [ngModelOptions]="{standalone: true}"
                   [options]="piecesPdp" bindValue="id" [bindLabel]="formatPiece"
-                  placeholder="Rechercher une pièce de rechange par référence ou désignation...">
+                  (search)="onPieceSearch($event)"
+                  placeholder="Référence, pièce ou dépôt...">
                 </app-searchable-select>
+                @if (piecesLoading) { <span class="mt-1 block text-[11px] text-oas-muted">Recherche des pièces...</span> }
               </div>
               <div>
                 <label class="block text-xs font-bold text-oas-muted mb-1">Qté.</label>
@@ -566,10 +568,9 @@
             <div class="space-y-2">
               @for (item of getLignesPdp(); track item.index) {
               <div [formGroupName]="item.index" class="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_5rem_9rem_auto] gap-2 items-center rounded-xl border border-blue-100 bg-blue-50/30 p-2.5">
-                <select formControlName="pieceDetacheeId" class="min-w-0 w-full px-3 py-2 rounded-lg border border-blue-200 bg-white text-sm text-oas-ink focus:outline-none focus:ring-2 focus:ring-blue-400/40">
-                  <option [ngValue]="null" disabled>Choisir une pièce PDP...</option>
-                  @for (piece of piecesPdp; track piece.id) { <option [value]="piece.id">{{ formatPiece(piece) }}</option> }
-                </select>
+                <app-searchable-select formControlName="pieceDetacheeId" [options]="piecesPdp"
+                  bindValue="id" [bindLabel]="formatPiece" (search)="onPieceSearch($event)"
+                  placeholder="Rechercher une pièce PDP ou un dépôt..."></app-searchable-select>
                 <input formControlName="quantite" type="number" [min]="item.group.get('quantiteRecue')?.value || 1" class="w-full px-2 py-2 rounded-lg border border-blue-200 bg-white text-sm font-bold text-center focus:outline-none focus:ring-2 focus:ring-blue-400/40" aria-label="Quantité PDP" />
                 <input formControlName="prixUnitaire" type="number" min="0" class="w-full px-2 py-2 rounded-lg border border-blue-200 bg-white text-sm font-bold text-right focus:outline-none focus:ring-2 focus:ring-blue-400/40" aria-label="Prix unitaire PDP" />
                 <div class="flex items-center justify-end gap-2">
