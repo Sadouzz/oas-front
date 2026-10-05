@@ -235,6 +235,16 @@ export class StepReceptionComponent implements OnInit {
     this.lignesReception.push(this.buildLigneReceptionGroup({ nom: '', etat: null, verrouille: false }));
   }
 
+  setLigneReceptionEtat(index: number, val: boolean): void {
+    const ctrl = this.lignesReception.at(index);
+    if (!ctrl || ctrl.get('verrouille')?.value) return;
+    const current = ctrl.get('etat')?.value;
+    ctrl.get('etat')?.setValue(current === val ? null : val);
+    ctrl.markAsDirty();
+    ctrl.markAsTouched();
+    this.cdr.markForCheck();
+  }
+
   removeLigneReception(index: number): void {
     if (this.lignesReception.at(index)?.get('verrouille')?.value) return;
     this.lignesReception.removeAt(index);

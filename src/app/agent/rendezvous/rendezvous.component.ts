@@ -8,6 +8,7 @@ import { RendezVous, RendezVousStatus, ClientModel, VehiculeModel, CreateRendezV
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { DatePipe } from '@angular/common';
+import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select.component';
 import {
   LucideSearch, LucideX, LucideCalendar, LucideCheck, LucideFileText, LucidePlus, LucideUser, LucideLock
 } from '@lucide/angular';
@@ -17,7 +18,7 @@ import {
   standalone: true,
   imports: [
     DatePipe,
-    ReactiveFormsModule, AlertComponent, PaginationComponent,
+    ReactiveFormsModule, AlertComponent, PaginationComponent, SearchableSelectComponent,
     LucideSearch, LucideX, LucideCalendar, LucideCheck, LucideFileText, LucidePlus, LucideUser, LucideLock
   ],
   templateUrl: './rendezvous.component.html',
@@ -36,6 +37,13 @@ export class RendezVousComponent implements OnInit {
   clients: ClientModel[] = [];
   vehicules: VehiculeModel[] = [];
   clientVehicules: VehiculeModel[] = [];
+
+  formatVehicule = (v: VehiculeModel): string => {
+    if (!v) return '';
+    const immat = v.immatriculation || '';
+    const details = `${v.marque || ''} ${v.modele || ''}`.trim();
+    return details ? `${immat} — ${details}` : immat;
+  };
 
   editedDate = '';
 

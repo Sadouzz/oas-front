@@ -201,14 +201,42 @@ export class FichesAtelier implements OnInit {
   }
 
   populateDefaultLines() {
+    const existingReceptionMap = new Map<string, any>();
+    this.lignesReception.controls.forEach(ctrl => {
+      const val = ctrl.value;
+      if (val && val.nom) {
+        existingReceptionMap.set(val.nom.trim().toLowerCase(), val);
+      }
+    });
+
+    const existingDefautsMap = new Map<string, any>();
+    this.lignesDefauts.controls.forEach(ctrl => {
+      const val = ctrl.value;
+      if (val && val.nom) {
+        existingDefautsMap.set(val.nom.trim().toLowerCase(), val);
+      }
+    });
+
     while (this.lignesReception.length > 0) {
       this.lignesReception.removeAt(0);
     }
     while (this.lignesDefauts.length > 0) {
       this.lignesDefauts.removeAt(0);
     }
-    this.defaultReception.forEach(r => this.addReception(r));
-    this.defaultDefauts.forEach(d => this.addDefaut(d));
+
+    this.defaultReception.forEach(r => {
+      const existing = existingReceptionMap.get(r.trim().toLowerCase());
+      this.addReception(r, existing ? existing.etat : null);
+    });
+
+    this.defaultDefauts.forEach(d => {
+      const existing = existingDefautsMap.get(d.trim().toLowerCase());
+      this.addDefaut(
+        d,
+        existing ? existing.present : false,
+        existing ? existing.designation : ''
+      );
+    });
   }
 
   formatClient = (c: ClientListResponse): string => {
@@ -281,6 +309,17 @@ export class FichesAtelier implements OnInit {
     }));
   }
 
+  setReceptionEtat(index: number, val: boolean) {
+    const ctrl = this.lignesReception.at(index)?.get('etat');
+    if (ctrl) {
+      const current = ctrl.value;
+      ctrl.setValue(current === val ? null : val);
+      ctrl.markAsDirty();
+      ctrl.markAsTouched();
+      this.cdr.markForCheck();
+    }
+  }
+
   removeReception(index: number) {
     this.lignesReception.removeAt(index);
   }
@@ -291,6 +330,27 @@ export class FichesAtelier implements OnInit {
       present: [present],
       designation: [designation]
     }));
+  }
+
+  toggleDefautPresent(index: number) {
+    const ctrl = this.lignesDefauts.at(index)?.get('present');
+    if (ctrl) {
+      ctrl.setValue(!ctrl.value);
+      ctrl.markAsDirty();
+      ctrl.markAsTouched();
+      this.cdr.markForCheck();
+    }
+  }
+
+  onDefautDesignationInput(index: number, value: string) {
+    const group = this.lignesDefauts.at(index);
+    if (group) {
+      group.get('designation')?.setValue(value, { emitEvent: false });
+      if (value && value.trim().length > 0) {
+        group.get('present')?.setValue(true, { emitEvent: false });
+      }
+      this.cdr.markForCheck();
+    }
   }
 
   removeDefaut(index: number) {
@@ -470,6 +530,8 @@ export class FichesAtelier implements OnInit {
       }
     }
 
+    console.log(request);
+
     this.service.create(request).subscribe({
       next: () => {
         if (rdvId) {
@@ -494,6 +556,7 @@ export class FichesAtelier implements OnInit {
         } else {
           this.saving = false;
           this.success = "Fiche atelier créée avec succès !";
+          
           this.cdr.markForCheck();
           setTimeout(() => {
             this.router.navigate(['/app/fiches-atelier']);

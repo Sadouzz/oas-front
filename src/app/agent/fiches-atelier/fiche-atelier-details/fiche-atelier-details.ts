@@ -61,8 +61,16 @@ export class FicheAtelierDetails implements OnInit {
     return ligne.etat === false || (ligne as any).non === true;
   }
 
+  hasDefaut(defaut: LigneDefaut): boolean {
+    const text = (defaut.designation || (defaut as any).description || (defaut as any).defaut || (defaut as any).valeur || '').trim();
+    return defaut.present === true || text.length > 0;
+  }
+
   getDefautTexte(defaut: LigneDefaut): string {
-    return defaut.designation || (defaut as any).description || (defaut as any).defaut || (defaut as any).valeur || (defaut.present ? 'Présent' : 'Aucune désignation');
+    const text = (defaut.designation || (defaut as any).description || (defaut as any).defaut || (defaut as any).valeur || '').trim();
+    if (text) return text;
+    if (defaut.present === true) return 'Défaut signalé (aucun détail saisi)';
+    return 'R.A.S (aucun défaut)';
   }
 
   ngOnInit(): void {
