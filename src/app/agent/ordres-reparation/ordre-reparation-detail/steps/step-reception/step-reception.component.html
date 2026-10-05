@@ -11,11 +11,23 @@
 } @else {
   <form [formGroup]="step1Form" (ngSubmit)="saveStep1ThenGoNext()" class="space-y-6">
     <div class="flex items-center justify-between border-b border-oas-line pb-3">
-      <h2 class="text-lg font-bold text-oas-ink">Étape 1 · Réception du véhicule</h2>
+      <div class="flex items-center gap-3">
+        <h2 class="text-lg font-bold text-oas-ink">Étape 1 · Réception du véhicule</h2>
+        @if (ficheAtelier) {
+          <a [routerLink]="['/app/fiches-atelier', ficheAtelier.id]" target="_blank"
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition"
+            title="Consulter la fiche atelier d'origine">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Fiche Atelier #{{ ficheAtelier.numero || ficheAtelier.id }}
+          </a>
+        }
+      </div>
       <span class="text-xs text-oas-muted font-mono">{{ step1Form.value.numero }}</span>
     </div>
 
-    <!-- Synthèse Véhicule & Client -->
+    <!-- Synthèse Véhicule & Détails Fiche Atelier -->
     @if (selectedVehicule) {
       <div class="p-5 bg-oas-bg/60 border border-oas-line rounded-xl flex flex-wrap items-center justify-between gap-4">
         <div class="flex items-center gap-3.5">
@@ -42,14 +54,32 @@
                 }
               </p>
             }
+            @if (ficheAtelier?.nomChauffeur) {
+              <p class="text-xs text-oas-muted mt-0.5 flex items-center gap-1.5 font-medium">
+                <span>🚗 Chauffeur : <strong class="text-oas-ink">{{ ficheAtelier?.nomChauffeur }}</strong></span>
+                @if (ficheAtelier?.telephoneChauffeur) {
+                  <span class="text-oas-muted">({{ ficheAtelier?.telephoneChauffeur }})</span>
+                }
+              </p>
+            }
           </div>
         </div>
-        @if (selectedVehicule.kilometrage) {
-          <div class="text-right">
-            <span class="text-[11px] text-oas-muted font-bold block uppercase tracking-wider">Kilométrage relevé</span>
-            <span class="text-base font-extrabold text-oas-ink">{{ selectedVehicule.kilometrage | number }} km</span>
-          </div>
-        }
+        <div class="flex items-center gap-6">
+          @if (selectedVehicule.kilometrage) {
+            <div class="text-right">
+              <span class="text-[11px] text-oas-muted font-bold block uppercase tracking-wider">Kilométrage relevé</span>
+              <span class="text-base font-extrabold text-oas-ink">{{ selectedVehicule.kilometrage | number }} km</span>
+            </div>
+          }
+          @if (ficheAtelier?.niveauEssence) {
+            <div class="text-right">
+              <span class="text-[11px] text-oas-muted font-bold block uppercase tracking-wider">Niveau carburant</span>
+              <span class="text-sm font-extrabold px-2.5 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200">
+                {{ ficheAtelier?.niveauEssence }}
+              </span>
+            </div>
+          }
+        </div>
       </div>
     }
 
@@ -92,51 +122,126 @@
       </div>
     </div>
 
-    <!-- Lignes de réception -->
-    <div>
-      <div class="flex items-center justify-between mb-3">
-        <label class="text-sm font-bold text-oas-ink">État des lieux / Réception</label>
-        <button type="button" (click)="addLigneReception()"
-          class="text-xs font-bold text-oas-accent hover:text-oas-accent-dark flex items-center gap-1.5 transition cursor-pointer">
-          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-          Ajouter une ligne
-        </button>
+    <!-- Grille 2 colonnes : Réception (État des lieux) + Défauts constatés -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- 1. État des lieux / Réception -->
+      <div class="bg-white rounded-2xl border border-oas-line p-5 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-oas-line pb-3">
+          <div class="flex items-center gap-2">
+            <span class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 font-bold text-xs flex items-center justify-center">
+              ✓
+            </span>
+            <div>
+              <h3 class="text-sm font-bold text-oas-ink">État des lieux / Réception</h3>
+              <p class="text-[11px] text-oas-muted">Points de contrôle à l'arrivée</p>
+            </div>
+          </div>
+          <button type="button" (click)="addLigneReception()"
+            class="text-xs font-bold text-oas-accent hover:text-oas-accent-dark flex items-center gap-1.5 transition cursor-pointer">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            Ajouter un point
+          </button>
+        </div>
+
+        <div class="space-y-2.5" formArrayName="lignesReception">
+          @if (lignesReception.controls.length === 0) {
+            <div class="p-4 text-center text-xs text-oas-muted bg-oas-bg/30 rounded-xl border border-dashed border-oas-line">
+              Aucun point de contrôle enregistré.
+            </div>
+          }
+          @for (ctrl of lignesReception.controls; track $index) {
+            <div [formGroupName]="$index"
+              class="flex items-center justify-between gap-3 p-3 rounded-xl border border-oas-line bg-oas-bg/40">
+              <div class="flex-1">
+                @if (ctrl.get('verrouille')?.value) {
+                  <p class="text-xs font-semibold text-oas-ink">{{ ctrl.get('nom')?.value }}</p>
+                } @else {
+                  <input type="text" formControlName="nom" placeholder="Point de contrôle..."
+                    class="w-full bg-transparent border-none text-xs font-semibold text-oas-ink outline-none" />
+                }
+              </div>
+              <div class="flex items-center gap-2 flex-shrink-0">
+                <label class="flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 cursor-pointer hover:bg-emerald-100 transition">
+                  <input type="radio" formControlName="etat" [value]="true" class="accent-emerald-600 cursor-pointer" />
+                  <span>Oui</span>
+                </label>
+                <label class="flex items-center gap-1 text-[11px] font-bold text-red-700 bg-red-50 px-2.5 py-1 rounded-lg border border-red-200 cursor-pointer hover:bg-red-100 transition">
+                  <input type="radio" formControlName="etat" [value]="false" class="accent-red-600 cursor-pointer" />
+                  <span>Non</span>
+                </label>
+                @if (!ctrl.get('verrouille')?.value) {
+                  <button type="button" (click)="removeLigneReception($index)" class="p-1 text-red-500 hover:bg-red-50 rounded-lg">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
       </div>
 
-      <div class="space-y-2.5" formArrayName="lignesReception">
-        @for (ctrl of lignesReception.controls; track $index) {
-          <div [formGroupName]="$index"
-            class="flex items-center justify-between gap-4 p-3 rounded-xl border border-oas-line bg-oas-bg/40">
-            <div class="flex-1">
-              @if (ctrl.get('verrouille')?.value) {
-                <p class="text-sm font-semibold text-oas-ink">{{ ctrl.get('nom')?.value }}</p>
-              } @else {
-                <input type="text" formControlName="nom" placeholder="Désignation"
-                  class="w-full bg-transparent border-none text-sm font-semibold text-oas-ink outline-none" />
-              }
+      <!-- 2. Défauts constatés (issus de la fiche atelier) -->
+      <div class="bg-white rounded-2xl border border-oas-line p-5 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-oas-line pb-3">
+          <div class="flex items-center gap-2">
+            <span class="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 font-bold text-xs flex items-center justify-center">
+              ⚠️
+            </span>
+            <div>
+              <h3 class="text-sm font-bold text-oas-ink">Défauts constatés</h3>
+              <p class="text-[11px] text-oas-muted">Anomalies relevées lors de la prise en charge</p>
             </div>
-            <div class="flex items-center gap-4">
-              <label class="flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 cursor-pointer">
-                <input type="radio" formControlName="etat" [value]="true" class="accent-emerald-600" />
-                <span>Oui</span>
-              </label>
-              <label class="flex items-center gap-1.5 text-xs font-bold text-red-700 bg-red-50 px-3 py-1.5 rounded-lg border border-red-200 cursor-pointer">
-                <input type="radio" formControlName="etat" [value]="false" class="accent-red-600" />
-                <span>Non</span>
-              </label>
-              @if (!ctrl.get('verrouille')?.value) {
-                <button type="button" (click)="removeLigneReception($index)" class="p-1.5 text-red-500 hover:bg-red-50 rounded-lg">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                  </svg>
-                </button>
-              }
-            </div>
+          </div>
+          @if (ficheAtelier) {
+            <span class="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+              Fiche atelier
+            </span>
+          }
+        </div>
+
+        @if (lignesDefauts && lignesDefauts.length > 0) {
+          <div class="space-y-2.5">
+            @for (defaut of lignesDefauts; track defaut.nom) {
+              <div class="p-3 rounded-xl border border-oas-line bg-oas-bg/40 flex flex-col sm:flex-row sm:items-start justify-between gap-2.5">
+                <div class="flex items-center gap-2 min-w-[130px]">
+                  <span class="text-xs font-bold text-oas-ink">{{ defaut.nom }}</span>
+                  @if (defaut.present) {
+                    <span class="px-1.5 py-0.5 text-[10px] font-extrabold bg-red-100 text-red-700 rounded">
+                      Présent
+                    </span>
+                  }
+                </div>
+                <div class="text-xs text-oas-ink2 flex-1">
+                  {{ defaut.designation || 'Aucune anomalie signalée' }}
+                </div>
+              </div>
+            }
+          </div>
+        } @else if (listeDefautsText) {
+          <div class="p-4 rounded-xl border border-oas-line bg-oas-bg/40">
+            <p class="text-xs text-oas-ink leading-relaxed whitespace-pre-wrap">{{ listeDefautsText }}</p>
+          </div>
+        } @else {
+          <div class="p-6 text-center text-xs text-oas-muted bg-oas-bg/30 rounded-xl border border-dashed border-oas-line">
+            Aucun défaut particulier n'a été spécifié sur la fiche atelier d'origine.
           </div>
         }
       </div>
     </div>
+
+    <!-- Notes & Remarques (N.B) de la Fiche Atelier -->
+    @if (ficheAtelier?.nb) {
+      <div class="bg-amber-50/50 border border-amber-200 rounded-xl p-4">
+        <h4 class="text-xs font-bold text-amber-900 mb-1 flex items-center gap-1.5">
+          <span>📝 Notes & Remarques (Fiche Atelier)</span>
+        </h4>
+        <p class="text-xs text-amber-900/90 whitespace-pre-wrap">{{ ficheAtelier?.nb }}</p>
+      </div>
+    }
   </form>
 }
+

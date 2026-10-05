@@ -2,17 +2,13 @@ import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FicheAtelierConfigService } from '../../fiches-atelier/fiche-atelier-config.service';
-import { FicheAtelierService } from '../../fiches-atelier/fiche-atelier.service';
-import { OrdreReparationService } from '../../ordres-reparation/ordre-reparation.service';
 import {
   BriqueConfig,
   FicheAtelierConfigBackend,
   FicheAtelierConfigItem,
   DEFAULT_LIGNES_RECEPTION,
   DEFAULT_RUBRIQUES_DEFAUTS,
-  parseFicheAtelierConfig,
-  FicheAtelierDetailsResponse,
-  extractContent
+  parseFicheAtelierConfig
 } from '../../../shared/models';
 import {
   LucidePlus,
@@ -23,8 +19,7 @@ import {
   LucideAlertTriangle,
   LucideLayers,
   LucideArchive,
-  LucideArchiveRestore,
-  LucideLock
+  LucideArchiveRestore
 } from '@lucide/angular';
 
 @Component({
@@ -41,15 +36,12 @@ import {
     LucideAlertTriangle,
     LucideLayers,
     LucideArchive,
-    LucideArchiveRestore,
-    LucideLock
+    LucideArchiveRestore
   ],
   templateUrl: './fiche-atelier-config.component.html'
 })
 export class FicheAtelierConfigComponent implements OnInit {
   private configService = inject(FicheAtelierConfigService);
-  private ficheService = inject(FicheAtelierService);
-  private ordreService = inject(OrdreReparationService);
   private cdr = inject(ChangeDetectorRef);
 
   backendConfig: FicheAtelierConfigBackend | null = null;
@@ -76,85 +68,13 @@ export class FicheAtelierConfigComponent implements OnInit {
   configs: BriqueConfig[] = [];
   newConfig: BriqueConfig = { label: '', type: 'text', obligatoire: false, options: '' };
 
-  // Cartographie des usages dans les fiches existantes et ordres de travail
-  private receptionUsageMap: Map<string, number> = new Map();
-  private defautUsageMap: Map<string, number> = new Map();
-  private rawOrdreDefautTexts: string[] = [];
-
   ngOnInit() {
     this.loadData();
   }
 
   loadData() {
     this.isLoading = true;
-    this.loadUsageData();
     this.loadConfigs();
-  }
-
-  private scanOrdreDefauts() {
-    for (const defText of this.rawOrdreDefautTexts) {
-      for (const r of this.rubriquesDefauts) {
-        if (r.nom && defText.includes(r.nom.trim().toLowerCase())) {
-          const k = r.nom.trim().toLowerCase();
-          this.defautUsageMap.set(k, (this.defautUsageMap.get(k) || 0) + 1);
-        }
-      }
-    }
-  }
-
-  private loadUsageData() {
-    // 1. Analyser les Fiches Atelier existantes
-    this.ficheService.getAll({ size: 1000 }).subscribe({
-      next: (data) => {
-        const fiches = extractContent<FicheAtelierDetailsResponse>(data);
-        for (const f of fiches) {
-          if (Array.isArray(f.lignesReception)) {
-            for (const lr of f.lignesReception) {
-              if (lr?.nom) {
-                const k = lr.nom.trim().toLowerCase();
-                this.receptionUsageMap.set(k, (this.receptionUsageMap.get(k) || 0) + 1);
-              }
-            }
-          }
-          if (Array.isArray(f.lignesDefauts)) {
-            for (const ld of f.lignesDefauts) {
-              if (ld?.nom) {
-                const k = ld.nom.trim().toLowerCase();
-                this.defautUsageMap.set(k, (this.defautUsageMap.get(k) || 0) + 1);
-              }
-            }
-          }
-        }
-        this.cdr.markForCheck();
-      },
-      error: (e) => console.warn('Could not check fiches usage', e)
-    });
-
-    // 2. Analyser les Ordres de Réparation existants
-    this.ordreService.getAll({ size: 1000 }).subscribe({
-      next: (data) => {
-        const ordres = extractContent<any>(data);
-        for (const o of ordres) {
-          if (Array.isArray(o.lignesReception)) {
-            for (const lr of o.lignesReception) {
-              if (lr?.nom) {
-                const k = lr.nom.trim().toLowerCase();
-                this.receptionUsageMap.set(k, (this.receptionUsageMap.get(k) || 0) + 1);
-              }
-            }
-          }
-          if (o.listeDefauts && typeof o.listeDefauts === 'string') {
-            this.rawOrdreDefautTexts.push(o.listeDefauts.toLowerCase());
-          }
-          if (o.diagnostic?.pannesDetectees && typeof o.diagnostic.pannesDetectees === 'string') {
-            this.rawOrdreDefautTexts.push(o.diagnostic.pannesDetectees.toLowerCase());
-          }
-        }
-        this.scanOrdreDefauts();
-        this.cdr.markForCheck();
-      },
-      error: (e) => console.warn('Could not check ordres usage', e)
-    });
   }
 
   loadConfigs() {
@@ -172,7 +92,6 @@ export class FicheAtelierConfigComponent implements OnInit {
           this.rubriquesDefauts = DEFAULT_RUBRIQUES_DEFAUTS.map(nom => ({ nom, archive: false }));
           this.configs = [];
         }
-        this.scanOrdreDefauts();
         this.isLoading = false;
         this.cdr.markForCheck();
       },
@@ -183,23 +102,6 @@ export class FicheAtelierConfigComponent implements OnInit {
         this.cdr.markForCheck();
       }
     });
-  }
-
-  // ─── Usages ────────────────────────────────────────────────────
-  getReceptionUsageCount(nom: string): number {
-    return this.receptionUsageMap.get(nom.trim().toLowerCase()) || 0;
-  }
-
-  isReceptionUsed(nom: string): boolean {
-    return this.getReceptionUsageCount(nom) > 0;
-  }
-
-  getDefautUsageCount(nom: string): number {
-    return this.defautUsageMap.get(nom.trim().toLowerCase()) || 0;
-  }
-
-  isDefautUsed(nom: string): boolean {
-    return this.getDefautUsageCount(nom) > 0;
   }
 
   // ─── Getters filtrés ───────────────────────────────────────────
@@ -271,37 +173,15 @@ export class FicheAtelierConfigComponent implements OnInit {
     const item = this.lignesReception[index];
     if (!item) return;
 
-    const count = this.getReceptionUsageCount(item.nom);
-    if (count > 0) {
-      this.errorMessage = `Impossible de supprimer « ${item.nom} » car il est déjà utilisé dans ${count} fiche(s) ou ordre(s) de travail. La suppression est interdite pour préserver les données historiques. Vous pouvez uniquement l'archiver.`;
-      return;
-    }
-
-    if (!confirm(`Supprimer définitivement le point de contrôle « ${item.nom} » ? (Cet élément n'a jamais été utilisé)`)) return;
+    if (!confirm(`Supprimer le point de contrôle « ${item.nom} » ?`)) return;
     this.lignesReception.splice(index, 1);
     this.syncConfigWithBackend(`Point de réception « ${item.nom} » supprimé.`);
   }
 
   resetLignesReception() {
-    if (!confirm('Réactiver les points de réception par défaut ? Vos points personnalisés déjà utilisés seront scrupuleusement conservés.')) return;
-
-    for (const defNom of DEFAULT_LIGNES_RECEPTION) {
-      const existing = this.lignesReception.find(i => i.nom.toLowerCase() === defNom.toLowerCase());
-      if (existing) {
-        existing.archive = false;
-      } else {
-        this.lignesReception.push({ nom: defNom, archive: false });
-      }
-    }
-
-    // Seuls les points JAMAIS utilisés et absents de la liste par défaut peuvent être retirés
-    this.lignesReception = this.lignesReception.filter(i => {
-      const isDef = DEFAULT_LIGNES_RECEPTION.some(d => d.toLowerCase() === i.nom.toLowerCase());
-      const isUsed = this.isReceptionUsed(i.nom);
-      return isDef || isUsed;
-    });
-
-    this.syncConfigWithBackend('Points de réception par défaut rétablis (éléments utilisés conservés).');
+    if (!confirm('Rétablir les points de réception par défaut ?')) return;
+    this.lignesReception = DEFAULT_LIGNES_RECEPTION.map(nom => ({ nom, archive: false }));
+    this.syncConfigWithBackend('Points de réception par défaut rétablis.');
   }
 
   // ─── Rubriques Défauts constatés ───────────────────────────────
@@ -336,36 +216,15 @@ export class FicheAtelierConfigComponent implements OnInit {
     const item = this.rubriquesDefauts[index];
     if (!item) return;
 
-    const count = this.getDefautUsageCount(item.nom);
-    if (count > 0) {
-      this.errorMessage = `Impossible de supprimer « ${item.nom} » car cette rubrique est déjà utilisée dans ${count} fiche(s) ou ordre(s) de travail. La suppression est interdite pour préserver les données historiques. Vous pouvez uniquement l'archiver.`;
-      return;
-    }
-
-    if (!confirm(`Supprimer définitivement la rubrique de défaut « ${item.nom} » ? (Cette rubrique n'a jamais été utilisée)`)) return;
+    if (!confirm(`Supprimer la rubrique de défaut « ${item.nom} » ?`)) return;
     this.rubriquesDefauts.splice(index, 1);
     this.syncConfigWithBackend(`Rubrique de défaut « ${item.nom} » supprimée.`);
   }
 
   resetRubriquesDefauts() {
-    if (!confirm('Réactiver les rubriques par défaut ? Vos rubriques déjà utilisées seront scrupuleusement conservées.')) return;
-
-    for (const defNom of DEFAULT_RUBRIQUES_DEFAUTS) {
-      const existing = this.rubriquesDefauts.find(i => i.nom.toLowerCase() === defNom.toLowerCase());
-      if (existing) {
-        existing.archive = false;
-      } else {
-        this.rubriquesDefauts.push({ nom: defNom, archive: false });
-      }
-    }
-
-    this.rubriquesDefauts = this.rubriquesDefauts.filter(i => {
-      const isDef = DEFAULT_RUBRIQUES_DEFAUTS.some(d => d.toLowerCase() === i.nom.toLowerCase());
-      const isUsed = this.isDefautUsed(i.nom);
-      return isDef || isUsed;
-    });
-
-    this.syncConfigWithBackend('Rubriques de défauts par défaut rétablies (éléments utilisés conservés).');
+    if (!confirm('Rétablir les rubriques de défauts par défaut ?')) return;
+    this.rubriquesDefauts = DEFAULT_RUBRIQUES_DEFAUTS.map(nom => ({ nom, archive: false }));
+    this.syncConfigWithBackend('Rubriques de défauts par défaut rétablies.');
   }
 
   // ─── Briques dynamiques ─────────────────────────────────────────

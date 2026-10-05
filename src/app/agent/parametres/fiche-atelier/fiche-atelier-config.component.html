@@ -93,7 +93,7 @@
           <div>
             <h2 class="text-base font-bold text-oas-ink">Points de contrôle à la Réception</h2>
             <p class="text-xs text-oas-muted mt-0.5">
-              Éléments vérifiés systématiquement lors de l'arrivée du véhicule. Les éléments déjà utilisés au moins une fois <strong>ne peuvent pas être supprimés</strong> (seul l'archivage est possible afin de préserver l'intégrité de l'historique). Les éléments jamais utilisés peuvent être supprimés définitivement.
+              Éléments vérifiés lors de l'arrivée du véhicule. Vous pouvez ajouter, archiver ou supprimer des points de contrôle.
             </p>
           </div>
           <button type="button" (click)="resetLignesReception()" [disabled]="saving"
@@ -181,19 +181,6 @@
                           Actif
                         </span>
                       }
-
-                      <!-- Usage count badge -->
-                      @if (isReceptionUsed(row.item.nom)) {
-                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200"
-                              title="Cet élément est présent dans {{ getReceptionUsageCount(row.item.nom) }} fiche(s) ou ordre(s). Suppression interdite : archivage uniquement.">
-                          <svg lucideLock class="w-3 h-3"></svg>
-                          <span>Utilisé ({{ getReceptionUsageCount(row.item.nom) }}) • Archivage seul</span>
-                        </span>
-                      } @else {
-                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-500 border border-slate-200">
-                          Non utilisé
-                        </span>
-                      }
                     </div>
                   </div>
                 </div>
@@ -217,15 +204,13 @@
                     </button>
                   }
 
-                  <!-- Bouton Supprimer : UNIQUEMENT pour les éléments JAMAIS utilisés -->
-                  @if (!isReceptionUsed(row.item.nom)) {
-                    <button type="button" (click)="removeLigneReception(row.originalIndex)" [disabled]="saving"
-                      title="Supprimer définitivement (non utilisé)"
-                      class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 text-rose-600 hover:bg-rose-50 rounded-lg border border-rose-200 transition cursor-pointer">
-                      <svg lucideTrash2 class="w-3.5 h-3.5"></svg>
-                      <span>Supprimer</span>
-                    </button>
-                  }
+                  <!-- Bouton Supprimer -->
+                  <button type="button" (click)="removeLigneReception(row.originalIndex)" [disabled]="saving"
+                    title="Supprimer définitivement"
+                    class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 text-rose-600 hover:bg-rose-50 rounded-lg border border-rose-200 transition cursor-pointer">
+                    <svg lucideTrash2 class="w-3.5 h-3.5"></svg>
+                    <span>Supprimer</span>
+                  </button>
                 </div>
 
               </div>
@@ -249,7 +234,7 @@
           <div>
             <h2 class="text-base font-bold text-oas-ink">Rubriques de Défauts constatés à la réception</h2>
             <p class="text-xs text-oas-muted mt-0.5">
-              Catégories de pannes à relever lors de la réception. Les rubriques déjà utilisées au moins une fois <strong>ne peuvent pas être supprimées</strong> (seul l'archivage est possible afin de préserver l'intégrité de l'historique). Les rubriques jamais utilisées peuvent être supprimées définitivement.
+              Catégories de pannes à relever lors de la réception. Vous pouvez ajouter, archiver ou supprimer des rubriques de défauts.
             </p>
           </div>
           <button type="button" (click)="resetRubriquesDefauts()" [disabled]="saving"
@@ -337,19 +322,6 @@
                           Active
                         </span>
                       }
-
-                      <!-- Usage count badge -->
-                      @if (isDefautUsed(row.item.nom)) {
-                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200"
-                              title="Cette rubrique est présente dans {{ getDefautUsageCount(row.item.nom) }} fiche(s) ou ordre(s). Suppression interdite : archivage uniquement.">
-                          <svg lucideLock class="w-3 h-3"></svg>
-                          <span>Utilisée ({{ getDefautUsageCount(row.item.nom) }}) • Archivage seul</span>
-                        </span>
-                      } @else {
-                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-500 border border-slate-200">
-                          Non utilisée
-                        </span>
-                      }
                     </div>
                   </div>
                 </div>
@@ -373,15 +345,13 @@
                     </button>
                   }
 
-                  <!-- Bouton Supprimer : UNIQUEMENT pour les rubriques JAMAIS utilisées -->
-                  @if (!isDefautUsed(row.item.nom)) {
-                    <button type="button" (click)="removeRubriqueDefaut(row.originalIndex)" [disabled]="saving"
-                      title="Supprimer définitivement (non utilisée)"
-                      class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 text-rose-600 hover:bg-rose-50 rounded-lg border border-rose-200 transition cursor-pointer">
-                      <svg lucideTrash2 class="w-3.5 h-3.5"></svg>
-                      <span>Supprimer</span>
-                    </button>
-                  }
+                  <!-- Bouton Supprimer -->
+                  <button type="button" (click)="removeRubriqueDefaut(row.originalIndex)" [disabled]="saving"
+                    title="Supprimer définitivement"
+                    class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 text-rose-600 hover:bg-rose-50 rounded-lg border border-rose-200 transition cursor-pointer">
+                    <svg lucideTrash2 class="w-3.5 h-3.5"></svg>
+                    <span>Supprimer</span>
+                  </button>
                 </div>
 
               </div>

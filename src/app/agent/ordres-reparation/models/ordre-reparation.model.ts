@@ -1,4 +1,5 @@
 import type { DiagnosticModel } from '../../diagnostics/models/diagnostic.model';
+import type { FicheAtelierDetailsResponse, LigneDefaut } from '../../fiches-atelier/models/fiche-atelier.model';
 
 export enum StatutOrdreReparation {
   RECEPTION = 'RECEPTION',
@@ -104,6 +105,9 @@ export interface OrdreReparation {
   lignesTravaux: LigneTravailOrdre[] | null;
   lignesReception: LigneReceptionOrdre[] | null;
   listeDefauts: string | null;
+  lignesDefauts?: LigneDefaut[] | null;
+  ficheAtelierId?: number | null;
+  ficheAtelier?: FicheAtelierDetailsResponse | null;
   dateCreation: string;
   updatedAt: string;
   dateSortie: string | null;

@@ -87,60 +87,76 @@ export function parseFicheAtelierConfig(jsonStr?: string | null): FicheAtelierFu
 }
 
 export interface LigneReception {
-    nom: string;
-    etat: boolean | null; // true = OUI, false = NON, null = non renseigné
+  nom: string;
+  etat?: boolean | null; // true = OUI, false = NON, null = non renseigné
+  oui?: boolean;
+  non?: boolean;
+  etatStr?: string | null;
+  valeur?: string | null;
+  statut?: string | null;
+  archive?: boolean | null;
 }
 
 export interface LigneDefaut {
-    nom: string;
-    present?: boolean | null; // true = cochée, false = non cochée
-    designation?: string;
+  nom: string;
+  present?: boolean | null; // true = cochée, false = non cochée
+  designation?: string;
+  description?: string;
+  defaut?: string;
+  valeur?: string;
+  archive?: boolean | null;
 }
 
 export interface FicheAtelierRequest {
-    rendezVousId?: number | null;
-    clientId: number;
-    vehiculeId: number;
-    nomChauffeur?: string;
-    telephoneChauffeur?: string;
-    niveauEssence?: string;
-    kilometrage?: number;
-    designationTravaux?: string;
-    lignesReception?: LigneReception[];
-    lignesDefauts?: LigneDefaut[];
-    nb?: string;
-    dateSortiePrevue?: string;
-    garantie?: string;
-    signatureReceptionnaireBase64?: string;
-    signatureBase64?: string;
-    signatureSortieBase64?: string;
+  rendezVousId?: number | null;
+  clientId: number;
+  vehiculeId: number;
+  nomChauffeur?: string;
+  telephoneChauffeur?: string;
+  niveauEssence?: string;
+  kilometrage?: number;
+  designationTravaux?: string;
+  lignesReception?: LigneReception[];
+  reception?: LigneReception[];
+  lignesDefauts?: LigneDefaut[];
+  defautsConstates?: LigneDefaut[];
+  defauts?: LigneDefaut[];
+  nb?: string;
+  dateSortiePrevue?: string;
+  garantie?: string;
+  signatureReceptionnaireBase64?: string;
+  signatureBase64?: string;
+  signatureSortieBase64?: string;
 }
 
 export interface FicheAtelierDetailsResponse {
-    id: number;
-    numero?: string;
-    rendezVousId?: number | null;
-    clientId: number;
-    clientName: string;
-    vehiculeId: number;
-    vehiculeImmatriculation: string;
-    garageId: number;
-    nomChauffeur?: string;
-    telephoneChauffeur?: string;
-    niveauEssence?: string;
-    kilometrage?: number;
-    designationTravaux?: string;
-    lignesReception?: LigneReception[];
-    lignesDefauts?: LigneDefaut[];
-    nb?: string;
-    dateSortiePrevue?: string;
-    garantie?: string;
-    signatureReceptionnaireBase64?: string;
-    signatureBase64?: string;
-    signatureSortieBase64?: string;
-    createdAt: string;
-    updatedAt: string;
-    hasOrdreReparation?: boolean;
+  id: number;
+  numero?: string;
+  rendezVousId?: number | null;
+  clientId: number;
+  clientName: string;
+  vehiculeId: number;
+  vehiculeImmatriculation: string;
+  garageId: number;
+  nomChauffeur?: string;
+  telephoneChauffeur?: string;
+  niveauEssence?: string;
+  kilometrage?: number;
+  designationTravaux?: string;
+  lignesReception?: LigneReception[];
+  reception?: LigneReception[];
+  lignesDefauts?: LigneDefaut[];
+  defautsConstates?: LigneDefaut[];
+  defauts?: LigneDefaut[];
+  nb?: string;
+  dateSortiePrevue?: string;
+  garantie?: string;
+  signatureReceptionnaireBase64?: string;
+  signatureBase64?: string;
+  signatureSortieBase64?: string;
+  createdAt: string;
+  updatedAt: string;
+  hasOrdreReparation?: boolean;
   devisPrevisionnel?: DevisPrevisionnelOnFicheAtelier | null;
 }
 

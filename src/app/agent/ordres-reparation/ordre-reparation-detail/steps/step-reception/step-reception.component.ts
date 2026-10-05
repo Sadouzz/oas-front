@@ -1,10 +1,13 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { OrdreReparationService } from '../../../ordre-reparation.service';
 import { DiagnosticService } from '../../../../diagnostics/diagnostic.service';
 import { VehiculeService } from '../../../../vehicules/vehicule.service';
+import { FicheAtelierService } from '../../../../fiches-atelier/fiche-atelier.service';
 import { AlertComponent } from '../../../../../shared/components/alert/alert.component';
 import {
   OrdreReparation,
@@ -15,6 +18,7 @@ import {
   StepReceptionDto
 } from '../../../../../shared/models';
 import { StepReceptionResponseDto } from '../../../models/responses/step-reception-response.dto';
+import { FicheAtelierDetailsResponse, LigneDefaut, LigneReception } from '../../../../fiches-atelier/models/fiche-atelier.model';
 
 export const TRAVAUX_FREQUENTS = [
   'Vidange moteur',
@@ -32,7 +36,7 @@ export const TRAVAUX_FREQUENTS = [
 @Component({
   selector: 'app-step-reception',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, AlertComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink, AlertComponent],
   templateUrl: './step-reception.component.html'
 })
 export class StepReceptionComponent implements OnInit {
@@ -41,12 +45,18 @@ export class StepReceptionComponent implements OnInit {
   private ordreService = inject(OrdreReparationService);
   private diagnosticService = inject(DiagnosticService);
   private vehiculeService = inject(VehiculeService);
+  private ficheAtelierService = inject(FicheAtelierService);
   private fb = inject(FormBuilder);
   private cdr = inject(ChangeDetectorRef);
 
   ordreId!: number;
   loadedOrdre: StepReceptionResponseDto | null = null;
+  fullOrdre: OrdreReparation | null = null;
+  ficheAtelier: FicheAtelierDetailsResponse | null = null;
   selectedVehicule: any = null;
+
+  lignesDefauts: LigneDefaut[] = [];
+  listeDefautsText = '';
 
   loading = true;
   saving = false;
@@ -86,27 +96,63 @@ export class StepReceptionComponent implements OnInit {
 
   loadData(): void {
     this.loading = true;
-    this.ordreService.getStepReception(this.ordreId).subscribe({
-      next: (o: StepReceptionResponseDto) => {
-        this.loadedOrdre = o;
-        this.selectedVehicule = o.vehicule;
+    forkJoin({
+      step: this.ordreService.getStepReception(this.ordreId),
+      ordre: this.ordreService.getById(this.ordreId).pipe(catchError(() => of(null)))
+    }).subscribe({
+      next: ({ step, ordre }) => {
+        this.loadedOrdre = step;
+        this.fullOrdre = ordre;
+        this.selectedVehicule = step.vehicule || ordre?.vehicule || null;
 
         this.step1Form.patchValue({
-          numero: o.numero,
-          vehiculeId: o.vehicule?.id ?? null,
-          descriptionTravaux: o.descriptionTravaux,
+          numero: step.numero || ordre?.numero || '',
+          vehiculeId: step.vehiculeId ?? step.vehicule?.id ?? ordre?.vehicule?.id ?? null,
+          descriptionTravaux: step.descriptionTravaux || ordre?.descriptionTravaux || '',
         });
 
-        this.setLignesReception(o.lignesReception);
-        this.setLignesTravaux(o.lignesTravaux);
+        // 1. Lignes de réception
+        const initialLignesRec = (step.lignesReception && step.lignesReception.length > 0)
+          ? step.lignesReception
+          : (ordre?.lignesReception && ordre.lignesReception.length > 0 ? ordre.lignesReception : []);
 
-        const travauxDecomp = this.decomposeToCheckboxes(o.descriptionTravaux || '', TRAVAUX_FREQUENTS);
+        this.setLignesReception(initialLignesRec);
+        this.setLignesTravaux(step.lignesTravaux || ordre?.lignesTravaux || []);
+
+        const descTravaux = step.descriptionTravaux || ordre?.descriptionTravaux || '';
+        const travauxDecomp = this.decomposeToCheckboxes(descTravaux, TRAVAUX_FREQUENTS);
         this.selectedTravaux = travauxDecomp.selected;
         this.autreTravaux = travauxDecomp.autre;
         this.showAutreTravaux = this.autreTravaux.length > 0;
 
-        this.loading = false;
-        this.cdr.markForCheck();
+        // 2. Recherche et chargement de la Fiche Atelier liée
+        const ficheDirect = step.ficheAtelier || ordre?.ficheAtelier;
+        const ficheId = step.ficheAtelierId || (ordre as any)?.ficheAtelierId || ficheDirect?.id;
+
+        if (ficheDirect) {
+          this.ficheAtelier = ficheDirect;
+          this.initDefautsAndComplementaryData(ficheDirect, step, ordre);
+          this.loading = false;
+          this.cdr.markForCheck();
+        } else if (ficheId) {
+          this.ficheAtelierService.getById(ficheId).pipe(catchError(() => of(null))).subscribe({
+            next: (fiche) => {
+              this.ficheAtelier = fiche;
+              this.initDefautsAndComplementaryData(fiche, step, ordre);
+              this.loading = false;
+              this.cdr.markForCheck();
+            },
+            error: () => {
+              this.initDefautsAndComplementaryData(null, step, ordre);
+              this.loading = false;
+              this.cdr.markForCheck();
+            }
+          });
+        } else {
+          this.initDefautsAndComplementaryData(null, step, ordre);
+          this.loading = false;
+          this.cdr.markForCheck();
+        }
       },
       error: (err) => {
         this.loading = false;
@@ -114,6 +160,41 @@ export class StepReceptionComponent implements OnInit {
         this.cdr.markForCheck();
       }
     });
+  }
+
+  private initDefautsAndComplementaryData(
+    fiche: FicheAtelierDetailsResponse | null,
+    step: StepReceptionResponseDto,
+    ordre: OrdreReparation | null
+  ): void {
+    // Si lignesReception est vide dans l'ordre mais présent sur la fiche atelier
+    if (this.lignesReception.length === 0 && fiche?.lignesReception && fiche.lignesReception.length > 0) {
+      this.setLignesReception(fiche.lignesReception.map(l => ({
+        nom: l.nom,
+        etat: l.etat,
+        verrouille: true
+      })));
+    }
+
+    // Récupération des défauts constatés
+    if (fiche?.lignesDefauts && fiche.lignesDefauts.length > 0) {
+      this.lignesDefauts = fiche.lignesDefauts;
+    } else if (step.lignesDefauts && step.lignesDefauts.length > 0) {
+      this.lignesDefauts = step.lignesDefauts;
+    } else if (ordre?.lignesDefauts && ordre.lignesDefauts.length > 0) {
+      this.lignesDefauts = ordre.lignesDefauts;
+    } else {
+      this.lignesDefauts = [];
+    }
+
+    this.listeDefautsText = step.listeDefauts || ordre?.listeDefauts || '';
+
+    // Si on a des informations complémentaires de la fiche atelier (kilométrage, etc.)
+    if (fiche && this.selectedVehicule) {
+      if (fiche.kilometrage && !this.selectedVehicule.kilometrage) {
+        this.selectedVehicule.kilometrage = fiche.kilometrage;
+      }
+    }
   }
 
   private buildLigneTravailGroup(l: LigneTravailOrdre) {
@@ -137,15 +218,15 @@ export class StepReceptionComponent implements OnInit {
     this.lignesTravaux.removeAt(index);
   }
 
-  private buildLigneReceptionGroup(l: LigneReceptionOrdre) {
+  private buildLigneReceptionGroup(l: LigneReceptionOrdre | LigneReception) {
     return this.fb.group({
-      nom: [{ value: l.nom, disabled: !!l.verrouille }, Validators.required],
-      etat: [{ value: l.etat, disabled: !!l.verrouille }],
-      verrouille: [!!l.verrouille],
+      nom: [{ value: l.nom, disabled: !!(l as LigneReceptionOrdre).verrouille }, Validators.required],
+      etat: [{ value: l.etat ?? null, disabled: !!(l as LigneReceptionOrdre).verrouille }],
+      verrouille: [!!(l as LigneReceptionOrdre).verrouille],
     });
   }
 
-  private setLignesReception(lignes: LigneReceptionOrdre[] | null | undefined) {
+  private setLignesReception(lignes: (LigneReceptionOrdre | LigneReception)[] | null | undefined) {
     this.lignesReception.clear();
     (lignes || []).forEach(l => this.lignesReception.push(this.buildLigneReceptionGroup(l)));
   }
@@ -195,11 +276,14 @@ export class StepReceptionComponent implements OnInit {
   saveStep1ThenGoNext(): void {
     const descriptionTravaux = this.composeFromCheckboxes(this.selectedTravaux, this.autreTravaux);
     const raw = this.step1Form.value;
+
     const payload: StepReceptionDto = {
       numero: raw.numero,
       descriptionTravaux: descriptionTravaux,
       lignesTravaux: this.lignesTravaux.getRawValue() as LigneTravailOrdre[],
       lignesReception: this.lignesReception.getRawValue() as LigneReceptionOrdre[],
+      listeDefauts: this.listeDefautsText,
+      lignesDefauts: this.lignesDefauts,
       vehiculeId: Number(raw.vehiculeId),
       statut: 'DIAGNOSTIC' as StatutOrdre
     };
@@ -248,3 +332,4 @@ export class StepReceptionComponent implements OnInit {
     });
   }
 }
+

@@ -7,14 +7,15 @@ import { CommonModule } from '@angular/common';
   selector: 'app-phone-input',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  styles: [':host { display: block; width: 100%; }'],
+  styles: [':host { display: block; width: 100%; } :host ::ng-deep .iti { display: block; width: 100%; }'],
   template: `
     <div class="relative w-full">
       <input
         #phoneInput
         type="tel"
-        class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
+        class="w-full py-2.5 pr-4 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
         [class.border-oas-bad]="invalid"
+        [placeholder]="placeholder"
         (input)="onInputChange()"
         (blur)="onTouched()"
         [disabled]="disabled"
@@ -37,7 +38,8 @@ import { CommonModule } from '@angular/common';
 export class PhoneInputComponent implements ControlValueAccessor, Validator, AfterViewInit, OnDestroy {
   @ViewChild('phoneInput') phoneInputRef!: ElementRef<HTMLInputElement>;
   @Input() invalid = false;
-  
+  @Input() placeholder = '';
+
   private iti: any;
   disabled = false;
   value = '';

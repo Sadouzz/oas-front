@@ -274,10 +274,10 @@ export class FichesAtelier implements OnInit {
     return this.form.get('lignesDefauts') as FormArray;
   }
 
-  addReception(nom: string = '') {
+  addReception(nom: string = '', etat: boolean | null = null) {
     this.lignesReception.push(this.fb.group({
       nom: [nom, Validators.required],
-      etat: [null] // true = OUI, false = NON, null = non renseigné
+      etat: [etat] // true = OUI, false = NON, null = non renseigné
     }));
   }
 
@@ -285,10 +285,11 @@ export class FichesAtelier implements OnInit {
     this.lignesReception.removeAt(index);
   }
 
-  addDefaut(nom: string = '') {
+  addDefaut(nom: string = '', present: boolean = false, designation: string = '') {
     this.lignesDefauts.push(this.fb.group({
       nom: [nom, Validators.required],
-      designation: [''] // text field for user to write the defect description
+      present: [present],
+      designation: [designation]
     }));
   }
 
@@ -418,15 +419,44 @@ export class FichesAtelier implements OnInit {
     this.saving = true;
     this.error = '';
 
-    const { clientId: _c, vehiculeId: _v, ...formVals } = this.form.value;
+    const { clientId: _c, vehiculeId: _v, lignesReception: _lr, lignesDefauts: _ld, ...formVals } = this.form.value;
 
     const rdvId = this.rdvData ? this.rdvData.id : this.rendezVousId;
+
+    const rawReception = this.lignesReception.getRawValue() || [];
+    const formattedReception = rawReception.map((r: any) => ({
+      nom: r.nom,
+      etat: r.etat === true ? true : (r.etat === false ? false : null),
+      oui: r.etat === true,
+      non: r.etat === false,
+      etatStr: r.etat === true ? 'OUI' : (r.etat === false ? 'NON' : null),
+      valeur: r.etat === true ? 'OUI' : (r.etat === false ? 'NON' : null)
+    }));
+
+    const rawDefauts = this.lignesDefauts.getRawValue() || [];
+    const formattedDefauts = rawDefauts.map((d: any) => {
+      const isPresent = d.present === true || (typeof d.designation === 'string' && d.designation.trim().length > 0);
+      const designationText = d.designation ? d.designation.trim() : '';
+      return {
+        nom: d.nom,
+        present: isPresent,
+        designation: designationText,
+        description: designationText,
+        defaut: designationText,
+        valeur: designationText
+      };
+    });
 
     const request: FicheAtelierRequest = {
       rendezVousId: rdvId || null,
       clientId: clientId,
       vehiculeId: vehiculeId,
       ...formVals,
+      lignesReception: formattedReception,
+      reception: formattedReception,
+      lignesDefauts: formattedDefauts,
+      defautsConstates: formattedDefauts,
+      defauts: formattedDefauts,
       signatureReceptionnaireBase64: this.sigRecEl ? this.sigRecEl.nativeElement.toDataURL('image/png') : undefined,
       signatureBase64: this.sigClientEl ? this.sigClientEl.nativeElement.toDataURL('image/png') : undefined
     };

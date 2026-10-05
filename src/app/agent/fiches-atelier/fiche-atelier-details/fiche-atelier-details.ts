@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { FicheAtelierService } from '../fiche-atelier.service';
 import { FicheAtelierDetailsResponse } from '../../../shared/models';
+import { LigneReception, LigneDefaut } from '../models/fiche-atelier.model';
 import { DevisPrevisionnel, DevisPrevisionnelService } from '../../devis-previsionnels/devis-previsionnel.service';
 import { OrdreReparationService } from '../../ordres-reparation/ordre-reparation.service';
 import { LucideArrowLeft, LucideCheck, LucideX } from '@lucide/angular';
@@ -40,6 +41,28 @@ export class FicheAtelierDetails implements OnInit {
   get canCreateOrdreReparation(): boolean {
     const role = this.authService.getRole();
     return !!role && this.rolesAutorisesCreationOR.includes(role);
+  }
+
+  get lignesReceptionList(): LigneReception[] {
+    if (!this.fiche) return [];
+    return this.fiche.lignesReception || (this.fiche as any).reception || [];
+  }
+
+  get lignesDefautsList(): LigneDefaut[] {
+    if (!this.fiche) return [];
+    return this.fiche.lignesDefauts || (this.fiche as any).defautsConstates || (this.fiche as any).defauts || [];
+  }
+
+  isLigneOui(ligne: LigneReception): boolean {
+    return ligne.etat === true || (ligne as any).oui === true;
+  }
+
+  isLigneNon(ligne: LigneReception): boolean {
+    return ligne.etat === false || (ligne as any).non === true;
+  }
+
+  getDefautTexte(defaut: LigneDefaut): string {
+    return defaut.designation || (defaut as any).description || (defaut as any).defaut || (defaut as any).valeur || (defaut.present ? 'Présent' : 'Aucune désignation');
   }
 
   ngOnInit(): void {

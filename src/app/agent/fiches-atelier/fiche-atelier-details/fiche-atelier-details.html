@@ -126,12 +126,12 @@
       <div class="bg-white rounded-xl border border-oas-line p-5 shadow-sm">
         <h3 class="font-bold text-oas-ink mb-4 border-b border-oas-line pb-2">Réception</h3>
         <div class="space-y-2">
-          @for (ligne of fiche.lignesReception; track ligne.nom) {
+          @for (ligne of lignesReceptionList; track $index) {
           <div class="flex justify-between items-center bg-gray-50 p-2 rounded border border-oas-line/50">
             <span class="text-sm font-medium text-oas-ink2">{{ ligne.nom }}</span>
             <span class="text-xs px-2 py-1 rounded-full font-bold"
-              [ngClass]="ligne.etat === true ? 'bg-green-100 text-green-700' : (ligne.etat === false ? 'bg-red-100 text-red-700' : 'bg-gray-200 text-gray-500')">
-              {{ ligne.etat === true ? 'OUI' : (ligne.etat === false ? 'NON' : 'N/A') }}
+              [ngClass]="isLigneOui(ligne) ? 'bg-green-100 text-green-700' : (isLigneNon(ligne) ? 'bg-red-100 text-red-700' : 'bg-gray-200 text-gray-500')">
+              {{ isLigneOui(ligne) ? 'OUI' : (isLigneNon(ligne) ? 'NON' : 'N/A') }}
             </span>
           </div>
           }
@@ -142,11 +142,16 @@
       <div class="bg-white rounded-xl border border-oas-line p-5 shadow-sm">
         <h3 class="font-bold text-oas-ink mb-4 border-b border-oas-line pb-2">Défauts constatés</h3>
         <div class="space-y-2">
-          @for (defaut of fiche.lignesDefauts; track defaut.nom) {
+          @for (defaut of lignesDefautsList; track $index) {
           <div
             class="flex flex-col sm:flex-row sm:items-start bg-gray-50 p-2.5 rounded border border-oas-line/50 gap-2">
-            <span class="text-sm font-bold text-oas-ink2 min-w-[120px]">{{ defaut.nom }}</span>
-            <span class="text-sm text-oas-ink w-full">{{ defaut.designation || 'Aucune désignation' }}</span>
+            <div class="flex items-center gap-2 min-w-[120px]">
+              <span class="text-sm font-bold text-oas-ink2">{{ defaut.nom }}</span>
+              @if (defaut.present) {
+                <span class="px-1.5 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-800 rounded">Présent</span>
+              }
+            </div>
+            <span class="text-sm text-oas-ink w-full">{{ getDefautTexte(defaut) }}</span>
           </div>
           }
         </div>
