@@ -77,7 +77,7 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
   errorMessage = '';
 
   form: FormGroup = this.fb.group({
-    fournisseurId: [null],
+    fournisseurId: [null, Validators.required],
     clientId: [null],
     vehiculeId: [null],
     tvaApplicable: [false],
@@ -597,6 +597,10 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
   closeDetail() { this.selectedBon = null; }
 
   save() {
+    if (!this.form.get('fournisseurId')?.value) {
+      this.notifyError('Sélectionnez un fournisseur pour ce bon de commande.');
+      return;
+    }
     if (this.lignesArray.length === 0) {
       this.notifyError('Veuillez ajouter au moins une ligne de commande.');
       return;

@@ -352,8 +352,7 @@
         <!-- Fournisseur (searchable dropdown style Ordre de Réparation) -->
         @if (fournisseurOpen) { <div class="fixed inset-0 z-[5]" (click)="fournisseurOpen = false"></div> }
         <div>
-          <label class="block text-sm font-semibold text-oas-ink mb-1">Fournisseur <span
-              class="font-normal text-oas-muted text-xs">(optionnel — assignable plus tard)</span></label>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Fournisseur <span class="text-red-600">*</span></label>
           <div class="relative z-[20]">
             <input type="text" [value]="fournisseurOpen ? fournisseurFilter : (fournisseurLabel || '')"
               (focus)="fournisseurOpen = true; fournisseurFilter = ''"
@@ -364,19 +363,6 @@
             <div
               class="absolute top-full left-0 right-0 mt-1 bg-white border border-oas-line rounded-xl shadow-2xl z-[30] max-h-56 overflow-y-auto"
               (click)="$event.stopPropagation()">
-              <!-- Option Aucun fournisseur -->
-              <button type="button"
-                (click)="form.patchValue({fournisseurId: null}); fournisseurFilter = ''; fournisseurOpen = false"
-                class="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-oas-bg text-left transition cursor-pointer border-b border-oas-line text-sm text-oas-muted">
-                <div
-                  class="w-8 h-8 rounded-full bg-oas-bg border border-oas-line flex items-center justify-center flex-shrink-0">
-                  <svg class="w-4 h-4 text-oas-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                    stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </div>
-                Aucun fournisseur (à assigner plus tard)
-              </button>
               @for (f of filteredFournisseurs; track f.id) {
               <button type="button" (click)="selectFournisseur(f)"
                 class="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-oas-bg text-left transition cursor-pointer border-b border-oas-line last:border-0">
