@@ -64,17 +64,17 @@
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-oas-line">
       <div>
         <label class="block text-xs font-semibold text-oas-muted mb-1">Date début</label>
-        <input type="date" [(ngModel)]="dateDebut" (change)="applyFilter()"
+        <input type="date" [(ngModel)]="dateDebut" (change)="onDateOrFournisseurFilterChange()"
           class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink" />
       </div>
       <div>
         <label class="block text-xs font-semibold text-oas-muted mb-1">Date fin</label>
-        <input type="date" [(ngModel)]="dateFin" (change)="applyFilter()"
+        <input type="date" [(ngModel)]="dateFin" (change)="onDateOrFournisseurFilterChange()"
           class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink" />
       </div>
       <div>
         <label class="block text-xs font-semibold text-oas-muted mb-1">Numéro ou nom fournisseur</label>
-        <input type="text" [(ngModel)]="filterFournisseur" (input)="applyFilter()" placeholder="Ex: Fournisseur #2 ou Total..."
+        <input type="text" [(ngModel)]="filterFournisseur" (input)="onDateOrFournisseurFilterChange()" placeholder="Ex: Fournisseur #2 ou Total..."
           class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink" />
       </div>
     </div>
@@ -158,7 +158,7 @@
       </div>
       @if (totalElements > 0) {
         <app-pagination [page]="page" [totalPages]="totalPages" [total]="totalElements" [pageSize]="pageSize"
-          (prev)="prevPage()" (next)="nextPage()" />
+          (prev)="prevPage()" (next)="nextPage()" (pageChange)="goToPage($event)" />
       }
       }
     </div>

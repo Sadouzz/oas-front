@@ -337,7 +337,14 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
         this.loading = false;
         this.cdr.markForCheck();
       },
-      error: () => this.loading = false,
+      error: () => {
+        this.bons = [];
+        this.filtered = [];
+        this.totalElements = 0;
+        this.serverTotalPages = 1;
+        this.loading = false;
+        this.cdr.markForCheck();
+      },
     });
   }
 
@@ -366,14 +373,21 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
       );
     }
     this.filtered = data;
-    this.page = 1;
   }
 
   // onSearch inherited from BasePaginatedComponent
 
   onFilterStatut(e: Event) {
     this.filterStatut = (e.target as HTMLSelectElement).value;
-    this.applyFilter(); this.cdr.markForCheck();
+    this.page = 1;
+    this.applyFilter();
+    this.cdr.markForCheck();
+  }
+
+  onDateOrFournisseurFilterChange() {
+    this.page = 1;
+    this.applyFilter();
+    this.cdr.markForCheck();
   }
 
   hasReception(bon: BonDeCommande | null): boolean {
