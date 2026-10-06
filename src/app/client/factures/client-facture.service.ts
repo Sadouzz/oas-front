@@ -14,6 +14,10 @@ export class ClientFactureService {
   }
 
   getById(id: number): Observable<FactureModel> {
-    return this.http.get<FactureModel>(`${this.api}/${id}`);
+    return this.http.get<FactureModel>(`${this.api}/me/${id}`);
+  }
+
+  downloadPdf(id: number): Observable<Blob> {
+    return this.http.get(`${this.api}/me/${id}/pdf`, { responseType: 'blob' });
   }
 }

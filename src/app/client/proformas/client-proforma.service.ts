@@ -13,6 +13,14 @@ export class ClientProformaService {
     return this.http.get<Proforma[]>(this.api + '/me');
   }
 
+  getById(id: number): Observable<Proforma> {
+    return this.http.get<Proforma>(`${this.api}/me/${id}`);
+  }
+
+  downloadPdf(id: number): Observable<Blob> {
+    return this.http.get(`${this.api}/me/${id}/pdf`, { responseType: 'blob' });
+  }
+
   valider(id: number): Observable<void> {
     return this.http.put<void>(`${this.api}/${id}/client-valider`, {});
   }

@@ -84,6 +84,26 @@ export class ClientFacturesComponent implements OnInit {
 
   select(facture: FactureModel): void {
     this.selected = facture;
+    this.service.getById(facture.id).subscribe({
+      next: details => { if (this.selected?.id === facture.id) this.selected = details; this.cdr.markForCheck(); },
+      error: () => { this.errorMessage = 'Impossible de charger le détail de cette facture.'; this.cdr.markForCheck(); },
+    });
+  }
+
+  downloadPdf(facture: FactureModel): void {
+    this.service.downloadPdf(facture.id).subscribe({
+      next: blob => this.savePdf(blob, `Facture-${facture.numero || facture.id}.pdf`),
+      error: () => { this.errorMessage = 'Impossible de télécharger cette facture.'; this.cdr.markForCheck(); },
+    });
+  }
+
+  private savePdf(blob: Blob, filename: string): void {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
   }
 
   closeDetail(): void {

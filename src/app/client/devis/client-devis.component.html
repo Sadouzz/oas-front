@@ -100,7 +100,10 @@
                 </button>
                 <div class="flex items-center justify-between gap-2 flex-wrap">
                   <h2 class="font-extrabold text-oas-ink text-base">Devis prévisionnel</h2>
-                  <app-status-badge [label]="statutLabels[selected.statut]" [tone]="statutTones[selected.statut]"></app-status-badge>
+                  <div class="flex items-center gap-2">
+                    <app-status-badge [label]="statutLabels[selected.statut]" [tone]="statutTones[selected.statut]"></app-status-badge>
+                    <button (click)="downloadPdf(selected!)" class="px-3 py-1.5 rounded-lg bg-oas-accent-bg text-oas-accent text-xs font-bold hover:bg-oas-accent/10 transition cursor-pointer">Télécharger PDF</button>
+                  </div>
                 </div>
               </div>
 

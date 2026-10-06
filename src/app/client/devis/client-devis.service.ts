@@ -13,6 +13,14 @@ export class ClientDevisService {
     return this.http.get<DevisPrevisionnel[]>(this.api + '/me');
   }
 
+  getById(id: number): Observable<DevisPrevisionnel> {
+    return this.http.get<DevisPrevisionnel>(`${this.api}/me/${id}`);
+  }
+
+  downloadPdf(id: number): Observable<Blob> {
+    return this.http.get(`${this.api}/me/${id}/pdf`, { responseType: 'blob' });
+  }
+
   accepter(id: number): Observable<DevisPrevisionnel> {
     return this.http.put<DevisPrevisionnel>(`${this.api}/${id}/client-accepter`, {});
   }
