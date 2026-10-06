@@ -180,6 +180,8 @@ export class FichesAtelier implements OnInit {
                 rubriquesManuelles.set(cle, nom);
               }
             }
+            // Remplacer les anciennes rubriques par la liste de référence et
+            // conserver seulement les lignes personnalisées actives du garage.
             this.defaultReception = [
               ...DEFAULT_LIGNES_RECEPTION,
               ...rubriquesManuelles.values()

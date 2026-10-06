@@ -315,7 +315,13 @@
         class="flex-1 border border-oas-line bg-white text-oas-ink2 font-semibold py-2.5 rounded-xl text-sm hover:bg-oas-bg transition cursor-pointer active:scale-98">
         Annuler
       </button>
-      <button type="submit" [disabled]="saving"
+    @if (duplicateVehicleData) {
+      <button type="button" (click)="requestVehicleTransfer()" [disabled]="requestingTransfer"
+        class="w-full flex items-center justify-center gap-2 bg-oas-accent hover:bg-oas-accent-dark disabled:opacity-50 text-white font-bold py-3 rounded-xl transition cursor-pointer">
+        {{ requestingTransfer ? 'Envoi en cours…' : 'Demander le transfert de ce véhicule' }}
+      </button>
+    }
+    <button type="submit" [disabled]="saving"
         class="flex-1 bg-oas-accent hover:bg-oas-accent-dark disabled:opacity-60 text-white font-bold py-2.5 rounded-xl text-sm transition cursor-pointer active:scale-98 shadow-xs">
         {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
       </button>

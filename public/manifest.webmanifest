@@ -1,0 +1,13 @@
+{
+  "name": "Orient Auto Service",
+  "short_name": "OAS",
+  "description": "Gestion et suivi des interventions OAS",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#d97706",
+  "icons": [
+    { "src": "/oas-logo.png", "sizes": "any", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

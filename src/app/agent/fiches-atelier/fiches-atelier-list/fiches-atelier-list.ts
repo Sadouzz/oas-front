@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { FicheAtelierService } from '../fiche-atelier.service';
 import { RendezVousService } from '../../rendezvous/rendezvous.service';
 import { OrdreReparationService } from '../../ordres-reparation/ordre-reparation.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { FicheAtelierDetailsResponse, RendezVous, extractContent } from '../../../shared/models';
 import { Router, RouterLink } from '@angular/router';
 import { LucideEye, LucideWrench, LucidePlus, LucideX, LucideCalendar, LucideLock } from '@lucide/angular';
@@ -21,6 +22,7 @@ export class FichesAtelierList extends BasePaginatedComponent implements OnInit 
   private service = inject(FicheAtelierService);
   private rdvService = inject(RendezVousService);
   private ordreService = inject(OrdreReparationService);
+  private authService = inject(AuthService);
   private router = inject(Router);
   
   fiches: FicheAtelierDetailsResponse[] = [];
@@ -28,6 +30,12 @@ export class FichesAtelierList extends BasePaginatedComponent implements OnInit 
   error = '';
   openingOrdreId: number | null = null;
   private searchTimeout: any;
+
+  private readonly rolesAutorisesCreationOR = ['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER'];
+  get canCreateOrdreReparation(): boolean {
+    const role = this.authService.getRole();
+    return !!role && this.rolesAutorisesCreationOR.includes(role);
+  }
 
   // Modal Nouveau Fiche Atelier (Sélection RDV)
   showNewModal = false;

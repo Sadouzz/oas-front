@@ -7,11 +7,12 @@ import { ClientNotificationService } from '../notifications/client-notification.
 import { ClientNotification } from '../models';
 import { CLIENT_PORTAL_PATHS } from '../client-portal.paths';
 import { ClientMessagerieWidgetComponent } from '../messagerie/client-messagerie-widget.component';
+import { PushOptInComponent } from '../../shared/components/push-opt-in/push-opt-in.component';
 
 @Component({
   selector: 'app-client-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ClientMessagerieWidgetComponent],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, ClientMessagerieWidgetComponent, PushOptInComponent],
   templateUrl: './client-layout.component.html',
 })
 export class ClientLayoutComponent implements OnInit, OnDestroy {

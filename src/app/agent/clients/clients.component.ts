@@ -68,6 +68,7 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   loadingVehicules = false;
 
   createForm = this.fb.group({
+    typeClient: ['PARTICULIER' as 'PARTICULIER' | 'ENTREPRISE', Validators.required],
     firstName: ['', Validators.required],
     lastName: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
@@ -75,6 +76,11 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
     username: [''],
     password: ['', Validators.required],
     confirmPassword: ['', Validators.required],
+    raisonSociale: [''],
+    numeroEntreprise: [''],
+    emailEntreprise: [''],
+    telephoneEntreprise: [''],
+    adresseEntreprise: [''],
   });
 
   vehicleForm = this.fb.group({
@@ -87,10 +93,14 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   });
 
   editForm = this.fb.group({
+    typeClient: ['PARTICULIER' as 'PARTICULIER' | 'ENTREPRISE', Validators.required],
     firstName: ['', Validators.required],
     lastName: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
     phone: ['', Validators.required],
+    raisonSociale: [''],
+    numeroEntreprise: [''],
+    adresseEntreprise: [''],
   });
 
   fideleForm = this.fb.group({
@@ -327,6 +337,8 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   // ── CREATE (step 1 : client info) ──────────────────────────────
   openCreate() {
     this.createForm.reset();
+    this.createForm.patchValue({ typeClient: 'PARTICULIER' });
+    this.setCreateClientType('PARTICULIER');
     this.vehicleForm.reset();
     this.errorMessage = '';
     this.createStep = 1;
@@ -347,8 +359,12 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   saveCreate() {
     const fName = this.createForm.get('firstName')?.value || '';
     const lName = this.createForm.get('lastName')?.value || '';
-    if (!this.createForm.get('username')?.value && fName && lName) {
-      let generated = `${fName.charAt(0).toLowerCase()}${lName.toLowerCase()}`.replace(/[^a-z0-9]/g, '');
+    const companyName = this.createForm.get('raisonSociale')?.value || '';
+    if (!this.createForm.get('username')?.value && (fName || companyName) && (lName || companyName)) {
+      const loginBase = this.createForm.get('typeClient')?.value === 'ENTREPRISE'
+        ? companyName
+        : `${fName.charAt(0)}${lName}`;
+      let generated = loginBase.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
       generated += Math.floor(100 + Math.random() * 900);
       this.createForm.patchValue({ username: generated });
     }
@@ -363,7 +379,19 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
       return;
     }
     this.saving = true;
-    this.clientService.create({ ...raw, type: 'CLIENT' }).subscribe({
+    const isEnterprise = raw.typeClient === 'ENTREPRISE';
+    const payload = {
+      ...raw,
+      email: isEnterprise ? raw.emailEntreprise : raw.email,
+      phone: isEnterprise ? raw.telephoneEntreprise : raw.phone,
+      type: 'CLIENT',
+      ...(isEnterprise ? {
+        adresse: raw.adresseEntreprise,
+        emailEntreprise: raw.emailEntreprise,
+        telephoneEntreprise: raw.telephoneEntreprise,
+      } : {}),
+    };
+    this.clientService.create(payload).subscribe({
       next: (res: any) => {
         this.saving = false;
         this.errorMessage = '';
@@ -375,6 +403,32 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
       },
       error: (err: any) => { this.saving = false; this.errorMessage = this.parseError(err); }
     });
+  }
+
+  setCreateClientType(type: 'PARTICULIER' | 'ENTREPRISE') {
+    this.createForm.patchValue({ typeClient: type });
+    const contactFields = ['email', 'phone'];
+    const enterpriseFields = ['raisonSociale', 'numeroEntreprise', 'emailEntreprise', 'telephoneEntreprise', 'adresseEntreprise'];
+    for (const name of contactFields) {
+      const control = this.createForm.get(name)!;
+      if (type === 'PARTICULIER') {
+        control.setValidators(name === 'email' ? [Validators.required, Validators.email] : Validators.required);
+      } else {
+        control.clearValidators();
+        control.setValue('');
+      }
+      control.updateValueAndValidity();
+    }
+    for (const name of enterpriseFields) {
+      const control = this.createForm.get(name)!;
+      if (type === 'ENTREPRISE') {
+        control.setValidators(name === 'emailEntreprise' ? [Validators.required, Validators.email] : Validators.required);
+      } else {
+        control.clearValidators();
+        control.setValue('');
+      }
+      control.updateValueAndValidity();
+    }
   }
 
   skipVehicle() {
@@ -449,11 +503,16 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   openEdit(client: ClientListResponse) {
     this.editingClient = client;
     this.editForm.patchValue({
+      typeClient: client.typeClient ?? 'PARTICULIER',
       firstName: client.firstName,
       lastName: client.lastName,
       email: client.email,
       phone: client.phone,
+      raisonSociale: client.raisonSociale ?? '',
+      numeroEntreprise: client.numeroEntreprise ?? '',
+      adresseEntreprise: client.adresseEntreprise ?? '',
     });
+    this.setEditClientType(client.typeClient ?? 'PARTICULIER');
     this.errorMessage = '';
     this.showEditModal = true;
   }
@@ -471,10 +530,25 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
       return;
     }
     this.saving = true;
-    this.clientService.update(this.editingClient.id, this.editForm.value as any).subscribe({
+    const raw = this.editForm.getRawValue() as any;
+    const payload = raw.typeClient === 'ENTREPRISE'
+      ? { ...raw, emailEntreprise: raw.email, telephoneEntreprise: raw.phone }
+      : raw;
+    this.clientService.update(this.editingClient.id, payload as any).subscribe({
       next: () => { this.saving = false; this.showSuccess('Client modifié avec succès !'); this.closeModal(); this.loadAll(); },
       error: (err: any) => { this.saving = false; this.errorMessage = err.error?.message || 'Erreur lors de la modification.'; }
     });
+  }
+
+  setEditClientType(type: 'PARTICULIER' | 'ENTREPRISE') {
+    this.editForm.patchValue({ typeClient: type });
+    const requiredFields = ['raisonSociale', 'numeroEntreprise', 'adresseEntreprise'];
+    for (const name of requiredFields) {
+      const control = this.editForm.get(name)!;
+      if (type === 'ENTREPRISE') control.setValidators(Validators.required);
+      else control.clearValidators();
+      control.updateValueAndValidity();
+    }
   }
 
   // ── FIDELITE ───────────────────────────────────────────────────

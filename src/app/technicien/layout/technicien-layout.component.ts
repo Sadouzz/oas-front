@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { TECHNICIEN_PORTAL_PATHS } from '../technicien-portal.paths';
+import { PushOptInComponent } from '../../shared/components/push-opt-in/push-opt-in.component';
 
 /**
  * Layout minimal du portail technicien, sur le modèle de client-portal/layout/client-layout.
@@ -9,7 +10,7 @@ import { TECHNICIEN_PORTAL_PATHS } from '../technicien-portal.paths';
 @Component({
   selector: 'app-technicien-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink],
+  imports: [RouterOutlet, RouterLink, PushOptInComponent],
   templateUrl: './technicien-layout.component.html',
 })
 export class TechnicienLayoutComponent {

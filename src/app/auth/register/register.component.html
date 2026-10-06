@@ -46,12 +46,71 @@
         <p class="text-oas-muted text-sm mt-1">Rejoignez-nous pour gérer vos véhicules et réparations</p>
       </div>
 
+      <div class="grid grid-cols-2 gap-3 mb-5" role="group" aria-label="Type de client">
+        <button type="button" (click)="chooseClientType('PARTICULIER')"
+                [class.border-oas-accent]="form.get('typeClient')?.value === 'PARTICULIER'"
+                [class.bg-oas-accent-bg]="form.get('typeClient')?.value === 'PARTICULIER'"
+                class="rounded-lg border-2 border-oas-line px-4 py-3 text-sm font-semibold text-oas-ink transition">
+          Particulier
+        </button>
+        <button type="button" (click)="chooseClientType('ENTREPRISE')"
+                [class.border-oas-accent]="form.get('typeClient')?.value === 'ENTREPRISE'"
+                [class.bg-oas-accent-bg]="form.get('typeClient')?.value === 'ENTREPRISE'"
+                class="rounded-lg border-2 border-oas-line px-4 py-3 text-sm font-semibold text-oas-ink transition">
+          Entreprise
+        </button>
+      </div>
+
       <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="space-y-4">
+
+        @if (form.get('typeClient')?.value === 'ENTREPRISE') {
+          <div class="space-y-4 rounded-xl border border-oas-line bg-oas-bg p-4">
+            <p class="text-xs font-bold uppercase tracking-wide text-oas-muted">Informations de l’entreprise</p>
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1.5">Raison sociale <span class="text-red-500">*</span></label>
+              <input type="text" autocomplete="organization" formControlName="raisonSociale" placeholder="Nom officiel de l’entreprise"
+                     class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"
+                     [class.border-oas-bad]="f('raisonSociale')?.invalid && f('raisonSociale')?.touched" />
+              @if (f('raisonSociale')?.invalid && f('raisonSociale')?.touched) { <p class="text-oas-bad text-xs mt-1">La raison sociale est obligatoire.</p> }
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1.5">NINEA <span class="text-red-500">*</span></label>
+              <input type="text" formControlName="numeroEntreprise" placeholder="Numéro NINEA"
+                     class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"
+                     [class.border-oas-bad]="f('numeroEntreprise')?.invalid && f('numeroEntreprise')?.touched" />
+              @if (f('numeroEntreprise')?.invalid && f('numeroEntreprise')?.touched) { <p class="text-oas-bad text-xs mt-1">Le NINEA est obligatoire.</p> }
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-semibold text-oas-ink mb-1.5">Téléphone entreprise <span class="text-red-500">*</span></label>
+                <app-phone-input formControlName="telephoneEntreprise"
+                                 [invalid]="!!(f('telephoneEntreprise')?.invalid && f('telephoneEntreprise')?.touched)"></app-phone-input>
+                @if (f('telephoneEntreprise')?.invalid && f('telephoneEntreprise')?.touched) { <p class="text-oas-bad text-xs mt-1">Le téléphone est obligatoire.</p> }
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-oas-ink mb-1.5">Email entreprise <span class="text-red-500">*</span></label>
+                <input type="email" autocomplete="email" formControlName="emailEntreprise" placeholder="contact@entreprise.com"
+                       class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"
+                       [class.border-oas-bad]="f('emailEntreprise')?.invalid && f('emailEntreprise')?.touched" />
+                @if (f('emailEntreprise')?.invalid && f('emailEntreprise')?.touched) { <p class="text-oas-bad text-xs mt-1">Saisissez un email d’entreprise valide.</p> }
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1.5">Adresse entreprise <span class="text-red-500">*</span></label>
+              <input type="text" autocomplete="street-address" formControlName="adresseEntreprise" placeholder="Adresse complète"
+                     class="w-full px-4 py-2.5 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"
+                     [class.border-oas-bad]="f('adresseEntreprise')?.invalid && f('adresseEntreprise')?.touched" />
+              @if (f('adresseEntreprise')?.invalid && f('adresseEntreprise')?.touched) { <p class="text-oas-bad text-xs mt-1">L’adresse entreprise est obligatoire.</p> }
+            </div>
+          </div>
+        }
 
         <!-- Prénom et Nom -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-semibold text-oas-ink mb-1.5">Prénom <span class="text-red-500">*</span></label>
+            <label class="block text-sm font-semibold text-oas-ink mb-1.5">
+              {{ form.get('typeClient')?.value === 'ENTREPRISE' ? 'Prénom du responsable' : 'Prénom' }} <span class="text-red-500">*</span>
+            </label>
             <input
               type="text"
               autocomplete="given-name"
@@ -66,7 +125,9 @@
           </div>
 
           <div>
-            <label class="block text-sm font-semibold text-oas-ink mb-1.5">Nom <span class="text-red-500">*</span></label>
+            <label class="block text-sm font-semibold text-oas-ink mb-1.5">
+              {{ form.get('typeClient')?.value === 'ENTREPRISE' ? 'Nom du responsable' : 'Nom' }} <span class="text-red-500">*</span>
+            </label>
             <input
               type="text"
               autocomplete="family-name"
@@ -82,6 +143,7 @@
         </div>
 
         <!-- Téléphone et Email -->
+        @if (form.get('typeClient')?.value === 'PARTICULIER') {
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-semibold text-oas-ink mb-1.5">Téléphone <span class="text-red-500">*</span></label>
@@ -115,6 +177,7 @@
             }
           </div>
         </div>
+        }
 
         <!-- Nom d'utilisateur (Login) -->
         <!-- <div>
