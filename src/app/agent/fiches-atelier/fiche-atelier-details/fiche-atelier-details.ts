@@ -88,6 +88,18 @@ export class FicheAtelierDetails implements OnInit {
       next: (data) => {
         this.fiche = data;
         this.devis = (data.devisPrevisionnel as any) ?? null;
+        if (!this.devis) {
+          this.devisService.getByFicheAtelierId(id).subscribe({
+            next: (devisData) => {
+              if (devisData) {
+                this.devis = devisData;
+                if (this.fiche) this.fiche.devisPrevisionnel = devisData as any;
+                this.cdr.markForCheck();
+              }
+            },
+            error: () => {}
+          });
+        }
         this.loading = false;
         this.cdr.markForCheck();
       },

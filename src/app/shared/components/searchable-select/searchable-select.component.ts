@@ -61,10 +61,12 @@ export class SearchableSelectComponent implements ControlValueAccessor {
   @Input() bindValue: string = 'id';
   @Input() bindLabel: string | ((opt: any) => string) = 'nom';
   @Input() placeholder: string = 'Sélectionner...';
+  @Input() serverSearch: boolean = false;
   @Output() change = new EventEmitter<any>();
   @Output() search = new EventEmitter<string>();
 
   value: any = null;
+  selectedOption: any = null;
   disabled = false;
   open = false;
   searchTerm: string | null = null;
@@ -94,14 +96,15 @@ export class SearchableSelectComponent implements ControlValueAccessor {
       return this.searchTerm;
     }
     if (this.value !== null && this.value !== undefined) {
-      const selected = this.options.find(o => o[this.bindValue] === this.value);
+      const selected = this.options.find(o => o[this.bindValue] === this.value) ||
+        (this.selectedOption && this.selectedOption[this.bindValue] === this.value ? this.selectedOption : null);
       return selected ? this.getLabel(selected) : '';
     }
     return '';
   }
 
   filteredOptions() {
-    if (!this.searchTerm) return this.options;
+    if (this.serverSearch || !this.searchTerm) return this.options;
     const term = this.searchTerm.toLowerCase();
     return this.options.filter(o => this.getLabel(o).toLowerCase().includes(term));
   }
@@ -128,6 +131,7 @@ export class SearchableSelectComponent implements ControlValueAccessor {
   }
 
   selectOption(opt: any) {
+    this.selectedOption = opt;
     this.value = opt ? opt[this.bindValue] : null;
     this.onChange(this.value);
     this.change.emit(this.value);
@@ -136,6 +140,9 @@ export class SearchableSelectComponent implements ControlValueAccessor {
 
   writeValue(obj: any): void {
     this.value = obj;
+    if (obj == null) {
+      this.selectedOption = null;
+    }
   }
   registerOnChange(fn: any): void {
     this.onChange = fn;

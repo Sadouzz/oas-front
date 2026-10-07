@@ -65,8 +65,28 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
 
   // Bon de Réception popup
   showReceptionModal = false;
-  receptionLignes: { ligneId: number; designationPiece: string; reference: string; quantiteCommandee: number; quantiteRecue: number; }[] = [];
+  receptionErrorMessage = '';
+  receptionLignes: {
+    ligneId: number;
+    designationPiece: string;
+    reference: string;
+    quantiteTotale: number;
+    quantiteDejaRecue: number;
+    quantiteRestante: number;
+    quantiteRecue: number;
+    isFullyReceived: boolean;
+  }[] = [];
   receptionSaving = false;
+
+  get totalQuantiteRecueNow(): number {
+    return this.receptionLignes
+      .filter(l => !l.isFullyReceived)
+      .reduce((sum, l) => sum + (Number(l.quantiteRecue) || 0), 0);
+  }
+
+  get allPiecesAlreadyReceived(): boolean {
+    return this.receptionLignes.length > 0 && this.receptionLignes.every(l => l.isFullyReceived);
+  }
 
   // Assigner fournisseur popup
   showAssignFournisseur = false;
@@ -205,6 +225,33 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
     return `${piece.reference} — ${piece.designation}${depotNom ? ` (${depotNom})` : ''}`;
   }
 
+  getPiece(pieceId: number | string | null | undefined): PieceDetache | undefined {
+    if (!pieceId) return undefined;
+    const id = Number(pieceId);
+    return this.pieces.find(p => p.id === id);
+  }
+
+  getPieceDesignation(pieceId: number | string | null | undefined): string {
+    const p = this.getPiece(pieceId);
+    return p?.designation || (pieceId ? `Pièce #${pieceId}` : 'Pièce');
+  }
+
+  getPieceReference(pieceId: number | string | null | undefined): string {
+    const p = this.getPiece(pieceId);
+    return p?.reference || '';
+  }
+
+  getPieceDepot(pieceId: number | string | null | undefined): string {
+    const p = this.getPiece(pieceId);
+    return p?.depot?.nom ?? p?.categorie?.depot?.nom ?? '';
+  }
+
+  getPieceDisplayName(pieceId: number | string | null | undefined): string {
+    const p = this.getPiece(pieceId);
+    if (!p) return pieceId ? `Pièce #${pieceId}` : 'Pièce';
+    return this.formatPiece(p);
+  }
+
   ngOnInit() {
     this.clientSearch$.pipe(
       debounceTime(300),
@@ -337,7 +384,14 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
         this.loading = false;
         this.cdr.markForCheck();
       },
-      error: () => this.loading = false,
+      error: () => {
+        this.bons = [];
+        this.filtered = [];
+        this.totalElements = 0;
+        this.serverTotalPages = 1;
+        this.loading = false;
+        this.cdr.markForCheck();
+      },
     });
   }
 
@@ -366,14 +420,21 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
       );
     }
     this.filtered = data;
-    this.page = 1;
   }
 
   // onSearch inherited from BasePaginatedComponent
 
   onFilterStatut(e: Event) {
     this.filterStatut = (e.target as HTMLSelectElement).value;
-    this.applyFilter(); this.cdr.markForCheck();
+    this.page = 1;
+    this.applyFilter();
+    this.cdr.markForCheck();
+  }
+
+  onDateOrFournisseurFilterChange() {
+    this.page = 1;
+    this.applyFilter();
+    this.cdr.markForCheck();
   }
 
   hasReception(bon: BonDeCommande | null): boolean {
@@ -398,9 +459,32 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
     const piece = this.piecesPdp.find(p => p.id === Number(this.piecePdpAjouter));
     if (!piece) return;
 
-    const ligne = this.makeLigne();
-    ligne.patchValue({ pieceDetacheeId: piece.id, quantite: Math.max(1, Number(this.qteAjouterPdp) || 1), prixUnitaire: Number(this.prixAjouterPdp) || 0 });
-    this.lignesArray.push(ligne);
+    const addedQty = Math.max(1, Number(this.qteAjouterPdp) || 1);
+    const hasCustomPrice = this.prixAjouterPdp !== null && this.prixAjouterPdp !== undefined;
+    const addedPrice = hasCustomPrice ? Number(this.prixAjouterPdp) : (piece.prix ?? 0);
+
+    const existingCtrl = this.lignesArray.controls.find(
+      c => Number(c.get('pieceDetacheeId')?.value) === piece.id
+    ) as FormGroup | undefined;
+
+    if (existingCtrl) {
+      const currentQty = Number(existingCtrl.get('quantite')?.value) || 0;
+      const currentPrice = Number(existingCtrl.get('prixUnitaire')?.value) || 0;
+      existingCtrl.patchValue({
+        quantite: currentQty + addedQty,
+        prixUnitaire: hasCustomPrice ? addedPrice : (currentPrice || addedPrice)
+      });
+      this.notify(`Quantité cumulée (+${addedQty}) pour "${piece.designation}".`);
+    } else {
+      const ligne = this.makeLigne();
+      ligne.patchValue({
+        pieceDetacheeId: piece.id,
+        quantite: addedQty,
+        prixUnitaire: addedPrice
+      });
+      this.lignesArray.push(ligne);
+    }
+
     this.piecePdpAjouter = null;
     this.qteAjouterPdp = 1;
     this.prixAjouterPdp = null;
@@ -437,6 +521,7 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
     this.prixAjouterPdp = null;
     this.errorMessage = '';
     this.showModal = true;
+    this.cdr.markForCheck();
   }
 
   openNewWithPiece(pieceId: number) {
@@ -462,13 +547,25 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
       this.notifyError('Seules les pièces de rechange (PDP) peuvent être commandées.');
       return;
     }
-    const ctrl = this.makeLigne();
-    ctrl.patchValue({
-      pieceDetacheeId: piece.id,
-      prixUnitaire: piece.prix ?? 0,
-      quantite: piece.seuilMinimum ? Math.max(1, piece.seuilMinimum - (piece.qteReelle ?? 0)) : 10
-    });
-    this.lignesArray.push(ctrl);
+    const addedQty = piece.seuilMinimum ? Math.max(1, piece.seuilMinimum - (piece.qteReelle ?? 0)) : 10;
+    const existingCtrl = this.lignesArray.controls.find(
+      c => Number(c.get('pieceDetacheeId')?.value) === piece.id
+    ) as FormGroup | undefined;
+
+    if (existingCtrl) {
+      const currentQty = Number(existingCtrl.get('quantite')?.value) || 0;
+      existingCtrl.patchValue({
+        quantite: currentQty + addedQty
+      });
+    } else {
+      const ctrl = this.makeLigne();
+      ctrl.patchValue({
+        pieceDetacheeId: piece.id,
+        prixUnitaire: piece.prix ?? 0,
+        quantite: addedQty
+      });
+      this.lignesArray.push(ctrl);
+    }
   }
 
   openEdit(bon: BonDeCommande) {
@@ -593,7 +690,30 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
     this.showModal = true;
   }
 
-  openDetail(bon: BonDeCommande) { this.selectedBon = bon; }
+  detailLoading = false;
+
+  openDetail(bon: BonDeCommande) {
+    this.selectedBon = bon;
+    this.detailLoading = true;
+    this.cdr.markForCheck();
+    this.service.getById(bon.id).subscribe({
+      next: (fullBon: any) => {
+        const data = (fullBon?.data || fullBon) as BonDeCommande;
+        this.selectedBon = data;
+        const idx = this.bons.findIndex(b => b.id === data.id);
+        if (idx !== -1) {
+          this.bons[idx] = { ...this.bons[idx], ...data };
+        }
+        this.detailLoading = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.detailLoading = false;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
   closeDetail() { this.selectedBon = null; }
 
   save() {
@@ -618,6 +738,7 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
       }
     }
     this.saving = true;
+    this.cdr.markForCheck();
     const raw = this.form.value;
     const payload = {
       fournisseurId: raw.fournisseurId ? Number(raw.fournisseurId) : null,
@@ -631,6 +752,7 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
           pieceDetacheeId: Number(l.pieceDetacheeId),
           quantite: Number(l.quantite),
           prixUnitaire: Number(l.prixUnitaire),
+          typePiece: 'PDP',
         })),
       ],
     };
@@ -638,8 +760,18 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
       ? this.service.create(payload)
       : this.service.update(this.editingId!, payload);
     req$.subscribe({
-      next: () => { this.showModal = false; this.saving = false; this.load(); this.notify('Bon de commande enregistré.'); },
-      error: (err: any) => { this.saving = false; this.notifyError(err?.error?.message || 'Erreur lors de la sauvegarde.'); },
+      next: () => {
+        this.showModal = false;
+        this.saving = false;
+        this.load();
+        this.notify('Bon de commande enregistré.');
+        this.cdr.markForCheck();
+      },
+      error: (err: any) => {
+        this.saving = false;
+        this.notifyError(err?.error?.message || 'Erreur lors de la sauvegarde.');
+        this.cdr.markForCheck();
+      },
     });
   }
 
@@ -656,32 +788,42 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
     });
   }
 
-  action(type: 'envoyer' | 'receptionner' | 'annuler') {
-    if (!this.selectedBon || this.actioning) return;
+  action(type: 'envoyer' | 'receptionner' | 'annuler', bon?: BonDeCommande) {
+    const targetBon = bon || this.selectedBon;
+    if (!targetBon || this.actioning) return;
+    this.selectedBon = targetBon;
 
     // Intercepter "envoyer" si pas de fournisseur
-    if (type === 'envoyer' && !this.selectedBon.fournisseurId) {
+    if (type === 'envoyer' && !targetBon.fournisseurId) {
       this.showAssignFournisseur = true;
       return;
     }
 
     // Intercepter "receptionner" pour ouvrir le popup bon de réception
     if (type === 'receptionner') {
-      this.openReceptionPopup();
+      this.openReceptionPopup(targetBon);
       return;
     }
 
     this.actioning = true;
-    this.service[type](this.selectedBon.id).subscribe({
-      next: updated => {
-        this.selectedBon = updated;
-        const idx = this.bons.findIndex(b => b.id === updated.id);
-        if (idx !== -1) this.bons[idx] = updated;
-        this.applyFilter(); this.cdr.markForCheck();
+    this.service[type](targetBon.id).subscribe({
+      next: (updated: any) => {
+        const fullBon = (updated?.data || updated) as BonDeCommande;
+        this.selectedBon = fullBon;
+        const idx = this.bons.findIndex(b => b.id === fullBon.id);
+        if (idx !== -1) {
+          this.bons[idx] = { ...this.bons[idx], ...fullBon };
+        }
+        this.applyFilter();
+        this.cdr.markForCheck();
         this.actioning = false;
-        this.notify('Statut mis à jour.');
+        this.notify(type === 'envoyer' ? 'Bon de commande marqué comme envoyé au fournisseur.' : 'Statut mis à jour.');
       },
-      error: (err: any) => { this.actioning = false; this.notifyError(err?.error?.message || 'Erreur lors de la mise à jour.'); },
+      error: (err: any) => {
+        this.actioning = false;
+        this.cdr.markForCheck();
+        this.notifyError(err?.error?.message || 'Erreur lors de la mise à jour.');
+      },
     });
   }
 
@@ -714,30 +856,78 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
   }
 
   // ─── Bon de Réception ─────────────────────────────────
-  openReceptionPopup() {
-    if (!this.selectedBon) return;
-    this.receptionLignes = this.selectedBon.lignes
-      .map(l => {
-        const restante = l.quantite - (l.quantiteRecue || 0);
-        return {
-          ligneId: l.id!,
-          designationPiece: l.designationPiece || l.reference || '',
-          reference: l.reference || '',
-          quantiteCommandee: restante,
-          quantiteRecue: restante,
-        };
-      })
-      .filter(l => l.quantiteCommandee > 0);
+  openReceptionPopup(bon?: BonDeCommande) {
+    const targetBon = bon || this.selectedBon;
+    if (!targetBon) return;
+    this.selectedBon = targetBon;
+    this.receptionErrorMessage = '';
+
+    if (!targetBon.lignes || targetBon.lignes.length === 0) {
+      this.service.getById(targetBon.id).subscribe({
+        next: (fullBon) => {
+          this.selectedBon = fullBon;
+          const idx = this.bons.findIndex(b => b.id === fullBon.id);
+          if (idx !== -1) this.bons[idx] = fullBon;
+          this.initReceptionLignes(fullBon);
+          this.showReceptionModal = true;
+          this.cdr.markForCheck();
+        },
+        error: (err: any) => {
+          this.notifyError(err?.error?.message || 'Erreur lors du chargement des lignes du bon.');
+        }
+      });
+      return;
+    }
+
+    this.initReceptionLignes(targetBon);
     this.showReceptionModal = true;
+    this.cdr.markForCheck();
+  }
+
+  private initReceptionLignes(targetBon: BonDeCommande) {
+    this.receptionLignes = (targetBon.lignes || []).map(l => {
+      const qteTotale = Number(l.quantite) || 0;
+      const qteDejaRecue = Number(l.quantiteRecue) || 0;
+      const qteRestante = Math.max(0, qteTotale - qteDejaRecue);
+      const isFully = qteDejaRecue >= qteTotale && qteTotale > 0;
+
+      return {
+        ligneId: l.id!,
+        designationPiece: l.designationPiece || l.reference || 'Pièce',
+        reference: l.reference || '',
+        quantiteTotale: qteTotale,
+        quantiteDejaRecue: qteDejaRecue,
+        quantiteRestante: qteRestante,
+        quantiteRecue: isFully ? 0 : qteRestante,
+        isFullyReceived: isFully,
+      };
+    });
   }
 
   saveReception() {
     if (!this.selectedBon) return;
+    this.receptionErrorMessage = '';
+
+    if (this.allPiecesAlreadyReceived) {
+      this.receptionErrorMessage = 'Toutes les pièces de ce bon de commande ont déjà été intégralement réceptionnées.';
+      this.cdr.markForCheck();
+      return;
+    }
+
+    const nonFullyLines = this.receptionLignes.filter(l => !l.isFullyReceived);
+    const totalNewReceived = nonFullyLines.reduce((sum, l) => sum + (Number(l.quantiteRecue) || 0), 0);
+
+    if (nonFullyLines.length > 0 && totalNewReceived <= 0) {
+      this.receptionErrorMessage = 'Veuillez renseigner au moins une quantité reçue supérieure à 0.';
+      this.cdr.markForCheck();
+      return;
+    }
+
     this.receptionSaving = true;
     const request: ReceptionBonDeCommandeRequest = {
       lignes: this.receptionLignes.map(l => ({
         ligneId: l.ligneId,
-        quantiteRecue: l.quantiteRecue,
+        quantiteRecue: l.isFullyReceived ? 0 : (Number(l.quantiteRecue) || 0),
       }))
     };
     this.service.receptionnerAvecReception(this.selectedBon.id, request).subscribe({
@@ -752,7 +942,8 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
       },
       error: (err: any) => {
         this.receptionSaving = false;
-        this.notifyError(err?.error?.message || 'Erreur réception.');
+        this.receptionErrorMessage = err?.error?.message || 'Erreur lors de la validation de la réception.';
+        this.cdr.markForCheck();
       },
     });
   }
@@ -811,11 +1002,21 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
   }
 
   private notify(msg: string) {
-    this.saving = false; this.successMessage = msg;
-    setTimeout(() => this.successMessage = '', 3500);
+    this.saving = false;
+    this.successMessage = msg;
+    this.cdr.markForCheck();
+    setTimeout(() => {
+      this.successMessage = '';
+      this.cdr.markForCheck();
+    }, 3500);
   }
   private notifyError(msg: string) {
-    this.saving = false; this.errorMessage = msg;
-    setTimeout(() => this.errorMessage = '', 3500);
+    this.saving = false;
+    this.errorMessage = msg;
+    this.cdr.markForCheck();
+    setTimeout(() => {
+      this.errorMessage = '';
+      this.cdr.markForCheck();
+    }, 3500);
   }
 }

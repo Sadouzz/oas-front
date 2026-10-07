@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { OrdreReparationService } from '../../../ordre-reparation.service';
 import { ProformaService } from '../../../../proforma/proforma.service';
@@ -16,7 +16,7 @@ import { StepProformaResponseDto } from '../../../models/responses';
 @Component({
   selector: 'app-step-proforma',
   standalone: true,
-  imports: [CommonModule, AlertComponent],
+  imports: [CommonModule, AlertComponent, RouterLink],
   templateUrl: './step-proforma.component.html'
 })
 export class StepProformaComponent implements OnInit {

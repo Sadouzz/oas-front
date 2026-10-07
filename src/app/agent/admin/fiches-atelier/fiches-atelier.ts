@@ -255,17 +255,34 @@ export class FichesAtelier implements OnInit {
     return details ? `${immat} — ${details}` : immat;
   };
 
-  loadClients() {
-    this.clientService.getAll({ size: 200 }).subscribe({
+  loadingClients = false;
+  private clientSearchDebounce: any;
+
+  loadClients(keyword: string = '') {
+    this.loadingClients = true;
+    const params: any = { page: 0, size: 10 };
+    if (keyword && keyword.trim()) {
+      params.keyword = keyword.trim();
+    }
+    this.clientService.getAll(params).subscribe({
       next: (data) => {
         this.clients = extractContent(data);
+        this.loadingClients = false;
         this.cdr.markForCheck();
       },
       error: () => {
         this.clients = [];
+        this.loadingClients = false;
         this.cdr.markForCheck();
       }
     });
+  }
+
+  onClientSearch(term: string) {
+    clearTimeout(this.clientSearchDebounce);
+    this.clientSearchDebounce = setTimeout(() => {
+      this.loadClients(term);
+    }, 300);
   }
 
   onClientChange(val: any) {

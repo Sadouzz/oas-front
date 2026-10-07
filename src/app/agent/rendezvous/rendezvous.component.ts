@@ -102,6 +102,10 @@ export class RendezVousComponent implements OnInit {
     commentaire:    [''],
   });
 
+  loadingClients = false;
+  selectedClientObj: ClientModel | null = null;
+  private clientSearchDebounce: any;
+
   ngOnInit() {
     this.load();
     this.loadClientsAndVehicles();
@@ -113,14 +117,36 @@ export class RendezVousComponent implements OnInit {
     });
   }
 
-  loadClientsAndVehicles() {
-    this.clientService.getAll().subscribe({
+  loadClients(keyword: string = '') {
+    this.loadingClients = true;
+    const params: any = { page: 0, size: 10 };
+    if (keyword && keyword.trim()) {
+      params.keyword = keyword.trim();
+    }
+    this.clientService.getAll(params).subscribe({
       next: (res) => {
         this.clients = extractContent<ClientModel>(res);
+        this.loadingClients = false;
         this.cdr.markForCheck();
       },
-      error: () => {}
+      error: () => {
+        this.loadingClients = false;
+        this.cdr.markForCheck();
+      }
     });
+  }
+
+  onClientSearch(keyword: string) {
+    this.clientFilter = keyword;
+    this.clientOpen = true;
+    clearTimeout(this.clientSearchDebounce);
+    this.clientSearchDebounce = setTimeout(() => {
+      this.loadClients(keyword);
+    }, 300);
+  }
+
+  loadClientsAndVehicles() {
+    this.loadClients('');
 
     this.vehiculeService.getAll().subscribe({
       next: (res) => {
@@ -182,6 +208,9 @@ export class RendezVousComponent implements OnInit {
 
   // ─── Création de RDV ──────────────────────────────
   get clientLabel(): string {
+    if (this.selectedClientObj) {
+      return `${this.selectedClientObj.firstName} ${this.selectedClientObj.lastName}`;
+    }
     const id = this.createForm.get('clientId')?.value;
     if (!id) return '';
     const c = this.clients.find(x => x.id === Number(id));
@@ -189,24 +218,20 @@ export class RendezVousComponent implements OnInit {
   }
 
   get selectedClient(): ClientModel | undefined {
+    if (this.selectedClientObj) return this.selectedClientObj;
     const id = this.createForm.get('clientId')?.value;
     if (!id) return undefined;
     return this.clients.find(x => x.id === Number(id));
   }
 
   get filteredClients(): ClientModel[] {
-    if (!this.clientFilter) return this.clients;
-    const kw = this.clientFilter.toLowerCase();
-    return this.clients.filter(c =>
-      `${c.firstName} ${c.lastName}`.toLowerCase().includes(kw) ||
-      (c.phone ?? '').toLowerCase().includes(kw) ||
-      (c.email ?? '').toLowerCase().includes(kw)
-    );
+    return this.clients;
   }
 
   loadingClientVehicules = false;
 
   selectClient(c: ClientModel) {
+    this.selectedClientObj = c;
     this.createForm.patchValue({ clientId: c.id, vehiculeId: null });
     this.clientFilter = '';
     this.clientOpen = false;
@@ -229,10 +254,13 @@ export class RendezVousComponent implements OnInit {
   }
 
   clearClient() {
+    this.selectedClientObj = null;
     this.createForm.patchValue({ clientId: null, vehiculeId: null });
     this.clientVehicules = [];
     this.loadingClientVehicules = false;
     this.clientFilter = '';
+    this.clientOpen = true;
+    this.loadClients('');
     this.cdr.markForCheck();
   }
 
@@ -255,12 +283,14 @@ export class RendezVousComponent implements OnInit {
       statut: 'EN_ATTENTE',
       commentaire: '',
     });
+    this.selectedClientObj = null;
     this.clientFilter = '';
     this.clientOpen = false;
     this.clientVehicules = [];
     this.loadingClientVehicules = false;
     this.modalErrorMessage = '';
     this.showCreateModal = true;
+    this.loadClients('');
   }
 
   closeCreate() {

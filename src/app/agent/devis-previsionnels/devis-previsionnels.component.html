@@ -51,9 +51,14 @@
             <div class="flex items-start justify-between mb-2">
               <div>
                 <span class="font-bold text-oas-ink">{{ d.numero || ('#' + d.id) }}</span>
+                <p class="text-[11px] text-oas-muted mt-0.5">
+                  {{ (d.dateCreation || d.createdAt) ? ((d.dateCreation || d.createdAt) | date:'dd/MM/yyyy HH:mm') : '—' }}
+                </p>
                 <div class="mt-1">
                   @if (d.client) {
                     <p class="font-semibold text-sm">{{ d.client.firstName }} {{ d.client.lastName }}</p>
+                  } @else if (d.clientNom) {
+                    <p class="font-semibold text-sm">{{ d.clientNom }}</p>
                   } @else {
                     <p class="text-oas-faint text-sm">—</p>
                   }
@@ -75,6 +80,8 @@
                 <p class="font-medium text-oas-ink2">
                   @if (d.vehicule) {
                     {{ d.vehicule.immatriculation }}
+                  } @else if (d.vehiculeImmatriculation) {
+                    {{ d.vehiculeImmatriculation }}
                   } @else {
                     <span class="text-oas-faint">—</span>
                   }
@@ -135,14 +142,13 @@
           <thead>
             <tr class="border-b border-oas-line">
               <th class="text-left text-xs text-oas-muted px-5 py-3">N°</th>
+              <th class="text-left text-xs text-oas-muted px-5 py-3">Date</th>
               <th class="text-left text-xs text-oas-muted px-5 py-3">Client</th>
               <th class="text-left text-xs text-oas-muted px-5 py-3">Véhicule</th>
               <th class="text-left text-xs text-oas-muted px-5 py-3">Agent</th>
               <th class="text-left text-xs text-oas-muted px-5 py-3">Kilométrage</th>
               <th class="text-left text-xs text-oas-muted px-5 py-3">Montant</th>
               <th class="text-left text-xs text-oas-muted px-5 py-3">Statut</th>
-              <th class="text-left text-xs text-oas-muted px-5 py-3">Agent</th>
-              <th class="text-left text-xs text-oas-muted px-5 py-3">Notes</th>
               <th class="px-5 py-3">Actions</th>
             </tr>
           </thead>
@@ -152,15 +158,22 @@
                 <td class="px-5 py-4 font-semibold text-oas-ink">
                   {{ d.numero || ('#' + d.id) }}
                 </td>
+                <td class="px-5 py-4 text-xs text-oas-muted font-medium whitespace-nowrap">
+                  {{ (d.dateCreation || d.createdAt) ? ((d.dateCreation || d.createdAt) | date:'dd/MM/yyyy HH:mm') : '—' }}
+                </td>
                 <td class="px-5 py-4 font-semibold text-oas-ink">
                   @if (d.client) {
                     {{ d.client.firstName }} {{ d.client.lastName }}
+                  } @else if (d.clientNom) {
+                    {{ d.clientNom }}
                   } @else { <span class="text-oas-faint">—</span> }
                 </td>
                 <td class="px-5 py-4 text-sm text-oas-ink2">
                   @if (d.vehicule) {
                     <span class="font-medium">{{ d.vehicule.immatriculation }}</span>
                     <span class="text-oas-muted text-xs ml-1">{{ d.vehicule.marque }}</span>
+                  } @else if (d.vehiculeImmatriculation) {
+                    <span class="font-medium">{{ d.vehiculeImmatriculation }}</span>
                   } @else { <span class="text-oas-faint">—</span> }
                 </td>
                 <td class="px-5 py-4 text-sm text-oas-ink2">
@@ -182,14 +195,7 @@
                     {{ d.statut }}
                   </span>
                 </td>
-                <td class="px-5 py-4 text-sm text-oas-muted max-w-xs truncate">{{ d.notesReparation }}</td>
-                <td class="px-5 py-4 text-sm text-oas-ink2">
-                  @if (d.agent) {
-                    {{ d.agent.firstName }} {{ d.agent.lastName }}
-                  } @else {
-                    <span class="text-oas-faint">—</span>
-                  }
-                </td>
+                
                 <td class="px-5 py-4">
                   <div class="flex items-center gap-1 justify-end">
                     @if (d.statut !== 'ACCEPTE' && d.statut !== 'PAYEE') {

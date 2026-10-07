@@ -328,14 +328,14 @@
             </div>
           </div>
           <div class="flex items-center gap-3">
-            <!-- <button type="button" (click)="actualiserProforma()" [disabled]="saving"
-              title="Actualiser le proforma avec les dernières pièces et main d'œuvre"
-              class="px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            <a [routerLink]="['/app/ordres-reparation', ordreId, 'pieces-mo']"
+               title="Modifier les pièces et la main-d'œuvre (Étape 3)"
+               class="px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
               </svg>
-              <span>Actualiser</span>
-            </button> -->
+              <span>Modifier les articles</span>
+            </a>
             <button type="button" (click)="telechargerPdf()" [disabled]="telechargementEnCours"
               class="px-4 py-2.5 border border-oas-line hover:bg-oas-bg text-oas-ink rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer">
               <svg class="w-4 h-4 text-oas-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">

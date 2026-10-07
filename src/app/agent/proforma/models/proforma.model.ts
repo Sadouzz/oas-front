@@ -1,21 +1,27 @@
 export interface LignePiece {
-  id: number;
-  pieceId?: number;
+  id?: number;
+  pieceId?: number | null;
+  piece?: any;
+  type?: string;
+  referencePiece?: string;
   designationPiece?: string;
   isCustom?: boolean;
+  custom?: boolean;
   designationPds?: string;
   quantite: number;
   prix: number;
-  montantTotal: number;
+  prixUnitaire?: number;
+  montantTotal?: number;
 }
 
 export interface LigneMD {
-  id: number;
+  id?: number;
   mainDoeuvreId: number;
-  descriptionMainDoeuvre: string;
+  mainDoeuvre?: any;
+  descriptionMainDoeuvre?: string;
   nbreHeure: number;
   tarifHoraire: number;
-  montantTotal: number;
+  montantTotal?: number;
 }
 
 export interface Proforma {
@@ -62,8 +68,19 @@ export interface ProformaRequest {
   tvaRate?: number | null;
   montantTimbre?: number;
   montantAutre?: number;
-  lignesPieces: { pieceId: number; quantite: number; prix: number }[];
-  lignesMainDoeuvres: { mainDoeuvreId: number; nbreHeure: number; tarifHoraire: number }[];
+  lignesPieces: {
+    pieceId?: number | null;
+    isCustom?: boolean;
+    custom?: boolean;
+    designationPds?: string;
+    quantite: number;
+    prix: number;
+  }[];
+  lignesMainDoeuvres: {
+    mainDoeuvreId: number;
+    nbreHeure: number;
+    tarifHoraire: number;
+  }[];
 }
 
 export interface LignePieceRequest {

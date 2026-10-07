@@ -22,6 +22,10 @@ export class ProformaService {
     return this.http.get<Proforma>(`${this.api}/${id}`);
   }
 
+  getDetails(id: number): Observable<Proforma> {
+    return this.http.get<Proforma>(`${this.api}/${id}`);
+  }
+
   getByOrdreReparationId(ordreReparationId: number): Observable<Proforma> {
     return this.http.get<Proforma>(`${this.api}/ordre-reparation/${ordreReparationId}`);
   }
