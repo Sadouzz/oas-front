@@ -3,8 +3,6 @@ import { CommonModule, NgClass } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink, RouterOutlet, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { OrdreReparationService } from '../ordre-reparation.service';
-import { DiagnosticService } from '../../diagnostics/diagnostic.service';
-import { VehiculeService } from '../../vehicules/vehicule.service';
 import { AlertComponent } from '../../../shared/components/alert/alert.component';
 import { OrdreReparation, StatutOrdre, VehiculeModel, STATUT_ETAPES, getEtapeFromStatut } from '../../../shared/models';
 
@@ -38,8 +36,6 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private service = inject(OrdreReparationService);
-  private diagnosticService = inject(DiagnosticService);
-  private vehiculeService = inject(VehiculeService);
 
   ordreId!: number;
   loadedOrdre: OrdreReparation | null = null;
@@ -58,7 +54,7 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
   }
 
   isNextStepDisabled(): boolean {
-    if (this.activeChild?.saving) return true;
+    if (this.activeChild?.saving || this.activeChild?.loading) return true;
     if (this.currentStep === 2) {
       const diagStatut = this.activeChild?.statutDiagnostic || this.loadedOrdre?.diagnostic?.statut;
       return diagStatut !== 'VALIDE';
@@ -72,6 +68,9 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
     }
     if (this.currentStep === 4) {
       return !this.activeChild?.isProformaValide;
+    }
+    if (this.currentStep === 5) {
+      return !!this.activeChild?.hasRuptureStock;
     }
     return false;
   }
@@ -104,6 +103,15 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
         return;
       }
     }
+    if (this.currentStep === 5) {
+      if (this.activeChild?.hasRuptureStock) {
+        return;
+      }
+      if (this.activeChild && typeof this.activeChild.passerEtapeSuivante === 'function') {
+        this.activeChild.passerEtapeSuivante();
+        return;
+      }
+    }
     if (this.activeChild && typeof this.activeChild.validateStep === 'function') {
       this.activeChild.validateStep();
     } else {
@@ -122,7 +130,7 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
       case 4:
         return 'Suivant';
       case 5:
-        return this.activeChild?.hasRuptureStock ? 'Générer le Bon de Commande' : 'Passer au Bon de Sortie';
+        return this.activeChild?.hasRuptureStock ? 'Pièces manquantes en stock' : 'Passer au Bon de Sortie';
       case 6:
         return 'Créer le Bon de Sortie Magasin';
       case 7:
@@ -174,8 +182,11 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
   loadOrdreSilently(): void {
     if (!this.ordreId) return;
     this.service.getSummary(this.ordreId).subscribe({
-      next: (o: any) => {
+      next: (res: any) => {
+        const o = res?.data || res;
         this.loadedOrdre = o;
+        this.selectedVehicule = o?.vehicule as any;
+        this.hasDiagnostic = !!o?.hasDiagnostic;
         this.cdr.markForCheck();
       }
     });
@@ -186,20 +197,11 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
   loadOrdre(): void {
     this.loading = true;
     this.service.getSummary(this.ordreId).subscribe({
-      next: (o: any) => {
+      next: (res: any) => {
+        const o = res?.data || res;
         this.loadedOrdre = o;
-        this.selectedVehicule = o.vehicule as any;
-
-        if (o.vehicule?.id) {
-          this.vehiculeService.getById(o.vehicule.id).subscribe({
-            next: (fullV) => {
-              this.selectedVehicule = fullV;
-              this.cdr.markForCheck();
-            },
-            error: () => {}
-          });
-        }
-
+        this.selectedVehicule = o?.vehicule as any;
+        this.hasDiagnostic = !!o?.hasDiagnostic;
         this.loading = false;
         this.cdr.markForCheck();
 
@@ -209,36 +211,14 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
 
         if (!this.hasAutoRedirected && (lastSegment === this.ordreId.toString() || lastSegment === 'reception')) {
           this.hasAutoRedirected = true;
-          if (o.statut && o.statut !== 'RECEPTION' && o.statut !== 'A_FAIRE') {
+          if (o?.statut && o.statut !== 'RECEPTION' && o.statut !== 'A_FAIRE') {
             const targetPath = this.statutToPath(o.statut);
             if (targetPath !== lastSegment) {
               this.router.navigate(['/app/ordres-reparation', this.ordreId, targetPath], { replaceUrl: true });
             }
-          } else {
-            // Vérifie si un diagnostic a déjà été créé pour cet OR (même si le statut de l'ordre n'est pas encore synchro)
-            this.diagnosticService.getByOrdreReparationId(this.ordreId).subscribe({
-              next: (diag) => {
-                if (diag) {
-                  this.hasDiagnostic = true;
-                  const targetPath = (diag.statut === 'VALIDE') ? 'pieces-mo' : 'diagnostic';
-                  if (targetPath !== lastSegment) {
-                    this.router.navigate(['/app/ordres-reparation', this.ordreId, targetPath], { replaceUrl: true });
-                  }
-                  this.cdr.markForCheck();
-                }
-              }
-            });
+          } else if (o?.hasDiagnostic) {
+            this.router.navigate(['/app/ordres-reparation', this.ordreId, 'diagnostic'], { replaceUrl: true });
           }
-        } else {
-          this.hasAutoRedirected = true;
-          this.diagnosticService.getByOrdreReparationId(this.ordreId).subscribe({
-            next: (diag) => {
-              if (diag) {
-                this.hasDiagnostic = true;
-                this.cdr.markForCheck();
-              }
-            }
-          });
         }
       },
       error: (err) => {

@@ -3,11 +3,11 @@
   <!-- Header -->
   <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4 flex items-center justify-between">
     <div>
-      <h1 class="text-2xl font-bold text-oas-ink">Proformas</h1>
+      <h1 class="text-2xl font-bold text-oas-ink">Factures Proforma</h1>
       <p class="text-sm text-oas-muted mt-1">{{ paged.length }} proforma(s) affiché(s) sur {{ totalElements }}</p>
     </div>
     <button (click)="openNew()"
-            class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-11 rounded-lg flex items-center gap-2 transition cursor-pointer">
+            class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-11 rounded-lg flex items-center gap-2 transition cursor-pointer shadow-sm">
       <svg lucidePlus class="w-4 h-4"></svg>
       Nouveau proforma
     </button>
@@ -15,22 +15,28 @@
 
   <!-- Alerts -->
   @if (successMessage) {
-    <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg text-sm">{{ successMessage }}</div>
+    <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg text-sm flex items-center justify-between">
+      <span>{{ successMessage }}</span>
+      <button (click)="successMessage = ''" class="text-green-600 hover:text-green-900 cursor-pointer font-bold">✕</button>
+    </div>
   }
   @if (errorMessage) {
-    <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm">{{ errorMessage }}</div>
+    <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm flex items-center justify-between">
+      <span>{{ errorMessage }}</span>
+      <button (click)="errorMessage = ''" class="text-red-600 hover:text-red-900 cursor-pointer font-bold">✕</button>
+    </div>
   }
 
-  <!-- Search -->
-  <div class="bg-white rounded-2xl border border-oas-line p-3 shadow-sm flex gap-3">
-    <div class="relative flex-1">
+  <!-- Search & Filters -->
+  <div class="bg-white rounded-2xl border border-oas-line p-3 shadow-sm flex flex-wrap sm:flex-nowrap gap-3">
+    <div class="relative flex-1 min-w-[200px]">
       <span class="absolute left-3 top-1/2 -translate-y-1/2 text-oas-muted">
         <svg lucideSearch class="w-4 h-4"></svg>
       </span>
-      <input (input)="onSearch($event)" placeholder="N°, client, immatriculation..."
-             class="w-full pl-9 pr-4 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
+      <input (input)="onSearch($event)" placeholder="Rechercher par N°, client, immatriculation..."
+             class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
     </div>
-    <select (change)="onStatutFilterChange($event)" class="w-48 px-4 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition text-oas-ink">
+    <select (change)="onStatutFilterChange($event)" class="w-full sm:w-52 px-4 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition text-oas-ink">
       <option value="">Tous les statuts</option>
       <option value="EN_ATTENTE">En attente</option>
       <option value="ACCEPTE">Accepté</option>
@@ -42,78 +48,79 @@
   </div>
 
   <!-- Table + Detail -->
-  <div class="flex gap-5">
+  <div class="flex flex-col lg:flex-row gap-5">
 
     <!-- Table -->
-    <div class="bg-white rounded-lg border border-oas-line shadow-card overflow-hidden" [class.flex-1]="selectedProforma" [class.w-full]="!selectedProforma">
+    <div class="bg-white rounded-2xl border border-oas-line shadow-card overflow-hidden transition-all duration-300"
+         [class.flex-1]="selectedProforma" [class.w-full]="!selectedProforma">
       @if (loading) {
         <div class="flex items-center justify-center py-16">
-          <div class="w-6 h-6 border-2 border-oas-accent border-t-transparent rounded-full animate-spin"></div>
+          <div class="w-7 h-7 border-2 border-oas-accent border-t-transparent rounded-full animate-spin"></div>
         </div>
       } @else if (paged.length === 0) {
-        <div class="text-center py-16 text-oas-muted text-sm">Aucun proforma.</div>
+        <div class="text-center py-16 text-oas-muted text-sm">Aucun proforma trouvé.</div>
       } @else {
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
-              <tr class="border-b border-oas-line">
-                <th class="text-left text-xs text-oas-muted px-5 py-3">N°</th>
+              <tr class="border-b border-oas-line bg-oas-bg/50">
+                <th class="text-left text-xs font-bold text-oas-muted uppercase tracking-wider px-5 py-3.5">N°</th>
                 @if (!selectedProforma) {
-                  <th class="text-left text-xs text-oas-muted px-5 py-3">Client</th>
-                  <th class="text-left text-xs text-oas-muted px-5 py-3">Immat.</th>
-                  <th class="text-right text-xs text-oas-muted px-5 py-3">Total</th>
+                  <th class="text-left text-xs font-bold text-oas-muted uppercase tracking-wider px-5 py-3.5">Client</th>
+                  <th class="text-left text-xs font-bold text-oas-muted uppercase tracking-wider px-5 py-3.5">Immat.</th>
+                  <th class="text-right text-xs font-bold text-oas-muted uppercase tracking-wider px-5 py-3.5">Total TTC</th>
                 }
-                <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Date</th>
-                <th class="text-left text-xs font-bold uppercase tracking-wide text-oas-muted px-5 py-3">Statut</th>
-                <th class="px-5 py-3"></th>
+                <th class="text-left text-xs font-bold uppercase tracking-wider text-oas-muted px-5 py-3.5">Date</th>
+                <th class="text-left text-xs font-bold uppercase tracking-wider text-oas-muted px-5 py-3.5">Statut</th>
+                <th class="px-5 py-3.5 text-right font-bold text-xs text-oas-muted uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody>
               @for (p of paged; track p.id) {
-                <tr class="hover:bg-oas-bg transition border-b border-oas-line cursor-pointer"
-                    [ngClass]="{'bg-orange-50': selectedProforma?.id === p.id}"
+                <tr class="hover:bg-slate-50/80 transition border-b border-oas-line cursor-pointer"
+                    [ngClass]="{'bg-orange-50/70 border-l-4 border-l-oas-accent': selectedProforma?.id === p.id}"
                     (click)="openDetail(p)">
                   <td class="px-5 py-4 font-mono font-bold text-oas-accent text-xs">{{ p.numero }}</td>
                   @if (!selectedProforma) {
-                    <td class="px-5 py-4 text-oas-ink text-sm">{{ p.clientNom }}</td>
-                    <td class="px-5 py-4 text-oas-muted text-xs">{{ p.immatriculation ?? '—' }}</td>
-                    <td class="px-5 py-4 text-right font-semibold text-oas-ink">{{ fmt(totalAvecBC(p)) }} FCFA</td>
+                    <td class="px-5 py-4 text-oas-ink text-sm font-medium">{{ p.clientNom }}</td>
+                    <td class="px-5 py-4 text-oas-muted text-xs font-mono">{{ p.immatriculation ?? '—' }}</td>
+                    <td class="px-5 py-4 text-right font-black text-oas-ink whitespace-nowrap">{{ fmt(totalAvecBC(p)) }} FCFA</td>
                   }
-                  <td class="px-5 py-4 text-xs text-oas-muted">{{ formatDate(p.dateCreation) }}</td>
-                  <td class="px-5 py-4">
-                    <span class="px-2 py-1 rounded text-[10px] font-bold tracking-wider"
+                  <td class="px-5 py-4 text-xs text-oas-muted whitespace-nowrap">{{ formatDate(p.dateCreation) }}</td>
+                  <td class="px-5 py-4 whitespace-nowrap">
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-wider uppercase border"
                           [ngClass]="{
-                            'bg-amber-100 text-amber-700': p.statut === 'EN_ATTENTE',
-                            'bg-green-100 text-green-700': p.statut === 'ACCEPTE' || p.statut === 'PAYEE',
-                            'bg-red-100 text-red-700': p.statut === 'REJETE' || p.statut === 'ANNULEE',
-                            'bg-blue-100 text-blue-700': p.statut === 'PARTIELLEMENT_PAYEE',
-                            'bg-gray-100 text-gray-700': !p.statut
+                            'bg-amber-100 text-amber-800 border-amber-300': p.statut === 'EN_ATTENTE',
+                            'bg-emerald-100 text-emerald-800 border-emerald-300': p.statut === 'ACCEPTE' || p.statut === 'PAYEE',
+                            'bg-red-100 text-red-800 border-red-300': p.statut === 'REJETE' || p.statut === 'ANNULEE',
+                            'bg-blue-100 text-blue-800 border-blue-300': p.statut === 'PARTIELLEMENT_PAYEE',
+                            'bg-gray-100 text-gray-700 border-gray-300': !p.statut
                           }">
                       {{ p.statut || 'N/A' }}
                     </span>
                     @if (!p.visibleClient) {
-                      <span class="ml-1 px-2 py-1 rounded text-[10px] font-bold tracking-wider bg-gray-100 text-gray-500" title="Pas encore visible côté portail client">
+                      <span class="ml-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-100 text-slate-500 border border-slate-200" title="Pas encore envoyé au client">
                         Non envoyé
                       </span>
                     }
                   </td>
-                  <td class="px-5 py-4" (click)="$event.stopPropagation()">
-                    <div class="flex items-center gap-1 justify-end">
+                  <td class="px-5 py-4 text-right" (click)="$event.stopPropagation()">
+                    <div class="flex items-center gap-1.5 justify-end">
                       <button (click)="ouvrirPdf(p.id)" title="Visualiser / Exporter PDF (nouvel onglet)"
-                              class="px-2 py-1 rounded bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs border border-red-200 transition cursor-pointer flex items-center gap-1">
+                              class="px-2.5 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs border border-red-200 transition cursor-pointer flex items-center gap-1">
                         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                           <polyline points="14 2 14 8 20 8"/>
                         </svg>
                         PDF
                       </button>
-                      <button (click)="openEdit(p)"
-                              class="p-1.5 rounded-lg hover:bg-oas-info-bg text-oas-muted hover:text-oas-info transition cursor-pointer">
-                        <svg lucidePencil class="w-4 h-4"></svg>
+                      <button (click)="openEdit(p)" title="Modifier ce proforma (articles, MO, prix, quantités...)"
+                              class="p-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 transition cursor-pointer">
+                        <svg lucidePencil class="w-3.5 h-3.5"></svg>
                       </button>
-                      <button (click)="delete(p.id)"
-                              class="p-1.5 rounded-lg hover:bg-oas-bad-bg text-oas-muted hover:text-oas-bad transition cursor-pointer">
-                        <svg lucideTrash2 class="w-4 h-4"></svg>
+                      <button (click)="delete(p.id)" title="Supprimer ce proforma"
+                              class="p-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 transition cursor-pointer">
+                        <svg lucideTrash2 class="w-3.5 h-3.5"></svg>
                       </button>
                     </div>
                   </td>
@@ -123,13 +130,13 @@
           </table>
         </div>
         @if (totalPages > 1) {
-          <div class="flex items-center justify-between px-5 py-3 border-t border-oas-line text-sm text-oas-muted">
+          <div class="flex items-center justify-between px-5 py-3.5 border-t border-oas-line text-sm text-oas-muted bg-white">
             <span>Page {{ page }} / {{ totalPages }}</span>
             <div class="flex gap-2">
               <button (click)="prevPage()" [disabled]="page === 1"
-                      class="px-3 py-1 rounded border border-oas-line disabled:opacity-40 hover:bg-oas-bg transition">‹</button>
+                      class="px-3 py-1.5 rounded-lg border border-oas-line disabled:opacity-40 hover:bg-oas-bg transition cursor-pointer">‹ Précédent</button>
               <button (click)="nextPage()" [disabled]="page === totalPages"
-                      class="px-3 py-1 rounded border border-oas-line disabled:opacity-40 hover:bg-oas-bg transition">›</button>
+                      class="px-3 py-1.5 rounded-lg border border-oas-line disabled:opacity-40 hover:bg-oas-bg transition cursor-pointer">Suivant ›</button>
             </div>
           </div>
         }
@@ -138,94 +145,103 @@
 
     <!-- Detail panel -->
     @if (selectedProforma) {
-      <div class="w-96 flex-shrink-0 bg-white rounded-lg border border-oas-line shadow-card flex flex-col overflow-hidden">
-        <div class="flex items-center justify-between px-5 py-4 border-b border-oas-line">
+      <div class="w-full lg:w-[420px] flex-shrink-0 bg-white rounded-2xl border border-oas-line shadow-card flex flex-col overflow-hidden animate-fadeIn">
+        
+        <!-- Detail Header -->
+        <div class="flex items-center justify-between px-5 py-4 border-b border-oas-line bg-oas-bg/40">
           <div>
             <div class="flex items-center gap-2">
-              <p class="font-mono font-bold text-oas-accent text-sm">{{ selectedProforma.numero }}</p>
-              <span class="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider"
+              <p class="font-mono font-black text-oas-accent text-base">{{ selectedProforma.numero }}</p>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wider uppercase border"
                     [ngClass]="{
-                      'bg-amber-100 text-amber-700': selectedProforma.statut === 'EN_ATTENTE',
-                      'bg-green-100 text-green-700': selectedProforma.statut === 'ACCEPTE' || selectedProforma.statut === 'PAYEE',
-                      'bg-red-100 text-red-700': selectedProforma.statut === 'REJETE' || selectedProforma.statut === 'ANNULEE',
-                      'bg-blue-100 text-blue-700': selectedProforma.statut === 'PARTIELLEMENT_PAYEE',
-                      'bg-gray-100 text-gray-700': !selectedProforma.statut
+                      'bg-amber-100 text-amber-800 border-amber-300': selectedProforma.statut === 'EN_ATTENTE',
+                      'bg-emerald-100 text-emerald-800 border-emerald-300': selectedProforma.statut === 'ACCEPTE' || selectedProforma.statut === 'PAYEE',
+                      'bg-red-100 text-red-800 border-red-300': selectedProforma.statut === 'REJETE' || selectedProforma.statut === 'ANNULEE',
+                      'bg-blue-100 text-blue-800 border-blue-300': selectedProforma.statut === 'PARTIELLEMENT_PAYEE',
+                      'bg-gray-100 text-gray-700 border-gray-300': !selectedProforma.statut
                     }">
                 {{ selectedProforma.statut || 'N/A' }}
               </span>
-              <span class="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider"
-                    [ngClass]="selectedProforma.visibleClient ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'">
-                {{ selectedProforma.visibleClient ? 'Envoyé au client' : 'En préparation' }}
-              </span>
             </div>
-            <p class="text-xs text-oas-muted mt-0.5">{{ formatDate(selectedProforma.dateCreation) }}</p>
+            <p class="text-xs text-oas-muted mt-0.5 font-medium">Émis le {{ formatDate(selectedProforma.dateCreation) }}</p>
           </div>
-          <button (click)="closeDetail()" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted cursor-pointer">
+          <button (click)="closeDetail()" class="p-1.5 rounded-xl hover:bg-white text-oas-muted hover:text-oas-ink border border-transparent hover:border-oas-line transition cursor-pointer">
             <svg lucideX class="w-5 h-5"></svg>
           </button>
         </div>
 
-        <div class="flex-1 overflow-y-auto p-5 space-y-5">
+        <div class="flex-1 overflow-y-auto p-5 space-y-5 max-h-[78vh]">
 
-          <!-- Infos -->
-          <div class="space-y-2 text-sm">
+          <!-- Bouton de modification rapide -->
+          <button (click)="openEdit(selectedProforma)"
+                  class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl transition text-sm cursor-pointer flex items-center justify-center gap-2 shadow-sm shadow-blue-500/20">
+            <svg lucidePencil class="w-4 h-4"></svg>
+            Modifier ce proforma
+          </button>
+
+          <!-- Informations Client & Véhicule -->
+          <div class="p-4 bg-oas-bg/50 rounded-xl border border-oas-line space-y-2.5 text-xs">
             <div class="flex justify-between">
-              <span class="text-oas-muted">Client</span>
-              <span class="font-semibold text-oas-ink">{{ selectedProforma.clientNom }}</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-oas-muted">Agent</span>
-              <span class="font-semibold text-oas-ink">{{ selectedProforma.agentNom }}</span>
+              <span class="text-oas-muted font-semibold">Client</span>
+              <span class="font-bold text-oas-ink">{{ selectedProforma.clientNom }}</span>
             </div>
             @if (selectedProforma.immatriculation) {
               <div class="flex justify-between">
-                <span class="text-oas-muted">Immatriculation</span>
-                <span class="font-semibold text-oas-ink">{{ selectedProforma.immatriculation }}</span>
+                <span class="text-oas-muted font-semibold">Immatriculation</span>
+                <span class="font-mono font-bold text-oas-ink">{{ selectedProforma.immatriculation }}</span>
               </div>
             }
             @if (selectedProforma.marque || selectedProforma.modele) {
               <div class="flex justify-between">
-                <span class="text-oas-muted">Véhicule</span>
+                <span class="text-oas-muted font-semibold">Véhicule</span>
                 <span class="font-semibold text-oas-ink">{{ selectedProforma.marque }} {{ selectedProforma.modele }} {{ selectedProforma.annee }}</span>
               </div>
             }
             <div class="flex justify-between">
-              <span class="text-oas-muted">Kilométrage</span>
-              <span class="font-semibold text-oas-ink">{{ selectedProforma.kilometrage }} km</span>
+              <span class="text-oas-muted font-semibold">Kilométrage</span>
+              <span class="font-bold text-oas-ink">{{ fmt(selectedProforma.kilometrage) }} km</span>
             </div>
             @if (selectedProforma.numeroBonDeCommande) {
               <div class="flex justify-between">
-                <span class="text-oas-muted">N° BC</span>
-                <span class="font-mono font-bold text-oas-accent text-xs">{{ selectedProforma.numeroBonDeCommande }}</span>
+                <span class="text-oas-muted font-semibold">N° BC lié</span>
+                <span class="font-mono font-bold text-oas-accent">{{ selectedProforma.numeroBonDeCommande }}</span>
               </div>
             }
             @if (selectedProforma.remarque) {
-              <div class="flex justify-between gap-4">
-                <span class="text-oas-muted flex-shrink-0">Remarque</span>
-                <span class="text-oas-ink text-right text-xs">{{ selectedProforma.remarque }}</span>
+              <div class="pt-2 border-t border-oas-line/70">
+                <span class="text-oas-muted font-semibold block mb-0.5">Remarque :</span>
+                <span class="text-oas-ink italic">{{ selectedProforma.remarque }}</span>
               </div>
             }
           </div>
 
           <!-- Lignes pièces -->
-          @if (selectedProforma.lignesPieces.length > 0) {
+          @if (selectedProforma.lignesPieces && selectedProforma.lignesPieces.length > 0) {
             <div>
-              <p class="text-xs font-bold text-oas-muted uppercase tracking-wide mb-2">Pièces ({{ selectedProforma.lignesPieces.length }})</p>
-              <div class="border border-oas-line rounded-lg overflow-hidden">
+              <div class="flex items-center justify-between mb-2">
+                <p class="text-xs font-bold text-oas-muted uppercase tracking-wider">Pièces détachées ({{ selectedProforma.lignesPieces.length }})</p>
+                <span class="text-[11px] font-bold text-blue-700">PDP / PDG / PDS</span>
+              </div>
+              <div class="border border-oas-line rounded-xl overflow-hidden shadow-2xs">
                 <table class="w-full text-xs">
-                  <thead class="bg-oas-bg">
+                  <thead class="bg-oas-bg/70 text-oas-muted font-bold text-[11px]">
                     <tr>
-                      <th class="text-left px-3 py-2 font-bold text-oas-muted">Pièce</th>
-                      <th class="text-center px-3 py-2 font-bold text-oas-muted">Qté</th>
-                      <th class="text-right px-3 py-2 font-bold text-oas-muted">Total</th>
+                      <th class="text-left px-3 py-2">Désignation</th>
+                      <th class="text-center px-2 py-2 w-12">Qté</th>
+                      <th class="text-right px-3 py-2 w-24">Total</th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-oas-line">
                     @for (l of selectedProforma.lignesPieces; track l.id) {
-                      <tr>
-                        <td class="px-3 py-2 text-oas-ink">{{ l.designationPiece || l.designationPds }}</td>
-                        <td class="px-3 py-2 text-center">{{ l.quantite }}</td>
-                        <td class="px-3 py-2 text-right font-semibold">{{ fmt(l.montantTotal) }}</td>
+                      <tr class="hover:bg-slate-50/50">
+                        <td class="px-3 py-2 text-oas-ink">
+                          <div class="font-bold truncate max-w-[180px]">{{ l.designationPiece || l.designationPds }}</div>
+                          @if (l.referencePiece) {
+                            <div class="text-[10px] text-oas-muted font-mono">{{ l.referencePiece }}</div>
+                          }
+                        </td>
+                        <td class="px-2 py-2 text-center font-bold">{{ l.quantite }}</td>
+                        <td class="px-3 py-2 text-right font-extrabold text-oas-ink whitespace-nowrap">{{ fmt(l.montantTotal || (l.quantite * l.prix)) }}</td>
                       </tr>
                     }
                   </tbody>
@@ -235,24 +251,27 @@
           }
 
           <!-- Lignes main d'œuvre -->
-          @if (selectedProforma.lignesMainDoeuvres.length > 0) {
+          @if (selectedProforma.lignesMainDoeuvres && selectedProforma.lignesMainDoeuvres.length > 0) {
             <div>
-              <p class="text-xs font-bold text-oas-muted uppercase tracking-wide mb-2">Main d'œuvre ({{ selectedProforma.lignesMainDoeuvres.length }})</p>
-              <div class="border border-oas-line rounded-lg overflow-hidden">
+              <div class="flex items-center justify-between mb-2">
+                <p class="text-xs font-bold text-oas-muted uppercase tracking-wider">Main-d'œuvre ({{ selectedProforma.lignesMainDoeuvres.length }})</p>
+                <span class="text-[11px] font-bold text-purple-700">Prestations</span>
+              </div>
+              <div class="border border-oas-line rounded-xl overflow-hidden shadow-2xs">
                 <table class="w-full text-xs">
-                  <thead class="bg-oas-bg">
+                  <thead class="bg-oas-bg/70 text-oas-muted font-bold text-[11px]">
                     <tr>
-                      <th class="text-left px-3 py-2 font-bold text-oas-muted">Description</th>
-                      <th class="text-center px-3 py-2 font-bold text-oas-muted">H</th>
-                      <th class="text-right px-3 py-2 font-bold text-oas-muted">Total</th>
+                      <th class="text-left px-3 py-2">Prestation</th>
+                      <th class="text-center px-2 py-2 w-12">H</th>
+                      <th class="text-right px-3 py-2 w-24">Total</th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-oas-line">
                     @for (l of selectedProforma.lignesMainDoeuvres; track l.id) {
-                      <tr>
-                        <td class="px-3 py-2 text-oas-ink">{{ l.descriptionMainDoeuvre }}</td>
-                        <td class="px-3 py-2 text-center">{{ l.nbreHeure }}</td>
-                        <td class="px-3 py-2 text-right font-semibold">{{ fmt(l.montantTotal) }}</td>
+                      <tr class="hover:bg-slate-50/50">
+                        <td class="px-3 py-2 text-oas-ink font-bold truncate max-w-[180px]">{{ l.descriptionMainDoeuvre }}</td>
+                        <td class="px-2 py-2 text-center font-bold">{{ l.nbreHeure }}</td>
+                        <td class="px-3 py-2 text-right font-extrabold text-oas-ink whitespace-nowrap">{{ fmt(l.montantTotal || (l.nbreHeure * l.tarifHoraire)) }}</td>
                       </tr>
                     }
                   </tbody>
@@ -261,51 +280,50 @@
             </div>
           }
 
-          <!-- Totaux -->
-          <div class="bg-oas-bg rounded-lg p-4 space-y-1.5 text-sm">
+          <!-- Totaux Récapitulatifs -->
+          <div class="bg-oas-bg rounded-2xl p-4 space-y-2 text-xs border border-oas-line">
             <div class="flex justify-between">
-              <span class="text-oas-muted">Montant HT</span>
-              <span class="font-semibold text-oas-ink">{{ fmt(selectedProforma.montantHT) }} FCFA</span>
+              <span class="text-oas-muted font-medium">Montant HT</span>
+              <span class="font-bold text-oas-ink">{{ fmt(selectedProforma.montantHT) }} FCFA</span>
             </div>
             @if (selectedProforma.montantTVA > 0) {
               <div class="flex justify-between">
-                <span class="text-oas-muted">TVA</span>
-                <span class="font-semibold text-oas-ink">{{ fmt(selectedProforma.montantTVA) }} FCFA</span>
+                <span class="text-oas-muted font-medium">TVA (18%)</span>
+                <span class="font-bold text-oas-ink">{{ fmt(selectedProforma.montantTVA) }} FCFA</span>
               </div>
             }
             @if (selectedProforma.montantTimbre > 0) {
               <div class="flex justify-between">
-                <span class="text-oas-muted">Timbre</span>
-                <span class="font-semibold text-oas-ink">{{ fmt(selectedProforma.montantTimbre) }} FCFA</span>
+                <span class="text-oas-muted font-medium">Timbre fiscal</span>
+                <span class="font-bold text-oas-ink">{{ fmt(selectedProforma.montantTimbre) }} FCFA</span>
               </div>
             }
             @if (selectedProforma.montantAutre > 0) {
               <div class="flex justify-between">
-                <span class="text-oas-muted">Autre</span>
-                <span class="font-semibold text-oas-ink">{{ fmt(selectedProforma.montantAutre) }} FCFA</span>
+                <span class="text-oas-muted font-medium">Autre montant</span>
+                <span class="font-bold text-oas-ink">{{ fmt(selectedProforma.montantAutre) }} FCFA</span>
               </div>
             }
             @if (montantBCDetail > 0) {
               <div class="flex justify-between">
-                <span class="text-oas-muted">Bon de commande</span>
-                <span class="font-semibold text-oas-ink">{{ fmt(montantBCDetail) }} FCFA</span>
+                <span class="text-oas-muted font-medium">Bon de commande lié</span>
+                <span class="font-bold text-oas-ink">{{ fmt(montantBCDetail) }} FCFA</span>
               </div>
             }
-            <div class="flex justify-between pt-1.5 border-t border-oas-line">
-              <span class="font-bold text-oas-ink">Total</span>
-              <span class="font-bold text-oas-accent text-base">{{ fmt(totalAvecBC(selectedProforma)) }} FCFA</span>
+            <div class="flex justify-between pt-2 border-t border-oas-line font-bold">
+              <span class="text-oas-ink text-sm">Total Net à Payer</span>
+              <span class="text-base font-black text-oas-accent whitespace-nowrap">{{ fmt(totalAvecBC(selectedProforma)) }} FCFA</span>
             </div>
           </div>
 
-          <!-- Actions -->
-          <div class="space-y-2">
+          <!-- Actions supplémentaires -->
+          <div class="space-y-2 pt-1">
             @if (!selectedProforma.visibleClient) {
-              <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-700">
-                Ce proforma n'est pas encore visible côté portail client. Ajustez les prix si besoin (icône crayon)
-                puis validez pour l'envoyer.
+              <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800">
+                Ce proforma n'est pas encore visible côté portail client. Ajustez les prix/pièces si besoin, puis validez pour l'envoyer.
               </div>
               <button (click)="validerEnvoi(selectedProforma.id)"
-                      class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl transition text-sm cursor-pointer flex items-center justify-center gap-2">
+                      class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition text-sm cursor-pointer flex items-center justify-center gap-2 shadow-sm shadow-emerald-600/20">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
                 </svg>
@@ -313,29 +331,32 @@
               </button>
             } @else if (selectedProforma.statut === 'EN_ATTENTE' || !selectedProforma.statut) {
               <button (click)="validerProforma(selectedProforma.id)"
-                      class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2.5 rounded-xl transition text-sm cursor-pointer flex items-center justify-center gap-2">
+                      class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition text-sm cursor-pointer flex items-center justify-center gap-2 shadow-sm shadow-emerald-600/20">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                 </svg>
-                Valider (Accord client)
+                Valider (Accord client obtenu)
               </button>
             }
+
             <button (click)="convertToFacture(selectedProforma.id)"
-                    class="w-full bg-oas-accent hover:bg-oas-accent-dark text-white font-bold py-2.5 rounded-lg transition text-sm cursor-pointer flex items-center justify-center gap-2">
+                    class="w-full bg-oas-accent hover:bg-oas-accent-dark text-white font-bold py-2.5 rounded-xl transition text-sm cursor-pointer flex items-center justify-center gap-2 shadow-sm shadow-oas-accent/20">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
               </svg>
               Convertir en facture TTC
             </button>
+
             <button (click)="downloadPdf(selectedProforma.id)"
-                    class="w-full bg-white hover:bg-oas-bg border border-oas-line text-oas-ink font-semibold py-2.5 rounded-lg transition text-sm cursor-pointer flex items-center justify-center gap-2">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    class="w-full bg-white hover:bg-oas-bg border border-oas-line text-oas-ink font-semibold py-2.5 rounded-xl transition text-sm cursor-pointer flex items-center justify-center gap-2">
+              <svg class="w-4 h-4 text-oas-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
               </svg>
               Télécharger PDF
             </button>
+
             <button (click)="ouvrirPdf(selectedProforma.id)"
-                    class="w-full bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 font-bold py-2.5 rounded-lg transition text-sm cursor-pointer flex items-center justify-center gap-2">
+                    class="w-full bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 font-bold py-2.5 rounded-xl transition text-sm cursor-pointer flex items-center justify-center gap-2">
               <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                 <polyline points="14 2 14 8 20 8"/>
@@ -350,293 +371,710 @@
   </div>
 </div>
 
-<!-- Create / Edit Modal -->
+<!-- ══════════════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL DE CRÉATION & MODIFICATION DE PROFORMA (AVEC LES 4 CARTES D'ARTICLES) -->
+<!-- ══════════════════════════════════════════════════════════════════════════════ -->
 @if (showModal) {
-  <div class="fixed inset-0 z-50 flex items-start justify-center bg-black/50 overflow-y-auto py-6">
-    <div class="bg-white rounded-lg shadow-2xl w-full max-w-2xl mx-4 my-auto">
+  <div class="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-xs overflow-y-auto py-6 px-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-5xl my-auto overflow-hidden border border-oas-line animate-scaleUp">
 
-      <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line">
-        <h2 class="text-base font-bold text-oas-ink">{{ isNew ? 'Nouveau proforma' : 'Modifier le proforma' }}</h2>
-        <button (click)="showModal = false" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted cursor-pointer">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line bg-oas-bg/40">
+        <div>
+          <h2 class="text-lg font-bold text-oas-ink">
+            {{ isNew ? 'Nouveau devis proforma' : ('Modifier le proforma : ' + (selectedProforma?.numero || '')) }}
+          </h2>
+          <p class="text-xs text-oas-muted mt-0.5">Ajoutez, diminuez ou ajustez les pièces et la main-d'œuvre de la facture proforma.</p>
+        </div>
+        <button (click)="showModal = false" class="p-2 rounded-xl hover:bg-white text-oas-muted hover:text-oas-ink border border-transparent hover:border-oas-line transition cursor-pointer">
+          <svg lucideX class="w-5 h-5"></svg>
         </button>
       </div>
 
-      <div class="px-6 py-5">
-        <form [formGroup]="form" (ngSubmit)="save()" class="space-y-5">
+      <!-- Modal Body -->
+      <div class="p-6 max-h-[80vh] overflow-y-auto space-y-6">
+        <form [formGroup]="form" (ngSubmit)="save()" class="space-y-6">
 
-          <!-- Bon de commande -->
-          @if (bcOpen) { <div class="fixed inset-0 z-[5]" (click)="bcOpen = false"></div> }
-          <div>
-            <label class="block text-sm font-semibold text-oas-ink mb-1">Bon de commande</label>
-            @if (bcLinked) {
-              <div class="flex items-center gap-2 px-3 py-2.5 rounded-lg border border-oas-accent/40 bg-orange-50 text-sm">
-                <span class="font-mono font-bold text-oas-accent flex-1">{{ bcLabel }}</span>
-                <button type="button" (click)="clearBC()"
-                        class="text-xs text-oas-bad hover:underline cursor-pointer flex-shrink-0">Supprimer</button>
+          <!-- En-tête : Informations du Document -->
+          @if (!isNew) {
+            <!-- EN MODIFICATION : AFFICHAGE STRICTEMENT STATIQUE ET NON MODIFIABLE -->
+            <div class="p-5 bg-slate-50/90 rounded-2xl border border-slate-200 space-y-3">
+              <div class="flex items-center justify-between pb-2.5 border-b border-slate-200">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+                  <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Informations du Document</h3>
+                </div>
+                <span class="text-[11px] font-bold text-slate-500 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                  </svg>
+                  Informations fixes
+                </span>
+              </div>
+
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <div class="p-3 bg-white rounded-xl border border-slate-200">
+                  <span class="text-oas-muted block font-medium">Client</span>
+                  <strong class="text-sm font-bold text-oas-ink block truncate">{{ clientLabel || '-' }}</strong>
+                </div>
+                <div class="p-3 bg-white rounded-xl border border-slate-200">
+                  <span class="text-oas-muted block font-medium">Véhicule</span>
+                  <strong class="text-sm font-bold text-oas-ink block truncate">
+                    {{ form.get('immatriculation')?.value || vehiculeLabel || '-' }}
+                  </strong>
+                  @if (form.get('marque')?.value || form.get('modele')?.value) {
+                    <span class="text-[11px] text-oas-muted block truncate">{{ form.get('marque')?.value }} {{ form.get('modele')?.value }}</span>
+                  }
+                </div>
+                <div class="p-3 bg-white rounded-xl border border-slate-200">
+                  <span class="text-oas-muted block font-medium">Kilométrage</span>
+                  <strong class="text-sm font-bold text-oas-ink block">{{ fmt(form.get('kilometrage')?.value) }} km</strong>
+                </div>
+                <div class="p-3 bg-white rounded-xl border border-slate-200">
+                  <span class="text-oas-muted block font-medium">Bon de commande</span>
+                  <strong class="text-sm font-bold text-oas-accent font-mono block truncate">
+                    {{ form.get('numeroBonDeCommande')?.value || 'Aucun' }}
+                  </strong>
+                </div>
+              </div>
+
+              <div class="p-2.5 bg-blue-50/70 rounded-xl border border-blue-100 flex items-center gap-2 text-xs text-blue-800">
+                <svg class="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Seules les <strong>pièces détachées</strong> et les <strong>prestations de main-d'œuvre</strong> peuvent être modifiées ci-dessous.</span>
+              </div>
+            </div>
+          } @else {
+            <!-- EN CRÉATION : FORMULAIRE DE CHOIX DU CLIENT ET DU VÉHICULE -->
+            <div class="p-5 bg-slate-50/70 rounded-2xl border border-slate-200 space-y-4">
+              <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-slate-500"></span>
+                Informations du Document
+              </h3>
+
+              <!-- Bon de commande optionnel -->
+              @if (bcOpen) { <div class="fixed inset-0 z-[15]" (click)="bcOpen = false"></div> }
+              <div>
+                <label class="block text-xs font-bold text-oas-muted mb-1">Lier à un Bon de Commande (Optionnel)</label>
+                @if (bcLinked) {
+                  <div class="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-oas-accent/40 bg-orange-50 text-sm">
+                    <span class="font-mono font-bold text-oas-accent flex-1">{{ bcLabel }}</span>
+                    <button type="button" (click)="clearBC()"
+                            class="text-xs text-oas-bad font-semibold hover:underline cursor-pointer flex-shrink-0">Délier</button>
+                  </div>
+                } @else {
+                  <div class="relative z-[20]">
+                    <input type="text"
+                           [value]="bcOpen ? bcFilter : ''"
+                           (focus)="bcOpen = true; bcFilter = ''"
+                           (input)="bcFilter = $any($event.target).value"
+                           placeholder="Rechercher un bon de commande par N° ou immatriculation..."
+                           class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+                    @if (bcOpen) {
+                      <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-oas-line rounded-xl shadow-xl z-[30] max-h-52 overflow-y-auto"
+                           (click)="$event.stopPropagation()">
+                        @for (bc of filteredBonsCommande; track bc.id) {
+                          <div (click)="selectBC(bc)"
+                               class="flex items-center gap-2 px-3 py-2.5 hover:bg-oas-bg cursor-pointer text-sm text-oas-ink border-b border-oas-line last:border-0">
+                            <span class="font-mono font-bold text-oas-accent">{{ bc.numero }}</span>
+                            @if (bc.immatriculationVehicule) {
+                              <span class="text-oas-muted text-xs font-mono">{{ bc.immatriculationVehicule }}</span>
+                            }
+                            <span class="ml-auto font-bold text-oas-ink text-xs">{{ fmt(bc.montantTTC) }} FCFA</span>
+                          </div>
+                        }
+                        @if (filteredBonsCommande.length === 0) {
+                          <div class="px-3 py-3 text-xs text-oas-muted text-center italic">Aucun bon de commande trouvé</div>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+
+              <!-- Client & Véhicule -->
+              @if (!bcLinked) {
+                @if (clientOpen) { <div class="fixed inset-0 z-[15]" (click)="clientOpen = false"></div> }
+                @if (vehiculeOpen) { <div class="fixed inset-0 z-[15]" (click)="vehiculeOpen = false"></div> }
+              }
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-bold text-oas-muted mb-1">Client *</label>
+                  @if (bcLinked) {
+                    <div class="px-3 py-2.5 rounded-xl border border-oas-line bg-white text-sm text-oas-ink font-semibold">{{ clientLabel }}</div>
+                  } @else {
+                    <div class="relative z-[20]">
+                      <input type="text"
+                             [value]="clientOpen ? clientFilter : clientLabel"
+                             (focus)="clientOpen = true; clientFilter = ''"
+                             (input)="clientFilter = $any($event.target).value"
+                             placeholder="Sélectionner un client..."
+                             class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition font-medium"
+                             [class.border-oas-bad]="form.get('clientId')?.invalid && form.get('clientId')?.touched"/>
+                      @if (clientOpen) {
+                        <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-oas-line rounded-xl shadow-xl z-[30] max-h-52 overflow-y-auto"
+                             (click)="$event.stopPropagation()">
+                          @for (c of filteredClients; track c.id) {
+                            <div (click)="selectClient(c)"
+                                 class="px-3 py-2.5 hover:bg-oas-bg cursor-pointer text-sm text-oas-ink border-b border-oas-line last:border-0">
+                              <span class="font-bold">{{ c.firstName }} {{ c.lastName }}</span>
+                              @if (c.phone) { <span class="text-oas-muted ml-2 text-xs">({{ c.phone }})</span> }
+                            </div>
+                          }
+                          @if (filteredClients.length === 0) {
+                            <div class="px-3 py-3 text-xs text-oas-muted text-center italic">Aucun client trouvé</div>
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-oas-muted mb-1">Véhicule (Optionnel)</label>
+                  @if (bcLinked) {
+                    <div class="px-3 py-2.5 rounded-xl border border-oas-line bg-white text-sm text-oas-ink font-semibold">{{ vehiculeLabel }}</div>
+                  } @else {
+                    <div class="relative z-[20]">
+                      <input type="text"
+                             [value]="vehiculeOpen ? vehiculeFilter : vehiculeLabel"
+                             (focus)="vehiculeOpen = true; vehiculeFilter = ''"
+                             (input)="vehiculeFilter = $any($event.target).value"
+                             [placeholder]="form.get('clientId')?.value ? 'Sélectionner un véhicule...' : 'Choisissez d\'abord un client'"
+                             [disabled]="!form.get('clientId')?.value"
+                             class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition disabled:opacity-50 font-medium"/>
+                      @if (vehiculeOpen && form.get('clientId')?.value) {
+                        <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-oas-line rounded-xl shadow-xl z-[30] max-h-52 overflow-y-auto"
+                             (click)="$event.stopPropagation()">
+                          <div (click)="selectVehicule(null)"
+                               class="px-3 py-2.5 hover:bg-oas-bg cursor-pointer text-xs text-oas-muted border-b border-oas-line italic">
+                            Aucun véhicule rattaché
+                          </div>
+                          @for (v of filteredVehicules; track v.id) {
+                            <div (click)="selectVehicule(v)"
+                                 class="px-3 py-2.5 hover:bg-oas-bg cursor-pointer text-sm text-oas-ink border-b border-oas-line last:border-0">
+                              <span class="font-bold font-mono">{{ v.immatriculation }}</span>
+                              <span class="text-oas-muted ml-2 text-xs">{{ v.marque }} {{ v.modele }}</span>
+                            </div>
+                          }
+                          @if (filteredVehicules.length === 0) {
+                            <div class="px-3 py-3 text-xs text-oas-muted text-center italic">Aucun véhicule pour ce client</div>
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!-- Immatriculation, Kilométrage & Remarque -->
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label class="block text-xs font-bold text-oas-muted mb-1">Immatriculation</label>
+                  <input formControlName="immatriculation" placeholder="Ex: AA-123-BB"
+                         class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-oas-muted mb-1">Kilométrage (km) *</label>
+                  <input formControlName="kilometrage" type="number" min="0" placeholder="Ex: 50000"
+                         class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-white text-sm font-bold focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+                         [class.border-oas-bad]="form.get('kilometrage')?.invalid && form.get('kilometrage')?.touched"/>
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-oas-muted mb-1">Remarque / Note interne</label>
+                  <input formControlName="remarque" placeholder="Observation..."
+                         class="w-full px-3 py-2.5 rounded-xl border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- ══════════════════════════════════════════════════════════════════════ -->
+          <!-- 1. SECTION PIÈCES DE RECHANGE (PDP)                                   -->
+          <!-- ══════════════════════════════════════════════════════════════════════ -->
+          <div class="bg-white border border-blue-200 rounded-2xl p-5 shadow-2xs space-y-4">
+            <div class="flex items-center justify-between">
+              <label class="block text-sm font-bold text-oas-ink flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                1. Pièces de Rechange (PDP)
+              </label>
+              <span class="text-xs font-bold text-blue-700">
+                {{ lignesPiecesPdp.length }} pièce{{ lignesPiecesPdp.length > 1 ? 's' : '' }}
+              </span>
+            </div>
+
+            <!-- Formulaire d'ajout PDP -->
+            <div class="flex flex-wrap sm:flex-nowrap gap-3 items-end">
+              <div class="flex-1 min-w-[200px]">
+                <label class="block text-xs font-bold text-oas-muted">Pièce</label>
+                <app-searchable-select
+                  [(ngModel)]="piecePdpAjouter"
+                  [ngModelOptions]="{standalone: true}"
+                  (change)="onPiecePdpSelected($event)"
+                  [options]="piecesPdpFiltrees"
+                  bindValue="id"
+                  placeholder="Rechercher une pièce de rechange par référence ou désignation..."
+                  [bindLabel]="formatPiece">
+                </app-searchable-select>
+              </div>
+              <div class="w-20">
+                <label class="block text-xs font-bold text-oas-muted">Qté.</label>
+                <input type="number" [(ngModel)]="qteAjouterPdp" [ngModelOptions]="{standalone: true}" min="1" placeholder="Qté"
+                  title="Quantité"
+                  class="w-full px-3 py-2.5 rounded-xl border border-blue-200 bg-white text-sm font-bold text-center focus:outline-none focus:ring-2 focus:ring-blue-400/40 transition" />
+              </div>
+              <div class="w-32">
+                <label class="block text-xs font-bold text-oas-muted">Prix</label>
+                <input type="number" [(ngModel)]="prixAjouterPdp" [ngModelOptions]="{standalone: true}" min="0" placeholder="Prix (FCFA)"
+                  title="Prix unitaire en FCFA"
+                  class="w-full px-3 py-2.5 rounded-xl border border-blue-200 bg-white text-sm font-bold text-right focus:outline-none focus:ring-2 focus:ring-blue-400/40 transition" />
+              </div>
+              <button type="button" (click)="addPiecePdp()" [disabled]="!piecePdpAjouter"
+                      class="px-5 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-xs font-bold transition cursor-pointer disabled:opacity-50 flex-shrink-0">
+                Ajouter PDP
+              </button>
+            </div>
+
+            <!-- Tableau dédié PDP -->
+            @if (lignesPiecesPdp.length > 0) {
+              <div class="overflow-x-auto rounded-xl border border-blue-200 mt-2">
+                <table class="w-full text-xs text-left">
+                  <thead class="bg-blue-50/70 text-blue-900 uppercase font-bold text-[11px] border-b border-blue-200">
+                    <tr>
+                      <th class="px-4 py-3">Désignation</th>
+                      <th class="px-3 py-3 text-center w-28">Qté</th>
+                      <th class="px-3 py-3 text-right w-40">Prix unit. (FCFA)</th>
+                      <th class="px-3 py-3 text-right w-36">Total</th>
+                      <th class="px-3 py-3 text-center w-28">Dispo</th>
+                      <th class="px-3 py-3 text-center w-12">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-blue-100">
+                    @for (l of lignesPiecesPdp; track $index) {
+                      <tr class="hover:bg-blue-50/40 transition">
+                        <td class="px-4 py-3 font-semibold text-oas-ink">
+                          <div class="flex items-center gap-2">
+                            <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold flex-shrink-0 bg-blue-100 text-blue-800 border border-blue-300">
+                              PDP
+                            </span>
+                            <span>{{ l.piece?.reference ? (l.piece?.reference + ' — ') : '' }}{{ l.piece?.designation || l.designationPds }}</span>
+                          </div>
+                        </td>
+                        <td class="px-3 py-3 text-center">
+                          <div class="flex items-center justify-center gap-1">
+                            <button type="button" (click)="decrementPiece(l)" title="Diminuer la quantité"
+                                    class="w-6 h-6 rounded-md bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold flex items-center justify-center cursor-pointer transition text-xs">-</button>
+                            <input type="number" [(ngModel)]="l.quantite" [ngModelOptions]="{standalone: true}" (ngModelChange)="onPieceQuantiteChange(l)" min="1"
+                                   class="w-14 px-1 py-1 rounded-lg border border-blue-200 bg-white text-center font-bold text-xs focus:ring-2 focus:ring-blue-400/40 focus:outline-none transition"/>
+                            <button type="button" (click)="incrementPiece(l)" title="Augmenter la quantité"
+                                    class="w-6 h-6 rounded-md bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold flex items-center justify-center cursor-pointer transition text-xs">+</button>
+                          </div>
+                        </td>
+                        <td class="px-3 py-3 text-right">
+                          <div class="flex items-center justify-end gap-1">
+                            <input type="number" [(ngModel)]="l.prix" [ngModelOptions]="{standalone: true}" min="0" placeholder="0"
+                                   class="w-28 px-2.5 py-1.5 rounded-lg border border-blue-200 bg-white text-right font-bold text-xs focus:ring-2 focus:ring-blue-400/40 focus:border-blue-400 focus:outline-none transition"/>
+                            <span class="text-blue-800 text-[10px] font-semibold">FCFA</span>
+                          </div>
+                        </td>
+                        <td class="px-3 py-3 text-right font-extrabold text-blue-950 whitespace-nowrap">
+                          {{ fmt((l.prix || 0) * (l.quantite || 0)) }} FCFA
+                        </td>
+                        <td class="px-3 py-3 text-center">
+                          @if ((l.manquant ?? 0) > 0) {
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700">
+                              Manque {{ l.manquant }}
+                            </span>
+                          } @else {
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700">
+                              En stock
+                            </span>
+                          }
+                        </td>
+                        <td class="px-3 py-3 text-center">
+                          <button type="button" (click)="removePieceItem(l)" title="Supprimer cette pièce"
+                                  class="text-red-400 hover:text-red-700 p-1 font-bold cursor-pointer transition">✕</button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
               </div>
             } @else {
-              <div class="relative z-[10]">
-                <input type="text"
-                       [value]="bcOpen ? bcFilter : ''"
-                       (focus)="bcOpen = true; bcFilter = ''"
-                       (input)="bcFilter = $any($event.target).value"
-                       placeholder="Rechercher un bon de commande..."
-                       class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
-                @if (bcOpen) {
-                  <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-oas-line rounded-lg shadow-xl z-[10] max-h-52 overflow-y-auto"
-                       (click)="$event.stopPropagation()">
-                    @for (bc of filteredBonsCommande; track bc.id) {
-                      <div (click)="selectBC(bc)"
-                           class="flex items-center gap-2 px-3 py-2.5 hover:bg-oas-bg cursor-pointer text-sm text-oas-ink border-b border-oas-line last:border-0">
-                        <span class="font-mono font-bold text-oas-accent">{{ bc.numero }}</span>
-                        @if (bc.immatriculationVehicule) {
-                          <span class="text-oas-muted text-xs">{{ bc.immatriculationVehicule }}</span>
-                        }
-                        <span class="ml-auto font-semibold text-oas-ink text-xs">{{ fmt(bc.montantTTC) }} FCFA</span>
-                      </div>
-                    }
-                    @if (filteredBonsCommande.length === 0) {
-                      <div class="px-3 py-3 text-sm text-oas-muted text-center">Aucun resultat</div>
-                    }
-                  </div>
-                }
-              </div>
+              <p class="text-xs text-oas-muted italic py-1">Aucune pièce de rechange (PDP) ajoutée.</p>
             }
           </div>
 
-          <!-- Client + Véhicule -->
-          @if (!bcLinked) {
-            @if (clientOpen) { <div class="fixed inset-0 z-[5]" (click)="clientOpen = false"></div> }
-            @if (vehiculeOpen) { <div class="fixed inset-0 z-[5]" (click)="vehiculeOpen = false"></div> }
-          }
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-semibold text-oas-ink mb-1">Client *</label>
-              @if (bcLinked) {
-                <div class="px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm text-oas-ink opacity-70">{{ clientLabel }}</div>
-              } @else {
-                <div class="relative z-[10]">
-                  <input type="text"
-                         [value]="clientOpen ? clientFilter : clientLabel"
-                         (focus)="clientOpen = true; clientFilter = ''"
-                         (input)="clientFilter = $any($event.target).value"
-                         placeholder="Rechercher un client..."
-                         class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
-                         [class.border-oas-bad]="form.get('clientId')?.invalid && form.get('clientId')?.touched"/>
-                  @if (clientOpen) {
-                    <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-oas-line rounded-lg shadow-xl z-[10] max-h-52 overflow-y-auto"
-                         (click)="$event.stopPropagation()">
-                      @for (c of filteredClients; track c.id) {
-                        <div (click)="selectClient(c)"
-                             class="px-3 py-2.5 hover:bg-oas-bg cursor-pointer text-sm text-oas-ink border-b border-oas-line last:border-0">
-                          <span class="font-medium">{{ c.firstName }} {{ c.lastName }}</span>
-                          @if (c.phone) { <span class="text-oas-muted ml-2 text-xs">{{ c.phone }}</span> }
-                        </div>
-                      }
-                      @if (filteredClients.length === 0) {
-                        <div class="px-3 py-3 text-sm text-oas-muted text-center">Aucun resultat</div>
-                      }
-                    </div>
-                  }
-                </div>
-              }
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-oas-ink mb-1">Vehicule</label>
-              @if (bcLinked) {
-                <div class="px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm text-oas-ink opacity-70">{{ vehiculeLabel }}</div>
-              } @else {
-                <div class="relative z-[10]">
-                  <input type="text"
-                         [value]="vehiculeOpen ? vehiculeFilter : vehiculeLabel"
-                         (focus)="vehiculeOpen = true; vehiculeFilter = ''"
-                         (input)="vehiculeFilter = $any($event.target).value"
-                         [placeholder]="form.get('clientId')?.value ? 'Rechercher un vehicule...' : 'Choisissez d\'abord un client'"
-                         [disabled]="!form.get('clientId')?.value"
-                         class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition disabled:opacity-50"/>
-                  @if (vehiculeOpen && form.get('clientId')?.value) {
-                    <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-oas-line rounded-lg shadow-xl z-[10] max-h-52 overflow-y-auto"
-                         (click)="$event.stopPropagation()">
-                      <div (click)="selectVehicule(null)"
-                           class="px-3 py-2.5 hover:bg-oas-bg cursor-pointer text-sm text-oas-muted border-b border-oas-line">
-                        Aucun vehicule
-                      </div>
-                      @for (v of filteredVehicules; track v.id) {
-                        <div (click)="selectVehicule(v)"
-                             class="px-3 py-2.5 hover:bg-oas-bg cursor-pointer text-sm text-oas-ink border-b border-oas-line last:border-0">
-                          <span class="font-medium font-mono">{{ v.immatriculation }}</span>
-                          <span class="text-oas-muted ml-2">{{ v.marque }} {{ v.modele }}</span>
-                        </div>
-                      }
-                      @if (filteredVehicules.length === 0) {
-                        <div class="px-3 py-3 text-sm text-oas-muted text-center">Aucun vehicule pour ce client</div>
-                      }
-                    </div>
-                  }
-                </div>
-              }
-            </div>
-          </div>
-
-          <!-- Immatriculation + Kilométrage -->
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-semibold text-oas-ink mb-1">Immatriculation</label>
-              <input formControlName="immatriculation" placeholder="Ex: AA-123-BA"
-                     class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-oas-ink mb-1">Kilométrage *</label>
-              <input formControlName="kilometrage" type="number" min="0" placeholder="Ex: 45000"
-                     class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
-                     [class.border-oas-bad]="form.get('kilometrage')?.invalid && form.get('kilometrage')?.touched"/>
-            </div>
-          </div>
-
-          <!-- Remarque -->
-          <div>
-            <label class="block text-sm font-semibold text-oas-ink mb-1">Remarque</label>
-            <input formControlName="remarque" placeholder="Remarque..."
-                   class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
-          </div>
-
-          <!-- Lignes pièces -->
-          <div>
-            <div class="flex items-center justify-between mb-2">
-              <label class="text-sm font-bold text-oas-ink">Pièces détachées</label>
-              <button type="button" (click)="addPiece()"
-                      class="text-xs font-bold text-oas-accent hover:text-oas-accent-dark flex items-center gap-1 cursor-pointer">
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-                </svg>
-                Ajouter
-              </button>
-            </div>
-            <div formArrayName="lignesPieces" class="space-y-2">
-              @for (ligne of lignesPiecesArray.controls; track $index) {
-                <div [formGroupName]="$index" class="flex items-center gap-2 bg-oas-bg rounded-lg p-3">
-                  <!-- Toggle CAT / PDS -->
-                  <button type="button" (click)="togglePieceCustom($index)"
-                    class="px-2 py-1 rounded border border-oas-line bg-white text-[10px] font-bold text-oas-muted hover:text-oas-ink hover:border-oas-ink transition cursor-pointer flex-shrink-0"
-                    title="Basculer entre le Catalogue (CAT) et une Pièce Détachée Spéciale (PDS) hors stock">
-                    {{ ligne.get('isCustom')?.value ? 'PDS' : 'CAT' }}
-                  </button>
-
-                  <!-- Select ou Input selon isCustom -->
-                  @if (!ligne.get('isCustom')?.value) {
-                    <select formControlName="pieceId" (change)="onPieceChange($index)"
-                            class="flex-1 px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink"
-                            [class.border-oas-bad]="ligne.get('pieceId')?.invalid && ligne.get('pieceId')?.touched">
-                      <option [ngValue]="null" disabled>Pièce...</option>
-                      @for (p of pieces; track p.id) {
-                        <option [value]="p.id">{{ p.designation }} — {{ p.reference }}</option>
-                      }
-                    </select>
-                  } @else {
-                    <input formControlName="designationPds"
-                           placeholder="Désignation de la pièce..."
-                           class="flex-1 px-3 py-2 rounded-lg border border-orange-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-300/40 transition"/>
-                  }
-
-                  <input formControlName="quantite" type="number" min="1" placeholder="Qté"
-                         class="w-20 px-3 py-2 rounded-lg border border-oas-line bg-white text-sm text-center focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
-                  <input formControlName="prix" type="number" min="0" placeholder="Prix"
-                         class="w-28 px-3 py-2 rounded-lg border border-oas-line bg-white text-sm text-right focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
-                  <span class="text-xs font-semibold text-oas-ink w-24 text-right">
-                    {{ fmt((ligne.get('quantite')?.value || 0) * (ligne.get('prix')?.value || 0)) }}
-                  </span>
-                  <button type="button" (click)="removePiece($index)"
-                          class="p-1.5 rounded-lg hover:bg-red-50 text-oas-muted hover:text-red-500 transition cursor-pointer flex-shrink-0">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                  </button>
-                </div>
-              }
-            </div>
-          </div>
-
-          <!-- Lignes main d'œuvre -->
-          <div>
-            <div class="flex items-center justify-between mb-2">
-              <label class="text-sm font-bold text-oas-ink">Main d'œuvre</label>
-              <button type="button" (click)="addMD()"
-                      class="text-xs font-bold text-oas-accent hover:text-oas-accent-dark flex items-center gap-1 cursor-pointer">
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-                </svg>
-                Ajouter
-              </button>
-            </div>
-            <div formArrayName="lignesMainDoeuvres" class="space-y-2">
-              @for (ligne of lignesMDArray.controls; track $index) {
-                <div [formGroupName]="$index" class="flex items-center gap-2 bg-oas-bg rounded-lg p-3">
-                  <select formControlName="mainDoeuvreId" (change)="onMDChange($index)"
-                          class="flex-1 px-3 py-2 rounded-lg border border-oas-line bg-white text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink"
-                          [class.border-oas-bad]="ligne.get('mainDoeuvreId')?.invalid && ligne.get('mainDoeuvreId')?.touched">
-                    <option [ngValue]="null" disabled>Main d'œuvre...</option>
-                    @for (m of mainsDoeuvre; track m.id) {
-                      <option [value]="m.id">{{ m.categorie }}</option>
-                    }
-                  </select>
-                  <input formControlName="nbreHeure" type="number" min="1" placeholder="Heures"
-                         class="w-24 px-3 py-2 rounded-lg border border-oas-line bg-white text-sm text-center focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
-                  <input formControlName="tarifHoraire" type="number" min="0" placeholder="Tarif/h"
-                         class="w-28 px-3 py-2 rounded-lg border border-oas-line bg-white text-sm text-right focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
-                  <span class="text-xs font-semibold text-oas-ink w-24 text-right">
-                    {{ fmt((ligne.get('nbreHeure')?.value || 0) * (ligne.get('tarifHoraire')?.value || 0)) }}
-                  </span>
-                  <button type="button" (click)="removeMD($index)"
-                          class="p-1.5 rounded-lg hover:bg-red-50 text-oas-muted hover:text-red-500 transition cursor-pointer flex-shrink-0">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                  </button>
-                </div>
-              }
+          <!-- ══════════════════════════════════════════════════════════════════════ -->
+          <!-- 2. SECTION PIÈCES SOUS GARANTIE (PDG)                                 -->
+          <!-- ══════════════════════════════════════════════════════════════════════ -->
+          <div class="bg-white border border-emerald-200 rounded-2xl p-5 shadow-2xs space-y-4">
+            <div class="flex items-center justify-between">
+              <label class="block text-sm font-bold text-oas-ink flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                2. Pièces sous Garantie (PDG)
+              </label>
+              <span class="text-xs font-bold text-emerald-700">
+                {{ lignesPiecesPdg.length }} pièce{{ lignesPiecesPdg.length > 1 ? 's' : '' }}
+              </span>
             </div>
 
-            @if (lignesPiecesArray.length > 0 || lignesMDArray.length > 0 || bcLinked) {
-              <div class="mt-3 bg-oas-bg rounded-lg p-4 space-y-1.5 text-sm">
-                @if (lignesPiecesArray.length > 0) {
-                  <div class="flex justify-between">
-                    <span class="text-oas-muted">Pièces</span>
-                    <span class="font-semibold">{{ fmt(totalPieces) }} FCFA</span>
-                  </div>
-                }
-                @if (lignesMDArray.length > 0) {
-                  <div class="flex justify-between">
-                    <span class="text-oas-muted">Main d'œuvre</span>
-                    <span class="font-semibold">{{ fmt(totalMD) }} FCFA</span>
-                  </div>
-                }
-                @if (bcLinked && montantBonCommandeForm > 0) {
-                  <div class="flex justify-between">
-                    <span class="text-oas-muted">Bon de commande</span>
-                    <span class="font-semibold">{{ fmt(montantBonCommandeForm) }} FCFA</span>
-                  </div>
-                }
-                <div class="flex justify-between pt-1.5 border-t border-oas-line">
-                  <span class="font-bold text-oas-ink">Estimé HT</span>
-                  <span class="font-bold text-oas-accent">{{ fmt(totalPieces + totalMD + montantBonCommandeForm) }} FCFA</span>
-                </div>
+            <!-- Formulaire d'ajout PDG -->
+            <div class="flex flex-wrap sm:flex-nowrap gap-3 items-end">
+              <div class="flex-1 min-w-[200px]">
+                <label class="block text-xs font-bold text-oas-muted">Pièce</label>
+                <app-searchable-select
+                  [(ngModel)]="piecePdgAjouter"
+                  [ngModelOptions]="{standalone: true}"
+                  (change)="onPiecePdgSelected($event)"
+                  [options]="piecesPdgFiltrees"
+                  bindValue="id"
+                  placeholder="Rechercher une pièce sous garantie par référence ou désignation..."
+                  [bindLabel]="formatPiece">
+                </app-searchable-select>
               </div>
+              <div class="w-20">
+                <label class="block text-xs font-bold text-oas-muted">Qté.</label>
+                <input type="number" [(ngModel)]="qteAjouterPdg" [ngModelOptions]="{standalone: true}" min="1" placeholder="Qté"
+                  title="Quantité"
+                  class="w-full px-3 py-2.5 rounded-xl border border-emerald-200 bg-white text-sm font-bold text-center focus:outline-none focus:ring-2 focus:ring-emerald-400/40 transition" />
+              </div>
+              <div class="w-32">
+                <label class="block text-xs font-bold text-oas-muted">Prix</label>
+                <input type="number" [(ngModel)]="prixAjouterPdg" [ngModelOptions]="{standalone: true}" min="0" placeholder="Prix (FCFA)"
+                  title="Prix unitaire en FCFA"
+                  class="w-full px-3 py-2.5 rounded-xl border border-emerald-200 bg-white text-sm font-bold text-right focus:outline-none focus:ring-2 focus:ring-emerald-400/40 transition" />
+              </div>
+              <button type="button" (click)="addPiecePdg()" [disabled]="!piecePdgAjouter"
+                      class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition cursor-pointer disabled:opacity-50 flex-shrink-0">
+                Ajouter PDG
+              </button>
+            </div>
+
+            <!-- Tableau dédié PDG -->
+            @if (lignesPiecesPdg.length > 0) {
+              <div class="overflow-x-auto rounded-xl border border-emerald-200 mt-2">
+                <table class="w-full text-xs text-left">
+                  <thead class="bg-emerald-50/70 text-emerald-900 uppercase font-bold text-[11px] border-b border-emerald-200">
+                    <tr>
+                      <th class="px-4 py-3">Désignation</th>
+                      <th class="px-3 py-3 text-center w-28">Qté</th>
+                      <th class="px-3 py-3 text-right w-40">Prix unit. (FCFA)</th>
+                      <th class="px-3 py-3 text-right w-36">Total</th>
+                      <th class="px-3 py-3 text-center w-12">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-emerald-100">
+                    @for (l of lignesPiecesPdg; track $index) {
+                      <tr class="hover:bg-emerald-50/40 transition">
+                        <td class="px-4 py-3 font-semibold text-oas-ink">
+                          <div class="flex items-center gap-2">
+                            <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold flex-shrink-0 bg-emerald-100 text-emerald-800 border border-emerald-300">
+                              PDG
+                            </span>
+                            <span>{{ l.piece?.reference ? (l.piece?.reference + ' — ') : '' }}{{ l.piece?.designation || l.designationPds }}</span>
+                          </div>
+                        </td>
+                        <td class="px-3 py-3 text-center">
+                          <div class="flex items-center justify-center gap-1">
+                            <button type="button" (click)="decrementPiece(l)" title="Diminuer la quantité"
+                                    class="w-6 h-6 rounded-md bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold flex items-center justify-center cursor-pointer transition text-xs">-</button>
+                            <input type="number" [(ngModel)]="l.quantite" [ngModelOptions]="{standalone: true}" (ngModelChange)="onPieceQuantiteChange(l)" min="1"
+                                   class="w-14 px-1 py-1 rounded-lg border border-emerald-200 bg-white text-center font-bold text-xs focus:ring-2 focus:ring-emerald-400/40 focus:outline-none transition"/>
+                            <button type="button" (click)="incrementPiece(l)" title="Augmenter la quantité"
+                                    class="w-6 h-6 rounded-md bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold flex items-center justify-center cursor-pointer transition text-xs">+</button>
+                          </div>
+                        </td>
+                        <td class="px-3 py-3 text-right">
+                          <div class="flex items-center justify-end gap-1">
+                            <input type="number" [(ngModel)]="l.prix" [ngModelOptions]="{standalone: true}" min="0" placeholder="0"
+                                   class="w-28 px-2.5 py-1.5 rounded-lg border border-emerald-200 bg-white text-right font-bold text-xs focus:ring-2 focus:ring-emerald-400/40 focus:border-emerald-400 focus:outline-none transition"/>
+                            <span class="text-emerald-800 text-[10px] font-semibold">FCFA</span>
+                          </div>
+                        </td>
+                        <td class="px-3 py-3 text-right font-extrabold text-emerald-950 whitespace-nowrap">
+                          {{ fmt((l.prix || 0) * (l.quantite || 0)) }} FCFA
+                        </td>
+                        <td class="px-3 py-3 text-center">
+                          <button type="button" (click)="removePieceItem(l)" title="Supprimer cette pièce"
+                                  class="text-red-400 hover:text-red-700 p-1 font-bold cursor-pointer transition">✕</button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            } @else {
+              <p class="text-xs text-oas-muted italic py-1">Aucune pièce sous garantie (PDG) ajoutée.</p>
             }
           </div>
 
-          <!-- Actions -->
-          <div class="flex justify-end gap-3 pt-2">
+          <!-- ══════════════════════════════════════════════════════════════════════ -->
+          <!-- 3. SECTION PIÈCES À SAISIR (PDS — HORS CATALOGUE)                    -->
+          <!-- ══════════════════════════════════════════════════════════════════════ -->
+          <div class="bg-white border border-amber-200 rounded-2xl p-5 shadow-2xs space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="block text-sm font-bold text-oas-ink flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                  3. Pièces à saisir (PDS — Hors catalogue)
+                </label>
+                <p class="text-xs text-oas-muted mt-0.5">Pièces sur mesure ou hors stock. Renseignez directement le prix unitaire validé.</p>
+              </div>
+              <span class="text-xs font-bold text-amber-700">
+                {{ lignesPiecesPds.length }} pièce{{ lignesPiecesPds.length > 1 ? 's' : '' }} PDS
+              </span>
+            </div>
+
+            <!-- Formulaire d'ajout PDS -->
+            <div class="flex flex-wrap sm:flex-nowrap gap-3 items-end">
+              <div class="flex-1 min-w-[200px]">
+                <label class="block text-xs font-bold text-oas-muted">Pièce</label>
+                <input type="text" [(ngModel)]="pieceCustomDesignation" [ngModelOptions]="{standalone: true}"
+                  placeholder="Désignation de la pièce à saisir (ex: Radiateur adaptable, Filtre spécifique...)"
+                  class="w-full px-3 py-2.5 rounded-xl border border-amber-300 bg-white text-sm text-oas-ink focus:outline-none focus:ring-2 focus:ring-amber-400/40 transition font-medium" />
+              </div>
+              <div class="w-20">
+                <label class="block text-xs font-bold text-oas-muted">Qté</label>
+                <input type="number" [(ngModel)]="pieceCustomQuantite" [ngModelOptions]="{standalone: true}" min="1" placeholder="Qté"
+                  title="Quantité"
+                  class="w-full px-3 py-2.5 rounded-xl border border-amber-300 bg-white text-sm font-bold text-center focus:outline-none focus:ring-2 focus:ring-amber-400/40 transition" />
+              </div>
+              <div class="w-32">
+                <label class="block text-xs font-bold text-oas-muted">Prix</label>
+                <input type="number" [(ngModel)]="pieceCustomPrix" [ngModelOptions]="{standalone: true}" min="0" placeholder="Prix (FCFA)"
+                  title="Prix unitaire en FCFA"
+                  class="w-full px-3 py-2.5 rounded-xl border border-amber-300 bg-white text-sm font-bold text-right focus:outline-none focus:ring-2 focus:ring-amber-400/40 transition" />
+              </div>
+              <button type="button" (click)="addPieceCustom()" [disabled]="!pieceCustomDesignation.trim()"
+                class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold transition cursor-pointer disabled:opacity-50 flex-shrink-0">
+                Ajouter PDS
+              </button>
+            </div>
+
+            <!-- Tableau dédié PDS -->
+            @if (lignesPiecesPds.length > 0) {
+              <div class="overflow-x-auto rounded-xl border border-amber-200 mt-2">
+                <table class="w-full text-xs text-left">
+                  <thead class="bg-amber-50/70 text-amber-900 uppercase font-bold text-[11px] border-b border-amber-200">
+                    <tr>
+                      <th class="px-4 py-3">Désignation</th>
+                      <th class="px-3 py-3 text-center w-28">Qté</th>
+                      <th class="px-3 py-3 text-right w-40">Prix unit. à fixer (FCFA)</th>
+                      <th class="px-3 py-3 text-right w-36">Total</th>
+                      <th class="px-3 py-3 text-center w-28">Dispo</th>
+                      <th class="px-3 py-3 text-center w-12">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-amber-100">
+                    @for (l of lignesPiecesPds; track $index) {
+                      <tr class="hover:bg-amber-50/40 transition">
+                        <td class="px-4 py-3 font-semibold text-oas-ink">
+                          <div class="flex items-center gap-2">
+                            <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300 flex-shrink-0">PDS</span>
+                            <span>{{ l.designationPds }}</span>
+                          </div>
+                        </td>
+                        <td class="px-3 py-3 text-center">
+                          <div class="flex items-center justify-center gap-1">
+                            <button type="button" (click)="decrementPiece(l)" title="Diminuer la quantité"
+                                    class="w-6 h-6 rounded-md bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold flex items-center justify-center cursor-pointer transition text-xs">-</button>
+                            <input type="number" [(ngModel)]="l.quantite" [ngModelOptions]="{standalone: true}" min="1"
+                                   class="w-14 px-1 py-1 rounded-lg border border-amber-300 bg-white text-center font-bold text-xs focus:ring-2 focus:ring-amber-400/40 focus:outline-none transition"/>
+                            <button type="button" (click)="incrementPiece(l)" title="Augmenter la quantité"
+                                    class="w-6 h-6 rounded-md bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold flex items-center justify-center cursor-pointer transition text-xs">+</button>
+                          </div>
+                        </td>
+                        <td class="px-3 py-3 text-right">
+                          <div class="flex items-center justify-end gap-1">
+                            <input type="number" [(ngModel)]="l.prix" [ngModelOptions]="{standalone: true}" min="0" placeholder="0"
+                                   class="w-28 px-2.5 py-1.5 rounded-lg border border-amber-300 bg-white text-right font-bold text-xs focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400 focus:outline-none transition"/>
+                            <span class="text-amber-800 text-[10px] font-semibold">FCFA</span>
+                          </div>
+                        </td>
+                        <td class="px-3 py-3 text-right font-extrabold text-amber-950 whitespace-nowrap">
+                          {{ fmt((l.prix || 0) * (l.quantite || 0)) }} FCFA
+                        </td>
+                        <td class="px-3 py-3 text-center">
+                          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                            Hors stock (PDS)
+                          </span>
+                        </td>
+                        <td class="px-3 py-3 text-center">
+                          <button type="button" (click)="removePieceItem(l)" title="Supprimer cette pièce"
+                                  class="text-red-400 hover:text-red-700 p-1 font-bold cursor-pointer transition">✕</button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            } @else {
+              <p class="text-xs text-oas-muted italic py-1">Aucune pièce sur mesure (PDS) ajoutée.</p>
+            }
+          </div>
+
+          <!-- ══════════════════════════════════════════════════════════════════════ -->
+          <!-- 4. SECTION PRESTATIONS DE MAIN-D'ŒUVRE                                 -->
+          <!-- ══════════════════════════════════════════════════════════════════════ -->
+          <div class="bg-white border border-purple-200 rounded-2xl p-5 shadow-2xs space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="block text-sm font-bold text-oas-ink flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-purple-600"></span>
+                  4. Prestations de Main-d'œuvre
+                </label>
+                <p class="text-xs text-oas-muted mt-0.5">Prestations nécessaires aux réparations. Ajustez le tarif et le nombre d'heures.</p>
+              </div>
+              <span class="text-xs font-bold text-purple-700">
+                {{ lignesMOList.length }} prestation{{ lignesMOList.length > 1 ? 's' : '' }}
+              </span>
+            </div>
+
+            <!-- Formulaire d'ajout MO -->
+            <div class="flex flex-wrap sm:flex-nowrap gap-3 items-end">
+              <div class="flex-1 min-w-[200px]">
+                <label class="block text-xs font-bold text-oas-muted">Prestation</label>
+                <app-searchable-select
+                  [(ngModel)]="moAjouter"
+                  [ngModelOptions]="{standalone: true}"
+                  (change)="onMoSelected($event)"
+                  [options]="moFiltrees"
+                  bindValue="id"
+                  placeholder="Sélectionner une prestation de main-d'œuvre..."
+                  [bindLabel]="formatMO">
+                </app-searchable-select>
+              </div>
+              <div class="w-20">
+                <label class="block text-xs font-bold text-oas-muted">Heures / Qté</label>
+                <input type="number" [(ngModel)]="qteAjouterMO" [ngModelOptions]="{standalone: true}" min="1" placeholder="Heures"
+                  title="Nombre d'heures ou quantité"
+                  class="w-full px-3 py-2.5 rounded-xl border border-purple-200 bg-white text-sm font-bold text-center focus:outline-none focus:ring-2 focus:ring-purple-400/40 transition" />
+              </div>
+              <div class="w-32">
+                <label class="block text-xs font-bold text-oas-muted">Tarif unit.</label>
+                <input type="number" [(ngModel)]="prixAjouterMO" [ngModelOptions]="{standalone: true}" min="0" placeholder="Tarif (FCFA)"
+                  title="Tarif unitaire en FCFA"
+                  class="w-full px-3 py-2.5 rounded-xl border border-purple-200 bg-white text-sm font-bold text-right focus:outline-none focus:ring-2 focus:ring-purple-400/40 transition" />
+              </div>
+              <button type="button" (click)="addMO()" [disabled]="!moAjouter"
+                class="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition cursor-pointer disabled:opacity-50 flex-shrink-0">
+                Ajouter MO
+              </button>
+            </div>
+
+            <!-- Tableau dédié MO -->
+            @if (lignesMOList.length > 0) {
+              <div class="overflow-x-auto rounded-xl border border-purple-200 mt-2">
+                <table class="w-full text-xs text-left">
+                  <thead class="bg-purple-50/70 text-purple-900 uppercase font-bold text-[11px] border-b border-purple-200">
+                    <tr>
+                      <th class="px-4 py-3">Prestation</th>
+                      <th class="px-3 py-3 text-center w-28">Heures / Qté</th>
+                      <th class="px-3 py-3 text-right w-40">Tarif unit. (FCFA)</th>
+                      <th class="px-3 py-3 text-right w-36">Total</th>
+                      <th class="px-3 py-3 text-center w-12">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-purple-100">
+                    @for (m of lignesMOList; track $index) {
+                      <tr class="hover:bg-purple-50/40 transition">
+                        <td class="px-4 py-3 font-semibold text-oas-ink">
+                          <p class="font-bold text-oas-ink">{{ m.descriptionMainDoeuvre }}</p>
+                          @if (m.mo?.categorie?.nom && m.mo?.categorie?.nom !== m.descriptionMainDoeuvre) {
+                            <p class="text-[10px] text-purple-700 font-medium">{{ m.mo?.categorie?.nom }}</p>
+                          }
+                        </td>
+                        <td class="px-3 py-3 text-center">
+                          <div class="flex items-center justify-center gap-1">
+                            <button type="button" (click)="decrementMO(m)" title="Diminuer les heures"
+                                    class="w-6 h-6 rounded-md bg-purple-100 hover:bg-purple-200 text-purple-800 font-bold flex items-center justify-center cursor-pointer transition text-xs">-</button>
+                            <input type="number" [(ngModel)]="m.nbreHeure" [ngModelOptions]="{standalone: true}" min="1"
+                                   class="w-14 px-1 py-1 rounded-lg border border-purple-200 bg-white text-center font-bold text-xs focus:ring-2 focus:ring-purple-400/40 focus:outline-none transition"/>
+                            <button type="button" (click)="incrementMO(m)" title="Augmenter les heures"
+                                    class="w-6 h-6 rounded-md bg-purple-100 hover:bg-purple-200 text-purple-800 font-bold flex items-center justify-center cursor-pointer transition text-xs">+</button>
+                          </div>
+                        </td>
+                        <td class="px-3 py-3 text-right">
+                          <div class="flex items-center justify-end gap-1">
+                            <input type="number" [(ngModel)]="m.tarifHoraire" [ngModelOptions]="{standalone: true}" min="0" placeholder="0"
+                                   class="w-28 px-2.5 py-1.5 rounded-lg border border-purple-200 bg-white text-right font-bold text-xs focus:ring-2 focus:ring-purple-400/40 focus:border-purple-400 focus:outline-none transition"/>
+                            <span class="text-purple-800 text-[10px] font-semibold">FCFA</span>
+                          </div>
+                        </td>
+                        <td class="px-3 py-3 text-right font-extrabold text-purple-950 whitespace-nowrap">
+                          {{ fmt((m.tarifHoraire || 0) * (m.nbreHeure || 0)) }} FCFA
+                        </td>
+                        <td class="px-3 py-3 text-center">
+                          <button type="button" (click)="removeMOItem(m)" title="Supprimer cette prestation"
+                                  class="text-red-400 hover:text-red-700 p-1 font-bold cursor-pointer transition">✕</button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            } @else {
+              <p class="text-xs text-oas-muted italic py-1">Aucune prestation de main-d'œuvre ajoutée.</p>
+            }
+          </div>
+
+          <!-- ══════════════════════════════════════════════════════════════════════ -->
+          <!-- RÉCAPITULATIF & TOTAUX EN TEMPS RÉEL                                   -->
+          <!-- ══════════════════════════════════════════════════════════════════════ -->
+          <div class="bg-oas-bg rounded-2xl p-5 border border-oas-line space-y-3">
+            <h4 class="text-xs font-bold text-oas-muted uppercase tracking-wider">Récapitulatif Financier Prévisionnel</h4>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+              <div class="p-3 bg-white rounded-xl border border-oas-line">
+                <span class="text-oas-muted block font-medium">Sous-total Pièces HT</span>
+                <strong class="text-sm font-bold text-oas-ink">{{ fmt(totalPieces) }} FCFA</strong>
+              </div>
+              <div class="p-3 bg-white rounded-xl border border-oas-line">
+                <span class="text-oas-muted block font-medium">Sous-total MO HT</span>
+                <strong class="text-sm font-bold text-oas-ink">{{ fmt(totalMO) }} FCFA</strong>
+              </div>
+              <div class="p-3 bg-white rounded-xl border border-oas-line">
+                <span class="text-oas-muted block font-medium">Total HT</span>
+                <strong class="text-sm font-bold text-oas-ink">{{ fmt(totalHT) }} FCFA</strong>
+              </div>
+              <div class="p-3 bg-white rounded-xl border border-oas-line">
+                <span class="text-oas-muted block font-medium">TVA ({{ tvaRate }}%)</span>
+                <strong class="text-sm font-bold text-oas-ink">{{ fmt(montantTVA) }} FCFA</strong>
+              </div>
+            </div>
+
+            @if (bcLinked && montantBonCommandeForm > 0) {
+              <div class="p-3 bg-orange-50 rounded-xl border border-orange-200 text-xs flex items-center justify-between text-orange-950 font-bold">
+                <span>Bon de commande lié (TTC) :</span>
+                <span>{{ fmt(montantBonCommandeForm) }} FCFA</span>
+              </div>
+            }
+
+            <div class="p-4 bg-oas-accent/10 rounded-xl border border-oas-accent/30 flex items-center justify-between">
+              <div>
+                <span class="text-xs text-oas-accent font-black uppercase tracking-wider block">Net Total à Payer (TTC)</span>
+                <span class="text-[11px] text-oas-muted">Comprend toutes les pièces, main-d'œuvre et taxes</span>
+              </div>
+              <strong class="text-xl font-black text-oas-accent whitespace-nowrap">
+                {{ fmt(totalTTC + (bcLinked ? montantBonCommandeForm : 0)) }} FCFA
+              </strong>
+            </div>
+          </div>
+
+          <!-- Actions du modal -->
+          <div class="flex items-center justify-end gap-3 pt-3 border-t border-oas-line">
             <button type="button" (click)="showModal = false"
-                    class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-lg border border-oas-line flex items-center transition cursor-pointer text-sm">
+                    class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-5 h-11 rounded-xl border border-oas-line flex items-center transition cursor-pointer text-sm">
               Annuler
             </button>
-            <button type="submit" [disabled]="saving"
-                    class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-5 h-10 rounded-lg flex items-center gap-2 transition cursor-pointer disabled:opacity-60 text-sm">
-              @if (saving) { <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> }
-              {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
+            <button type="submit" [disabled]="saving || !hasAtLeastOneItem"
+                    class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-6 h-11 rounded-xl flex items-center gap-2 transition cursor-pointer disabled:opacity-50 text-sm shadow-md shadow-oas-accent/25">
+              @if (saving) {
+                <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Enregistrement...</span>
+              } @else {
+                <span>{{ isNew ? 'Créer le proforma' : 'Enregistrer les modifications' }}</span>
+              }
             </button>
           </div>
 

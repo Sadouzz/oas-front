@@ -28,7 +28,8 @@ import {
   StepReceptionResponseDto,
   StepDiagnosticResponseDto,
   StepPiecesMoResponseDto,
-  StepProformaResponseDto
+  StepProformaResponseDto,
+  StepApprovisionnementResponseDto
 } from './models/responses';
 
 @Injectable({ providedIn: 'root' })
@@ -134,6 +135,10 @@ export class OrdreReparationService {
   }
 
   // 5. Approvisionnement (Bon de Commande)
+  getStepApprovisionnement(id: number): Observable<StepApprovisionnementResponseDto> {
+    return this.http.get<StepApprovisionnementResponseDto>(`${this.api}/${id}/step-approvisionnement`);
+  }
+
   updateStepApprovisionnement(id: number, data: StepApprovisionnementDto): Observable<void> {
     return this.http.put(`${this.api}/${id}/step-approvisionnement`, data, { responseType: 'text' }).pipe(map(() => void 0));
   }

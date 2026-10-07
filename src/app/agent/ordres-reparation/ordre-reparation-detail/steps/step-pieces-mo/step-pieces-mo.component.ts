@@ -2,8 +2,10 @@ import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { OrdreReparationService } from '../../../ordre-reparation.service';
+import { ProformaService } from '../../../../proforma/proforma.service';
 import { PieceDetacheeService } from '../../../../pieces-detachees/piece-detachee.service';
 import { MainDoeuvreService } from '../../../../main-doeuvre/main-doeuvre.service';
 import { AlertComponent } from '../../../../../shared/components/alert/alert.component';
@@ -47,6 +49,7 @@ export class StepPiecesMoComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private ordreService = inject(OrdreReparationService);
+  private proformaService = inject(ProformaService);
   private pieceService = inject(PieceDetacheeService);
   private moService = inject(MainDoeuvreService);
   cdr = inject(ChangeDetectorRef);
@@ -163,112 +166,234 @@ export class StepPiecesMoComponent implements OnInit {
     forkJoin({
       pieces: this.pieceService.getAll(),
       mo: this.moService.getAll(),
-      ordre: this.ordreService.getStepPiecesMo(this.ordreId)
+      ordre: this.ordreService.getStepPiecesMo(this.ordreId),
+      proforma: this.proformaService.getByOrdreReparationId(this.ordreId).pipe(
+        catchError(() => of(null))
+      )
     }).subscribe({
-      next: ({ pieces, mo, ordre }) => {
+      next: ({ pieces, mo, ordre, proforma }) => {
         // Catalogue : uniquement PDP et PDG (exclure PDS)
         this.allPieces = extractContent<PieceDetache>(pieces as any).filter(p => p.statut === 'ACTIF' && p.type !== 'PDS');
         this.allMO = extractContent<MainDoeuvreModel>(mo as any).filter(m => !m.isArchived);
         this.loadedOrdre = ordre;
 
-        // Cumuler les pièces identiques au chargement
-        const piecesMap = new Map<string, any>();
-        const fetchedPieces = ordre.lignesOrdreReparationPieces || (ordre as any).lignesPieces || [];
-        for (const l of fetchedPieces) {
-          const pieceId = l.piece?.id ?? (l as any).pieceId;
-          const key = l.isCustom 
-            ? `custom_${(l.designationPds || '').trim().toLowerCase()}`
-            : `cat_${pieceId}`;
+        const hasProformaLines = proforma && (
+          (proforma.lignesPieces && proforma.lignesPieces.length > 0) ||
+          (proforma.lignesMainDoeuvres && proforma.lignesMainDoeuvres.length > 0) ||
+          ((proforma as any).pieces && (proforma as any).pieces.length > 0) ||
+          ((proforma as any).mainsDoeuvre && (proforma as any).mainsDoeuvre.length > 0)
+        );
 
-          const catalogPiece = !l.isCustom && pieceId
-            ? this.allPieces.find(p => p.id === pieceId)
-            : null;
-          const resolvedPiece = catalogPiece || l.piece;
+        if (hasProformaLines) {
+          // ══════════════════════════════════════════════════════════════════════
+          // CAS 1 : LE PROFORMA EXISTE DÉJÀ -> CHARGER DEPUIS LE PROFORMA
+          // ══════════════════════════════════════════════════════════════════════
+          const piecesMap = new Map<string, any>();
+          const proformaPieces: any[] = proforma.lignesPieces || (proforma as any).pieces || [];
+          for (const l of proformaPieces) {
+            const pieceId = l.pieceId ?? l.piece?.id ?? null;
+            const isCustom = !!(l.isCustom || l.custom || !pieceId || l.designationPds);
+            const key = isCustom
+              ? `custom_${(l.designationPds || l.designationPiece || '').trim().toLowerCase()}`
+              : `cat_${pieceId}`;
 
-          // Résolution du prix unitaire :
-          // 1. Si un prix explicite > 0 a déjà été fixé, on le conserve
-          // 2. Sinon, on prend directement le prix du catalogue
-          // 3. Sinon, le prix de la pièce imbriquée
-          let unitPrice = 0;
-          if (l.prix != null && Number(l.prix) > 0) {
-            unitPrice = Number(l.prix);
-          } else if (catalogPiece?.prix != null && Number(catalogPiece.prix) > 0) {
-            unitPrice = Number(catalogPiece.prix);
-          } else if (l.piece?.prix != null && Number(l.piece.prix) > 0) {
-            unitPrice = Number(l.piece.prix);
-          }
+            const catalogPiece = !isCustom && pieceId
+              ? this.allPieces.find(p => p.id === Number(pieceId))
+              : null;
+            const resolvedPiece = catalogPiece || l.piece;
 
-          if (piecesMap.has(key)) {
-            const item = piecesMap.get(key);
-            item.quantite += (l.quantite || 1);
-            if ((item.prixUnitaire == null || item.prixUnitaire === 0) && unitPrice > 0) {
-              item.prixUnitaire = unitPrice;
+            let unitPrice = 0;
+            if (l.prix != null && Number(l.prix) >= 0) {
+              unitPrice = Number(l.prix);
+            } else if (l.prixUnitaire != null && Number(l.prixUnitaire) >= 0) {
+              unitPrice = Number(l.prixUnitaire);
+            } else if (l.montantTotal != null && l.quantite) {
+              unitPrice = Number(l.montantTotal) / Number(l.quantite);
+            } else if (catalogPiece?.prix != null) {
+              unitPrice = Number(catalogPiece.prix);
             }
-          } else {
-            piecesMap.set(key, {
-              piece: resolvedPiece,
-              pieceIdTemp: pieceId,
-              quantite: l.quantite || 1,
-              isCustom: !!l.isCustom,
-              designationPds: l.designationPds,
-              prixUnitaire: unitPrice,
-              stockDisponible: l.isCustom ? 0 : ((resolvedPiece?.stockMagasin ?? 0) + (resolvedPiece?.stockAtelier ?? 0)),
-              manquant: 0,
-              aSortirMagasin: 0
-            });
-          }
-        }
 
-        this.lignesPieces = Array.from(piecesMap.values()).map(lp => {
-          if (!lp.isCustom && lp.piece) {
-            lp.manquant = Math.max(0, lp.quantite - (lp.piece?.stockMagasin ?? 0));
-            lp.aSortirMagasin = lp.manquant > 0 ? 0 : 1;
-          }
-          return lp;
-        });
+            const qte = Number(l.quantite ?? l.qte ?? 1) || 1;
+            const des = l.designationPds || l.designationPiece || resolvedPiece?.designation || (isCustom ? 'Pièce à saisir' : 'Pièce détachée');
 
-        // Cumuler les MO identiques au chargement
-        const moMap = new Map<number, any>();
-        const fetchedMo = ordre.lignesOrdreReparationMainDoeuvres || (ordre as any).lignesMainDoeuvres || [];
-        for (const l of fetchedMo) {
-          let catalogMO = null;
-          
-          if (l.mainDoeuvre?.id) {
-            catalogMO = this.allMO.find(m => m.id === l.mainDoeuvre.id);
-          } else if ((l as any).mainDoeuvreId) {
-            catalogMO = this.allMO.find(m => m.id === (l as any).mainDoeuvreId);
-          } else if (l.description) {
-            catalogMO = this.allMO.find(m => m.description === l.description);
-          }
-
-          const resolvedMO = catalogMO || l.mainDoeuvre || { id: l.id || Date.now(), description: l.description, prix: l.prix };
-          const moId = resolvedMO.id;
-
-          if (!moId) continue;
-
-          let unitPrice = 0;
-          if (l.prix != null && Number(l.prix) > 0) {
-            unitPrice = Number(l.prix);
-          } else if (resolvedMO?.prix != null && Number(resolvedMO.prix) > 0) {
-            unitPrice = Number(resolvedMO.prix);
-          }
-
-          if (moMap.has(moId)) {
-            const item = moMap.get(moId);
-            item.quantite += (l.nbreHeure ?? l.heures ?? 1);
-            if ((item.prixUnitaire == null || item.prixUnitaire === 0) && unitPrice > 0) {
-              item.prixUnitaire = unitPrice;
+            if (piecesMap.has(key)) {
+              const item = piecesMap.get(key);
+              item.quantite += qte;
+              if ((item.prixUnitaire == null || item.prixUnitaire === 0) && unitPrice > 0) {
+                item.prixUnitaire = unitPrice;
+              }
+            } else {
+              piecesMap.set(key, {
+                piece: resolvedPiece,
+                pieceIdTemp: isCustom ? null : (pieceId ? Number(pieceId) : null),
+                quantite: qte,
+                isCustom,
+                designationPds: des,
+                prixUnitaire: unitPrice,
+                stockDisponible: isCustom ? 0 : ((resolvedPiece?.stockMagasin ?? 0) + (resolvedPiece?.stockAtelier ?? 0)),
+                manquant: 0,
+                aSortirMagasin: 0
+              });
             }
-          } else {
-            moMap.set(moId, {
-              mo: resolvedMO,
-              quantite: l.nbreHeure ?? l.heures ?? 1,
-              prixUnitaire: unitPrice
-            });
           }
-        }
 
-        this.lignesMO = Array.from(moMap.values());
+          this.lignesPieces = Array.from(piecesMap.values()).map(lp => {
+            if (!lp.isCustom && lp.piece) {
+              lp.manquant = Math.max(0, lp.quantite - (lp.piece?.stockMagasin ?? 0));
+              lp.aSortirMagasin = lp.manquant > 0 ? 0 : 1;
+            }
+            return lp;
+          });
+
+          // MO depuis le Proforma
+          const moMap = new Map<number | string, any>();
+          const proformaMo: any[] = proforma.lignesMainDoeuvres || (proforma as any).lignesMainDoeuvre || (proforma as any).mainsDoeuvre || [];
+          for (const l of proformaMo) {
+            const moId = l.mainDoeuvreId ?? l.mainDoeuvre?.id ?? null;
+            let catalogMO = null;
+            if (moId) {
+              catalogMO = this.allMO.find(m => m.id === Number(moId));
+            } else if (l.descriptionMainDoeuvre || l.description) {
+              const desc = l.descriptionMainDoeuvre || l.description;
+              catalogMO = this.allMO.find(m => m.description === desc);
+            }
+
+            const resolvedMO = catalogMO || l.mainDoeuvre || {
+              id: moId || Date.now(),
+              description: l.descriptionMainDoeuvre || l.description || 'Prestation main-d’œuvre',
+              prix: l.tarifHoraire ?? l.prix
+            };
+            const mapKey = resolvedMO.id || (l.descriptionMainDoeuvre || l.description || 'mo');
+
+            let unitPrice = 0;
+            if (l.tarifHoraire != null && Number(l.tarifHoraire) >= 0) {
+              unitPrice = Number(l.tarifHoraire);
+            } else if (l.prix != null && Number(l.prix) >= 0) {
+              unitPrice = Number(l.prix);
+            } else if (l.prixUnitaire != null && Number(l.prixUnitaire) >= 0) {
+              unitPrice = Number(l.prixUnitaire);
+            } else if (l.montantTotal != null && (l.nbreHeure || l.heures)) {
+              unitPrice = Number(l.montantTotal) / Number(l.nbreHeure || l.heures);
+            } else if (resolvedMO?.prix != null) {
+              unitPrice = Number(resolvedMO.prix);
+            }
+
+            const qte = Number(l.nbreHeure ?? l.heures ?? l.quantite ?? 1) || 1;
+
+            if (moMap.has(mapKey)) {
+              const item = moMap.get(mapKey);
+              item.quantite += qte;
+              if ((item.prixUnitaire == null || item.prixUnitaire === 0) && unitPrice > 0) {
+                item.prixUnitaire = unitPrice;
+              }
+            } else {
+              moMap.set(mapKey, {
+                mo: resolvedMO,
+                quantite: qte,
+                prixUnitaire: unitPrice
+              });
+            }
+          }
+
+          this.lignesMO = Array.from(moMap.values());
+        } else {
+          // ══════════════════════════════════════════════════════════════════════
+          // CAS 2 : PAS ENCORE DE PROFORMA -> CHARGER DEPUIS LE DIAGNOSTIC/ORDRE
+          // ══════════════════════════════════════════════════════════════════════
+          const piecesMap = new Map<string, any>();
+          const fetchedPieces = ordre.lignesOrdreReparationPieces || (ordre as any).lignesPieces || [];
+          for (const l of fetchedPieces) {
+            const pieceId = l.piece?.id ?? (l as any).pieceId;
+            const key = l.isCustom 
+              ? `custom_${(l.designationPds || '').trim().toLowerCase()}`
+              : `cat_${pieceId}`;
+
+            const catalogPiece = !l.isCustom && pieceId
+              ? this.allPieces.find(p => p.id === pieceId)
+              : null;
+            const resolvedPiece = catalogPiece || l.piece;
+
+            let unitPrice = 0;
+            if (l.prix != null && Number(l.prix) > 0) {
+              unitPrice = Number(l.prix);
+            } else if (catalogPiece?.prix != null && Number(catalogPiece.prix) > 0) {
+              unitPrice = Number(catalogPiece.prix);
+            } else if (l.piece?.prix != null && Number(l.piece.prix) > 0) {
+              unitPrice = Number(l.piece.prix);
+            }
+
+            if (piecesMap.has(key)) {
+              const item = piecesMap.get(key);
+              item.quantite += (l.quantite || 1);
+              if ((item.prixUnitaire == null || item.prixUnitaire === 0) && unitPrice > 0) {
+                item.prixUnitaire = unitPrice;
+              }
+            } else {
+              piecesMap.set(key, {
+                piece: resolvedPiece,
+                pieceIdTemp: pieceId,
+                quantite: l.quantite || 1,
+                isCustom: !!l.isCustom,
+                designationPds: l.designationPds,
+                prixUnitaire: unitPrice,
+                stockDisponible: l.isCustom ? 0 : ((resolvedPiece?.stockMagasin ?? 0) + (resolvedPiece?.stockAtelier ?? 0)),
+                manquant: 0,
+                aSortirMagasin: 0
+              });
+            }
+          }
+
+          this.lignesPieces = Array.from(piecesMap.values()).map(lp => {
+            if (!lp.isCustom && lp.piece) {
+              lp.manquant = Math.max(0, lp.quantite - (lp.piece?.stockMagasin ?? 0));
+              lp.aSortirMagasin = lp.manquant > 0 ? 0 : 1;
+            }
+            return lp;
+          });
+
+          // Cumuler les MO de l'ordre
+          const moMap = new Map<number, any>();
+          const fetchedMo = ordre.lignesOrdreReparationMainDoeuvres || (ordre as any).lignesMainDoeuvres || [];
+          for (const l of fetchedMo) {
+            let catalogMO = null;
+            
+            if (l.mainDoeuvre?.id) {
+              catalogMO = this.allMO.find(m => m.id === l.mainDoeuvre.id);
+            } else if ((l as any).mainDoeuvreId) {
+              catalogMO = this.allMO.find(m => m.id === (l as any).mainDoeuvreId);
+            } else if (l.description) {
+              catalogMO = this.allMO.find(m => m.description === l.description);
+            }
+
+            const resolvedMO = catalogMO || l.mainDoeuvre || { id: l.id || Date.now(), description: l.description, prix: l.prix };
+            const moId = resolvedMO.id;
+
+            if (!moId) continue;
+
+            let unitPrice = 0;
+            if (l.prix != null && Number(l.prix) > 0) {
+              unitPrice = Number(l.prix);
+            } else if (resolvedMO?.prix != null && Number(resolvedMO.prix) > 0) {
+              unitPrice = Number(resolvedMO.prix);
+            }
+
+            if (moMap.has(moId)) {
+              const item = moMap.get(moId);
+              item.quantite += (l.nbreHeure ?? l.heures ?? 1);
+              if ((item.prixUnitaire == null || item.prixUnitaire === 0) && unitPrice > 0) {
+                item.prixUnitaire = unitPrice;
+              }
+            } else {
+              moMap.set(moId, {
+                mo: resolvedMO,
+                quantite: l.nbreHeure ?? l.heures ?? 1,
+                prixUnitaire: unitPrice
+              });
+            }
+          }
+
+          this.lignesMO = Array.from(moMap.values());
+        }
 
         this.loading = false;
         this.cdr.markForCheck();

@@ -68,6 +68,8 @@
                 bindValue="id"
                 [bindLabel]="formatClient"
                 placeholder="-- Choisir un client --"
+                [serverSearch]="true"
+                (search)="onClientSearch($event)"
                 (change)="onClientChange($event)">
               </app-searchable-select>
               @if (form.get('clientId')?.invalid && form.get('clientId')?.touched) {
