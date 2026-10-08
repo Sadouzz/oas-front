@@ -37,6 +37,10 @@ export class OrdreReparationService {
   private http = inject(HttpClient);
   private api = `${environment.apiUrl}/api/ordres-reparation`;
 
+  restituerVehicule(id: number, signature: string, garantieMois: number): Observable<void> {
+    return this.http.post<void>(`${this.api}/${id}/restitution`, { signature, garantieMois });
+  }
+
   getAll(params?: PageParams & { statut?: string; dateDebut?: string; dateFin?: string; search?: string }): Observable<any> {
     const p: Record<string, string> = {};
     if (params?.statut) {

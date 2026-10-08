@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ElementRef, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -7,7 +7,7 @@ import { FicheAtelierDetailsResponse } from '../../../shared/models';
 import { LigneReception, LigneDefaut } from '../models/fiche-atelier.model';
 import { DevisPrevisionnel, DevisPrevisionnelService } from '../../devis-previsionnels/devis-previsionnel.service';
 import { OrdreReparationService } from '../../ordres-reparation/ordre-reparation.service';
-import { LucideArrowLeft, LucideCheck, LucideX } from '@lucide/angular';
+import { LucideArrowLeft, LucideCheck } from '@lucide/angular';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
@@ -28,6 +28,43 @@ export class FicheAtelierDetails implements OnInit {
   fiche: FicheAtelierDetailsResponse | null = null;
   loading = false;
   error = '';
+  sharingPdf = false;
+  shareMessage = '';
+
+  partagerFicheSignee(): void {
+    if (!this.fiche || this.sharingPdf) return;
+    this.sharingPdf = true;
+    this.shareMessage = '';
+    this.ficheAtelierService.getSignedPdf(this.fiche.id).subscribe({
+      next: async (blob) => {
+        const file = new File([blob], `fiche-atelier-${this.fiche!.numero || this.fiche!.id}.pdf`, { type: 'application/pdf' });
+        try {
+          if (navigator.share && navigator.canShare?.({ files: [file] })) {
+            await navigator.share({ files: [file], title: 'Fiche atelier signée' });
+            this.shareMessage = 'Document transmis à l’application de partage. Sélectionnez WhatsApp et le client.';
+          } else {
+            const url = URL.createObjectURL(file);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = file.name;
+            link.click();
+            setTimeout(() => URL.revokeObjectURL(url), 60000);
+            this.shareMessage = 'PDF téléchargé : joignez-le à la conversation WhatsApp du client.';
+          }
+        } catch (error) {
+          if ((error as DOMException).name !== 'AbortError') this.error = 'Le partage de la fiche a échoué.';
+        } finally {
+          this.sharingPdf = false;
+          this.cdr.markForCheck();
+        }
+      },
+      error: () => {
+        this.sharingPdf = false;
+        this.error = 'Impossible de générer la fiche signée.';
+        this.cdr.markForCheck();
+      }
+    });
+  }
   
   devis: DevisPrevisionnel | null = null;
   creatingDevis = false;
@@ -221,78 +258,4 @@ export class FicheAtelierDetails implements OnInit {
     this.router.navigate(['/app/fiches-atelier']);
   }
 
-  // --- Signature Sortie ---
-  @ViewChild('signatureSortieCanvas') set sigSortieCanvas(el: ElementRef<HTMLCanvasElement>) {
-    if (el) {
-      this.sigSortieEl = el;
-      this.ctx = el.nativeElement.getContext('2d');
-      if (this.ctx) {
-        this.ctx.lineWidth = 2;
-        this.ctx.lineCap = 'round';
-        this.ctx.strokeStyle = '#000000';
-      }
-    }
-  }
-  sigSortieEl!: ElementRef<HTMLCanvasElement>;
-  private ctx: CanvasRenderingContext2D | null = null;
-  private isDrawing = false;
-  savingSortie = false;
-
-  startDrawing(event: MouseEvent | TouchEvent) {
-    this.isDrawing = true;
-    this.draw(event);
-  }
-
-  draw(event: MouseEvent | TouchEvent) {
-    if (!this.isDrawing || !this.ctx || !this.sigSortieEl) return;
-    event.preventDefault();
-
-    const canvas = this.sigSortieEl.nativeElement;
-    const rect = canvas.getBoundingClientRect();
-    
-    let x, y;
-    if (event instanceof MouseEvent) {
-      x = event.clientX - rect.left;
-      y = event.clientY - rect.top;
-    } else if (event instanceof TouchEvent) {
-      x = event.touches[0].clientX - rect.left;
-      y = event.touches[0].clientY - rect.top;
-    }
-
-    if (x !== undefined && y !== undefined) {
-      this.ctx.lineTo(x, y);
-      this.ctx.stroke();
-      this.ctx.beginPath();
-      this.ctx.moveTo(x, y);
-    }
-  }
-
-  stopDrawing() {
-    this.isDrawing = false;
-    if (this.ctx) this.ctx.beginPath();
-  }
-
-  clearSignature() {
-    if (this.ctx && this.sigSortieEl) {
-      const canvas = this.sigSortieEl.nativeElement;
-      this.ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-  }
-
-  validerSortie() {
-    if (!this.fiche || !this.sigSortieEl) return;
-    this.savingSortie = true;
-    const signatureBase64 = this.sigSortieEl.nativeElement.toDataURL('image/png');
-
-    this.ficheAtelierService.signForExit(this.fiche.id, signatureBase64).subscribe({
-      next: (data) => {
-        this.fiche = data;
-        this.savingSortie = false;
-      },
-      error: () => {
-        this.error = "Erreur lors de la validation de la sortie.";
-        this.savingSortie = false;
-      }
-    });
-  }
 }

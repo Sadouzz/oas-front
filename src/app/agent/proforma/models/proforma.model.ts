@@ -49,6 +49,9 @@ export interface Proforma {
   numeroBonDeCommande: string | null;
   statut?: string;
   visibleClient?: boolean;
+  tauxRemiseClient?: number | null;
+  montantRemiseClient?: number | null;
+  avertissementsFinanciers?: string[];
   lignesPieces: LignePiece[];
   lignesMainDoeuvres: LigneMD[];
 }

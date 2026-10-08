@@ -22,8 +22,8 @@ export class PdfTemplatesComponent implements OnInit, OnDestroy {
     { id: 'AVOIR_TTC', label: 'Avoir TTC' }, { id: 'DIAGNOSTIC', label: 'Diagnostic' }
   ];
   readonly tokenHelp: Record<string, string[]> = {
-    FACTURE: ['numero', 'date', 'agentNom', 'clientNom', 'immatriculation', 'marque', 'modele', 'annee', 'chassis', 'kilometrage', 'numeroBonDeCommande', 'montantHT', 'montantTVA', 'montantTimbre', 'montantAutre', 'montantTTC', 'montantTotal', 'montantPaye', 'resteAPayer', 'remarque'],
-    PROFORMA: ['numero', 'clientNom', 'immatriculation', 'marque', 'modele', 'montantHT', 'montantTTC', 'remarque'],
+    FACTURE: ['numero', 'date', 'dateEcheance', 'agentNom', 'clientNom', 'immatriculation', 'marque', 'modele', 'annee', 'chassis', 'kilometrage', 'numeroBonDeCommande', 'montantHT', 'tauxRemiseClient', 'montantRemiseClient', 'montantTVA', 'montantTimbre', 'montantAutre', 'montantTTC', 'montantTotal', 'montantPaye', 'resteAPayer', 'remarque'],
+    PROFORMA: ['numero', 'clientNom', 'immatriculation', 'marque', 'modele', 'montantHT', 'tauxRemiseClient', 'montantRemiseClient', 'montantTTC', 'remarque'],
     DEVIS_PREVISIONNEL: ['numero', 'date', 'clientNom', 'immatriculation', 'marque', 'modele', 'montantTotal', 'reparations'],
     BON_COMMANDE: ['numero', 'date', 'statut', 'fournisseur', 'immatriculation', 'montantHT', 'montantTTC'],
     BON_RECEPTION: ['numero', 'date', 'statut', 'montantHT', 'montantTTC', 'remarque'],

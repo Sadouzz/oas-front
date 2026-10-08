@@ -111,6 +111,8 @@ export interface OrdreReparation {
   dateCreation: string;
   updatedAt: string;
   dateSortie: string | null;
+  dateRestitution?: string | null;
+  garantieMois?: number | null;
   statut: StatutOrdre;
   vehicule: {
     id: number;

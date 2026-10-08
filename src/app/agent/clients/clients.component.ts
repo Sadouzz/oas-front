@@ -7,6 +7,7 @@ import { VehiculeService } from '../vehicules/vehicule.service';
 import { BonDeSortieService } from '../bons-de-sortie/bon-de-sortie.service';
 import { FactureService, FactureModel } from '../factures/facture.service';
 import { ClientModel, ClientListResponse, VehiculeModel, extractContent, PageParams } from '../../shared/models/index';
+import { CompteFinancierPayload, CompteFinancierResponse, MouvementCreditResponse } from './models/client-model';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
@@ -49,6 +50,10 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   // Fidele modal
   showFideleModal = false;
   fideleClient: ClientListResponse | null = null;
+  compteFinancier: CompteFinancierResponse | null = null;
+  mouvementsCredit: MouvementCreditResponse[] = [];
+  showConditionsModal = false;
+  conditionsClient: ClientListResponse | null = null;
   
 
   // Risk modal (hard delete)
@@ -66,6 +71,12 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   detailTab: 'profil' | 'vehicules.component' = 'profil';
   clientVehicules: VehiculeModel[] = [];
   loadingVehicules = false;
+  vehiculesError = '';
+  vehiculePage = 1;
+  vehiculePageSize = 10;
+  vehiculeTotal = 0;
+  vehiculeTotalPages = 0;
+  private vehiculeLoadSequence = 0;
 
   createForm = this.fb.group({
     typeClient: ['PARTICULIER' as 'PARTICULIER' | 'ENTREPRISE', Validators.required],
@@ -104,12 +115,23 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   });
 
   fideleForm = this.fb.group({
-    montantRemise: [null as number | null],
-    montantPlafond: [null as number | null],
-    echeance: [null as number | null],
-    ninea: [''],
+    raisonSociale: ['', Validators.required],
+    ninea: ['', [Validators.required, Validators.pattern(/^[A-Za-z0-9]{3,40}$/)]],
+    remisePourcentage: [0 as number, [Validators.required, Validators.min(0), Validators.max(100)]],
+    montantPlafond: [null as number | null, Validators.min(0)],
+    echeance: [null as number | null, [Validators.min(1), Validators.max(3650)]],
+    montantPlafondEcheance: [null as number | null, Validators.min(0)],
     rccm: [''],
     rib: [''],
+    montantCredit: [null as number | null, Validators.min(0.01)],
+    commentaireCredit: [''],
+    actif: [true],
+  });
+
+  conditionsForm = this.fb.group({
+    plafondEncours: [null as number | null, Validators.min(0)],
+    echeanceJours: [null as number | null, [Validators.min(1), Validators.max(3650)]],
+    plafondPeriode: [null as number | null, Validators.min(0)],
   });
 
   ngOnInit() {
@@ -215,12 +237,15 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
     this.selectedClient = client;
     this.detailTab = 'vehicules.component';
     this.clientVehicules = [];
+    this.vehiculePage = 1;
     this.loadClientVehicules(client.id);
   }
 
   closeDetail() {
     this.selectedClient = null;
     this.clientVehicules = [];
+    this.vehiculesError = '';
+    this.vehiculeLoadSequence++;
   }
 
   setDetailTab(tab: 'profil' | 'vehicules.component') {
@@ -230,12 +255,33 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
     }
   }
 
-  loadClientVehicules(clientId: number) {
+  loadClientVehicules(clientId: number, page = this.vehiculePage) {
+    this.vehiculePage = page;
     this.loadingVehicules = true;
-    this.vehiculeService.getByClient(clientId).subscribe({
-      next: (v) => { this.clientVehicules = v; this.loadingVehicules = false; },
-      error: () => { this.loadingVehicules = false; },
+    this.vehiculesError = '';
+    const sequence = ++this.vehiculeLoadSequence;
+    this.vehiculeService.getByClientPage(clientId, page - 1, this.vehiculePageSize).subscribe({
+      next: (response) => {
+        if (sequence !== this.vehiculeLoadSequence || this.selectedClient?.id !== clientId) return;
+        this.clientVehicules = response.content ?? [];
+        this.vehiculeTotal = response.totalElements ?? this.clientVehicules.length;
+        this.vehiculeTotalPages = response.totalPages ?? Math.ceil(this.vehiculeTotal / this.vehiculePageSize);
+        this.loadingVehicules = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        if (sequence !== this.vehiculeLoadSequence) return;
+        this.loadingVehicules = false;
+        this.vehiculesError = 'Impossible de charger les véhicules de ce client.';
+        this.cdr.markForCheck();
+      },
     });
+  }
+
+  onVehiclePageChange(page: number) {
+    if (this.selectedClient && page >= 1 && page <= this.vehiculeTotalPages && page !== this.vehiculePage) {
+      this.loadClientVehicules(this.selectedClient.id, page);
+    }
   }
 
   // ── ARCHIVE / UNARCHIVE (direct, no modal) ────────────────────────
@@ -493,7 +539,10 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
         this.addingVehicle = false;
         this.vehicleForm.reset();
         this.loadAll();
-        if (this.selectedClient) this.loadClientVehicules(this.selectedClient.id);
+        if (this.selectedClient) {
+          this.vehiculePage = 1;
+          this.loadClientVehicules(this.selectedClient.id, 1);
+        }
       },
       error: (err: any) => { this.saving = false; this.errorMessage = err.error?.message || 'Erreur lors de la création du véhicule.'; }
     });
@@ -552,30 +601,38 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   }
 
   // ── FIDELITE ───────────────────────────────────────────────────
-  onFileSelected(event: Event, field: string) {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      const file = input.files[0];
-      // On simule l'upload en générant une fausse URL. 
-      // Dans un cas réel, vous feriez un appel API vers votre service de stockage
-      // et vous mettriez l'URL retournée dans le formulaire.
-      const fakeUrl = `https://stockage.oas.sn/documents/${field}/${file.name}`;
-      this.fideleForm.patchValue({ [field]: fakeUrl });
-    }
-  }
-
   openFideleModal(client: ClientListResponse) {
     this.fideleClient = client;
+    this.compteFinancier = null;
+    this.mouvementsCredit = [];
     this.fideleForm.patchValue({
-      montantRemise: client.montantRemise ?? 0,
+      raisonSociale: client.raisonSociale ?? '',
+      remisePourcentage: client.montantRemise ?? 0,
       montantPlafond: client.montantPlafond ?? null,
       echeance: client.echeance ?? null,
-      ninea: client.ninea ?? '',
+      montantPlafondEcheance: client.montantPlafondEcheance ?? null,
+      ninea: client.numeroEntreprise ?? '',
       rccm: client.rccm ?? '',
-      rib: client.rib ?? ''
+      rib: client.rib ?? '',
+      montantCredit: null,
+      commentaireCredit: ''
     });
     this.errorMessage = '';
     this.showFideleModal = true;
+    this.clientService.getCompteFinancier(client.id).subscribe({
+      next: account => {
+        this.compteFinancier = account;
+        this.fideleForm.patchValue({ actif: account.compteExiste ? account.compteActif : true });
+        if (account.compteExiste) {
+          this.clientService.getMouvementsCredit(client.id).subscribe({
+            next: rows => { this.mouvementsCredit = rows; this.cdr.markForCheck(); },
+            error: () => { this.mouvementsCredit = []; }
+          });
+        }
+        this.cdr.markForCheck();
+      },
+      error: () => { this.compteFinancier = null; }
+    });
   }
 
   closeFideleModal() {
@@ -585,16 +642,84 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
     this.errorMessage = '';
   }
 
+  openConditionsModal(client: ClientListResponse) {
+    this.conditionsClient = client;
+    this.conditionsForm.setValue({
+      plafondEncours: client.montantPlafond ?? null,
+      echeanceJours: client.echeance ?? null,
+      plafondPeriode: client.montantPlafondEcheance ?? null,
+    });
+    this.errorMessage = '';
+    this.showConditionsModal = true;
+  }
+
+  closeConditionsModal() {
+    this.showConditionsModal = false;
+    this.conditionsClient = null;
+    this.conditionsForm.reset();
+  }
+
+  saveConditions() {
+    if (this.conditionsForm.invalid || !this.conditionsClient || this.saving) return;
+    this.saving = true;
+    const value = this.conditionsForm.getRawValue();
+    this.clientService.updateConditionsFinancieres(this.conditionsClient.id, {
+      plafondEncours: value.plafondEncours,
+      echeanceJours: value.echeanceJours,
+      plafondPeriode: value.plafondPeriode,
+    }).subscribe({
+      next: () => {
+        this.saving = false;
+        this.showSuccess(`Conditions de paiement mises à jour pour ${this.conditionsClient?.firstName ?? 'le client'}.`);
+        this.closeConditionsModal();
+        this.loadAll();
+      },
+      error: (err: any) => {
+        this.saving = false;
+        this.errorMessage = err.error?.message || err.error || 'Impossible de mettre à jour les conditions financières.';
+      }
+    });
+  }
+
   saveFidele() {
     if (this.fideleForm.invalid || !this.fideleClient || this.saving) return;
     this.saving = true;
     const raw = this.fideleForm.getRawValue();
-    this.clientService.passerFidele(this.fideleClient.id, raw).subscribe({
+    if (Number(raw.montantCredit ?? 0) > 0 && !raw.actif) {
+      this.errorMessage = 'Activez le compte financier avant d’y ajouter un crédit.';
+      return;
+    }
+    const id = this.fideleClient.id;
+    const payload: CompteFinancierPayload = {
+      raisonSociale: raw.raisonSociale!.trim(),
+      ninea: raw.ninea!.trim(),
+      remisePourcentage: Number(raw.remisePourcentage),
+      plafondCredit: raw.montantPlafond,
+      echeanceJours: raw.echeance,
+      plafondPeriode: raw.montantPlafondEcheance,
+      rccm: raw.rccm?.trim() || null,
+      rib: raw.rib?.trim() || null,
+      actif: raw.actif ?? true,
+    };
+    const montantCredit = Number(raw.montantCredit ?? 0);
+    this.clientService.configurerCompteFinancier(id, payload).subscribe({
       next: (res) => {
-        this.saving = false;
-        this.showSuccess(`Client ${this.fideleClient!.firstName} est maintenant fidèle !`);
-        this.closeFideleModal();
-        this.loadAll();
+        const complete = () => {
+          this.saving = false;
+          this.showSuccess(`Compte financier enregistré pour ${this.fideleClient?.firstName ?? 'le client'}.`);
+          this.closeFideleModal();
+          this.loadAll();
+        };
+        if (montantCredit > 0) {
+          this.clientService.ajouterCredit(id, montantCredit, raw.commentaireCredit || undefined).subscribe({
+            next: () => complete(),
+            error: (err: any) => {
+              this.saving = false;
+              this.errorMessage = err.error?.message || 'Le compte a été enregistré, mais le crédit n’a pas pu être ajouté. Réessayez depuis le compte.';
+              this.clientService.getCompteFinancier(id).subscribe({ next: account => this.compteFinancier = account });
+            }
+          });
+        } else complete();
       },
       error: (err: any) => {
         this.saving = false;

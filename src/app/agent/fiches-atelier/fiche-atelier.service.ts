@@ -23,6 +23,10 @@ export class FicheAtelierService {
     return this.http.get<FicheAtelierDetailsResponse>(`${this.api}/${id}`);
   }
 
+  getSignedPdf(id: number): Observable<Blob> {
+    return this.http.get(`${this.api}/${id}/pdf`, { responseType: 'blob' });
+  }
+
   getByRendezVousId(rendezVousId: number): Observable<FicheAtelierDetailsResponse> {
     return this.http.get<FicheAtelierDetailsResponse>(`${this.api}/rendezvous/${rendezVousId}`);
   }

@@ -20,6 +20,12 @@
       <button (click)="successMessage = ''" class="text-green-600 hover:text-green-900 cursor-pointer font-bold">✕</button>
     </div>
   }
+  @if (warningMessage) {
+    <div class="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
+      <span>{{ warningMessage }}</span>
+      <button (click)="warningMessage = ''" class="ml-3 text-amber-800 hover:text-amber-950 cursor-pointer font-bold">✕</button>
+    </div>
+  }
   @if (errorMessage) {
     <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm flex items-center justify-between">
       <span>{{ errorMessage }}</span>

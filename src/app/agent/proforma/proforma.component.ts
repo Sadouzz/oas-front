@@ -95,6 +95,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
   statutFilter = '';
   successMessage = '';
   errorMessage = '';
+  warningMessage = '';
 
   // Formulaire d'en-tête / métadonnées
   form: FormGroup = this.fb.group({
@@ -886,7 +887,12 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
             });
           }
         }
-        this.notify(this.isNew ? 'Proforma créé avec succès.' : 'Proforma mis à jour avec succès.');
+        const warnings: string[] = savedProforma?.avertissementsFinanciers ?? [];
+        if (warnings.length) {
+          this.saving = false;
+          this.warningMessage = `${this.isNew ? 'Proforma créé' : 'Proforma mis à jour'} avec avertissement : ${warnings.join(' ')}`;
+          setTimeout(() => this.warningMessage = '', 9000);
+        } else this.notify(this.isNew ? 'Proforma créé avec succès.' : 'Proforma mis à jour avec succès.');
       },
       error: (err) => {
         this.saving = false;

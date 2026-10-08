@@ -178,7 +178,7 @@ export class ClientVehiculesComponent implements OnInit {
       error: (err: any) => {
         this.saving = false;
         const message = err.error?.message || err.message || "Une erreur est survenue lors de l'enregistrement.";
-        if (err.status === 409 || /immatriculation.*(exist|déjà)|déjà exist/i.test(message)) {
+        if (/immatriculation.*(exist|déjà)|déjà exist/i.test(message)) {
           this.duplicateVehicleData = {
             immatriculation: String(this.form.value.immatriculation || '').trim().toUpperCase(),
             numeroChassis: this.form.value.numeroChassis || null,

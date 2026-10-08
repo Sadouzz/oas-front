@@ -31,6 +31,12 @@ export class VehiculeService {
     return this.http.get<VehiculeModel[]>(`${this.api}/client/${clientId}`);
   }
 
+  getByClientPage(clientId: number, page: number, size = 10): Observable<import('../../shared/models').PageResponse<VehiculeModel>> {
+    return this.http.get<import('../../shared/models').PageResponse<VehiculeModel>>(`${this.api}/client/${clientId}`, {
+      params: { page: page.toString(), size: size.toString() },
+    });
+  }
+
   create(data: VehiculeRequest): Observable<VehiculeModel> {
     return this.http.post<VehiculeModel>(`${this.api}/create`, data);
   }
