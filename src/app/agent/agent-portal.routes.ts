@@ -37,9 +37,26 @@ export const AGENT_PORTAL_ROUTES: Routes = [
             import('./vehicules/vehicules.component').then(m => m.VehiculesComponent),
         },
         {
-          path: 'pieces-detachees',
+          path: 'pdp',
           loadComponent: () =>
             import('./pieces-detachees/pieces-detachees.component').then(m => m.PiecesDetacheesComponent),
+          data: { type: 'PDP' }
+        },
+        {
+          path: 'pieces-detachees',
+          redirectTo: 'pdp',
+          pathMatch: 'full'
+        },
+        {
+          path: 'pdg',
+          loadComponent: () =>
+            import('./pieces-detachees/pieces-detachees.component').then(m => m.PiecesDetacheesComponent),
+          data: { type: 'PDG' }
+        },
+        {
+          path: 'pieces-generees',
+          redirectTo: 'pdg',
+          pathMatch: 'full'
         },
         {
           path: 'seuil-alertes',

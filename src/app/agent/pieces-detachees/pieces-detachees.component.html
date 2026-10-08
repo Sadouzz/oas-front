@@ -1,23 +1,101 @@
 <div class="flex-1 min-w-0">
   <div class="flex items-center justify-between mb-6">
     <div>
-      <h1 class="text-2xl font-bold text-oas-ink">Catalogue des pièces détachées</h1>
+      <h1 class="text-2xl font-bold text-oas-ink">
+        @if (filterType === 'PDG') {
+          Catalogue des PDG
+        } @else if (filterType === 'PDP') {
+          Catalogue des PDP
+        } @else {
+          Catalogue des pièces détachées
+        }
+      </h1>
       <p class="text-sm text-oas-muted mt-1">{{ paged.length }} pièce(s) affichée(s) sur {{ totalElements }}</p>
     </div>
-    @if (canEdit) {
-    <button (click)="openCreate()"
-      class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-11 rounded-lg flex items-center gap-2 transition cursor-pointer">
-      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-      </svg>
-      Ajouter une pièce
-    </button>
-    }
+    <div class="flex items-center gap-2.5">
+      <!-- 1. Bouton Export Excel -->
+      <div class="relative">
+        <button type="button" 
+          (click)="toggleExcelMenu()"
+          class="bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200 hover:border-emerald-300 font-semibold px-3.5 h-11 rounded-lg flex items-center gap-2 transition cursor-pointer shadow-sm text-sm">
+          <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h7.5c.621 0 1.125-.504 1.125-1.125m-9.75 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-7.5A1.125 1.125 0 0112 18.375m9.75-12.75c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125m19.5 0v1.5c0 .621-.504 1.125-1.125 1.125M2.25 5.625v1.5c0 .621.504 1.125 1.125 1.125m0 0h17.25m-17.25 0h7.5c.621 0 1.125.504 1.125 1.125M3.375 8.25c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125m17.25-3.75h-7.5c-.621 0-1.125.504-1.125 1.125m8.625-1.125c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125m-17.25 0h7.5m-7.5 0c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125M12 10.875v7.5m0-7.5a1.125 1.125 0 011.125-1.125h7.5c.621 0 1.125.504 1.125 1.125m-9.75 0V18.375m0-7.5a1.125 1.125 0 00-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125m9.75 7.5v-7.5" />
+          </svg>
+          <span>Excel</span>
+          @if (isSuperAgentOrMaster && filterType !== 'PDG') {
+            <svg class="w-3.5 h-3.5 text-emerald-600 transition-transform" [class.rotate-180]="excelMenuOpen" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          }
+        </button>
+
+        @if (excelMenuOpen && isSuperAgentOrMaster && filterType !== 'PDG') {
+          <div (click)="excelMenuOpen = false" class="fixed inset-0 z-40"></div>
+          <div class="absolute right-0 mt-2 w-48 bg-white border border-oas-line rounded-xl shadow-xl z-50 py-1 overflow-hidden">
+            <button type="button" (click)="exportExcel(false); excelMenuOpen = false"
+              class="w-full text-left px-3.5 py-2 text-xs font-medium text-oas-ink hover:bg-emerald-50 flex items-center justify-between transition cursor-pointer">
+              <span>Sans prix</span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">Standard</span>
+            </button>
+            <button type="button" (click)="exportExcel(true); excelMenuOpen = false"
+              class="w-full text-left px-3.5 py-2 text-xs font-medium text-oas-ink hover:bg-emerald-50 flex items-center justify-between transition cursor-pointer border-t border-slate-100">
+              <span>Avec prix</span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">Complet</span>
+            </button>
+          </div>
+        }
+      </div>
+
+      <!-- 2. Bouton Export PDF -->
+      <div class="relative">
+        <button type="button" 
+          (click)="togglePdfMenu()"
+          class="bg-white hover:bg-red-50 text-red-700 border border-red-200 hover:border-red-300 font-semibold px-3.5 h-11 rounded-lg flex items-center gap-2 transition cursor-pointer shadow-sm text-sm">
+          <svg class="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+          </svg>
+          <span>PDF</span>
+          @if (isSuperAgentOrMaster && filterType !== 'PDG') {
+            <svg class="w-3.5 h-3.5 text-red-500 transition-transform" [class.rotate-180]="pdfMenuOpen" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          }
+        </button>
+
+        @if (pdfMenuOpen && isSuperAgentOrMaster && filterType !== 'PDG') {
+          <div (click)="pdfMenuOpen = false" class="fixed inset-0 z-40"></div>
+          <div class="absolute right-0 mt-2 w-48 bg-white border border-oas-line rounded-xl shadow-xl z-50 py-1 overflow-hidden">
+            <button type="button" (click)="exportPdf(false); pdfMenuOpen = false"
+              class="w-full text-left px-3.5 py-2 text-xs font-medium text-oas-ink hover:bg-red-50 flex items-center justify-between transition cursor-pointer">
+              <span>Sans prix</span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">Standard</span>
+            </button>
+            <button type="button" (click)="exportPdf(true); pdfMenuOpen = false"
+              class="w-full text-left px-3.5 py-2 text-xs font-medium text-oas-ink hover:bg-red-50 flex items-center justify-between transition cursor-pointer border-t border-slate-100">
+              <span>Avec prix</span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">Complet</span>
+            </button>
+          </div>
+        }
+      </div>
+
+      <!-- 3. Bouton Ajouter une pièce -->
+      @if (canEdit) {
+      <button (click)="openCreate()"
+        class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-11 rounded-lg flex items-center gap-2 transition cursor-pointer">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+        </svg>
+        {{ filterType === 'PDG' ? 'Ajouter une PDG' : 'Ajouter une PDP' }}
+      </button>
+      }
+    </div>
   </div>
 
   <app-alert [success]="successMessage" [error]="errorMessage" />
 
   <!-- KPI cards -->
+  @if (filterType !== 'PDG') {
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
     <div class="bg-white rounded-lg border border-oas-line p-4 shadow-sm">
       <div class="flex items-center gap-3 mb-2">
@@ -75,28 +153,26 @@
       <p class="text-[10px] text-oas-faint mt-0.5">Articles en rupture de stock</p>
     </div>
   </div>
-
-  <!-- Filtres par depot (tabs/buttons) -->
-  <div class="mb-4">
-    <span class="text-xs font-semibold text-oas-muted block mb-1.5">Dépôts :</span>
-    <div class="flex flex-wrap gap-2">
-      <button (click)="setFilterDepot('')"
-        class="px-3 py-1.5 rounded-lg text-xs font-bold border transition cursor-pointer"
-        [ngClass]="filterDepot === '' ? 'bg-oas-accent text-white border-oas-accent' : 'bg-white text-oas-muted border-oas-line hover:border-oas-accent hover:text-oas-accent'">
-        Tous
-      </button>
-      @for (depot of depotsFilters; track depot) {
-      <button (click)="setFilterDepot(depot)"
-        class="px-3 py-1.5 rounded-lg text-xs font-bold border transition cursor-pointer"
-        [ngClass]="filterDepot === depot ? 'bg-oas-accent text-white border-oas-accent' : 'bg-white text-oas-muted border-oas-line hover:border-oas-accent hover:text-oas-accent'">
-        {{ depot }}
-      </button>
-      }
+  } @else {
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-5">
+    <div class="bg-white rounded-lg border border-oas-line p-4 shadow-sm">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+        </div>
+        <span class="text-xs font-semibold text-oas-muted">Total articles PDG</span>
+      </div>
+      <p class="text-2xl font-extrabold text-oas-ink">{{ totalElements }}</p>
+      <p class="text-[10px] text-oas-faint mt-0.5">Pièces générées actives (sans suivi d'inventaire ni historique stock)</p>
     </div>
   </div>
+  }
 
   <!-- Filtres -->
-  <div class="bg-white rounded-lg border border-oas-line p-3 mb-4 shadow-sm flex gap-3 flex-wrap">
+  <div class="bg-white rounded-lg border border-oas-line p-3 mb-4 shadow-sm flex items-center gap-3 flex-wrap">
     <div class="relative flex-1 min-w-48">
       <span class="absolute left-3 top-1/2 -translate-y-1/2 text-oas-muted">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -104,16 +180,25 @@
         </svg>
       </span>
       <input type="text" (input)="onSearch($event)" placeholder="Rechercher par référence, n° série, catégorie..."
-        class="w-full pl-9 pr-4 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition" />
+        class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition" />
     </div>
-    <select (change)="onTypeFilter($event)"
-      class="px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
-      <option value="">Tous types</option>
-      <option value="PDP">PDP</option>
-      <option value="PDG">PDG</option>
-    </select>
+
+    <!-- Filtre Dépôt (Searchable Select, masqué pour PDG) -->
+    @if (filterType !== 'PDG') {
+    <div class="w-60 flex-shrink-0">
+      <app-searchable-select
+        [options]="depotsOptions"
+        bindValue="nom"
+        bindLabel="nom"
+        placeholder="Tous les dépôts"
+        [ngModel]="filterDepot"
+        (change)="onDepotChange($event)">
+      </app-searchable-select>
+    </div>
+    }
+
     <select (change)="onStatutFilter($event)"
-      class="px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
+      class="px-3 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
       <option value="">Tous statuts</option>
       <option value="ACTIF">Actif</option>
       <!-- <option value="INACTIF">Inactif</option> -->
@@ -126,16 +211,24 @@
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-oas-line">
-            <th class="text-left text-xs text-oas-muted px-5 py-3">Type</th>
-            <th class="text-left text-xs text-oas-muted px-5 py-3">Réf</th>
-            <th class="text-left text-xs text-oas-muted px-5 py-3">Numéro</th>
-            <th class="text-left text-xs text-oas-muted px-5 py-3">Désignation</th>
+            <!-- <th class="text-left text-xs text-oas-muted px-5 py-3">Type</th> -->
+            <th class="text-left text-xs text-oas-muted px-5 py-3 w-48 min-w-[160px]">Réf</th>
+            <!-- <th class="text-left text-xs text-oas-muted px-5 py-3">Numéro</th> -->
+            <th class="text-left text-xs text-oas-muted px-5 py-3 min-w-[280px]">Désignation</th>
+            @if (filterType !== 'PDG') {
             <th class="text-left text-xs text-oas-muted px-5 py-3">Dépôt</th>
+            }
             <th class="text-left text-xs text-oas-muted px-5 py-3">Catégorie</th>
             <th class="text-left text-xs text-oas-muted px-5 py-3">Stock magasin</th>
             <th class="text-left text-xs text-oas-muted px-5 py-3">Stock atelier</th>
-            <th class="text-left text-xs text-oas-muted px-5 py-3">Qté</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Stock réel</th>
+            @if (filterType !== 'PDG' && isSuperAgentOrMaster) {
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Prix en gros</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Pourcentage %</th>
+            <th class="text-left text-xs text-oas-muted px-5 py-3">Prix détail</th>
+            } @else {
             <th class="text-left text-xs text-oas-muted px-5 py-3">Prix unitaire</th>
+            }
             @if (canEdit) {
             <th class="text-right text-xs text-oas-muted px-5 py-3">Actions</th>
             }
@@ -144,7 +237,7 @@
         <tbody>
           @if (loading) {
           <tr>
-            <td [attr.colspan]="canEdit ? 12 : 11" class="text-center py-14 text-oas-muted">
+            <td [attr.colspan]="tableColumnsCount" class="text-center py-14 text-oas-muted">
               <svg class="animate-spin h-5 w-5 mx-auto mb-2 text-oas-accent" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
@@ -154,16 +247,18 @@
           } @else {
           @for (p of paged; track p.id) {
           <tr class="hover:bg-oas-bg transition border-b border-oas-line">
-            <td class="px-5 py-4">
+            <!-- <td class="px-5 py-4">
               <span
                 class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold {{ typeBadge(p.type) }}">{{
                 p.type }}</span>
-            </td>
-            <td class="px-5 py-4 font-semibold text-oas-ink">{{ p.reference }}</td>
-            <td class="px-5 py-4 font-mono text-xs text-oas-accent">{{ p.numero }}</td>
-            <td class="px-5 py-4 font-mono text-xs text-oas-muted">{{ p.designation }}</td>
-            <td class="px-5 py-4 text-sm text-oas-ink2">{{ p.depot?.nom || p.categorie?.depot?.nom || '-' }}</td>
-            <td class="px-5 py-4 text-sm text-oas-ink2">{{ p.categorie?.nom || p.categorie }}</td>
+            </td> -->
+            <td class="px-5 py-4 font-semibold text-oas-ink min-w-[160px]">{{ p.reference }}</td>
+            <!-- <td class="px-5 py-4 font-mono text-xs text-oas-accent">{{ p.numero }}</td> -->
+            <td class="px-5 py-4 text-xs font-medium text-oas-ink2 min-w-[280px]">{{ p.designation }}</td>
+            @if (filterType !== 'PDG') {
+            <td class="px-5 py-4 text-sm text-oas-ink2">{{ getDepotNom(p) }}</td>
+            }
+            <td class="px-5 py-4 text-sm text-oas-ink2">{{ getCatNom(p) }}</td>
             <td class="px-5 py-4">
               @if (p.type === 'PDP') {
               <span
@@ -180,20 +275,32 @@
             <td class="px-5 py-4 font-semibold text-oas-ink">
               @if (p.type === 'PDP') { {{ p.qteReelle ?? 0 }} } @else { <span class="text-oas-faint">–</span> }
             </td>
-            <td class="px-5 py-4 text-sm text-oas-ink2">
+            @if (filterType !== 'PDG' && isSuperAgentOrMaster) {
+            <td class="px-5 py-4 text-sm text-oas-ink2 whitespace-nowrap">
+              @if (p.type === 'PDP' && p.prixGros != null) {
+              {{ p.prixGros | number:'1.0-0' }} FCFA
+              } @else { <span class="text-oas-faint">–</span> }
+            </td>
+            <td class="px-5 py-4 text-sm text-oas-ink2 font-semibold">
+              @if (p.type === 'PDP' && p.pourcentage != null) {
+              {{ p.pourcentage }}%
+              } @else { <span class="text-oas-faint">–</span> }
+            </td>
+            <td class="px-5 py-4 text-sm text-oas-ink font-semibold whitespace-nowrap">
               @if (p.type === 'PDP' && (p.prixUnitaire != null || p.prix != null)) {
               {{ (p.prixUnitaire ?? p.prix) | number:'1.0-0' }} FCFA
               } @else { <span class="text-oas-faint">–</span> }
             </td>
+            } @else {
+            <td class="px-5 py-4 text-sm text-oas-ink2 whitespace-nowrap">
+              @if (p.prixUnitaire != null || p.prix != null) {
+              {{ (p.prixUnitaire ?? p.prix) | number:'1.0-0' }} FCFA
+              } @else { <span class="text-oas-faint">–</span> }
+            </td>
+            }
             @if (canEdit) {
             <td class="px-5 py-4">
               <div class="flex items-center justify-end gap-1">
-                @if (p.type === 'PDP') {
-                <button (click)="commanderPiece(p)" title="Commander (Réapprovisionnement)"
-                  class="p-1.5 rounded-lg hover:bg-orange-50 text-oas-muted hover:text-oas-accent transition cursor-pointer">
-                  <svg lucideShoppingCart class="w-4 h-4"></svg>
-                </button>
-                }
                 <button (click)="openEdit(p)" title="Modifier"
                   class="p-1.5 rounded-lg hover:bg-oas-info-bg text-oas-muted hover:text-oas-info transition cursor-pointer">
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -232,7 +339,18 @@
           </tr>
           } @empty {
           <tr>
-            <td [attr.colspan]="canEdit ? 10 : 9" class="text-center py-14 text-oas-muted text-sm">Aucune pièce trouvée
+            <td [attr.colspan]="tableColumnsCount" class="text-center py-12 text-oas-muted text-sm">
+              <div class="flex flex-col items-center justify-center gap-2">
+                <svg class="w-10 h-10 text-oas-muted/40 stroke-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
+                <span class="font-semibold text-oas-ink text-base">
+                  {{ searchTerm ? 'Aucune pièce trouvée pour « ' + searchTerm + ' »' : 'Aucune pièce trouvée' }}
+                </span>
+                @if (searchTerm) {
+                  <p class="text-xs text-oas-muted">Vérifiez l'orthographe ou modifiez les filtres de recherche.</p>
+                }
+              </div>
             </td>
           </tr>
           }
@@ -248,10 +366,10 @@
 </div>
 
 @if (showModal) {
-<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-  <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-    <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line sticky top-0 bg-white">
-      <h3 class="font-bold text-oas-ink">{{ isNew ? 'Ajouter une pièce' : 'Modifier la pièce' }}</h3>
+<div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg my-auto relative overflow-visible">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line bg-white rounded-t-2xl">
+      <h3 class="font-bold text-oas-ink">{{ isNew ? (filterType === 'PDG' ? 'Ajouter une PDG' : 'Ajouter une PDP') : (filterType === 'PDG' ? 'Modifier la PDG' : 'Modifier la PDP') }}</h3>
       <button (click)="closeModal()" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted cursor-pointer">
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -269,42 +387,51 @@
       }
 
       <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="block text-sm font-semibold text-oas-ink mb-1">Dépôt (optionnel)</label>
-          <app-searchable-select formControlName="depotId" [options]="depots" bindValue="id" bindLabel="nom"
-            placeholder="Filtrer les catégories par dépôt...">
-          </app-searchable-select>
-        </div>
-        <div>
-          <label class="block text-sm font-semibold text-oas-ink mb-1">Catégorie *</label>
+        @if (selectedType === 'PDP') {
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-sm font-semibold text-oas-ink">Dépôt physique (optionnel)</label>
+              <button type="button" (click)="openQuickAddDepot()"
+                class="text-xs font-bold text-oas-accent hover:text-oas-accent-dark flex items-center gap-0.5 cursor-pointer transition">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+                <span>Nouveau</span>
+              </button>
+            </div>
+            <app-searchable-select formControlName="depotId" [options]="physicalDepots" bindValue="id" bindLabel="nom"
+              placeholder="Filtrer par dépôt physique..." [addNewLabel]="'Ajouter un dépôt...'" (addNew)="openQuickAddDepot()">
+            </app-searchable-select>
+          </div>
+        }
+        <div [class.col-span-2]="selectedType === 'PDG'">
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-sm font-semibold text-oas-ink">Catégorie *</label>
+            <button type="button" (click)="openQuickAddCategorie()"
+              class="text-xs font-bold text-oas-accent hover:text-oas-accent-dark flex items-center gap-0.5 cursor-pointer transition">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+              <span>Nouvelle</span>
+            </button>
+          </div>
           <app-searchable-select formControlName="categorie" [options]="filteredCategories" bindValue="nom"
-            bindLabel="nom" placeholder="Sélectionner une catégorie...">
+            bindLabel="nom" placeholder="Sélectionner une catégorie..." [addNewLabel]="'Ajouter une catégorie...'" (addNew)="openQuickAddCategorie()">
           </app-searchable-select>
         </div>
       </div>
 
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-semibold text-oas-ink mb-1">Type *</label>
-          <select formControlName="type"
-            class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink">
-            @for (t of types; track t) {
-
-            <option [value]="t">{{ t }}</option>
-
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-sm font-semibold text-oas-ink">Réf *</label>
+            @if (!isNew) {
+              <span class="text-[11px] text-oas-muted italic">Non modifiable</span>
             }
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-semibold text-oas-ink mb-1">Réf *</label>
-          <input type="text" formControlName="reference"
+          </div>
+          <input type="text" formControlName="reference" [readonly]="!isNew"
             class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
+            [class.bg-slate-100]="!isNew"
+            [class.text-slate-500]="!isNew"
+            [class.cursor-not-allowed]="!isNew"
             [class.border-oas-bad]="f['reference'].invalid && f['reference'].touched" />
         </div>
-      </div>
-
-
-      <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-semibold text-oas-ink mb-1">Désignation *</label>
           <input type="text" formControlName="designation"
@@ -325,17 +452,45 @@
           </div>
         </div>
         }
+        @if (isSuperAgentOrMaster) {
+        <div class="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1">Prix en gros (FCFA)</label>
+            <input type="number" formControlName="prixGros" min="0" placeholder="Ex: 50000"
+              class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition" />
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1">Pourcentage (%)</label>
+            <input type="number" formControlName="pourcentage" min="0" placeholder="Ex: 20"
+              class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition" />
+          </div>
+        </div>
+        }
+
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-sm font-semibold text-oas-ink mb-1">Prix (FCFA)</label>
-            <input type="number" formControlName="prix" min="0"
+            <label class="block text-sm font-semibold text-oas-ink mb-1">{{ isSuperAgentOrMaster ? 'Prix de vente / détail (FCFA)' : 'Prix de vente (FCFA)' }}</label>
+            <input type="number" formControlName="prixUnitaire" min="0" placeholder="Ex: 60000"
               class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition" />
+            @if (isSuperAgentOrMaster) {
+              <p class="text-[11px] text-oas-muted mt-1">Calculé auto : Prix en gros + (Prix en gros × %)</p>
+            }
           </div>
           <div>
             <label class="block text-sm font-semibold text-oas-ink mb-1">Seuil min.</label>
-            <input type="number" formControlName="seuilMinimum" min="0"
+            <input type="number" formControlName="seuilMinimum" min="0" placeholder="Ex: 5"
               class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition" />
           </div>
+        </div>
+      </div>
+      }
+
+      @if (selectedType === 'PDG') {
+      <div class="border-t border-oas-line pt-4">
+        <div>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Prix de vente (FCFA) <span class="text-xs text-oas-muted font-normal">(Optionnel)</span></label>
+          <input type="number" formControlName="prixUnitaire" min="0" placeholder="Ex: 50000"
+            class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition" />
         </div>
       </div>
       }
@@ -346,6 +501,101 @@
         <button type="submit" [disabled]="saving"
           class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-10 rounded-lg flex items-center transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm">{{
           saving ? 'Enregistrement...' : (isNew ? 'Créer' : 'Enregistrer') }}</button>
+      </div>
+    </form>
+  </div>
+</div>
+}
+
+<!-- Modale d'ajout rapide de Dépôt -->
+@if (showQuickDepotModal) {
+<div class="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4 overflow-y-auto">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md my-auto relative">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-oas-line">
+      <h3 class="font-bold text-oas-ink text-base flex items-center gap-2">
+        <span class="w-7 h-7 rounded-lg bg-oas-accent/15 text-oas-accent flex items-center justify-center text-xs">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+        </span>
+        Nouveau dépôt physique
+      </h3>
+      <button type="button" (click)="closeQuickAddDepot()" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted cursor-pointer">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+      </button>
+    </div>
+    <form (ngSubmit)="saveQuickDepot()" class="px-5 py-4 space-y-3.5">
+      @if (quickDepotError) {
+      <div class="p-3 bg-oas-bad-bg text-oas-bad border border-oas-bad/20 rounded-lg text-xs">
+        {{ quickDepotError }}
+      </div>
+      }
+      <div>
+        <label class="block text-xs font-semibold text-oas-ink mb-1">Nom du dépôt *</label>
+        <input type="text" [(ngModel)]="quickDepotNom" name="quickDepotNom" required placeholder="Ex: Dépôt Annexe"
+          class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40" />
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-oas-ink mb-1">Description (optionnel)</label>
+        <input type="text" [(ngModel)]="quickDepotDescription" name="quickDepotDescription" placeholder="Ex: Stock pièces détachées"
+          class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40" />
+      </div>
+      <div class="flex justify-end gap-2 pt-2 border-t border-oas-line">
+        <button type="button" (click)="closeQuickAddDepot()"
+          class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-3.5 h-9 rounded-lg border border-oas-line text-xs cursor-pointer">Annuler</button>
+        <button type="submit" [disabled]="quickDepotSaving || !quickDepotNom.trim()"
+          class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-9 rounded-lg text-xs disabled:opacity-50 flex items-center gap-1.5 cursor-pointer">
+          {{ quickDepotSaving ? 'Création...' : 'Créer le dépôt' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+}
+
+<!-- Modale d'ajout rapide de Catégorie -->
+@if (showQuickCatModal) {
+<div class="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4 overflow-y-auto">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md my-auto relative">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-oas-line">
+      <h3 class="font-bold text-oas-ink text-base flex items-center gap-2">
+        <span class="w-7 h-7 rounded-lg bg-oas-accent/15 text-oas-accent flex items-center justify-center text-xs">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+        </span>
+        Nouvelle catégorie
+      </h3>
+      <button type="button" (click)="closeQuickAddCategorie()" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted cursor-pointer">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+      </button>
+    </div>
+    <form (ngSubmit)="saveQuickCategorie()" class="px-5 py-4 space-y-3.5">
+      @if (quickCatError) {
+      <div class="p-3 bg-oas-bad-bg text-oas-bad border border-oas-bad/20 rounded-lg text-xs">
+        {{ quickCatError }}
+      </div>
+      }
+      <div>
+        <label class="block text-xs font-semibold text-oas-ink mb-1">Nom de la catégorie *</label>
+        <input type="text" [(ngModel)]="quickCatNom" name="quickCatNom" required placeholder="Ex: Filtrage, Freinage..."
+          class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40" />
+      </div>
+      @if (selectedType === 'PDP') {
+      <div>
+        <label class="block text-xs font-semibold text-oas-ink mb-1">Dépôt associé</label>
+        <select [(ngModel)]="quickCatDepotId" name="quickCatDepotId"
+          class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40">
+          <option [ngValue]="null">Aucun (tous dépôts)</option>
+          @for (d of physicalDepots; track d.id) {
+            <option [ngValue]="d.id">{{ d.nom }}</option>
+          }
+        </select>
+      </div>
+      }
+      <div class="flex justify-end gap-2 pt-2 border-t border-oas-line">
+        <button type="button" (click)="closeQuickAddCategorie()"
+          class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-3.5 h-9 rounded-lg border border-oas-line text-xs cursor-pointer">Annuler</button>
+        <button type="submit" [disabled]="quickCatSaving || !quickCatNom.trim()"
+          class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-9 rounded-lg text-xs disabled:opacity-50 flex items-center gap-1.5 cursor-pointer">
+          {{ quickCatSaving ? 'Création...' : 'Créer la catégorie' }}
+        </button>
       </div>
     </form>
   </div>

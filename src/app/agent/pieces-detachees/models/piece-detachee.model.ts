@@ -2,6 +2,8 @@ export interface CategoriePiece {
   id?: number;
   nom: string;
   depot?: { id: number; nom?: string };
+  depots?: Depot[] | { id?: number; nom?: string }[];
+  depotIds?: number[];
   isArchived?: boolean;
 }
 
@@ -27,6 +29,7 @@ export interface PieceDetache {
   stockAtelier?: number;
   stockMagasin?: number;
   prix?: number;
+  prixGros?: number;
   prixUnitaire?: number;
   seuilMinimum?: number;
   estUtilise?: boolean;
@@ -37,11 +40,15 @@ export interface PieceDetacheRequest {
   reference: string;
   designation: string;
   categorie: string;
-  pourcentage?: number;
-  statut?: 'ACTIF' | 'INACTIF';
+  depotId?: number | null;
+  depot?: string | null;
   stockMagasin?: number | null;
-  prix?: number | null;
+  prixUnitaire?: number | null;
+  prixGros?: number | null;
+  pourcentage?: number | null;
   seuilMinimum?: number | null;
+  statut?: 'ACTIF' | 'INACTIF';
+  prix?: number | null; // Compatibility
 }
 
 export interface PieceMouvementListResponse {

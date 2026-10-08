@@ -5,11 +5,12 @@ import { CategoriePieceService } from '../../pieces-detachees/categorie-piece.se
 import { DepotService } from '../../pieces-detachees/depot.service';
 import { CategoriePiece, Depot } from '../../../shared/models';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
+import { SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
 
 @Component({
   selector: 'app-categories',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent],
+  imports: [CommonModule, FormsModule, PaginationComponent, SearchableSelectComponent],
   templateUrl: './categories.component.html'
 })
 export class CategoriesComponent implements OnInit {
@@ -28,7 +29,12 @@ export class CategoriesComponent implements OnInit {
   totalPages = 1;
   search = '';
 
-  newCategorie: CategoriePiece = { nom: '', depot: { id: 0 } };
+  newCategorieNom = '';
+  selectedDepotId: number | null = null;
+
+  get physicalDepots(): Depot[] {
+    return this.depots.filter(d => d.nom?.toUpperCase() !== 'PDG');
+  }
 
   ngOnInit() {
     this.loadDepots();
@@ -40,8 +46,8 @@ export class CategoriesComponent implements OnInit {
       next: (res: any) => {
         const list = Array.isArray(res) ? res : (res?.content || res?.data?.content || res?.data || []);
         this.depots = list;
-        if (this.depots.length > 0 && (!this.newCategorie.depot || this.newCategorie.depot.id === 0)) {
-          this.newCategorie.depot = { id: this.depots[0].id || 0 };
+        if (!this.selectedDepotId && this.physicalDepots.length > 0) {
+          this.selectedDepotId = this.physicalDepots[0].id || null;
         }
         this.cdr.markForCheck();
       }
@@ -58,7 +64,8 @@ export class CategoriesComponent implements OnInit {
             const term = this.search.trim().toLowerCase();
             filtered = res.filter((c: CategoriePiece) =>
               (c.nom && c.nom.toLowerCase().includes(term)) ||
-              (c.depot?.nom && c.depot.nom.toLowerCase().includes(term))
+              (c.depot?.nom && c.depot.nom.toLowerCase().includes(term)) ||
+              (c.depots && (c.depots as any[]).some(d => d?.nom && d.nom.toLowerCase().includes(term)))
             );
           }
           this.totalElements = filtered.length;
@@ -78,7 +85,8 @@ export class CategoriesComponent implements OnInit {
             const term = this.search.trim().toLowerCase();
             list = list.filter((c: CategoriePiece) =>
               (c.nom && c.nom.toLowerCase().includes(term)) ||
-              (c.depot?.nom && c.depot.nom.toLowerCase().includes(term))
+              (c.depot?.nom && c.depot.nom.toLowerCase().includes(term)) ||
+              (c.depots && (c.depots as any[]).some(d => d?.nom && d.nom.toLowerCase().includes(term)))
             );
           }
           this.totalElements = list.length;
@@ -128,13 +136,16 @@ export class CategoriesComponent implements OnInit {
   }
 
   saveCategorie() {
-    if (!this.newCategorie.nom?.trim() || !this.newCategorie.depot?.id) return;
-    this.categorieService.create(this.newCategorie).subscribe({
+    if (!this.newCategorieNom?.trim() || !this.selectedDepotId) return;
+    const payload: any = {
+      nom: this.newCategorieNom.trim(),
+      depotId: Number(this.selectedDepotId),
+      depotIds: [Number(this.selectedDepotId)]
+    };
+    this.categorieService.create(payload).subscribe({
       next: () => {
-        this.newCategorie = {
-          nom: '',
-          depot: { id: this.depots.length > 0 ? (this.depots[0].id || 0) : 0 }
-        };
+        this.newCategorieNom = '';
+        this.selectedDepotId = this.physicalDepots[0]?.id || (this.depots.length > 0 ? this.depots[0].id! : null);
         this.loadData();
       },
       error: (err) => console.error('Erreur création catégorie', err)
@@ -153,5 +164,15 @@ export class CategoriesComponent implements OnInit {
     if (!depotId) return '—';
     const d = this.depots.find(item => item.id === depotId);
     return d ? d.nom : '—';
+  }
+
+  getDepotDisplay(cat: CategoriePiece): string {
+    if (cat.depots && Array.isArray(cat.depots) && cat.depots.length > 0) {
+      const physical = cat.depots.find((d: any) => (d?.nom || this.getDepotName(d?.id || d)).toUpperCase() !== 'PDG');
+      if (physical) return (physical as any).nom || this.getDepotName((physical as any).id || physical);
+    }
+    if (cat.depot?.nom) return cat.depot.nom;
+    if (cat.depot?.id) return this.getDepotName(cat.depot.id);
+    return '—';
   }
 }

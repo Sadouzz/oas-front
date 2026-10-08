@@ -36,20 +36,32 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/f
           @if (filteredOptions().length === 0) {
             <div class="px-3 py-3 text-oas-muted text-center text-xs">Aucun résultat</div>
           } @else {
-            @for (opt of filteredOptions(); track opt[bindValue]) {
+            @for (opt of filteredOptions(); track (opt && opt[bindValue] != null ? opt[bindValue] : $index)) {
               <div (click)="selectOption(opt)"
                    class="px-3 py-2.5 hover:bg-oas-bg cursor-pointer transition text-oas-ink border-b border-oas-line/50 last:border-0 flex items-center justify-between"
-                   [class.bg-oas-accent]="value === opt[bindValue]"
-                   [class.text-white]="value === opt[bindValue]"
-                   [class.font-bold]="value === opt[bindValue]">
+                   [class.bg-oas-accent]="isSelected(opt)"
+                   [class.text-white]="isSelected(opt)"
+                   [class.font-bold]="isSelected(opt)">
                 <span>{{ getLabel(opt) }}</span>
-                @if (value === opt[bindValue]) {
+                @if (isSelected(opt)) {
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                   </svg>
                 }
               </div>
             }
+          }
+
+          @if (addNewLabel) {
+            <div (click)="onAddNewClick($event)"
+                 class="px-3 py-2.5 bg-slate-50 hover:bg-oas-accent/10 text-oas-accent font-semibold cursor-pointer transition border-t border-oas-line sticky bottom-0 flex items-center gap-2 text-xs">
+              <div class="w-4 h-4 rounded-full bg-oas-accent/15 text-oas-accent flex items-center justify-center flex-shrink-0">
+                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+              </div>
+              <span class="truncate">{{ addNewLabel }}</span>
+            </div>
           }
         </div>
       }
@@ -62,8 +74,10 @@ export class SearchableSelectComponent implements ControlValueAccessor {
   @Input() bindLabel: string | ((opt: any) => string) = 'nom';
   @Input() placeholder: string = 'Sélectionner...';
   @Input() serverSearch: boolean = false;
+  @Input() addNewLabel?: string;
   @Output() change = new EventEmitter<any>();
   @Output() search = new EventEmitter<string>();
+  @Output() addNew = new EventEmitter<void>();
 
   value: any = null;
   selectedOption: any = null;
@@ -85,10 +99,17 @@ export class SearchableSelectComponent implements ControlValueAccessor {
 
   getLabel(opt: any): string {
     if (!opt) return '';
+    if (typeof opt === 'string') return opt;
     if (typeof this.bindLabel === 'function') {
       return this.bindLabel(opt);
     }
-    return opt[this.bindLabel] || '';
+    return opt[this.bindLabel] ?? '';
+  }
+
+  isSelected(opt: any): boolean {
+    if (this.value === null || this.value === undefined || opt === null || opt === undefined) return false;
+    if (typeof opt === 'string') return this.value === opt;
+    return this.value === opt[this.bindValue];
   }
 
   displayValue(): string {
@@ -96,17 +117,21 @@ export class SearchableSelectComponent implements ControlValueAccessor {
       return this.searchTerm;
     }
     if (this.value !== null && this.value !== undefined) {
-      const selected = this.options.find(o => o[this.bindValue] === this.value) ||
-        (this.selectedOption && this.selectedOption[this.bindValue] === this.value ? this.selectedOption : null);
-      return selected ? this.getLabel(selected) : '';
+      const selected = (this.options || []).find(o => {
+        if (!o) return false;
+        if (typeof o === 'string') return o === this.value;
+        return o[this.bindValue] === this.value;
+      }) || (this.selectedOption && (this.selectedOption[this.bindValue] === this.value || this.selectedOption === this.value) ? this.selectedOption : null);
+      return selected ? this.getLabel(selected) : (typeof this.value === 'string' ? this.value : '');
     }
     return '';
   }
 
   filteredOptions() {
-    if (this.serverSearch || !this.searchTerm) return this.options;
+    const list = this.options || [];
+    if (this.serverSearch || !this.searchTerm) return list;
     const term = this.searchTerm.toLowerCase();
-    return this.options.filter(o => this.getLabel(o).toLowerCase().includes(term));
+    return list.filter(o => this.getLabel(o).toLowerCase().includes(term));
   }
 
   onSearchChange(term: string) {
@@ -130,9 +155,22 @@ export class SearchableSelectComponent implements ControlValueAccessor {
     this.onTouch();
   }
 
+  onAddNewClick(event: MouseEvent) {
+    event.stopPropagation();
+    event.preventDefault();
+    this.close();
+    this.addNew.emit();
+  }
+
   selectOption(opt: any) {
     this.selectedOption = opt;
-    this.value = opt ? opt[this.bindValue] : null;
+    if (opt == null) {
+      this.value = null;
+    } else if (typeof opt === 'string') {
+      this.value = opt;
+    } else {
+      this.value = opt[this.bindValue] !== undefined ? opt[this.bindValue] : opt;
+    }
     this.onChange(this.value);
     this.change.emit(this.value);
     this.close();

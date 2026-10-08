@@ -59,10 +59,13 @@ export class LayoutComponent implements OnInit, OnDestroy {
     '/vehicules': { label: 'Véhicules' },
     '/bons-de-sortie': { label: 'Bon de sortie', section: 'Gestion Stock' },
     '/historique-bs': { label: 'Historique', section: 'Gestion Stock' },
-    '/inventaire': { label: 'Inventaire', section: 'Gestion Stock' },
-    '/seuil-alertes': { label: 'Seuil alertes', section: 'Piéces dét' },
-    '/pieces-detachees': { label: 'Liste des articles', section: 'Piéces dét' },
-    '/stock': { label: 'Historique', section: 'Piéces dét' },
+    '/inventaire': { label: 'Inventaire', section: 'Pièces détachées (PDP)' },
+    '/seuil-alertes': { label: 'Seuil alertes', section: 'Pièces détachées (PDP)' },
+    '/pdp': { label: 'Pièces détachées (PDP)', section: 'Catalogue' },
+    '/pdg': { label: 'Pièces générées (PDG)', section: 'Catalogue' },
+    '/pieces-detachees': { label: 'Pièces détachées (PDP)', section: 'Catalogue' },
+    '/pieces-generees': { label: 'Pièces générées (PDG)', section: 'Catalogue' },
+    '/stock': { label: 'Historique', section: 'Pièces détachées (PDP)' },
     '/bons-reception': { label: 'Bon de réception', section: 'Réapprovisionnement' },
     '/fournisseurs': { label: 'Fournisseurs', section: 'Réapprovisionnement' },
     '/factures': { label: 'Facture', section: 'Facture TTC' },
@@ -239,13 +242,23 @@ export class LayoutComponent implements OnInit, OnDestroy {
     const relUrl = this.getRelativeUrl(url);
     if (['/fiches-atelier', '/ordres-reparation', '/diagnostics', '/diagnostic', '/techniciens'].some(p => relUrl.startsWith(p))) {
       this.openSection = 'atelier';
-    } else if (['/pieces-detachees', '/stock', '/seuil-alertes'].some(p => relUrl.startsWith(p)) && !relUrl.startsWith('/historique-bs')) {
+    } else if (relUrl.startsWith('/pieces-generees') || relUrl.startsWith('/pdg')) {
       this.openSection = 'pieces';
+      this.openSubSection = 'pdg';
+    } else if (relUrl.startsWith('/pieces-detachees') || relUrl.startsWith('/pdp')) {
+      this.openSection = 'pieces';
+      const parsed = this.router.parseUrl(url);
+      if (parsed.queryParams['type'] === 'PDG') {
+        this.openSubSection = 'pdg';
+      } else {
+        this.openSubSection = 'pdp';
+      }
+    } else if (['/stock', '/seuil-alertes', '/inventaire'].some(p => relUrl.startsWith(p)) && !relUrl.startsWith('/historique-bs')) {
+      this.openSection = 'pieces';
+      this.openSubSection = 'pdp';
     } else if (['/bons-de-sortie', '/historique-bs'].some(p => relUrl.startsWith(p))) {
       this.openSection = 'stock';
       this.openSubSection = 'bs';
-    } else if (['/inventaire'].some(p => relUrl.startsWith(p))) {
-      this.openSection = 'stock';
     } else if (['/bons-reception', '/fournisseurs'].some(p => relUrl.startsWith(p))) {
       this.openSection = 'reappro';
     } else if (relUrl.startsWith('/factures')) {
