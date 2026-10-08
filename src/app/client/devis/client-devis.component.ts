@@ -92,6 +92,26 @@ export class ClientDevisComponent implements OnInit {
 
   select(devis: DevisPrevisionnel): void {
     this.selected = devis;
+    this.service.getById(devis.id).subscribe({
+      next: details => { if (this.selected?.id === devis.id) this.selected = details; this.cdr.markForCheck(); },
+      error: () => { this.errorMessage = 'Impossible de charger le détail de ce devis.'; this.cdr.markForCheck(); },
+    });
+  }
+
+  downloadPdf(devis: DevisPrevisionnel): void {
+    this.service.downloadPdf(devis.id).subscribe({
+      next: blob => this.savePdf(blob, `Devis-${devis.numero || devis.id}.pdf`),
+      error: (err: any) => { this.errorMessage = err.error?.message || 'Impossible de télécharger ce devis.'; this.cdr.markForCheck(); },
+    });
+  }
+
+  private savePdf(blob: Blob, filename: string): void {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
   }
 
   closeDetail(): void {

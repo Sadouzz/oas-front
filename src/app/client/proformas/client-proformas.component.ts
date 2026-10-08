@@ -84,6 +84,26 @@ export class ClientProformasComponent implements OnInit {
 
   select(proforma: Proforma): void {
     this.selected = proforma;
+    this.service.getById(proforma.id).subscribe({
+      next: details => { if (this.selected?.id === proforma.id) this.selected = details; this.cdr.markForCheck(); },
+      error: () => { this.errorMessage = 'Impossible de charger le détail de cette proforma.'; this.cdr.markForCheck(); },
+    });
+  }
+
+  downloadPdf(proforma: Proforma): void {
+    this.service.downloadPdf(proforma.id).subscribe({
+      next: blob => this.savePdf(blob, `Proforma-${proforma.numero || proforma.id}.pdf`),
+      error: (err: any) => { this.errorMessage = err.error?.message || 'Impossible de télécharger cette proforma.'; this.cdr.markForCheck(); },
+    });
+  }
+
+  private savePdf(blob: Blob, filename: string): void {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
   }
 
   closeDetail(): void {
@@ -91,7 +111,8 @@ export class ClientProformasComponent implements OnInit {
   }
 
   isPending(proforma: Proforma): boolean {
-    return proforma.statut === 'EN_ATTENTE' || !proforma.statut;
+    const status = (proforma.statut || 'EN_ATTENTE').trim().toUpperCase();
+    return !['ACCEPTE', 'REJETE', 'ANNULEE', 'PAYEE', 'PARTIELLEMENT_PAYEE'].includes(status);
   }
 
   statutLabel(proforma: Proforma): string {

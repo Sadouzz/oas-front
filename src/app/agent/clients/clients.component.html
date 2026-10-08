@@ -81,8 +81,13 @@
                         {{ clientInitials(client) }}
                       </div>
                       <div>
-                        <p class="font-semibold text-oas-ink text-sm">{{ client.firstName }} {{ client.lastName }}</p>
-                        <p class="text-xs text-oas-muted">&#64;{{ client.username }}</p>
+                        <p class="font-semibold text-oas-ink text-sm">
+                          {{ client.typeClient === 'ENTREPRISE' ? client.raisonSociale : client.firstName + ' ' + client.lastName }}
+                        </p>
+                        <p class="text-xs text-oas-muted">
+                          @if (client.typeClient === 'ENTREPRISE') { Entreprise · NINEA {{ client.numeroEntreprise }} }
+                          @else { &#64;{{ client.username }} }
+                        </p>
                       </div>
                     </div>
                   </td>
@@ -118,13 +123,13 @@
                         <button (click)="openFideleModal(client)"
                                 class="flex items-center gap-1 px-2.5 py-1 rounded-lg border border-orange-200 hover:bg-orange-50 text-orange-500 transition cursor-pointer text-xs font-bold mr-1">
                           <svg lucideAward class="w-3.5 h-3.5"></svg>
-                          Rendre Fidèle
+                          Compte entreprise
                         </button>
                       } @else {
                         <button (click)="openFideleModal(client)"
                                 class="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-orange-100 border border-orange-200 text-orange-600 hover:bg-orange-200 transition cursor-pointer text-xs font-bold mr-1">
                           <svg lucideAward class="w-3.5 h-3.5"></svg>
-                          Fidèle
+                          Compte actif
                         </button>
                       }
                       @if (client.enabled) {
@@ -169,7 +174,12 @@
             {{ clientInitials(selectedClient) }}
           </div>
           <div class="flex-1 min-w-0">
-            <h3 class="text-lg font-semibold text-oas-ink leading-tight">{{ selectedClient.firstName }} {{ selectedClient.lastName }}</h3>
+          <h3 class="text-lg font-semibold text-oas-ink leading-tight">
+            {{ selectedClient.typeClient === 'ENTREPRISE' ? selectedClient.raisonSociale : selectedClient.firstName + ' ' + selectedClient.lastName }}
+          </h3>
+          @if (selectedClient.typeClient === 'ENTREPRISE') {
+            <p class="text-xs text-oas-muted mt-0.5">Responsable : {{ selectedClient.firstName }} {{ selectedClient.lastName }} · NINEA {{ selectedClient.numeroEntreprise }}</p>
+          }
             @if (selectedClient.enabled) {
               <span class="inline-flex items-center gap-1 text-xs font-bold text-oas-ok mt-0.5">
                 <span class="w-1.5 h-1.5 rounded-full bg-oas-ok"></span>Client actif
@@ -241,6 +251,14 @@
 
         @if (detailTab === 'profil') {
           <div class="p-5 space-y-4">
+            @if (selectedClient.typeClient === 'ENTREPRISE') {
+              <div class="rounded-lg border border-oas-line bg-oas-bg p-3 space-y-1">
+                <p class="text-[10px] text-oas-muted uppercase tracking-wide">Entreprise</p>
+                <p class="text-sm font-semibold text-oas-ink">{{ selectedClient.raisonSociale }}</p>
+                <p class="text-xs text-oas-muted">NINEA : {{ selectedClient.numeroEntreprise }}</p>
+                <p class="text-xs text-oas-muted">{{ selectedClient.adresseEntreprise }}</p>
+              </div>
+            }
             <div class="flex items-center gap-2.5">
               <div class="w-8 h-8 rounded-lg bg-oas-bg flex items-center justify-center flex-shrink-0">
                 <svg lucideUser class="w-4 h-4 text-oas-muted"></svg>
@@ -253,16 +271,16 @@
             <div class="pt-4 border-t border-oas-line space-y-3">
               <div class="flex items-center justify-between">
                 <div>
-                  <p class="text-sm font-semibold text-oas-ink">Statut de Fidélité</p>
-                  <p class="text-xs text-oas-muted mt-0.5">Avantages et remises accordés</p>
+                  <p class="text-sm font-semibold text-oas-ink">Compte financier entreprise</p>
+                  <p class="text-xs text-oas-muted mt-0.5">Remises et crédits propres à l’entreprise</p>
                 </div>
                 @if (selectedClient.clientFidele) {
                   <span class="inline-flex items-center gap-1 text-xs font-bold text-orange-500 bg-orange-50 px-2 py-1 rounded-md border border-orange-100">
-                    <svg lucideAward class="w-3.5 h-3.5"></svg>Fidèle
+                    <svg lucideAward class="w-3.5 h-3.5"></svg>Actif
                   </span>
                 } @else {
                   <span class="inline-flex items-center gap-1 text-xs font-bold text-oas-muted bg-oas-bg px-2 py-1 rounded-md border border-oas-line">
-                    Standard
+                    Aucun compte actif
                   </span>
                 }
               </div>
@@ -273,13 +291,13 @@
                     <p class="text-sm font-semibold text-oas-ink">{{ selectedClient.montantRemise || 0 }}%</p>
                   </div>
                   <div class="bg-oas-bg p-2 rounded border border-oas-line">
-                    <p class="text-[10px] text-oas-muted uppercase">Plafond Crédit</p>
+                    <p class="text-[10px] text-oas-muted uppercase">Plafond encours</p>
                     <p class="text-sm font-semibold text-oas-ink">{{ selectedClient.montantPlafond ? (selectedClient.montantPlafond | number) + ' F' : 'Illimité' }}</p>
                   </div>
                 </div>
                 <div class="flex gap-2">
                   <button (click)="openFideleModal(selectedClient)" class="flex-1 border border-orange-200 text-orange-500 hover:bg-orange-50 text-xs font-bold px-3 py-2 rounded-lg transition cursor-pointer text-center">
-                    Modifier avantages
+                    Modifier compte
                   </button>
                   <button (click)="retirerFidele(selectedClient)" title="Retirer" class="p-2 border border-oas-bad/40 text-oas-bad hover:bg-oas-bad-bg rounded-lg transition cursor-pointer">
                     <svg lucideShieldOff class="w-4 h-4"></svg>
@@ -287,9 +305,12 @@
                 </div>
               } @else {
                 <button (click)="openFideleModal(selectedClient)" class="w-full flex items-center justify-center gap-1.5 bg-orange-50 text-orange-600 hover:bg-orange-100 border border-orange-200 text-xs font-bold px-3 py-2.5 rounded-lg transition cursor-pointer">
-                  <svg lucideAward class="w-3.5 h-3.5"></svg>Créer un compte fidèle
+                  <svg lucideAward class="w-3.5 h-3.5"></svg>Ouvrir / gérer le compte entreprise
                 </button>
               }
+              <button (click)="openConditionsModal(selectedClient)" class="mt-2 w-full flex items-center justify-center gap-1.5 bg-oas-info-bg text-oas-info hover:bg-blue-100 border border-blue-200 text-xs font-bold px-3 py-2.5 rounded-lg transition cursor-pointer">
+                Définir les conditions de paiement (tous clients)
+              </button>
             </div>
             
             <div class="pt-4 border-t border-oas-line flex items-center justify-between">
@@ -322,43 +343,46 @@
               <div class="flex items-center justify-center py-8">
                 <svg lucideLoader2 class="animate-spin h-5 w-5 text-oas-accent"></svg>
               </div>
+            } @else if (vehiculesError) {
+              <div class="text-center py-8 text-sm text-oas-bad">{{ vehiculesError }}</div>
             } @else if (clientVehicules.length === 0) {
               <div class="text-center py-10">
                 <svg lucideCar class="w-12 h-12 text-oas-line mx-auto mb-3"></svg>
                 <p class="text-sm text-oas-muted">Aucun véhicule enregistré</p>
               </div>
             } @else {
-              <!-- Grille 2 colonnes -->
-              <div class="grid grid-cols-2 gap-3 mb-5">
-                @for (v of clientVehicules; track v.id; let i = $index) {
-                  <div class="border border-oas-line rounded-lg p-3.5 hover:border-oas-accent/40 hover:shadow-sm transition bg-white">
-                    <div class="flex items-start justify-between mb-2.5">
-                      <div class="w-9 h-9 rounded-lg bg-oas-info-bg flex items-center justify-center flex-shrink-0">
-                        <svg lucideCar class="w-5 h-5 text-oas-info"></svg>
-                      </div>
-                      @if (i === 0) {
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-oas-accent/10 text-oas-accent">Principal</span>
-                      }
-                    </div>
-                    <p class="font-bold text-sm text-oas-ink leading-tight">{{ v.marque }} {{ v.modele }}</p>
-                    <p class="font-mono text-xs font-bold text-oas-accent mt-0.5">{{ v.immatriculation }}</p>
-                    <div class="flex items-center gap-2 mt-2 pt-2 border-t border-oas-line">
-                      @if (v.annee) {
-                        <span class="flex items-center gap-1 text-xs text-oas-muted">
-                          <svg lucideCalendar class="w-3 h-3"></svg>
-                          {{ v.annee }}
-                        </span>
-                      }
-                      @if (v.kilometrage) {
-                        <span class="flex items-center gap-1 text-xs text-oas-muted">
-                          <svg lucideZap class="w-3 h-3"></svg>
-                          {{ v.kilometrage | number:'1.0-0' }} km
-                        </span>
-                      }
-                    </div>
-                  </div>
-                }
+              <div class="overflow-x-auto rounded-lg border border-oas-line">
+                <table class="w-full text-sm text-left">
+                  <thead class="bg-oas-bg text-[11px] uppercase tracking-wide text-oas-muted">
+                    <tr>
+                      <th class="px-4 py-3 font-bold">Véhicule</th>
+                      <th class="px-4 py-3 font-bold">Immatriculation</th>
+                      <th class="px-4 py-3 font-bold">Année</th>
+                      <th class="px-4 py-3 font-bold text-right">Kilométrage</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-oas-line">
+                    @for (v of clientVehicules; track v.id) {
+                      <tr class="hover:bg-oas-bg/60 transition">
+                        <td class="px-4 py-3">
+                          <span class="inline-flex items-center gap-2 font-semibold text-oas-ink">
+                            <svg lucideCar class="w-4 h-4 text-oas-info"></svg>{{ v.marque }} {{ v.modele }}
+                          </span>
+                        </td>
+                        <td class="px-4 py-3 font-mono font-bold text-oas-accent">{{ v.immatriculation }}</td>
+                        <td class="px-4 py-3 text-oas-muted">{{ v.annee ?? '—' }}</td>
+                        <td class="px-4 py-3 text-right text-oas-muted">{{ v.kilometrage != null ? (v.kilometrage | number:'1.0-0') + ' km' : '—' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
               </div>
+              <app-pagination
+                [page]="vehiculePage"
+                [pageSize]="vehiculePageSize"
+                [total]="vehiculeTotal"
+                [totalPages]="vehiculeTotalPages"
+                (pageChange)="onVehiclePageChange($event)" />
             }
 
             <!-- Historique des interventions -->
@@ -416,6 +440,46 @@
           @if (errorMessage) {
             <div class="px-3 py-2 bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-xs rounded-lg">{{ errorMessage }}</div>
           }
+          <div class="grid grid-cols-2 gap-3">
+            <button type="button" (click)="setCreateClientType('PARTICULIER')"
+                    [class.border-oas-accent]="createForm.get('typeClient')?.value === 'PARTICULIER'"
+                    class="rounded-lg border-2 border-oas-line px-3 py-2.5 text-sm font-semibold text-oas-ink">Particulier</button>
+            <button type="button" (click)="setCreateClientType('ENTREPRISE')"
+                    [class.border-oas-accent]="createForm.get('typeClient')?.value === 'ENTREPRISE'"
+                    class="rounded-lg border-2 border-oas-line px-3 py-2.5 text-sm font-semibold text-oas-ink">Entreprise</button>
+          </div>
+          @if (createForm.get('typeClient')?.value === 'ENTREPRISE') {
+            <div class="space-y-3 rounded-lg border border-oas-line bg-oas-bg p-3">
+              <p class="text-xs font-bold uppercase tracking-wide text-oas-muted">Informations de l’entreprise</p>
+              <div>
+                <label class="block text-sm font-semibold text-oas-ink mb-1">Raison sociale *</label>
+                <input type="text" formControlName="raisonSociale" class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-white text-sm"/>
+                @if (fCreate['raisonSociale'].invalid && fCreate['raisonSociale'].touched) { <p class="text-oas-bad text-xs mt-1">Requis</p> }
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-oas-ink mb-1">NINEA *</label>
+                <input type="text" formControlName="numeroEntreprise" class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-white text-sm"/>
+                @if (fCreate['numeroEntreprise'].invalid && fCreate['numeroEntreprise'].touched) { <p class="text-oas-bad text-xs mt-1">Le NINEA est obligatoire</p> }
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-sm font-semibold text-oas-ink mb-1">Email entreprise *</label>
+                  <input type="email" formControlName="emailEntreprise" class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-white text-sm"/>
+                  @if (fCreate['emailEntreprise'].invalid && fCreate['emailEntreprise'].touched) { <p class="text-oas-bad text-xs mt-1">Email invalide</p> }
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-oas-ink mb-1">Téléphone entreprise *</label>
+                  <app-phone-input formControlName="telephoneEntreprise" [invalid]="!!(fCreate['telephoneEntreprise'].invalid && fCreate['telephoneEntreprise'].touched)"></app-phone-input>
+                  @if (fCreate['telephoneEntreprise'].invalid && fCreate['telephoneEntreprise'].touched) { <p class="text-oas-bad text-xs mt-1">Requis</p> }
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-oas-ink mb-1">Adresse entreprise *</label>
+                <input type="text" formControlName="adresseEntreprise" class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-white text-sm"/>
+                @if (fCreate['adresseEntreprise'].invalid && fCreate['adresseEntreprise'].touched) { <p class="text-oas-bad text-xs mt-1">Requis</p> }
+              </div>
+            </div>
+          }
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-semibold text-oas-ink mb-1">Prénom *</label>
@@ -437,6 +501,7 @@
             </div>
           </div>
           <!-- Identifiant auto-généré -->
+          @if (createForm.get('typeClient')?.value === 'PARTICULIER') {
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-semibold text-oas-ink mb-1">Email *</label>
@@ -455,6 +520,7 @@
               }
             </div>
           </div>
+          }
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-semibold text-oas-ink mb-1">Mot de passe *</label>
@@ -602,6 +668,38 @@
   </div>
 }
 
+<!-- Conditions financières applicables aux clients particuliers et entreprises -->
+@if (showConditionsModal && conditionsClient) {
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line">
+        <h3 class="font-bold text-oas-ink">Conditions de paiement — {{ conditionsClient.firstName }} {{ conditionsClient.lastName }}</h3>
+        <button (click)="closeConditionsModal()" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted cursor-pointer"><svg lucideX class="w-5 h-5"></svg></button>
+      </div>
+      <form [formGroup]="conditionsForm" (ngSubmit)="saveConditions()" class="px-6 py-5 space-y-4">
+        @if (errorMessage) { <div class="px-3 py-2 bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-xs rounded-lg">{{ errorMessage }}</div> }
+        <p class="text-xs text-oas-muted">Ces limites s’appliquent aux clients particuliers comme aux entreprises. Les agents reçoivent un avertissement; l’espace client applique le blocage de prise de rendez-vous selon les règles de compte.</p>
+        <div>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Plafond d’encours impayé (F CFA)</label>
+          <input type="number" formControlName="plafondEncours" min="0" step="1" placeholder="Vide = sans plafond" class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm"/>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Échéance (jours)</label>
+          <input type="number" formControlName="echeanceJours" min="1" max="3650" placeholder="ex. 30" class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm"/>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Plafond cumulé facturé pendant l’échéance (F CFA)</label>
+          <input type="number" formControlName="plafondPeriode" min="0" step="0.01" placeholder="Vide = sans plafond de période" class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm"/>
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" (click)="closeConditionsModal()" class="bg-white text-oas-ink font-semibold px-4 h-10 rounded-lg border border-oas-line cursor-pointer">Annuler</button>
+          <button type="submit" [disabled]="saving || conditionsForm.invalid" class="bg-orange-500 hover:bg-orange-600 text-white font-bold px-4 h-10 rounded-lg cursor-pointer disabled:opacity-50">{{ saving ? 'Enregistrement...' : 'Enregistrer les conditions' }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
 <!-- Modal ajout vehicule depuis detail (modal dédié) -->
 @if (!showCreateModal && addingVehicle && selectedClient) {
   <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -683,6 +781,30 @@
       <form [formGroup]="editForm" (ngSubmit)="saveEdit()" class="px-6 py-5 space-y-4">
         @if (errorMessage) {
           <div class="px-3 py-2 bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-xs rounded-lg">{{ errorMessage }}</div>
+        }
+        <div>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Type de client</label>
+          <select formControlName="typeClient" (change)="setEditClientType($any(editForm.get('typeClient')?.value))"
+                  class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm">
+            <option value="PARTICULIER">Particulier</option>
+            <option value="ENTREPRISE">Entreprise</option>
+          </select>
+        </div>
+        @if (editForm.get('typeClient')?.value === 'ENTREPRISE') {
+          <div class="space-y-3 rounded-lg border border-oas-line bg-oas-bg p-3">
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1">Raison sociale *</label>
+              <input type="text" formControlName="raisonSociale" class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-white text-sm"/>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1">NINEA *</label>
+              <input type="text" formControlName="numeroEntreprise" class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-white text-sm"/>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-oas-ink mb-1">Adresse entreprise *</label>
+              <input type="text" formControlName="adresseEntreprise" class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-white text-sm"/>
+            </div>
+          </div>
         }
         <div class="grid grid-cols-2 gap-4">
           <div>
@@ -866,7 +988,7 @@
       <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line sticky top-0 bg-white">
         <h3 class="font-bold text-oas-ink flex items-center gap-2">
           <svg lucideAward class="w-5 h-5 text-orange-500"></svg>
-          Paramètres Client Fidèle
+          Compte financier entreprise
         </h3>
         <button (click)="closeFideleModal()" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted transition cursor-pointer">
           <svg lucideX class="w-5 h-5"></svg>
@@ -878,66 +1000,87 @@
         }
         
         <div>
-          <label class="block text-sm font-semibold text-oas-ink mb-1">Remise client (%)</label>
-          <input type="number" formControlName="montantRemise" placeholder="0" min="0" max="100"
+          <p class="text-xs text-oas-muted mb-3">L’ouverture transforme un client particulier en entreprise. Son compte utilisateur reste inchangé et son statut entreprise sera conservé même si le compte financier est désactivé.</p>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Raison sociale</label>
+          <input type="text" formControlName="raisonSociale" maxlength="200" required
                  class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition"/>
         </div>
+        <div>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">NINEA (identifiant légal)</label>
+          <input type="text" formControlName="ninea" maxlength="40" required autocomplete="off"
+                 class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm uppercase focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition"/>
+          <p class="text-[10px] text-oas-muted mt-1">Saisissez les lettres et chiffres du NINEA; aucun document à téléverser.</p>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Remise entreprise (%)</label>
+          <input type="number" formControlName="remisePourcentage" placeholder="0" min="0" max="100"
+                 class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition"/>
+        </div>
+        <label class="flex items-center gap-2 text-sm font-semibold text-oas-ink">
+          <input type="checkbox" formControlName="actif" class="accent-orange-500"/>
+          Compte financier actif
+        </label>
         
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-semibold text-oas-ink mb-1">Plafond Crédit max</label>
+            <label class="block text-sm font-semibold text-oas-ink mb-1">Plafond d’encours impayé</label>
             <input type="number" formControlName="montantPlafond" placeholder="ex: 5000000" min="0"
                    class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition"/>
-            <p class="text-[10px] text-oas-muted mt-1">Laissez vide si illimité</p>
+            <p class="text-[10px] text-oas-muted mt-1">Alerte agent; blocage de réservation client si dépassé.</p>
           </div>
           <div>
-            <label class="block text-sm font-semibold text-oas-ink mb-1">Échéance (jours)</label>
-            <input type="number" formControlName="echeance" placeholder="ex: 30" min="0"
+            <label class="block text-sm font-semibold text-oas-ink mb-1">Délai d’échéance (jours)</label>
+            <input type="number" formControlName="echeance" placeholder="ex: 30" min="1"
                    class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition"/>
           </div>
         </div>
+        <div>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Plafond facturé sur la période</label>
+          <input type="number" formControlName="montantPlafondEcheance" placeholder="ex: 500000" min="0"
+                 class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition"/>
+          <p class="text-[10px] text-oas-muted mt-1">Cumul des factures émises pendant le nombre de jours défini ci-dessus.</p>
+        </div>
         
         <div class="pt-3 border-t border-oas-line space-y-4">
-          <p class="text-sm font-bold text-oas-ink">Documents professionnels</p>
-          
-          <div>
-            <label class="block text-sm font-semibold text-oas-ink mb-1">NINEA</label>
-            <div class="flex flex-col gap-2">
-              <input type="file" accept=".pdf,image/*" (change)="onFileSelected($event, 'ninea')"
-                     class="block w-full text-sm text-oas-muted file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100 transition"/>
-              @if (fideleForm.get('ninea')?.value) {
-                <a [href]="fideleForm.get('ninea')?.value" target="_blank" 
-                   class="inline-flex items-center gap-1.5 text-xs text-oas-info hover:text-blue-700 font-semibold bg-oas-info-bg px-3 py-1.5 rounded-lg w-fit transition border border-blue-200">
-                  📄 Voir le fichier NINEA
-                </a>
-              }
-            </div>
-          </div>
+          <p class="text-sm font-bold text-oas-ink">Coordonnées professionnelles (facultatif)</p>
           <div>
             <label class="block text-sm font-semibold text-oas-ink mb-1">RCCM</label>
-            <div class="flex flex-col gap-2">
-              <input type="file" accept=".pdf,image/*" (change)="onFileSelected($event, 'rccm')"
-                     class="block w-full text-sm text-oas-muted file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100 transition"/>
-              @if (fideleForm.get('rccm')?.value) {
-                <a [href]="fideleForm.get('rccm')?.value" target="_blank" 
-                   class="inline-flex items-center gap-1.5 text-xs text-oas-info hover:text-blue-700 font-semibold bg-oas-info-bg px-3 py-1.5 rounded-lg w-fit transition border border-blue-200">
-                  📄 Voir le fichier RCCM
-                </a>
-              }
-            </div>
+            <input type="text" formControlName="rccm" maxlength="100" class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm"/>
           </div>
           <div>
             <label class="block text-sm font-semibold text-oas-ink mb-1">RIB</label>
-            <div class="flex flex-col gap-2">
-              <input type="file" accept=".pdf,image/*" (change)="onFileSelected($event, 'rib')"
-                     class="block w-full text-sm text-oas-muted file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100 transition"/>
-              @if (fideleForm.get('rib')?.value) {
-                <a [href]="fideleForm.get('rib')?.value" target="_blank" 
-                   class="inline-flex items-center gap-1.5 text-xs text-oas-info hover:text-blue-700 font-semibold bg-oas-info-bg px-3 py-1.5 rounded-lg w-fit transition border border-blue-200">
-                  📄 Voir le fichier RIB
-                </a>
-              }
-            </div>
+            <input type="text" formControlName="rib" maxlength="100" class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm"/>
+          </div>
+          <div>
+          </div>
+        </div>
+
+        @if (compteFinancier) {
+          <div class="rounded-lg bg-orange-50 border border-orange-200 px-4 py-3 text-sm">
+            <div class="font-bold text-oas-ink">Solde crédit disponible : {{ compteFinancier.soldeCredit | number }} F CFA</div>
+            <div class="text-xs text-oas-muted mt-1">Crédits suivis dans un journal; ils ne règlent pas automatiquement les factures.</div>
+            @if (compteFinancier.encoursImpayes > 0) { <div class="text-xs mt-1">Encours impayé : {{ compteFinancier.encoursImpayes | number }} F CFA</div> }
+          </div>
+        }
+        @if (mouvementsCredit.length) {
+          <div class="rounded-lg border border-oas-line overflow-hidden">
+            <p class="bg-oas-bg px-3 py-2 text-xs font-bold text-oas-ink">Derniers ajouts de crédit</p>
+            @for (mouvement of mouvementsCredit; track mouvement.id) {
+              <div class="flex items-center justify-between gap-3 px-3 py-2 border-t border-oas-line text-xs">
+                <span class="text-oas-muted">{{ mouvement.dateCreation | date:'short' }} · {{ mouvement.commentaire || 'Ajout de crédit' }}</span>
+                <span class="font-bold text-oas-ink whitespace-nowrap">+{{ mouvement.montant | number }} F</span>
+              </div>
+            }
+          </div>
+        }
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1">Ajouter un crédit (facultatif)</label>
+            <input type="number" formControlName="montantCredit" min="0.01" step="0.01" [disabled]="!fideleForm.get('actif')?.value" class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm disabled:opacity-50"/>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-oas-ink mb-1">Motif du crédit</label>
+            <input type="text" formControlName="commentaireCredit" maxlength="500" class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm"/>
           </div>
         </div>
 
@@ -946,7 +1089,7 @@
                   class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-lg border border-oas-line flex items-center transition cursor-pointer text-sm">Annuler</button>
           <button type="submit" [disabled]="saving"
                   class="bg-orange-500 hover:bg-orange-600 text-white font-bold px-4 h-10 rounded-lg flex items-center transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm">
-            {{ saving ? 'Enregistrement...' : (fideleClient?.clientFidele ? 'Mettre à jour' : 'Activer Client Fidèle') }}
+            {{ saving ? 'Enregistrement...' : 'Enregistrer le compte' }}
           </button>
         </div>
       </form>

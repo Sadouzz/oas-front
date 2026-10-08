@@ -17,6 +17,27 @@
 
   <app-alert [success]="successMessage" [error]="errorMessage" />
 
+  @if (loadingTransfers || transferRequests.length) {
+    <section class="bg-white rounded-lg border border-oas-line p-4 mb-5 shadow-sm">
+      <h2 class="font-bold text-oas-ink mb-3">Demandes de transfert de véhicule</h2>
+      @if (loadingTransfers) { <p class="text-sm text-oas-muted">Chargement des demandes…</p> }
+      @for (request of transferRequests; track request.id) {
+        <div class="flex flex-col md:flex-row md:items-center gap-3 border-t border-oas-line py-3">
+          <div class="flex-1 text-sm">
+            <p class="font-semibold">{{ request.immatriculation }} · {{ request.marque }} {{ request.modele }}</p>
+            <p class="text-oas-muted">{{ request.currentOwnerName }} → {{ request.requesterName }} · {{ request.requestedAt | date:'short' }}</p>
+            @if (request.chassis) { <p class="text-xs text-oas-muted">Châssis : {{ request.chassis }}</p> }
+            @if (request.requestNote) { <p class="text-xs text-oas-muted">Motif : {{ request.requestNote }}</p> }
+          </div>
+          <div class="flex gap-2">
+            <button type="button" (click)="decideTransfer(request, true)" class="px-3 py-2 rounded-lg bg-oas-accent text-white text-xs font-bold">Valider</button>
+            <button type="button" (click)="decideTransfer(request, false)" class="px-3 py-2 rounded-lg border border-oas-line text-oas-ink text-xs font-bold">Refuser</button>
+          </div>
+        </div>
+      }
+    </section>
+  }
+
   <!-- Search + filtres -->
   <div class="bg-white rounded-lg border border-oas-line p-3 mb-4 shadow-sm flex flex-col sm:flex-row gap-3">
     <div class="relative flex-1">

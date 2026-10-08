@@ -83,6 +83,8 @@ export class FichesAtelier implements OnInit {
   
   private isDrawingRec = false;
   private isDrawingClient = false;
+  private signatureRecDessinee = false;
+  private signatureClientDessinee = false;
 
   defaultReception: string[] = [...DEFAULT_LIGNES_RECEPTION];
   defaultDefauts: string[] = [...DEFAULT_RUBRIQUES_DEFAUTS];
@@ -99,30 +101,6 @@ export class FichesAtelier implements OnInit {
 
     this.initForm();
     this.loadConfigAndLines();
-  }
-
-  get minDateSortie(): string {
-    const pad = (n: number) => String(n).padStart(2, '0');
-    const now = new Date();
-    const today = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-
-    if (this.rdvData?.dateRendezVous) {
-      const d = new Date(this.rdvData.dateRendezVous);
-      if (!isNaN(d.getTime())) {
-        const rdvDate = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-        return rdvDate > today ? rdvDate : today;
-      }
-    }
-    return today;
-  }
-
-  formatDateFr(ymd: string): string {
-    if (!ymd) return '';
-    const parts = ymd.split('-');
-    if (parts.length === 3) {
-      return `${parts[2]}/${parts[1]}/${parts[0]}`;
-    }
-    return ymd;
   }
 
   isRdvTodayOrPast(dateStr?: string | null): boolean {
@@ -144,8 +122,6 @@ export class FichesAtelier implements OnInit {
       niveauEssence: [''],
       designationTravaux: ['', Validators.required],
       nb: [''],
-      dateSortiePrevue: [''],
-      garantie: [''],
       lignesReception: this.fb.array([]),
       lignesDefauts: this.fb.array([])
     });
@@ -180,6 +156,8 @@ export class FichesAtelier implements OnInit {
                 rubriquesManuelles.set(cle, nom);
               }
             }
+            // Remplacer les anciennes rubriques par la liste de référence et
+            // conserver seulement les lignes personnalisées actives du garage.
             this.defaultReception = [
               ...DEFAULT_LIGNES_RECEPTION,
               ...rubriquesManuelles.values()
@@ -430,6 +408,8 @@ export class FichesAtelier implements OnInit {
     if (x !== undefined && y !== undefined) {
       ctx.lineTo(x, y);
       ctx.stroke();
+      if (type === 'rec') this.signatureRecDessinee = true;
+      else this.signatureClientDessinee = true;
       ctx.beginPath();
       ctx.moveTo(x, y);
     }
@@ -446,6 +426,8 @@ export class FichesAtelier implements OnInit {
   }
 
   clearSignature(type: 'rec' | 'client') {
+    if (type === 'rec') this.signatureRecDessinee = false;
+    else this.signatureClientDessinee = false;
     const ctx = type === 'rec' ? this.ctxRec : this.ctxClient;
     const canvas = type === 'rec' ? this.sigRecEl?.nativeElement : this.sigClientEl?.nativeElement;
     if (ctx && canvas) {
@@ -484,12 +466,8 @@ export class FichesAtelier implements OnInit {
       return;
     }
 
-    if (this.form.value.dateSortiePrevue && this.form.value.dateSortiePrevue < this.minDateSortie) {
-      if (this.rdvData?.dateRendezVous) {
-        this.error = `La date de sortie prévue doit être après celle du rendez-vous (au plus tôt le ${this.formatDateFr(this.minDateSortie)}).`;
-      } else {
-        this.error = `La date de sortie prévue ne peut pas être dans le passé (au plus tôt le ${this.formatDateFr(this.minDateSortie)}).`;
-      }
+    if (!this.signatureRecDessinee || !this.signatureClientDessinee || !this.conditionsAcceptees) {
+      this.error = 'Les deux signatures et l’acceptation des conditions sont obligatoires.';
       return;
     }
 
@@ -537,15 +515,6 @@ export class FichesAtelier implements OnInit {
       signatureReceptionnaireBase64: this.sigRecEl ? this.sigRecEl.nativeElement.toDataURL('image/png') : undefined,
       signatureBase64: this.sigClientEl ? this.sigClientEl.nativeElement.toDataURL('image/png') : undefined
     };
-
-    // Format date string correctly if needed, e.g. from datetime-local
-    if (request.dateSortiePrevue) {
-      if (request.dateSortiePrevue.length === 10) {
-        request.dateSortiePrevue = request.dateSortiePrevue + 'T00:00:00';
-      } else if (request.dateSortiePrevue.endsWith('Z')) {
-        request.dateSortiePrevue = request.dateSortiePrevue.slice(0, -1);
-      }
-    }
 
     console.log(request);
 

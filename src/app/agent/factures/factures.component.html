@@ -467,6 +467,11 @@
         @if (createStep === 2) {
           <div class="space-y-4">
             <p class="text-sm text-oas-muted">Selectionnez la ordre de réparation liee a cette facture.</p>
+            <div class="grid gap-3 sm:grid-cols-2"><label class="block text-sm font-semibold text-oas-ink">Présentation du PDF
+              <select [value]="form.get('pdfLayoutKey')?.value" (change)="changeInvoiceLayout($any($event.target).value)" class="mt-1 w-full rounded-lg border border-oas-line bg-white px-3 py-2"><option value="AVEC_ENTETE">Avec entête</option><option value="SANS_ENTETE">Sans entête</option></select></label>
+              <label class="block text-sm font-semibold text-oas-ink">Modèle de facture
+                <select formControlName="pdfTemplateId" class="mt-1 w-full rounded-lg border border-oas-line bg-white px-3 py-2"><option [ngValue]="null">Modèle par défaut</option>@for (template of invoiceTemplates; track template.id) { <option [ngValue]="template.id">{{ template.name }} · v{{ template.version }}</option> }</select></label>
+            </div>
             <div>
               <label class="block text-sm font-semibold text-oas-ink mb-1">Ordre de Réparation *</label>
               @if (ficheOpen) {

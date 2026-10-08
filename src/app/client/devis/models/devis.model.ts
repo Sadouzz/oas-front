@@ -2,6 +2,7 @@ export type StatutDevis = 'EN_ATTENTE' | 'ACCEPTE' | 'REJETE' | 'PAYEE' | 'PARTI
 
 export interface DevisPrevisionnel {
   id: number;
+  numero?: string | null;
   notesReparation: string | null;
   montantTotal: number;
   dateCreation: string;

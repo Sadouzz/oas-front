@@ -43,4 +43,6 @@ export interface FactureCreateRequest {
   montantTimbre?: number | null;
   montantAutre?: number | null;
   modePaiement: string;
+  pdfTemplateId?: number | null;
+  pdfLayoutKey?: 'AVEC_ENTETE' | 'SANS_ENTETE';
 }

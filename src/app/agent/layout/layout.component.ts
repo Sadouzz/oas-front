@@ -6,6 +6,7 @@ import { AgentNotificationService } from '../../core/services/agent-notification
 import { NotificationWsService } from '../../core/services/notification-ws.service';
 import { AgentNotification } from '../../shared/models/agent-notification.model';
 import { GarageContextService } from '../../core/services/garage-context.service';
+import { PushOptInComponent } from '../../shared/components/push-opt-in/push-opt-in.component';
 import { filter, Subscription } from 'rxjs';
 import {
   LucideHouse,
@@ -25,7 +26,7 @@ import {
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, PushOptInComponent],
   templateUrl: './layout.component.html',
 })
 export class LayoutComponent implements OnInit, OnDestroy {
@@ -91,6 +92,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
     '/techniciens': { label: 'Techniciens', section: 'Processus de réparation' },
     '/rendezvous': { label: 'Rendez-vous' },
     '/admin/users': { label: 'Utilisateurs', section: 'Administration' },
+    '/admin/pdf-templates': { label: 'Modèles PDF', section: 'Administration' },
     '/admin/history': { label: 'Historique connexions', section: 'Administration' },
   };
 

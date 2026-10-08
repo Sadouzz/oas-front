@@ -122,8 +122,6 @@ export interface FicheAtelierRequest {
   defautsConstates?: LigneDefaut[];
   defauts?: LigneDefaut[];
   nb?: string;
-  dateSortiePrevue?: string;
-  garantie?: string;
   signatureReceptionnaireBase64?: string;
   signatureBase64?: string;
   signatureSortieBase64?: string;
@@ -151,6 +149,8 @@ export interface FicheAtelierDetailsResponse {
   nb?: string;
   dateSortiePrevue?: string;
   garantie?: string;
+  dateRestitution?: string;
+  garantieMois?: number;
   signatureReceptionnaireBase64?: string;
   signatureBase64?: string;
   signatureSortieBase64?: string;

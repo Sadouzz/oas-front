@@ -59,6 +59,9 @@ export class ClientRendezVousComponent implements OnInit {
   showVehiculeCreateForm = false;
   vehiculeSaving = false;
   vehiculeCreateError = '';
+  vehiculeTransferMessage = '';
+  duplicateVehicleData: { immatriculation: string; numeroChassis?: string | null } | null = null;
+  requestingVehicleTransfer = false;
 
   searchTerm = '';
   statutFilter = '';
@@ -150,12 +153,21 @@ export class ClientRendezVousComponent implements OnInit {
   openVehiculeCreateForm(): void {
     this.vehiculeForm.reset();
     this.vehiculeCreateError = '';
+    this.vehiculeTransferMessage = '';
+    this.duplicateVehicleData = null;
     this.showVehiculeCreateForm = true;
     this.vehiculeDropdownOpen = false;
   }
 
   closeVehiculeCreateForm(): void {
     this.showVehiculeCreateForm = false;
+    this.vehiculeCreateError = '';
+    this.vehiculeTransferMessage = '';
+    this.duplicateVehicleData = null;
+  }
+
+  clearDuplicateVehicleRequest(): void {
+    this.duplicateVehicleData = null;
     this.vehiculeCreateError = '';
   }
 
@@ -187,7 +199,40 @@ export class ClientRendezVousComponent implements OnInit {
       },
       error: (err: any) => {
         this.vehiculeSaving = false;
-        this.vehiculeCreateError = err.error?.message || "Impossible d'ajouter ce véhicule.";
+        const message = err.error?.message || err.message || "Impossible d'ajouter ce véhicule.";
+        if (/immatriculation.*(exist|déjà)|déjà exist/i.test(message)) {
+          this.duplicateVehicleData = {
+            immatriculation: String(this.vehiculeForm.value.immatriculation || '').trim().toUpperCase(),
+            numeroChassis: this.vehiculeForm.value.numeroChassis || null,
+          };
+          this.vehiculeCreateError = 'Ce véhicule est déjà enregistré. Envoyez une demande de transfert aux agents.';
+        } else {
+          this.vehiculeCreateError = message;
+        }
+      },
+    });
+  }
+
+  requestVehicleTransfer(): void {
+    if (!this.duplicateVehicleData || this.requestingVehicleTransfer) return;
+    this.requestingVehicleTransfer = true;
+    this.vehiculeService.requestTransfer({
+      ...this.duplicateVehicleData,
+      requestNote: 'Demande envoyée depuis le formulaire de prise de rendez-vous.',
+    }).subscribe({
+      next: () => {
+        this.requestingVehicleTransfer = false;
+        this.vehiculeCreateError = '';
+        this.vehiculeTransferMessage = 'Demande envoyée aux agents. Vous pourrez sélectionner ce véhicule pour votre rendez-vous après validation.';
+        this.duplicateVehicleData = null;
+        this.vehiculeForm.reset();
+        this.showVehiculeCreateForm = false;
+        this.cdr.markForCheck();
+      },
+      error: (err: any) => {
+        this.requestingVehicleTransfer = false;
+        this.vehiculeCreateError = err.error?.message || 'Impossible d’envoyer la demande de transfert.';
+        this.cdr.markForCheck();
       },
     });
   }
@@ -249,6 +294,9 @@ export class ClientRendezVousComponent implements OnInit {
     this.vehiculeSearchTerm = '';
     this.vehiculeDropdownOpen = false;
     this.showVehiculeCreateForm = false;
+    this.vehiculeCreateError = '';
+    this.vehiculeTransferMessage = '';
+    this.duplicateVehicleData = null;
     this.modalErrorMessage = '';
     this.showCreateModal = true;
     this.loadBookingContext();
@@ -256,6 +304,8 @@ export class ClientRendezVousComponent implements OnInit {
 
   closeCreate(): void {
     this.showCreateModal = false;
+    this.vehiculeTransferMessage = '';
+    this.duplicateVehicleData = null;
   }
 
   save(): void {

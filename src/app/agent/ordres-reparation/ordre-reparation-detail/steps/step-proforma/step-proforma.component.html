@@ -300,6 +300,12 @@
               </svg>
               <span>{{ telechargementEnCours ? 'Téléchargement...' : 'Télécharger PDF' }}</span>
             </button>
+            @if (!isProformaVisibleClient) {
+              <button type="button" (click)="envoyerAuClient()" [disabled]="saving"
+                class="px-4 py-2.5 bg-oas-accent hover:bg-oas-accent-dark text-white rounded-xl text-xs font-bold transition cursor-pointer disabled:opacity-50">
+                Valider et envoyer au client
+              </button>
+            }
             <span class="text-xs font-bold px-3 py-2 rounded-xl bg-emerald-100 text-emerald-800 border border-emerald-200">
               Prêt pour l'étape suivante ✓
             </span>
@@ -312,8 +318,13 @@
               </svg>
             </div>
             <div>
-              <p class="font-bold text-amber-900">En attente d'accord du client</p>
-              <p class="text-[11px] text-amber-700">Présentez ce devis au client. Une fois validé, confirmez ci-contre pour débloquer la suite.</p>
+              @if (isProformaVisibleClient) {
+                <p class="font-bold text-amber-900">En attente d'accord du client</p>
+                <p class="text-[11px] text-amber-700">La proforma a été envoyée. Le client peut maintenant la consulter dans son espace.</p>
+              } @else {
+                <p class="font-bold text-amber-900">Proforma non envoyée au client</p>
+                <p class="text-[11px] text-amber-700">Vérifiez les prix puis validez son envoi pour la rendre visible dans l’espace client.</p>
+              }
             </div>
           </div>
           <div class="flex items-center gap-3">
@@ -332,6 +343,12 @@
               </svg>
               <span>{{ telechargementEnCours ? 'Téléchargement...' : 'Télécharger PDF' }}</span>
             </button>
+            @if (!isProformaVisibleClient) {
+              <button type="button" (click)="envoyerAuClient()" [disabled]="saving"
+                class="px-4 py-2.5 bg-oas-accent hover:bg-oas-accent-dark text-white rounded-xl text-xs font-bold transition cursor-pointer disabled:opacity-50">
+                Valider et envoyer au client
+              </button>
+            }
             <button type="button" (click)="validerProforma()" [disabled]="saving"
               class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold flex items-center gap-2 transition cursor-pointer shadow-md shadow-emerald-600/25 disabled:opacity-50">
               @if (saving) {

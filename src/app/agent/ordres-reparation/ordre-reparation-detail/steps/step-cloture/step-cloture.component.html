@@ -6,6 +6,10 @@
   </div>
   <h2 class="text-2xl font-extrabold text-oas-ink">Dossier de réparation clôturé & Véhicule restitué</h2>
   <p class="text-sm text-oas-muted">Toutes les opérations ont été effectuées et validées avec succès.</p>
+  @if (ordre?.dateRestitution) {
+    <p class="text-sm text-oas-ink">Restitué le {{ ordre?.dateRestitution | date:'dd/MM/yyyy HH:mm' }}.</p>
+    <p class="text-sm text-oas-ink">Garantie : {{ ordre?.garantieMois }} mois à compter de cette restitution.</p>
+  }
   <div class="pt-4">
     <a routerLink="/app/ordres-reparation"
       class="px-6 py-3 bg-oas-ink hover:bg-oas-ink/80 text-white rounded-xl text-sm font-bold transition cursor-pointer inline-block">

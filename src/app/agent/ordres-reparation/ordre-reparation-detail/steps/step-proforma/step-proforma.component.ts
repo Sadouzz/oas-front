@@ -214,6 +214,32 @@ export class StepProformaComponent implements OnInit {
     return isProformaStatusValide || isOrdrePastProforma;
   }
 
+  get isProformaVisibleClient(): boolean {
+    return this.proformaChargee?.visibleClient === true;
+  }
+
+  envoyerAuClient(): void {
+    if (!this.proformaChargee?.id || this.isProformaVisibleClient) return;
+    if (!confirm('Valider les prix de cette proforma et la rendre visible dans l’espace client ?')) return;
+
+    this.saving = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.proformaService.validerEnvoi(this.proformaChargee.id).subscribe({
+      next: updated => {
+        this.proformaChargee = updated;
+        this.saving = false;
+        this.successMessage = 'Proforma envoyée : elle est maintenant visible dans l’espace client.';
+        this.cdr.markForCheck();
+      },
+      error: err => {
+        this.saving = false;
+        this.errorMessage = err.error?.message || 'Impossible d’envoyer la proforma au client.';
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
   validerProforma(): void {
     if (!this.proformaChargee?.id) {
       this.errorMessage = 'Aucune proforma chargée à valider.';

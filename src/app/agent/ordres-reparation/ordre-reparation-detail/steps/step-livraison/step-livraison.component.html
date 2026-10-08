@@ -19,5 +19,15 @@
       <p class="text-base font-bold text-emerald-900">Le véhicule a été entièrement réparé, testé et nettoyé.</p>
       <p class="text-xs text-emerald-700">Cliquez sur le bouton ci-dessous pour confirmer et enregistrer la remise du véhicule au client.</p>
     </div>
+      <div class="space-y-3">
+        <label for="garantieMois" class="block text-sm font-semibold">Garantie à compter de la restitution (mois)</label>
+        <input id="garantieMois" type="number" min="1" max="120" step="1" [(ngModel)]="garantieMois"
+          class="w-32 rounded-lg border border-oas-line px-3 py-2" />
+        <label class="block text-sm font-semibold">Signature du client à la restitution</label>
+        <canvas #signatureCanvas width="600" height="200" class="w-full max-w-[600px] h-[200px] border border-oas-line rounded-lg touch-none"
+          (mousedown)="commencerSignature($event)" (mousemove)="dessinerSignature($event)" (mouseup)="terminerSignature()"
+          (mouseleave)="terminerSignature()" (touchstart)="commencerSignature($event)" (touchmove)="dessinerSignature($event)" (touchend)="terminerSignature()"></canvas>
+        <button type="button" (click)="effacerSignature()" class="text-sm text-oas-accent">Effacer la signature</button>
+      </div>
   </div>
 }

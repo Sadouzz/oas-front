@@ -122,7 +122,7 @@ export const AGENT_PORTAL_ROUTES: Routes = [
           loadComponent: () =>
             import('./ordres-reparation/ordre-reparation-detail/ordre-reparation-detail.component').then(
               m => m.OrdreReparationDetailComponent
-            ),
+          ),
           children: [
             { path: '', redirectTo: 'reception', pathMatch: 'full' },
             {
@@ -283,6 +283,10 @@ export const AGENT_PORTAL_ROUTES: Routes = [
           path: 'admin',
           canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER'])],
           children: [
+            {
+              path: 'pdf-templates',
+              loadComponent: () => import('./admin/pdf-templates/pdf-templates.component').then(m => m.PdfTemplatesComponent),
+            },
             {
               path: 'users',
               loadComponent: () =>
