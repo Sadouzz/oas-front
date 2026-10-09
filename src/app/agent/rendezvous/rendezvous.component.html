@@ -60,16 +60,17 @@
               <td class="px-5 py-4 font-semibold text-oas-ink whitespace-nowrap">
                 {{ rdv.numero || ('#' + rdv.id) }}
               </td>
-              <td class="px-5 py-4 font-semibold text-oas-ink whitespace-nowrap">
-                {{ formatDateTime(rdv.dateRendezVous) }}
+              <td class="px-5 py-4 whitespace-nowrap">
+                <div class="font-semibold text-oas-ink">{{ rdv.dateRendezVous | date:'dd/MM/yyyy' }}</div>
+                <div class="text-xs text-oas-muted">{{ rdv.dateRendezVous | date:'HH:mm' }}</div>
               </td>
               <td class="px-5 py-4 text-oas-ink">{{ rdv.clientName }}</td>
               <td class="px-5 py-4 text-oas-muted text-xs">
                 {{ rdv.vehiculeImmatriculation ?? '—' }}
               </td>
               <td class="px-5 py-4 text-oas-ink max-w-[200px] truncate">{{ rdv.motif }}</td>
-              <td class="px-5 py-4">
-                <span class="px-2.5 py-1 rounded-full text-xs font-semibold {{ getStatutClass(rdv) }}">
+              <td class="px-5 py-4 whitespace-nowrap">
+                <span class="inline-block px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap {{ getStatutClass(rdv) }}">
                   {{ getStatutLabel(rdv) }}
                 </span>
               </td>
