@@ -20,19 +20,6 @@ import {
 import { StepReceptionResponseDto } from '../../../models/responses/step-reception-response.dto';
 import { FicheAtelierDetailsResponse, LigneDefaut, LigneReception } from '../../../../fiches-atelier/models/fiche-atelier.model';
 
-export const TRAVAUX_FREQUENTS = [
-  'Vidange moteur',
-  'Vidange boîte de vitesse',
-  'Changement plaquettes de frein',
-  'Changement disques de frein',
-  'Changement courroie de distribution',
-  'Diagnostic électronique',
-  'Climatisation',
-  'Parallélisme / géométrie',
-  'Révision générale',
-  'Changement pneus',
-];
-
 @Component({
   selector: 'app-step-reception',
   standalone: true,
@@ -62,11 +49,6 @@ export class StepReceptionComponent implements OnInit {
   saving = false;
   errorMessage = '';
   successMessage = '';
-
-  travauxFrequents = TRAVAUX_FREQUENTS;
-  selectedTravaux: string[] = [];
-  autreTravaux = '';
-  showAutreTravaux = false;
 
   step1Form: FormGroup = this.fb.group({
     numero: [''],
@@ -118,12 +100,6 @@ export class StepReceptionComponent implements OnInit {
 
         this.setLignesReception(initialLignesRec);
         this.setLignesTravaux(step.lignesTravaux || ordre?.lignesTravaux || []);
-
-        const descTravaux = step.descriptionTravaux || ordre?.descriptionTravaux || '';
-        const travauxDecomp = this.decomposeToCheckboxes(descTravaux, TRAVAUX_FREQUENTS);
-        this.selectedTravaux = travauxDecomp.selected;
-        this.autreTravaux = travauxDecomp.autre;
-        this.showAutreTravaux = this.autreTravaux.length > 0;
 
         // 2. Recherche et chargement de la Fiche Atelier liée
         const ficheDirect = step.ficheAtelier || ordre?.ficheAtelier;
@@ -250,42 +226,13 @@ export class StepReceptionComponent implements OnInit {
     this.lignesReception.removeAt(index);
   }
 
-  toggleTravail(t: string): void {
-    const idx = this.selectedTravaux.indexOf(t);
-    if (idx >= 0) {
-      this.selectedTravaux.splice(idx, 1);
-    } else {
-      this.selectedTravaux.push(t);
-    }
-  }
-
-  private decomposeToCheckboxes(text: string, frequentList: string[]): { selected: string[], autre: string } {
-    if (!text) return { selected: [], autre: '' };
-    const items = text.split(',').map(s => s.trim()).filter(s => s.length > 0);
-    const selected: string[] = [];
-    const others: string[] = [];
-    for (const item of items) {
-      if (frequentList.includes(item)) selected.push(item);
-      else others.push(item);
-    }
-    return { selected, autre: others.join(', ') };
-  }
-
-  private composeFromCheckboxes(selected: string[], autre: string): string {
-    const list = [...selected];
-    if (autre && autre.trim().length > 0) {
-      list.push(autre.trim());
-    }
-    return list.join(', ');
-  }
-
   validateStep(): void {
     this.saveStep1ThenGoNext();
   }
 
   saveStep1ThenGoNext(): void {
-    const descriptionTravaux = this.composeFromCheckboxes(this.selectedTravaux, this.autreTravaux);
     const raw = this.step1Form.value;
+    const descriptionTravaux = (raw.descriptionTravaux || '').trim();
 
     const payload: StepReceptionDto = {
       numero: raw.numero,

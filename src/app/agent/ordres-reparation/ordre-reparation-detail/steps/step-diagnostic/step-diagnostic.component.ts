@@ -34,18 +34,6 @@ export const SPECIALITES_TECHNICIEN: { value: Specialite; label: string }[] = [
   { value: 'PNEUMATIQUE', label: 'Pneumatique' },
 ];
 
-export const PANNES_FREQUENTES = [
-  'Bruit anormal moteur',
-  'Voyant moteur allumé',
-  'Freinage inefficace / vibrations',
-  'Fuite d\'huile',
-  'Fumée anormale à l\'échappement',
-  'Climatisation inopérante',
-  'Problème démarrage',
-  'Usure pneus',
-  'Jeu dans la direction',
-];
-
 @Component({
   selector: 'app-step-diagnostic',
   standalone: true,
@@ -244,11 +232,6 @@ export class StepDiagnosticComponent implements OnInit {
     return (f + l) || 'T';
   }
 
-  pannesFrequentes = PANNES_FREQUENTES;
-  selectedPannes: string[] = [];
-  autrePannes = '';
-  showAutrePannes = false;
-
   statutDiagnostic: StatutDiagnostic = 'EN_ATTENTE';
 
   remarquesDiagnostic: RemarqueDiagnostic[] = [];
@@ -302,11 +285,6 @@ export class StepDiagnosticComponent implements OnInit {
         (o.techniciensAssocies || []).forEach(t => this.knownTechniciensMap.set(t.id, t));
         this.selectedTechniciens = (o.techniciensAssocies || []).map(t => t.id);
 
-        const pannesDecomp = this.decomposeToCheckboxes(o.listeDefauts ?? '', PANNES_FREQUENTES);
-        this.selectedPannes = pannesDecomp.selected;
-        this.autrePannes = pannesDecomp.autre;
-        this.showAutrePannes = this.autrePannes.length > 0;
-
         // Détermine le statut initial du diagnostic
         if (o.diagnostic?.statut) {
           this.statutDiagnostic = o.diagnostic.statut;
@@ -322,12 +300,6 @@ export class StepDiagnosticComponent implements OnInit {
           
           if (o.diagnostic.statut) {
             this.statutDiagnostic = o.diagnostic.statut;
-          }
-          if (o.diagnostic.pannesDetectees) {
-            const p = this.decomposeToCheckboxes(o.diagnostic.pannesDetectees, PANNES_FREQUENTES);
-            this.selectedPannes = p.selected;
-            this.autrePannes = p.autre;
-            this.showAutrePannes = this.autrePannes.length > 0;
           }
           if (o.diagnostic.piecesJointes && o.diagnostic.piecesJointes.length > 0) {
             this.piecesJointesDiagnostic = o.diagnostic.piecesJointes;
@@ -557,32 +529,10 @@ export class StepDiagnosticComponent implements OnInit {
     });
   }
 
-  private autoSaveTimeout: any = null;
-
-  togglePanne(p: string): void {
-    const idx = this.selectedPannes.indexOf(p);
-    if (idx >= 0) {
-      this.selectedPannes.splice(idx, 1);
-    } else {
-      this.selectedPannes.push(p);
-    }
-    this.saveDiagnosticSilently();
-  }
-
-  onAutrePannesChange(): void {
-    if (this.autoSaveTimeout) {
-      clearTimeout(this.autoSaveTimeout);
-    }
-    this.autoSaveTimeout = setTimeout(() => {
-      this.saveDiagnosticSilently();
-    }, 600);
-  }
-
   saveDiagnosticSilently(): void {
-    const pannes = this.composeFromCheckboxes(this.selectedPannes, this.autrePannes);
     const stepDto: DiagnosticStepDto = {
       ordreReparationId: this.ordreId,
-      listeDefauts: pannes,
+      listeDefauts: this.loadedOrdre?.listeDefauts || this.currentDiagnostic?.pannesDetectees || '',
       technicienIds: this.selectedTechniciens,
       statut: this.statutDiagnostic
     };
@@ -592,28 +542,6 @@ export class StepDiagnosticComponent implements OnInit {
       },
       error: () => { }
     });
-  }
-
-  private decomposeToCheckboxes(raw: string, frequentList: string[]): { selected: string[]; autre: string } {
-    if (!raw || !raw.trim()) {
-      return { selected: [], autre: '' };
-    }
-    const items = raw.split(',').map(s => s.trim()).filter(Boolean);
-    const selected: string[] = [];
-    const others: string[] = [];
-    for (const item of items) {
-      if (frequentList.includes(item)) selected.push(item);
-      else others.push(item);
-    }
-    return { selected, autre: others.join(', ') };
-  }
-
-  private composeFromCheckboxes(selected: string[], autre: string): string {
-    const list = [...selected];
-    if (autre && autre.trim().length > 0) {
-      list.push(autre.trim());
-    }
-    return list.join(', ');
   }
 
   marquerTermine(): void {
@@ -639,10 +567,10 @@ export class StepDiagnosticComponent implements OnInit {
     this.statutDiagnostic = 'VALIDE';
     this.saving = true;
 
-    const pannes = this.composeFromCheckboxes(this.selectedPannes, this.autrePannes);
+    const listeDefauts = this.loadedOrdre?.listeDefauts || this.currentDiagnostic?.pannesDetectees || '';
     const stepDto: DiagnosticStepDto = {
       ordreReparationId: this.ordreId,
-      listeDefauts: pannes,
+      listeDefauts: listeDefauts,
       technicienIds: this.selectedTechniciens,
       statut: 'VALIDE'
     };
@@ -662,7 +590,7 @@ export class StepDiagnosticComponent implements OnInit {
         // En cas d'erreur avec le endpoint diagnostic, on tente la mise à jour via l'ordre
         const payload: any = {
           numero: this.loadedOrdre?.numero || '',
-          listeDefauts: pannes,
+          listeDefauts: listeDefauts,
           vehiculeId: this.loadedOrdre?.vehiculeId || 0,
           statut: 'PIECES_MO'
         };
@@ -690,10 +618,9 @@ export class StepDiagnosticComponent implements OnInit {
     this.saving = true;
     this.statutDiagnostic = 'EN_COURS';
 
-    const pannes = this.composeFromCheckboxes(this.selectedPannes, this.autrePannes);
     const stepDto: DiagnosticStepDto = {
       ordreReparationId: this.ordreId,
-      listeDefauts: pannes,
+      listeDefauts: this.loadedOrdre?.listeDefauts || this.currentDiagnostic?.pannesDetectees || '',
       technicienIds: this.selectedTechniciens,
       statut: 'EN_COURS'
     };
@@ -781,12 +708,12 @@ export class StepDiagnosticComponent implements OnInit {
   }
 
   saveDiagnosticSeul(): void {
-    const pannes = this.composeFromCheckboxes(this.selectedPannes, this.autrePannes);
+    const listeDefauts = this.loadedOrdre?.listeDefauts || this.currentDiagnostic?.pannesDetectees || '';
     this.saving = true;
 
     const stepDto: DiagnosticStepDto = {
       ordreReparationId: this.ordreId,
-      listeDefauts: pannes,
+      listeDefauts: listeDefauts,
       technicienIds: this.selectedTechniciens,
       statut: this.statutDiagnostic
     };
@@ -802,7 +729,7 @@ export class StepDiagnosticComponent implements OnInit {
       error: () => {
         const payload: any = {
           numero: this.loadedOrdre?.numero || '',
-          listeDefauts: pannes,
+          listeDefauts: listeDefauts,
           vehiculeId: this.loadedOrdre?.vehiculeId || 0
         };
         this.ordreService.update(this.ordreId, payload).subscribe({
@@ -829,12 +756,12 @@ export class StepDiagnosticComponent implements OnInit {
   }
 
   saveStep2ThenGoNext(): void {
-    const pannes = this.composeFromCheckboxes(this.selectedPannes, this.autrePannes);
+    const listeDefauts = this.loadedOrdre?.listeDefauts || this.currentDiagnostic?.pannesDetectees || '';
     this.saving = true;
 
     const stepDto: DiagnosticStepDto = {
       ordreReparationId: this.ordreId,
-      listeDefauts: pannes,
+      listeDefauts: listeDefauts,
       technicienIds: this.selectedTechniciens,
       statut: 'VALIDE'
     };
@@ -858,7 +785,7 @@ export class StepDiagnosticComponent implements OnInit {
       error: () => {
         const payload: any = {
           numero: this.loadedOrdre?.numero || '',
-          listeDefauts: pannes,
+          listeDefauts: listeDefauts,
           vehiculeId: this.loadedOrdre?.vehiculeId || 0
         };
         this.ordreService.update(this.ordreId, payload).subscribe({

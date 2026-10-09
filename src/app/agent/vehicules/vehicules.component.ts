@@ -39,26 +39,18 @@ export class VehiculesComponent extends BasePaginatedComponent implements OnInit
   isNew = false;
   editingId = null as number | null;
 
-  // 2-step creation
-  createStep = 1;
-  pendingVehicle: any = null;
-
   filterMarque = '';
   filterClientId: number | null = null;
 
-  // Step 1 form (vehicle info)
-  infoForm = this.fb.group({
+  // Formulaire unifié (Création & Édition sur 1 seul step)
+  form = this.fb.group({
+    clientId: [null as number | null, Validators.required],
     immatriculation: ['', Validators.required],
     marque: ['', Validators.required],
     modele: ['', Validators.required],
     annee: [null as number | null],
     kilometrage: [null as number | null],
     numeroChassis: [''],
-  });
-
-  // Step 2 form (select client)
-  clientForm = this.fb.group({
-    clientId: [null as number | null, Validators.required],
   });
 
   editingClient: UserModel | null = null;
@@ -74,7 +66,7 @@ export class VehiculesComponent extends BasePaginatedComponent implements OnInit
     if (this.selectedClient) {
       return `${this.selectedClient.firstName || ''} ${this.selectedClient.lastName || ''}`.trim();
     }
-    const id = this.clientForm.get('clientId')?.value;
+    const id = this.form.get('clientId')?.value;
     if (!id) return '';
     const c = this.clients.find(x => x.id === Number(id));
     return c ? `${c.firstName || ''} ${c.lastName || ''}`.trim() : '';
@@ -86,7 +78,7 @@ export class VehiculesComponent extends BasePaginatedComponent implements OnInit
 
   selectClient(c: UserModel) {
     this.selectedClient = c;
-    this.clientForm.patchValue({ clientId: c.id });
+    this.form.patchValue({ clientId: c.id });
     this.clientFilter = '';
     this.clientOpen = false;
     this.cdr.markForCheck();
@@ -106,21 +98,11 @@ export class VehiculesComponent extends BasePaginatedComponent implements OnInit
 
   clearSelectedClient() {
     this.selectedClient = null;
-    this.clientForm.patchValue({ clientId: null });
+    this.form.patchValue({ clientId: null });
     this.clientFilter = '';
     this.loadClients();
     this.cdr.markForCheck();
   }
-
-  // Edit form (all fields except client — client cannot be changed after creation)
-  editForm = this.fb.group({
-    immatriculation: ['', Validators.required],
-    marque: ['', Validators.required],
-    modele: ['', Validators.required],
-    annee: [null as number | null],
-    kilometrage: [null as number | null],
-    numeroChassis: [''],
-  });
 
   ngOnInit() {
     this.loadData();
@@ -256,33 +238,20 @@ export class VehiculesComponent extends BasePaginatedComponent implements OnInit
 
   get paged(): VehiculeModel[] { return this.filtered; }
 
-  // ── CREATE 2-STEP ──────────────────────────────────────────────
+  // ── CREATE ────────────────────────────────────────────────────
   openCreate() {
     this.isNew = true;
     this.editingId = null;
-    this.createStep = 1;
-    this.pendingVehicle = null;
+    this.editingClient = null;
     this.selectedClient = null;
-    this.infoForm.reset();
-    this.clientForm.reset();
+    this.form.reset();
+    this.form.get('clientId')?.setValidators(Validators.required);
+    this.form.get('clientId')?.updateValueAndValidity();
     this.clientOpen = false;
     this.clientFilter = '';
     this.errorMessage = '';
     this.showModal = true;
-  }
-
-  nextStep() {
-    if (this.infoForm.invalid) { this.infoForm.markAllAsTouched(); return; }
-    this.pendingVehicle = this.infoForm.value;
-    this.createStep = 2;
-    this.errorMessage = '';
-    this.clientFilter = '';
     this.loadClients();
-  }
-
-  prevStep() {
-    this.createStep = 1;
-    this.errorMessage = '';
   }
 
   // ── EDIT ───────────────────────────────────────────────────────
@@ -290,9 +259,12 @@ export class VehiculesComponent extends BasePaginatedComponent implements OnInit
     this.isNew = false;
     this.editingId = v.id;
     this.editingClient = (v.client as any) || null;
-    this.createStep = 1;
+    this.selectedClient = (v.client as any) || null;
     this.errorMessage = '';
-    this.editForm.patchValue({
+    this.form.get('clientId')?.clearValidators();
+    this.form.get('clientId')?.updateValueAndValidity();
+    this.form.patchValue({
+      clientId: v.client?.id ?? null,
       immatriculation: v.immatriculation,
       marque: v.marque,
       modele: v.modele,
@@ -308,39 +280,49 @@ export class VehiculesComponent extends BasePaginatedComponent implements OnInit
   }
 
   save() {
+    if (this.form.invalid || this.saving) {
+      this.form.markAllAsTouched();
+      return;
+    }
+    this.saving = true;
+    const formVal = this.form.getRawValue();
+    const payload = {
+      immatriculation: formVal.immatriculation?.trim(),
+      marque: formVal.marque?.trim(),
+      modele: formVal.modele?.trim(),
+      annee: formVal.annee ? Number(formVal.annee) : null,
+      kilometrage: formVal.kilometrage != null ? Number(formVal.kilometrage) : null,
+      numeroChassis: formVal.numeroChassis?.trim() || null,
+      clientId: this.isNew ? (formVal.clientId ? Number(formVal.clientId) : null) : (this.editingClient?.id ?? null)
+    };
+
     if (this.isNew) {
-      if (this.clientForm.invalid || this.saving) { this.clientForm.markAllAsTouched(); return; }
-      this.saving = true;
-      const formVal = this.pendingVehicle || {};
-      const payload = {
-        immatriculation: formVal.immatriculation?.trim(),
-        marque: formVal.marque?.trim(),
-        modele: formVal.modele?.trim(),
-        annee: formVal.annee ? Number(formVal.annee) : null,
-        kilometrage: formVal.kilometrage != null && formVal.kilometrage !== '' ? Number(formVal.kilometrage) : null,
-        numeroChassis: formVal.numeroChassis?.trim() || null,
-        clientId: this.clientForm.value.clientId ? Number(this.clientForm.value.clientId) : null
-      };
       this.vehiculeService.create(payload as any).subscribe({
-        next: () => { this.saving = false; this.showSuccess('Véhicule créé avec succès !'); this.closeModal(); this.loadVehicules(); },
-        error: (err: any) => { this.saving = false; this.errorMessage = err.error?.message || 'Erreur lors de la création.'; this.cdr.markForCheck(); }
+        next: () => {
+          this.saving = false;
+          this.showSuccess('Véhicule créé avec succès !');
+          this.closeModal();
+          this.loadVehicules();
+        },
+        error: (err: any) => {
+          this.saving = false;
+          this.errorMessage = err.error?.message || 'Erreur lors de la création.';
+          this.cdr.markForCheck();
+        }
       });
     } else {
-      if (this.editForm.invalid || this.saving) { this.editForm.markAllAsTouched(); return; }
-      this.saving = true;
-      const formVal = this.editForm.value as any;
-      const payload = {
-        immatriculation: formVal.immatriculation?.trim(),
-        marque: formVal.marque?.trim(),
-        modele: formVal.modele?.trim(),
-        annee: formVal.annee ? Number(formVal.annee) : null,
-        kilometrage: formVal.kilometrage != null && formVal.kilometrage !== '' ? Number(formVal.kilometrage) : null,
-        numeroChassis: formVal.numeroChassis?.trim() || null,
-        clientId: this.editingClient?.id ?? null
-      };
       this.vehiculeService.update(this.editingId!, payload as any).subscribe({
-        next: () => { this.saving = false; this.showSuccess('Véhicule modifié avec succès !'); this.closeModal(); this.loadVehicules(); },
-        error: (err: any) => { this.saving = false; this.errorMessage = err.error?.message || 'Erreur lors de la modification.'; this.cdr.markForCheck(); }
+        next: () => {
+          this.saving = false;
+          this.showSuccess('Véhicule modifié avec succès !');
+          this.closeModal();
+          this.loadVehicules();
+        },
+        error: (err: any) => {
+          this.saving = false;
+          this.errorMessage = err.error?.message || 'Erreur lors de la modification.';
+          this.cdr.markForCheck();
+        }
       });
     }
   }
@@ -360,7 +342,5 @@ export class VehiculesComponent extends BasePaginatedComponent implements OnInit
     setTimeout(() => { this.successMessage = ''; this.cdr.markForCheck(); }, 3500);
   }
 
-  get fInfo() { return this.infoForm.controls; }
-  get fClient() { return this.clientForm.controls; }
-  get fEdit() { return this.editForm.controls; }
+  get f() { return this.form.controls; }
 }

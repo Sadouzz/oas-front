@@ -1,11 +1,11 @@
 import { Component, Input, Output, EventEmitter, forwardRef, ElementRef, HostListener } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/forms';
-
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-searchable-select',
   standalone: true,
-  imports: [FormsModule],
+  imports: [CommonModule, FormsModule],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -38,13 +38,13 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/f
           } @else {
             @for (opt of filteredOptions(); track (opt && opt[bindValue] != null ? opt[bindValue] : $index)) {
               <div (click)="selectOption(opt)"
-                   class="px-3 py-2.5 hover:bg-oas-bg cursor-pointer transition text-oas-ink border-b border-oas-line/50 last:border-0 flex items-center justify-between"
-                   [class.bg-oas-accent]="isSelected(opt)"
-                   [class.text-white]="isSelected(opt)"
-                   [class.font-bold]="isSelected(opt)">
+                   class="px-3 py-2.5 cursor-pointer transition border-b border-oas-line/50 last:border-0 flex items-center justify-between"
+                   [ngClass]="isSelected(opt) 
+                     ? 'bg-oas-accent-bg text-oas-accent-dark font-bold hover:bg-oas-accent-bg/80' 
+                     : 'text-oas-ink hover:bg-oas-bg'">
                 <span>{{ getLabel(opt) }}</span>
                 @if (isSelected(opt)) {
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <svg class="w-4 h-4 text-oas-accent flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                   </svg>
                 }
@@ -130,8 +130,19 @@ export class SearchableSelectComponent implements ControlValueAccessor {
   filteredOptions() {
     const list = this.options || [];
     if (this.serverSearch || !this.searchTerm) return list;
-    const term = this.searchTerm.toLowerCase();
-    return list.filter(o => this.getLabel(o).toLowerCase().includes(term));
+    const term = this.searchTerm.trim().toLowerCase();
+    return list.filter(o => {
+      if (!o) return false;
+      const label = this.getLabel(o).toLowerCase();
+      if (label.includes(term)) return true;
+      if (typeof o === 'object') {
+        const ref = (o.reference || '').toLowerCase();
+        const des = (o.designation || o.description || '').toLowerCase();
+        const nom = (o.nom || o.prenom || o.matricule || o.immatriculation || '').toLowerCase();
+        if (ref.includes(term) || des.includes(term) || nom.includes(term)) return true;
+      }
+      return false;
+    });
   }
 
   onSearchChange(term: string) {

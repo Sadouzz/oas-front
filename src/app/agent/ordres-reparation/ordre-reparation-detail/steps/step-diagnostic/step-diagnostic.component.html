@@ -441,45 +441,7 @@
       </div>
     </div>
 
-    <!-- Anomalies & Pannes signalées -->
-    <div class="border-t border-oas-line pt-4 space-y-3">
-      <label class="block text-sm font-bold text-oas-ink">Anomalies constatées / Pannes</label>
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
-        @for (p of pannesFrequentes; track p) {
-          <label class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold cursor-pointer transition border"
-            [class.bg-red-50]="selectedPannes.includes(p)"
-            [class.border-red-300]="selectedPannes.includes(p)"
-            [class.text-red-700]="selectedPannes.includes(p)"
-            [class.bg-oas-bg]="!selectedPannes.includes(p)"
-            [class.border-oas-line]="!selectedPannes.includes(p)"
-            [class.text-oas-ink]="!selectedPannes.includes(p)">
-            <input type="checkbox" [checked]="selectedPannes.includes(p)" (change)="togglePanne(p)"
-              class="w-4 h-4 accent-red-600 rounded" />
-            <span>{{ p }}</span>
-          </label>
-        }
-      </div>
 
-      <div class="mt-3">
-        <label class="inline-flex items-center gap-2.5 px-3.5 py-2 rounded-xl text-xs font-semibold cursor-pointer border transition"
-          [class.bg-amber-50]="showAutrePannes"
-          [class.border-amber-300]="showAutrePannes"
-          [class.text-amber-800]="showAutrePannes"
-          [class.bg-oas-bg]="!showAutrePannes"
-          [class.border-oas-line]="!showAutrePannes"
-          [class.text-oas-ink]="!showAutrePannes">
-          <input type="checkbox" [checked]="showAutrePannes" (change)="showAutrePannes = !showAutrePannes"
-            class="w-4 h-4 accent-amber-500 rounded" />
-          <span>Autre anomalie constatée</span>
-        </label>
-        @if (showAutrePannes) {
-          <textarea [(ngModel)]="autrePannes" [ngModelOptions]="{standalone: true}"
-            (input)="onAutrePannesChange()" (blur)="saveDiagnosticSilently()" rows="2"
-            placeholder="Précisez les symptômes..."
-            class="w-full mt-2 px-3.5 py-2.5 rounded-xl border border-amber-300 bg-amber-50/40 text-sm text-oas-ink focus:outline-none focus:ring-2 focus:ring-amber-400/40 transition resize-none"></textarea>
-        }
-      </div>
-    </div>
 
     <!-- Remarques de diagnostic -->
     <div class="border-t border-oas-line pt-4 space-y-3">
