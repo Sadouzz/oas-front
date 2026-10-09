@@ -41,6 +41,10 @@ export class VehiculeService {
     return this.http.post<VehiculeModel>(`${this.api}/create`, data);
   }
 
+  activer(id: number): Observable<VehiculeModel> {
+    return this.http.put<VehiculeModel>(`${this.api}/${id}/activer`, {});
+  }
+
   update(id: number, data: VehiculeRequest): Observable<VehiculeModel> {
     return this.http.put<VehiculeModel>(`${this.api}/${id}`, data);
   }

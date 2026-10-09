@@ -13,7 +13,9 @@ export interface RendezVousListResponse {
   numero?: string;
   dateRendezVous: string;
   clientName: string;
+  vehiculeId?: number | null;
   vehiculeImmatriculation: string | null;
+  vehiculeActif: boolean;
   motif: string;
   motifAnnulation?: string | null;
   statut: RendezVousStatus;
@@ -27,6 +29,7 @@ export interface RendezVous {
   clientName: string;
   vehiculeId: number | null;
   vehiculeImmatriculation: string | null;
+  vehiculeActif: boolean;
   dateRendezVous: string;
   motif: string;
   motifAnnulation?: string | null;

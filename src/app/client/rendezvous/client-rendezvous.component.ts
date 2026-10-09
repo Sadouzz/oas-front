@@ -196,7 +196,8 @@ export class ClientRendezVousComponent implements OnInit {
           annee: vehicule.annee,
           kilometrage: vehicule.kilometrage,
           numeroChassis: vehicule.numeroChassis,
-          disponiblePourRdv: true
+          disponiblePourRdv: true,
+          actif: false
         };
         this.vehicules = [...this.vehicules, newV];
         this.selectVehicule(vehicule.id);
@@ -228,7 +229,7 @@ export class ClientRendezVousComponent implements OnInit {
       next: () => {
         this.requestingVehicleTransfer = false;
         this.vehiculeCreateError = '';
-        this.vehiculeTransferMessage = 'Demande envoyée aux agents. Vous pourrez sélectionner ce véhicule pour votre rendez-vous après validation.';
+        this.vehiculeTransferMessage = 'Votre demande a été envoyée à OAS pour vérification. Vous pourrez sélectionner ce véhicule pour votre rendez-vous après validation.';
         this.duplicateVehicleData = null;
         this.vehiculeForm.reset();
         this.showVehiculeCreateForm = false;

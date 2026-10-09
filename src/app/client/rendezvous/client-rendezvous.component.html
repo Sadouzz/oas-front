@@ -172,7 +172,13 @@
             </div>
             }
 
-            @if (canCancel(selected.statut)) {
+            @if (selected.vehiculeActif === false) {
+            <p class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              Ce véhicule attend son activation par OAS. Votre demande de rendez-vous ne pourra pas être modifiée ou annulée avant son activation.
+            </p>
+            }
+
+            @if (selected.vehiculeActif !== false && canCancel(selected.statut)) {
             <div class="pt-2 border-t border-oas-line">
               <button (click)="annuler(selected.id)"
                 class="w-full border-2 border-oas-bad text-oas-bad font-bold py-2.5 rounded-xl text-sm hover:bg-oas-bad-bg transition cursor-pointer active:scale-98">
@@ -228,6 +234,7 @@
             <div (mousedown)="selectVehicule(vehicule.id)"
               class="px-4 py-2.5 text-sm text-oas-ink hover:bg-oas-bg cursor-pointer">
               {{ vehicule.immatriculation }} — {{ vehicule.marque }} {{ vehicule.modele }}
+              @if (!vehicule.actif) { · Nouveau, activation après RDV }
             </div>
             }
             @if (vehiculesFiltres.length === 0) {
@@ -307,7 +314,7 @@
             @if (duplicateVehicleData) {
             <button type="button" (click)="requestVehicleTransfer()" [disabled]="requestingVehicleTransfer"
               class="w-full rounded-lg bg-oas-accent px-3 py-2.5 text-sm font-bold text-white transition hover:bg-oas-accent-dark disabled:opacity-60">
-              {{ requestingVehicleTransfer ? 'Envoi de la demande…' : 'Demander le transfert de ce véhicule' }}
+              {{ requestingVehicleTransfer ? 'Envoi à OAS…' : 'Envoyer la demande à OAS' }}
             </button>
             }
 

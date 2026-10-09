@@ -10,14 +10,10 @@ import { environment } from '../../../../environments/environment';
   selector: 'app-push-opt-in',
   standalone: true,
   template: `
-    @if (authenticated() && pushEnabled()) {
+    @if (authenticated() && pushEnabled() && !subscribed()) {
       <div class="fixed bottom-4 right-4 z-[70] flex items-center gap-2 rounded-xl border border-oas-line bg-white px-3 py-2 shadow-lg">
-        <span class="text-xs text-oas-ink">{{ subscribed() ? 'Notifications push activées' : 'Recevoir les notifications' }}</span>
-        @if (subscribed()) {
-          <button type="button" (click)="disable()" [disabled]="busy()" class="rounded-lg border border-oas-line px-2.5 py-1.5 text-xs font-semibold text-oas-muted disabled:opacity-50">Désactiver</button>
-        } @else {
-          <button type="button" (click)="enable()" [disabled]="busy()" class="rounded-lg bg-oas-accent px-2.5 py-1.5 text-xs font-bold text-white disabled:opacity-50">{{ busy() ? '…' : 'Activer' }}</button>
-        }
+        <span class="text-xs text-oas-ink">Recevoir les notifications</span>
+        <button type="button" (click)="enable()" [disabled]="busy()" class="rounded-lg bg-oas-accent px-2.5 py-1.5 text-xs font-bold text-white disabled:opacity-50">{{ busy() ? '…' : 'Activer' }}</button>
         @if (error()) { <span class="sr-only" role="alert">{{ error() }}</span> }
       </div>
     }
@@ -70,20 +66,6 @@ export class PushOptInComponent implements OnInit {
       this.subscribed.set(true);
     } catch (error: any) {
       this.error.set(error?.message || 'Impossible d’activer les notifications.');
-    } finally { this.busy.set(false); }
-  }
-
-  async disable(): Promise<void> {
-    if (this.busy()) return;
-    this.busy.set(true);
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.getSubscription();
-      if (subscription) await firstValueFrom(this.http.delete(`${this.api}/subscription`, { params: { endpoint: subscription.endpoint } }));
-      if (subscription) await subscription.unsubscribe();
-      this.subscribed.set(false);
-    } catch (error: any) {
-      this.error.set(error?.message || 'Impossible de désactiver les notifications.');
     } finally { this.busy.set(false); }
   }
 
