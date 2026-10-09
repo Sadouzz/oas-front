@@ -191,7 +191,7 @@ export class RdvComponent implements OnInit {
         prenom: ['', [Validators.required, Validators.minLength(2)]],
         nom: ['', [Validators.required, Validators.minLength(2)]],
         email: ['', [Validators.required, Validators.email]],
-        telephone: ['', [Validators.required, Validators.pattern(/^[0-9+\s]{8,15}$/)]],
+        telephone: ['', Validators.required],
         motDePasse: ['', [Validators.required, Validators.minLength(6)]],
         confirmation: ['', [Validators.required]],
         cgu: [false, [Validators.requiredTrue]]
@@ -239,7 +239,7 @@ export class RdvComponent implements OnInit {
       `\nMerci !`;
 
     const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/221785968642?text=${encodedMessage}`;
+    const whatsappUrl = `https://wa.me/221777662671?text=${encodedMessage}`;
     window.open(whatsappUrl, '_blank');
     this.closeModal();
   }

@@ -9,6 +9,7 @@ import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { DatePipe } from '@angular/common';
 import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select.component';
+import { PhoneInputComponent } from '../../shared/components/phone-input/phone-input.component';
 import {
   LucideSearch, LucideX, LucideCalendar, LucideCheck, LucideFileText, LucidePlus, LucideUser, LucideLock
 } from '@lucide/angular';
@@ -18,7 +19,7 @@ import {
   standalone: true,
   imports: [
     DatePipe,
-    ReactiveFormsModule, AlertComponent, PaginationComponent, SearchableSelectComponent,
+    ReactiveFormsModule, AlertComponent, PaginationComponent, SearchableSelectComponent, PhoneInputComponent,
     LucideSearch, LucideX, LucideCalendar, LucideCheck, LucideFileText, LucidePlus, LucideUser, LucideLock
   ],
   templateUrl: './rendezvous.component.html',
@@ -69,12 +70,26 @@ export class RendezVousComponent implements OnInit {
   errorMessage = '';
   modalErrorMessage = '';
   modalSuccessMessage = '';
+  clientPhone = '';
+  whatsappFallbackUrl = '';
+  whatsappNotice = '';
+  showQuickClientForm = false;
+  showQuickVehicleForm = false;
+  quickClientError = '';
+  quickVehicleError = '';
+  quickClientForm: FormGroup = this.fb.group({
+    firstName: ['', Validators.required], lastName: ['', Validators.required],
+    phone: ['', Validators.required], email: ['', [Validators.required, Validators.email]], adresse: [''],
+  });
+  quickVehicleForm: FormGroup = this.fb.group({
+    immatriculation: ['', Validators.required], marque: ['', Validators.required], modele: ['', Validators.required],
+    annee: [null], kilometrage: [null], numeroChassis: [''],
+  });
 
   readonly statutOptions: { value: RendezVousStatus; label: string }[] = [
     { value: 'EN_ATTENTE', label: 'En attente' },
     { value: 'CONFIRME',   label: 'En cours (Confirmé)' },
     { value: 'TERMINE',    label: 'Fiche atelier créée' },
-    { value: 'REFUSE',     label: 'Refusé' },
     { value: 'ANNULE',     label: 'Annulé' },
   ];
 
@@ -91,6 +106,7 @@ export class RendezVousComponent implements OnInit {
   statutForm: FormGroup = this.fb.group({
     statut:      ['', Validators.required],
     commentaire: [''],
+    motifAnnulation: [''],
   });
 
   createForm: FormGroup = this.fb.group({
@@ -232,6 +248,7 @@ export class RendezVousComponent implements OnInit {
 
   selectClient(c: ClientModel) {
     this.selectedClientObj = c;
+    this.clientPhone = c.phone || '';
     this.createForm.patchValue({ clientId: c.id, vehiculeId: null });
     this.clientFilter = '';
     this.clientOpen = false;
@@ -268,6 +285,54 @@ export class RendezVousComponent implements OnInit {
     this.createForm.patchValue({ motif: m });
   }
 
+  openQuickClientForm(): void {
+    this.quickClientError = '';
+    this.quickClientForm.reset();
+    this.showQuickClientForm = true;
+  }
+
+  createQuickClient(): void {
+    if (this.quickClientForm.invalid) {
+      this.quickClientForm.markAllAsTouched();
+      return;
+    }
+    this.quickClientError = '';
+    const raw = this.quickClientForm.getRawValue();
+    this.clientService.create({ ...raw, password: '', typeClient: 'PARTICULIER' }).subscribe({
+      next: (created: any) => {
+        const client = created as ClientModel;
+        this.clients = [client, ...this.clients.filter(c => c.id !== client.id)];
+        this.showQuickClientForm = false;
+        this.selectClient(client);
+      },
+      error: (err: any) => this.quickClientError = err.error?.message || "Impossible de créer le client.",
+    });
+  }
+
+  createQuickVehicle(): void {
+    if (this.quickVehicleForm.invalid || !this.selectedClient) {
+      this.quickVehicleForm.markAllAsTouched();
+      return;
+    }
+    this.quickVehicleError = '';
+    const raw = this.quickVehicleForm.getRawValue();
+    this.vehiculeService.create({
+      immatriculation: String(raw.immatriculation).trim().toUpperCase(),
+      marque: String(raw.marque).trim(), modele: String(raw.modele).trim(),
+      annee: raw.annee ? Number(raw.annee) : null,
+      kilometrage: raw.kilometrage !== null && raw.kilometrage !== '' ? Number(raw.kilometrage) : null,
+      numeroChassis: raw.numeroChassis?.trim() || null,
+      clientId: this.selectedClient.id,
+    }).subscribe({
+      next: created => {
+        this.clientVehicules = [created, ...this.clientVehicules.filter(v => v.id !== created.id)];
+        this.createForm.patchValue({ vehiculeId: created.id });
+        this.showQuickVehicleForm = false;
+      },
+      error: (err: any) => this.quickVehicleError = err.error?.message || "Impossible de créer le véhicule.",
+    });
+  }
+
   get minDate(): string {
     const d = new Date();
     const pad = (n: number) => String(n).padStart(2, '0');
@@ -287,6 +352,10 @@ export class RendezVousComponent implements OnInit {
     this.clientFilter = '';
     this.clientOpen = false;
     this.clientVehicules = [];
+    this.showQuickClientForm = false;
+    this.showQuickVehicleForm = false;
+    this.quickClientError = '';
+    this.quickVehicleError = '';
     this.loadingClientVehicules = false;
     this.modalErrorMessage = '';
     this.showCreateModal = true;
@@ -297,6 +366,8 @@ export class RendezVousComponent implements OnInit {
     this.showCreateModal = false;
     this.modalErrorMessage = '';
     this.clientOpen = false;
+    this.showQuickClientForm = false;
+    this.showQuickVehicleForm = false;
   }
 
   private getDefaultDate(): string {
@@ -320,6 +391,7 @@ export class RendezVousComponent implements OnInit {
 
     this.saving = true;
     this.modalErrorMessage = '';
+    const whatsappWindow = this.reserveWhatsAppWindow();
     const raw = this.createForm.value;
 
     const payload: CreateRendezVousRequest = {
@@ -332,13 +404,15 @@ export class RendezVousComponent implements OnInit {
     };
 
     this.service.create(payload).subscribe({
-      next: () => {
+      next: (created) => {
         this.saving = false;
         this.closeCreate();
         this.load();
+        this.openWhatsApp(whatsappWindow, created);
         this.notify('Rendez-vous créé avec succès.');
       },
       error: (err: any) => {
+        whatsappWindow?.close();
         this.saving = false;
         this.modalErrorMessage = err.error?.message || err.error || 'Erreur lors de la création du rendez-vous.';
         this.cdr.markForCheck();
@@ -351,8 +425,9 @@ export class RendezVousComponent implements OnInit {
     this.editingRdv = rdv;
     this.modalErrorMessage = '';
     this.modalSuccessMessage = '';
-    this.statutForm.patchValue({ statut: rdv.statut, commentaire: rdv.commentaire ?? '' });
+    this.statutForm.patchValue({ statut: rdv.statut === 'REFUSE' ? 'ANNULE' : rdv.statut, commentaire: rdv.commentaire ?? '', motifAnnulation: rdv.motifAnnulation ?? '' });
     this.showStatutModal = true;
+    this.loadClientPhone(rdv.clientId);
   }
 
   isValiderAction = true;
@@ -364,6 +439,7 @@ export class RendezVousComponent implements OnInit {
     this.modalErrorMessage = '';
     this.modalSuccessMessage = '';
     this.showValiderModal = true;
+    this.loadClientPhone(rdv.clientId);
   }
 
   openEditDate(rdv: RendezVous) {
@@ -392,14 +468,23 @@ export class RendezVousComponent implements OnInit {
     if (!this.editingRdv || this.statutForm.invalid) return;
     this.saving = true;
     this.modalErrorMessage = '';
-    const { statut, commentaire } = this.statutForm.value;
-    this.service.updateStatut(this.editingRdv.id, statut, commentaire || undefined).subscribe({
-      next: () => {
+    const { statut, commentaire, motifAnnulation } = this.statutForm.value;
+    if (statut === 'ANNULE' && !String(motifAnnulation ?? '').trim()) {
+      this.saving = false;
+      this.modalErrorMessage = "Le motif est obligatoire pour annuler le rendez-vous.";
+      return;
+    }
+    const whatsappWindow = this.reserveWhatsAppWindow();
+    this.service.updateStatut(this.editingRdv.id, statut, commentaire || undefined,
+      statut === 'ANNULE' ? String(motifAnnulation).trim() : undefined).subscribe({
+      next: (updated) => {
         this.closeModals();
         this.load();
+        this.openWhatsApp(whatsappWindow, updated, String(motifAnnulation || ''));
         this.notify('Statut mis à jour.');
       },
       error: (err: any) => {
+        whatsappWindow?.close();
         this.saving = false;
         this.modalErrorMessage = err.error?.message || 'Erreur lors de la mise à jour.';
       },
@@ -414,34 +499,43 @@ export class RendezVousComponent implements OnInit {
     }
     this.saving = true;
     this.modalErrorMessage = '';
+    const shouldNotifyWhatsApp = this.isValiderAction && this.editingRdv.statut === 'EN_ATTENTE';
+    const whatsappWindow = shouldNotifyWhatsApp ? this.reserveWhatsAppWindow() : null;
 
     const doValider = () => {
       this.service.valider(this.editingRdv!.id).subscribe({
-        next: () => {
+        next: (updated) => {
           this.closeModals();
           this.load();
+          this.openWhatsApp(whatsappWindow, updated);
           this.notify('Rendez-vous confirmé.');
         },
         error: (err: any) => {
+          whatsappWindow?.close();
           this.saving = false;
           this.modalErrorMessage = err.error?.message || 'Erreur lors de la confirmation.';
         },
       });
     };
 
-    if (this.editedDate) {
+    const dateChanged = !!this.editedDate && !!this.editingRdv &&
+      new Date(this.editedDate).getTime() !== new Date(this.editingRdv.dateRendezVous).getTime();
+
+    if (dateChanged) {
       const isoDate = new Date(this.editedDate).toISOString();
       this.service.updateDate(this.editingRdv.id, isoDate).subscribe({
-        next: () => {
+        next: (updated) => {
           if (this.isValiderAction && this.editingRdv?.statut === 'EN_ATTENTE') {
             doValider();
           } else {
             this.closeModals();
             this.load();
+            this.openWhatsApp(whatsappWindow, updated, '', true);
             this.notify('Date du rendez-vous modifiée avec succès.');
           }
         },
         error: (err: any) => {
+          whatsappWindow?.close();
           this.saving = false;
           this.modalErrorMessage = err.error?.message || 'Erreur lors de la mise à jour de la date.';
         },
@@ -451,6 +545,7 @@ export class RendezVousComponent implements OnInit {
         doValider();
       } else {
         this.closeModals();
+        this.notify('Aucune modification de date à enregistrer.');
       }
     }
   }
@@ -493,17 +588,49 @@ export class RendezVousComponent implements OnInit {
   }
 
   cancelRdv(rdv: RendezVous) {
-    if (confirm(`Êtes-vous sûr de vouloir annuler ce rendez-vous ?`)) {
-      this.service.updateStatut(rdv.id, 'ANNULE', 'Annulé par l\'agent').subscribe({
-        next: () => {
-          this.notify('Rendez-vous annulé avec succès.');
-          this.load();
-        },
-        error: (err: any) => {
-          this.notifyError(err.error?.message || 'Erreur lors de l\'annulation du rendez-vous.');
-        }
-      });
+    this.editingRdv = rdv;
+    this.statutForm.reset({ statut: 'ANNULE', commentaire: '', motifAnnulation: '' });
+    this.modalErrorMessage = '';
+    this.showStatutModal = true;
+    this.loadClientPhone(rdv.clientId);
+  }
+
+  private loadClientPhone(clientId: number | null | undefined): void {
+    this.clientPhone = '';
+    if (!clientId) return;
+    this.clientService.getById(clientId).subscribe({
+      next: client => this.clientPhone = client.phone || '',
+      error: () => this.clientPhone = '',
+    });
+  }
+
+  private reserveWhatsAppWindow(): Window | null {
+    if (!this.clientPhone) return null;
+    const popup = window.open('about:blank', '_blank');
+    if (popup) popup.opener = null;
+    return popup;
+  }
+
+  private openWhatsApp(popup: Window | null, rdv: RendezVous, reason = '', dateModified = false): void {
+    if (!this.clientPhone) {
+      this.whatsappNotice = 'Le changement est enregistré, mais aucun numéro de téléphone client ne permet de préparer le message WhatsApp.';
+      this.whatsappFallbackUrl = '';
+      return;
     }
+    const date = new Date(rdv.dateRendezVous).toLocaleString('fr-FR');
+    const isCancellation = rdv.statut === 'ANNULE' || rdv.statut === 'REFUSE';
+    const message = isCancellation
+      ? `Votre rendez-vous prévu à la date du ${date} a été annulé pour motif de ${reason || rdv.motifAnnulation || 'motif communiqué par notre équipe'}.`
+      : dateModified
+        ? `La date de votre rendez-vous a été modifiée au ${date}.`
+        : rdv.statut === 'EN_ATTENTE'
+          ? `Votre demande de rendez-vous prévue à la date du ${date} est enregistrée et en attente de confirmation.`
+          : `Votre rendez-vous prévu à la date du ${date} a été confirmé.`;
+    let phone = this.clientPhone.replace(/[^0-9]/g, '');
+    if (phone.length === 9) phone = `221${phone}`;
+    this.whatsappFallbackUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    this.whatsappNotice = 'Message WhatsApp préparé. Vérifiez-le puis appuyez sur Envoyer dans WhatsApp.';
+    if (popup) popup.location.href = this.whatsappFallbackUrl;
   }
 
   get paged(): RendezVous[] {
@@ -534,6 +661,7 @@ export class RendezVousComponent implements OnInit {
   }
 
   statutLabel(s: RendezVousStatus): string {
+    if (s === 'REFUSE') return 'Annulé';
     return this.statutOptions.find(o => o.value === s)?.label ?? s;
   }
 
@@ -542,7 +670,7 @@ export class RendezVousComponent implements OnInit {
       EN_ATTENTE: 'bg-red-100 text-red-700',
       CONFIRME:   'bg-orange-100 text-orange-700',
       TERMINE:    'bg-green-100 text-green-700',
-      REFUSE:     'bg-gray-200 text-gray-800',
+      REFUSE:     'bg-gray-100 text-gray-500',
       ANNULE:     'bg-gray-100 text-gray-500',
     };
     return map[s] ?? '';

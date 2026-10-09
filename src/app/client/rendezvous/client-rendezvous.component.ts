@@ -16,7 +16,7 @@ type SortOrder = 'recent' | 'ancien';
 const STATUT_LABELS: Record<RendezVousStatus, string> = {
   EN_ATTENTE: 'En attente',
   CONFIRME: 'Confirmé',
-  REFUSE: 'Refusé',
+  REFUSE: 'Annulé',
   ANNULE: 'Annulé',
   TERMINE: 'Terminé',
 };
@@ -24,7 +24,7 @@ const STATUT_LABELS: Record<RendezVousStatus, string> = {
 const STATUT_TONES: Record<RendezVousStatus, BadgeTone> = {
   EN_ATTENTE: 'pending',
   CONFIRME: 'success',
-  REFUSE: 'danger',
+  REFUSE: 'neutral',
   ANNULE: 'neutral',
   TERMINE: 'info',
 };
@@ -49,6 +49,11 @@ export class ClientRendezVousComponent implements OnInit {
   garages: ClientBookingContextGarage[] = [];
   loading = false;
   showCreateModal = false;
+  showCancelModal = false;
+  cancelTargetId: number | null = null;
+  cancelReason = '';
+  cancelErrorMessage = '';
+  cancelSaving = false;
   saving = false;
   successMessage = '';
   errorMessage = '';
@@ -339,14 +344,33 @@ export class ClientRendezVousComponent implements OnInit {
   }
 
   annuler(id: number): void {
-    if (!confirm('Confirmer l’annulation de ce rendez-vous ?')) return;
-    this.service.annuler(id).subscribe({
+    this.cancelTargetId = id;
+    this.cancelReason = '';
+    this.cancelErrorMessage = '';
+    this.showCancelModal = true;
+  }
+
+  confirmerAnnulation(): void {
+    const id = this.cancelTargetId;
+    const reason = this.cancelReason.trim();
+    if (!id || !reason) {
+      this.cancelErrorMessage = 'Veuillez indiquer le motif de l’annulation.';
+      return;
+    }
+    this.cancelSaving = true;
+    this.service.annuler(id, reason).subscribe({
       next: () => {
+        this.cancelSaving = false;
+        this.showCancelModal = false;
+        this.cancelTargetId = null;
         this.successMessage = 'Rendez-vous annulé.';
         setTimeout(() => this.successMessage = '', 4000);
         this.load();
       },
-      error: (err: any) => this.errorMessage = err.error?.message || "Impossible d'annuler ce rendez-vous.",
+      error: (err: any) => {
+        this.cancelSaving = false;
+        this.cancelErrorMessage = err.error?.message || "Impossible d'annuler ce rendez-vous.";
+      },
     });
   }
 }

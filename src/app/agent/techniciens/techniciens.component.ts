@@ -7,6 +7,7 @@ import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideWrench } from '@lucide/angular';
 import { AuthService } from '../../core/services/auth.service';
+import { PhoneInputComponent } from '../../shared/components/phone-input/phone-input.component';
 
 const SPECIALITES: { value: Specialite; label: string }[] = [
   { value: 'MECANIQUE_GENERALE', label: 'Mécanique générale' },
@@ -21,7 +22,7 @@ const SPECIALITES: { value: Specialite; label: string }[] = [
 @Component({
   selector: 'app-techniciens',
   standalone: true,
-  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX],
+  imports: [ReactiveFormsModule, AlertComponent, PaginationComponent, PhoneInputComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX],
   templateUrl: './techniciens.component.html',
 })
 export class TechniciensComponent implements OnInit {

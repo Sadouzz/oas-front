@@ -156,9 +156,8 @@
             </div>
             <div>
               <label class="block text-sm font-semibold text-oas-ink mb-1">Téléphone *</label>
-              <input formControlName="phone"
-                     class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
-                     [class.border-oas-bad]="form.get('phone')?.invalid && form.get('phone')?.touched"/>
+              <app-phone-input formControlName="phone"
+                     [invalid]="form.get('phone')?.invalid && form.get('phone')?.touched || false"></app-phone-input>
             </div>
           </div>
 

@@ -43,7 +43,7 @@
               <label for="nom" class="absolute left-0 top-3 text-oas-muted text-lg transition-all peer-focus:-top-4 peer-focus:text-xs peer-focus:text-oas-accent peer-focus:font-bold peer-[:not(:placeholder-shown)]:-top-4 peer-[:not(:placeholder-shown)]:text-xs font-medium">Nom et Prénom</label>
             </div>
             <div class="relative group">
-              <input type="tel" id="telephone" class="w-full bg-transparent border-b-2 border-oas-line py-3 px-0 text-oas-navy text-lg focus:outline-none focus:border-oas-accent transition-colors peer placeholder-transparent" placeholder="Téléphone">
+              <input type="tel" id="telephone" inputmode="tel" (input)="sanitizeTelephone($event)" class="w-full bg-transparent border-b-2 border-oas-line py-3 px-0 text-oas-navy text-lg focus:outline-none focus:border-oas-accent transition-colors peer placeholder-transparent" placeholder="Téléphone">
               <label for="telephone" class="absolute left-0 top-3 text-oas-muted text-lg transition-all peer-focus:-top-4 peer-focus:text-xs peer-focus:text-oas-accent peer-focus:font-bold peer-[:not(:placeholder-shown)]:-top-4 peer-[:not(:placeholder-shown)]:text-xs font-medium">Téléphone</label>
             </div>
             <div class="relative group md:col-span-2">

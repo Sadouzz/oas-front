@@ -17,7 +17,7 @@ export class ClientRendezVousService {
     return this.http.post<RendezVous>(this.api, payload);
   }
 
-  annuler(id: number): Observable<void> {
-    return this.http.put<void>(`${this.api}/${id}/annuler`, {});
+  annuler(id: number, motifAnnulation: string): Observable<void> {
+    return this.http.put<void>(`${this.api}/${id}/annuler`, {}, { params: { motifAnnulation } });
   }
 }

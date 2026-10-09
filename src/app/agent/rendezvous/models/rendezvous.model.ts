@@ -9,11 +9,13 @@ export interface RendezVousDateHistory {
 
 export interface RendezVousListResponse {
   id: number;
+  clientId?: number;
   numero?: string;
   dateRendezVous: string;
   clientName: string;
   vehiculeImmatriculation: string | null;
   motif: string;
+  motifAnnulation?: string | null;
   statut: RendezVousStatus;
   hasFicheAtelier?: boolean;
 }
@@ -27,6 +29,7 @@ export interface RendezVous {
   vehiculeImmatriculation: string | null;
   dateRendezVous: string;
   motif: string;
+  motifAnnulation?: string | null;
   statut: RendezVousStatus;
   commentaire: string | null;
   dateCreation: string;
@@ -49,4 +52,3 @@ export interface CreateRendezVousRequest {
   commentaire?: string | null;
   garageId?: number | null;
 }
-

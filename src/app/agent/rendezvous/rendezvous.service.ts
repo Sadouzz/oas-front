@@ -28,9 +28,10 @@ export class RendezVousService {
     return this.http.post<RendezVous>(this.api, payload);
   }
 
-  updateStatut(id: number, statut: RendezVousStatus, commentaire?: string): Observable<RendezVous> {
+  updateStatut(id: number, statut: RendezVousStatus, commentaire?: string, motifAnnulation?: string): Observable<RendezVous> {
     let params = new HttpParams().set('statut', statut);
     if (commentaire) params = params.set('commentaire', commentaire);
+    if (motifAnnulation) params = params.set('motifAnnulation', motifAnnulation);
     return this.http.put<RendezVous>(`${this.api}/${id}/statut`, null, { params });
   }
 
@@ -42,4 +43,3 @@ export class RendezVousService {
     return this.http.put<RendezVous>(`${this.api}/${id}/date`, { nouvelleDate });
   }
 }
-

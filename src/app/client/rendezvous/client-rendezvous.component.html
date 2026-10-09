@@ -144,6 +144,12 @@
               <p class="text-oas-muted text-xs mb-1">Motif</p>
               <p class="text-oas-ink2">{{ selected.motif }}</p>
             </div>
+            @if (selected.motifAnnulation) {
+            <div class="rounded-lg border border-red-200 bg-red-50 p-3">
+              <p class="text-red-700 text-xs font-semibold mb-1">Motif d'annulation</p>
+              <p class="text-red-900">{{ selected.motifAnnulation }}</p>
+            </div>
+            }
 
             @if (selected.dateHistory?.length) {
             <div>
@@ -339,6 +345,21 @@
         </button>
       </div>
     </form>
+  </app-modal>
+  }
+  @if (showCancelModal) {
+  <app-modal title="Annuler le rendez-vous" (close)="showCancelModal = false">
+    <div class="space-y-4">
+      <p class="text-sm text-oas-muted">Indiquez le motif de l’annulation. Il sera communiqué à l’équipe.</p>
+      <app-alert [error]="cancelErrorMessage"></app-alert>
+      <textarea [value]="cancelReason" (input)="cancelReason = $any($event.target).value" rows="4" maxlength="1000"
+        placeholder="Ex. : Je ne suis plus disponible à cette date…"
+        class="w-full px-3.5 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 resize-none"></textarea>
+      <div class="flex justify-end gap-3">
+        <button type="button" (click)="showCancelModal = false" [disabled]="cancelSaving" class="px-4 py-2 rounded-lg border border-oas-line text-sm font-semibold">Retour</button>
+        <button type="button" (click)="confirmerAnnulation()" [disabled]="!cancelReason.trim() || cancelSaving" class="px-4 py-2 rounded-lg bg-oas-bad text-white text-sm font-bold disabled:opacity-50">{{ cancelSaving ? 'Annulation…' : 'Confirmer l’annulation' }}</button>
+      </div>
+    </div>
   </app-modal>
   }
 </div>

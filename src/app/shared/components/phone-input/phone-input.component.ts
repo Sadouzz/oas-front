@@ -2,6 +2,7 @@ import { Component, ElementRef, forwardRef, ViewChild, AfterViewInit, OnDestroy,
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, NG_VALIDATORS, Validator, AbstractControl, ValidationErrors, ReactiveFormsModule } from '@angular/forms';
 import intlTelInput from 'intl-tel-input';
 import { CommonModule } from '@angular/common';
+import { phoneNumberValidator, sanitizePhoneInput } from '../../validators/phone-number.validator';
 
 @Component({
   selector: 'app-phone-input',
@@ -16,7 +17,7 @@ import { CommonModule } from '@angular/common';
         class="w-full py-2.5 pr-4 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition placeholder-oas-faint"
         [class.border-oas-bad]="invalid"
         [placeholder]="placeholder"
-        (input)="onInputChange()"
+        (input)="onInputChange($event)"
         (blur)="onTouched()"
         [disabled]="disabled"
       />
@@ -46,6 +47,7 @@ export class PhoneInputComponent implements ControlValueAccessor, Validator, Aft
 
   onChange: any = () => {};
   onTouched: any = () => {};
+  private onValidatorChange: () => void = () => {};
 
   ngAfterViewInit() {
     this.iti = intlTelInput(this.phoneInputRef.nativeElement, {
@@ -54,6 +56,7 @@ export class PhoneInputComponent implements ControlValueAccessor, Validator, Aft
       separateDialCode: true,
       loadUtils: () => import('intl-tel-input/utils')
     });
+    this.onValidatorChange();
 
     if (this.value) {
       this.iti.setNumber(this.value);
@@ -70,8 +73,10 @@ export class PhoneInputComponent implements ControlValueAccessor, Validator, Aft
     }
   }
 
-  onInputChange() {
+  onInputChange(event?: Event) {
     if (this.iti) {
+      const input = event?.target as HTMLInputElement | undefined;
+      if (input) input.value = sanitizePhoneInput(input.value);
       const isValid = this.iti.isValidNumber();
       if (isValid) {
         this.value = this.iti.getNumber();
@@ -100,24 +105,18 @@ export class PhoneInputComponent implements ControlValueAccessor, Validator, Aft
     this.onTouched = fn;
   }
 
+  registerOnValidatorChange(fn: () => void): void {
+    this.onValidatorChange = fn;
+  }
+
   setDisabledState(isDisabled: boolean): void {
     this.disabled = isDisabled;
   }
 
   validate(control: AbstractControl): ValidationErrors | null {
-    if (!this.iti) {
-      return null; // Not initialized yet, assume valid for now or wait
-    }
-    
-    const value = control.value;
-    if (!value) {
-      return null; // required validation is handled by Angular's required validator
-    }
-
-    if (this.iti.isValidNumber()) {
-      return null;
-    }
-
-    return { invalidPhone: true };
+    const formatErrors = phoneNumberValidator()(control);
+    if (formatErrors) return formatErrors;
+    if (!this.iti || !control.value) return null;
+    return this.iti.isValidNumber() ? null : { invalidPhone: true };
   }
 }

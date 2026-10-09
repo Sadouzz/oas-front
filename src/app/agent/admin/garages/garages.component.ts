@@ -3,11 +3,12 @@ import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { GarageService } from '../../../services/garage.service';
 import { LucidePlus, LucideEdit2, LucideTrash2, LucideX, LucideSave } from '@lucide/angular';
+import { PhoneInputComponent } from '../../../shared/components/phone-input/phone-input.component';
 
 @Component({
   selector: 'app-garages',
   standalone: true,
-  imports: [ReactiveFormsModule, LucidePlus, LucideEdit2, LucideTrash2, LucideX, LucideSave],
+  imports: [ReactiveFormsModule, PhoneInputComponent, LucidePlus, LucideEdit2, LucideTrash2, LucideX, LucideSave],
   templateUrl: './garages.component.html'
 })
 export class GaragesComponent implements OnInit {
@@ -102,4 +103,3 @@ export class GaragesComponent implements OnInit {
     }
   }
 }
-

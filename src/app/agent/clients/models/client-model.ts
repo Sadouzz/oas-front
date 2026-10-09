@@ -2,7 +2,7 @@ export interface ClientModel {
   id: number;
   matricule: string;
   phone: string;
-  username: string;
+  username?: string;
   firstName: string;
   lastName: string;
   email: string;

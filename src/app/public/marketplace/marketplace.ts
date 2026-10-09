@@ -110,7 +110,7 @@ export class Marketplace implements OnInit {
         prenom: ['', [Validators.required, Validators.minLength(2)]],
         nom: ['', [Validators.required, Validators.minLength(2)]],
         email: ['', [Validators.required, Validators.email]],
-        telephone: ['', [Validators.required, Validators.pattern(/^[0-9+\s]{8,15}$/)]],
+        telephone: ['', Validators.required],
         motDePasse: ['', [Validators.required, Validators.minLength(6)]],
         confirmation: ['', [Validators.required]],
         cgu: [false, [Validators.requiredTrue]]
