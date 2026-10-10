@@ -805,6 +805,8 @@ export class PiecesDetacheesComponent extends BasePaginatedComponent implements 
             margin: 0;
             padding: 10px;
             font-size: 11px;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
           }
           .header {
             display: flex;
@@ -848,14 +850,16 @@ export class PiecesDetacheesComponent extends BasePaginatedComponent implements 
             font-size: 10px;
           }
           th {
-            background-color: #0f1e36;
-            color: #ffffff;
+            background-color: #0f1e36 !important;
+            color: #ffffff !important;
             font-weight: 700;
             padding: 7px 10px;
             text-align: left;
             font-size: 9.5px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
           }
           .footer {
             margin-top: 15px;
@@ -906,15 +910,36 @@ export class PiecesDetacheesComponent extends BasePaginatedComponent implements 
       </html>
     `;
 
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.open();
-      printWindow.document.write(printContent);
-      printWindow.document.close();
-      printWindow.focus();
+    // Utilisation d'une iframe invisible pour éviter le blocage des popups sous HTTPS
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    iframe.style.visibility = 'hidden';
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document || iframe.contentDocument;
+    if (doc) {
+      doc.open();
+      doc.write(printContent);
+      doc.close();
       setTimeout(() => {
-        printWindow.print();
-      }, 350);
+        try {
+          iframe.contentWindow?.focus();
+          iframe.contentWindow?.print();
+        } catch (e) {
+          console.error('Erreur lors de l\'impression PDF:', e);
+        } finally {
+          setTimeout(() => {
+            if (document.body.contains(iframe)) {
+              document.body.removeChild(iframe);
+            }
+          }, 1500);
+        }
+      }, 300);
     }
   }
 
