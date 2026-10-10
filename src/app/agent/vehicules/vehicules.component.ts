@@ -34,6 +34,12 @@ export class VehiculesComponent extends BasePaginatedComponent implements OnInit
   errorMessage = '';
   transferRequests: VehicleTransferRequest[] = [];
   loadingTransfers = false;
+  transferRequestsError = '';
+  transferDecisionRequest: VehicleTransferRequest | null = null;
+  transferDecisionApproved: boolean | null = null;
+  transferDecisionNote = '';
+  transferDecisionError = '';
+  savingTransferDecision = false;
 
   showModal = false;
   isNew = false;
@@ -112,20 +118,58 @@ export class VehiculesComponent extends BasePaginatedComponent implements OnInit
 
   loadTransfers() {
     this.loadingTransfers = true;
+    this.transferRequestsError = '';
     this.transferService.pending().subscribe({
-      next: requests => { this.transferRequests = requests; this.loadingTransfers = false; this.cdr.markForCheck(); },
-      error: () => { this.transferRequests = []; this.loadingTransfers = false; this.cdr.markForCheck(); }
+      next: requests => {
+        this.transferRequests = Array.isArray(requests) ? requests : [];
+        this.loadingTransfers = false;
+        this.cdr.markForCheck();
+      },
+      error: (err: any) => {
+        this.transferRequests = [];
+        this.loadingTransfers = false;
+        this.transferRequestsError = err.error?.message || 'Impossible de charger les demandes de transfert.';
+        this.cdr.markForCheck();
+      }
     });
   }
 
-  decideTransfer(request: VehicleTransferRequest, approved: boolean) {
-    const action = approved ? 'valider' : 'refuser';
-    const response = window.prompt(`Motif pour ${action} le transfert de ${request.immatriculation} (facultatif) :`);
-    if (response === null) return;
-    const note = response;
-    this.transferService.decide(request.id, approved, note).subscribe({
-      next: () => { this.showSuccess(approved ? 'Transfert validé.' : 'Demande refusée.'); this.loadTransfers(); this.loadVehicules(); },
-      error: (err: any) => { this.errorMessage = err.error?.message || 'Impossible de traiter cette demande.'; this.cdr.markForCheck(); }
+  openTransferDecision(request: VehicleTransferRequest, approved: boolean): void {
+    this.transferDecisionRequest = request;
+    this.transferDecisionApproved = approved;
+    this.transferDecisionNote = '';
+    this.transferDecisionError = '';
+    this.cdr.markForCheck();
+  }
+
+  closeTransferDecision(): void {
+    if (this.savingTransferDecision) return;
+    this.transferDecisionRequest = null;
+    this.transferDecisionApproved = null;
+    this.transferDecisionNote = '';
+    this.transferDecisionError = '';
+  }
+
+  confirmTransferDecision(): void {
+    const request = this.transferDecisionRequest;
+    const approved = this.transferDecisionApproved;
+    if (!request || approved === null || this.savingTransferDecision) return;
+
+    this.savingTransferDecision = true;
+    this.transferDecisionError = '';
+    this.transferService.decide(request.id, approved, this.transferDecisionNote.trim()).subscribe({
+      next: () => {
+        this.savingTransferDecision = false;
+        this.closeTransferDecision();
+        this.showSuccess(approved ? 'Transfert validé.' : 'Demande refusée.');
+        this.loadTransfers();
+        this.loadVehicules();
+      },
+      error: (err: any) => {
+        this.savingTransferDecision = false;
+        this.transferDecisionError = err.error?.message || 'Impossible de traiter cette demande.';
+        this.cdr.markForCheck();
+      }
     });
   }
 

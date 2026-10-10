@@ -560,9 +560,24 @@ export class RendezVousComponent implements OnInit {
   }
 
   canCreateFiche(rdv: RendezVous): boolean {
+    if (rdv.vehiculeActif === false) return false;
     if (rdv.hasFicheAtelier || rdv.statut === 'TERMINE') return false;
     if (rdv.statut !== 'CONFIRME') return false;
     return this.isRdvTodayOrPast(rdv.dateRendezVous);
+  }
+
+  activerVehicule(rdv: RendezVous): void {
+    if (!rdv.vehiculeId || rdv.vehiculeActif) return;
+    this.vehiculeService.activer(rdv.vehiculeId).subscribe({
+      next: () => {
+        this.successMessage = `Le véhicule ${rdv.vehiculeImmatriculation || ''} est maintenant actif.`;
+        this.load();
+      },
+      error: (err: any) => {
+        this.errorMessage = err.error?.message || "Impossible d'activer ce véhicule.";
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   notifyNotToday(rdv: RendezVous) {

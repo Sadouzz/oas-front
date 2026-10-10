@@ -35,6 +35,7 @@ export class ClientVehiculesComponent implements OnInit {
   saving = false;
   successMessage = '';
   errorMessage = '';
+  createErrorMessage = '';
   duplicateVehicleData: { immatriculation: string; numeroChassis?: string | null } | null = null;
   requestingTransfer = false;
 
@@ -149,12 +150,17 @@ export class ClientVehiculesComponent implements OnInit {
 
   toggleCreate(): void {
     this.showCreateForm = !this.showCreateForm;
+    if (this.showCreateForm) {
+      this.createErrorMessage = '';
+      this.duplicateVehicleData = null;
+    }
   }
 
   closeCreate(): void {
     this.form.reset();
     this.showCreateForm = false;
     this.duplicateVehicleData = null;
+    this.createErrorMessage = '';
   }
 
   save(): void {
@@ -164,7 +170,7 @@ export class ClientVehiculesComponent implements OnInit {
     }
 
     this.saving = true;
-    this.errorMessage = '';
+    this.createErrorMessage = '';
 
     this.vehiculeService.create(this.form.value).subscribe({
       next: () => {
@@ -177,15 +183,19 @@ export class ClientVehiculesComponent implements OnInit {
       },
       error: (err: any) => {
         this.saving = false;
-        const message = err.error?.message || err.message || "Une erreur est survenue lors de l'enregistrement.";
-        if (/immatriculation.*(exist|déjà)|déjà exist/i.test(message)) {
+        const message = typeof err.error === 'string'
+          ? err.error
+          : err.error?.message || err.message || "Une erreur est survenue lors de l'enregistrement.";
+        const registrationAlreadyExists = err.status === 409
+          && /immatriculation.{0,100}(exist|déjà)/i.test(message);
+        if (registrationAlreadyExists || /immatriculation.*(exist|déjà)|déjà exist/i.test(message)) {
           this.duplicateVehicleData = {
             immatriculation: String(this.form.value.immatriculation || '').trim().toUpperCase(),
             numeroChassis: this.form.value.numeroChassis || null,
           };
-          this.errorMessage = 'Ce véhicule est déjà enregistré. Vous pouvez demander son transfert à votre compte.';
+          this.createErrorMessage = 'Ce véhicule est déjà enregistré. Vous pouvez demander son transfert à votre compte.';
         } else {
-          this.errorMessage = message;
+          this.createErrorMessage = message;
         }
       },
     });
@@ -197,7 +207,8 @@ export class ClientVehiculesComponent implements OnInit {
     this.vehiculeService.requestTransfer(this.duplicateVehicleData).subscribe({
       next: () => {
         this.requestingTransfer = false;
-        this.successMessage = 'Votre demande de transfert a été envoyée aux agents.';
+        this.successMessage = 'Votre demande a été envoyée à OAS pour vérification.';
+        this.createErrorMessage = '';
         this.errorMessage = '';
         this.duplicateVehicleData = null;
         this.form.reset();
@@ -206,7 +217,7 @@ export class ClientVehiculesComponent implements OnInit {
       },
       error: (err: any) => {
         this.requestingTransfer = false;
-        this.errorMessage = err.error?.message || 'Impossible d’envoyer la demande de transfert.';
+        this.createErrorMessage = err.error?.message || 'Impossible d’envoyer la demande de transfert.';
       }
     });
   }

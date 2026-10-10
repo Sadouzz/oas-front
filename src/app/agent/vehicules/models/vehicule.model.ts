@@ -10,6 +10,7 @@ export interface VehiculeModel {
   numeroChassis: string;
   client: UserModel | null;
   archiveParClient: boolean;
+  actif: boolean;
   createdAt: string;
 }
 

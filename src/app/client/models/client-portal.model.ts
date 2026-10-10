@@ -83,6 +83,7 @@ export interface ClientVehiculeCard {
   annee?: number | null;
   kilometrage?: number | null;
   numeroChassis?: string | null;
+  actif: boolean;
   createdAt: string;
   stage: string;
   stageIndex: number;
@@ -121,6 +122,7 @@ export interface ClientBookingContextVehicule {
   kilometrage?: number | null;
   numeroChassis?: string | null;
   disponiblePourRdv: boolean;
+  actif: boolean;
 }
 
 export interface ClientBookingContextGarage {
