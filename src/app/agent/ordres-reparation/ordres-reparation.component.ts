@@ -174,7 +174,6 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
       next: (res: any) => {
         const items = extractContent<OrdreReparation>(res);
         this.rawOrdres = (items && items.length) ? items : (this.applyPageResponse<OrdreReparation>(res) || []);
-        this.rawOrdres.sort((a, b) => (b.id ?? 0) - (a.id ?? 0));
 
         this.applyFilter();
 

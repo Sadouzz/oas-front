@@ -84,7 +84,8 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
 
   piecePdgAjouter: number | null = null;
   qteAjouterPdg = 1;
-  prixAjouterPdg: number | null = null;
+  prixTotalAjouterPdg: number | null = null;
+  private selectedPiecePdgUnitPrice = 0;
 
   moAjouter: number | null = null;
   qteAjouterMO = 1;
@@ -116,7 +117,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
 
   get totalPieces(): number {
     return this.lignesPieces.reduce((sum, l) => {
-      if (l.isCustom) {
+      if (l.isCustom || l.piece?.type === 'PDG') {
         const tot = l.prixTotal != null && l.prixTotal >= 0
           ? Number(l.prixTotal)
           : ((l.prixUnitaire || 0) * (l.quantite || 0));
@@ -301,7 +302,8 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
 
             const qte = Number(l.quantite ?? l.qte ?? 1) || 1;
             const des = l.designationPds || l.designationPiece || resolvedPiece?.designation || (isCustom ? 'Pièce à saisir' : 'Pièce détachée');
-            const totalPds = isCustom ? (l.montantTotal != null ? Number(l.montantTotal) : unitPrice * qte) : undefined;
+            const isPdg = !isCustom && resolvedPiece?.type === 'PDG';
+            const totalItem = (isCustom || isPdg) ? (l.montantTotal != null ? Number(l.montantTotal) : unitPrice * qte) : undefined;
 
             if (piecesMap.has(key)) {
               const item = piecesMap.get(key);
@@ -309,8 +311,9 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
               if ((item.prixUnitaire == null || item.prixUnitaire === 0) && unitPrice > 0) {
                 item.prixUnitaire = unitPrice;
               }
-              if (item.isCustom) {
-                item.prixTotal = (item.prixTotal || 0) + (totalPds || 0);
+              if (item.isCustom || item.piece?.type === 'PDG') {
+                item.prixTotal = (item.prixTotal || 0) + (totalItem || 0);
+                item.prixUnitaire = item.quantite > 0 ? Math.round(item.prixTotal / item.quantite) : unitPrice;
               }
             } else {
               piecesMap.set(key, {
@@ -320,7 +323,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
                 isCustom,
                 designationPds: des,
                 prixUnitaire: unitPrice,
-                prixTotal: totalPds,
+                prixTotal: totalItem,
                 stockDisponible: isCustom ? 0 : ((resolvedPiece?.stockMagasin ?? 0) + (resolvedPiece?.stockAtelier ?? 0)),
                 manquant: 0,
                 aSortirMagasin: 0
@@ -422,7 +425,8 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
             }
 
             const qte = l.quantite || 1;
-            const totalPds = l.isCustom ? (unitPrice * qte) : undefined;
+            const isPdg = !l.isCustom && resolvedPiece?.type === 'PDG';
+            const totalItem = (l.isCustom || isPdg) ? (unitPrice * qte) : undefined;
 
             if (piecesMap.has(key)) {
               const item = piecesMap.get(key);
@@ -430,8 +434,9 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
               if ((item.prixUnitaire == null || item.prixUnitaire === 0) && unitPrice > 0) {
                 item.prixUnitaire = unitPrice;
               }
-              if (item.isCustom) {
-                item.prixTotal = (item.prixTotal || 0) + (totalPds || 0);
+              if (item.isCustom || item.piece?.type === 'PDG') {
+                item.prixTotal = (item.prixTotal || 0) + (totalItem || 0);
+                item.prixUnitaire = item.quantite > 0 ? Math.round(item.prixTotal / item.quantite) : unitPrice;
               }
             } else {
               piecesMap.set(key, {
@@ -441,7 +446,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
                 isCustom: !!l.isCustom,
                 designationPds: l.designationPds,
                 prixUnitaire: unitPrice,
-                prixTotal: totalPds,
+                prixTotal: totalItem,
                 stockDisponible: l.isCustom ? 0 : ((resolvedPiece?.stockMagasin ?? 0) + (resolvedPiece?.stockAtelier ?? 0)),
                 manquant: 0,
                 aSortirMagasin: 0
@@ -526,13 +531,21 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
 
   onPiecePdgSelected(pieceId: any): void {
     if (!pieceId) {
-      this.prixAjouterPdg = null;
+      this.prixTotalAjouterPdg = null;
+      this.selectedPiecePdgUnitPrice = 0;
       return;
     }
     const p = this.piecesPdgList.find(item => item.id === Number(pieceId)) || this.allPieces.find(item => item.id === Number(pieceId));
     if (p) {
       const price = p.prixUnitaire ?? p.prix ?? (p as any).prixDeVente ?? (p as any).prixVente ?? null;
-      this.prixAjouterPdg = price != null ? Number(price) : null;
+      this.selectedPiecePdgUnitPrice = price != null ? Number(price) : 0;
+      this.prixTotalAjouterPdg = this.selectedPiecePdgUnitPrice * (this.qteAjouterPdg || 1);
+    }
+  }
+
+  onQteAjouterPdgChange(): void {
+    if (this.selectedPiecePdgUnitPrice > 0) {
+      this.prixTotalAjouterPdg = this.selectedPiecePdgUnitPrice * (this.qteAjouterPdg || 1);
     }
   }
 
@@ -585,29 +598,36 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
     if (!p) return;
 
     const defaultPrice = p.prixUnitaire ?? p.prix ?? (p as any).prixDeVente ?? (p as any).prixVente ?? 0;
-    const unitPrice = this.prixAjouterPdg != null && this.prixAjouterPdg >= 0 ? Number(this.prixAjouterPdg) : Number(defaultPrice);
+    const qte = Number(this.qteAjouterPdg) || 1;
+    const total = this.prixTotalAjouterPdg != null && this.prixTotalAjouterPdg >= 0
+      ? Number(this.prixTotalAjouterPdg)
+      : (Number(defaultPrice) * qte);
+    const unitPrice = qte > 0 ? Math.round(total / qte) : 0;
 
     const existing = this.lignesPieces.find(l => !l.isCustom && l.piece?.id === p.id);
     if (existing) {
-      existing.quantite += this.qteAjouterPdg;
-      existing.prixUnitaire = unitPrice;
+      existing.quantite += qte;
+      existing.prixTotal = (existing.prixTotal || 0) + total;
+      existing.prixUnitaire = existing.quantite > 0 ? Math.round(existing.prixTotal / existing.quantite) : 0;
       existing.manquant = Math.max(0, existing.quantite - (existing.piece?.stockMagasin ?? 0));
       existing.aSortirMagasin = existing.manquant > 0 ? 0 : 1;
     } else {
       this.lignesPieces.push({
         isCustom: false,
         piece: p,
-        quantite: this.qteAjouterPdg,
+        quantite: qte,
+        prixTotal: total,
         prixUnitaire: unitPrice,
         stockDisponible: (p.stockMagasin ?? 0) + (p.stockAtelier ?? 0),
-        manquant: Math.max(0, this.qteAjouterPdg - (p.stockMagasin ?? 0)),
-        aSortirMagasin: Math.max(0, this.qteAjouterPdg - (p.stockMagasin ?? 0)) > 0 ? 0 : 1
+        manquant: Math.max(0, qte - (p.stockMagasin ?? 0)),
+        aSortirMagasin: Math.max(0, qte - (p.stockMagasin ?? 0)) > 0 ? 0 : 1
       });
     }
 
     this.piecePdgAjouter = null;
     this.qteAjouterPdg = 1;
-    this.prixAjouterPdg = null;
+    this.prixTotalAjouterPdg = null;
+    this.selectedPiecePdgUnitPrice = 0;
   }
 
   addPieceCustom(): void {
@@ -651,6 +671,13 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
     }
   }
 
+  onPdgPrixTotalChange(l: LignePiece): void {
+    const q = Number(l.quantite) || 1;
+    const tot = l.prixTotal != null ? Number(l.prixTotal) : 0;
+    l.prixUnitaire = q > 0 ? Math.round(tot / q) : 0;
+    this.cdr.markForCheck();
+  }
+
   onPdsPrixTotalChange(l: LignePiece): void {
     const q = Number(l.quantite) || 1;
     const tot = l.prixTotal != null ? Number(l.prixTotal) : 0;
@@ -659,15 +686,13 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
   }
 
   onPieceQuantiteChange(l: LignePiece): void {
-    if (l.isCustom) {
-      const q = Number(l.quantite) || 1;
+    const q = Number(l.quantite) || 1;
+    if (l.isCustom || l.piece?.type === 'PDG') {
       if (l.prixTotal != null && l.prixTotal > 0) {
         l.prixUnitaire = q > 0 ? Math.round(l.prixTotal / q) : 0;
       } else if (l.prixUnitaire != null && l.prixUnitaire > 0) {
         l.prixTotal = (l.prixUnitaire || 0) * q;
       }
-      this.cdr.markForCheck();
-      return;
     }
     if (l.piece) {
       l.manquant = Math.max(0, (l.quantite || 0) - (l.piece?.stockMagasin ?? 0));
@@ -724,7 +749,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
       const pieceId = l.isCustom ? null : (l.piece?.id ?? null);
       const catPiece = pieceId ? this.allPieces.find(p => p.id === pieceId) : null;
       let finalPrice = 0;
-      if (l.isCustom) {
+      if (l.isCustom || l.piece?.type === 'PDG') {
         if (l.prixTotal != null && (l.quantite || 1) > 0) {
           finalPrice = Math.round(Number(l.prixTotal) / Number(l.quantite));
         } else if (l.prixUnitaire != null) {

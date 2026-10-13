@@ -759,8 +759,11 @@ export class PiecesDetacheesComponent extends BasePaginatedComponent implements 
     items.forEach((p, idx) => {
       const depotNom = p.depot?.nom || p.categorie?.depot?.nom || '-';
       const catNom = (p.categorie as any)?.nom || p.categorie || '-';
-      const rawPrix = p.prixUnitaire ?? p.prix;
-      const prixFormatted = rawPrix != null ? new Intl.NumberFormat('fr-FR').format(rawPrix) + ' FCFA' : '—';
+      const rawPrixGros = p.prixGros;
+      const prixGrosFormatted = rawPrixGros != null ? new Intl.NumberFormat('fr-FR').format(rawPrixGros) + ' FCFA' : '—';
+      const pourcFormatted = p.pourcentage != null ? p.pourcentage + '%' : '—';
+      const rawPrixDetail = p.prixUnitaire ?? p.prix;
+      const prixDetailFormatted = rawPrixDetail != null ? new Intl.NumberFormat('fr-FR').format(rawPrixDetail) + ' FCFA' : '—';
       
       rowsHtml += `
         <tr style="background-color: ${idx % 2 === 0 ? '#ffffff' : '#f8fafc'}; border-bottom: 1px solid #e2e8f0;">
@@ -775,7 +778,9 @@ export class PiecesDetacheesComponent extends BasePaginatedComponent implements 
             <td style="padding: 7px 10px; text-align: center; font-weight: 700; color: #0f172a;">${p.qteReelle ?? 0}</td>
           ` : ''}
           ${avecPrix && !isPdg ? `
-            <td style="padding: 7px 10px; text-align: right; font-weight: 600; color: #0f172a;">${prixFormatted}</td>
+            <td style="padding: 7px 10px; text-align: right; color: #334155;">${prixGrosFormatted}</td>
+            <td style="padding: 7px 10px; text-align: center; font-weight: 600; color: #475569;">${pourcFormatted}</td>
+            <td style="padding: 7px 10px; text-align: right; font-weight: 700; color: #0f172a;">${prixDetailFormatted}</td>
           ` : ''}
         </tr>
       `;
@@ -894,7 +899,9 @@ export class PiecesDetacheesComponent extends BasePaginatedComponent implements 
                 <th style="text-align: center;">Qté Totale</th>
               ` : ''}
               ${avecPrix && !isPdg ? `
-                <th style="text-align: right;">Prix Unitaire</th>
+                <th style="text-align: right;">Prix Gros</th>
+                <th style="text-align: center;">Pourcentage</th>
+                <th style="text-align: right;">Prix Détail</th>
               ` : ''}
             </tr>
           </thead>
@@ -955,7 +962,20 @@ export class PiecesDetacheesComponent extends BasePaginatedComponent implements 
     if (isPdg) {
       headers = ['Référence', 'Numéro', 'Désignation', 'Dépôt', 'Catégorie', 'Statut'];
     } else if (avecPrix) {
-      headers = ['Référence', 'Numéro', 'Désignation', 'Dépôt', 'Catégorie', 'Stock Magasin', 'Stock Atelier', 'Quantité Réelle', 'Prix Unitaire (FCFA)', 'Statut'];
+      headers = [
+        'Référence',
+        'Numéro',
+        'Désignation',
+        'Dépôt',
+        'Catégorie',
+        'Stock Magasin',
+        'Stock Atelier',
+        'Quantité Réelle',
+        'Prix en Gros (FCFA)',
+        'Pourcentage (%)',
+        'Prix Détail (FCFA)',
+        'Statut'
+      ];
     } else {
       headers = ['Référence', 'Numéro', 'Désignation', 'Dépôt', 'Catégorie', 'Stock Magasin', 'Stock Atelier', 'Quantité Réelle', 'Statut'];
     }
@@ -982,6 +1002,8 @@ export class PiecesDetacheesComponent extends BasePaginatedComponent implements 
           p.stockMagasin != null ? p.stockMagasin : 0,
           p.stockAtelier != null ? p.stockAtelier : 0,
           p.qteReelle != null ? p.qteReelle : 0,
+          p.prixGros != null ? p.prixGros : 0,
+          p.pourcentage != null ? p.pourcentage : 0,
           (p.prixUnitaire ?? p.prix) != null ? (p.prixUnitaire ?? p.prix) : 0,
           p.statut || ''
         ];

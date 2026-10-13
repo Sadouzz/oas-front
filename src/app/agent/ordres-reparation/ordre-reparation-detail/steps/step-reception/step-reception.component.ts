@@ -18,7 +18,14 @@ import {
   StepReceptionDto
 } from '../../../../../shared/models';
 import { StepReceptionResponseDto } from '../../../models/responses/step-reception-response.dto';
-import { FicheAtelierDetailsResponse, LigneDefaut, LigneReception } from '../../../../fiches-atelier/models/fiche-atelier.model';
+import {
+  FicheAtelierDetailsResponse,
+  FicheAtelierRequest,
+  LigneDefaut,
+  LigneReception,
+  DEFAULT_LIGNES_RECEPTION,
+  DEFAULT_RUBRIQUES_DEFAUTS
+} from '../../../../fiches-atelier/models/fiche-atelier.model';
 
 @Component({
   selector: 'app-step-reception',
@@ -138,6 +145,9 @@ export class StepReceptionComponent implements OnInit {
     });
   }
 
+  notesFicheAtelier = '';
+  nouveauDefautNom = '';
+
   private initDefautsAndComplementaryData(
     fiche: FicheAtelierDetailsResponse | null,
     step: StepReceptionResponseDto,
@@ -148,22 +158,40 @@ export class StepReceptionComponent implements OnInit {
       this.setLignesReception(fiche.lignesReception.map(l => ({
         nom: l.nom,
         etat: l.etat,
-        verrouille: true
+        verrouille: false
       })));
+    } else if (this.lignesReception.length === 0) {
+      this.setLignesReception(DEFAULT_LIGNES_RECEPTION.map(nom => ({ nom, etat: null, verrouille: false })));
     }
 
-    // Récupération des défauts constatés
+    // Récupération et normalisation des défauts constatés
+    let rawDefauts: LigneDefaut[] = [];
     if (fiche?.lignesDefauts && fiche.lignesDefauts.length > 0) {
-      this.lignesDefauts = fiche.lignesDefauts;
+      rawDefauts = fiche.lignesDefauts;
+    } else if ((fiche as any)?.defautsConstates && (fiche as any).defautsConstates.length > 0) {
+      rawDefauts = (fiche as any).defautsConstates;
     } else if (step.lignesDefauts && step.lignesDefauts.length > 0) {
-      this.lignesDefauts = step.lignesDefauts;
+      rawDefauts = step.lignesDefauts;
     } else if (ordre?.lignesDefauts && ordre.lignesDefauts.length > 0) {
-      this.lignesDefauts = ordre.lignesDefauts;
-    } else {
-      this.lignesDefauts = [];
+      rawDefauts = ordre.lignesDefauts;
     }
+
+    const defautsMap = new Map<string, LigneDefaut>();
+    DEFAULT_RUBRIQUES_DEFAUTS.forEach(nom => {
+      defautsMap.set(nom.toLowerCase(), { nom, present: false, designation: '' });
+    });
+    rawDefauts.forEach(d => {
+      if (!d.nom) return;
+      defautsMap.set(d.nom.toLowerCase(), {
+        nom: d.nom,
+        present: !!d.present,
+        designation: d.designation || d.description || ''
+      });
+    });
+    this.lignesDefauts = Array.from(defautsMap.values());
 
     this.listeDefautsText = step.listeDefauts || ordre?.listeDefauts || '';
+    this.notesFicheAtelier = fiche?.nb || '';
 
     // Si on a des informations complémentaires de la fiche atelier (kilométrage, etc.)
     if (fiche && this.selectedVehicule) {
@@ -171,12 +199,74 @@ export class StepReceptionComponent implements OnInit {
         this.selectedVehicule.kilometrage = fiche.kilometrage;
       }
     }
+
+    this.takeSnapshot();
+  }
+
+  initialSnapshot: string = '';
+
+  takeSnapshot(): void {
+    this.initialSnapshot = this.getCurrentSnapshot();
+    this.cdr.markForCheck();
+  }
+
+  get hasChanges(): boolean {
+    if (!this.initialSnapshot) return false;
+    return this.getCurrentSnapshot() !== this.initialSnapshot;
+  }
+
+  private getCurrentSnapshot(): string {
+    const raw = this.step1Form.getRawValue();
+    const defauts = (this.lignesDefauts || []).map(d => ({
+      nom: (d.nom || '').trim(),
+      present: !!d.present,
+      designation: (d.designation || '').trim()
+    }));
+    const rec = (this.lignesReception.getRawValue() || []).map((l: any) => ({
+      nom: (l.nom || '').trim(),
+      etat: l.etat ?? null
+    }));
+    return JSON.stringify({
+      descriptionTravaux: (raw.descriptionTravaux || '').trim(),
+      lignesReception: rec,
+      lignesDefauts: defauts,
+      notesFicheAtelier: (this.notesFicheAtelier || '').trim()
+    });
+  }
+
+  toggleDefautPresent(defaut: LigneDefaut): void {
+    defaut.present = !defaut.present;
+    if (!defaut.present) {
+      defaut.designation = '';
+    }
+    this.cdr.markForCheck();
+  }
+
+  addCustomDefaut(): void {
+    const nom = (this.nouveauDefautNom || '').trim();
+    if (!nom) return;
+    if (this.lignesDefauts.some(d => d.nom.toLowerCase() === nom.toLowerCase())) {
+      this.nouveauDefautNom = '';
+      return;
+    }
+    this.lignesDefauts.push({
+      nom,
+      present: true,
+      designation: ''
+    });
+    this.nouveauDefautNom = '';
+    this.cdr.markForCheck();
+  }
+
+  removeDefaut(index: number): void {
+    this.lignesDefauts.splice(index, 1);
+    this.cdr.markForCheck();
   }
 
   private buildLigneTravailGroup(l: LigneTravailOrdre) {
     return this.fb.group({
-      nom: [{ value: l.nom, disabled: !!l.verrouille }, Validators.required],
-      verrouille: [!!l.verrouille],
+      nom: [l.nom, Validators.required],
+      verrouille: [false],
     });
   }
 
@@ -190,30 +280,40 @@ export class StepReceptionComponent implements OnInit {
   }
 
   removeLigneTravail(index: number): void {
-    if (this.lignesTravaux.at(index)?.get('verrouille')?.value) return;
     this.lignesTravaux.removeAt(index);
   }
 
   private buildLigneReceptionGroup(l: LigneReceptionOrdre | LigneReception) {
     return this.fb.group({
-      nom: [{ value: l.nom, disabled: !!(l as LigneReceptionOrdre).verrouille }, Validators.required],
-      etat: [{ value: l.etat ?? null, disabled: !!(l as LigneReceptionOrdre).verrouille }],
-      verrouille: [!!(l as LigneReceptionOrdre).verrouille],
+      nom: [l.nom || '', Validators.required],
+      etat: [l.etat ?? null],
+      verrouille: [false],
     });
   }
 
   private setLignesReception(lignes: (LigneReceptionOrdre | LigneReception)[] | null | undefined) {
     this.lignesReception.clear();
-    (lignes || []).forEach(l => this.lignesReception.push(this.buildLigneReceptionGroup(l)));
+    const list = (lignes && lignes.length > 0) ? lignes : DEFAULT_LIGNES_RECEPTION.map(nom => ({ nom, etat: null }));
+    list.forEach(l => this.lignesReception.push(this.buildLigneReceptionGroup(l)));
   }
+
+  nouveauPointNom = '';
 
   addLigneReception(): void {
     this.lignesReception.push(this.buildLigneReceptionGroup({ nom: '', etat: null, verrouille: false }));
   }
 
+  addCustomPointReception(): void {
+    const nom = (this.nouveauPointNom || '').trim();
+    if (!nom) return;
+    this.lignesReception.push(this.buildLigneReceptionGroup({ nom, etat: null, verrouille: false }));
+    this.nouveauPointNom = '';
+    this.cdr.markForCheck();
+  }
+
   setLigneReceptionEtat(index: number, val: boolean): void {
     const ctrl = this.lignesReception.at(index);
-    if (!ctrl || ctrl.get('verrouille')?.value) return;
+    if (!ctrl) return;
     const current = ctrl.get('etat')?.value;
     ctrl.get('etat')?.setValue(current === val ? null : val);
     ctrl.markAsDirty();
@@ -222,64 +322,116 @@ export class StepReceptionComponent implements OnInit {
   }
 
   removeLigneReception(index: number): void {
-    if (this.lignesReception.at(index)?.get('verrouille')?.value) return;
     this.lignesReception.removeAt(index);
+    this.cdr.markForCheck();
   }
 
   validateStep(): void {
-    this.saveStep1ThenGoNext();
+    this.saveStep1(true);
   }
 
-  saveStep1ThenGoNext(): void {
-    const raw = this.step1Form.value;
+  saveStep1(goToNext: boolean = false): void {
+    const raw = this.step1Form.getRawValue();
     const descriptionTravaux = (raw.descriptionTravaux || '').trim();
 
-    const payload: StepReceptionDto = {
+    const lignesRec: LigneReceptionOrdre[] = (this.lignesReception.getRawValue() || []).map((l: any) => ({
+      nom: (l.nom || '').trim(),
+      etat: l.etat ?? null,
+      verrouille: false
+    })).filter((l: any) => !!l.nom);
+
+    const lignesDef: LigneDefaut[] = (this.lignesDefauts || []).map(d => ({
+      nom: (d.nom || '').trim(),
+      present: !!d.present,
+      designation: d.present ? (d.designation || '').trim() : ''
+    }));
+
+    const ordrePayload: StepReceptionDto = {
       numero: raw.numero,
       descriptionTravaux: descriptionTravaux,
-      lignesTravaux: this.lignesTravaux.getRawValue() as LigneTravailOrdre[],
-      lignesReception: this.lignesReception.getRawValue() as LigneReceptionOrdre[],
+      lignesTravaux: (raw.lignesTravaux || []) as LigneTravailOrdre[],
+      lignesReception: lignesRec,
       listeDefauts: this.listeDefautsText,
-      lignesDefauts: this.lignesDefauts,
+      lignesDefauts: lignesDef,
       vehiculeId: Number(raw.vehiculeId),
-      statut: 'DIAGNOSTIC' as StatutOrdre
+      statut: (this.loadedOrdre?.statut || 'DIAGNOSTIC') as StatutOrdre
     };
 
     this.saving = true;
-    this.ordreService.updateStepReception(this.ordreId, payload).subscribe({
-      next: () => {
-        // Tente également la mise à jour explicite du statut de l'ordre
-        this.ordreService.updateStatut(this.ordreId, 'DIAGNOSTIC').subscribe({
-          next: () => {},
-          error: () => {}
-        });
+    this.errorMessage = '';
+    this.successMessage = '';
 
-        // Crée directement le diagnostic associé en statut 'EN_ATTENTE'
-        this.diagnosticService.create({
-          ordreReparationId: this.ordreId,
-          statut: 'EN_ATTENTE',
-          pannesDetectees: descriptionTravaux
-        }).subscribe({
-          next: () => {
-            this.saving = false;
-            this.successMessage = 'Réception validée et diagnostic créé en attente.';
-            this.cdr.markForCheck();
-            this.router.navigate(['/app/ordres-reparation', this.ordreId, 'diagnostic']);
-          },
-          error: () => {
-            // Même si déjà créé, synchronise en EN_ATTENTE via saveStep
-            this.diagnosticService.saveStep({
-              ordreReparationId: this.ordreId,
-              statut: 'EN_ATTENTE',
-              listeDefauts: descriptionTravaux
-            }).subscribe({
-              next: () => {},
-              error: () => {}
-            });
-            this.saving = false;
-            this.router.navigate(['/app/ordres-reparation', this.ordreId, 'diagnostic']);
-          }
-        });
+    // 1. Sauvegarde de l'étape 1 sur l'Ordre de Réparation
+    this.ordreService.updateStepReception(this.ordreId, ordrePayload).subscribe({
+      next: () => {
+        // 2. Synchronisation de la Fiche Atelier liée
+        const ficheId = this.ficheAtelier?.id || this.loadedOrdre?.ficheAtelierId || (this.fullOrdre as any)?.ficheAtelierId;
+        if (ficheId && this.ficheAtelier) {
+          const ficheReq: FicheAtelierRequest = {
+            rendezVousId: this.ficheAtelier.rendezVousId ?? null,
+            clientId: this.ficheAtelier.clientId || this.selectedVehicule?.clientId || 0,
+            vehiculeId: Number(raw.vehiculeId),
+            nomChauffeur: this.ficheAtelier.nomChauffeur,
+            telephoneChauffeur: this.ficheAtelier.telephoneChauffeur,
+            niveauEssence: this.ficheAtelier.niveauEssence,
+            kilometrage: this.selectedVehicule?.kilometrage || this.ficheAtelier.kilometrage,
+            designationTravaux: descriptionTravaux,
+            lignesReception: lignesRec.map(l => ({ nom: l.nom, etat: l.etat })),
+            reception: lignesRec.map(l => ({ nom: l.nom, etat: l.etat })),
+            lignesDefauts: lignesDef,
+            defautsConstates: lignesDef,
+            nb: (this.notesFicheAtelier || '').trim(),
+            signatureReceptionnaireBase64: this.ficheAtelier.signatureReceptionnaireBase64,
+            signatureBase64: this.ficheAtelier.signatureBase64,
+            signatureSortieBase64: this.ficheAtelier.signatureSortieBase64
+          };
+
+          this.ficheAtelierService.update(ficheId, ficheReq).pipe(
+            catchError((err) => {
+              console.warn('Erreur synchronisation Fiche Atelier:', err);
+              return of(null);
+            })
+          ).subscribe({
+            next: (updatedFiche) => {
+              if (updatedFiche) {
+                this.ficheAtelier = updatedFiche;
+              }
+            }
+          });
+        }
+
+        if (goToNext) {
+          this.ordreService.updateStatut(this.ordreId, 'DIAGNOSTIC').subscribe({
+            next: () => {},
+            error: () => {}
+          });
+
+          this.diagnosticService.create({
+            ordreReparationId: this.ordreId,
+            statut: 'EN_ATTENTE',
+            pannesDetectees: descriptionTravaux
+          }).subscribe({
+            next: () => {
+              this.saving = false;
+              this.router.navigate(['/app/ordres-reparation', this.ordreId, 'diagnostic']);
+            },
+            error: () => {
+              this.diagnosticService.saveStep({
+                ordreReparationId: this.ordreId,
+                statut: 'EN_ATTENTE',
+                listeDefauts: descriptionTravaux
+              }).subscribe({ next: () => {}, error: () => {} });
+              this.saving = false;
+              this.router.navigate(['/app/ordres-reparation', this.ordreId, 'diagnostic']);
+            }
+          });
+        } else {
+          this.saving = false;
+          this.takeSnapshot();
+          this.step1Form.markAsPristine();
+          this.successMessage = 'Étape 1 et Fiche Atelier mises à jour avec succès !';
+          this.cdr.markForCheck();
+        }
       },
       error: (err) => {
         this.saving = false;

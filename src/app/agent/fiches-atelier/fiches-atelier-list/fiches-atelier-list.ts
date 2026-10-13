@@ -55,7 +55,7 @@ export class FichesAtelierList extends BasePaginatedComponent implements OnInit 
     this.service.getAll(params).subscribe({
       next: (data) => {
         const arr = this.applyPageResponse<FicheAtelierDetailsResponse>(data);
-        this.fiches = arr.sort((a: any, b: any) => b.id - a.id);
+        this.fiches = arr;
         this.loading = false;
         this.cdr.markForCheck();
       },

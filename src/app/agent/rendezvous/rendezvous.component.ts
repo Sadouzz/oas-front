@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef, HostListener } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RendezVousService } from './rendezvous.service';
@@ -57,6 +57,27 @@ export class RendezVousComponent implements OnInit {
 
   clientOpen = false;
   clientFilter = '';
+  openMotifRdvId: number | null = null;
+
+  toggleMotifDropdown(id: number, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.openMotifRdvId = this.openMotifRdvId === id ? null : id;
+    this.cdr.markForCheck();
+  }
+
+  isMotifOpen(id: number): boolean {
+    return this.openMotifRdvId === id;
+  }
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    if (this.openMotifRdvId !== null) {
+      this.openMotifRdvId = null;
+      this.cdr.markForCheck();
+    }
+  }
 
   searchText = '';
   filterStatut: RendezVousStatus | '' = '';

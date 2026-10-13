@@ -376,7 +376,7 @@ export class StepApprovisionnementComponent implements OnInit, OnDestroy {
       resteACommander: manquant
     };
   }
-  
+
   statutLabel(statut?: string): string {
     switch (statut) {
       case 'EN_ATTENTE': return 'En attente';
