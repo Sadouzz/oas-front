@@ -17,9 +17,12 @@ export class ClientNotificationsComponent implements OnInit {
   notifications: ClientNotification[] = [];
   loading = false;
   errorMessage = '';
+  page = 0;
+  hasNext = false;
+  totalUnread = 0;
 
   get unreadCount(): number {
-    return this.notifications.filter(n => !n.lu).length;
+    return this.totalUnread;
   }
 
   ngOnInit(): void {
@@ -28,18 +31,47 @@ export class ClientNotificationsComponent implements OnInit {
 
   load(): void {
     this.loading = true;
-    this.service.getAll().subscribe({
-      next: notifs => { this.notifications = notifs; this.loading = false; this.cdr.markForCheck(); },
+    this.service.getPage(0).subscribe({
+      next: result => {
+        this.notifications = result.content;
+        this.page = result.page;
+        this.hasNext = result.hasNext;
+        this.totalUnread = result.totalUnread;
+        this.loading = false;
+        this.cdr.markForCheck();
+      },
       error: () => { this.loading = false; this.cdr.markForCheck(); this.errorMessage = 'Impossible de charger vos notifications.'; },
+    });
+  }
+
+  loadMore(): void {
+    if (!this.hasNext || this.loading) return;
+    this.loading = true;
+    this.service.getPage(this.page + 1).subscribe({
+      next: result => {
+        this.notifications = [...this.notifications, ...result.content];
+        this.page = result.page;
+        this.hasNext = result.hasNext;
+        this.totalUnread = result.totalUnread;
+        this.loading = false;
+        this.cdr.markForCheck();
+      },
+      error: () => { this.loading = false; this.cdr.markForCheck(); },
     });
   }
 
   markAsRead(notification: ClientNotification): void {
     if (notification.lu) return;
-    this.service.markAsRead(notification.id).subscribe({ next: () => notification.lu = true });
+    this.service.markAsRead(notification.id).subscribe({ next: () => {
+      notification.lu = true;
+      this.totalUnread = Math.max(0, this.totalUnread - 1);
+    } });
   }
 
   markAllAsRead(): void {
-    this.service.markAllAsRead().subscribe({ next: () => this.notifications.forEach(n => n.lu = true) });
+    this.service.markAllAsRead().subscribe({ next: () => {
+      this.notifications.forEach(n => n.lu = true);
+      this.totalUnread = 0;
+    } });
   }
 }

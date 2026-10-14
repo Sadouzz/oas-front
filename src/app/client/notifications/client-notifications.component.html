@@ -48,5 +48,11 @@
         </div>
       }
     </div>
+    @if (hasNext) {
+      <button (click)="loadMore()" [disabled]="loading"
+        class="mt-4 w-full rounded-lg border border-oas-line bg-white p-3 text-sm font-semibold text-oas-accent hover:bg-blue-50 disabled:opacity-50">
+        Charger les notifications plus anciennes
+      </button>
+    }
   }
 </div>

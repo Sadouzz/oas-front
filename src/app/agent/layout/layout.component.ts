@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
 import { AgentNotificationService } from '../../core/services/agent-notification.service';
 import { NotificationWsService } from '../../core/services/notification-ws.service';
+import { LiveNotificationService } from '../../core/services/live-notification.service';
 import { AgentNotification } from '../../shared/models/agent-notification.model';
 import { GarageContextService } from '../../core/services/garage-context.service';
 import { PushOptInComponent } from '../../shared/components/push-opt-in/push-opt-in.component';
@@ -34,11 +35,16 @@ export class LayoutComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private notificationService = inject(AgentNotificationService);
   private notificationWsService = inject(NotificationWsService);
+  private liveNotificationService = inject(LiveNotificationService);
   private garageContext = inject(GarageContextService);
   private router = inject(Router);
   private routerSub?: Subscription;
   private wsSub?: Subscription;
   private notificationInterval: any;
+  private notificationsInitialized = false;
+  private totalUnreadNotifications = 0;
+  hasMoreNotifications = false;
+  private notificationPage = 0;
 
   openSection: string | null = null;
   notificationsOpen = false;
@@ -50,8 +56,11 @@ export class LayoutComponent implements OnInit, OnDestroy {
   activeGarageName: string | null = null;
   
   get unreadCount(): number {
-    return this.notifications.filter(n => !n.lu).length;
+    return this.totalUnreadNotifications;
   }
+
+  get notificationSoundEnabled(): boolean { return this.liveNotificationService.soundEnabled; }
+  setNotificationSoundEnabled(enabled: boolean): void { this.liveNotificationService.setSoundEnabled(enabled); }
 
   private readonly routeLabels: Record<string, { label: string; section?: string }> = {
     '/profil': { label: 'Mon profil' },
@@ -176,11 +185,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
   }
 
   private initWebSocketNotifications() {
-    const role = this.authService.getRole();
-    const userId = this.authService.getUserId();
-    const username = this.authService.getUsername();
-
-    this.notificationWsService.connect(role, userId, username);
+    this.notificationWsService.connect();
 
     this.wsSub = this.notificationWsService.notifications$.subscribe({
       next: (notif) => {
@@ -188,6 +193,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
         const exists = this.notifications.some(n => n.id === notif.id);
         if (!exists) {
           this.notifications.unshift(notif);
+          if (!notif.lu) this.totalUnreadNotifications++;
+          this.liveNotificationService.notify(notif);
           this.cdr.markForCheck();
         }
       },
@@ -207,14 +214,38 @@ export class LayoutComponent implements OnInit, OnDestroy {
     this.notificationWsService.disconnect();
   }
 
-  loadNotifications() {
-    this.notificationService.getNotifications().subscribe({
-      next: (notifs) => {
-        this.notifications = notifs || [];
+  loadNotifications(page = 0, append = false) {
+    this.notificationService.getNotificationPage(page).subscribe({
+      next: (result) => {
+        const received = result.content || [];
+        if (this.notificationsInitialized) {
+          const knownIds = new Set(this.notifications.map(notification => notification.id));
+          received
+            .filter(notification => !knownIds.has(notification.id))
+            .forEach(notification => this.liveNotificationService.notify(notification));
+        }
+        this.notifications = this.mergeNotifications(append ? this.notifications : received, append ? received : this.notifications);
+        this.totalUnreadNotifications = result.totalUnread;
+        this.hasMoreNotifications = result.hasNext;
+        this.notificationPage = result.page;
+        this.notificationsInitialized = true;
         this.cdr.markForCheck();
       },
       error: (err) => console.error('Erreur chargement notifications', err)
     });
+  }
+
+  loadMoreNotifications(): void { this.loadNotifications(this.notificationPage + 1, true); }
+
+  private mergeNotifications(primary: AgentNotification[], secondary: AgentNotification[]): AgentNotification[] {
+    const byId = new Map<number, AgentNotification>();
+    [...primary, ...secondary].forEach(notification => {
+      const existing = byId.get(notification.id);
+      byId.set(notification.id, existing ? { ...notification, lu: existing.lu || notification.lu } : notification);
+    });
+    return [...byId.values()].sort((a, b) =>
+      new Date(b.dateCreation).getTime() - new Date(a.dateCreation).getTime() || b.id - a.id,
+    );
   }
 
   toggleNotifications() {
@@ -226,6 +257,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
     this.notificationService.markAsRead(notification.id).subscribe({
       next: () => {
         notification.lu = true;
+        this.totalUnreadNotifications = Math.max(0, this.totalUnreadNotifications - 1);
         this.cdr.markForCheck();
       }
     });
@@ -235,6 +267,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
     this.notificationService.markAllAsRead().subscribe({
       next: () => {
         this.notifications.forEach(n => n.lu = true);
+        this.totalUnreadNotifications = 0;
         this.cdr.markForCheck();
       }
     });

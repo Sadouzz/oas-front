@@ -202,11 +202,17 @@ export class ClientRendezVousComponent implements OnInit {
         this.vehicules = [...this.vehicules, newV];
         this.selectVehicule(vehicule.id);
         this.showVehiculeCreateForm = false;
+        this.cdr.markForCheck();
       },
       error: (err: any) => {
         this.vehiculeSaving = false;
-        const message = err.error?.message || err.message || "Impossible d'ajouter ce véhicule.";
-        if (/immatriculation.*(exist|déjà)|déjà exist/i.test(message)) {
+        const message = typeof err.error === 'string'
+          ? err.error
+          : err.error?.message || err.message || "Impossible d'ajouter ce véhicule.";
+        const isDuplicateVehicle = err.status === 409
+          && /immatriculation|chassis|véhicule|vehicle/i.test(message)
+          || /immatriculation.{0,100}(exist|déjà)|(?:numéro|numero) de châssis.{0,100}(exist|déjà)|déjà exist/i.test(message);
+        if (isDuplicateVehicle) {
           this.duplicateVehicleData = {
             immatriculation: String(this.vehiculeForm.value.immatriculation || '').trim().toUpperCase(),
             numeroChassis: this.vehiculeForm.value.numeroChassis || null,
@@ -215,6 +221,7 @@ export class ClientRendezVousComponent implements OnInit {
         } else {
           this.vehiculeCreateError = message;
         }
+        this.cdr.markForCheck();
       },
     });
   }

@@ -10,6 +10,7 @@ import { TireTrackComponent } from '../../shared/components/tire-track/tire-trac
 import { BoltCornersComponent } from '../../shared/components/bolt-corners/bolt-corners';
 import { PistonAccordionComponent } from '../../shared/components/piston-accordion/piston-accordion';
 import { PhoneInputComponent } from '../../shared/components/phone-input/phone-input.component';
+import { PUBLIC_WHATSAPP_NUMBER, PUBLIC_WHATSAPP_URL } from '../../shared/config/public-contact';
 
 register();
 
@@ -31,6 +32,7 @@ register();
   styleUrl: './contact.css'
 })
 export class ContactComponent implements OnInit {
+  readonly whatsappUrl = PUBLIC_WHATSAPP_URL;
 
   informations: any[] = [];
   questions: any[] = [];
@@ -81,8 +83,8 @@ export class ContactComponent implements OnInit {
       {
         icone: 'whatsapp',
         titre: 'WhatsApp',
-        valeur: '+221 78 596 86 42',
-        lien: 'https://wa.me/221785968642',
+        valeur: `+${PUBLIC_WHATSAPP_NUMBER.slice(0, 3)} ${PUBLIC_WHATSAPP_NUMBER.slice(3, 5)} ${PUBLIC_WHATSAPP_NUMBER.slice(5, 7)} ${PUBLIC_WHATSAPP_NUMBER.slice(7, 9)} ${PUBLIC_WHATSAPP_NUMBER.slice(9)}`,
+        lien: this.whatsappUrl,
         cible: '_blank'
       },
       {

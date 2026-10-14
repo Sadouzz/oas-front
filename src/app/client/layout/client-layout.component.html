@@ -142,6 +142,11 @@
             <div class="fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:right-0 sm:top-full mt-2 w-auto sm:w-80 bg-white border border-oas-line rounded-2xl shadow-xl z-50 overflow-hidden flex flex-col max-h-[75vh] sm:max-h-[400px]">
               <div class="p-3.5 border-b border-oas-line flex items-center justify-between bg-gray-50 flex-shrink-0">
                 <span class="font-bold text-sm text-oas-ink">Notifications</span>
+                <label class="mr-auto ml-3 flex items-center gap-1.5 text-[11px] text-oas-muted">
+                  <input type="checkbox" [checked]="notificationSoundEnabled"
+                    (change)="setNotificationSoundEnabled($any($event.target).checked)" aria-label="Son des notifications">
+                  Son
+                </label>
                 @if (unreadCount > 0) {
                   <button (click)="markAllAsRead()" class="text-xs text-oas-accent hover:underline font-semibold">Tout marquer comme lu</button>
                 }
@@ -165,6 +170,9 @@
                     <p class="text-xs text-oas-muted leading-snug">{{ notif.message }}</p>
                     <p class="text-[10px] text-gray-400 mt-2">{{ notif.dateCreation | date:'dd/MM/yyyy HH:mm' }}</p>
                   </div>
+                }
+                @if (hasMoreNotifications) {
+                  <button (click)="loadMoreNotifications()" class="w-full p-2 text-xs font-medium text-oas-accent hover:bg-blue-50">Charger les plus anciennes</button>
                 }
               </div>
             </div>

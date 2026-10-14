@@ -46,7 +46,7 @@
             Remplissez notre formulaire de contact ci-dessous ou échangez directement avec nous sur WhatsApp pour un traitement prioritaire.
           </p>
           <div class="flex gap-4">
-            <a href="https://wa.me/221785968642" target="_blank" class="btn-outline flex items-center gap-2">
+            <a [href]="whatsappUrl" target="_blank" rel="noopener noreferrer" class="btn-outline flex items-center gap-2">
               <app-icon name="whatsapp" [size]="18"></app-icon>
               WhatsApp
             </a>
@@ -222,7 +222,7 @@
                             <p class="font-bold text-oas-navy group-hover:text-white">+221 33 821 47 11</p>
                           </div>
                         </a>
-                        <a href="https://wa.me/221785968642" target="_blank" class="flex items-center gap-4 p-4 bg-oas-bg border border-oas-line hover:border-green-500 hover:bg-green-500 hover:text-white transition-all duration-200 group no-underline">
+                        <a [href]="whatsappUrl" target="_blank" rel="noopener noreferrer" class="flex items-center gap-4 p-4 bg-oas-bg border border-oas-line hover:border-green-500 hover:bg-green-500 hover:text-white transition-all duration-200 group no-underline">
                           <div class="w-10 h-10 bg-white rounded flex items-center justify-center text-green-600 group-hover:bg-white">
                             <app-icon name="whatsapp" [size]="18"></app-icon>
                           </div>

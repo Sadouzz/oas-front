@@ -125,6 +125,13 @@
                 </td>
                 <td class="px-5 py-4">
                   <div class="flex items-center justify-end gap-1">
+                    @if (v.actif === false) {
+                      <button type="button" (click)="activerVehicule(v)" [disabled]="activatingVehicules.has(v.id)"
+                              title="Activer ce véhicule"
+                              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-semibold text-xs transition cursor-pointer disabled:opacity-60 disabled:cursor-wait">
+                        {{ activatingVehicules.has(v.id) ? 'Activation…' : 'Activer véhicule' }}
+                      </button>
+                    }
                     <button (click)="openEdit(v)" title="Modifier"
                             class="p-1.5 rounded-lg hover:bg-oas-info-bg text-oas-muted hover:text-oas-info transition cursor-pointer">
                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

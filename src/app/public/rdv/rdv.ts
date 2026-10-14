@@ -39,6 +39,7 @@ import { SheetMetalCardComponent } from '../../shared/components/sheet-metal-car
 import { BoltCornersComponent } from '../../shared/components/bolt-corners/bolt-corners';
 import { SpeedometerComponent } from '../../shared/components/speedometer/speedometer';
 import { PhoneInputComponent } from '../../shared/components/phone-input/phone-input.component';
+import { PUBLIC_WHATSAPP_URL } from '../../shared/config/public-contact';
 
 @Component({
   selector: 'app-rdv',
@@ -239,7 +240,7 @@ export class RdvComponent implements OnInit {
       `\nMerci !`;
 
     const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/221777662671?text=${encodedMessage}`;
+    const whatsappUrl = `${PUBLIC_WHATSAPP_URL}?text=${encodedMessage}`;
     window.open(whatsappUrl, '_blank');
     this.closeModal();
   }

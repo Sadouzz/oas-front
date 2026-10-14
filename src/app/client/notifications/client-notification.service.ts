@@ -3,14 +3,15 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ClientNotification } from '../models';
+import { NotificationPage } from '../../shared/models/notification-page.model';
 
 @Injectable({ providedIn: 'root' })
 export class ClientNotificationService {
   private http = inject(HttpClient);
   private api = `${environment.apiUrl}/api/notifications`;
 
-  getAll(): Observable<ClientNotification[]> {
-    return this.http.get<ClientNotification[]>(this.api);
+  getPage(page = 0, size = 50): Observable<NotificationPage<ClientNotification>> {
+    return this.http.get<NotificationPage<ClientNotification>>(`${this.api}/page`, { params: { page, size } });
   }
 
   markAsRead(id: number): Observable<void> {

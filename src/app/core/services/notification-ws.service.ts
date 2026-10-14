@@ -1,14 +1,16 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Client, IMessage } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { Observable, Subject } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AgentNotification } from '../../shared/models/agent-notification.model';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class NotificationWsService {
+  private authService = inject(AuthService);
   private client: Client | null = null;
   private notificationSubject = new Subject<AgentNotification>();
   public notifications$: Observable<AgentNotification> = this.notificationSubject.asObservable();
@@ -16,9 +18,9 @@ export class NotificationWsService {
 
   /**
    * Initialise et active la connexion WebSocket via STOMP / SockJS.
-   * S'abonne aux topics de rôle, d'agent et de file utilisateur.
+   * S'abonne à la file privée de l'utilisateur authentifié.
    */
-  connect(role?: string | null, agentId?: number | null, username?: string | null): void {
+  connect(): void {
     if (this.client && this.client.active) {
       return;
     }
@@ -27,6 +29,10 @@ export class NotificationWsService {
 
     this.client = new Client({
       webSocketFactory: () => new SockJS(wsUrl),
+      beforeConnect: async client => {
+        const token = this.authService.getToken();
+        client.connectHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+      },
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
@@ -50,36 +56,20 @@ export class NotificationWsService {
         }
       };
 
-      // 1. Abonnement global
-      this.client?.subscribe('/topic/notifications', handleMessage);
-
-      // 2. Abonnement par rôle (ex: /topic/roles/ROLE_AGENT/notifications et /topic/roles/AGENT/notifications)
-      if (role) {
-        this.client?.subscribe(`/topic/roles/${role}/notifications`, handleMessage);
-        const strippedRole = role.replace(/^ROLE_/, '');
-        if (strippedRole !== role) {
-          this.client?.subscribe(`/topic/roles/${strippedRole}/notifications`, handleMessage);
-        }
-      }
-
-      // 3. Abonnement spécifique à l'agent (ID)
-      if (agentId) {
-        this.client?.subscribe(`/topic/agent/${agentId}/notifications`, handleMessage);
-      }
-
-      // 4. File personnelle de l'utilisateur
-      if (username) {
-        this.client?.subscribe(`/user/${username}/queue/notifications`, handleMessage);
-      }
-      this.client?.subscribe(`/user/queue/notifications`, handleMessage);
+      // Spring résout cette destination vers la session de l'utilisateur
+      // authentifié lors de la connexion WebSocket.
+      this.client?.subscribe('/user/queue/notifications', handleMessage);
     };
 
     this.client.onDisconnect = () => {
       this.isConnected = false;
-      console.log('❌ Déconnecté du WebSocket STOMP des notifications');
     };
 
+    this.client.onWebSocketClose = () => { this.isConnected = false; };
+    this.client.onWebSocketError = () => { this.isConnected = false; };
+
     this.client.onStompError = (frame) => {
+      this.isConnected = false;
       console.warn('⚠️ Erreur STOMP:', frame.headers['message'], frame.body);
     };
 
