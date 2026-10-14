@@ -10,6 +10,7 @@ export interface RendezVousDateHistory {
 export interface RendezVousListResponse {
   id: number;
   clientId?: number;
+  clientPhone?: string | null;
   numero?: string;
   dateRendezVous: string;
   clientName: string;
@@ -26,6 +27,7 @@ export interface RendezVous {
   id: number;
   numero?: string;
   clientId: number;
+  clientPhone?: string | null;
   clientName: string;
   vehiculeId: number | null;
   vehiculeImmatriculation: string | null;

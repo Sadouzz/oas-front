@@ -180,6 +180,7 @@ export class ClientVehiculesComponent implements OnInit {
         this.successMessage = 'Véhicule enregistré avec succès.';
         setTimeout(() => this.successMessage = '', 4000);
         this.load();
+        this.cdr.markForCheck();
       },
       error: (err: any) => {
         this.saving = false;
@@ -197,6 +198,7 @@ export class ClientVehiculesComponent implements OnInit {
         } else {
           this.createErrorMessage = message;
         }
+        this.cdr.markForCheck();
       },
     });
   }

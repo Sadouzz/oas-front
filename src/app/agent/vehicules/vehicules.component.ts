@@ -32,6 +32,7 @@ export class VehiculesComponent extends BasePaginatedComponent implements OnInit
   saving = false;
   successMessage = '';
   errorMessage = '';
+  activatingVehicules = new Set<number>();
   transferRequests: VehicleTransferRequest[] = [];
   loadingTransfers = false;
   transferRequestsError = '';
@@ -369,6 +370,24 @@ export class VehiculesComponent extends BasePaginatedComponent implements OnInit
         }
       });
     }
+  }
+
+  activerVehicule(vehicule: VehiculeModel): void {
+    if (vehicule.actif !== false || this.activatingVehicules.has(vehicule.id)) return;
+    this.activatingVehicules.add(vehicule.id);
+    this.errorMessage = '';
+    this.vehiculeService.activer(vehicule.id).subscribe({
+      next: () => {
+        this.activatingVehicules.delete(vehicule.id);
+        this.showSuccess(`Le véhicule ${vehicule.immatriculation} est maintenant actif.`);
+        this.loadVehicules();
+      },
+      error: (err: any) => {
+        this.activatingVehicules.delete(vehicule.id);
+        this.errorMessage = err.error?.message || "Impossible d'activer ce véhicule.";
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   deleteVehicule(v: VehiculeModel) {

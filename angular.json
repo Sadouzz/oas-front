@@ -40,7 +40,8 @@
             "allowedCommonJsDependencies": [
               "aos",
               "@stomp/stompjs",
-              "sockjs-client"
+              "sockjs-client",
+              "howler"
             ]
           },
           "configurations": {

@@ -10,6 +10,7 @@ import { PaginationComponent } from '../../shared/components/pagination/paginati
 import { DatePipe } from '@angular/common';
 import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select.component';
 import { PhoneInputComponent } from '../../shared/components/phone-input/phone-input.component';
+import { toWhatsAppNumber } from '../../shared/config/public-contact';
 import {
   LucideSearch, LucideX, LucideCalendar, LucideCheck, LucideFileText, LucidePlus, LucideUser, LucideLock
 } from '@lucide/angular';
@@ -427,7 +428,7 @@ export class RendezVousComponent implements OnInit {
     this.modalSuccessMessage = '';
     this.statutForm.patchValue({ statut: rdv.statut === 'REFUSE' ? 'ANNULE' : rdv.statut, commentaire: rdv.commentaire ?? '', motifAnnulation: rdv.motifAnnulation ?? '' });
     this.showStatutModal = true;
-    this.loadClientPhone(rdv.clientId);
+    this.clientPhone = rdv.clientPhone || '';
   }
 
   isValiderAction = true;
@@ -439,7 +440,7 @@ export class RendezVousComponent implements OnInit {
     this.modalErrorMessage = '';
     this.modalSuccessMessage = '';
     this.showValiderModal = true;
-    this.loadClientPhone(rdv.clientId);
+    this.clientPhone = rdv.clientPhone || '';
   }
 
   openEditDate(rdv: RendezVous) {
@@ -449,6 +450,7 @@ export class RendezVousComponent implements OnInit {
     this.modalErrorMessage = '';
     this.modalSuccessMessage = '';
     this.showValiderModal = true;
+    this.clientPhone = rdv.clientPhone || '';
   }
 
   onDateChange(e: Event) {
@@ -607,27 +609,19 @@ export class RendezVousComponent implements OnInit {
     this.statutForm.reset({ statut: 'ANNULE', commentaire: '', motifAnnulation: '' });
     this.modalErrorMessage = '';
     this.showStatutModal = true;
-    this.loadClientPhone(rdv.clientId);
-  }
-
-  private loadClientPhone(clientId: number | null | undefined): void {
-    this.clientPhone = '';
-    if (!clientId) return;
-    this.clientService.getById(clientId).subscribe({
-      next: client => this.clientPhone = client.phone || '',
-      error: () => this.clientPhone = '',
-    });
+    this.clientPhone = rdv.clientPhone || '';
   }
 
   private reserveWhatsAppWindow(): Window | null {
-    if (!this.clientPhone) return null;
+    if (!toWhatsAppNumber(this.clientPhone)) return null;
     const popup = window.open('about:blank', '_blank');
     if (popup) popup.opener = null;
     return popup;
   }
 
   private openWhatsApp(popup: Window | null, rdv: RendezVous, reason = '', dateModified = false): void {
-    if (!this.clientPhone) {
+    const phone = toWhatsAppNumber(this.clientPhone);
+    if (!phone) {
       this.whatsappNotice = 'Le changement est enregistré, mais aucun numéro de téléphone client ne permet de préparer le message WhatsApp.';
       this.whatsappFallbackUrl = '';
       return;
@@ -641,8 +635,6 @@ export class RendezVousComponent implements OnInit {
         : rdv.statut === 'EN_ATTENTE'
           ? `Votre demande de rendez-vous prévue à la date du ${date} est enregistrée et en attente de confirmation.`
           : `Votre rendez-vous prévu à la date du ${date} a été confirmé.`;
-    let phone = this.clientPhone.replace(/[^0-9]/g, '');
-    if (phone.length === 9) phone = `221${phone}`;
     this.whatsappFallbackUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
     this.whatsappNotice = 'Message WhatsApp préparé. Vérifiez-le puis appuyez sur Envoyer dans WhatsApp.';
     if (popup) popup.location.href = this.whatsappFallbackUrl;
