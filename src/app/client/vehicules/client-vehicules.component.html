@@ -87,9 +87,9 @@
                 <div class="flex items-center gap-2 flex-wrap">
                   <span class="font-mono-data font-semibold text-sm text-oas-ink whitespace-nowrap">{{ v.immatriculation }}</span>
                   <app-status-badge [label]="stage.label" [tone]="stage.tone"></app-status-badge>
-                  @if (v.actif === false) {
+                  <!-- @if (v.actif === false) {
                     <app-status-badge label="En attente d'activation" tone="pending"></app-status-badge>
-                  }
+                  } -->
                 </div>
                 <p class="text-xs text-oas-muted mt-0.5 truncate">{{ v.marque }} {{ v.modele }}</p>
               </div>
