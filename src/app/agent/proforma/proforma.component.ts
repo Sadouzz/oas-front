@@ -280,7 +280,8 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
     }
     const p = this.pieces.find(item => item.id === Number(pieceId));
     if (p) {
-      this.prixAjouterPdp = p.prix ?? null;
+      const price = p.prixUnitaire ?? p.prix ?? (p as any).prixDeVente ?? (p as any).prixVente ?? (p as any).prixGros ?? null;
+      this.prixAjouterPdp = price != null ? Number(price) : null;
     }
   }
 
@@ -291,7 +292,8 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
     }
     const p = this.pieces.find(item => item.id === Number(pieceId));
     if (p) {
-      this.prixAjouterPdg = p.prix ?? null;
+      const price = (p as any).prixGros ?? p.prixUnitaire ?? p.prix ?? (p as any).prixDeVente ?? (p as any).prixVente ?? null;
+      this.prixAjouterPdg = price != null ? Number(price) : null;
     }
   }
 

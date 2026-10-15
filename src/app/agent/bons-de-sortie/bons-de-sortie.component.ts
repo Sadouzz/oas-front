@@ -173,9 +173,17 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     return this.lignesPieces.filter(l => l.piece.type === 'PDP');
   }
 
+  getPiecePrice(p?: PieceDetache | null): number | null {
+    if (!p) return null;
+    const val = p.prixUnitaire ?? p.prix ?? (p as any).prixDeVente ?? (p as any).prixVente ?? p.prixGros;
+    return val != null && val !== ('' as any) && !isNaN(Number(val)) ? Number(val) : null;
+  }
+
   get totalPdp(): number {
     return this.lignesPiecesPdp.reduce((sum, l) => {
-      const price = l.prix != null && l.prix !== ('' as any) ? Number(l.prix) : (l.piece?.prix != null ? Number(l.piece.prix) : 0);
+      const price = l.prix != null && l.prix !== ('' as any)
+        ? Number(l.prix)
+        : (this.getPiecePrice(l.piece) ?? 0);
       return sum + (price * (Number(l.quantite) || 0));
     }, 0);
   }
@@ -186,7 +194,8 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
 
   formatPiece = (p: PieceDetache) => {
     const stock = p.stockMagasin != null ? `(Stock: ${p.stockMagasin})` : '';
-    const prix = p.prix != null ? `— ${p.prix} FCFA` : '';
+    const price = this.getPiecePrice(p);
+    const prix = price != null ? `— ${price} FCFA` : '';
     return `${p.reference} — ${p.designation} ${prix} ${stock}`.trim();
   };
 
@@ -198,13 +207,15 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
   onPiecePdpSelected(pieceId: any) {
     if (!pieceId) {
       this.prixAjouterPdp = null;
+      this.cdr.markForCheck();
       return;
     }
     const p = this.piecesPdp.find(x => x.id === +pieceId);
     if (p) {
-      this.prixAjouterPdp = p.prix != null ? Number(p.prix) : null;
+      this.prixAjouterPdp = this.getPiecePrice(p);
       this.qteAjouterPdp = 1;
       this.errorMessage = '';
+      this.cdr.markForCheck();
     }
   }
 
@@ -236,7 +247,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
 
     const prix = this.prixAjouterPdp != null && this.prixAjouterPdp !== ('' as any)
       ? Number(this.prixAjouterPdp)
-      : (piece.prix != null ? Number(piece.prix) : 0);
+      : (this.getPiecePrice(piece) ?? 0);
 
     if (existing) {
       existing.quantite = currentQte + qteDemandee;
@@ -428,7 +439,25 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     this.loadPdpPieces('');
   }
 
-  closeCreate() { this.showCreateModal = false; this.errorMessage = ''; this.createStep = 1; }
+  closeCreate() {
+    this.showCreateModal = false;
+    this.errorMessage = '';
+    this.createStep = 1;
+    this.saving = false;
+    this.lignesPieces = [];
+    this.piecePdpAjouter = null;
+    this.qteAjouterPdp = 1;
+    this.prixAjouterPdp = null;
+    this.form.reset();
+    this.selectedClient = null;
+    this.vehiculesFiltres = [];
+    this.clientOpen = false;
+    this.vehiculeOpen = false;
+    this.clientFilter = '';
+    this.vehiculeFilter = '';
+    this.cdr.markForCheck();
+    this.cdr.detectChanges();
+  }
 
   goStep(n: number) {
     if (n === 2) {
@@ -448,7 +477,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     const lignesPieces = this.lignesPieces.map(l => {
       const price = l.prix != null && l.prix !== ('' as any)
         ? Number(l.prix)
-        : (l.piece?.prix != null ? Number(l.piece.prix) : null);
+        : this.getPiecePrice(l.piece);
       return {
         pieceId: l.piece.id,
         quantite: Number(l.quantite) || 1,
@@ -479,6 +508,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
       return;
     }
     this.saving = true;
+    this.cdr.markForCheck();
 
     this.bonService.creer({
       clientId: val.clientId,
@@ -491,11 +521,15 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
         this.showSuccess('Bon de sortie créé !');
         this.closeCreate();
         this.loadBons();
+        this.cdr.markForCheck();
+        this.cdr.detectChanges();
       },
       error: (err: any) => {
         this.saving = false;
         const msg = err.error?.message ?? (typeof err.error === 'string' ? err.error : '');
         this.errorMessage = msg || 'Erreur lors de la création.';
+        this.cdr.markForCheck();
+        this.cdr.detectChanges();
       }
     });
   }
@@ -540,11 +574,13 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
         this.showSuccess('Pièce retournée avec succès au stock magasin.');
         this.loadBons();
         this.loadHistorique(updatedBon.id);
+        this.cdr.markForCheck();
       },
       error: (err: any) => {
         this.saving = false;
         const msg = err.error?.message ?? (typeof err.error === 'string' ? err.error : '');
         this.errorMessage = msg || 'Erreur lors du retour de pièce.';
+        this.cdr.markForCheck();
       }
     });
   }
@@ -554,11 +590,18 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     if (this.saving) return;
     this.saving = true;
     this.bonService.valider(bon.id).subscribe({
-      next: () => { this.saving = false; this.showSuccess(`Bon ${bon.reference} validé !`); this.loadBons(); this.closeDetail(); },
+      next: () => {
+        this.saving = false;
+        this.showSuccess(`Bon ${bon.reference} validé !`);
+        this.loadBons();
+        this.closeDetail();
+        this.cdr.markForCheck();
+      },
       error: (err: any) => {
         this.saving = false;
         const msg = err.error?.message ?? (typeof err.error === 'string' ? err.error : '');
         this.errorMessage = msg || 'Erreur lors de la validation.';
+        this.cdr.markForCheck();
       }
     });
   }
@@ -615,7 +658,12 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
   }
 
   private showSuccess(msg: string) {
-    this.successMessage = msg; this.errorMessage = '';
-    setTimeout(() => this.successMessage = '', 3500);
+    this.successMessage = msg;
+    this.errorMessage = '';
+    this.cdr.markForCheck();
+    setTimeout(() => {
+      this.successMessage = '';
+      this.cdr.markForCheck();
+    }, 3500);
   }
 }

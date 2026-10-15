@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subject, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, catchError, takeUntil } from 'rxjs/operators';
 import { VehiculeService } from './vehicule.service';
@@ -10,11 +10,12 @@ import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 import { VehicleTransferService, VehicleTransferRequest } from './vehicle-transfer.service';
+import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select.component';
 
 @Component({
   selector: 'app-vehicules',
   standalone: true,
-  imports: [ReactiveFormsModule, DecimalPipe, DatePipe, AlertComponent, PaginationComponent],
+  imports: [FormsModule, ReactiveFormsModule, DecimalPipe, DatePipe, AlertComponent, PaginationComponent, SearchableSelectComponent],
   templateUrl: './vehicules.component.html',
 })
 export class VehiculesComponent extends BasePaginatedComponent implements OnInit, OnDestroy {
@@ -234,6 +235,9 @@ export class VehiculesComponent extends BasePaginatedComponent implements OnInit
       next: (res: any) => {
         const list = this.applyPageResponse<VehiculeModel>(res);
         this.vehicules = list.sort((a: any, b: any) => b.id - a.id);
+        this.vehicules.forEach(v => {
+          if (v.marque) this.knownMarques.add(v.marque.trim());
+        });
         this.applyFilter();
         this.loading = false;
         this.cdr.markForCheck();
@@ -246,13 +250,26 @@ export class VehiculesComponent extends BasePaginatedComponent implements OnInit
     });
   }
 
+  private knownMarques = new Set<string>();
+
   get marques(): string[] {
-    return [...new Set(this.vehicules.map(v => v.marque).filter(Boolean))].sort();
+    this.vehicules.forEach(v => {
+      if (v.marque) this.knownMarques.add(v.marque.trim());
+    });
+    return Array.from(this.knownMarques).filter(Boolean).sort((a, b) => a.localeCompare(b));
+  }
+
+  get marquesOptions(): { label: string; value: string }[] {
+    const list: { label: string; value: string }[] = [{ label: 'Toutes les marques', value: '' }];
+    this.marques.forEach(m => {
+      list.push({ label: m, value: m });
+    });
+    return list;
   }
 
   applyFilter() {
     let data = this.vehicules;
-    if (this.filterMarque) data = data.filter(v => v.marque === this.filterMarque);
+    if (this.filterMarque) data = data.filter(v => v.marque?.toLowerCase() === this.filterMarque.toLowerCase());
     if (this.filterClientId != null) data = data.filter(v => v.client?.id === this.filterClientId);
     if (this.searchTerm) {
       const kw = this.searchTerm;
@@ -267,6 +284,13 @@ export class VehiculesComponent extends BasePaginatedComponent implements OnInit
   }
 
   // onSearch is inherited from BasePaginatedComponent
+
+  onMarqueChange(val: any) {
+    const selected = typeof val === 'object' ? (val?.value ?? '') : (val ?? '');
+    this.filterMarque = (!selected || selected === 'Toutes les marques') ? '' : selected;
+    this.page = 1;
+    this.loadVehicules();
+  }
 
   onMarqueFilter(event: Event) {
     this.filterMarque = (event.target as HTMLSelectElement).value;

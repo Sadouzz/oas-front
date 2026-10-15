@@ -4,7 +4,13 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { FicheAtelierService } from '../fiche-atelier.service';
 import { FicheAtelierDetailsResponse } from '../../../shared/models';
-import { LigneReception, LigneDefaut } from '../models/fiche-atelier.model';
+import {
+  LigneReception,
+  LigneDefaut,
+  FicheAtelierRequest,
+  DEFAULT_LIGNES_RECEPTION,
+  DEFAULT_RUBRIQUES_DEFAUTS
+} from '../models/fiche-atelier.model';
 import { DevisPrevisionnel, DevisPrevisionnelService } from '../../devis-previsionnels/devis-previsionnel.service';
 import { OrdreReparationService } from '../../ordres-reparation/ordre-reparation.service';
 import { LucideArrowLeft, LucideCheck } from '@lucide/angular';
@@ -80,14 +86,23 @@ export class FicheAtelierDetails implements OnInit {
     return !!role && this.rolesAutorisesCreationOR.includes(role);
   }
 
+  lignesReception: LigneReception[] = [];
+  lignesDefauts: LigneDefaut[] = [];
+  notesFicheAtelier = '';
+  nouveauPointNom = '';
+  nouveauDefautNom = '';
+
+  initialSnapshot = '';
+  savingChanges = false;
+  saveSuccess = '';
+  saveError = '';
+
   get lignesReceptionList(): LigneReception[] {
-    if (!this.fiche) return [];
-    return this.fiche.lignesReception || (this.fiche as any).reception || [];
+    return this.lignesReception;
   }
 
   get lignesDefautsList(): LigneDefaut[] {
-    if (!this.fiche) return [];
-    return this.fiche.lignesDefauts || (this.fiche as any).defautsConstates || (this.fiche as any).defauts || [];
+    return this.lignesDefauts;
   }
 
   isLigneOui(ligne: LigneReception): boolean {
@@ -110,6 +125,179 @@ export class FicheAtelierDetails implements OnInit {
     return 'R.A.S (aucun défaut)';
   }
 
+  private initDataFromFiche(data: FicheAtelierDetailsResponse): void {
+    const rawReception = data.lignesReception || (data as any).reception || [];
+    if (rawReception.length > 0) {
+      this.lignesReception = rawReception.map((l: any) => ({
+        nom: l.nom,
+        etat: l.etat !== undefined ? l.etat : (l.oui === true ? true : (l.non === true ? false : null))
+      }));
+    } else {
+      this.lignesReception = DEFAULT_LIGNES_RECEPTION.map(nom => ({ nom, etat: null }));
+    }
+
+    let rawDefauts = data.lignesDefauts || (data as any).defautsConstates || (data as any).defauts || [];
+    const defautsMap = new Map<string, LigneDefaut>();
+    DEFAULT_RUBRIQUES_DEFAUTS.forEach(nom => {
+      defautsMap.set(nom.toLowerCase(), { nom, present: false, designation: '' });
+    });
+    rawDefauts.forEach((d: any) => {
+      if (!d.nom) return;
+      const desc = (d.designation || d.description || d.defaut || d.valeur || '').trim();
+      defautsMap.set(d.nom.toLowerCase(), {
+        nom: d.nom,
+        present: !!d.present || desc.length > 0,
+        designation: desc
+      });
+    });
+    this.lignesDefauts = Array.from(defautsMap.values());
+    this.notesFicheAtelier = data.nb || '';
+
+    this.takeSnapshot();
+  }
+
+  takeSnapshot(): void {
+    this.initialSnapshot = this.getCurrentSnapshot();
+    this.cdr.markForCheck();
+  }
+
+  get hasChanges(): boolean {
+    if (!this.initialSnapshot) return false;
+    return this.getCurrentSnapshot() !== this.initialSnapshot;
+  }
+
+  private getCurrentSnapshot(): string {
+    const rec = (this.lignesReception || []).map(l => ({
+      nom: (l.nom || '').trim(),
+      etat: l.etat ?? null
+    }));
+    const def = (this.lignesDefauts || []).map(d => ({
+      nom: (d.nom || '').trim(),
+      present: !!d.present,
+      designation: (d.designation || '').trim()
+    }));
+    return JSON.stringify({
+      lignesReception: rec,
+      lignesDefauts: def,
+      notes: (this.notesFicheAtelier || '').trim()
+    });
+  }
+
+  cancelChanges(): void {
+    if (this.fiche) {
+      this.initDataFromFiche(this.fiche);
+      this.saveSuccess = '';
+      this.saveError = '';
+      this.cdr.markForCheck();
+    }
+  }
+
+  setLigneReceptionEtat(index: number, val: boolean): void {
+    const item = this.lignesReception[index];
+    if (!item) return;
+    item.etat = item.etat === val ? null : val;
+    this.cdr.markForCheck();
+  }
+
+  addCustomPointReception(): void {
+    const nom = (this.nouveauPointNom || '').trim();
+    if (!nom) return;
+    this.lignesReception.push({ nom, etat: null });
+    this.nouveauPointNom = '';
+    this.cdr.markForCheck();
+  }
+
+  removeLigneReception(index: number): void {
+    this.lignesReception.splice(index, 1);
+    this.cdr.markForCheck();
+  }
+
+  toggleDefautPresent(defaut: LigneDefaut): void {
+    defaut.present = !defaut.present;
+    if (!defaut.present) {
+      defaut.designation = '';
+    }
+    this.cdr.markForCheck();
+  }
+
+  addCustomDefaut(): void {
+    const nom = (this.nouveauDefautNom || '').trim();
+    if (!nom) return;
+    if (this.lignesDefauts.some(d => d.nom.toLowerCase() === nom.toLowerCase())) {
+      this.nouveauDefautNom = '';
+      return;
+    }
+    this.lignesDefauts.push({
+      nom,
+      present: true,
+      designation: ''
+    });
+    this.nouveauDefautNom = '';
+    this.cdr.markForCheck();
+  }
+
+  removeDefaut(index: number): void {
+    this.lignesDefauts.splice(index, 1);
+    this.cdr.markForCheck();
+  }
+
+  saveChanges(): void {
+    if (!this.fiche || this.savingChanges) return;
+    this.savingChanges = true;
+    this.saveSuccess = '';
+    this.saveError = '';
+
+    const lignesRec: LigneReception[] = (this.lignesReception || [])
+      .map(l => ({ nom: (l.nom || '').trim(), etat: l.etat ?? null }))
+      .filter(l => !!l.nom);
+
+    const lignesDef: LigneDefaut[] = (this.lignesDefauts || [])
+      .map(d => ({
+        nom: (d.nom || '').trim(),
+        present: !!d.present,
+        designation: d.present ? (d.designation || '').trim() : ''
+      }))
+      .filter(d => !!d.nom);
+
+    const req: FicheAtelierRequest = {
+      rendezVousId: this.fiche.rendezVousId ?? null,
+      clientId: this.fiche.clientId,
+      vehiculeId: this.fiche.vehiculeId,
+      nomChauffeur: this.fiche.nomChauffeur,
+      telephoneChauffeur: this.fiche.telephoneChauffeur,
+      niveauEssence: this.fiche.niveauEssence,
+      kilometrage: this.fiche.kilometrage,
+      designationTravaux: this.fiche.designationTravaux,
+      lignesReception: lignesRec,
+      reception: lignesRec,
+      lignesDefauts: lignesDef,
+      defautsConstates: lignesDef,
+      nb: (this.notesFicheAtelier || '').trim(),
+      signatureReceptionnaireBase64: this.fiche.signatureReceptionnaireBase64,
+      signatureBase64: this.fiche.signatureBase64,
+      signatureSortieBase64: this.fiche.signatureSortieBase64
+    };
+
+    this.ficheAtelierService.update(this.fiche.id, req).subscribe({
+      next: (updated) => {
+        this.fiche = updated;
+        this.initDataFromFiche(updated);
+        this.savingChanges = false;
+        this.saveSuccess = 'Modifications enregistrées avec succès !';
+        this.cdr.markForCheck();
+        setTimeout(() => {
+          this.saveSuccess = '';
+          this.cdr.markForCheck();
+        }, 4000);
+      },
+      error: (err) => {
+        this.savingChanges = false;
+        this.saveError = err.error?.message || 'Erreur lors de l\'enregistrement des modifications.';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
   ngOnInit(): void {
     const idParam = this.route.snapshot.paramMap.get('id');
     if (idParam) {
@@ -124,6 +312,7 @@ export class FicheAtelierDetails implements OnInit {
     this.ficheAtelierService.getById(id).subscribe({
       next: (data) => {
         this.fiche = data;
+        this.initDataFromFiche(data);
         this.devis = (data.devisPrevisionnel as any) ?? null;
         if (!this.devis) {
           this.devisService.getByFicheAtelierId(id).subscribe({

@@ -59,16 +59,19 @@
       </span>
       <input type="text" (input)="onSearch($event)"
              placeholder="Rechercher par immatriculation, marque, modèle ou client..."
-             class="w-full pl-9 pr-4 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
+             class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
     </div>
-    <!-- Filtre marque -->
-    <select (change)="onMarqueFilter($event)"
-            class="px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink min-w-[160px]">
-      <option value="">Toutes les marques</option>
-      @for (m of marques; track m) {
-        <option [value]="m">{{ m }}</option>
-      }
-    </select>
+    <!-- Filtre marque (Searchable Select) -->
+    <div class="w-full sm:w-60 flex-shrink-0">
+      <app-searchable-select
+        [options]="marquesOptions"
+        bindValue="value"
+        bindLabel="label"
+        placeholder="Toutes les marques"
+        [ngModel]="filterMarque"
+        (change)="onMarqueChange($event)">
+      </app-searchable-select>
+    </div>
     <!-- Filtre client
     <select (change)="onClientFilter($event)"
             class="px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink min-w-[180px]">

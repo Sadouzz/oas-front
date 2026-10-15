@@ -427,7 +427,7 @@
                   </div>
                 </td>
                 <td class="px-3 py-3 text-right font-extrabold text-blue-950 whitespace-nowrap">
-                  {{ (((l.prix != null ? l.prix : l.piece?.prix) || 0) * (l.quantite || 0)) | number }} FCFA
+                  {{ (((l.prix != null ? l.prix : getPiecePrice(l.piece)) || 0) * (l.quantite || 0)) | number }} FCFA
                 </td>
                 <td class="px-3 py-3 text-center">
                   <button type="button" (click)="removePiece(l)" title="Supprimer cette pièce"
@@ -472,7 +472,10 @@
       </button>
       }
     </div>
-    <div class="flex gap-2">
+    <div class="flex items-center gap-2">
+      @if (errorMessage) {
+      <span class="text-xs text-rose-600 font-semibold max-w-xs truncate" [title]="errorMessage">{{ errorMessage }}</span>
+      }
       <button type="button" (click)="closeCreate()"
         class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-lg border border-oas-line transition cursor-pointer text-sm">Annuler</button>
       @if (createStep < 2) { <button type="button" (click)="goStep(createStep + 1)"
