@@ -43,18 +43,11 @@ export class ClientSettingsComponent {
       return;
     }
 
-    const username = this.authService.getUsername();
-    if (!username) {
-      this.errorMessage = 'Session invalide, veuillez vous reconnecter.';
-      return;
-    }
-
     this.saving = true;
     this.errorMessage = '';
     this.successMessage = '';
 
     this.profileService.changePassword({
-      username,
       oldPassword: this.form.value.oldPassword,
       newPassword: this.form.value.newPassword,
     }).subscribe({

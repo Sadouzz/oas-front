@@ -8,7 +8,7 @@ import { CloudinaryUploadResult } from '../../models';
  *
  * Exemple :
  *   <app-media-uploader
- *     folder="oas/marketplace"
+ *     folder="oas/temp"
  *     [previewUrl]="produit.mediaUrl"
  *     (uploaded)="produit.mediaUrl = $event.secureUrl" />
  */

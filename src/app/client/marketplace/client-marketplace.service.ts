@@ -30,11 +30,11 @@ export class ClientMarketplaceService {
   }
 
   getMesDemandes(): Observable<DemandeProduit[]> {
-    return this.http.get<DemandeProduit[]>(`${this.api}/demandes`);
+    return this.http.get<DemandeProduit[]>(`${this.api}/demandes/mes-demandes`);
   }
 
   getHistorique(): Observable<DemandeProduit[]> {
-    return this.http.get<DemandeProduit[]>(`${this.api}/historique`);
+    return this.http.get<DemandeProduit[]>(`${this.api}/demandes/client/historique`);
   }
 
   annulerDemande(id: number): Observable<DemandeProduit> {

@@ -89,7 +89,9 @@ function handle401Error(
       }),
       catchError((err) => {
         isRefreshing = false;
-        refreshTokenSubject.next(null);
+        // Release concurrent 401 requests as well; leaving the subject at null
+        // would keep their observables pending forever.
+        refreshTokenSubject.next('');
         authService.logout();
         router.navigate(['/login'], { replaceUrl: true });
         return throwError(() => err);
@@ -100,6 +102,7 @@ function handle401Error(
       filter(token => token !== null),
       take(1),
       switchMap(token => {
+        if (!token) return throwError(() => new Error('La session a expiré.'));
         let headers = req.headers;
         if (token) {
           headers = headers.set('Authorization', `Bearer ${token}`);

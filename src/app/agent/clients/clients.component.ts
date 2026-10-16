@@ -118,7 +118,6 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
     raisonSociale: ['', Validators.required],
     ninea: ['', [Validators.required, Validators.pattern(/^[A-Za-z0-9]{3,40}$/)]],
     remisePourcentage: [0 as number, [Validators.required, Validators.min(0), Validators.max(100)]],
-    montantPlafond: [null as number | null, Validators.min(0)],
     echeance: [null as number | null, [Validators.min(1), Validators.max(3650)]],
     montantPlafondEcheance: [null as number | null, Validators.min(0)],
     rccm: [''],
@@ -129,7 +128,6 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   });
 
   conditionsForm = this.fb.group({
-    plafondEncours: [null as number | null, Validators.min(0)],
     echeanceJours: [null as number | null, [Validators.min(1), Validators.max(3650)]],
     plafondPeriode: [null as number | null, Validators.min(0)],
   });
@@ -608,7 +606,6 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
     this.fideleForm.patchValue({
       raisonSociale: client.raisonSociale ?? '',
       remisePourcentage: client.montantRemise ?? 0,
-      montantPlafond: client.montantPlafond ?? null,
       echeance: client.echeance ?? null,
       montantPlafondEcheance: client.montantPlafondEcheance ?? null,
       ninea: client.numeroEntreprise ?? '',
@@ -645,7 +642,6 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   openConditionsModal(client: ClientListResponse) {
     this.conditionsClient = client;
     this.conditionsForm.setValue({
-      plafondEncours: client.montantPlafond ?? null,
       echeanceJours: client.echeance ?? null,
       plafondPeriode: client.montantPlafondEcheance ?? null,
     });
@@ -664,7 +660,6 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
     this.saving = true;
     const value = this.conditionsForm.getRawValue();
     this.clientService.updateConditionsFinancieres(this.conditionsClient.id, {
-      plafondEncours: value.plafondEncours,
       echeanceJours: value.echeanceJours,
       plafondPeriode: value.plafondPeriode,
     }).subscribe({
@@ -694,7 +689,6 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
       raisonSociale: raw.raisonSociale!.trim(),
       ninea: raw.ninea!.trim(),
       remisePourcentage: Number(raw.remisePourcentage),
-      plafondCredit: raw.montantPlafond,
       echeanceJours: raw.echeance,
       plafondPeriode: raw.montantPlafondEcheance,
       rccm: raw.rccm?.trim() || null,

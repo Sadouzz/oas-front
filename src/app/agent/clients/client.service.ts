@@ -82,7 +82,7 @@ export class ClientService {
     return this.http.post<CompteFinancierResponse>(`${this.api}/${id}/compte-financier/credits`, { montant, commentaire });
   }
 
-  updateConditionsFinancieres(id: number, payload: { plafondEncours: number | null; echeanceJours: number | null; plafondPeriode: number | null }): Observable<ClientModel> {
+  updateConditionsFinancieres(id: number, payload: { echeanceJours: number | null; plafondPeriode: number | null }): Observable<ClientModel> {
     return this.http.put<ClientModel>(`${this.api}/${id}/conditions-financieres`, payload);
   }
 }

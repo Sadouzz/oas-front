@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap, map } from 'rxjs';
+import { Observable, tap, map, finalize, shareReplay } from 'rxjs';
 import { jwtDecode } from 'jwt-decode';
 import { environment } from '../../../environments/environment';
 import { AuthResponse, LoginRequest, RegisterRequest, CheckAvailabilityResponse } from '../../shared/models';
@@ -16,8 +16,13 @@ export class AuthService {
   private cookieService = inject(CookieService);
   private api = `${environment.apiUrl}/api/auth`;
   private expirationTimer: any;
+  private accessToken: string | null = null;
+  private refreshInFlight?: Observable<AuthResponse>;
 
   constructor() {
+    // Retire l'ancien jeton persistant lisible par JavaScript. Le jeton d'accès reste
+    // en mémoire; seul le jeton de renouvellement est conservé dans un cookie HttpOnly.
+    this.cookieService.delete('token');
     this.scheduleAutoRefresh();
   }
 
@@ -26,8 +31,7 @@ export class AuthService {
       map(res => (res && res.data) ? res.data : res),
       tap((response: AuthResponse) => {
         if (response && response.token) {
-          // Stockage dans les cookies uniquement
-          this.cookieService.set('token', response.token, 7);
+          this.accessToken = response.token;
           this.cookieService.set('username', response.username, 7);
           this.cookieService.set('role', response.role, 7);
 
@@ -41,11 +45,13 @@ export class AuthService {
   }
 
   refreshToken(): Observable<AuthResponse> {
-    return this.http.post<any>(`${this.api}/refresh`, {}, { withCredentials: true }).pipe(
+    if (this.refreshInFlight) return this.refreshInFlight;
+
+    this.refreshInFlight = this.http.post<any>(`${this.api}/refresh`, {}, { withCredentials: true }).pipe(
       map(res => (res && res.data) ? res.data : res),
       tap((response: AuthResponse) => {
         if (response && response.token) {
-          this.cookieService.set('token', response.token, 7);
+          this.accessToken = response.token;
           if (response.username) this.cookieService.set('username', response.username, 7);
           if (response.role) this.cookieService.set('role', response.role, 7);
 
@@ -54,8 +60,11 @@ export class AuthService {
           }
           this.scheduleAutoRefresh();
         }
-      })
+      }),
+      finalize(() => { this.refreshInFlight = undefined; }),
+      shareReplay({ bufferSize: 1, refCount: false })
     );
+    return this.refreshInFlight;
   }
 
   register(data: RegisterRequest): Observable<void> {
@@ -76,6 +85,7 @@ export class AuthService {
       next: () => {},
       error: () => {}
     });
+    this.accessToken = null;
     this.cookieService.delete('token');
     this.cookieService.delete('username');
     this.cookieService.delete('role');
@@ -84,7 +94,7 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    return this.cookieService.get('token');
+    return this.accessToken;
   }
 
   /**

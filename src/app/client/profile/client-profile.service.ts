@@ -13,6 +13,9 @@ export class ClientProfileService {
   }
 
   changePassword(payload: ChangePasswordPayload): Observable<unknown> {
-    return this.http.post(`${environment.apiUrl}/api/auth/change-password`, payload);
+    return this.http.post(`${environment.apiUrl}/api/auth/me/change-password`, {
+      oldPassword: payload.oldPassword,
+      newPassword: payload.newPassword,
+    });
   }
 }

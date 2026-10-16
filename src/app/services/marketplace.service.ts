@@ -74,7 +74,7 @@ export const MOCK_PRODUCTS: Product[] = [
 @Injectable({ providedIn: 'root' })
 export class MarketplaceService {
   private http = inject(HttpClient);
-  private api = `${environment.apiUrl}/api/client/marketplace`;
+  private api = `${environment.apiUrl}/api/marketplace`;
 
   getAll(): Observable<Product[]> {
     return this.http.get<BackendProduit[]>(`${this.api}/produits`).pipe(

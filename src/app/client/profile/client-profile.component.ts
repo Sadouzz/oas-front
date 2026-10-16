@@ -198,18 +198,11 @@ export class ClientProfileComponent implements OnInit {
       return;
     }
 
-    const username = this.user?.username;
-    if (!username) {
-      this.passwordError = 'Identifiant introuvable, veuillez recharger la page.';
-      return;
-    }
-
     this.savingPassword = true;
     this.passwordError = '';
     this.passwordSuccess = '';
 
     this.profileService.changePassword({
-      username,
       oldPassword: this.passwordForm.value.oldPassword,
       newPassword: this.passwordForm.value.newPassword,
     }).subscribe({

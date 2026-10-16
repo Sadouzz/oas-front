@@ -15,15 +15,34 @@ export class NotificationWsService {
   private notificationSubject = new Subject<AgentNotification>();
   public notifications$: Observable<AgentNotification> = this.notificationSubject.asObservable();
   private isConnected = false;
+  private isConnecting = false;
 
   /**
    * Initialise et active la connexion WebSocket via STOMP / SockJS.
    * S'abonne à la file privée de l'utilisateur authentifié.
    */
   connect(): void {
-    if (this.client && this.client.active) {
+    if ((this.client && this.client.active) || this.isConnecting) {
       return;
     }
+
+    if (!this.authService.getToken()) {
+      this.isConnecting = true;
+      this.authService.refreshToken().subscribe({
+        next: () => {
+          this.isConnecting = false;
+          this.activateConnection();
+        },
+        error: () => { this.isConnecting = false; }
+      });
+      return;
+    }
+
+    this.activateConnection();
+  }
+
+  private activateConnection(): void {
+    if ((this.client && this.client.active) || this.isConnecting) return;
 
     const wsUrl = `${environment.apiUrl}/ws`;
 
@@ -45,7 +64,7 @@ export class NotificationWsService {
 
     this.client.onConnect = () => {
       this.isConnected = true;
-      // console.log('✅ Connecté au WebSocket STOMP des notifications');
+      this.isConnecting = false;
 
       const handleMessage = (message: IMessage) => {
         try {
@@ -73,6 +92,7 @@ export class NotificationWsService {
       console.warn('⚠️ Erreur STOMP:', frame.headers['message'], frame.body);
     };
 
+    this.isConnecting = true;
     this.client.activate();
   }
 
@@ -84,6 +104,7 @@ export class NotificationWsService {
       this.client.deactivate();
       this.client = null;
       this.isConnected = false;
+      this.isConnecting = false;
     }
   }
 

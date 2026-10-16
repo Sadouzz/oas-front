@@ -18,7 +18,8 @@ export class MediaUploadService {
 
   /**
    * @param file   Fichier image ou vidéo à uploader.
-   * @param folder Dossier Cloudinary cible, ex: "oas/marketplace", "oas/garage", "oas/demandeRDV/jean-dupont".
+   * @param folder Dossier Cloudinary autorisé, par exemple "oas/temp",
+   *               "oas/pdf-templates" ou "oas/ordres-reparation/diagnostic".
    */
   upload(file: File, folder?: string): Observable<MediaUploadEvent> {
     return this.getSignature(folder).pipe(

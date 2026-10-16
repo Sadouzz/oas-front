@@ -2,6 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, shareReplay } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { CookieService } from '../../core/services/cookie.service';
+import { AuthService } from '../../core/services/auth.service';
 import { UserModel } from '../../shared/models';
 import {
   ClientDashboard,
@@ -14,12 +16,20 @@ import {
 @Injectable({ providedIn: 'root' })
 export class ClientPortalService {
   private http = inject(HttpClient);
+  private cookieService = inject(CookieService);
+  private authService = inject(AuthService);
   private clientApi = `${environment.apiUrl}/api/clients`;
   private portalApi = `${environment.apiUrl}/api/client-portal`;
 
   private me$?: Observable<UserModel>;
+  private meCacheSession: string | null = null;
 
   getMe(): Observable<UserModel> {
+    const currentSession = `${this.cookieService.get('username') ?? ''}:${this.authService.getToken() ?? ''}`;
+    if (currentSession !== this.meCacheSession) {
+      this.me$ = undefined;
+      this.meCacheSession = currentSession;
+    }
     if (!this.me$) {
       this.me$ = this.http.get<UserModel>(`${this.clientApi}/me`).pipe(
         shareReplay(1)
@@ -30,6 +40,7 @@ export class ClientPortalService {
 
   clearMeCache(): void {
     this.me$ = undefined;
+    this.meCacheSession = `${this.cookieService.get('username') ?? ''}:${this.authService.getToken() ?? ''}`;
   }
 
   getDashboard(): Observable<ClientDashboard> {

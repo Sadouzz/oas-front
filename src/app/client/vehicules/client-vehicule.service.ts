@@ -14,7 +14,7 @@ export class ClientVehiculeService {
   }
 
   getById(id: number): Observable<VehiculeModel> {
-    return this.http.get<VehiculeModel>(`${this.api}/${id}`);
+    return this.http.get<VehiculeModel>(`${this.api}/me/${id}`);
   }
 
   create(data: any): Observable<VehiculeModel> {

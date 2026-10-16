@@ -285,14 +285,10 @@
                 }
               </div>
               @if (selectedClient.clientFidele) {
-                <div class="grid grid-cols-2 gap-3 mb-2">
+                <div class="grid grid-cols-1 gap-3 mb-2">
                   <div class="bg-oas-bg p-2 rounded border border-oas-line">
                     <p class="text-[10px] text-oas-muted uppercase">Remise</p>
                     <p class="text-sm font-semibold text-oas-ink">{{ selectedClient.montantRemise || 0 }}%</p>
-                  </div>
-                  <div class="bg-oas-bg p-2 rounded border border-oas-line">
-                    <p class="text-[10px] text-oas-muted uppercase">Plafond encours</p>
-                    <p class="text-sm font-semibold text-oas-ink">{{ selectedClient.montantPlafond ? (selectedClient.montantPlafond | number) + ' F' : 'Illimité' }}</p>
                   </div>
                 </div>
                 <div class="flex gap-2">
@@ -678,11 +674,7 @@
       </div>
       <form [formGroup]="conditionsForm" (ngSubmit)="saveConditions()" class="px-6 py-5 space-y-4">
         @if (errorMessage) { <div class="px-3 py-2 bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-xs rounded-lg">{{ errorMessage }}</div> }
-        <p class="text-xs text-oas-muted">Ces limites s’appliquent aux clients particuliers comme aux entreprises. Les agents reçoivent un avertissement; l’espace client applique le blocage de prise de rendez-vous selon les règles de compte.</p>
-        <div>
-          <label class="block text-sm font-semibold text-oas-ink mb-1">Plafond d’encours impayé (F CFA)</label>
-          <input type="number" formControlName="plafondEncours" min="0" step="1" placeholder="Vide = sans plafond" class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm"/>
-        </div>
+        <p class="text-xs text-oas-muted">Le plafond de facturation et le délai s’appliquent aux clients particuliers comme aux entreprises. Les agents reçoivent un avertissement; côté client, les réservations sont bloquées en cas de facture échue impayée ou de plafond de période atteint.</p>
         <div>
           <label class="block text-sm font-semibold text-oas-ink mb-1">Échéance (jours)</label>
           <input type="number" formControlName="echeanceJours" min="1" max="3650" placeholder="ex. 30" class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm"/>
@@ -1021,18 +1013,10 @@
           Compte financier actif
         </label>
         
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-semibold text-oas-ink mb-1">Plafond d’encours impayé</label>
-            <input type="number" formControlName="montantPlafond" placeholder="ex: 5000000" min="0"
-                   class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition"/>
-            <p class="text-[10px] text-oas-muted mt-1">Alerte agent; blocage de réservation client si dépassé.</p>
-          </div>
-          <div>
-            <label class="block text-sm font-semibold text-oas-ink mb-1">Délai d’échéance (jours)</label>
-            <input type="number" formControlName="echeance" placeholder="ex: 30" min="1"
-                   class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition"/>
-          </div>
+        <div>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Délai d’échéance (jours)</label>
+          <input type="number" formControlName="echeance" placeholder="ex: 30" min="1"
+                 class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition"/>
         </div>
         <div>
           <label class="block text-sm font-semibold text-oas-ink mb-1">Plafond facturé sur la période</label>
@@ -1059,7 +1043,7 @@
           <div class="rounded-lg bg-orange-50 border border-orange-200 px-4 py-3 text-sm">
             <div class="font-bold text-oas-ink">Solde crédit disponible : {{ compteFinancier.soldeCredit | number }} F CFA</div>
             <div class="text-xs text-oas-muted mt-1">Crédits suivis dans un journal; ils ne règlent pas automatiquement les factures.</div>
-            @if (compteFinancier.encoursImpayes > 0) { <div class="text-xs mt-1">Encours impayé : {{ compteFinancier.encoursImpayes | number }} F CFA</div> }
+            @if (compteFinancier.encoursImpayes > 0) { <div class="text-xs mt-1">Reste dû sur les factures (informatif) : {{ compteFinancier.encoursImpayes | number }} F CFA</div> }
           </div>
         }
         @if (mouvementsCredit.length) {

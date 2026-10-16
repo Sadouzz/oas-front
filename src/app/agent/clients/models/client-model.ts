@@ -13,7 +13,6 @@ export interface ClientModel {
   role?: string;
   clientFidele?: boolean;
   montantRemise?: number | null;
-  montantPlafond?: number | null;
   echeance?: number | null;
   montantPlafondEcheance?: number | null;
   ninea?: string | null;
@@ -39,7 +38,6 @@ export interface ClientListResponse {
     vehiculeNumbers?: number;
     clientFidele?: boolean;
     montantRemise?: number | null;
-    montantPlafond?: number | null;
     echeance?: number | null;
     montantPlafondEcheance?: number | null;
     ninea?: string | null;
@@ -78,7 +76,6 @@ export interface UpdateClientPayload {
 
 export interface FidelePayload {
   montantRemise?: number | null;
-  montantPlafond?: number | null;
   echeance?: number | null;
   montantPlafondEcheance?: number | null;
   ninea?: string | null;
@@ -90,7 +87,6 @@ export interface CompteFinancierPayload {
   raisonSociale: string;
   ninea: string;
   remisePourcentage: number;
-  plafondCredit: number | null;
   echeanceJours: number | null;
   plafondPeriode: number | null;
   rccm?: string | null;
@@ -107,7 +103,6 @@ export interface CompteFinancierResponse {
   compteExiste: boolean;
   remisePourcentage: number;
   soldeCredit: number;
-  plafondCredit: number | null;
   echeanceJours: number | null;
   plafondPeriode: number | null;
   encoursImpayes: number;
