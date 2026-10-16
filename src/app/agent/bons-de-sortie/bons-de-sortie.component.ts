@@ -21,6 +21,17 @@ export interface LignePieceBS {
   prix?: number | null;
 }
 
+export interface LigneDetailStockValidation {
+  pieceId: number;
+  reference: string;
+  designation: string;
+  quantite: number;
+  stockMagasinAv: number;
+  stockMagasinAp: number;
+  stockAtelierAv: number;
+  stockAtelierAp: number;
+}
+
 @Component({
   selector: 'app-bons-de-sortie',
   standalone: true,
@@ -83,6 +94,18 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
   showCreateModal = false;
   showDetailModal = false;
   selectedBon: BonDeSortie | null = null;
+
+  // Modal de validation avec détails des stocks
+  showValidateModal = false;
+  bonToValidate: BonDeSortie | null = null;
+  validating = false;
+  validationDetails: LigneDetailStockValidation[] = [];
+  loadingValidationDetails = false;
+
+  // Modal de retour de pièce
+  showReturnPieceModal = false;
+  pieceToReturn: any = null;
+  returningPiece = false;
 
   createStep = 1;
 
@@ -562,14 +585,164 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     });
   }
 
-  retournerPiece(pieceId: number) {
-    if (!this.selectedBon) return;
-    if (!confirm('Voulez-vous retirer cette pièce du bon de sortie ? La quantité sera recréditée au stock magasin.')) return;
-    if (this.saving) return;
-    this.saving = true;
+  openValidateModal(bon: BonDeSortie): void {
+    this.bonToValidate = bon;
+    this.showValidateModal = true;
+    this.validationDetails = [];
+    this.prepareValidationDetails(bon);
+    this.cdr.markForCheck();
+  }
+
+  closeValidateModal(): void {
+    if (this.validating) return;
+    this.showValidateModal = false;
+    this.bonToValidate = null;
+    this.validationDetails = [];
+    this.cdr.markForCheck();
+  }
+
+  prepareValidationDetails(bon: BonDeSortie): void {
+    if (!bon) return;
+    this.loadingValidationDetails = true;
+
+    const handleBonLines = (fullBon: BonDeSortie) => {
+      const lignes = fullBon.lignesBonDeSortiePieces || [];
+      if (lignes.length === 0) {
+        this.validationDetails = [];
+        this.loadingValidationDetails = false;
+        this.cdr.markForCheck();
+        return;
+      }
+
+      const promises = lignes.map((ligne: any) => {
+        const pieceId = ligne.piece?.id || ligne.pieceId;
+        const qte = Number(ligne.quantite) || 0;
+        const ref = ligne.piece?.reference || '—';
+        const desig = ligne.piece?.designation || ligne.designationPds || ref;
+
+        if (pieceId) {
+          return this.pieceService.getById(pieceId).toPromise().then(
+            (p: any) => {
+              const smAv = Number(p?.stockMagasin ?? ligne.piece?.stockMagasin ?? 0);
+              const saAv = Number(p?.stockAtelier ?? ligne.piece?.stockAtelier ?? 0);
+              return {
+                pieceId,
+                reference: p?.reference || ref,
+                designation: p?.designation || desig,
+                quantite: qte,
+                stockMagasinAv: smAv,
+                stockMagasinAp: smAv,
+                stockAtelierAv: saAv,
+                stockAtelierAp: Math.max(0, saAv - qte)
+              };
+            },
+            () => ({
+              pieceId,
+              reference: ref,
+              designation: desig,
+              quantite: qte,
+              stockMagasinAv: Number(ligne.piece?.stockMagasin ?? 0),
+              stockMagasinAp: Number(ligne.piece?.stockMagasin ?? 0),
+              stockAtelierAv: Number(ligne.piece?.stockAtelier ?? 0),
+              stockAtelierAp: Math.max(0, Number(ligne.piece?.stockAtelier ?? 0) - qte)
+            })
+          );
+        }
+
+        return Promise.resolve({
+          pieceId: 0,
+          reference: ref,
+          designation: desig,
+          quantite: qte,
+          stockMagasinAv: 0,
+          stockMagasinAp: 0,
+          stockAtelierAv: 0,
+          stockAtelierAp: 0
+        });
+      });
+
+      Promise.all(promises).then((details) => {
+        this.validationDetails = details;
+        this.loadingValidationDetails = false;
+        this.cdr.markForCheck();
+      });
+    };
+
+    if (!bon.lignesBonDeSortiePieces || bon.lignesBonDeSortiePieces.length === 0) {
+      this.bonService.getById(bon.id).subscribe({
+        next: (full) => {
+          this.bonToValidate = full;
+          handleBonLines(full);
+        },
+        error: () => {
+          this.loadingValidationDetails = false;
+          this.cdr.markForCheck();
+        }
+      });
+    } else {
+      handleBonLines(bon);
+    }
+  }
+
+  confirmValider(): void {
+    if (!this.bonToValidate || this.validating) return;
+    this.validating = true;
+    const bon = this.bonToValidate;
+
+    this.bonService.valider(bon.id).subscribe({
+      next: () => {
+        this.validating = false;
+        this.showValidateModal = false;
+        this.bonToValidate = null;
+        this.showSuccess(`Bon ${bon.reference} validé avec succès ! Sortie atelier effectuée.`);
+        this.loadBons();
+        if (this.selectedBon?.id === bon.id) {
+          this.closeDetail();
+        }
+        this.cdr.markForCheck();
+      },
+      error: (err: any) => {
+        this.validating = false;
+        const msg = err.error?.message ?? (typeof err.error === 'string' ? err.error : '');
+        this.errorMessage = msg || 'Erreur lors de la validation.';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  valider(bon: BonDeSortie): void {
+    this.openValidateModal(bon);
+  }
+
+  openRetourPieceModal(ligne: any): void {
+    this.pieceToReturn = {
+      id: ligne.id || ligne.piece?.id,
+      pieceId: ligne.piece?.id,
+      reference: ligne.piece?.reference || '—',
+      designation: ligne.piece?.designation || ligne.designationPds || '',
+      quantite: ligne.quantite || 0
+    };
+    this.showReturnPieceModal = true;
+    this.cdr.markForCheck();
+  }
+
+  closeRetourPieceModal(): void {
+    if (this.returningPiece) return;
+    this.showReturnPieceModal = false;
+    this.pieceToReturn = null;
+    this.cdr.markForCheck();
+  }
+
+  confirmRetourPiece(): void {
+    if (!this.selectedBon || !this.pieceToReturn || this.returningPiece) return;
+    this.returningPiece = true;
+    const pieceId = this.pieceToReturn.pieceId || this.pieceToReturn.id;
+
     this.bonService.retournerPiece(this.selectedBon.id, pieceId).subscribe({
       next: (updatedBon) => {
-        this.saving = false;
+        this.returningPiece = false;
+        this.showReturnPieceModal = false;
+        this.pieceToReturn = null;
         this.selectedBon = updatedBon;
         this.showSuccess('Pièce retournée avec succès au stock magasin.');
         this.loadBons();
@@ -577,7 +750,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
         this.cdr.markForCheck();
       },
       error: (err: any) => {
-        this.saving = false;
+        this.returningPiece = false;
         const msg = err.error?.message ?? (typeof err.error === 'string' ? err.error : '');
         this.errorMessage = msg || 'Erreur lors du retour de pièce.';
         this.cdr.markForCheck();
@@ -585,25 +758,19 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     });
   }
 
-  valider(bon: BonDeSortie) {
-    if (!confirm(`Valider le bon ${bon.reference} ? Les pièces seront déduites de l'atelier.`)) return;
-    if (this.saving) return;
-    this.saving = true;
-    this.bonService.valider(bon.id).subscribe({
-      next: () => {
-        this.saving = false;
-        this.showSuccess(`Bon ${bon.reference} validé !`);
-        this.loadBons();
-        this.closeDetail();
-        this.cdr.markForCheck();
-      },
-      error: (err: any) => {
-        this.saving = false;
-        const msg = err.error?.message ?? (typeof err.error === 'string' ? err.error : '');
-        this.errorMessage = msg || 'Erreur lors de la validation.';
+  retournerPiece(pieceId: number, ligne?: any): void {
+    if (ligne) {
+      this.openRetourPieceModal(ligne);
+    } else {
+      const found = this.selectedBon?.lignesBonDeSortiePieces?.find((l: any) => l.piece?.id === pieceId || l.id === pieceId);
+      if (found) {
+        this.openRetourPieceModal(found);
+      } else {
+        this.pieceToReturn = { pieceId, id: pieceId, reference: 'Pièce #' + pieceId, quantite: 1 };
+        this.showReturnPieceModal = true;
         this.cdr.markForCheck();
       }
-    });
+    }
   }
 
   statutClass(statut: string): string {

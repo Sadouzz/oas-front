@@ -35,6 +35,11 @@ export class StepProformaComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
 
+  showModalEnvoi = false;
+  showModalValider = false;
+  envoiEnCours = false;
+  validationEnCours = false;
+
   ngOnInit(): void {
     const idParam = this.route.snapshot.paramMap.get('id') || this.route.parent?.snapshot.paramMap.get('id');
     if (!idParam) {
@@ -219,50 +224,109 @@ export class StepProformaComponent implements OnInit {
   }
 
   envoyerAuClient(): void {
-    if (!this.proformaChargee?.id || this.isProformaVisibleClient) return;
-    if (!confirm('Valider les prix de cette proforma et la rendre visible dans l’espace client ?')) return;
+    this.openModalEnvoi();
+  }
 
-    this.saving = true;
+  openModalEnvoi(): void {
+    if (!this.proformaChargee?.id || this.isProformaVisibleClient) return;
+    this.showModalEnvoi = true;
+    this.cdr.detectChanges();
+  }
+
+  closeModalEnvoi(): void {
+    this.showModalEnvoi = false;
+    this.envoiEnCours = false;
+    this.cdr.detectChanges();
+  }
+
+  confirmerEnvoiAuClient(): void {
+    if (!this.proformaChargee?.id || this.envoiEnCours) return;
+
+    // Fermer le modal immédiatement
+    this.showModalEnvoi = false;
+    this.envoiEnCours = true;
     this.errorMessage = '';
     this.successMessage = '';
+    this.cdr.detectChanges();
+
     this.proformaService.validerEnvoi(this.proformaChargee.id).subscribe({
-      next: updated => {
-        this.proformaChargee = updated;
-        this.saving = false;
-        this.successMessage = 'Proforma envoyée : elle est maintenant visible dans l’espace client.';
-        this.cdr.markForCheck();
+      next: (updated) => {
+        this.envoiEnCours = false;
+        if (this.proformaChargee) {
+          this.proformaChargee.visibleClient = true;
+        }
+        this.successMessage = 'Proforma envoyée avec succès : elle est maintenant visible dans l’espace client.';
+        this.loadData();
+        this.cdr.detectChanges();
       },
-      error: err => {
-        this.saving = false;
-        this.errorMessage = err.error?.message || 'Impossible d’envoyer la proforma au client.';
-        this.cdr.markForCheck();
+      error: (err) => {
+        this.envoiEnCours = false;
+        if (err.status === 200 || err.status === 201) {
+          if (this.proformaChargee) {
+            this.proformaChargee.visibleClient = true;
+          }
+          this.successMessage = 'Proforma envoyée avec succès : elle est maintenant visible dans l’espace client.';
+          this.loadData();
+        } else {
+          this.errorMessage = err.error?.message || err.message || 'Impossible d’envoyer la proforma au client.';
+        }
+        this.cdr.detectChanges();
       },
     });
   }
 
   validerProforma(): void {
+    this.openModalValider();
+  }
+
+  openModalValider(): void {
     if (!this.proformaChargee?.id) {
       this.errorMessage = 'Aucune proforma chargée à valider.';
-      this.cdr.markForCheck();
+      this.cdr.detectChanges();
       return;
     }
-    this.saving = true;
+    this.showModalValider = true;
+    this.cdr.detectChanges();
+  }
+
+  closeModalValider(): void {
+    this.showModalValider = false;
+    this.validationEnCours = false;
+    this.cdr.detectChanges();
+  }
+
+  confirmerValidationProforma(): void {
+    if (!this.proformaChargee?.id || this.validationEnCours) return;
+
+    // Fermer le modal immédiatement
+    this.showModalValider = false;
+    this.validationEnCours = true;
     this.errorMessage = '';
     this.successMessage = '';
+    this.cdr.detectChanges();
 
     this.proformaService.valider(this.proformaChargee.id).subscribe({
       next: (res: any) => {
-        this.saving = false;
+        this.validationEnCours = false;
         if (this.proformaChargee) {
           this.proformaChargee.statut = res?.statut || 'ACCEPTE';
         }
         this.successMessage = 'Devis proforma validé avec succès.';
-        this.cdr.markForCheck();
+        this.loadData();
+        this.cdr.detectChanges();
       },
       error: (err) => {
-        this.saving = false;
-        this.errorMessage = err.error?.message || 'Erreur lors de la validation du proforma.';
-        this.cdr.markForCheck();
+        this.validationEnCours = false;
+        if (err.status === 200 || err.status === 201) {
+          if (this.proformaChargee) {
+            this.proformaChargee.statut = 'ACCEPTE';
+          }
+          this.successMessage = 'Devis proforma validé avec succès.';
+          this.loadData();
+        } else {
+          this.errorMessage = err.error?.message || err.message || 'Erreur lors de la validation du proforma.';
+        }
+        this.cdr.detectChanges();
       }
     });
   }

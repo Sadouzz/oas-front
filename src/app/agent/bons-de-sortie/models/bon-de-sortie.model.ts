@@ -1,6 +1,6 @@
 export interface LigneBonDeSortie {
   id: number;
-  piece: { id: number; reference: string; designation?: string; numeroDeSerie?: string; prix?: number } | null;
+  piece: { id: number; reference: string; designation?: string; numeroDeSerie?: string; prix?: number; stockMagasin?: number; stockAtelier?: number } | null;
   quantite: number;
 }
 
