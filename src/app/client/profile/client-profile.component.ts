@@ -1,3 +1,4 @@
+import { ConfirmationService } from '../../shared/components/confirmation/confirmation.service';
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -49,6 +50,8 @@ function passwordsMatch(control: AbstractControl): ValidationErrors | null {
   templateUrl: './client-profile.component.html',
 })
 export class ClientProfileComponent implements OnInit {
+  private confirmation = inject(ConfirmationService);
+
   private cdr = inject(ChangeDetectorRef);
   private portalService = inject(ClientPortalService);
   private profileService = inject(ClientProfileService);
@@ -256,8 +259,8 @@ export class ClientProfileComponent implements OnInit {
     this.commandesFiltrees = statuts ? this.commandes.filter(c => statuts.includes(c.statut)) : this.commandes;
   }
 
-  annulerCommande(commande: DemandeProduit): void {
-    if (!confirm('Confirmer l’annulation de cette commande ?')) return;
+  async annulerCommande(commande: DemandeProduit): Promise<void> {
+    if (!await this.confirmation.confirm('Confirmer l’annulation de cette commande ?')) return;
     this.marketplaceService.annulerDemande(commande.id).subscribe({
       next: () => this.loadCommandes(),
       error: (err: any) => {

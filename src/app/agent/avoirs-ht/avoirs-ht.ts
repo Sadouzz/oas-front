@@ -1,3 +1,4 @@
+import { ConfirmationService } from '../../shared/components/confirmation/confirmation.service';
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormArray, FormBuilder, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -24,6 +25,8 @@ import { AvoirHT, AvoirHTCreateRequest } from './models/avoir-ht.model';
   templateUrl: './avoirs-ht.html',
 })
 export class AvoirsHt extends BasePaginatedComponent implements OnInit {
+  private confirmation = inject(ConfirmationService);
+
   private cdr = inject(ChangeDetectorRef);
   private service = inject(AvoirHTService);
   private fb = inject(FormBuilder);
@@ -345,8 +348,8 @@ export class AvoirsHt extends BasePaginatedComponent implements OnInit {
     });
   }
 
-  deleteAvoir(a: AvoirHT) {
-    if (!confirm(`Supprimer l'avoir ${a.numero} ?`)) return;
+  async deleteAvoir(a: AvoirHT) {
+    if (!await this.confirmation.confirm(`Supprimer l'avoir ${a.numero} ?`)) return;
     this.service.delete(a.id).subscribe({
       next: () => {
         this.showSuccess(`Avoir ${a.numero} supprimé.`);

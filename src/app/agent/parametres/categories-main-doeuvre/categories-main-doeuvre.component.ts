@@ -1,3 +1,4 @@
+import { ConfirmationService } from '../../../shared/components/confirmation/confirmation.service';
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -12,6 +13,8 @@ import { PaginationComponent } from '../../../shared/components/pagination/pagin
   templateUrl: './categories-main-doeuvre.component.html'
 })
 export class CategoriesMainDoeuvreComponent implements OnInit {
+  private confirmation = inject(ConfirmationService);
+
   private categorieService = inject(CategorieMainDoeuvreService);
   private cdr = inject(ChangeDetectorRef);
 
@@ -129,8 +132,8 @@ export class CategoriesMainDoeuvreComponent implements OnInit {
     });
   }
 
-  deleteCategorie(id: number) {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette catégorie de main d’œuvre ?')) return;
+  async deleteCategorie(id: number) {
+    if (!await this.confirmation.confirm('Êtes-vous sûr de vouloir supprimer cette catégorie de main d’œuvre ?')) return;
     this.categorieService.delete(id).subscribe({
       next: () => {
         this.showSuccess('Catégorie supprimée avec succès.');

@@ -86,7 +86,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
     // '/devis': { label: 'Devis', section: 'Facture HT' },
     '/devis-previsionnels': { label: 'Devis Prévisionnel', section: 'Facture HT' },
     '/avoirs-ht': { label: 'Avoir note de prix', section: 'Facture HT' },
-    '/gestion-tva': { label: 'Gestion TVA' },
+    '/gestion-tva': { label: 'Configuration fiscale globale' },
     '/gestion-recu': { label: 'Gestion reçu' },
     '/admin/main-doeuvre': { label: "Main d'œuvre" },
     '/admin/parametres': { label: 'Paramètres', section: 'Administration' },
@@ -317,6 +317,9 @@ export class LayoutComponent implements OnInit, OnDestroy {
     } else if (relUrl.startsWith('/avoirs-ht')) {
       this.openSection = 'facture-ht';
       this.openSubSection = 'avoir-ht';
+    } else if (relUrl.startsWith('/gestion-tva')) {
+      this.openSection = 'admin';
+      this.openSubSection = 'parametres';
     } else if (relUrl.startsWith('/admin/parametres')) {
       this.openSection = 'admin';
       this.openSubSection = 'parametres';

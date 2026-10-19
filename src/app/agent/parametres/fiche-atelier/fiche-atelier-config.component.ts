@@ -1,3 +1,4 @@
+import { ConfirmationService } from '../../../shared/components/confirmation/confirmation.service';
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -41,6 +42,8 @@ import {
   templateUrl: './fiche-atelier-config.component.html'
 })
 export class FicheAtelierConfigComponent implements OnInit {
+  private confirmation = inject(ConfirmationService);
+
   private configService = inject(FicheAtelierConfigService);
   private cdr = inject(ChangeDetectorRef);
 
@@ -169,17 +172,17 @@ export class FicheAtelierConfigComponent implements OnInit {
     this.syncConfigWithBackend(`Point de réception « ${item.nom} » ${action}.`);
   }
 
-  removeLigneReception(index: number) {
+  async removeLigneReception(index: number) {
     const item = this.lignesReception[index];
     if (!item) return;
 
-    if (!confirm(`Supprimer le point de contrôle « ${item.nom} » ?`)) return;
+    if (!await this.confirmation.confirm(`Supprimer le point de contrôle « ${item.nom} » ?`)) return;
     this.lignesReception.splice(index, 1);
     this.syncConfigWithBackend(`Point de réception « ${item.nom} » supprimé.`);
   }
 
-  resetLignesReception() {
-    if (!confirm('Rétablir les points de réception par défaut ?')) return;
+  async resetLignesReception() {
+    if (!await this.confirmation.confirm('Rétablir les points de réception par défaut ?')) return;
     this.lignesReception = DEFAULT_LIGNES_RECEPTION.map(nom => ({ nom, archive: false }));
     this.syncConfigWithBackend('Points de réception par défaut rétablis.');
   }
@@ -212,17 +215,17 @@ export class FicheAtelierConfigComponent implements OnInit {
     this.syncConfigWithBackend(`Rubrique de défaut « ${item.nom} » ${action}.`);
   }
 
-  removeRubriqueDefaut(index: number) {
+  async removeRubriqueDefaut(index: number) {
     const item = this.rubriquesDefauts[index];
     if (!item) return;
 
-    if (!confirm(`Supprimer la rubrique de défaut « ${item.nom} » ?`)) return;
+    if (!await this.confirmation.confirm(`Supprimer la rubrique de défaut « ${item.nom} » ?`)) return;
     this.rubriquesDefauts.splice(index, 1);
     this.syncConfigWithBackend(`Rubrique de défaut « ${item.nom} » supprimée.`);
   }
 
-  resetRubriquesDefauts() {
-    if (!confirm('Rétablir les rubriques de défauts par défaut ?')) return;
+  async resetRubriquesDefauts() {
+    if (!await this.confirmation.confirm('Rétablir les rubriques de défauts par défaut ?')) return;
     this.rubriquesDefauts = DEFAULT_RUBRIQUES_DEFAUTS.map(nom => ({ nom, archive: false }));
     this.syncConfigWithBackend('Rubriques de défauts par défaut rétablies.');
   }
@@ -237,8 +240,8 @@ export class FicheAtelierConfigComponent implements OnInit {
     this.newConfig = { label: '', type: 'text', obligatoire: false, options: '' };
   }
 
-  deleteConfig(id: number) {
-    if (!confirm('Supprimer cette brique dynamique ?')) return;
+  async deleteConfig(id: number) {
+    if (!await this.confirmation.confirm('Supprimer cette brique dynamique ?')) return;
     this.configs = this.configs.filter(c => c.id !== id);
     this.syncConfigWithBackend('Brique dynamique supprimée.');
   }

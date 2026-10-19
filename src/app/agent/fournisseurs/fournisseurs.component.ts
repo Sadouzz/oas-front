@@ -1,3 +1,4 @@
+import { ConfirmationService } from '../../shared/components/confirmation/confirmation.service';
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FournisseurService } from './fournisseur.service';
@@ -14,6 +15,8 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideBu
   templateUrl: './fournisseurs.component.html',
 })
 export class FournisseursComponent extends BasePaginatedComponent implements OnInit {
+  private confirmation = inject(ConfirmationService);
+
   private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
   private service = inject(FournisseurService);
@@ -130,8 +133,8 @@ export class FournisseursComponent extends BasePaginatedComponent implements OnI
     });
   }
 
-  delete(f: FournisseurModel) {
-    if (!confirm(`Supprimer le fournisseur "${f.nomEntreprise}" ? Cette action est irréversible.`)) return;
+  async delete(f: FournisseurModel) {
+    if (!await this.confirmation.confirm(`Supprimer le fournisseur "${f.nomEntreprise}" ? Cette action est irréversible.`)) return;
     this.service.delete(f.id).subscribe({
       next: () => { this.showSuccess('Fournisseur supprimé.'); this.load(); },
       error: (err: any) => { this.errorMessage = err.error?.message || 'Erreur lors de la suppression.'; }

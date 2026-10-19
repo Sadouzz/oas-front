@@ -1,3 +1,4 @@
+import { ConfirmationService } from '../../shared/components/confirmation/confirmation.service';
 import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -19,6 +20,8 @@ import { SearchableSelectComponent } from '../../shared/components/searchable-se
   templateUrl: './vehicules.component.html',
 })
 export class VehiculesComponent extends BasePaginatedComponent implements OnInit, OnDestroy {
+  private confirmation = inject(ConfirmationService);
+
   private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
   private vehiculeService = inject(VehiculeService);
@@ -414,8 +417,8 @@ export class VehiculesComponent extends BasePaginatedComponent implements OnInit
     });
   }
 
-  deleteVehicule(v: VehiculeModel) {
-    if (!confirm(`Supprimer le véhicule ${v.immatriculation} ? Cette action est irréversible.`)) return;
+  async deleteVehicule(v: VehiculeModel) {
+    if (!await this.confirmation.confirm(`Supprimer le véhicule ${v.immatriculation} ? Cette action est irréversible.`)) return;
     this.vehiculeService.delete(v.id).subscribe({
       next: () => { this.showSuccess('Véhicule supprimé.'); this.loadVehicules(); },
       error: (err: any) => { this.errorMessage = err.error?.message || 'Erreur lors de la suppression.'; this.cdr.markForCheck(); }

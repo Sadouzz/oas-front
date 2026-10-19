@@ -1,3 +1,4 @@
+import { ConfirmationService } from '../../shared/components/confirmation/confirmation.service';
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ClientDevisService } from './client-devis.service';
@@ -33,6 +34,8 @@ const STATUT_TONES: Record<StatutDevis, BadgeTone> = {
   templateUrl: './client-devis.component.html',
 })
 export class ClientDevisComponent implements OnInit {
+  private confirmation = inject(ConfirmationService);
+
   private cdr = inject(ChangeDetectorRef);
   private service = inject(ClientDevisService);
 
@@ -139,8 +142,8 @@ export class ClientDevisComponent implements OnInit {
     });
   }
 
-  refuser(id: number): void {
-    if (!confirm('Confirmer le refus de ce devis ?')) return;
+  async refuser(id: number): Promise<void> {
+    if (!await this.confirmation.confirm('Confirmer le refus de ce devis ?')) return;
     this.acting = true;
     this.service.refuser(id).subscribe({
       next: updated => {

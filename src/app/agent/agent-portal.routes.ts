@@ -271,6 +271,7 @@ export const AGENT_PORTAL_ROUTES: Routes = [
         },
         {
           path: 'gestion-tva',
+          canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER'])],
           loadComponent: () =>
             import('./gestion-tva/gestion-tva.component').then(m => m.GestionTvaComponent),
         },

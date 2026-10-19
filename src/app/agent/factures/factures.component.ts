@@ -1,3 +1,4 @@
+import { ConfirmationService } from '../../shared/components/confirmation/confirmation.service';
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormArray, FormBuilder, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -23,6 +24,8 @@ import { PdfTemplate, PdfTemplateService } from '../admin/pdf-templates/pdf-temp
   templateUrl: './factures.component.html',
 })
 export class FacturesComponent extends BasePaginatedComponent implements OnInit {
+  private confirmation = inject(ConfirmationService);
+
   private cdr = inject(ChangeDetectorRef);
   private service = inject(FactureService);
   private fb = inject(FormBuilder);
@@ -331,8 +334,8 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
   openDetail(f: FactureModel) { this.selectedFacture = f; }
   closeDetail() { this.selectedFacture = null; }
 
-  delete(id: number) {
-    if (!confirm('Supprimer cette facture ?')) return;
+  async delete(id: number) {
+    if (!await this.confirmation.confirm('Supprimer cette facture ?')) return;
     this.service.delete(id).subscribe({
       next: () => { this.load(); this.closeDetail(); this.notify('Facture supprimée.'); },
       error: () => this.notifyError('Erreur lors de la suppression.'),

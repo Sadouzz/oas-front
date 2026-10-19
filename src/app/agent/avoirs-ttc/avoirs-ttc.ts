@@ -1,3 +1,4 @@
+import { ConfirmationService } from '../../shared/components/confirmation/confirmation.service';
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormArray, FormBuilder, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -16,6 +17,7 @@ import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { LucideSearch, LucidePlus, LucideTrash2, LucideX, LucideDownload, LucideEye, LucideLoader2 } from '@lucide/angular';
 
 import { AvoirTTC, AvoirTTCCreateRequest } from './models/avoit-ttc.model';
+import { FiscalConfigurationService } from '../gestion-tva/fiscal-configuration.service';
 
 @Component({
   selector: 'app-avoirs-ttc',
@@ -25,6 +27,8 @@ import { AvoirTTC, AvoirTTCCreateRequest } from './models/avoit-ttc.model';
   templateUrl: './avoirs-ttc.html',
 })
 export class AvoirsTtc extends BasePaginatedComponent implements OnInit {
+  private confirmation = inject(ConfirmationService);
+
   private cdr = inject(ChangeDetectorRef);
   private service = inject(AvoirTTCService);
   private fb = inject(FormBuilder);
@@ -34,6 +38,9 @@ export class AvoirsTtc extends BasePaginatedComponent implements OnInit {
   private pieceService = inject(PieceDetacheeService);
   private moService = inject(MainDoeuvreService);
   private authService = inject(AuthService);
+  private fiscalConfigurationService = inject(FiscalConfigurationService);
+  tvaRate = 18;
+  timbreFiscal = 100;
 
   avoirs: AvoirTTC[] = [];
   filtered: AvoirTTC[] = [];
@@ -104,6 +111,14 @@ export class AvoirsTtc extends BasePaginatedComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.fiscalConfigurationService.getCurrent().subscribe({
+      next: config => {
+        this.tvaRate = config.tvaRate;
+        this.timbreFiscal = config.timbreFiscal;
+        this.form.patchValue({ montantTimbre: config.timbreFiscal });
+      },
+      error: () => undefined,
+    });
     this.loadData();
     forkJoin({
       //clients: this.clientService.getAll(),
@@ -188,7 +203,7 @@ export class AvoirsTtc extends BasePaginatedComponent implements OnInit {
       kilometrage: 0,
       remarque: '',
       appliquerTVA: true,
-      montantTimbre: 0
+      montantTimbre: this.timbreFiscal,
     });
     while (this.lignesPieces.length) this.lignesPieces.removeAt(0);
     while (this.lignesMainDoeuvres.length) this.lignesMainDoeuvres.removeAt(0);
@@ -273,7 +288,7 @@ export class AvoirsTtc extends BasePaginatedComponent implements OnInit {
   }
 
   get totalTVA(): number {
-    return this.form.get('appliquerTVA')?.value ? Math.round(this.totalHT * 0.18) : 0;
+    return this.form.get('appliquerTVA')?.value ? Math.round(this.totalHT * this.tvaRate / 100) : 0;
   }
 
   get totalTTC(): number {
@@ -361,8 +376,8 @@ export class AvoirsTtc extends BasePaginatedComponent implements OnInit {
     });
   }
 
-  deleteAvoir(a: AvoirTTC) {
-    if (!confirm(`Supprimer l'avoir ${a.numero} ?`)) return;
+  async deleteAvoir(a: AvoirTTC) {
+    if (!await this.confirmation.confirm(`Supprimer l'avoir ${a.numero} ?`)) return;
     this.service.delete(a.id).subscribe({
       next: () => {
         this.showSuccess(`Avoir ${a.numero} supprimé.`);

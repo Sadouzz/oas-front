@@ -1,3 +1,4 @@
+import { ConfirmationService } from '../../../shared/components/confirmation/confirmation.service';
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -12,6 +13,8 @@ import { PhoneInputComponent } from '../../../shared/components/phone-input/phon
   templateUrl: './garages.component.html'
 })
 export class GaragesComponent implements OnInit {
+  private confirmation = inject(ConfirmationService);
+
   private cdr = inject(ChangeDetectorRef);
   private garageService = inject(GarageService);
   private fb = inject(FormBuilder);
@@ -95,8 +98,8 @@ export class GaragesComponent implements OnInit {
     });
   }
 
-  deleteGarage(id: number) {
-    if (confirm('Voulez-vous vraiment supprimer/archiver ce garage ?')) {
+  async deleteGarage(id: number) {
+    if (await this.confirmation.confirm('Voulez-vous vraiment supprimer/archiver ce garage ?')) {
       this.garageService.delete(id).subscribe(() => {
         this.loadGarages();
       });

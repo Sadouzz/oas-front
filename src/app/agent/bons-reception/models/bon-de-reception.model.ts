@@ -2,9 +2,14 @@ export interface LigneFacturationPiece {
   id: number;
   pieceId: number;
   designationPiece: string;
+  referencePiece?: string;
+  depotNom?: string;
   quantite: number;
   prix: number;
   montantTotal: number;
+  quantiteCommandee?: number;
+  quantiteRecueTotale?: number;
+  quantiteRestante?: number;
 }
 
 export interface LigneFacturationMainDoeuvre {
@@ -30,6 +35,16 @@ export interface BonDeReception {
   kilometrage: number;
   bonDeCommandeId: number | null;
   bonDeCommandeNumero: string | null;
+  bonDeCommandeMontantTTC?: number | null;
+  fournisseurNom?: string | null;
+  referenceFactureFournisseur?: string | null;
+  statut?: string | null;
+  vehiculeImmatriculation?: string | null;
+  vehiculeMarque?: string | null;
+  vehiculeModele?: string | null;
+  clientPrenom?: string | null;
+  clientNom?: string | null;
+  clientTelephone?: string | null;
   lignesPieces: LigneFacturationPiece[];
   lignesMainDoeuvres: LigneFacturationMainDoeuvre[];
 }

@@ -1,3 +1,4 @@
+import { ConfirmationService } from '../../../shared/components/confirmation/confirmation.service';
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -12,6 +13,8 @@ import { PaginationComponent } from '../../../shared/components/pagination/pagin
   templateUrl: './depots.component.html'
 })
 export class DepotsComponent implements OnInit {
+  private confirmation = inject(ConfirmationService);
+
   private depotService = inject(DepotService);
   private cdr = inject(ChangeDetectorRef);
 
@@ -126,8 +129,8 @@ export class DepotsComponent implements OnInit {
     });
   }
 
-  deleteDepot(id: number) {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce dépôt ?')) return;
+  async deleteDepot(id: number) {
+    if (!await this.confirmation.confirm('Êtes-vous sûr de vouloir supprimer ce dépôt ?')) return;
     this.depotService.delete(id).subscribe({
       next: () => this.loadData(),
       error: (err) => console.error('Erreur suppression dépôt', err)

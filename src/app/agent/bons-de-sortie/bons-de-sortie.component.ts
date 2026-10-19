@@ -1,3 +1,4 @@
+import { ConfirmationService } from '../../shared/components/confirmation/confirmation.service';
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
@@ -47,6 +48,8 @@ export interface LignePieceBS {
   templateUrl: './bons-de-sortie.component.html',
 })
 export class BonsDeSortieComponent extends BasePaginatedComponent implements OnInit {
+  private confirmation = inject(ConfirmationService);
+
   private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
@@ -562,9 +565,9 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     });
   }
 
-  retournerPiece(pieceId: number) {
+  async retournerPiece(pieceId: number) {
     if (!this.selectedBon) return;
-    if (!confirm('Voulez-vous retirer cette pièce du bon de sortie ? La quantité sera recréditée au stock magasin.')) return;
+    if (!await this.confirmation.confirm('Voulez-vous retirer cette pièce du bon de sortie ? La quantité sera recréditée au stock magasin.')) return;
     if (this.saving) return;
     this.saving = true;
     this.bonService.retournerPiece(this.selectedBon.id, pieceId).subscribe({
@@ -585,8 +588,8 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     });
   }
 
-  valider(bon: BonDeSortie) {
-    if (!confirm(`Valider le bon ${bon.reference} ? Les pièces seront déduites de l'atelier.`)) return;
+  async valider(bon: BonDeSortie) {
+    if (!await this.confirmation.confirm(`Valider le bon ${bon.reference} ? Les pièces seront déduites de l'atelier.`)) return;
     if (this.saving) return;
     this.saving = true;
     this.bonService.valider(bon.id).subscribe({

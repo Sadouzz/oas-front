@@ -1,3 +1,4 @@
+import { ConfirmationService } from '../../shared/components/confirmation/confirmation.service';
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -20,6 +21,8 @@ import { UserModel, VehiculeModel, OrdreReparation, extractContent } from '../..
   templateUrl: './notes-prix.component.html',
 })
 export class NotesPrixComponent extends BasePaginatedComponent implements OnInit {
+  private confirmation = inject(ConfirmationService);
+
   private cdr = inject(ChangeDetectorRef);
   private service = inject(NoteDePrixService);
   private fb = inject(FormBuilder);
@@ -333,8 +336,8 @@ export class NotesPrixComponent extends BasePaginatedComponent implements OnInit
   openDetail(f: NoteDePrixModel) { this.selectedNote = f; }
   closeDetail() { this.selectedNote = null; }
 
-  delete(id: number) {
-    if (!confirm('Supprimer cette note de prix ?')) return;
+  async delete(id: number) {
+    if (!await this.confirmation.confirm('Supprimer cette note de prix ?')) return;
     this.service.delete(id).subscribe({
       next: () => { this.load(); this.closeDetail(); this.notify('Note de prix supprimée.'); },
       error: () => this.notifyError('Erreur lors de la suppression.'),

@@ -1,3 +1,4 @@
+import { ConfirmationService } from '../../shared/components/confirmation/confirmation.service';
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { DecimalPipe, NgClass } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
@@ -21,6 +22,8 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideAr
   templateUrl: './pieces-detachees.component.html',
 })
 export class PiecesDetacheesComponent extends BasePaginatedComponent implements OnInit {
+  private confirmation = inject(ConfirmationService);
+
   private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
   private service = inject(PieceDetacheeService);
@@ -729,16 +732,16 @@ export class PiecesDetacheesComponent extends BasePaginatedComponent implements 
     }
   }
 
-  deletePiece(p: PieceDetache) {
-    if (!confirm(`Supprimer la pièce "${p.reference}" ?`)) return;
+  async deletePiece(p: PieceDetache) {
+    if (!await this.confirmation.confirm(`Supprimer la pièce "${p.reference}" ?`)) return;
     this.service.delete(p.id).subscribe({
       next: () => { this.showSuccess('Pièce supprimée.'); this.load(); this.loadStats(); },
       error: (err: any) => { this.errorMessage = err.error?.message || 'Erreur.'; }
     });
   }
 
-  restorePiece(p: PieceDetache) {
-    if (!confirm(`Restaurer la pièce archivée "${p.reference}" ?`)) return;
+  async restorePiece(p: PieceDetache) {
+    if (!await this.confirmation.confirm(`Restaurer la pièce archivée "${p.reference}" ?`)) return;
     this.service.restore(p.id).subscribe({
       next: () => { this.showSuccess('Pièce restaurée avec succès !'); this.load(); this.loadStats(); },
       error: (err: any) => { this.errorMessage = err.error?.message || 'Erreur lors de la restauration.'; }

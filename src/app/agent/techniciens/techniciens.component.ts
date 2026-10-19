@@ -1,3 +1,4 @@
+import { ConfirmationService } from '../../shared/components/confirmation/confirmation.service';
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TechnicienService } from './technicien.service';
@@ -26,6 +27,8 @@ const SPECIALITES: { value: Specialite; label: string }[] = [
   templateUrl: './techniciens.component.html',
 })
 export class TechniciensComponent implements OnInit {
+  private confirmation = inject(ConfirmationService);
+
   private cdr = inject(ChangeDetectorRef);
   private service = inject(TechnicienService);
   private garageService = inject(GarageService);
@@ -193,8 +196,8 @@ export class TechniciensComponent implements OnInit {
     });
   }
 
-  delete(t: Technicien) {
-    if (!confirm(`Supprimer le technicien ${t.firstName} ${t.lastName} ?`)) return;
+  async delete(t: Technicien) {
+    if (!await this.confirmation.confirm(`Supprimer le technicien ${t.firstName} ${t.lastName} ?`)) return;
     this.service.delete(t.id).subscribe({
       next: () => { this.load(); this.notify('Technicien supprimé.'); },
       error: () => this.notifyError('Erreur lors de la suppression.'),

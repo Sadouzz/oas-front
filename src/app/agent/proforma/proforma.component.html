@@ -294,7 +294,7 @@
             </div>
             @if (selectedProforma.montantTVA > 0) {
               <div class="flex justify-between">
-                <span class="text-oas-muted font-medium">TVA (18%)</span>
+                <span class="text-oas-muted font-medium">TVA ({{ tvaRate }}%)</span>
                 <span class="font-bold text-oas-ink">{{ fmt(selectedProforma.montantTVA) }} FCFA</span>
               </div>
             }

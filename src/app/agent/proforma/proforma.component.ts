@@ -1,3 +1,4 @@
+import { ConfirmationService } from '../../shared/components/confirmation/confirmation.service';
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
@@ -14,6 +15,7 @@ import { LucidePencil, LucideTrash2, LucidePlus, LucideSearch, LucideX } from '@
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 import { ProformaPrintComponent, montantEnLettresFCFA } from '../../shared/document-print';
 import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select.component';
+import { FiscalConfigurationService } from '../gestion-tva/fiscal-configuration.service';
 
 export interface LignePieceFormItem {
   id?: number;
@@ -56,6 +58,8 @@ export interface LigneMOFormItem {
   templateUrl: './proforma.component.html',
 })
 export class ProformaComponent extends BasePaginatedComponent implements OnInit {
+  private confirmation = inject(ConfirmationService);
+
   private cdr = inject(ChangeDetectorRef);
   private service = inject(ProformaService);
   private bcService = inject(BonDeCommandeService);
@@ -65,6 +69,9 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
   private mdService = inject(MainDoeuvreService);
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
+  private fiscalConfigurationService = inject(FiscalConfigurationService);
+  private currentTvaRate = 18;
+  private currentTimbreFiscal = 100;
 
   proformas: Proforma[] = [];
   filtered: Proforma[] = [];
@@ -140,6 +147,10 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
   prixAjouterMO: number | null = null;
 
   ngOnInit() {
+    this.fiscalConfigurationService.getCurrent().subscribe({
+      next: config => { this.currentTvaRate = config.tvaRate; this.currentTimbreFiscal = config.timbreFiscal; },
+      error: () => undefined,
+    });
     this.load();
     forkJoin({
       clients: this.clientService.getAll(),
@@ -615,9 +626,9 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
 
     this.form.reset({
       kilometrage: 0,
-      montantTimbre: 0,
+      montantTimbre: this.currentTimbreFiscal,
       montantAutre: 0,
-      tvaRate: 18,
+      tvaRate: this.currentTvaRate,
     });
 
     this.lignesPieces = [];
@@ -903,16 +914,16 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
     });
   }
 
-  convertToFacture(id: number) {
-    if (!confirm('Convertir ce proforma en facture TTC ?')) return;
+  async convertToFacture(id: number) {
+    if (!await this.confirmation.confirm('Convertir ce proforma en facture TTC ?')) return;
     this.service.convertToFacture(id).subscribe({
       next: () => { this.load(); this.closeDetail(); this.notify('Proforma converti en facture.'); },
       error: () => this.notifyError('Erreur lors de la conversion.'),
     });
   }
 
-  validerEnvoi(id: number) {
-    if (!confirm('Valider les prix et rendre ce proforma visible au client ? Vérifiez les lignes pièces/MO avant de continuer.')) return;
+  async validerEnvoi(id: number) {
+    if (!await this.confirmation.confirm('Valider les prix et rendre ce proforma visible au client ? Vérifiez les lignes pièces/MO avant de continuer.')) return;
     this.service.validerEnvoi(id).subscribe({
       next: (updated) => {
         this.load();
@@ -925,8 +936,8 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
     });
   }
 
-  validerProforma(id: number) {
-    if (!confirm('Valider ce proforma ? L\'accord client a-t-il été obtenu ?')) return;
+  async validerProforma(id: number) {
+    if (!await this.confirmation.confirm('Valider ce proforma ? L\'accord client a-t-il été obtenu ?')) return;
     this.service.valider(id).subscribe({
       next: () => { 
         this.load(); 
@@ -939,8 +950,8 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
     });
   }
 
-  delete(id: number) {
-    if (!confirm('Supprimer ce proforma ?')) return;
+  async delete(id: number) {
+    if (!await this.confirmation.confirm('Supprimer ce proforma ?')) return;
     this.service.delete(id).subscribe({
       next: () => { this.load(); this.closeDetail(); this.notify('Proforma supprimé.'); },
       error: () => this.notifyError('Erreur lors de la suppression.'),
@@ -1039,7 +1050,8 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
   }
 
   get tvaRate(): number {
-    return Number(this.form.get('tvaRate')?.value) || 18;
+    const rate = Number(this.form.get('tvaRate')?.value ?? this.currentTvaRate);
+    return Number.isFinite(rate) ? rate : this.currentTvaRate;
   }
 
   get montantTVA(): number {

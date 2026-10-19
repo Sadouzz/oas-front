@@ -1,3 +1,4 @@
+import { ConfirmationService } from '../../shared/components/confirmation/confirmation.service';
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -22,6 +23,8 @@ type SortOrder = 'recent' | 'ancien';
   templateUrl: './client-vehicules.component.html',
 })
 export class ClientVehiculesComponent implements OnInit {
+  private confirmation = inject(ConfirmationService);
+
   private cdr = inject(ChangeDetectorRef);
   private portalService = inject(ClientPortalService);
   private vehiculeService = inject(ClientVehiculeService);
@@ -224,8 +227,8 @@ export class ClientVehiculesComponent implements OnInit {
     });
   }
 
-  archive(vehicule: ClientVehiculeCard): void {
-    if (confirm('Voulez-vous vraiment archiver ce véhicule ?')) {
+  async archive(vehicule: ClientVehiculeCard): Promise<void> {
+    if (await this.confirmation.confirm('Voulez-vous vraiment archiver ce véhicule ?')) {
       this.vehiculeService.archive(vehicule.id).subscribe({
         next: () => {
           this.successMessage = 'Véhicule archivé avec succès.';

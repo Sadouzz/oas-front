@@ -1,3 +1,4 @@
+import { ConfirmationService } from '../../shared/components/confirmation/confirmation.service';
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -18,6 +19,8 @@ import { SearchableSelectComponent } from '../../shared/components/searchable-se
   templateUrl: './technicien-ordre-detail.component.html',
 })
 export class TechnicienOrdreDetailComponent implements OnInit {
+  private confirmation = inject(ConfirmationService);
+
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
@@ -168,8 +171,8 @@ export class TechnicienOrdreDetailComponent implements OnInit {
     });
   }
 
-  removeRemarque(remarqueId: number) {
-    if (!confirm('Supprimer cette remarque ?')) return;
+  async removeRemarque(remarqueId: number) {
+    if (!await this.confirmation.confirm('Supprimer cette remarque ?')) return;
     const prev = [...this.remarquesDiagnostic];
     this.remarquesDiagnostic = this.remarquesDiagnostic.filter(r => r.id !== remarqueId);
     this.cdr.markForCheck();
@@ -213,8 +216,8 @@ export class TechnicienOrdreDetailComponent implements OnInit {
     });
   }
 
-  removePieceJointeDiagnostic(id: number) {
-    if (!confirm('Supprimer cette pièce jointe ?')) return;
+  async removePieceJointeDiagnostic(id: number) {
+    if (!await this.confirmation.confirm('Supprimer cette pièce jointe ?')) return;
     const prev = [...this.piecesJointesDiagnostic];
     this.piecesJointesDiagnostic = this.piecesJointesDiagnostic.filter(p => p.id !== id);
     this.cdr.markForCheck();
@@ -417,8 +420,8 @@ export class TechnicienOrdreDetailComponent implements OnInit {
   }
 
   // ─── Suppression Pièce (Instantané) ───
-  supprimerPiece(item: any) {
-    if (!confirm('Voulez-vous retirer cette pièce ?')) return;
+  async supprimerPiece(item: any) {
+    if (!await this.confirmation.confirm('Voulez-vous retirer cette pièce ?')) return;
     const ids: number[] = item.ids || (item.id ? [item.id] : []);
     if (!ids || ids.length === 0) return;
 
@@ -450,8 +453,8 @@ export class TechnicienOrdreDetailComponent implements OnInit {
   }
 
   // ─── Suppression MO (Instantané) ───
-  supprimerMainDoeuvre(item: any) {
-    if (!confirm('Voulez-vous retirer cette main d\'œuvre ?')) return;
+  async supprimerMainDoeuvre(item: any) {
+    if (!await this.confirmation.confirm('Voulez-vous retirer cette main d\'œuvre ?')) return;
     const ids: number[] = item.ids || (item.id ? [item.id] : []);
     if (!ids || ids.length === 0) return;
 

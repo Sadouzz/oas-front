@@ -276,7 +276,7 @@
           </div>
           @if (selectedBon.tvaApplicable) {
           <div class="flex justify-between">
-            <span class="text-oas-muted">TVA (18%)</span>
+            <span class="text-oas-muted">TVA ({{ tauxTvaBon(selectedBon) }}%)</span>
             <span class="font-semibold text-oas-ink">{{ fmt(selectedBon.montantTVA || 0) }} FCFA</span>
           </div>
           }
@@ -531,7 +531,7 @@
           <div class="flex items-center gap-3 pt-6">
             <input type="checkbox" formControlName="tvaApplicable" id="tva"
               class="w-4 h-4 accent-oas-accent rounded cursor-pointer" />
-            <label for="tva" class="text-sm font-semibold text-oas-ink cursor-pointer">Appliquer TVA (18%)</label>
+            <label for="tva" class="text-sm font-semibold text-oas-ink cursor-pointer">Appliquer TVA ({{ tvaRate }}%)</label>
           </div>
           <div>
             <label class="block text-sm font-semibold text-oas-ink mb-1">Observation</label>
@@ -677,7 +677,7 @@
             </div>
             @if (form.get('tvaApplicable')?.value) {
             <div class="flex justify-between">
-              <span class="text-oas-muted">TVA (18%)</span>
+              <span class="text-oas-muted">TVA ({{ tvaRate }}%)</span>
               <span class="font-semibold">{{ fmt(montantTVAForm) }} FCFA</span>
             </div>
             }
@@ -814,6 +814,13 @@
           <button type="button" (click)="receptionErrorMessage = ''" class="text-red-500 hover:text-red-700 font-bold p-1 cursor-pointer">✕</button>
         </div>
       }
+
+      <label class="block space-y-1.5">
+        <span class="text-xs font-bold uppercase tracking-wide text-oas-muted">Référence facture fournisseur <span class="font-normal normal-case">(facultatif)</span></span>
+        <input type="text" [(ngModel)]="referenceFactureFournisseur" name="referenceFactureFournisseur" maxlength="100"
+          placeholder="Ex. FA-2026-00125"
+          class="w-full rounded-lg border border-oas-line px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/30" />
+      </label>
 
       @if (allPiecesAlreadyReceived) {
         <div class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-xl text-xs font-semibold flex items-center gap-2.5">

@@ -1,3 +1,4 @@
+import { ConfirmationService } from '../../shared/components/confirmation/confirmation.service';
 import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, NgClass, NgStyle } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -53,6 +54,8 @@ export const STATUT_STEPS: { statut: StatutOrdre; label: string }[] = [
   templateUrl: './ordres-reparation.component.html',
 })
 export class OrdresReparationComponent extends BasePaginatedComponent implements OnInit, OnDestroy {
+  private confirmation = inject(ConfirmationService);
+
   private cdr = inject(ChangeDetectorRef);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -324,8 +327,8 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
     this.cdr.markForCheck();
   }
 
-  delete(id: number): void {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cet ordre de réparation ?')) return;
+  async delete(id: number): Promise<void> {
+    if (!await this.confirmation.confirm('Êtes-vous sûr de vouloir supprimer cet ordre de réparation ?')) return;
     this.service.delete(id).subscribe({
       next: () => {
         this.notify('Ordre de réparation supprimé.');

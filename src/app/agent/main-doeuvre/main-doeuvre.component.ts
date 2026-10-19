@@ -1,3 +1,4 @@
+import { ConfirmationService } from '../../shared/components/confirmation/confirmation.service';
 import { Component, inject, OnInit, OnDestroy, Pipe, PipeTransform, ChangeDetectorRef } from '@angular/core';
 import { DecimalPipe, NgClass, UpperCasePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -24,6 +25,7 @@ export class CategorieCountPipe implements PipeTransform {
   templateUrl: './main-doeuvre.component.html',
 })
 export class MainDoeuvreComponent implements OnInit, OnDestroy {
+  private confirmation = inject(ConfirmationService);
   private cdr = inject(ChangeDetectorRef);
   private fb      = inject(FormBuilder);
   private service = inject(MainDoeuvreService);
@@ -243,8 +245,8 @@ export class MainDoeuvreComponent implements OnInit, OnDestroy {
     });
   }
 
-  delete(item: MainDoeuvreModel) {
-    if (!confirm(`Supprimer "${item.categorie?.nom}" (${item.nbreHeure}h — ${item.prix.toLocaleString('fr-FR')} FCFA) ? Action irréversible.`)) return;
+  async delete(item: MainDoeuvreModel) {
+    if (!await this.confirmation.confirm(`Supprimer "${item.categorie?.nom}" (${item.nbreHeure}h — ${item.prix.toLocaleString('fr-FR')} FCFA) ? Action irréversible.`)) return;
     this.service.delete(item.id).subscribe({
       next: () => { this.showSuccess('Prestation supprimée.'); this.load(); },
       error: (err: any) => { this.errorMessage = err.error?.message || 'Erreur lors de la suppression.'; }
@@ -298,8 +300,8 @@ export class MainDoeuvreComponent implements OnInit, OnDestroy {
     });
   }
 
-  deleteCat(id: number) {
-    if (!confirm('Supprimer cette catégorie ?')) return;
+  async deleteCat(id: number) {
+    if (!await this.confirmation.confirm('Supprimer cette catégorie ?')) return;
     this.catService.delete(id).subscribe({
       next: () => { this.loadCategories(); this.showSuccess('Catégorie supprimée'); },
       error: (err) => this.catErrorMessage = err.error?.message || 'Erreur lors de la suppression'

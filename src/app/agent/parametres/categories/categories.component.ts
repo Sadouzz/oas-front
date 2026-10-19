@@ -1,3 +1,4 @@
+import { ConfirmationService } from '../../../shared/components/confirmation/confirmation.service';
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -14,6 +15,8 @@ import { SearchableSelectComponent } from '../../../shared/components/searchable
   templateUrl: './categories.component.html'
 })
 export class CategoriesComponent implements OnInit {
+  private confirmation = inject(ConfirmationService);
+
   private categorieService = inject(CategoriePieceService);
   private depotService = inject(DepotService);
   private cdr = inject(ChangeDetectorRef);
@@ -152,8 +155,8 @@ export class CategoriesComponent implements OnInit {
     });
   }
 
-  deleteCategorie(id: number) {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ?')) return;
+  async deleteCategorie(id: number) {
+    if (!await this.confirmation.confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ?')) return;
     this.categorieService.delete(id).subscribe({
       next: () => this.loadData(),
       error: (err) => console.error('Erreur suppression catégorie', err)

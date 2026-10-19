@@ -1,12 +1,8 @@
+import { ConfirmationService } from '../../shared/components/confirmation/confirmation.service';
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
-import { forkJoin } from 'rxjs';
 import { BonDeReceptionService } from './bon-de-reception.service';
 import { BonDeReception } from './models/bon-de-reception.model';
-import { BonDeCommandeService } from '../bons-commande/bon-de-commande.service';
-import { BonDeCommande } from '../bons-commande/models/bon-de-commande.model';
-import { VehiculeService } from '../vehicules/vehicule.service';
 import { NgClass } from '@angular/common';
-import { VehiculeModel, extractContent } from '../../shared/models/index';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideTruck } from '@lucide/angular';
@@ -17,15 +13,13 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDo
   templateUrl: './bons-reception.component.html',
 })
 export class BonsReceptionComponent extends BasePaginatedComponent implements OnInit {
+  private confirmation = inject(ConfirmationService);
+
   private cdr = inject(ChangeDetectorRef);
   private service = inject(BonDeReceptionService);
-  private bcService = inject(BonDeCommandeService);
-  private vehiculeService = inject(VehiculeService);
 
   bons: BonDeReception[] = [];
   filtered: BonDeReception[] = [];
-  bonsCommande: BonDeCommande[] = [];
-  allVehicules: VehiculeModel[] = [];
 
   loading = true;
   selectedBon: BonDeReception | null = null;
@@ -34,15 +28,6 @@ export class BonsReceptionComponent extends BasePaginatedComponent implements On
 
   ngOnInit() {
     this.loadData();
-    forkJoin({
-      bonsCommande: this.bcService.getAll(),
-      vehicules: this.vehiculeService.getAll(),
-    }).subscribe({
-      next: ({ bonsCommande, vehicules }) => {
-        this.bonsCommande = extractContent(bonsCommande);
-        this.allVehicules = extractContent(vehicules);
-      },
-    });
   }
 
   loadData() {
@@ -71,25 +56,27 @@ export class BonsReceptionComponent extends BasePaginatedComponent implements On
   }
 
   applyFilter() {
-    let data = this.bons;
-    if (this.searchTerm) {
-      const kw = this.searchTerm.toLowerCase();
-      data = data.filter(b =>
-        b.numero.toLowerCase().includes(kw) ||
-        (b.agentNom ?? '').toLowerCase().includes(kw) ||
-        (b.bonDeCommandeNumero ?? '').toLowerCase().includes(kw)
-      );
-    }
-    this.filtered = data;
+    this.filtered = this.bons;
   }
 
   // onSearch is inherited from BasePaginatedComponent
 
-  openDetail(bon: BonDeReception) { this.selectedBon = bon; }
+  openDetail(bon: BonDeReception) {
+    this.selectedBon = bon;
+    this.service.getById(bon.id).subscribe({
+      next: detail => {
+        if (this.selectedBon?.id === bon.id) {
+          this.selectedBon = { ...bon, ...detail };
+          this.cdr.markForCheck();
+        }
+      },
+      error: () => this.notifyError('Impossible de charger le détail du bon de réception.'),
+    });
+  }
   closeDetail() { this.selectedBon = null; }
 
-  delete(id: number) {
-    if (!confirm('Supprimer ce bon de réception ?')) return;
+  async delete(id: number) {
+    if (!await this.confirmation.confirm('Supprimer ce bon de réception ?')) return;
     this.service.delete(id).subscribe({
       next: () => { this.load(); this.closeDetail(); this.notify('Bon de réception supprimé.'); },
       error: () => this.notifyError('Erreur lors de la suppression.'),
@@ -107,27 +94,18 @@ export class BonsReceptionComponent extends BasePaginatedComponent implements On
     });
   }
 
-  totalAvecBC(bon: BonDeReception): number {
-    const bcAmount = bon.bonDeCommandeId
-      ? this.bonsCommande.find(b => b.id === bon.bonDeCommandeId)?.montantTTC ?? 0
-      : 0;
-    return bcAmount + bon.montantTotal;
+  get montantBCDetail(): number { return this.selectedBon?.bonDeCommandeMontantTTC ?? 0; }
+
+  statutLabel(statut?: string | null): string {
+    const labels: Record<string, string> = { RECU: 'Reçu', INCOMPLET: 'Partiel', ENVOYE: 'En cours', EN_ATTENTE: 'En attente', ANNULE: 'Annulé' };
+    return statut ? (labels[statut] ?? statut) : 'Reçu';
   }
 
-  get detailVehicule(): VehiculeModel | null {
-    if (!this.selectedBon?.bonDeCommandeId) return null;
-    const bc = this.bonsCommande.find(b => b.id === this.selectedBon!.bonDeCommandeId);
-    if (!bc?.vehiculeId) return null;
-    return this.allVehicules.find(v => v.id === bc.vehiculeId) ?? null;
-  }
-
-  get detailClient() {
-    return this.detailVehicule?.client ?? null;
-  }
-
-  get montantBCDetail(): number {
-    if (!this.selectedBon?.bonDeCommandeId) return 0;
-    return this.bonsCommande.find(b => b.id === this.selectedBon!.bonDeCommandeId)?.montantTTC ?? 0;
+  statutClass(statut?: string | null): string {
+    if (statut === 'RECU') return 'bg-green-50 text-green-700';
+    if (statut === 'INCOMPLET') return 'bg-amber-50 text-amber-700';
+    if (statut === 'ANNULE') return 'bg-red-50 text-red-700';
+    return 'bg-blue-50 text-blue-700';
   }
 
   formatDate(d: string): string { return new Date(d).toLocaleDateString('fr-FR'); }

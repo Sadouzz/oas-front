@@ -1,3 +1,4 @@
+import { ConfirmationService } from '../../shared/components/confirmation/confirmation.service';
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -20,6 +21,8 @@ import { DevisPrevisionnelPrintComponent } from '../../shared/document-print';
   templateUrl: './devis-previsionnels.component.html',
 })
 export class DevisPrevisionnelsComponent extends BasePaginatedComponent implements OnInit {
+  private confirmation = inject(ConfirmationService);
+
   private cdr = inject(ChangeDetectorRef);
   private service = inject(DevisPrevisionnelService);
   private clientService = inject(ClientService);
@@ -145,16 +148,16 @@ export class DevisPrevisionnelsComponent extends BasePaginatedComponent implemen
     });
   }
 
-  delete(id: number) {
-    if (!confirm('Supprimer ce devis ?')) return;
+  async delete(id: number) {
+    if (!await this.confirmation.confirm('Supprimer ce devis ?')) return;
     this.service.delete(id).subscribe({
       next: () => { this.loadData(); this.notify('Devis supprimé.'); },
       error: () => this.notifyError('Erreur lors de la suppression.'),
     });
   }
 
-  valider(id: number) {
-    if (!confirm('Voulez-vous vraiment forcer la validation de ce devis ?')) return;
+  async valider(id: number) {
+    if (!await this.confirmation.confirm('Voulez-vous vraiment forcer la validation de ce devis ?')) return;
     this.service.valider(id).subscribe({
       next: () => { this.loadData(); this.notify('Devis validé avec succès.'); },
       error: () => this.notifyError('Erreur lors de la validation du devis.'),

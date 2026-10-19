@@ -54,5 +54,6 @@ export interface ReceptionBonDeCommandeLigne {
 }
 
 export interface ReceptionBonDeCommandeRequest {
+    referenceFactureFournisseur?: string;
     lignes: ReceptionBonDeCommandeLigne[];
 }

@@ -1,3 +1,4 @@
+import { ConfirmationService } from '../../../shared/components/confirmation/confirmation.service';
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -23,6 +24,8 @@ import { AuthService } from '../../../core/services/auth.service';
   templateUrl: './fiche-atelier-details.html'
 })
 export class FicheAtelierDetails implements OnInit {
+  private confirmation = inject(ConfirmationService);
+
   private cdr = inject(ChangeDetectorRef);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -364,9 +367,9 @@ export class FicheAtelierDetails implements OnInit {
     });
   }
 
-  validerDevis() {
+  async validerDevis() {
     if (!this.devis) return;
-    if (!confirm("Voulez-vous forcer la validation de ce devis (ex: accord téléphonique du client) ?")) return;
+    if (!await this.confirmation.confirm("Voulez-vous forcer la validation de ce devis (ex: accord téléphonique du client) ?")) return;
     
     this.devisService.valider(this.devis.id).subscribe({
       next: (updated) => {

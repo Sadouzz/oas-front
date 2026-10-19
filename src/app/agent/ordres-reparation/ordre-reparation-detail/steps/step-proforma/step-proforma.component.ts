@@ -1,9 +1,11 @@
+import { ConfirmationService } from '../../../../../shared/components/confirmation/confirmation.service';
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { OrdreReparationService } from '../../../ordre-reparation.service';
 import { ProformaService } from '../../../../proforma/proforma.service';
+import { FiscalConfigurationService } from '../../../../gestion-tva/fiscal-configuration.service';
 
 import { AlertComponent } from '../../../../../shared/components/alert/alert.component';
 import {
@@ -20,15 +22,19 @@ import { StepProformaResponseDto } from '../../../models/responses';
   templateUrl: './step-proforma.component.html'
 })
 export class StepProformaComponent implements OnInit {
+  private confirmation = inject(ConfirmationService);
+
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private ordreService = inject(OrdreReparationService);
   private proformaService = inject(ProformaService);
+  private fiscalConfigurationService = inject(FiscalConfigurationService);
   private cdr = inject(ChangeDetectorRef);
 
   ordreId!: number;
   loadedOrdre: StepProformaResponseDto | null = null;
   proformaChargee: any = null;
+  private defaultTvaRate = 18;
 
   loading = true;
   saving = false;
@@ -36,6 +42,10 @@ export class StepProformaComponent implements OnInit {
   successMessage = '';
 
   ngOnInit(): void {
+    this.fiscalConfigurationService.getCurrent().subscribe({
+      next: config => { this.defaultTvaRate = config.tvaRate; this.cdr.markForCheck(); },
+      error: () => undefined,
+    });
     const idParam = this.route.snapshot.paramMap.get('id') || this.route.parent?.snapshot.paramMap.get('id');
     if (!idParam) {
       this.router.navigate(['/app/ordres-reparation']);
@@ -189,7 +199,7 @@ export class StepProformaComponent implements OnInit {
   }
 
   get tvaTaux(): number {
-    return this.proformaChargee?.tva ?? 18;
+    return this.proformaChargee?.tva ?? this.defaultTvaRate;
   }
 
   get totalTVACalcule(): number {
@@ -218,9 +228,9 @@ export class StepProformaComponent implements OnInit {
     return this.proformaChargee?.visibleClient === true;
   }
 
-  envoyerAuClient(): void {
+  async envoyerAuClient(): Promise<void> {
     if (!this.proformaChargee?.id || this.isProformaVisibleClient) return;
-    if (!confirm('Valider les prix de cette proforma et la rendre visible dans l’espace client ?')) return;
+    if (!await this.confirmation.confirm('Valider les prix de cette proforma et la rendre visible dans l’espace client ?')) return;
 
     this.saving = true;
     this.errorMessage = '';

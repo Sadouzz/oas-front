@@ -1,3 +1,4 @@
+import { ConfirmationService } from '../../shared/components/confirmation/confirmation.service';
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NgClass, DatePipe, DecimalPipe } from '@angular/common';
@@ -21,6 +22,8 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, Lu
   templateUrl: './clients.component.html',
 })
 export class ClientsComponent extends BasePaginatedComponent implements OnInit {
+  private confirmation = inject(ConfirmationService);
+
   private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
   private clientService = inject(ClientService);
@@ -722,9 +725,9 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
     });
   }
 
-  retirerFidele(client: ClientListResponse) {
+  async retirerFidele(client: ClientListResponse) {
     if (this.saving) return;
-    if (!confirm(`Voulez-vous retirer le statut fidèle de ${client.firstName} ${client.lastName} ?`)) return;
+    if (!await this.confirmation.confirm(`Voulez-vous retirer le statut fidèle de ${client.firstName} ${client.lastName} ?`)) return;
     
     this.saving = true;
     this.clientService.retirerFidele(client.id).subscribe({

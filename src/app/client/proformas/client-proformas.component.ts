@@ -1,3 +1,4 @@
+import { ConfirmationService } from '../../shared/components/confirmation/confirmation.service';
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ClientProformaService } from './client-proforma.service';
@@ -27,6 +28,8 @@ const STATUT_TONES: Record<string, BadgeTone> = {
   templateUrl: './client-proformas.component.html',
 })
 export class ClientProformasComponent implements OnInit {
+  private confirmation = inject(ConfirmationService);
+
   private cdr = inject(ChangeDetectorRef);
   private service = inject(ClientProformaService);
 
@@ -140,8 +143,8 @@ export class ClientProformasComponent implements OnInit {
     });
   }
 
-  refuser(id: number): void {
-    if (!confirm('Confirmer le refus de cette proforma ?')) return;
+  async refuser(id: number): Promise<void> {
+    if (!await this.confirmation.confirm('Confirmer le refus de cette proforma ?')) return;
     this.acting = true;
     this.service.refuser(id).subscribe({
       next: () => {

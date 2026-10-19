@@ -1,3 +1,4 @@
+import { ConfirmationService } from '../../shared/components/confirmation/confirmation.service';
 import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -15,6 +16,7 @@ import { BasePaginatedComponent } from '../../shared/components/base-paginated.c
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideArrowRight } from '@lucide/angular';
 import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select.component';
+import { FiscalConfigurationService } from '../gestion-tva/fiscal-configuration.service';
 
 @Component({
   selector: 'app-bons-commande',
@@ -23,6 +25,8 @@ import { SearchableSelectComponent } from '../../shared/components/searchable-se
   templateUrl: './bons-commande.component.html',
 })
 export class BonsCommandeComponent extends BasePaginatedComponent implements OnInit, OnDestroy {
+  private confirmation = inject(ConfirmationService);
+
   private cdr = inject(ChangeDetectorRef);
   private service = inject(BonDeCommandeService);
   private fournisseurService = inject(FournisseurService);
@@ -31,6 +35,8 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
   private clientService = inject(ClientService);
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
+  private fiscalConfigurationService = inject(FiscalConfigurationService);
+  tvaRate = 18;
 
   bons: BonDeCommande[] = [];
   filtered: BonDeCommande[] = [];
@@ -66,6 +72,7 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
   // Bon de Réception popup
   showReceptionModal = false;
   receptionErrorMessage = '';
+  referenceFactureFournisseur = '';
   receptionLignes: {
     ligneId: number;
     designationPiece: string;
@@ -253,6 +260,7 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
   }
 
   ngOnInit() {
+    this.fiscalConfigurationService.getCurrent().subscribe({ next: config => { this.tvaRate = config.tvaRate; } });
     this.clientSearch$.pipe(
       debounceTime(300),
       distinctUntilChanged(),
@@ -775,13 +783,13 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
     });
   }
 
-  delete(id: number) {
+  async delete(id: number) {
     const bon = this.bons.find(b => b.id === id);
     if (bon && this.hasReception(bon)) {
       this.notifyError('Impossible de supprimer ce bon de commande : la réception a déjà commencé.');
       return;
     }
-    if (!confirm('Supprimer ce bon de commande ?')) return;
+    if (!await this.confirmation.confirm('Supprimer ce bon de commande ?')) return;
     this.service.delete(id).subscribe({
       next: () => { this.load(); this.closeDetail(); this.notify('Bon supprimé.'); },
       error: (err: any) => this.notifyError(err?.error?.message || 'Erreur lors de la suppression.'),
@@ -861,6 +869,7 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
     if (!targetBon) return;
     this.selectedBon = targetBon;
     this.receptionErrorMessage = '';
+    this.referenceFactureFournisseur = '';
 
     if (!targetBon.lignes || targetBon.lignes.length === 0) {
       this.service.getById(targetBon.id).subscribe({
@@ -925,6 +934,7 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
 
     this.receptionSaving = true;
     const request: ReceptionBonDeCommandeRequest = {
+      referenceFactureFournisseur: this.referenceFactureFournisseur.trim() || undefined,
       lignes: this.receptionLignes.map(l => ({
         ligneId: l.ligneId,
         quantiteRecue: l.isFullyReceived ? 0 : (Number(l.quantiteRecue) || 0),
@@ -966,7 +976,11 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
   }
 
   get montantTVAForm(): number {
-    return this.form.get('tvaApplicable')?.value ? this.montantHTForm * 0.18 : 0;
+    return this.form.get('tvaApplicable')?.value ? this.montantHTForm * this.tvaRate / 100 : 0;
+  }
+
+  tauxTvaBon(bon: BonDeCommande): number {
+    return bon.montantHT > 0 ? Math.round((bon.montantTVA / bon.montantHT) * 10000) / 100 : this.tvaRate;
   }
 
   get montantTTCForm(): number { return this.montantHTForm + this.montantTVAForm; }

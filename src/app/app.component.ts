@@ -2,13 +2,15 @@ import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { CookiePopupComponent } from './shared/components/cookie-popup/cookie-popup.component';
 import { environment } from '../environments/environment';
+import { ConfirmationDialogComponent } from './shared/components/confirmation/confirmation-dialog.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [
     RouterOutlet,
-    CookiePopupComponent
+    CookiePopupComponent,
+    ConfirmationDialogComponent
   ],
   templateUrl: './app.component.html',
 })

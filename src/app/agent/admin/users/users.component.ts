@@ -1,3 +1,4 @@
+import { ConfirmationService } from '../../../shared/components/confirmation/confirmation.service';
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UserManagementService } from '../user-management.service';
@@ -27,6 +28,8 @@ const ROLE_PREFIX: Record<string, string> = {
   templateUrl: './users.component.html',
 })
 export class UsersComponent extends BasePaginatedComponent implements OnInit {
+  private confirmation = inject(ConfirmationService);
+
   private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
   private userService = inject(UserManagementService);
@@ -242,8 +245,8 @@ export class UsersComponent extends BasePaginatedComponent implements OnInit {
     });
   }
 
-  deleteUser(user: UserModel) {
-    if (!confirm(`Supprimer ${user.firstName} ${user.lastName} ? Cette action est irréversible.`)) return;
+  async deleteUser(user: UserModel) {
+    if (!await this.confirmation.confirm(`Supprimer ${user.firstName} ${user.lastName} ? Cette action est irréversible.`)) return;
     this.userService.delete(user.id).subscribe({
       next: () => { this.showSuccess('Utilisateur supprimé.'); this.loadUsers(); },
       error: (err: any) => { this.errorMessage = err.error?.message || 'Erreur lors de la suppression.'; }
