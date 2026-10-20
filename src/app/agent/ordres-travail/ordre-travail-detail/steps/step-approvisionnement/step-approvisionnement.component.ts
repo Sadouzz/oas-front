@@ -94,6 +94,7 @@ export class StepApprovisionnementComponent implements OnInit {
       next: (res) => {
         this.data = res;
         this.loading = false;
+        this.checkAndFallbackPieces();
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -102,6 +103,36 @@ export class StepApprovisionnementComponent implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  private checkAndFallbackPieces(): void {
+    if (!this.data) return;
+    const pieces = this.data.piecesManquantesProforma || (this.data as any).piecesProforma;
+    if (!pieces || pieces.length === 0) {
+      this.otService.getStepRecapitulatif(this.otId).subscribe({
+        next: (recap) => {
+          if (recap?.proforma?.lignesPieces && recap.proforma.lignesPieces.length > 0) {
+            this.data!.piecesManquantesProforma = recap.proforma.lignesPieces.map(lp => ({
+              ligneId: lp.id,
+              pieceId: (lp as any).pieceId || lp.id,
+              reference: (lp as any).reference || '',
+              designation: lp.nom || (lp as any).designation || 'Pièce',
+              type: lp.type || (lp.isCustom ? 'PDS' : 'PDP'),
+              isCustom: lp.isCustom,
+              quantiteDemandee: lp.quantite,
+              stockMagasin: lp.quantite,
+              quantiteManquante: 0,
+              isManquant: false,
+              prixUnitaire: lp.prix,
+              montantTotal: lp.montantTotal || (lp.quantite * (lp.prix || 0)),
+              quantiteCommande: 0,
+              quantiteRecue: 0
+            }));
+            this.cdr.detectChanges();
+          }
+        }
+      });
+    }
   }
 
   loadFournisseurs(): void {
@@ -117,13 +148,28 @@ export class StepApprovisionnementComponent implements OnInit {
     });
   }
 
+  get piecesList(): PieceApprovisionnementDto[] {
+    return this.data?.piecesManquantesProforma || (this.data as any)?.piecesProforma || [];
+  }
+
+  get isToutDisponibleEnStock(): boolean {
+    return !this.hasPiecesManquantes && !this.hasBonsDeCommande;
+  }
+
   get hasPiecesManquantes(): boolean {
-    return !!(this.data?.piecesManquantesProforma && this.data.piecesManquantesProforma.some(p => !this.isPieceComplete(p)));
+    return !!(this.piecesList.length > 0 && this.piecesList.some(p => !this.isPieceComplete(p)));
   }
 
   get totalPiecesManquantes(): number {
-    if (!this.data?.piecesManquantesProforma) return 0;
-    return this.data.piecesManquantesProforma.reduce((sum, p) => sum + (Number(p.quantiteManquante) || 0), 0);
+    return this.piecesList.reduce((sum, p) => sum + (Number(p.quantiteManquante) || 0), 0);
+  }
+
+  get totalPiecesDemandees(): number {
+    return this.piecesList.reduce((sum, p) => sum + (Number(p.quantiteDemandee) || 0), 0);
+  }
+
+  get totalMontantPieces(): number {
+    return this.piecesList.reduce((sum, p) => sum + (Number(p.montantTotal) || (Number(p.quantiteDemandee || 0) * Number(p.prixUnitaire || 0))), 0);
   }
 
   get hasBonsDeCommande(): boolean {
@@ -140,7 +186,7 @@ export class StepApprovisionnementComponent implements OnInit {
   }
 
   get piecesRestantesACommander(): PieceApprovisionnementDto[] {
-    return (this.data?.piecesManquantesProforma || []).filter(p => this.getResteACommander(p) > 0);
+    return this.piecesList.filter(p => this.getResteACommander(p) > 0);
   }
 
   get totalQuantiteRestanteACommander(): number {
@@ -155,6 +201,15 @@ export class StepApprovisionnementComponent implements OnInit {
     return this.hasPiecesManquantes && this.piecesRestantesACommander.length === 0;
   }
 
+  isPieceInStock(p: PieceApprovisionnementDto): boolean {
+    if (p.isManquant === false) return true;
+    const manquant = Number(p.quantiteManquante || 0);
+    if (manquant <= 0) return true;
+    const demandee = Number(p.quantiteDemandee || 0);
+    const stock = Number(p.stockMagasin || 0);
+    return stock >= demandee && demandee > 0;
+  }
+
   isPieceComplete(p: PieceApprovisionnementDto): boolean {
     const demandee = Number(p.quantiteDemandee || 0);
     const stock = Number(p.stockMagasin || 0);
@@ -164,19 +219,22 @@ export class StepApprovisionnementComponent implements OnInit {
     if (stock >= demandee && demandee > 0) return true;
     if (manquant <= 0) return true;
 
+    const recu = Number(p.quantiteRecue || 0);
+    if (recu >= manquant && manquant > 0) return true;
+
     return false;
   }
 
   get isAllApprovisionnementComplete(): boolean {
-    const missing = this.data?.piecesManquantesProforma;
-    if (!missing || missing.length === 0) {
+    const list = this.piecesList;
+    if (!list || list.length === 0) {
       return true;
     }
-    return missing.every(p => this.isPieceComplete(p));
+    return list.every(p => this.isPieceComplete(p));
   }
 
   get piecesIncompletes(): PieceApprovisionnementDto[] {
-    return (this.data?.piecesManquantesProforma || []).filter(p => !this.isPieceComplete(p));
+    return this.piecesList.filter(p => !this.isPieceComplete(p));
   }
 
   get totalPiecesIncompletes(): number {

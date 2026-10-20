@@ -120,42 +120,68 @@
       </div>
     } @else {
       <!-- Tout est disponible -->
-      <div class="p-4 rounded-xl border bg-emerald-50/70 border-emerald-200 shadow-2xs">
+      <div class="p-4 rounded-xl border bg-emerald-50/80 border-emerald-200 shadow-2xs flex flex-wrap items-center justify-between gap-4">
         <div class="flex items-start gap-3">
-          <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-2xs">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+          <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-2xs">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
             </svg>
           </div>
           <div>
-            <h3 class="text-sm font-extrabold text-emerald-950">Stock disponible en magasin</h3>
-            <p class="text-xs text-emerald-800/90 mt-0.5 leading-relaxed">
-              Toutes les pièces requises sont disponibles en stock magasin en quantité suffisante. Vous pouvez continuer directement vers le Bon de Sortie.
+            <div class="flex items-center gap-2">
+              <h3 class="text-sm font-extrabold text-emerald-950">Stock disponible en magasin</h3>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-200 text-emerald-900 uppercase tracking-wide">
+                Toutes les pièces sont là
+              </span>
+            </div>
+            <p class="text-xs text-emerald-800/90 mt-1 leading-relaxed">
+              Toutes les pièces requises pour cet ordre de travail sont présentes en stock magasin en quantité suffisante. Aucun réapprovisionnement ni bon de commande n'est nécessaire.
             </p>
           </div>
         </div>
+        <button type="button" (click)="continuerVersBonSortie()" [disabled]="advancing"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-xs cursor-pointer">
+          <span>Continuer vers le Bon de Sortie</span>
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        </button>
       </div>
     }
 
-    <!-- Tableau des Pièces en rupture ou en attente d'approvisionnement -->
-    @if (data.piecesManquantesProforma && data.piecesManquantesProforma.length > 0) {
+    <!-- Tableau des Pièces du dossier & Disponibilité en stock -->
+    @if (piecesList.length > 0) {
       <div class="border rounded-xl overflow-hidden bg-white shadow-xs"
-        [class]="isAllApprovisionnementComplete ? 'border-emerald-200' : (isToutCommande ? 'border-blue-200' : 'border-red-200')">
+        [class]="isToutDisponibleEnStock ? 'border-emerald-200' : (isAllApprovisionnementComplete ? 'border-emerald-200' : (isToutCommande ? 'border-blue-200' : 'border-red-200'))">
         <div class="px-4 py-3 border-b flex flex-wrap items-center justify-between gap-3"
-          [class]="isAllApprovisionnementComplete ? 'bg-emerald-50/80 border-emerald-200' : (isToutCommande ? 'bg-blue-50/80 border-blue-200' : 'bg-red-50/80 border-red-200')">
+          [class]="isToutDisponibleEnStock ? 'bg-emerald-50/80 border-emerald-200' : (isAllApprovisionnementComplete ? 'bg-emerald-50/80 border-emerald-200' : (isToutCommande ? 'bg-blue-50/80 border-blue-200' : 'bg-red-50/80 border-red-200'))">
           <div class="flex items-center gap-2">
             <div class="w-2.5 h-2.5 rounded-full"
-              [class]="isAllApprovisionnementComplete ? 'bg-emerald-600' : (canCreateBonDeCommande ? 'bg-red-600 animate-pulse' : 'bg-blue-600 animate-pulse')"></div>
+              [class]="(isToutDisponibleEnStock || isAllApprovisionnementComplete) ? 'bg-emerald-600' : (canCreateBonDeCommande ? 'bg-red-600 animate-pulse' : 'bg-blue-600 animate-pulse')"></div>
             <h3 class="text-xs font-bold uppercase tracking-wider"
-              [class]="isAllApprovisionnementComplete ? 'text-emerald-950' : (isToutCommande ? 'text-blue-950' : 'text-red-950')">
-              Pièces en rupture ou en attente d'approvisionnement
+              [class]="(isToutDisponibleEnStock || isAllApprovisionnementComplete) ? 'text-emerald-950' : (isToutCommande ? 'text-blue-950' : 'text-red-950')">
+              @if (isToutDisponibleEnStock) {
+                Pièces requises pour l'intervention · Toutes disponibles en stock
+              } @else if (isAllApprovisionnementComplete) {
+                Pièces requises · Stock complet & réceptionné
+              } @else {
+                Pièces en rupture ou en attente d'approvisionnement
+              }
             </h3>
             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
-              [class]="isAllApprovisionnementComplete ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : (isToutCommande ? 'bg-blue-100 text-blue-800 border border-blue-200' : 'bg-red-100 text-red-800 border border-red-200')">
-              {{ data.piecesManquantesProforma.length }}
+              [class]="(isToutDisponibleEnStock || isAllApprovisionnementComplete) ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : (isToutCommande ? 'bg-blue-100 text-blue-800 border border-blue-200' : 'bg-red-100 text-red-800 border border-red-200')">
+              {{ piecesList.length }} référence{{ piecesList.length > 1 ? 's' : '' }}
             </span>
           </div>
-          @if (canCreateBonDeCommande) {
+
+          @if (isToutDisponibleEnStock) {
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold">
+              <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              Toutes les pièces sont là en stock magasin
+            </span>
+          } @else if (canCreateBonDeCommande) {
             <button type="button" (click)="openBDCModal()"
               class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition shadow-xs cursor-pointer">
               <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -187,15 +213,16 @@
                 <th class="px-4 py-2.5 text-center">Qté Demandée</th>
                 <th class="px-4 py-2.5 text-center">Stock Magasin</th>
                 <th class="px-4 py-2.5 text-center">Manquant</th>
-                <th class="px-4 py-2.5 text-center">Commandé / Reçu</th>
-                <th class="px-4 py-2.5 text-center">Statut Commande</th>
+                <th class="px-4 py-2.5 text-center">Disponibilité / Réception</th>
+                <th class="px-4 py-2.5 text-center">Statut</th>
                 <th class="px-4 py-2.5 text-right">Prix Unitaire</th>
                 <th class="px-4 py-2.5 text-right">Montant Total</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-oas-line">
-              @for (pm of data.piecesManquantesProforma; track (pm.ligneId || pm.pieceId || $index)) {
-                <tr class="hover:bg-red-50/30 transition">
+              @for (pm of piecesList; track (pm.ligneId || pm.pieceId || $index)) {
+                @let inStock = isPieceInStock(pm);
+                <tr class="transition" [class]="inStock ? 'hover:bg-emerald-50/25' : 'hover:bg-red-50/30'">
                   <!-- Désignation & Réf -->
                   <td class="px-4 py-3">
                     <div class="font-bold text-oas-ink">{{ pm.designation }}</div>
@@ -219,7 +246,7 @@
                   <!-- Stock Magasin -->
                   <td class="px-4 py-3 text-center">
                     <span class="font-mono font-semibold"
-                      [class]="(pm.stockMagasin || 0) > 0 ? 'text-amber-800' : 'text-red-700'">
+                      [class]="inStock ? 'text-emerald-800 font-bold' : ((pm.stockMagasin || 0) > 0 ? 'text-amber-800' : 'text-red-700')">
                       {{ pm.stockMagasin || 0 }}
                     </span>
                     @if (pm.stockAtelier) {
@@ -228,23 +255,48 @@
                   </td>
                   <!-- Manquant -->
                   <td class="px-4 py-3 text-center">
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full font-mono font-extrabold text-xs bg-red-100 text-red-800 border border-red-200">
-                      -{{ pm.quantiteManquante }}
-                    </span>
+                    @if (inStock || (pm.quantiteManquante || 0) <= 0) {
+                      <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-mono font-bold text-xs bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        <svg class="w-3 h-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        0 (Complet)
+                      </span>
+                    } @else {
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full font-mono font-extrabold text-xs bg-red-100 text-red-800 border border-red-200">
+                        -{{ pm.quantiteManquante }}
+                      </span>
+                    }
                   </td>
-                  <!-- Commandé / Reçu -->
+                  <!-- Disponibilité / Réception -->
                   <td class="px-4 py-3 text-center">
-                    <div class="text-[11px] font-mono">
-                      <span class="font-bold text-blue-700">{{ pm.quantiteCommande || 0 }}</span>
-                      <span class="text-oas-muted"> cmd / </span>
-                      <span class="font-bold text-emerald-700">{{ pm.quantiteRecue || 0 }}</span>
-                      <span class="text-oas-muted"> reçue</span>
-                    </div>
+                    @if (isToutDisponibleEnStock || (inStock && !pm.quantiteCommande)) {
+                      <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700">
+                        <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Stock magasin suffisant
+                      </span>
+                    } @else {
+                      <div class="text-[11px] font-mono">
+                        <span class="font-bold text-blue-700">{{ pm.quantiteCommande || 0 }}</span>
+                        <span class="text-oas-muted"> cmd / </span>
+                        <span class="font-bold text-emerald-700">{{ pm.quantiteRecue || 0 }}</span>
+                        <span class="text-oas-muted"> reçue</span>
+                      </div>
+                    }
                   </td>
-                  <!-- Statut Commande -->
+                  <!-- Statut Commande / État -->
                   <td class="px-4 py-3 text-center">
                     @let reste = getResteACommander(pm);
-                    @if (isPieceComplete(pm)) {
+                    @if (isToutDisponibleEnStock || (inStock && !pm.quantiteCommande && !pm.quantiteManquante)) {
+                      <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        <svg class="w-3 h-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Disponible (Tous là)
+                      </span>
+                    } @else if (isPieceComplete(pm)) {
                       <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
                         <svg class="w-3 h-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
@@ -276,95 +328,132 @@
                 </tr>
               }
             </tbody>
+            <!-- Footer résumé -->
+            <tfoot class="bg-slate-50 border-t border-oas-line font-bold text-xs">
+              <tr>
+                <td class="px-4 py-3 text-oas-ink">
+                  Total : {{ piecesList.length }} référence{{ piecesList.length > 1 ? 's' : '' }}
+                </td>
+                <td class="px-4 py-3 text-center font-mono font-bold text-oas-ink">
+                  {{ totalPiecesDemandees }}
+                </td>
+                <td colspan="4" class="px-4 py-3 text-center">
+                  @if (isToutDisponibleEnStock) {
+                    <span class="inline-flex items-center gap-1 text-emerald-800 font-bold text-[11px]">
+                      <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                      </svg>
+                      Toutes les pièces sont là · Stock magasin complet
+                    </span>
+                  } @else if (totalPiecesIncompletes > 0) {
+                    <span class="text-red-700 font-bold text-[11px]">
+                      {{ totalPiecesIncompletes }} unité(s) manquante(s)
+                    </span>
+                  } @else {
+                    <span class="text-emerald-700 font-bold text-[11px]">
+                      Stock 100% complet
+                    </span>
+                  }
+                </td>
+                <td class="px-4 py-3 text-right text-oas-muted uppercase tracking-wider text-[10px]">
+                  Total Pièces
+                </td>
+                <td class="px-4 py-3 text-right font-mono font-extrabold text-oas-ink text-sm">
+                  {{ totalMontantPieces | number:'1.0-0' }} FCFA
+                </td>
+              </tr>
+            </tfoot>
           </table>
         </div>
       </div>
     }
 
     <!-- Bons de commande associés -->
-    <div class="border border-oas-line rounded-xl overflow-hidden bg-white shadow-xs">
-      <div class="bg-oas-bg/70 px-4 py-3 border-b border-oas-line flex items-center justify-between">
-        <h3 class="text-xs font-bold uppercase tracking-wider text-oas-ink flex items-center gap-2">
-          <span>Bons de commande rattachés</span>
-          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
-            {{ data.bonsDeCommande?.length || 0 }}
-          </span>
-        </h3>
-        @if (canCreateBonDeCommande) {
-          <button type="button" (click)="openBDCModal()"
-            class="text-xs font-bold text-amber-700 hover:text-amber-800 flex items-center gap-1 cursor-pointer">
-            <span>+ Ajouter une commande</span>
-          </button>
-        }
-      </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs">
-          <thead class="bg-slate-50 text-oas-muted uppercase tracking-wider font-semibold border-b border-oas-line">
-            <tr>
-              <th class="px-4 py-2.5">N° Bon Commande</th>
-              <th class="px-4 py-2.5">Fournisseur</th>
-              <th class="px-4 py-2.5 text-center">Nbre Pièces</th>
-              <th class="px-4 py-2.5 text-right">Montant Total</th>
-              <th class="px-4 py-2.5 text-center">Statut</th>
-              <th class="px-4 py-2.5 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-oas-line">
-            @for (bc of data.bonsDeCommande; track bc.id) {
-              <tr class="hover:bg-slate-50/60 transition">
-                <td class="px-4 py-2.5 font-bold font-mono text-oas-accent">{{ bc.numero }}</td>
-                <td class="px-4 py-2.5 font-medium text-oas-ink">{{ bc.fournisseurNom || '—' }}</td>
-                <td class="px-4 py-2.5 text-center font-mono font-bold">{{ bc.nombrePieces }}</td>
-                <td class="px-4 py-2.5 text-right font-mono font-bold text-oas-ink">{{ bc.montantTotal | number:'1.0-0' }} FCFA</td>
-                <td class="px-4 py-2.5 text-center">
-                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold"
-                    [class]="bc.statut === 'VALIDE' || bc.statut === 'LIVRE' || bc.statut === 'RECU' ? 'bg-emerald-100 text-emerald-800' : (bc.statut === 'ENVOYE' || bc.statut === 'INCOMPLET' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800')">
-                    {{ bc.statut }}
-                  </span>
-                </td>
-                <td class="px-4 py-2.5 text-right">
-                  <div class="flex items-center justify-end gap-1.5">
-                    @if (bc.statut === 'EN_ATTENTE') {
-                      <button type="button" (click)="envoyerBdc(bc.id)" [disabled]="actioningBdcId === bc.id"
-                        class="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 text-xs font-semibold cursor-pointer transition flex items-center gap-1 shadow-2xs"
-                        title="Marquer comme envoyé au fournisseur">
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                        </svg>
-                        Envoyer
-                      </button>
-                    }
-                    @if (bc.statut !== 'ANNULE' && bc.statut !== 'RECU') {
-                      <button type="button" (click)="openReceptionPopup(bc.id)" [disabled]="actioningBdcId === bc.id"
-                        class="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold cursor-pointer transition shadow-2xs flex items-center gap-1.5"
-                        title="Réceptionner ce bon et ajuster les quantités reçues">
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                        Réceptionner
-                      </button>
-                    } @else if (bc.statut === 'RECU') {
-                      <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                        <svg class="w-3 h-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                        Réceptionné
-                      </span>
-                    }
-                  </div>
-                </td>
-              </tr>
-            } @empty {
+    @if ((data.bonsDeCommande && data.bonsDeCommande.length > 0) || canCreateBonDeCommande) {
+      <div class="border border-oas-line rounded-xl overflow-hidden bg-white shadow-xs">
+        <div class="bg-oas-bg/70 px-4 py-3 border-b border-oas-line flex items-center justify-between">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-oas-ink flex items-center gap-2">
+            <span>Bons de commande rattachés</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+              {{ data.bonsDeCommande?.length || 0 }}
+            </span>
+          </h3>
+          @if (canCreateBonDeCommande) {
+            <button type="button" (click)="openBDCModal()"
+              class="text-xs font-bold text-amber-700 hover:text-amber-800 flex items-center gap-1 cursor-pointer">
+              <span>+ Ajouter une commande</span>
+            </button>
+          }
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 text-oas-muted uppercase tracking-wider font-semibold border-b border-oas-line">
               <tr>
-                <td colspan="6" class="px-4 py-6 text-center text-oas-muted">
-                  Aucun bon de commande fournisseur n'a été émis pour cet ordre.
-                </td>
+                <th class="px-4 py-2.5">N° Bon Commande</th>
+                <th class="px-4 py-2.5">Fournisseur</th>
+                <th class="px-4 py-2.5 text-center">Nbre Pièces</th>
+                <th class="px-4 py-2.5 text-right">Montant Total</th>
+                <th class="px-4 py-2.5 text-center">Statut</th>
+                <th class="px-4 py-2.5 text-right">Actions</th>
               </tr>
-            }
-          </tbody>
-        </table>
+            </thead>
+            <tbody class="divide-y divide-oas-line">
+              @for (bc of data.bonsDeCommande; track bc.id) {
+                <tr class="hover:bg-slate-50/60 transition">
+                  <td class="px-4 py-2.5 font-bold font-mono text-oas-accent">{{ bc.numero }}</td>
+                  <td class="px-4 py-2.5 font-medium text-oas-ink">{{ bc.fournisseurNom || '—' }}</td>
+                  <td class="px-4 py-2.5 text-center font-mono font-bold">{{ bc.nombrePieces }}</td>
+                  <td class="px-4 py-2.5 text-right font-mono font-bold text-oas-ink">{{ bc.montantTotal | number:'1.0-0' }} FCFA</td>
+                  <td class="px-4 py-2.5 text-center">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold"
+                      [class]="bc.statut === 'VALIDE' || bc.statut === 'LIVRE' || bc.statut === 'RECU' ? 'bg-emerald-100 text-emerald-800' : (bc.statut === 'ENVOYE' || bc.statut === 'INCOMPLET' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800')">
+                      {{ bc.statut }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-2.5 text-right">
+                    <div class="flex items-center justify-end gap-1.5">
+                      @if (bc.statut === 'EN_ATTENTE') {
+                        <button type="button" (click)="envoyerBdc(bc.id)" [disabled]="actioningBdcId === bc.id"
+                          class="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 text-xs font-semibold cursor-pointer transition flex items-center gap-1 shadow-2xs"
+                          title="Marquer comme envoyé au fournisseur">
+                          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                          </svg>
+                          Envoyer
+                        </button>
+                      }
+                      @if (bc.statut !== 'ANNULE' && bc.statut !== 'RECU') {
+                        <button type="button" (click)="openReceptionPopup(bc.id)" [disabled]="actioningBdcId === bc.id"
+                          class="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold cursor-pointer transition shadow-2xs flex items-center gap-1.5"
+                          title="Réceptionner ce bon et ajuster les quantités reçues">
+                          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                          Réceptionner
+                        </button>
+                      } @else if (bc.statut === 'RECU') {
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                          <svg class="w-3 h-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                          Réceptionné
+                        </span>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="6" class="px-4 py-6 text-center text-oas-muted">
+                    Aucun bon de commande fournisseur n'a été émis pour cet ordre.
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    }
 
     <!-- Boutons d'action -->
     <div class="flex items-center justify-between pt-4 border-t border-oas-line">

@@ -54,10 +54,12 @@ export interface BonDeSortieRequest {
   clientId: number;
   vehiculeId: number;
   ordreReparationId?: number;
+  ordreTravailId?: number;
   lignesPieces: {
     pieceId?: number | null;
     quantite: number;
     prix?: number | null;
+    prixUnitaire?: number | null;
     isCustom?: boolean;
     designationPds?: string;
   }[];

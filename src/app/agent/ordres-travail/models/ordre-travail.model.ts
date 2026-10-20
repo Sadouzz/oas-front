@@ -175,18 +175,42 @@ export interface StepApprovisionnementResponseDto extends StepBaseDto {
   proformaNumero?: string;
   bonsDeCommande?: BonDeCommandeSummary[];
   piecesManquantesProforma?: PieceApprovisionnementDto[];
+  piecesProforma?: PieceApprovisionnementDto[];
 }
 
 // Étape 3 : Bon de Sortie
+export interface PieceBonSortieDto {
+  ligneId?: number;
+  pieceId?: number;
+  reference?: string;
+  designation: string;
+  quantiteDemandee: number;
+  stockMagasin: number;
+  stockAtelier?: number;
+  quantiteASortir: number;
+  quantiteSortie?: number;
+  prixUnitaire?: number;
+}
+
 export interface StepBonSortieResponseDto extends StepBaseDto {
+  vehiculeId?: number;
+  proformaId?: number;
+  ordreReparationId?: number;
+  clientId?: number;
+  hasBonDeSortie: boolean;
+  proformaNumero?: string;
+  piecesManquantesProforma?: PieceBonSortieDto[];
   bonDeSortie?: {
     id: number;
     numero?: string;
+    reference?: string;
     statut: string;
     dateSortiePrevue?: string;
     dateSortieEffective?: string;
     remarques?: string;
-  };
+    remarque?: string;
+    lignesBonDeSortiePieces?: any[];
+  } | null;
 }
 
 // Étape 4 : Assignation Techniciens

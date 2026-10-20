@@ -189,6 +189,12 @@ export class OrdreTravailService {
     );
   }
 
+  updateStepBonSortie(id: number, data?: any): Observable<void> {
+    return this.http
+      .put(`${this.api}/${id}/step-bon-sortie`, data || {}, { responseType: 'text' })
+      .pipe(map(() => void 0));
+  }
+
   // Étape 4 : Assignation Techniciens
   getStepAssignation(id: number): Observable<StepAssignationResponseDto> {
     return this.http.get<any>(
