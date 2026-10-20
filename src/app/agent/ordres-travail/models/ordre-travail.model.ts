@@ -252,15 +252,25 @@ export interface StepReparationDto {
 }
 
 // Étape 6 : Paiement
+export interface FactureSummaryDto {
+  id: number;
+  numero?: string;
+  client?: string;
+  vehicule?: string;
+  statut: string;
+  montantAPayer?: number;
+  montantPaye?: number;
+  montantRestant: number;
+  montantTotal?: number;
+  modePaiement?: string;
+}
+
 export interface StepPaiementResponseDto extends StepBaseDto {
-  facture?: {
-    id: number;
-    numero?: string;
-    statut: string;
-    montantRestant: number;
-    montantTotal?: number;
-    modePaiement?: string;
-  };
+  vehiculeId?: number;
+  proformaId?: number;
+  ordreReparationId?: number;
+  hasFacture: boolean;
+  facture?: FactureSummaryDto | null;
 }
 
 // Étape 7 : Prêt à Livrer

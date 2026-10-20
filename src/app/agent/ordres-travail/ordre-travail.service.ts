@@ -234,6 +234,12 @@ export class OrdreTravailService {
     );
   }
 
+  updateStepPaiement(id: number, data?: any): Observable<void> {
+    return this.http
+      .put(`${this.api}/${id}/step-paiement`, data || {}, { responseType: 'text' })
+      .pipe(map(() => void 0));
+  }
+
   // Étape 7 : Prêt à Livrer
   getStepPretALivrer(id: number): Observable<StepPretALivrerResponseDto> {
     return this.http.get<any>(
