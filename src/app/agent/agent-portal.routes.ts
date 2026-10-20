@@ -205,6 +205,79 @@ export const AGENT_PORTAL_ROUTES: Routes = [
           ],
         },
         {
+          path: 'ordres-travail',
+          canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER'])],
+          loadComponent: () =>
+            import('./ordres-travail/ordres-travail.component').then(m => m.OrdresTravailComponent),
+        },
+        {
+          path: 'ordres-travail/:id',
+          canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER'])],
+          loadComponent: () =>
+            import('./ordres-travail/ordre-travail-detail/ordre-travail-detail.component').then(
+              m => m.OrdreTravailDetailComponent
+            ),
+          children: [
+            { path: '', redirectTo: 'recapitulatif', pathMatch: 'full' },
+            {
+              path: 'recapitulatif',
+              loadComponent: () =>
+                import('./ordres-travail/ordre-travail-detail/steps/step-recapitulatif/step-recapitulatif.component').then(
+                  m => m.StepRecapitulatifComponent
+                ),
+            },
+            {
+              path: 'approvisionnement',
+              loadComponent: () =>
+                import('./ordres-travail/ordre-travail-detail/steps/step-approvisionnement/step-approvisionnement.component').then(
+                  m => m.StepApprovisionnementComponent
+                ),
+            },
+            {
+              path: 'bon-sortie',
+              loadComponent: () =>
+                import('./ordres-travail/ordre-travail-detail/steps/step-bon-sortie/step-bon-sortie.component').then(
+                  m => m.StepBonSortieComponent
+                ),
+            },
+            {
+              path: 'assignation',
+              loadComponent: () =>
+                import('./ordres-travail/ordre-travail-detail/steps/step-assignation/step-assignation.component').then(
+                  m => m.StepAssignationComponent
+                ),
+            },
+            {
+              path: 'reparation',
+              loadComponent: () =>
+                import('./ordres-travail/ordre-travail-detail/steps/step-reparation/step-reparation.component').then(
+                  m => m.StepReparationComponent
+                ),
+            },
+            {
+              path: 'paiement',
+              loadComponent: () =>
+                import('./ordres-travail/ordre-travail-detail/steps/step-paiement/step-paiement.component').then(
+                  m => m.StepPaiementComponent
+                ),
+            },
+            {
+              path: 'pret-a-livrer',
+              loadComponent: () =>
+                import('./ordres-travail/ordre-travail-detail/steps/step-pret-a-livrer/step-pret-a-livrer.component').then(
+                  m => m.StepPretALivrerComponent
+                ),
+            },
+            {
+              path: 'livraison',
+              loadComponent: () =>
+                import('./ordres-travail/ordre-travail-detail/steps/step-livraison/step-livraison.component').then(
+                  m => m.StepLivraisonComponent
+                ),
+            },
+          ],
+        },
+        {
           path: 'techniciens',
           canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER'])],
           loadComponent: () =>

@@ -1,0 +1,120 @@
+<div class="space-y-6">
+  <!-- En-tête -->
+  <div class="flex flex-wrap items-center justify-between gap-4 border-b border-oas-line pb-4">
+    <div>
+      <h2 class="text-lg font-bold text-oas-ink flex items-center gap-2">
+        <span class="w-7 h-7 rounded-lg bg-yellow-100 text-yellow-800 flex items-center justify-center text-sm font-black">6</span>
+        Facturation & Contrôle du Règlement
+      </h2>
+      <p class="text-xs text-oas-muted mt-0.5">
+        Vérification du règlement de la facture client avant préparation et mise à disposition du véhicule.
+      </p>
+    </div>
+    <div class="flex items-center gap-2">
+      <a routerLink="/app/factures"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-oas-line bg-white hover:bg-oas-bg text-xs font-semibold text-oas-ink transition shadow-2xs">
+        <svg class="w-3.5 h-3.5 text-oas-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        Module Factures
+      </a>
+    </div>
+  </div>
+
+  <app-alert [error]="errorMessage" [success]="successMessage"></app-alert>
+
+  @if (loading) {
+    <div class="flex flex-col items-center justify-center py-12 text-oas-muted">
+      <div class="w-8 h-8 border-3 border-yellow-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+      <p class="text-sm font-medium">Chargement de l'état de facturation...</p>
+    </div>
+  } @else if (data) {
+
+    <!-- État de la Facture -->
+    @if (data.facture) {
+      @let isPayee = data.facture.statut === 'PAYEE' || data.facture.montantRestant === 0;
+      <div class="p-6 rounded-2xl border shadow-xs"
+        [class]="isPayee ? 'bg-emerald-50/50 border-emerald-200' : 'bg-amber-50/50 border-amber-200'">
+        
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center font-bold"
+              [class]="isPayee ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'">
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+            <div>
+              <span class="text-xs uppercase font-bold tracking-wider"
+                [class]="isPayee ? 'text-emerald-800' : 'text-amber-800'">Facture Client</span>
+              <h3 class="text-base font-bold text-oas-ink">
+                {{ data.facture.numero || ('Facture #' + data.facture.id) }}
+              </h3>
+            </div>
+          </div>
+
+          <span class="px-3.5 py-1.5 rounded-full text-xs font-bold border"
+            [class]="isPayee ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-amber-100 text-amber-800 border-amber-300'">
+            {{ isPayee ? 'RÈGLEMENT CONFIRMÉ' : ('STATUT : ' + data.facture.statut) }}
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-4 border-t"
+          [class]="isPayee ? 'border-emerald-200' : 'border-amber-200'">
+          <div>
+            <span class="text-oas-muted block mb-0.5">Reste à payer :</span>
+            <span class="font-mono text-base font-bold"
+              [class]="isPayee ? 'text-emerald-700' : 'text-amber-900'">
+              {{ (data.facture.montantRestant || 0) | number:'1.0-0' }} FCFA
+            </span>
+          </div>
+          <div>
+            <span class="text-oas-muted block mb-0.5">Condition de remise des clés :</span>
+            <span class="font-medium text-oas-ink">
+              {{ isPayee ? 'Le véhicule peut être mis en préparation de livraison.' : 'Paiement en attente de régularisation.' }}
+            </span>
+          </div>
+        </div>
+
+      </div>
+    } @else {
+      <div class="p-6 rounded-2xl border border-dashed border-oas-line text-center bg-slate-50/50">
+        <div class="w-12 h-12 rounded-full bg-yellow-100 text-yellow-800 flex items-center justify-center mx-auto mb-3">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h3 class="text-sm font-bold text-oas-ink">Facture en cours de génération ou de traitement</h3>
+        <p class="text-xs text-oas-muted max-w-md mx-auto mt-1">
+          La facture est automatiquement rattachée à cet ordre de travail lors de la finalisation des réparations. Vous pouvez continuer vers la préparation du véhicule.
+        </p>
+      </div>
+    }
+
+    <!-- Actions -->
+    <div class="flex items-center justify-between pt-4 border-t border-oas-line">
+      <a [routerLink]="['/app/ordres-travail', otId, 'reparation']"
+        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-oas-line text-xs font-semibold text-oas-muted hover:text-oas-ink transition cursor-pointer">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Étape précédente
+      </a>
+
+      <button (click)="continuerVersPretALivrer()"
+        [disabled]="advancing"
+        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-oas-accent hover:bg-oas-accent/90 text-white font-bold text-sm shadow-sm transition disabled:opacity-50 cursor-pointer">
+        @if (advancing) {
+          <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          <span>En cours...</span>
+        } @else {
+          <span>Valider & Passer à la Préparation (Prêt à livrer)</span>
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        }
+      </button>
+    </div>
+
+  }
+</div>

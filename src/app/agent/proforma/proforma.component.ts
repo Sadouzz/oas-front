@@ -1,13 +1,14 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ProformaService } from './proforma.service';
 import { BonDeCommandeService } from '../bons-commande/bon-de-commande.service';
 import { ClientService } from '../clients/client.service';
 import { VehiculeService } from '../vehicules/vehicule.service';
 import { PieceDetacheeService } from '../pieces-detachees/piece-detachee.service';
 import { MainDoeuvreService } from '../main-doeuvre/main-doeuvre.service';
+import { OrdreTravailService } from '../ordres-travail/ordre-travail.service';
 import { CommonModule, NgClass } from '@angular/common';
 import { Proforma, BonDeCommande, ClientModel, VehiculeModel, PieceDetache, MainDoeuvreModel, extractContent } from '../../shared/models/index';
 import { LucidePencil, LucideTrash2, LucidePlus, LucideSearch, LucideX } from '@lucide/angular';
@@ -65,6 +66,8 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
   private mdService = inject(MainDoeuvreService);
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private otService = inject(OrdreTravailService);
 
   proformas: Proforma[] = [];
   filtered: Proforma[] = [];
@@ -936,6 +939,19 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
         this.notify('Proforma validé.'); 
       },
       error: (err) => this.notifyError(err.error?.message || 'Erreur lors de la validation du proforma.'),
+    });
+  }
+
+  creerOrdreTravail(proformaId: number) {
+    if (!confirm('Initier un Ordre de Travail (OT) d\'atelier à partir de ce proforma validé ?')) return;
+    this.otService.createFromProforma(proformaId).subscribe({
+      next: (ot) => {
+        this.notify('Ordre de Travail initié avec succès.');
+        this.router.navigate(['/app/ordres-travail', ot.id]);
+      },
+      error: (err) => {
+        this.notifyError(err.error?.message || 'Erreur lors de la création de l\'ordre de travail.');
+      }
     });
   }
 

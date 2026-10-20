@@ -4,6 +4,8 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { OrdreReparationService } from '../../../ordre-reparation.service';
 import { ProformaService } from '../../../../proforma/proforma.service';
+import { OrdreTravailService } from '../../../../ordres-travail/ordre-travail.service';
+import { OrdreTravail } from '../../../../ordres-travail/models/ordre-travail.model';
 
 import { AlertComponent } from '../../../../../shared/components/alert/alert.component';
 import {
@@ -24,14 +26,17 @@ export class StepProformaComponent implements OnInit {
   private router = inject(Router);
   private ordreService = inject(OrdreReparationService);
   private proformaService = inject(ProformaService);
+  private otService = inject(OrdreTravailService);
   private cdr = inject(ChangeDetectorRef);
 
   ordreId!: number;
   loadedOrdre: StepProformaResponseDto | null = null;
   proformaChargee: any = null;
+  existingOT: OrdreTravail | null = null;
 
   loading = true;
   saving = false;
+  creationOTEnCours = false;
   errorMessage = '';
   successMessage = '';
 
@@ -57,11 +62,25 @@ export class StepProformaComponent implements OnInit {
         this.loadedOrdre = res;
         this.proformaChargee = res.proforma || null;
         this.loading = false;
+        this.checkExistingOT();
         this.cdr.markForCheck();
       },
       error: (err) => {
         this.loading = false;
         this.errorMessage = err.error?.message || 'Erreur lors du chargement des données.';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  checkExistingOT(): void {
+    this.otService.getByOrdreReparationId(this.ordreId).subscribe({
+      next: (ot) => {
+        this.existingOT = ot;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.existingOT = null;
         this.cdr.markForCheck();
       }
     });
@@ -392,6 +411,46 @@ export class StepProformaComponent implements OnInit {
       error: () => {
         this.telechargementEnCours = false;
         this.errorMessage = 'Impossible de télécharger le PDF du proforma.';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  showConfirmOTModal = false;
+
+  ouvrirConfirmationOT(): void {
+    if (!this.isProformaValide) {
+      this.errorMessage = 'Veuillez d\'abord valider la facture proforma pour créer un ordre de travail.';
+      return;
+    }
+    this.showConfirmOTModal = true;
+    this.cdr.markForCheck();
+  }
+
+  fermerConfirmationOT(): void {
+    this.showConfirmOTModal = false;
+    this.cdr.markForCheck();
+  }
+
+  confirmerCreationOT(): void {
+    this.showConfirmOTModal = false;
+    this.creationOTEnCours = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.otService.createFromOrdreReparation(this.ordreId).subscribe({
+      next: (ot) => {
+        this.creationOTEnCours = false;
+        this.existingOT = ot;
+        this.successMessage = `Ordre de Travail ${ot.numero} créé avec succès. Redirection vers l'atelier...`;
+        this.cdr.markForCheck();
+        setTimeout(() => {
+          this.router.navigate(['/app/ordres-travail', ot.id]);
+        }, 600);
+      },
+      error: (err) => {
+        this.creationOTEnCours = false;
+        this.errorMessage = err.error?.message || 'Erreur lors de la création de l\'ordre de travail.';
         this.cdr.markForCheck();
       }
     });

@@ -29,3 +29,29 @@ export * from '../../agent/notes-prix/models/note-de-prix.model';
 export * from '../../agent/clients/models/client-model';
 export * from '../../agent/dashboard/models/dashboard.model';
 export * from '../../agent/diagnostics/models/diagnostic.model';
+export {
+  StatutOrdreTravail,
+  STATUT_OT_ETAPES,
+  ETAPES_ORDRE_TRAVAIL,
+  getEtapeFromStatutOT,
+  getPathFromEtapeOT,
+  getStatutColorOT,
+  type StepBaseDto as StepBaseOTDto,
+  type StepRecapitulatifResponseDto,
+  type BonDeCommandeSummary,
+  type StepApprovisionnementResponseDto,
+  type StepBonSortieResponseDto,
+  type TechnicienSummary as TechnicienSummaryOT,
+  type StepAssignationResponseDto,
+  type StepReparationResponseDto,
+  type StepPaiementResponseDto,
+  type StepPretALivrerResponseDto,
+  type StepLivraisonResponseDto,
+  type StepAssignationDto as StepAssignationOTDto,
+  type StepReparationDto as StepReparationOTDto,
+  type StepPretALivrerDto as StepPretALivrerOTDto,
+  type StepLivraisonDto as StepLivraisonOTDto,
+  type OrdreTravail,
+  type OrdreTravailSummaryDto,
+  type OrdreTravailRequest
+} from '../../agent/ordres-travail/models/ordre-travail.model';
