@@ -1,6 +1,6 @@
 export interface LigneBonDeSortie {
   id: number;
-  piece: { id: number; reference: string; designation?: string; numeroDeSerie?: string; prix?: number } | null;
+  piece: { id: number; reference: string; designation?: string; numeroDeSerie?: string; prix?: number; stockMagasin?: number; stockAtelier?: number } | null;
   quantite: number;
 }
 
@@ -54,10 +54,12 @@ export interface BonDeSortieRequest {
   clientId: number;
   vehiculeId: number;
   ordreReparationId?: number;
+  ordreTravailId?: number;
   lignesPieces: {
     pieceId?: number | null;
     quantite: number;
     prix?: number | null;
+    prixUnitaire?: number | null;
     isCustom?: boolean;
     designationPds?: string;
   }[];

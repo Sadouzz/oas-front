@@ -766,9 +766,9 @@
       </button>
 
       @if (canValidate && selectedBon.statut === 'EN_ATTENTE') {
-      <button (click)="valider(selectedBon)" [disabled]="saving"
+      <button (click)="valider(selectedBon)" [disabled]="validating || saving"
         class="flex items-center justify-center gap-2 bg-oas-ok hover:bg-oas-ok/90 text-white font-bold px-5 h-10 rounded-xl transition text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
-        @if (saving) {
+        @if (validating) {
         <svg lucideLoader2 class="animate-spin h-4 w-4"></svg>
         <span>Validation en cours...</span>
         } @else {
@@ -779,6 +779,237 @@
       }
     </div>
 
+  </div>
+</div>
+}
+
+<!-- ═══════════════════════════════════════════════════════
+     MODAL CONFIRMATION VALIDATION BON DE SORTIE
+     ═══════════════════════════════════════════════════════ -->
+@if (showValidateModal && bonToValidate) {
+<div class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 transition-opacity" (click)="closeValidateModal()">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden border border-oas-line" (click)="$event.stopPropagation()">
+    <!-- En-tête -->
+    <div class="px-6 py-4 border-b border-oas-line flex items-center justify-between bg-emerald-50/60 flex-shrink-0">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0 shadow-2xs">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <div>
+          <h3 class="font-bold text-base text-oas-ink">Validation du Bon de Sortie</h3>
+          <p class="text-xs font-mono font-bold text-emerald-700 mt-0.5">{{ bonToValidate.reference }}</p>
+        </div>
+      </div>
+      <button type="button" (click)="closeValidateModal()" [disabled]="validating"
+        class="p-1.5 rounded-lg hover:bg-white text-oas-muted hover:text-oas-ink cursor-pointer transition disabled:opacity-50">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Contenu détaillé -->
+    <div class="p-6 space-y-4 overflow-y-auto flex-1 text-xs">
+      <!-- Explication impact stock -->
+      <div class="p-3.5 bg-emerald-50/70 border border-emerald-200/80 rounded-xl text-xs text-emerald-950 flex items-start gap-3">
+        <svg class="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+        <div class="space-y-1">
+          <p class="font-bold text-emerald-900">Confirmation de la sortie atelier</p>
+          <p class="text-emerald-800 leading-relaxed">
+            La validation confirme l'utilisation effective des pièces dans les travaux. Les quantités seront déduites du <strong>stock atelier</strong>.
+          </p>
+        </div>
+      </div>
+
+      <!-- Informations Client & Véhicule -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 bg-oas-bg/70 rounded-xl border border-oas-line">
+        <div>
+          <span class="text-[11px] text-oas-muted font-medium block">Client</span>
+          <span class="font-bold text-oas-ink text-sm">
+            {{ bonToValidate.client ? (bonToValidate.client.firstName + ' ' + bonToValidate.client.lastName) : '—' }}
+          </span>
+        </div>
+        <div>
+          <span class="text-[11px] text-oas-muted font-medium block">Véhicule</span>
+          <span class="font-mono font-bold text-oas-ink text-sm">
+            {{ bonToValidate.vehicule ? bonToValidate.vehicule.immatriculation : '—' }}
+          </span>
+          @if (bonToValidate.vehicule?.marque || bonToValidate.vehicule?.modele) {
+            <span class="text-[11px] text-oas-muted block">{{ bonToValidate.vehicule?.marque }} {{ bonToValidate.vehicule?.modele }}</span>
+          }
+        </div>
+      </div>
+
+      <!-- Tableau détaillé des pièces avec stocks Avant -> Après -->
+      <div class="bg-white border border-oas-line rounded-xl p-3.5 space-y-2.5">
+        <div class="flex items-center justify-between">
+          <h4 class="font-bold text-xs text-oas-ink uppercase tracking-wide">Détail des pièces et impact stocks</h4>
+          @if (loadingValidationDetails) {
+            <span class="text-xs text-oas-muted flex items-center gap-1.5">
+              <svg lucideLoader2 class="animate-spin h-3.5 w-3.5 text-oas-accent"></svg>
+              Calcul des stocks...
+            </span>
+          }
+        </div>
+
+        @if (validationDetails.length > 0) {
+          <div class="overflow-x-auto rounded-lg border border-oas-line">
+            <table class="w-full text-xs text-left">
+              <thead class="bg-oas-bg text-oas-muted uppercase font-bold text-[10px] border-b border-oas-line">
+                <tr>
+                  <th class="px-3 py-2">Pièce / Réf</th>
+                  <th class="px-2.5 py-2 text-center">Qté BS</th>
+                  <th class="px-3 py-2 text-center">Stock Magasin</th>
+                  <th class="px-3 py-2 text-center">Stock Atelier (Av. → Ap.)</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-oas-line">
+                @for (d of validationDetails; track d.pieceId) {
+                  <tr class="hover:bg-slate-50/70 transition">
+                    <td class="px-3 py-2">
+                      <div class="font-bold text-oas-ink">{{ d.designation }}</div>
+                      @if (d.reference && d.reference !== d.designation) {
+                        <div class="text-[10px] text-oas-muted font-mono">{{ d.reference }}</div>
+                      }
+                    </td>
+                    <td class="px-2.5 py-2 text-center font-extrabold text-oas-ink">
+                      {{ d.quantite }}
+                    </td>
+                    <td class="px-3 py-2 text-center font-mono">
+                      <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-bold text-[11px]">
+                        {{ d.stockMagasinAv }}
+                      </span>
+                    </td>
+                    <td class="px-3 py-2 text-center font-mono">
+                      <div class="inline-flex items-center gap-1.5">
+                        <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-[11px]">
+                          {{ d.stockAtelierAv }}
+                        </span>
+                        <span class="text-oas-muted">→</span>
+                        <span class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-extrabold text-[11px]">
+                          {{ d.stockAtelierAp }}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else if (!loadingValidationDetails) {
+          <p class="text-xs text-oas-muted italic py-3 text-center">Aucune pièce sur ce bon de sortie.</p>
+        }
+      </div>
+    </div>
+
+    <!-- Pied de page -->
+    <div class="px-6 py-4 border-t border-oas-line bg-oas-bg/40 flex items-center justify-end gap-3 flex-shrink-0">
+      <button type="button" (click)="closeValidateModal()" [disabled]="validating"
+        class="px-4 py-2.5 rounded-xl border border-oas-line text-oas-ink font-semibold text-xs hover:bg-white transition cursor-pointer disabled:opacity-50">
+        Annuler
+      </button>
+      <button type="button" (click)="confirmValider()" [disabled]="validating"
+        class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-2 shadow-sm transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+        @if (validating) {
+          <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+          </svg>
+          <span>Validation en cours...</span>
+        } @else {
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+          <span>Confirmer la validation</span>
+        }
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- ═══════════════════════════════════════════════════════
+     MODAL CONFIRMATION RETOUR PIÈCE AU STOCK MAGASIN
+     ═══════════════════════════════════════════════════════ -->
+@if (showReturnPieceModal && pieceToReturn) {
+<div class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 transition-opacity" (click)="closeRetourPieceModal()">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-oas-line" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="px-6 py-4 border-b border-oas-line flex items-center justify-between bg-amber-50/70">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0 shadow-2xs">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+          </svg>
+        </div>
+        <div>
+          <h3 class="font-bold text-base text-oas-ink">Retourner la pièce</h3>
+          <p class="text-xs text-amber-800 mt-0.5">Retirer du bon de sortie</p>
+        </div>
+      </div>
+      <button type="button" (click)="closeRetourPieceModal()" [disabled]="returningPiece"
+        class="p-1.5 rounded-lg hover:bg-white text-oas-muted hover:text-oas-ink cursor-pointer transition disabled:opacity-50">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="px-6 py-5 space-y-4 text-xs">
+      <div class="p-3.5 bg-amber-50/70 border border-amber-200 rounded-xl text-amber-950 flex items-start gap-3">
+        <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <p class="leading-relaxed">
+          Voulez-vous retirer cette pièce du bon de sortie ? La quantité sera <strong>recréditée au stock magasin</strong>.
+        </p>
+      </div>
+
+      <div class="bg-oas-bg/70 rounded-xl p-4 border border-oas-line space-y-2">
+        <div class="flex justify-between items-center py-1 border-b border-oas-line/60">
+          <span class="text-oas-muted font-medium">Référence</span>
+          <span class="font-mono font-bold text-oas-ink">{{ pieceToReturn.reference }}</span>
+        </div>
+        @if (pieceToReturn.designation) {
+          <div class="flex justify-between items-center py-1 border-b border-oas-line/60">
+            <span class="text-oas-muted font-medium">Désignation</span>
+            <span class="font-bold text-oas-ink">{{ pieceToReturn.designation }}</span>
+          </div>
+        }
+        <div class="flex justify-between items-center pt-1">
+          <span class="text-oas-muted font-medium">Quantité à retourner</span>
+          <span class="font-mono font-bold text-sm text-amber-700">{{ pieceToReturn.quantite }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="px-6 py-4 border-t border-oas-line bg-oas-bg/40 flex items-center justify-end gap-3 flex-shrink-0">
+      <button type="button" (click)="closeRetourPieceModal()" [disabled]="returningPiece"
+        class="px-4 py-2.5 rounded-xl border border-oas-line text-oas-ink font-semibold text-xs hover:bg-white transition cursor-pointer disabled:opacity-50">
+        Annuler
+      </button>
+      <button type="button" (click)="confirmRetourPiece()" [disabled]="returningPiece"
+        class="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center gap-2 shadow-sm transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+        @if (returningPiece) {
+          <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+          </svg>
+          <span>Retour en cours...</span>
+        } @else {
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+          </svg>
+          <span>Confirmer le retour</span>
+        }
+      </button>
+    </div>
   </div>
 </div>
 }

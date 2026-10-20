@@ -1,0 +1,857 @@
+<div class="space-y-6">
+  <!-- En-tête -->
+  <div class="flex flex-wrap items-center justify-between gap-4 border-b border-oas-line pb-4">
+    <div>
+      <h2 class="text-lg font-bold text-oas-ink flex items-center gap-2">
+        <span class="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-sm font-black">2</span>
+        Approvisionnement & Commandes Fournisseurs
+      </h2>
+      <p class="text-xs text-oas-muted mt-0.5">
+        Suivi des pièces nécessaires, vérification des ruptures de stock et des commandes d'achat associées.
+      </p>
+    </div>
+    <div class="flex items-center gap-2">
+      @if (canCreateBonDeCommande) {
+        <button type="button" (click)="openBDCModal()"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition shadow-2xs cursor-pointer">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+          Nouveau Bon de Commande
+        </button>
+      } @else if (isToutCommande) {
+        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold">
+          <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+          Toutes les pièces commandées
+        </span>
+      }
+      <a routerLink="/app/bons-commande"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-oas-line bg-white hover:bg-oas-bg text-xs font-semibold text-oas-ink transition shadow-2xs">
+        <svg class="w-3.5 h-3.5 text-oas-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+        </svg>
+        Gestion des BDC
+      </a>
+    </div>
+  </div>
+
+  <app-alert [error]="errorMessage" [success]="successMessage"></app-alert>
+
+  @if (loading) {
+    <div class="flex flex-col items-center justify-center py-12 text-oas-muted">
+      <div class="w-8 h-8 border-3 border-amber-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+      <p class="text-sm font-medium">Chargement des données d'approvisionnement...</p>
+    </div>
+  } @else if (data) {
+
+    <!-- Statut Global de Stock -->
+    @if (hasPiecesManquantes && !hasBonsDeCommande) {
+      <!-- Alerte Rupture Critique (Pas encore de commande) -->
+      <div class="p-4 rounded-xl border bg-red-50/70 border-red-200 shadow-2xs">
+        <div class="flex items-start gap-3">
+          <div class="w-9 h-9 rounded-xl bg-red-100 text-red-700 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-2xs">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <div class="flex-1">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-extrabold text-red-950">
+                Rupture de stock détectée ({{ data.piecesManquantesProforma?.length }} référence(s), {{ totalPiecesManquantes }} unité(s) manquante(s))
+              </h3>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-200 text-red-900 uppercase tracking-wide">
+                Réapprovisionnement requis
+              </span>
+            </div>
+            <p class="text-xs text-red-800/90 mt-1 leading-relaxed">
+              Le stock magasin actuel est insuffisant pour honorer ce dossier. Un ou plusieurs bons de commande fournisseur doivent être créés afin de combler le déficit de pièces.
+            </p>
+          </div>
+        </div>
+      </div>
+    } @else if (hasPiecesManquantes && hasBonsDeCommande) {
+      <!-- Approvisionnement en cours / complet -->
+      <div class="p-4 rounded-xl border shadow-2xs"
+        [class]="isAllApprovisionnementComplete ? 'bg-emerald-50/70 border-emerald-200' : (isToutCommande ? 'bg-blue-50/70 border-blue-200' : 'bg-amber-50/70 border-amber-200')">
+        <div class="flex items-start gap-3">
+          <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 shadow-2xs"
+            [class]="isAllApprovisionnementComplete ? 'bg-emerald-100 text-emerald-800' : (isToutCommande ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800')">
+            @if (isAllApprovisionnementComplete) {
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            } @else {
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+            }
+          </div>
+          <div class="flex-1">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-extrabold"
+                [class]="isAllApprovisionnementComplete ? 'text-emerald-950' : (isToutCommande ? 'text-blue-950' : 'text-amber-950')">
+                @if (isAllApprovisionnementComplete) {
+                  Approvisionnement complet & Pièces 100% réceptionnées
+                } @else if (isToutCommande) {
+                  Commandes passées · Réception magasin requise ({{ data.bonsDeCommande?.length }} bon(s) rattaché(s))
+                } @else {
+                  Approvisionnement partiel ({{ data.bonsDeCommande?.length }} bon(s) rattaché(s))
+                }
+              </h3>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide"
+                [class]="isAllApprovisionnementComplete ? 'bg-emerald-200 text-emerald-900' : (isToutCommande ? 'bg-blue-200 text-blue-900' : 'bg-amber-200 text-amber-900')">
+                {{ isAllApprovisionnementComplete ? 'Stock complet' : (isToutCommande ? 'En attente de réception' : 'Commande partielle') }}
+              </span>
+            </div>
+            <p class="text-xs mt-1 leading-relaxed"
+              [class]="isAllApprovisionnementComplete ? 'text-emerald-800/90' : (isToutCommande ? 'text-blue-800/90' : 'text-amber-800/90')">
+              @if (isAllApprovisionnementComplete) {
+                Toutes les pièces requises ont été commandées et réceptionnées en stock magasin. Vous pouvez désormais continuer vers le Bon de Sortie.
+              } @else if (isToutCommande) {
+                Toutes les commandes d'achat ont été émises. Vous devez réceptionner les pièces manquantes (via le bouton « Réceptionner ») avant de pouvoir continuer vers le Bon de Sortie.
+              } @else {
+                Des commandes d'achat ont été émises, mais il reste encore {{ piecesRestantesACommander.length }} référence(s) à commander ({{ totalQuantiteRestanteACommander }} unité(s)).
+              }
+            </p>
+          </div>
+        </div>
+      </div>
+    } @else {
+      <!-- Tout est disponible -->
+      <div class="p-4 rounded-xl border bg-emerald-50/80 border-emerald-200 shadow-2xs flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-2xs">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-sm font-extrabold text-emerald-950">Stock disponible en magasin</h3>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-200 text-emerald-900 uppercase tracking-wide">
+                Toutes les pièces sont là
+              </span>
+            </div>
+            <p class="text-xs text-emerald-800/90 mt-1 leading-relaxed">
+              Toutes les pièces requises pour cet ordre de travail sont présentes en stock magasin en quantité suffisante. Aucun réapprovisionnement ni bon de commande n'est nécessaire.
+            </p>
+          </div>
+        </div>
+        <button type="button" (click)="continuerVersBonSortie()" [disabled]="advancing"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-xs cursor-pointer">
+          <span>Continuer vers le Bon de Sortie</span>
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        </button>
+      </div>
+    }
+
+    <!-- Tableau des Pièces du dossier & Disponibilité en stock -->
+    @if (piecesList.length > 0) {
+      <div class="border rounded-xl overflow-hidden bg-white shadow-xs"
+        [class]="isToutDisponibleEnStock ? 'border-emerald-200' : (isAllApprovisionnementComplete ? 'border-emerald-200' : (isToutCommande ? 'border-blue-200' : 'border-red-200'))">
+        <div class="px-4 py-3 border-b flex flex-wrap items-center justify-between gap-3"
+          [class]="isToutDisponibleEnStock ? 'bg-emerald-50/80 border-emerald-200' : (isAllApprovisionnementComplete ? 'bg-emerald-50/80 border-emerald-200' : (isToutCommande ? 'bg-blue-50/80 border-blue-200' : 'bg-red-50/80 border-red-200'))">
+          <div class="flex items-center gap-2">
+            <div class="w-2.5 h-2.5 rounded-full"
+              [class]="(isToutDisponibleEnStock || isAllApprovisionnementComplete) ? 'bg-emerald-600' : (canCreateBonDeCommande ? 'bg-red-600 animate-pulse' : 'bg-blue-600 animate-pulse')"></div>
+            <h3 class="text-xs font-bold uppercase tracking-wider"
+              [class]="(isToutDisponibleEnStock || isAllApprovisionnementComplete) ? 'text-emerald-950' : (isToutCommande ? 'text-blue-950' : 'text-red-950')">
+              @if (isToutDisponibleEnStock) {
+                Pièces requises pour l'intervention · Toutes disponibles en stock
+              } @else if (isAllApprovisionnementComplete) {
+                Pièces requises · Stock complet & réceptionné
+              } @else {
+                Pièces en rupture ou en attente d'approvisionnement
+              }
+            </h3>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold"
+              [class]="(isToutDisponibleEnStock || isAllApprovisionnementComplete) ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : (isToutCommande ? 'bg-blue-100 text-blue-800 border border-blue-200' : 'bg-red-100 text-red-800 border border-red-200')">
+              {{ piecesList.length }} référence{{ piecesList.length > 1 ? 's' : '' }}
+            </span>
+          </div>
+
+          @if (isToutDisponibleEnStock) {
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold">
+              <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              Toutes les pièces sont là en stock magasin
+            </span>
+          } @else if (canCreateBonDeCommande) {
+            <button type="button" (click)="openBDCModal()"
+              class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition shadow-xs cursor-pointer">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              Créer un Bon de Commande ({{ piecesRestantesACommander.length }} restant{{ piecesRestantesACommander.length > 1 ? 's' : '' }})
+            </button>
+          } @else if (!isAllApprovisionnementComplete) {
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-100 text-blue-800 border border-blue-200 text-xs font-bold">
+              <svg class="w-3.5 h-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Commandé · Réception en attente ({{ totalPiecesIncompletes }} unité(s) manquante(s))
+            </span>
+          } @else {
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold">
+              <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              Déficit 100% réceptionné
+            </span>
+          }
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 text-oas-muted uppercase tracking-wider font-semibold border-b border-oas-line">
+              <tr>
+                <th class="px-4 py-2.5">Pièce & Réf.</th>
+                <th class="px-4 py-2.5 text-center">Qté Demandée</th>
+                <th class="px-4 py-2.5 text-center">Stock Magasin</th>
+                <th class="px-4 py-2.5 text-center">Manquant</th>
+                <th class="px-4 py-2.5 text-center">Disponibilité / Réception</th>
+                <th class="px-4 py-2.5 text-center">Statut</th>
+                <th class="px-4 py-2.5 text-right">Prix Unitaire</th>
+                <th class="px-4 py-2.5 text-right">Montant Total</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-oas-line">
+              @for (pm of piecesList; track (pm.ligneId || pm.pieceId || $index)) {
+                @let inStock = isPieceInStock(pm);
+                <tr class="transition" [class]="inStock ? 'hover:bg-emerald-50/25' : 'hover:bg-red-50/30'">
+                  <!-- Désignation & Réf -->
+                  <td class="px-4 py-3">
+                    <div class="font-bold text-oas-ink">{{ pm.designation }}</div>
+                    <div class="flex items-center gap-2 mt-0.5 text-[11px]">
+                      @if (pm.reference) {
+                        <span class="font-mono text-oas-muted bg-slate-100 px-1.5 py-0.5 rounded border border-oas-line">
+                          {{ pm.reference }}
+                        </span>
+                      }
+                      @if (pm.type) {
+                        <span class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 border border-blue-200">
+                          {{ pm.type }}
+                        </span>
+                      }
+                    </div>
+                  </td>
+                  <!-- Qté Demandée -->
+                  <td class="px-4 py-3 text-center font-mono font-bold text-oas-ink">
+                    {{ pm.quantiteDemandee }}
+                  </td>
+                  <!-- Stock Magasin -->
+                  <td class="px-4 py-3 text-center">
+                    <span class="font-mono font-semibold"
+                      [class]="inStock ? 'text-emerald-800 font-bold' : ((pm.stockMagasin || 0) > 0 ? 'text-amber-800' : 'text-red-700')">
+                      {{ pm.stockMagasin || 0 }}
+                    </span>
+                    @if (pm.stockAtelier) {
+                      <span class="text-[10px] text-oas-muted block">(Atelier: {{ pm.stockAtelier }})</span>
+                    }
+                  </td>
+                  <!-- Manquant -->
+                  <td class="px-4 py-3 text-center">
+                    @if (inStock || (pm.quantiteManquante || 0) <= 0) {
+                      <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-mono font-bold text-xs bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        <svg class="w-3 h-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        0 (Complet)
+                      </span>
+                    } @else {
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full font-mono font-extrabold text-xs bg-red-100 text-red-800 border border-red-200">
+                        -{{ pm.quantiteManquante }}
+                      </span>
+                    }
+                  </td>
+                  <!-- Disponibilité / Réception -->
+                  <td class="px-4 py-3 text-center">
+                    @if (isToutDisponibleEnStock || (inStock && !pm.quantiteCommande)) {
+                      <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700">
+                        <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Stock magasin suffisant
+                      </span>
+                    } @else {
+                      <div class="text-[11px] font-mono">
+                        <span class="font-bold text-blue-700">{{ pm.quantiteCommande || 0 }}</span>
+                        <span class="text-oas-muted"> cmd / </span>
+                        <span class="font-bold text-emerald-700">{{ pm.quantiteRecue || 0 }}</span>
+                        <span class="text-oas-muted"> reçue</span>
+                      </div>
+                    }
+                  </td>
+                  <!-- Statut Commande / État -->
+                  <td class="px-4 py-3 text-center">
+                    @let reste = getResteACommander(pm);
+                    @if (isToutDisponibleEnStock || (inStock && !pm.quantiteCommande && !pm.quantiteManquante)) {
+                      <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        <svg class="w-3 h-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Disponible (Tous là)
+                      </span>
+                    } @else if (isPieceComplete(pm)) {
+                      <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        <svg class="w-3 h-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Reçu ({{ pm.quantiteRecue }}/{{ pm.quantiteManquante }})
+                      </span>
+                    } @else if (reste === 0) {
+                      <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
+                        Commandé ({{ pm.quantiteRecue || 0 }}/{{ pm.quantiteManquante }} reçu)
+                      </span>
+                    } @else if ((pm.quantiteCommande || 0) > 0) {
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                        Reste : {{ reste }}
+                      </span>
+                    } @else {
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-800 border border-red-200">
+                        À commander
+                      </span>
+                    }
+                  </td>
+                  <!-- Prix Unitaire -->
+                  <td class="px-4 py-3 text-right font-mono font-medium text-oas-ink">
+                    {{ (pm.prixUnitaire || 0) | number:'1.0-0' }} FCFA
+                  </td>
+                  <!-- Montant Total -->
+                  <td class="px-4 py-3 text-right font-mono font-extrabold text-oas-ink">
+                    {{ (pm.montantTotal || (pm.quantiteDemandee * (pm.prixUnitaire || 0))) | number:'1.0-0' }} FCFA
+                  </td>
+                </tr>
+              }
+            </tbody>
+            <!-- Footer résumé -->
+            <tfoot class="bg-slate-50 border-t border-oas-line font-bold text-xs">
+              <tr>
+                <td class="px-4 py-3 text-oas-ink">
+                  Total : {{ piecesList.length }} référence{{ piecesList.length > 1 ? 's' : '' }}
+                </td>
+                <td class="px-4 py-3 text-center font-mono font-bold text-oas-ink">
+                  {{ totalPiecesDemandees }}
+                </td>
+                <td colspan="4" class="px-4 py-3 text-center">
+                  @if (isToutDisponibleEnStock) {
+                    <span class="inline-flex items-center gap-1 text-emerald-800 font-bold text-[11px]">
+                      <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                      </svg>
+                      Toutes les pièces sont là · Stock magasin complet
+                    </span>
+                  } @else if (totalPiecesIncompletes > 0) {
+                    <span class="text-red-700 font-bold text-[11px]">
+                      {{ totalPiecesIncompletes }} unité(s) manquante(s)
+                    </span>
+                  } @else {
+                    <span class="text-emerald-700 font-bold text-[11px]">
+                      Stock 100% complet
+                    </span>
+                  }
+                </td>
+                <td class="px-4 py-3 text-right text-oas-muted uppercase tracking-wider text-[10px]">
+                  Total Pièces
+                </td>
+                <td class="px-4 py-3 text-right font-mono font-extrabold text-oas-ink text-sm">
+                  {{ totalMontantPieces | number:'1.0-0' }} FCFA
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    }
+
+    <!-- Bons de commande associés -->
+    @if ((data.bonsDeCommande && data.bonsDeCommande.length > 0) || canCreateBonDeCommande) {
+      <div class="border border-oas-line rounded-xl overflow-hidden bg-white shadow-xs">
+        <div class="bg-oas-bg/70 px-4 py-3 border-b border-oas-line flex items-center justify-between">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-oas-ink flex items-center gap-2">
+            <span>Bons de commande rattachés</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+              {{ data.bonsDeCommande?.length || 0 }}
+            </span>
+          </h3>
+          @if (canCreateBonDeCommande) {
+            <button type="button" (click)="openBDCModal()"
+              class="text-xs font-bold text-amber-700 hover:text-amber-800 flex items-center gap-1 cursor-pointer">
+              <span>+ Ajouter une commande</span>
+            </button>
+          }
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 text-oas-muted uppercase tracking-wider font-semibold border-b border-oas-line">
+              <tr>
+                <th class="px-4 py-2.5">N° Bon Commande</th>
+                <th class="px-4 py-2.5">Fournisseur</th>
+                <th class="px-4 py-2.5 text-center">Nbre Pièces</th>
+                <th class="px-4 py-2.5 text-right">Montant Total</th>
+                <th class="px-4 py-2.5 text-center">Statut</th>
+                <th class="px-4 py-2.5 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-oas-line">
+              @for (bc of data.bonsDeCommande; track bc.id) {
+                <tr class="hover:bg-slate-50/60 transition">
+                  <td class="px-4 py-2.5 font-bold font-mono text-oas-accent">{{ bc.numero }}</td>
+                  <td class="px-4 py-2.5 font-medium text-oas-ink">{{ bc.fournisseurNom || '—' }}</td>
+                  <td class="px-4 py-2.5 text-center font-mono font-bold">{{ bc.nombrePieces }}</td>
+                  <td class="px-4 py-2.5 text-right font-mono font-bold text-oas-ink">{{ bc.montantTotal | number:'1.0-0' }} FCFA</td>
+                  <td class="px-4 py-2.5 text-center">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold"
+                      [class]="bc.statut === 'VALIDE' || bc.statut === 'LIVRE' || bc.statut === 'RECU' ? 'bg-emerald-100 text-emerald-800' : (bc.statut === 'ENVOYE' || bc.statut === 'INCOMPLET' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800')">
+                      {{ bc.statut }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-2.5 text-right">
+                    <div class="flex items-center justify-end gap-1.5">
+                      @if (bc.statut === 'EN_ATTENTE') {
+                        <button type="button" (click)="envoyerBdc(bc.id)" [disabled]="actioningBdcId === bc.id"
+                          class="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 text-xs font-semibold cursor-pointer transition flex items-center gap-1 shadow-2xs"
+                          title="Marquer comme envoyé au fournisseur">
+                          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                          </svg>
+                          Envoyer
+                        </button>
+                      }
+                      @if (bc.statut !== 'ANNULE' && bc.statut !== 'RECU') {
+                        <button type="button" (click)="openReceptionPopup(bc.id)" [disabled]="actioningBdcId === bc.id"
+                          class="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold cursor-pointer transition shadow-2xs flex items-center gap-1.5"
+                          title="Réceptionner ce bon et ajuster les quantités reçues">
+                          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                          Réceptionner
+                        </button>
+                      } @else if (bc.statut === 'RECU') {
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                          <svg class="w-3 h-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                          Réceptionné
+                        </span>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="6" class="px-4 py-6 text-center text-oas-muted">
+                    Aucun bon de commande fournisseur n'a été émis pour cet ordre.
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
+    <!-- Boutons d'action -->
+    <div class="flex items-center justify-between pt-4 border-t border-oas-line">
+      <a [routerLink]="['/app/ordres-travail', otId, 'recapitulatif']"
+        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-oas-line text-xs font-semibold text-oas-muted hover:text-oas-ink transition cursor-pointer">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Retour au Récapitulatif
+      </a>
+
+      <div class="flex items-center gap-3">
+        @if (!isAllApprovisionnementComplete) {
+          <span class="text-xs text-amber-800 bg-amber-50 border border-amber-200 px-3.5 py-2 rounded-xl font-medium flex items-center gap-2 shadow-2xs">
+            <svg class="w-4 h-4 text-amber-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span>Pièces incomplètes : réception magasin requise ({{ totalPiecesIncompletes }} restante(s))</span>
+          </span>
+        }
+
+        <button (click)="continuerVersBonSortie()"
+          [disabled]="advancing || !isAllApprovisionnementComplete"
+          class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          [ngClass]="isAllApprovisionnementComplete ? 'bg-oas-accent hover:bg-oas-accent/90 text-white' : 'bg-slate-200 text-slate-500'">
+          @if (advancing) {
+            <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <span>En cours...</span>
+          } @else {
+            <span>Continuer vers le Bon de Sortie</span>
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          }
+        </button>
+      </div>
+    </div>
+
+  }
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL POPUP : CRÉATION BONS DE COMMANDE (PAR PIÈCE & FOURNISSEUR)      -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+@if (showBDCModal) {
+  <div class="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-oas-line shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[92vh]">
+      
+      <!-- En-tête du popup -->
+      <div class="bg-gradient-to-r from-amber-600 to-amber-700 px-6 py-4 flex items-center justify-between text-white flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0 shadow-2xs">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-sm sm:text-base">Génération des Bons de Commande Fournisseurs</h3>
+            <p class="text-xs text-amber-100">Approvisionnement pour l'Ordre de Travail {{ data?.numero || ('#' + otId) }}</p>
+          </div>
+        </div>
+        <button type="button" (click)="closeBDCModal()" class="w-8 h-8 rounded-lg hover:bg-white/20 flex items-center justify-center text-white cursor-pointer transition">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Corps du popup (scrollable) -->
+      <div class="p-6 pb-36 space-y-4 overflow-y-auto flex-1">
+        
+        @if (modalErrorMessage) {
+          <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl text-xs font-semibold flex items-center justify-between gap-2 shadow-2xs">
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-red-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>{{ modalErrorMessage }}</span>
+            </div>
+            <button type="button" (click)="modalErrorMessage = ''" class="text-red-600 hover:text-red-800 font-bold p-1 cursor-pointer">✕</button>
+          </div>
+        }
+
+        <p class="text-xs text-oas-muted leading-relaxed">
+          Sélectionnez les pièces à commander et affectez un fournisseur à chacune. Un bon de commande distinct sera automatiquement généré pour chaque fournisseur choisi.
+        </p>
+
+        <!-- Raccourci Fournisseur Global -->
+        <div class="bg-amber-50/70 border border-amber-200 rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-3">
+          <div class="text-xs">
+            <span class="font-bold text-amber-950 block">Affecter un fournisseur à toutes les pièces :</span>
+            <span class="text-amber-800/80 text-[11px]">Applique le même fournisseur d'un coup à la sélection</span>
+          </div>
+          <div class="w-full sm:w-72">
+            <app-searchable-select
+              [(ngModel)]="globalFournisseurId"
+              (ngModelChange)="applyGlobalFournisseur($event)"
+              [options]="fournisseurs"
+              bindValue="id"
+              [bindLabel]="formatFournisseur"
+              placeholder="Choisir pour tout appliquer...">
+            </app-searchable-select>
+          </div>
+        </div>
+
+        <!-- Liste des pièces avec choix du fournisseur pour chaque pièce -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between text-xs font-bold text-oas-ink">
+            <span>Pièces à commander ({{ selectedPiecesToCommand.length }} / {{ piecesToCommand.length }}) :</span>
+            <span class="text-oas-muted text-[11px]">Cochez les pièces souhaitées</span>
+          </div>
+
+          <div class="space-y-3">
+            @for (p of piecesToCommand; track p.key) {
+              <div class="p-3.5 bg-white border rounded-xl flex flex-col gap-3 shadow-2xs transition"
+                [class.border-amber-300]="p.selected && !p.fournisseurId"
+                [class.bg-amber-50/20]="p.selected && !p.fournisseurId"
+                [class.border-blue-200]="p.selected && !!p.fournisseurId"
+                [class.bg-blue-50/10]="p.selected && !!p.fournisseurId"
+                [class.opacity-50]="!p.selected">
+
+                <!-- Première ligne : Checkbox + Info Pièce + Quantité à commander -->
+                <div class="flex items-start sm:items-center justify-between gap-3">
+                  <div class="flex items-center gap-3 min-w-0 flex-1">
+                    <input type="checkbox" [(ngModel)]="p.selected"
+                      class="w-4 h-4 rounded text-amber-600 border-oas-line focus:ring-amber-500 cursor-pointer" />
+                    
+                    <div class="min-w-0">
+                      <div class="flex items-center gap-2 flex-wrap">
+                        <span class="font-bold text-xs text-oas-ink">{{ p.designation }}</span>
+                        @if (p.reference) {
+                          <span class="font-mono bg-slate-100 text-oas-muted px-1.5 py-0.2 rounded text-[10px] border border-oas-line">
+                            {{ p.reference }}
+                          </span>
+                        }
+                        @if (p.type) {
+                          <span class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 border border-blue-200">
+                            {{ p.type }}
+                          </span>
+                        }
+                      </div>
+                      <div class="text-[11px] text-oas-muted mt-0.5">
+                        Stock dispo : <strong class="text-oas-ink">{{ p.stockMagasin }}</strong> · 
+                        Demandé : <strong class="text-oas-ink">{{ p.quantiteDemandee }}</strong> · 
+                        Déficit initial : <strong class="text-red-700 font-bold">-{{ p.quantiteManquante }}</strong>
+                        @if (p.quantiteDejaCommandee > 0) {
+                          · Déjà commandé : <strong class="text-blue-700 font-bold">{{ p.quantiteDejaCommandee }}</strong>
+                        }
+                        · Reste à commander : <strong class="text-amber-800 font-bold">{{ p.maxACommander }}</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Quantité à commander input -->
+                  <div class="flex items-center gap-2 flex-shrink-0">
+                    <span class="text-[11px] font-semibold text-oas-muted">Qté :</span>
+                    <input type="number" min="1" [max]="p.maxACommander" [(ngModel)]="p.quantiteACommander" [disabled]="!p.selected"
+                      class="w-20 px-2 py-1.5 rounded-lg border border-oas-line text-xs font-bold text-center text-oas-ink focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                  </div>
+                </div>
+
+                <!-- Deuxième ligne : Sélection du Fournisseur pour cette pièce -->
+                @if (p.selected) {
+                  <div class="pt-2 border-t border-oas-line/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                    <div class="flex items-center gap-1.5 text-oas-muted">
+                      <svg class="w-3.5 h-3.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                      <span class="font-semibold text-oas-ink">Fournisseur pour cette pièce :</span>
+                    </div>
+
+                    <div class="w-full sm:w-72">
+                      <app-searchable-select
+                        [(ngModel)]="p.fournisseurId"
+                        [options]="fournisseurs"
+                        [dropUp]="true"
+                        bindValue="id"
+                        [bindLabel]="formatFournisseur"
+                        placeholder="Choisir le fournisseur...">
+                      </app-searchable-select>
+                    </div>
+                  </div>
+                }
+
+              </div>
+            } @empty {
+              <div class="p-6 text-center text-xs text-oas-muted bg-slate-50 rounded-xl border border-oas-line">
+                Aucune pièce en rupture détectée.
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Résumé dynamique des Bons de Commande qui seront générés -->
+        @let groupSummary = getGroupSummary();
+        @if (groupSummary.length > 0) {
+          <div class="bg-blue-50/70 border border-blue-200 rounded-xl p-3.5 text-xs space-y-2">
+            <span class="font-bold text-blue-950 flex items-center gap-1.5">
+              <span>📋</span>
+              <span>{{ groupSummary.length }} bon{{ groupSummary.length > 1 ? 's' : '' }} de commande à générer :</span>
+            </span>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              @for (g of groupSummary; track g.fournisseurId) {
+                <div class="p-2.5 bg-white rounded-lg border border-blue-200 text-[11px] shadow-2xs">
+                  <span class="font-bold text-blue-900 block truncate">{{ g.fournisseurNom }}</span>
+                  <div class="text-oas-muted mt-0.5 flex justify-between">
+                    <span>{{ g.piecesCount }} réf. · {{ g.totalQuantite }} unité(s)</span>
+                    @if (g.totalMontant > 0) {
+                      <strong class="text-oas-ink">{{ g.totalMontant | number:'1.0-0' }} FCFA</strong>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+      </div>
+
+      <!-- Footer Actions -->
+      <div class="p-4 border-t border-oas-line bg-slate-50 flex items-center justify-end gap-3 flex-shrink-0">
+        <button type="button" (click)="closeBDCModal()" [disabled]="bdcSaving"
+          class="px-4 py-2.5 rounded-xl border border-oas-line text-xs font-semibold text-oas-ink hover:bg-white transition cursor-pointer">
+          Annuler
+        </button>
+        <button type="button" (click)="createBonDeCommande()" [disabled]="bdcSaving || !isAllSelectedFournisseursSet"
+          class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-amber-600/25 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+          @if (bdcSaving) {
+            <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <span>Génération en cours...</span>
+          } @else {
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Générer les bons de commande ({{ getDistinctFournisseurCount() }})</span>
+          }
+        </button>
+      </div>
+
+    </div>
+  </div>
+}
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL POPUP : BON DE RÉCEPTION FOURNISSEUR                             -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+@if (showReceptionModal) {
+  <div class="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-oas-line shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[90vh]">
+
+      <!-- En-tête du popup -->
+      <div class="bg-gradient-to-r from-emerald-600 to-emerald-700 px-6 py-4 flex items-center justify-between text-white flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0 shadow-2xs">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-sm sm:text-base">Bon de Réception Fournisseur</h3>
+            <p class="text-xs text-emerald-100">
+              Vérifiez et enregistrez les quantités reçues pour le bon {{ selectedBonForReception?.numero }}
+            </p>
+          </div>
+        </div>
+        <button type="button" (click)="closeReceptionModal()" class="w-8 h-8 rounded-lg hover:bg-white/20 flex items-center justify-center text-white cursor-pointer transition">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Corps du popup -->
+      <div class="p-6 space-y-4 overflow-y-auto flex-1">
+        @if (receptionErrorMessage) {
+          <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl text-xs font-semibold flex items-center justify-between gap-2 shadow-2xs">
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-red-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>{{ receptionErrorMessage }}</span>
+            </div>
+            <button type="button" (click)="receptionErrorMessage = ''" class="text-red-600 hover:text-red-800 font-bold p-1 cursor-pointer">✕</button>
+          </div>
+        }
+
+        @if (allPiecesAlreadyReceived) {
+          <div class="bg-blue-50 border border-blue-200 text-blue-900 px-4 py-3 rounded-xl text-xs font-semibold flex items-center gap-2.5">
+            <svg class="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>Toutes les pièces de ce bon de commande ont déjà été réceptionnées à 100%.</span>
+          </div>
+        } @else {
+          <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 flex gap-3">
+            <svg class="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div class="text-xs text-emerald-950">
+              <p class="font-bold">Confirmation de réception magasin</p>
+              <p class="text-emerald-800/90 mt-0.5 leading-relaxed">
+                Indiquez les quantités reçues pour chaque référence. Le stock magasin sera automatiquement incrémenté et le suivi de cet Ordre de Travail sera actualisé.
+              </p>
+            </div>
+          </div>
+        }
+
+        <!-- Tableau des lignes à réceptionner -->
+        <div class="border border-oas-line rounded-xl overflow-hidden bg-white shadow-2xs">
+          <table class="w-full text-xs">
+            <thead class="bg-slate-50 text-oas-muted uppercase tracking-wider font-semibold border-b border-oas-line">
+              <tr>
+                <th class="text-left px-4 py-2.5">Pièce / Référence</th>
+                <th class="text-center px-4 py-2.5">Commandé</th>
+                <th class="text-center px-4 py-2.5">Déjà Reçu</th>
+                <th class="text-center px-4 py-2.5">Reçu cette livraison</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-oas-line">
+              @for (l of receptionLignes; track l.ligneId) {
+                <tr [class.bg-slate-50]="l.isFullyReceived" [class.opacity-70]="l.isFullyReceived">
+                  <td class="px-4 py-3">
+                    <div class="font-bold text-oas-ink">{{ l.designationPiece }}</div>
+                    @if (l.reference) {
+                      <div class="text-[10px] text-oas-muted font-mono mt-0.5">{{ l.reference }}</div>
+                    }
+                  </td>
+                  <td class="px-4 py-3 text-center font-mono font-bold text-oas-ink">
+                    {{ l.quantiteTotale }}
+                  </td>
+                  <td class="px-4 py-3 text-center">
+                    @if (l.isFullyReceived) {
+                      <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        <svg class="w-3 h-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                        {{ l.quantiteDejaRecue }} / {{ l.quantiteTotale }}
+                      </span>
+                    } @else if (l.quantiteDejaRecue > 0) {
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                        {{ l.quantiteDejaRecue }} / {{ l.quantiteTotale }}
+                      </span>
+                    } @else {
+                      <span class="text-xs text-oas-muted font-medium">0 / {{ l.quantiteTotale }}</span>
+                    }
+                  </td>
+                  <td class="px-4 py-3 text-center">
+                    @if (l.isFullyReceived) {
+                      <div class="flex flex-col items-center">
+                        <span class="text-[11px] text-emerald-700 font-bold block">100% Reçu</span>
+                      </div>
+                    } @else {
+                      <div class="flex flex-col items-center">
+                        <input type="number" [(ngModel)]="l.quantiteRecue" min="0" [max]="l.quantiteRestante"
+                          class="w-20 px-2 py-1.5 text-center font-bold text-xs border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition"
+                          [ngClass]="l.quantiteRecue < l.quantiteRestante ? 'border-amber-300 bg-amber-50 text-amber-800' : 'border-emerald-300 bg-emerald-50 text-emerald-800'" />
+                        @if (l.quantiteRecue < l.quantiteRestante) {
+                          <span class="text-[10px] text-amber-700 font-semibold mt-0.5">
+                            Partiel (Reste {{ l.quantiteRestante - l.quantiteRecue }})
+                          </span>
+                        } @else {
+                          <span class="text-[10px] text-emerald-700 font-semibold mt-0.5">
+                            Solde tout ({{ l.quantiteRestante }})
+                          </span>
+                        }
+                      </div>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <!-- Footer Actions -->
+      <div class="p-4 border-t border-oas-line bg-slate-50 flex items-center justify-end gap-3 flex-shrink-0">
+        <button type="button" (click)="closeReceptionModal()" [disabled]="receptionSaving"
+          class="px-4 py-2.5 rounded-xl border border-oas-line text-xs font-semibold text-oas-ink hover:bg-white transition cursor-pointer">
+          {{ allPiecesAlreadyReceived ? 'Fermer' : 'Annuler' }}
+        </button>
+        @if (!allPiecesAlreadyReceived) {
+          <button type="button" (click)="saveReception()" [disabled]="receptionSaving || totalQuantiteRecueNow <= 0"
+            class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-emerald-600/25 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+            @if (receptionSaving) {
+              <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <span>Enregistrement en cours...</span>
+            } @else {
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Valider le Bon de Réception</span>
+            }
+          </button>
+        }
+      </div>
+
+    </div>
+  </div>
+}

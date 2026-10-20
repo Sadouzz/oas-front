@@ -1,0 +1,328 @@
+<div class="space-y-6">
+
+  <!-- Header -->
+  <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-oas-ink">Ordres de Travail</h1>
+      <p class="text-sm text-oas-muted mt-1">{{ ordres.length }} ordre(s) affiché(s) sur {{ totalElements }}</p>
+    </div>
+    <button (click)="openNewModal()" id="btn-nouvel-ordre"
+      class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-11 rounded-xl flex items-center justify-center gap-2 transition cursor-pointer shadow-lg shadow-oas-accent/25 w-full sm:w-auto">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+      </svg>
+      + Nouvel ordre
+    </button>
+  </div>
+
+  <app-alert [error]="errorMessage" [success]="successMessage"></app-alert>
+
+  <!-- Filtres -->
+  <div class="bg-white rounded-2xl border border-oas-line p-3.5 shadow-sm">
+    <div class="flex flex-wrap items-end gap-3">
+      <!-- Recherche texte -->
+      <div class="relative flex-1 min-w-56">
+        <label class="block text-xs font-semibold text-oas-muted mb-1">Recherche</label>
+        <div class="relative">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-oas-muted pointer-events-none">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </span>
+          <input (input)="onSearchInput($event)" [value]="searchTerm" placeholder="Rechercher par numéro, véhicule, client, statut..."
+            class="w-full pl-9 pr-8 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition text-oas-ink" />
+          @if (searchTerm) {
+            <button (click)="clearSearch()" type="button" title="Effacer la recherche"
+              class="absolute right-2.5 top-1/2 -translate-y-1/2 text-oas-muted hover:text-oas-ink p-1 cursor-pointer">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Statut -->
+      <div class="flex flex-col w-full sm:w-auto flex-1 sm:flex-none min-w-[160px]">
+        <label class="text-xs font-semibold text-oas-muted mb-1">Statut</label>
+        <select [(ngModel)]="selectedStatut" (change)="onStatutFilterChange()"
+          class="w-full px-3 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink font-medium">
+          <option value="">Tous les statuts</option>
+          @for (step of statutSteps; track step.statut) {
+            <option [value]="step.statut">{{ step.label }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Date début -->
+      <div class="flex flex-col w-full sm:w-auto flex-1 sm:flex-none min-w-[145px]">
+        <label class="text-xs font-semibold text-oas-muted mb-1">Depuis le</label>
+        <input type="date" [(ngModel)]="filterDateDebut" (change)="onFilterDate()"
+          class="w-full px-3 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink" />
+      </div>
+
+      <!-- Date fin -->
+      <div class="flex flex-col w-full sm:w-auto flex-1 sm:flex-none min-w-[145px]">
+        <label class="text-xs font-semibold text-oas-muted mb-1">Jusqu'au</label>
+        <input type="date" [(ngModel)]="filterDateFin" (change)="onFilterDate()"
+          class="w-full px-3 py-2 rounded-xl border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink" />
+      </div>
+
+      <!-- Réinitialiser -->
+      @if (hasActiveFilters) {
+        <button (click)="resetFilters()" type="button"
+          class="h-[38px] px-3.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer shadow-2xs whitespace-nowrap active:scale-95"
+          title="Réinitialiser tous les filtres">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+          <span>Réinitialiser</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Tableau des Ordres de Travail -->
+  <div class="bg-white border border-oas-line rounded-2xl shadow-xs overflow-hidden">
+    @if (loading) {
+      <div class="flex flex-col items-center justify-center py-16 text-oas-muted">
+        <div class="w-8 h-8 border-3 border-oas-accent border-t-transparent rounded-full animate-spin mb-3"></div>
+        <p class="text-sm font-medium">Chargement des ordres de travail...</p>
+      </div>
+    } @else if (ordres.length === 0) {
+      <div class="text-center py-16 px-4">
+        <div class="w-14 h-14 rounded-2xl bg-oas-bg flex items-center justify-center text-oas-muted mx-auto mb-3">
+          <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+        </div>
+        <h3 class="text-sm font-bold text-oas-ink">Aucun Ordre de Travail trouvé</h3>
+        <p class="text-xs text-oas-muted max-w-sm mx-auto mt-1 mb-4">
+          Vous pouvez créer un ordre de travail depuis un Proforma validé ou un Ordre de Réparation.
+        </p>
+        <button (click)="openNewModal()"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-oas-accent text-white font-bold text-xs shadow-xs hover:bg-oas-accent/90 transition cursor-pointer">
+          Créer un Ordre de Travail maintenant
+        </button>
+      </div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 text-oas-muted uppercase tracking-wider font-semibold border-b border-oas-line">
+            <tr>
+              <th class="px-5 py-3">N° OT</th>
+              <th class="px-5 py-3">Véhicule</th>
+              <th class="px-5 py-3">Client</th>
+              <th class="px-5 py-3">Statut & Étape</th>
+              <th class="px-5 py-3">Réf. Origine</th>
+              <th class="px-5 py-3">Date</th>
+              <th class="px-5 py-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-oas-line">
+            @for (ot of ordres; track ot.id) {
+              @let etapeNum = getEtapeNumero(ot);
+              <tr (click)="ouvrirStepper(ot)" class="hover:bg-slate-50/70 transition cursor-pointer">
+                <!-- N° OT -->
+                <td class="px-5 py-3.5">
+                  <div class="font-black text-oas-ink font-mono hover:text-oas-accent transition text-sm">
+                    {{ ot.numero }}
+                  </div>
+                </td>
+
+                <!-- Véhicule -->
+                <td class="px-5 py-3.5">
+                  @if (ot.vehicule?.immatriculation || ot.vehiculeImmatriculation) {
+                    <div class="font-bold text-oas-ink font-mono">{{ ot.vehicule?.immatriculation || ot.vehiculeImmatriculation }}</div>
+                    <div class="text-[11px] text-oas-muted">{{ ot.vehicule?.marque ? (ot.vehicule.marque + ' ' + (ot.vehicule.modele || '')) : ot.vehiculeMarqueModele }}</div>
+                  } @else {
+                    <span class="text-oas-muted italic">Non renseigné</span>
+                  }
+                </td>
+
+                <!-- Client -->
+                <td class="px-5 py-3.5">
+                  @if (getClientNom(ot)) {
+                    <div class="font-semibold text-oas-ink">{{ getClientNom(ot) }}</div>
+                    @if (getClientPhone(ot)) {
+                      <div class="text-[11px] text-oas-muted">{{ getClientPhone(ot) }}</div>
+                    }
+                  } @else {
+                    <span class="text-oas-muted italic">—</span>
+                  }
+                </td>
+
+                <!-- Statut & Progression -->
+                <td class="px-5 py-3.5">
+                  <div class="space-y-1.5 min-w-[140px]">
+                    <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border"
+                      [ngClass]="getStatutBadgeClass(ot.statut)">
+                      {{ ot.statut }}
+                    </span>
+                    <div class="flex items-center gap-1.5">
+                      <div class="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                        <div class="h-full rounded-full transition-all"
+                          [style.width.%]="(etapeNum / 8) * 100"
+                          [ngClass]="etapeNum === 8 ? 'bg-emerald-500' : 'bg-oas-accent'"></div>
+                      </div>
+                      <span class="text-[10px] font-mono font-bold text-oas-muted">{{ etapeNum }}/8</span>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Réf. Origine -->
+                <td class="px-5 py-3.5 text-oas-muted">
+                  @if (ot.proformaNumero || ot.proformaId) {
+                    <span class="block text-[11px] font-medium text-emerald-700">
+                      Proforma : {{ ot.proformaNumero || ('#' + ot.proformaId) }}
+                    </span>
+                  }
+                  @if (ot.ordreReparationNumero || ot.ordreReparationId) {
+                    <span class="block text-[11px] font-medium text-blue-700">
+                      OR : {{ ot.ordreReparationNumero || ('#' + ot.ordreReparationId) }}
+                    </span>
+                  }
+                  @if (!ot.proformaId && !ot.ordreReparationId) {
+                    <span class="text-[11px] italic">Création directe</span>
+                  }
+                </td>
+
+                <!-- Date -->
+                <td class="px-5 py-3.5 text-oas-muted text-[11px]">
+                  {{ ot.createdAt ? (ot.createdAt | date:'dd/MM/yyyy HH:mm') : '—' }}
+                </td>
+
+                <!-- Actions -->
+                <td class="px-5 py-3.5 text-right">
+                  <div class="flex items-center justify-end gap-1.5" (click)="$event.stopPropagation()">
+                    <button (click)="ouvrirStepper(ot)" title="Suivre l'Ordre de Travail"
+                      class="px-3 py-1.5 rounded-lg bg-oas-accent/10 hover:bg-oas-accent hover:text-white text-oas-accent font-bold text-[11px] transition cursor-pointer">
+                      Ouvrir l'étape
+                    </button>
+                    <button (click)="supprimerOT(ot, $event)" title="Supprimer"
+                      class="p-1.5 rounded-lg hover:bg-red-50 text-oas-muted hover:text-red-600 transition cursor-pointer">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      @if (totalPages > 1) {
+        <div class="px-5 py-3 border-t border-oas-line flex items-center justify-between text-xs text-oas-muted">
+          <span>Page {{ currentPage + 1 }} sur {{ totalPages }} ({{ totalElements }} ordres)</span>
+          <div class="flex items-center gap-1">
+            <button (click)="changePage(currentPage - 1)" [disabled]="currentPage === 0"
+              class="px-2.5 py-1 rounded-lg border border-oas-line hover:bg-oas-bg disabled:opacity-40 cursor-pointer">
+              Précédent
+            </button>
+            <button (click)="changePage(currentPage + 1)" [disabled]="currentPage >= totalPages - 1"
+              class="px-2.5 py-1 rounded-lg border border-oas-line hover:bg-oas-bg disabled:opacity-40 cursor-pointer">
+              Suivant
+            </button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+
+  <!-- Modal Création Nouvel Ordre de Travail -->
+  @if (showCreateModal) {
+    <div class="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl border border-oas-line shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        
+        <div class="p-5 border-b border-oas-line flex items-center justify-between bg-slate-50/50">
+          <div>
+            <h3 class="text-base font-black text-oas-ink">Nouvel Ordre de Travail</h3>
+            <p class="text-xs text-oas-muted mt-0.5">Choisissez la source d'initiation de l'OT d'atelier.</p>
+          </div>
+          <button (click)="closeNewModal()" class="w-8 h-8 rounded-lg hover:bg-slate-200/60 flex items-center justify-center text-oas-muted hover:text-oas-ink cursor-pointer">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="p-5 space-y-4">
+          <app-alert [error]="errorMessage"></app-alert>
+
+          <!-- Sélecteur de mode -->
+          <div class="grid grid-cols-3 gap-2 p-1 bg-slate-100 rounded-xl text-xs font-semibold">
+            <button type="button" (click)="creationMode = 'DEPUIS_PROFORMA'"
+              class="py-2 rounded-lg transition cursor-pointer text-center"
+              [class]="creationMode === 'DEPUIS_PROFORMA' ? 'bg-white shadow-xs text-oas-accent font-bold' : 'text-oas-muted hover:text-oas-ink'">
+              Depuis Proforma
+            </button>
+            <button type="button" (click)="creationMode = 'DEPUIS_OR'"
+              class="py-2 rounded-lg transition cursor-pointer text-center"
+              [class]="creationMode === 'DEPUIS_OR' ? 'bg-white shadow-xs text-oas-accent font-bold' : 'text-oas-muted hover:text-oas-ink'">
+              Depuis OR
+            </button>
+            <button type="button" (click)="creationMode = 'MANUEL'"
+              class="py-2 rounded-lg transition cursor-pointer text-center"
+              [class]="creationMode === 'MANUEL' ? 'bg-white shadow-xs text-oas-accent font-bold' : 'text-oas-muted hover:text-oas-ink'">
+              Création Directe
+            </button>
+          </div>
+
+          <!-- Champs selon le mode -->
+          @if (creationMode === 'DEPUIS_PROFORMA') {
+            <div>
+              <label class="block text-xs font-semibold text-oas-muted uppercase tracking-wider mb-1.5">
+                ID du Proforma validé *
+              </label>
+              <input type="number" [(ngModel)]="proformaIdInput" placeholder="Ex: 12"
+                class="w-full px-3 py-2 rounded-lg border border-oas-line text-sm text-oas-ink focus:outline-hidden focus:ring-2 focus:ring-oas-accent" />
+              <p class="text-[11px] text-oas-muted mt-1">
+                L'OT initialisera automatiquement l'étape 1 (Récapitulatif) avec le chiffrage pièces et main-d'œuvre du devis.
+              </p>
+            </div>
+          } @else if (creationMode === 'DEPUIS_OR') {
+            <div>
+              <label class="block text-xs font-semibold text-oas-muted uppercase tracking-wider mb-1.5">
+                ID de l'Ordre de Réparation *
+              </label>
+              <input type="number" [(ngModel)]="ordreReparationIdInput" placeholder="Ex: 3"
+                class="w-full px-3 py-2 rounded-lg border border-oas-line text-sm text-oas-ink focus:outline-hidden focus:ring-2 focus:ring-oas-accent" />
+              <p class="text-[11px] text-oas-muted mt-1">
+                Génère l'ordre de travail à partir de l'étape proforma validée de l'ordre de réparation.
+              </p>
+            </div>
+          } @else {
+            <div>
+              <label class="block text-xs font-semibold text-oas-muted uppercase tracking-wider mb-1.5">
+                Description des travaux d'atelier
+              </label>
+              <textarea rows="3" [(ngModel)]="descriptionTravauxInput" placeholder="Précisez les opérations demandées..."
+                class="w-full px-3 py-2 rounded-lg border border-oas-line text-sm text-oas-ink focus:outline-hidden focus:ring-2 focus:ring-oas-accent"></textarea>
+            </div>
+          }
+        </div>
+
+        <div class="p-4 bg-slate-50 border-t border-oas-line flex items-center justify-end gap-2">
+          <button type="button" (click)="closeNewModal()"
+            class="px-4 py-2 rounded-xl border border-oas-line text-xs font-semibold text-oas-muted hover:text-oas-ink transition cursor-pointer">
+            Annuler
+          </button>
+          <button type="button" (click)="submitCreateOT()" [disabled]="creatingOT"
+            class="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-oas-accent hover:bg-oas-accent/90 text-white font-bold text-xs shadow-xs transition disabled:opacity-50 cursor-pointer">
+            @if (creatingOT) {
+              <div class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <span>Création...</span>
+            } @else {
+              <span>Créer et Démarrer l'OT</span>
+            }
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+
+</div>

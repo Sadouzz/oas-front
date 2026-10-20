@@ -33,6 +33,7 @@ export class BonDeSortieService {
       clientId: data.clientId,
       vehiculeId: data.vehiculeId,
       ordreReparationId: data.ordreReparationId,
+      ordreTravailId: data.ordreTravailId,
       lignesPieces: data.lignesPieces,
       remarque: data.remarque,
     });

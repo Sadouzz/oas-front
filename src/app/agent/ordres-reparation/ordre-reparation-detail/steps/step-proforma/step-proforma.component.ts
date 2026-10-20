@@ -1,4 +1,3 @@
-import { ConfirmationService } from '../../../../../shared/components/confirmation/confirmation.service';
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -6,6 +5,8 @@ import { forkJoin } from 'rxjs';
 import { OrdreReparationService } from '../../../ordre-reparation.service';
 import { ProformaService } from '../../../../proforma/proforma.service';
 import { FiscalConfigurationService } from '../../../../gestion-tva/fiscal-configuration.service';
+import { OrdreTravailService } from '../../../../ordres-travail/ordre-travail.service';
+import { OrdreTravail } from '../../../../ordres-travail/models/ordre-travail.model';
 
 import { AlertComponent } from '../../../../../shared/components/alert/alert.component';
 import {
@@ -22,24 +23,30 @@ import { StepProformaResponseDto } from '../../../models/responses';
   templateUrl: './step-proforma.component.html'
 })
 export class StepProformaComponent implements OnInit {
-  private confirmation = inject(ConfirmationService);
-
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private ordreService = inject(OrdreReparationService);
   private proformaService = inject(ProformaService);
   private fiscalConfigurationService = inject(FiscalConfigurationService);
+  private otService = inject(OrdreTravailService);
   private cdr = inject(ChangeDetectorRef);
 
   ordreId!: number;
   loadedOrdre: StepProformaResponseDto | null = null;
   proformaChargee: any = null;
   private defaultTvaRate = 18;
+  existingOT: OrdreTravail | null = null;
 
   loading = true;
   saving = false;
+  creationOTEnCours = false;
   errorMessage = '';
   successMessage = '';
+
+  showModalEnvoi = false;
+  showModalValider = false;
+  envoiEnCours = false;
+  validationEnCours = false;
 
   ngOnInit(): void {
     this.fiscalConfigurationService.getCurrent().subscribe({
@@ -62,11 +69,25 @@ export class StepProformaComponent implements OnInit {
         this.loadedOrdre = res;
         this.proformaChargee = res.proforma || null;
         this.loading = false;
+        this.checkExistingOT();
         this.cdr.markForCheck();
       },
       error: (err) => {
         this.loading = false;
         this.errorMessage = err.error?.message || 'Erreur lors du chargement des données.';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  checkExistingOT(): void {
+    this.otService.getByOrdreReparationId(this.ordreId).subscribe({
+      next: (ot) => {
+        this.existingOT = ot;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.existingOT = null;
         this.cdr.markForCheck();
       }
     });
@@ -199,7 +220,7 @@ export class StepProformaComponent implements OnInit {
   }
 
   get tvaTaux(): number {
-    return this.proformaChargee?.tva ?? this.defaultTvaRate;
+    return this.proformaChargee?.tva ?? 18;
   }
 
   get totalTVACalcule(): number {
@@ -228,51 +249,110 @@ export class StepProformaComponent implements OnInit {
     return this.proformaChargee?.visibleClient === true;
   }
 
-  async envoyerAuClient(): Promise<void> {
-    if (!this.proformaChargee?.id || this.isProformaVisibleClient) return;
-    if (!await this.confirmation.confirm('Valider les prix de cette proforma et la rendre visible dans l’espace client ?')) return;
+  envoyerAuClient(): void {
+    this.openModalEnvoi();
+  }
 
-    this.saving = true;
+  openModalEnvoi(): void {
+    if (!this.proformaChargee?.id || this.isProformaVisibleClient) return;
+    this.showModalEnvoi = true;
+    this.cdr.detectChanges();
+  }
+
+  closeModalEnvoi(): void {
+    this.showModalEnvoi = false;
+    this.envoiEnCours = false;
+    this.cdr.detectChanges();
+  }
+
+  confirmerEnvoiAuClient(): void {
+    if (!this.proformaChargee?.id || this.envoiEnCours) return;
+
+    // Fermer le modal immédiatement
+    this.showModalEnvoi = false;
+    this.envoiEnCours = true;
     this.errorMessage = '';
     this.successMessage = '';
+    this.cdr.detectChanges();
+
     this.proformaService.validerEnvoi(this.proformaChargee.id).subscribe({
-      next: updated => {
-        this.proformaChargee = updated;
-        this.saving = false;
-        this.successMessage = 'Proforma envoyée : elle est maintenant visible dans l’espace client.';
-        this.cdr.markForCheck();
+      next: (updated) => {
+        this.envoiEnCours = false;
+        if (this.proformaChargee) {
+          this.proformaChargee.visibleClient = true;
+        }
+        this.successMessage = 'Proforma envoyée avec succès : elle est maintenant visible dans l’espace client.';
+        this.loadData();
+        this.cdr.detectChanges();
       },
-      error: err => {
-        this.saving = false;
-        this.errorMessage = err.error?.message || 'Impossible d’envoyer la proforma au client.';
-        this.cdr.markForCheck();
+      error: (err) => {
+        this.envoiEnCours = false;
+        if (err.status === 200 || err.status === 201) {
+          if (this.proformaChargee) {
+            this.proformaChargee.visibleClient = true;
+          }
+          this.successMessage = 'Proforma envoyée avec succès : elle est maintenant visible dans l’espace client.';
+          this.loadData();
+        } else {
+          this.errorMessage = err.error?.message || err.message || 'Impossible d’envoyer la proforma au client.';
+        }
+        this.cdr.detectChanges();
       },
     });
   }
 
   validerProforma(): void {
+    this.openModalValider();
+  }
+
+  openModalValider(): void {
     if (!this.proformaChargee?.id) {
       this.errorMessage = 'Aucune proforma chargée à valider.';
-      this.cdr.markForCheck();
+      this.cdr.detectChanges();
       return;
     }
-    this.saving = true;
+    this.showModalValider = true;
+    this.cdr.detectChanges();
+  }
+
+  closeModalValider(): void {
+    this.showModalValider = false;
+    this.validationEnCours = false;
+    this.cdr.detectChanges();
+  }
+
+  confirmerValidationProforma(): void {
+    if (!this.proformaChargee?.id || this.validationEnCours) return;
+
+    // Fermer le modal immédiatement
+    this.showModalValider = false;
+    this.validationEnCours = true;
     this.errorMessage = '';
     this.successMessage = '';
+    this.cdr.detectChanges();
 
     this.proformaService.valider(this.proformaChargee.id).subscribe({
       next: (res: any) => {
-        this.saving = false;
+        this.validationEnCours = false;
         if (this.proformaChargee) {
           this.proformaChargee.statut = res?.statut || 'ACCEPTE';
         }
         this.successMessage = 'Devis proforma validé avec succès.';
-        this.cdr.markForCheck();
+        this.loadData();
+        this.cdr.detectChanges();
       },
       error: (err) => {
-        this.saving = false;
-        this.errorMessage = err.error?.message || 'Erreur lors de la validation du proforma.';
-        this.cdr.markForCheck();
+        this.validationEnCours = false;
+        if (err.status === 200 || err.status === 201) {
+          if (this.proformaChargee) {
+            this.proformaChargee.statut = 'ACCEPTE';
+          }
+          this.successMessage = 'Devis proforma validé avec succès.';
+          this.loadData();
+        } else {
+          this.errorMessage = err.error?.message || err.message || 'Erreur lors de la validation du proforma.';
+        }
+        this.cdr.detectChanges();
       }
     });
   }
@@ -338,6 +418,46 @@ export class StepProformaComponent implements OnInit {
       error: () => {
         this.telechargementEnCours = false;
         this.errorMessage = 'Impossible de télécharger le PDF du proforma.';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  showConfirmOTModal = false;
+
+  ouvrirConfirmationOT(): void {
+    if (!this.isProformaValide) {
+      this.errorMessage = 'Veuillez d\'abord valider la facture proforma pour créer un ordre de travail.';
+      return;
+    }
+    this.showConfirmOTModal = true;
+    this.cdr.markForCheck();
+  }
+
+  fermerConfirmationOT(): void {
+    this.showConfirmOTModal = false;
+    this.cdr.markForCheck();
+  }
+
+  confirmerCreationOT(): void {
+    this.showConfirmOTModal = false;
+    this.creationOTEnCours = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.otService.createFromOrdreReparation(this.ordreId).subscribe({
+      next: (ot) => {
+        this.creationOTEnCours = false;
+        this.existingOT = ot;
+        this.successMessage = `Ordre de Travail ${ot.numero} créé avec succès. Redirection vers l'atelier...`;
+        this.cdr.markForCheck();
+        setTimeout(() => {
+          this.router.navigate(['/app/ordres-travail', ot.id]);
+        }, 600);
+      },
+      error: (err) => {
+        this.creationOTEnCours = false;
+        this.errorMessage = err.error?.message || 'Erreur lors de la création de l\'ordre de travail.';
         this.cdr.markForCheck();
       }
     });

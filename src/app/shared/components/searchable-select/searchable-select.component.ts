@@ -32,7 +32,8 @@ import { CommonModule } from '@angular/common';
       </div>
       
       @if (open) {
-        <div class="absolute z-50 w-full mt-1 bg-white border border-oas-line rounded-xl shadow-xl max-h-60 overflow-y-auto overflow-x-hidden">
+        <div class="absolute z-50 w-full bg-white border border-oas-line rounded-xl max-h-60 overflow-y-auto overflow-x-hidden"
+             [ngClass]="dropUp ? 'bottom-full mb-1.5 shadow-2xl' : 'top-full mt-1 shadow-xl'">
           @if (filteredOptions().length === 0) {
             <div class="px-3 py-3 text-oas-muted text-center text-xs">Aucun résultat</div>
           } @else {
@@ -75,6 +76,7 @@ export class SearchableSelectComponent implements ControlValueAccessor {
   @Input() placeholder: string = 'Sélectionner...';
   @Input() serverSearch: boolean = false;
   @Input() addNewLabel?: string;
+  @Input() dropUp: boolean = false;
   @Output() change = new EventEmitter<any>();
   @Output() search = new EventEmitter<string>();
   @Output() addNew = new EventEmitter<void>();
