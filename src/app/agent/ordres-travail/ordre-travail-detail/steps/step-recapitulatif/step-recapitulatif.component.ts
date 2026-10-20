@@ -2,7 +2,7 @@ import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { OrdreTravailService } from '../../../ordre-travail.service';
-import { StepRecapitulatifResponseDto, StatutOrdreTravail } from '../../../models/ordre-travail.model';
+import { StepRecapitulatifResponseDto, StatutOrdreTravail, PieceApprovisionnementDto } from '../../../models/ordre-travail.model';
 import { AlertComponent } from '../../../../../shared/components/alert/alert.component';
 
 @Component({
@@ -92,5 +92,35 @@ export class StepRecapitulatifComponent implements OnInit {
     if (!this.data) return 'Non renseigné';
     const c: any = this.data.client;
     return c?.phone || c?.telephone || (this.data as any).clientPhone || 'Non renseigné';
+  }
+
+  get piecesManquantes(): PieceApprovisionnementDto[] {
+    return (this.data?.piecesManquantesProforma || []).filter(
+      p => (p.quantiteManquante && p.quantiteManquante > 0) || p.isManquant
+    );
+  }
+
+  get hasPiecesManquantes(): boolean {
+    return this.piecesManquantes.length > 0;
+  }
+
+  get totalPiecesManquantes(): number {
+    return this.piecesManquantes.reduce((sum, p) => sum + (p.quantiteManquante || 0), 0);
+  }
+
+  get totalMontantManquant(): number {
+    return this.piecesManquantes.reduce(
+      (sum, p) => sum + ((p.prixUnitaire || 0) * (p.quantiteManquante || 0)),
+      0
+    );
+  }
+
+  getPieceManquante(ligneId?: number): PieceApprovisionnementDto | undefined {
+    if (!ligneId) return undefined;
+    return this.piecesManquantes.find(p => p.ligneId === ligneId);
+  }
+
+  get lignesMainDoeuvreList(): any[] {
+    return this.data?.proforma?.lignesMainDoeuvre || (this.data?.proforma as any)?.lignesMainDoeuvres || [];
   }
 }

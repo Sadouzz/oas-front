@@ -124,7 +124,15 @@ export interface StepRecapitulatifResponseDto extends StepBaseDto {
       tarifHoraire: number;
       montantTotal: number;
     }[];
+    lignesMainDoeuvres?: {
+      id: number;
+      designation: string;
+      nbreHeure: number;
+      tarifHoraire: number;
+      montantTotal: number;
+    }[];
   };
+  piecesManquantesProforma?: PieceApprovisionnementDto[];
 }
 
 // Étape 2 : Approvisionnement

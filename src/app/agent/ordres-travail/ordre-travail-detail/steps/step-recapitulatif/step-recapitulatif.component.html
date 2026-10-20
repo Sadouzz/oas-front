@@ -120,8 +120,17 @@
           </thead>
           <tbody class="divide-y divide-oas-line">
             @for (p of data.proforma?.lignesPieces; track p.id) {
-              <tr class="hover:bg-slate-50/60 transition">
-                <td class="px-4 py-2.5 font-medium text-oas-ink">{{ p.nom }}</td>
+              @let pm = getPieceManquante(p.id);
+              <tr class="hover:bg-slate-50/60 transition" [class.bg-red-50/20]="pm && (pm.quantiteManquante || 0) > 0">
+                <td class="px-4 py-2.5">
+                  <div class="font-medium text-oas-ink">{{ p.nom }}</div>
+                  @if (pm && (pm.quantiteManquante || 0) > 0) {
+                    <div class="inline-flex items-center gap-1.5 mt-1 px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-200">
+                      <span>Stock magasin : {{ pm.stockMagasin || 0 }}</span>
+                      <span class="text-red-900 font-extrabold font-mono">(-{{ pm.quantiteManquante }} manquant{{ pm.quantiteManquante > 1 ? 's' : '' }})</span>
+                    </div>
+                  }
+                </td>
                 <td class="px-4 py-2.5">
                   <span class="px-2 py-0.5 rounded text-[10px] font-bold"
                     [class]="p.type === 'PDP' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'">
@@ -150,7 +159,7 @@
         <h3 class="text-xs font-bold uppercase tracking-wider text-oas-ink flex items-center gap-2">
           <span>Prestations de Main-d'œuvre</span>
           <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-oas-accent/15 text-oas-accent">
-            {{ data.proforma?.lignesMainDoeuvre?.length || 0 }}
+            {{ lignesMainDoeuvreList.length }}
           </span>
         </h3>
       </div>
@@ -165,7 +174,7 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-oas-line">
-            @for (mo of data.proforma?.lignesMainDoeuvre; track mo.id) {
+            @for (mo of lignesMainDoeuvreList; track mo.id) {
               <tr class="hover:bg-slate-50/60 transition">
                 <td class="px-4 py-2.5 font-medium text-oas-ink">{{ mo.designation }}</td>
                 <td class="px-4 py-2.5 text-center font-mono font-bold">{{ mo.nbreHeure }} h</td>
@@ -184,25 +193,187 @@
       </div>
     </div>
 
-    <!-- Récapitulatif Financier Total -->
-    @if (data.proforma) {
-      <div class="flex justify-end">
-        <div class="w-full md:w-80 rounded-xl border border-oas-line bg-slate-50 p-4 space-y-2 text-xs">
-          <div class="flex justify-between text-oas-muted">
-            <span>Total HT :</span>
-            <span class="font-mono font-bold text-oas-ink">{{ data.proforma.montantHT | number:'1.0-0' }} FCFA</span>
+    <!-- Tableau des Pièces Manquantes (si rupture de stock) -->
+    @if (hasPiecesManquantes) {
+      <div class="border border-red-200 rounded-xl overflow-hidden bg-white shadow-xs">
+        <div class="bg-red-50/70 px-4 py-3 border-b border-red-200 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse"></span>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-red-950 flex items-center gap-2">
+              <span>Pièces Manquantes en Stock (Rupture)</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-800 border border-red-200">
+                {{ piecesManquantes.length }} référence{{ piecesManquantes.length > 1 ? 's' : '' }}
+              </span>
+            </h3>
           </div>
-          <div class="flex justify-between text-oas-muted">
-            <span>TVA :</span>
-            <span class="font-mono font-bold text-oas-ink">{{ data.proforma.montantTVA | number:'1.0-0' }} FCFA</span>
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-red-100 text-red-800 border border-red-200 text-xs font-bold">
+            <svg class="w-3.5 h-3.5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            Approvisionnement requis : {{ totalPiecesManquantes }} unité{{ totalPiecesManquantes > 1 ? 's' : '' }}
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-red-50/30 text-red-900/80 uppercase tracking-wider font-semibold border-b border-red-100">
+              <tr>
+                <th class="px-4 py-2.5">Désignation & Référence</th>
+                <th class="px-4 py-2.5">Type</th>
+                <th class="px-4 py-2.5 text-center">Qté Demandée</th>
+                <th class="px-4 py-2.5 text-center">Stock Magasin</th>
+                <th class="px-4 py-2.5 text-center">Quantité Manquante</th>
+                <!-- <th class="px-4 py-2.5 text-right">Prix Unitaire</th>
+                <th class="px-4 py-2.5 text-right">Montant Déficit</th> -->
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-red-100">
+              @for (pm of piecesManquantes; track (pm.ligneId || pm.pieceId || $index)) {
+                <tr class="hover:bg-red-50/20 transition">
+                  <!-- Désignation & Réf -->
+                  <td class="px-4 py-3">
+                    <div class="font-bold text-oas-ink">{{ pm.designation }}</div>
+                    @if (pm.reference) {
+                      <div class="flex items-center gap-1.5 mt-0.5">
+                        <span class="font-mono text-[10px] text-oas-muted bg-slate-100 px-1.5 py-0.5 rounded border border-oas-line">
+                          Réf: {{ pm.reference }}
+                        </span>
+                      </div>
+                    }
+                  </td>
+                  <!-- Type -->
+                  <td class="px-4 py-3">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold"
+                      [class]="pm.type === 'PDP' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'">
+                      {{ pm.type || (pm.isCustom ? 'PDG' : 'PDP') }}
+                    </span>
+                  </td>
+                  <!-- Qté Demandée -->
+                  <td class="px-4 py-3 text-center font-mono font-bold text-oas-ink">
+                    {{ pm.quantiteDemandee }}
+                  </td>
+                  <!-- Stock Magasin -->
+                  <td class="px-4 py-3 text-center">
+                    <span class="font-mono font-bold"
+                      [class]="(pm.stockMagasin || 0) > 0 ? 'text-amber-700' : 'text-red-600'">
+                      {{ pm.stockMagasin || 0 }}
+                    </span>
+                  </td>
+                  <!-- Manquant -->
+                  <td class="px-4 py-3 text-center">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-mono font-extrabold text-xs bg-red-100 text-red-700 border border-red-300">
+                      -{{ pm.quantiteManquante }}
+                    </span>
+                  </td>
+                  <!-- Prix Unitaire -->
+                  <!-- <td class="px-4 py-3 text-right font-mono text-oas-muted">
+                    {{ (pm.prixUnitaire || 0) | number:'1.0-0' }} FCFA
+                  </td> -->
+                  <!-- Montant Déficit -->
+                  <!-- <td class="px-4 py-3 text-right font-mono font-bold text-red-700">
+                    {{ ((pm.prixUnitaire || 0) * (pm.quantiteManquante || 0)) | number:'1.0-0' }} FCFA
+                  </td> -->
+  </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    } @else if (data.proforma?.lignesPieces && data.proforma!.lignesPieces!.length > 0) {
+      <!-- Toutes les pièces en stock -->
+      <div class="p-4 rounded-xl border bg-emerald-50/70 border-emerald-200 shadow-2xs flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center flex-shrink-0">
+            <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
           </div>
-          <div class="pt-2 border-t border-oas-line flex justify-between text-sm">
+          <div>
+            <h4 class="text-xs font-bold text-emerald-950 uppercase tracking-wide">Stock Magasin Vérifié · Aucune Rupture</h4>
+            <p class="text-xs text-emerald-800/90 mt-0.5">Toutes les pièces chiffrées sont disponibles en quantité suffisante pour l'intervention.</p>
+          </div>
+        </div>
+        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+          100% Disponible
+        </span>
+      </div>
+    }
+
+    <!-- Synthèse Stock & Récapitulatif Financier -->
+    <!-- @if (data.proforma) {
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
+        <!-- Carte Diagnostic Stock / Approvisionnement (Left) 
+        <div class="rounded-xl border p-4 text-xs flex flex-col justify-between"
+          [class]="hasPiecesManquantes ? 'border-amber-200 bg-amber-50/50' : 'border-emerald-200 bg-emerald-50/50'">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5"
+                [class]="hasPiecesManquantes ? 'text-amber-900' : 'text-emerald-900'">
+                @if (hasPiecesManquantes) {
+                  <svg class="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  Diagnostic de Stock
+                } @else {
+                  <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  Disponibilité des Pièces
+                }
+              </span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase"
+                [class]="hasPiecesManquantes ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-emerald-100 text-emerald-800 border border-emerald-300'">
+                {{ hasPiecesManquantes ? 'Approvisionnement Requis' : 'Stock Prêt' }}
+              </span>
+            </div>
+
+            @if (hasPiecesManquantes) {
+              <p class="text-xs text-amber-900/90 leading-relaxed mb-3">
+                <strong class="font-bold text-amber-950">{{ piecesManquantes.length }} référence{{ piecesManquantes.length > 1 ? 's' : '' }}</strong> en rupture de stock magasin pour un déficit total de
+                <strong class="font-bold text-red-700 font-mono">{{ totalPiecesManquantes }} pièce{{ totalPiecesManquantes > 1 ? 's' : '' }}</strong>.
+                Un réapprovisionnement auprès des fournisseurs est nécessaire.
+              </p>
+              <div class="space-y-1.5 pt-2 border-t border-amber-200/70 text-xs">
+                <div class="flex justify-between">
+                  <span class="text-amber-800/80">Coût estimé du déficit :</span>
+                  <span class="font-mono font-bold text-red-700">{{ totalMontantManquant | number:'1.0-0' }} FCFA</span>
+                </div>
+              </div>
+            } @else {
+              <p class="text-xs text-emerald-900/90 leading-relaxed">
+                Toutes les fournitures chiffrées sont en stock suffisant dans le magasin. Le passage à l'étape suivante permettra d'émettre directement le bon de sortie.
+              </p>
+            }
+          </div>
+
+          <div class="text-[11px] mt-3 pt-2 border-t"
+            [class]="hasPiecesManquantes ? 'border-amber-200 text-amber-800/80' : 'border-emerald-200 text-emerald-800/80'">
+            Étape suivante : <span class="font-bold">2. Approvisionnement & Commandes</span>
+          </div>
+        </div>
+
+        <!-- Récapitulatif Financier Total (Right) 
+        <div class="rounded-xl border border-oas-line bg-slate-50 p-4 space-y-2 text-xs flex flex-col justify-between">
+          <div>
+            <div class="text-xs font-bold uppercase tracking-wider text-oas-muted mb-2">Synthèse Financière</div>
+            <div class="space-y-2">
+              <div class="flex justify-between text-oas-muted">
+                <span>Total HT :</span>
+                <span class="font-mono font-bold text-oas-ink">{{ data.proforma.montantHT | number:'1.0-0' }} FCFA</span>
+              </div>
+              <div class="flex justify-between text-oas-muted">
+                <span>TVA :</span>
+                <span class="font-mono font-bold text-oas-ink">{{ data.proforma.montantTVA | number:'1.0-0' }} FCFA</span>
+              </div>
+            </div>
+          </div>
+          <div class="pt-3 border-t border-oas-line flex justify-between items-center text-sm">
             <span class="font-bold text-oas-ink">Total TTC :</span>
-            <span class="font-mono font-black text-oas-accent">{{ data.proforma.montantTTC | number:'1.0-0' }} FCFA</span>
+            <span class="font-mono font-black text-oas-accent text-base">{{ data.proforma.montantTTC | number:'1.0-0' }} FCFA</span>
           </div>
         </div>
       </div>
-    }
+    } -->
 
     <!-- Bouton d'action pour passer à l'étape suivante -->
     <div class="flex justify-end pt-4 border-t border-oas-line">
