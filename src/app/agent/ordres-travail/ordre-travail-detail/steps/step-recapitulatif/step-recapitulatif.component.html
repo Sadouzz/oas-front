@@ -114,8 +114,9 @@
               <th class="px-4 py-2.5">Désignation</th>
               <th class="px-4 py-2.5">Type</th>
               <th class="px-4 py-2.5 text-center">Quantité</th>
-              <th class="px-4 py-2.5 text-right">Prix Unitaire</th>
-              <th class="px-4 py-2.5 text-right">Total HT</th>
+              <th class="px-4 py-2.5 text-right">Prix unitaire HT avant remise</th>
+              <th class="px-4 py-2.5 text-right">Remise générale</th>
+              <th class="px-4 py-2.5 text-right">Total HT après remise</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-oas-line">
@@ -139,11 +140,15 @@
                 </td>
                 <td class="px-4 py-2.5 text-center font-mono font-bold">{{ p.quantite }}</td>
                 <td class="px-4 py-2.5 text-right font-mono text-oas-muted">{{ p.prix | number:'1.0-0' }} FCFA</td>
+                <td class="px-4 py-2.5 text-right whitespace-nowrap">
+                  <span class="font-semibold">{{ p.tauxRemise || 0 }} %</span>
+                  <span class="block text-[10px] text-oas-muted">−{{ ((p.quantite * p.prix) - p.montantTotal) | number:'1.0-0' }} FCFA</span>
+                </td>
                 <td class="px-4 py-2.5 text-right font-mono font-bold text-oas-ink">{{ p.montantTotal | number:'1.0-0' }} FCFA</td>
               </tr>
             } @empty {
               <tr>
-                <td colspan="5" class="px-4 py-6 text-center text-oas-muted">
+                <td colspan="6" class="px-4 py-6 text-center text-oas-muted">
                   Aucune pièce renseignée dans le proforma.
                 </td>
               </tr>
@@ -169,8 +174,9 @@
             <tr>
               <th class="px-4 py-2.5">Prestation / Tâche</th>
               <th class="px-4 py-2.5 text-center">Nbre Heures</th>
-              <th class="px-4 py-2.5 text-right">Tarif Horaire</th>
-              <th class="px-4 py-2.5 text-right">Total HT</th>
+              <th class="px-4 py-2.5 text-right">Tarif horaire HT avant remise</th>
+              <th class="px-4 py-2.5 text-right">Remise générale</th>
+              <th class="px-4 py-2.5 text-right">Total HT après remise</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-oas-line">
@@ -179,11 +185,15 @@
                 <td class="px-4 py-2.5 font-medium text-oas-ink">{{ mo.designation }}</td>
                 <td class="px-4 py-2.5 text-center font-mono font-bold">{{ mo.nbreHeure }} h</td>
                 <td class="px-4 py-2.5 text-right font-mono text-oas-muted">{{ mo.tarifHoraire | number:'1.0-0' }} FCFA/h</td>
+                <td class="px-4 py-2.5 text-right whitespace-nowrap">
+                  <span class="font-semibold">{{ mo.tauxRemise || 0 }} %</span>
+                  <span class="block text-[10px] text-oas-muted">−{{ ((mo.nbreHeure * mo.tarifHoraire) - mo.montantTotal) | number:'1.0-0' }} FCFA</span>
+                </td>
                 <td class="px-4 py-2.5 text-right font-mono font-bold text-oas-ink">{{ mo.montantTotal | number:'1.0-0' }} FCFA</td>
               </tr>
             } @empty {
               <tr>
-                <td colspan="4" class="px-4 py-6 text-center text-oas-muted">
+                <td colspan="5" class="px-4 py-6 text-center text-oas-muted">
                   Aucune main-d'œuvre renseignée.
                 </td>
               </tr>

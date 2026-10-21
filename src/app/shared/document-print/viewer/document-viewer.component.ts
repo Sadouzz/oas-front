@@ -92,6 +92,38 @@ export class DocumentViewerComponent implements OnInit {
         next: (target: any) => {
           const c = target.client as any;
           const v = target.vehicule as any;
+          const lignesPieces = (target.lignesPieces || target.lignes || []).map((lp: any) => {
+            const quantite = Number(lp.quantite) || 0;
+            const prixUnitaire = Number(lp.prixUnitaire ?? lp.prix) || 0;
+            const tauxRemise = Number(lp.tauxRemise ?? lp.remise) || 0;
+            const montantNet = Number(lp.montantTotal ?? quantite * prixUnitaire * (1 - tauxRemise / 100));
+            return {
+              reference: lp.referencePiece || lp.reference || '-',
+              designation: lp.designationPiece || lp.designationPds || lp.designation || '-',
+              quantite,
+              remise: tauxRemise,
+              montantRemise: Math.max(0, quantite * prixUnitaire - montantNet),
+              prixUnitaire,
+              totalLigne: montantNet
+            };
+          });
+          const lignesMainDoeuvres = (target.lignesMainDoeuvres || []).map((lm: any) => {
+            const quantite = Number(lm.nbreHeure ?? lm.quantite) || 0;
+            const prixUnitaire = Number(lm.tarifHoraire ?? lm.prix) || 0;
+            const tauxRemise = Number(lm.tauxRemise ?? lm.remise) || 0;
+            const montantNet = Number(lm.montantTotal ?? quantite * prixUnitaire * (1 - tauxRemise / 100));
+            return {
+              reference: 'MO',
+              designation: lm.descriptionMainDoeuvre || lm.designation || 'Main-d’œuvre',
+              quantite,
+              remise: tauxRemise,
+              montantRemise: Math.max(0, quantite * prixUnitaire - montantNet),
+              prixUnitaire,
+              totalLigne: montantNet
+            };
+          });
+          const montantRemiseGenerale = [...lignesPieces, ...lignesMainDoeuvres]
+            .reduce((total, ligne) => total + ligne.montantRemise, 0);
           this.documentData = {
             ...target,
             numero: target.numero || ('DK/' + target.id),
@@ -112,20 +144,17 @@ export class DocumentViewerComponent implements OnInit {
               kilometrage: target.kilometrage || v?.kilometrage || '-',
               chassis: target.numeroChassis || v?.numeroChassis || v?.chassis || '-'
             },
-            lignes: (target.lignesPieces || target.lignes || []).map((lp: any) => ({
-              reference: lp.referencePiece || lp.reference || '-',
-              designation: lp.designationPiece || lp.designationPds || lp.designation || '-',
-              quantite: lp.quantite,
-              remise: lp.remise || 0,
-              prixUnitaire: lp.prixUnitaire || (lp.quantite ? (lp.montantTotal / lp.quantite) : 0),
-              totalLigne: lp.montantTotal
-            })),
+            lignesPieces,
+            lignesMainDoeuvres,
+            montantRemiseGenerale,
+            tauxRemiseClient: target.tauxRemiseClient || 0,
+            montantRemiseClient: target.montantRemiseClient || 0,
             remarques: target.remarque || target.remarques || '',
-            totalHT: target.totalHt ?? target.totalHT ?? 0,
-            tva: target.montantTva ?? target.tva ?? 0,
-            timbre: target.timbre || 0,
-            totalTTC: target.totalTtc ?? target.totalTTC ?? 0,
-            montantEnLettres: target.montantEnLettres || montantEnLettresFCFA(target.totalTtc ?? target.totalTTC ?? 0)
+            totalHT: target.montantHT ?? target.totalHT ?? target.totalHt ?? 0,
+            tva: target.montantTVA ?? target.montantTva ?? target.tva ?? 0,
+            timbre: target.montantTimbre ?? target.timbre ?? 0,
+            totalTTC: target.montantTTC ?? target.totalTTC ?? target.totalTtc ?? target.montantTotal ?? 0,
+            montantEnLettres: target.montantEnLettres || montantEnLettresFCFA(target.montantTTC ?? target.totalTTC ?? target.totalTtc ?? target.montantTotal ?? 0)
           };
           this.loading = false;
           this.cdr.markForCheck();

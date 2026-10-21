@@ -93,12 +93,15 @@ export interface StepRecapitulatifResponseDto extends StepBaseDto {
     montantHT: number;
     montantTVA: number;
     montantTTC: number;
+    montantTimbre?: number;
+    montantTotal?: number;
     lignesPieces?: {
       id: number;
       nom: string;
       quantite: number;
       prix: number;
       montantTotal: number;
+      tauxRemise?: number;
       isCustom?: boolean;
       type?: string;
     }[];
@@ -108,6 +111,7 @@ export interface StepRecapitulatifResponseDto extends StepBaseDto {
       nbreHeure: number;
       tarifHoraire: number;
       montantTotal: number;
+      tauxRemise?: number;
     }[];
     lignesMainDoeuvres?: {
       id: number;

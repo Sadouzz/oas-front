@@ -231,8 +231,9 @@
                     <tr>
                       <th class="text-left px-3 py-2 font-bold text-oas-muted">Piece</th>
                       <th class="text-center px-3 py-2 font-bold text-oas-muted">Qte</th>
-                      <th class="text-right px-3 py-2 font-bold text-oas-muted">Remise</th>
-                      <th class="text-right px-3 py-2 font-bold text-oas-muted">Total</th>
+                      <th class="text-right px-3 py-2 font-bold text-oas-muted">Prix unit. HT avant remise</th>
+                      <th class="text-right px-3 py-2 font-bold text-oas-muted">Remise générale</th>
+                      <th class="text-right px-3 py-2 font-bold text-oas-muted">Total HT après remise</th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-oas-line">
@@ -240,6 +241,7 @@
                       <tr>
                         <td class="px-3 py-2 text-oas-ink">{{ l.designationPiece }}</td>
                         <td class="px-3 py-2 text-center">{{ l.quantite }}</td>
+                        <td class="px-3 py-2 text-right whitespace-nowrap">{{ fmt(l.prix) }} FCFA</td>
                         <td class="px-3 py-2 text-right whitespace-nowrap">{{ l.tauxRemise || 0 }} %<span class="block text-[10px] text-oas-muted">−{{ fmt((l.quantite * l.prix) - l.montantTotal) }}</span></td>
                         <td class="px-3 py-2 text-right font-semibold">{{ fmt(l.montantTotal) }}</td>
                       </tr>
@@ -260,8 +262,9 @@
                     <tr>
                       <th class="text-left px-3 py-2 font-bold text-oas-muted">Description</th>
                       <th class="text-center px-3 py-2 font-bold text-oas-muted">H</th>
-                      <th class="text-right px-3 py-2 font-bold text-oas-muted">Remise</th>
-                      <th class="text-right px-3 py-2 font-bold text-oas-muted">Total</th>
+                      <th class="text-right px-3 py-2 font-bold text-oas-muted">Tarif horaire HT avant remise</th>
+                      <th class="text-right px-3 py-2 font-bold text-oas-muted">Remise générale</th>
+                      <th class="text-right px-3 py-2 font-bold text-oas-muted">Total HT après remise</th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-oas-line">
@@ -269,6 +272,7 @@
                       <tr>
                         <td class="px-3 py-2 text-oas-ink">{{ l.descriptionMainDoeuvre }}</td>
                         <td class="px-3 py-2 text-center">{{ l.nbreHeure }}</td>
+                        <td class="px-3 py-2 text-right whitespace-nowrap">{{ fmt(l.tarifHoraire) }} FCFA/h</td>
                         <td class="px-3 py-2 text-right whitespace-nowrap">{{ l.tauxRemise || 0 }} %<span class="block text-[10px] text-oas-muted">−{{ fmt((l.nbreHeure * l.tarifHoraire) - l.montantTotal) }}</span></td>
                         <td class="px-3 py-2 text-right font-semibold">{{ fmt(l.montantTotal) }}</td>
                       </tr>

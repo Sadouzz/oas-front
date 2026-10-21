@@ -178,16 +178,26 @@ export class StepProformaComponent implements OnInit {
   }
 
   getPieceTotalBrut(ligne: any): number {
-    if (ligne?.montantTotal != null && Number(ligne.montantTotal) >= 0) return Number(ligne.montantTotal);
-    if (ligne?.total != null && Number(ligne.total) >= 0) return Number(ligne.total);
-    return this.getPiecePrixUnitaire(ligne) * this.getPieceQuantite(ligne);
+    const prix = this.getPiecePrixUnitaire(ligne);
+    if (prix > 0) return prix * this.getPieceQuantite(ligne);
+
+    // Les DTO proforma exposent montantTotal après remise. Reconstituer le brut
+    // seulement si le tarif unitaire n'est pas disponible.
+    const net = Number(ligne?.montantTotal ?? ligne?.total);
+    const taux = this.getPieceTauxRemise(ligne);
+    if (Number.isFinite(net) && net >= 0) return taux < 100 ? net / (1 - taux / 100) : net;
+    return 0;
   }
 
   getPieceMontantRemise(ligne: any): number {
+    const net = ligne?.montantTotal ?? ligne?.total;
+    if (net != null) return Math.max(0, this.getPieceTotalBrut(ligne) - Number(net));
     return this.getPieceTotalBrut(ligne) * this.getPieceTauxRemise(ligne) / 100;
   }
 
   getPieceTotal(ligne: any): number {
+    const net = ligne?.montantTotal ?? ligne?.total;
+    if (net != null && Number.isFinite(Number(net))) return Number(net);
     return this.getPieceTotalBrut(ligne) - this.getPieceMontantRemise(ligne);
   }
 
@@ -216,6 +226,8 @@ export class StepProformaComponent implements OnInit {
   }
 
   getMOTotal(ligne: any): number {
+    const net = ligne?.montantTotal ?? ligne?.total;
+    if (net != null && Number.isFinite(Number(net))) return Number(net);
     return this.getMOTotalBrut(ligne) - this.getMOMontantRemise(ligne);
   }
 
@@ -224,13 +236,18 @@ export class StepProformaComponent implements OnInit {
   }
 
   getMOMontantRemise(ligne: any): number {
+    const net = ligne?.montantTotal ?? ligne?.total;
+    if (net != null) return Math.max(0, this.getMOTotalBrut(ligne) - Number(net));
     return this.getMOTotalBrut(ligne) * this.getMOTauxRemise(ligne) / 100;
   }
 
   getMOTotalBrut(ligne: any): number {
-    if (ligne?.montantTotal != null) return Number(ligne.montantTotal) || 0;
-    if (ligne?.total != null) return Number(ligne.total) || 0;
-    return this.getMOTarifHoraire(ligne) * this.getMOHeures(ligne);
+    const tarif = this.getMOTarifHoraire(ligne);
+    if (tarif > 0) return tarif * this.getMOHeures(ligne);
+    const net = Number(ligne?.montantTotal ?? ligne?.total);
+    const taux = this.getMOTauxRemise(ligne);
+    if (Number.isFinite(net) && net >= 0) return taux < 100 ? net / (1 - taux / 100) : net;
+    return 0;
   }
 
   getMOTarifHoraireNet(ligne: any): number {
@@ -280,10 +297,13 @@ export class StepProformaComponent implements OnInit {
   }
 
   get totalTTCCalcule(): number {
-    if (this.proformaChargee?.montantTTC != null && this.proformaChargee.montantTTC > 0) {
-      return this.proformaChargee.montantTTC;
+    if (this.proformaChargee?.montantTotal != null && this.proformaChargee.montantTotal > 0) {
+      return this.proformaChargee.montantTotal;
     }
-    return this.totalHTCalcule + this.totalTVACalcule;
+    if (this.proformaChargee?.montantTTC != null && this.proformaChargee.montantTTC > 0) {
+      return this.proformaChargee.montantTTC + (Number(this.proformaChargee.montantTimbre) || 0);
+    }
+    return this.totalHTCalcule + this.totalTVACalcule + (Number(this.proformaChargee?.montantTimbre) || 0);
   }
 
   get isProformaValide(): boolean {

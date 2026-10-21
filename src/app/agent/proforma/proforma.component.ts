@@ -1042,8 +1042,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
         kilometrage: target.kilometrage || target.vehicule?.kilometrage || '-',
         chassis: target.numeroChassis || target.vehicule?.numeroChassis || target.vehicule?.chassis || '-'
       },
-      lignes: [
-        ...(target.lignesPieces || []).map((lp: any) => ({
+      lignesPieces: (target.lignesPieces || []).map((lp: any) => ({
           reference: lp.referencePiece || lp.piece?.reference || lp.reference || (lp.isCustom ? 'PDS' : '-'),
           designation: lp.designationPiece || lp.piece?.designation || lp.designationPds || lp.designation || '-',
           quantite: lp.quantite,
@@ -1052,7 +1051,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
           prixUnitaire: lp.prixUnitaire || lp.prix || (lp.quantite ? (lp.montantTotal / lp.quantite) : 0),
         totalLigne: lp.montantTotal ?? (lp.quantite || 0) * (lp.prix || lp.prixUnitaire || 0) * (1 - (Number(lp.tauxRemise) || 0) / 100)
         })),
-        ...(target.lignesMainDoeuvres || []).map((lmo: any) => ({
+      lignesMainDoeuvres: (target.lignesMainDoeuvres || []).map((lmo: any) => ({
           reference: 'MO',
           designation: lmo.descriptionMainDoeuvre || lmo.mainDoeuvre?.description || lmo.mainDoeuvre?.categorie?.nom || 'Main-d\'œuvre',
           quantite: lmo.nbreHeure || lmo.quantite || 1,
@@ -1060,14 +1059,15 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
           montantRemise: Math.max(0, (lmo.nbreHeure || 1) * (lmo.tarifHoraire || lmo.prix || 0) - (lmo.montantTotal ?? (lmo.nbreHeure || 1) * (lmo.tarifHoraire || lmo.prix || 0) * (1 - (Number(lmo.tauxRemise) || 0) / 100))),
           prixUnitaire: lmo.tarifHoraire || lmo.prix || 0,
           totalLigne: lmo.montantTotal ?? (lmo.nbreHeure || 1) * (lmo.tarifHoraire || lmo.prix || 0) * (1 - (Number(lmo.tauxRemise) || 0) / 100)
-        }))
-      ],
+        })),
       remarques: target.remarque || '',
       totalHT: target.montantHT || target.totalHt || 0,
       montantRemiseGenerale: (target.lignesPieces || []).reduce((sum: number, line: any) => sum + Math.max(0, (line.quantite || 0) * (line.prix || 0) - (line.montantTotal ?? (line.quantite || 0) * (line.prix || 0) * (1 - (Number(line.tauxRemise) || 0) / 100))), 0)
         + (target.lignesMainDoeuvres || []).reduce((sum: number, line: any) => sum + Math.max(0, (line.nbreHeure || 0) * (line.tarifHoraire || 0) - (line.montantTotal ?? (line.nbreHeure || 0) * (line.tarifHoraire || 0) * (1 - (Number(line.tauxRemise) || 0) / 100))), 0),
       tva: target.montantTVA || target.montantTva || 0,
       timbre: target.montantTimbre || target.timbre || 0,
+      tauxRemiseClient: target.tauxRemiseClient || 0,
+      montantRemiseClient: target.montantRemiseClient || 0,
       totalTTC: target.montantTTC || target.totalTtc || target.montantTotal || 0,
       montantEnLettres: montantEnLettresFCFA(target.montantTTC || target.totalTtc || target.montantTotal || 0)
     };

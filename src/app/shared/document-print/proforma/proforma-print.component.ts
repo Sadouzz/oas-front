@@ -43,13 +43,23 @@ export class ProformaPrintComponent {
 
   getLignes(): any[] {
     if (!this.data) return [];
-    if (Array.isArray(this.data.lignes) && this.data.lignes.length > 0) {
-      return this.data.lignes;
-    }
     if (Array.isArray(this.data.lignesPieces) && this.data.lignesPieces.length > 0) {
       return this.data.lignesPieces;
     }
+    // Compatibilité avec les anciennes intégrations qui fournissaient une liste unique.
+    if (Array.isArray(this.data.lignes) && this.data.lignes.length > 0) {
+      return this.data.lignes.filter((ligne: any) => ligne.reference !== 'MO');
+    }
     return [];
+  }
+
+  getLignesMainDoeuvres(): any[] {
+    if (!this.data) return [];
+    if (Array.isArray(this.data.lignesMainDoeuvres)) return this.data.lignesMainDoeuvres;
+    // Compatibilité avec les anciennes intégrations qui fournissaient une liste unique.
+    return Array.isArray(this.data.lignes)
+      ? this.data.lignes.filter((ligne: any) => ligne.reference === 'MO')
+      : [];
   }
 
   getLignePrix(ligne: any): number {
@@ -63,7 +73,7 @@ export class ProformaPrintComponent {
     if (ligne.montantTotal != null) return ligne.montantTotal;
     const qty = ligne.quantite || 0;
     const prix = this.getLignePrix(ligne);
-    const remise = ligne.remise || 0;
+    const remise = ligne.remise ?? ligne.tauxRemise ?? 0;
     return remise > 0 ? (qty * prix * (1 - remise / 100)) : (qty * prix);
   }
 

@@ -127,8 +127,11 @@
                   <div class="border border-oas-line rounded-xl divide-y divide-oas-line mb-4 overflow-hidden">
                     @for (ligne of selected.lignesPieces; track ligne.id) {
                       <div class="flex justify-between px-3 py-2 text-sm">
-                        <span class="text-oas-ink2">{{ ligne.designationPiece }} × {{ ligne.quantite }} <small class="block text-oas-muted">Remise générale : {{ ligne.tauxRemise || 0 }} %</small></span>
-                        <span class="font-mono-data font-semibold text-oas-ink">{{ ligne.montantTotal | number:'1.0-0' }} F</span>
+                        <span class="text-oas-ink2">{{ ligne.designationPiece }} × {{ ligne.quantite }}
+                          <small class="block text-oas-muted">{{ ligne.prix | number:'1.0-0' }} F/u HT avant remise</small>
+                          <small class="block text-oas-muted">Remise générale : {{ ligne.tauxRemise || 0 }} % (−{{ (ligne.quantite * ligne.prix - (ligne.montantTotal || 0)) | number:'1.0-0' }} F)</small>
+                        </span>
+                        <span class="font-mono-data font-semibold text-oas-ink">{{ ligne.montantTotal | number:'1.0-0' }} F HT après remise</span>
                       </div>
                     }
                   </div>
@@ -139,8 +142,10 @@
                   <div class="border border-oas-line rounded-xl divide-y divide-oas-line mb-4 overflow-hidden">
                     @for (ligne of selected.lignesMainDoeuvres; track ligne.id) {
                       <div class="flex justify-between px-3 py-2 text-sm">
-                        <span class="text-oas-ink2">{{ ligne.nbreHeure }} h × {{ ligne.tarifHoraire | number:'1.0-0' }} F <small class="block text-oas-muted">Remise générale : {{ ligne.tauxRemise || 0 }} %</small></span>
-                        <span class="font-mono-data font-semibold text-oas-ink">{{ ligne.montantTotal | number:'1.0-0' }} F</span>
+                        <span class="text-oas-ink2">{{ ligne.nbreHeure }} h × {{ ligne.tarifHoraire | number:'1.0-0' }} F/h HT avant remise
+                          <small class="block text-oas-muted">Remise générale : {{ ligne.tauxRemise || 0 }} % (−{{ (ligne.nbreHeure * ligne.tarifHoraire - (ligne.montantTotal || 0)) | number:'1.0-0' }} F)</small>
+                        </span>
+                        <span class="font-mono-data font-semibold text-oas-ink">{{ ligne.montantTotal | number:'1.0-0' }} F HT après remise</span>
                       </div>
                     }
                   </div>

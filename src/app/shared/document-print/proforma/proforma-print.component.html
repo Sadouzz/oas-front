@@ -50,9 +50,9 @@
         <th style="width: 18%;">Référence</th>
         <th style="width: 42%;">Désignation</th>
         <th style="width: 8%;">Qté</th>
-        <th style="width: 10%;">Rem.(%)</th>
-        <th style="width: 11%;">Prix unitaire</th>
-        <th style="width: 11%;">Total</th>
+        <th style="width: 10%;">Remise générale</th>
+        <th style="width: 11%;">Prix unitaire HT avant remise</th>
+        <th style="width: 11%;">Total HT après remise</th>
       </tr>
     </thead>
     <tbody>
@@ -70,21 +70,36 @@
     </tbody>
   </table>
 
-  <!-- SECTION MAIN D'OEUVRE & REMARQUES -->
+  <!-- SECTION MAIN D'OEUVRE -->
   <div style="text-align: center; font-weight: bold; margin: 15px 0;">Mains d'oeuvre</div>
-  
+
   <table class="table-doc">
     <thead>
       <tr>
-        <th>Remarques</th>
+        <th style="width: 48%;">Désignation</th>
+        <th style="width: 10%;">Heures</th>
+        <th style="width: 12%;">Remise générale</th>
+        <th style="width: 15%;">Tarif horaire HT avant remise</th>
+        <th style="width: 15%;">Total HT après remise</th>
       </tr>
     </thead>
     <tbody>
-      <tr>
-        <td style="height: 32px;">{{ data?.remarques || data?.remarque || '' }}</td>
+      <tr *ngFor="let ligne of getLignesMainDoeuvres()">
+        <td class="text-left">{{ ligne.designation || ligne.descriptionMainDoeuvre || 'Main-d’œuvre' }}</td>
+        <td>{{ ligne.quantite ?? ligne.nbreHeure ?? 0 }}</td>
+        <td>{{ ligne.remise ?? ligne.tauxRemise ?? 0 }} %<span *ngIf="ligne.montantRemise > 0" style="display:block; font-size:9px;">−{{ ligne.montantRemise | number:'1.0-0' }}</span></td>
+        <td class="text-right">{{ getLignePrix(ligne) | number:'1.0-0' }}</td>
+        <td class="text-right">{{ getLigneTotal(ligne) | number:'1.0-0' }}</td>
+      </tr>
+      <tr *ngIf="getLignesMainDoeuvres().length === 0">
+        <td colspan="5" style="padding: 10px;">Aucune main-d'œuvre</td>
       </tr>
     </tbody>
   </table>
+
+  <div *ngIf="data?.remarques || data?.remarque" style="margin: 10px 0;">
+    <strong>Remarques :</strong> {{ data?.remarques || data?.remarque }}
+  </div>
 
   <!-- TABLEAU DES TOTAUX -->
   <div class="totals-wrapper">

@@ -21,6 +21,8 @@ export interface StepOrdreTravailResponseDto extends BaseStepResponseDto {
     montantHT: number;
     montantTVA: number;
     montantTTC: number;
+    montantTimbre?: number;
+    montantTotal?: number;
   };
   vehicule?: any;
   client?: any;
