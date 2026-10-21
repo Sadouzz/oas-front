@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -12,15 +12,17 @@ import {
   getPathFromEtapeOT
 } from './models/ordre-travail.model';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
+import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
+import { extractPage } from '../../shared/models';
 import { ConfirmationService } from '../../shared/components/confirmation/confirmation.service';
 
 @Component({
   selector: 'app-ordres-travail',
   standalone: true,
-  imports: [CommonModule, NgClass, FormsModule, AlertComponent],
+  imports: [CommonModule, NgClass, FormsModule, AlertComponent, PaginationComponent],
   templateUrl: './ordres-travail.component.html'
 })
-export class OrdresTravailComponent implements OnInit {
+export class OrdresTravailComponent implements OnInit, OnDestroy {
   private confirmation = inject(ConfirmationService);
   private otService = inject(OrdreTravailService);
   private router = inject(Router);
@@ -42,6 +44,7 @@ export class OrdresTravailComponent implements OnInit {
   pageSize = 10;
   totalElements = 0;
   totalPages = 0;
+  private searchTimeout: any;
 
   get hasActiveFilters(): boolean {
     return !!(this.searchTerm || this.selectedStatut || this.filterDateDebut || this.filterDateFin);
@@ -59,6 +62,12 @@ export class OrdresTravailComponent implements OnInit {
     this.loadOrdres();
   }
 
+  ngOnDestroy(): void {
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+  }
+
   loadOrdres(): void {
     this.loading = true;
     this.errorMessage = '';
@@ -71,9 +80,16 @@ export class OrdresTravailComponent implements OnInit {
       size: this.pageSize
     }).subscribe({
       next: (res) => {
-        this.ordres = res?.content || [];
-        this.totalElements = res?.totalElements || 0;
-        this.totalPages = res?.totalPages || 0;
+        const page = extractPage<OrdreTravail>(res);
+        if (page) {
+          this.ordres = page.content || [];
+          this.totalElements = page.totalElements ?? this.ordres.length;
+          this.totalPages = page.totalPages ?? Math.max(1, Math.ceil(this.totalElements / this.pageSize));
+        } else {
+          this.ordres = res?.content || (Array.isArray(res) ? res : []);
+          this.totalElements = res?.totalElements ?? (Array.isArray(res) ? res.length : 0);
+          this.totalPages = res?.totalPages ?? Math.max(1, Math.ceil(this.totalElements / this.pageSize));
+        }
         this.loading = false;
         this.cdr.markForCheck();
       },
@@ -87,8 +103,11 @@ export class OrdresTravailComponent implements OnInit {
 
   onSearchInput(event: any): void {
     this.searchTerm = event.target.value;
-    this.currentPage = 0;
-    this.loadOrdres();
+    clearTimeout(this.searchTimeout);
+    this.searchTimeout = setTimeout(() => {
+      this.currentPage = 0;
+      this.loadOrdres();
+    }, 350);
   }
 
   clearSearch(): void {
@@ -117,9 +136,25 @@ export class OrdresTravailComponent implements OnInit {
   }
 
   changePage(page: number): void {
-    if (page >= 0 && page < this.totalPages) {
+    if (page >= 0 && page < this.totalPages && page !== this.currentPage) {
       this.currentPage = page;
       this.loadOrdres();
+    }
+  }
+
+  onPageChange1Based(page1Based: number): void {
+    this.changePage(page1Based - 1);
+  }
+
+  prevPage(): void {
+    if (this.currentPage > 0) {
+      this.changePage(this.currentPage - 1);
+    }
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages - 1) {
+      this.changePage(this.currentPage + 1);
     }
   }
 

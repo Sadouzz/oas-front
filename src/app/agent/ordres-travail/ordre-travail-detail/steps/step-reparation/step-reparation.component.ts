@@ -52,6 +52,7 @@ export class StepReparationComponent implements OnInit {
           now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
           this.dateFinReparation = now.toISOString().slice(0, 16);
         }
+        this.isReparationTerminee = res.statut === StatutOrdreTravail.TERMINE || (!!res.dateFinReparation && !!res.rapportReparation);
         this.loading = false;
         this.cdr.markForCheck();
       },
@@ -62,6 +63,8 @@ export class StepReparationComponent implements OnInit {
       }
     });
   }
+
+  isReparationTerminee = false;
 
   terminerReparation(): void {
     if (!this.rapportReparation.trim()) {
@@ -76,17 +79,15 @@ export class StepReparationComponent implements OnInit {
     const payload = {
       rapportReparation: this.rapportReparation,
       dateFinReparation: this.dateFinReparation ? new Date(this.dateFinReparation).toISOString() : new Date().toISOString(),
-      statut: StatutOrdreTravail.PAIEMENT
+      statut: StatutOrdreTravail.TERMINE
     };
 
     this.otService.updateStepReparation(this.otId, payload).subscribe({
       next: () => {
         this.saving = false;
-        this.successMessage = 'Rapport de réparation validé avec succès.';
+        this.isReparationTerminee = true;
+        this.successMessage = 'Rapport technique validé et Ordre de Travail marqué comme TERMINE avec succès ! Vous pouvez maintenant basculer sur l\'Ordre de Réparation pour le paiement et la livraison.';
         this.cdr.markForCheck();
-        setTimeout(() => {
-          this.router.navigate(['/app/ordres-travail', this.otId, 'paiement']);
-        }, 500);
       },
       error: (err) => {
         this.saving = false;

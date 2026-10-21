@@ -154,31 +154,10 @@ export const AGENT_PORTAL_ROUTES: Routes = [
                 ),
             },
             {
-              path: 'approvisionnement',
+              path: 'ordre-travail',
               loadComponent: () =>
-                import('./ordres-reparation/ordre-reparation-detail/steps/step-approvisionnement/step-approvisionnement.component').then(
-                  m => m.StepApprovisionnementComponent
-                ),
-            },
-            {
-              path: 'bon-sortie',
-              loadComponent: () =>
-                import('./ordres-reparation/ordre-reparation-detail/steps/step-bon-sortie/step-bon-sortie.component').then(
-                  m => m.StepBonSortieComponent
-                ),
-            },
-            {
-              path: 'assignation',
-              loadComponent: () =>
-                import('./ordres-reparation/ordre-reparation-detail/steps/step-assignation/step-assignation.component').then(
-                  m => m.StepAssignationComponent
-                ),
-            },
-            {
-              path: 'reparation',
-              loadComponent: () =>
-                import('./ordres-reparation/ordre-reparation-detail/steps/step-reparation/step-reparation.component').then(
-                  m => m.StepReparationComponent
+                import('./ordres-reparation/ordre-reparation-detail/steps/step-ordre-travail/step-ordre-travail.component').then(
+                  m => m.StepOrdreTravailComponent
                 ),
             },
             {
@@ -189,19 +168,25 @@ export const AGENT_PORTAL_ROUTES: Routes = [
                 ),
             },
             {
+              path: 'pret-a-livrer',
+              loadComponent: () =>
+                import('./ordres-reparation/ordre-reparation-detail/steps/step-pret-a-livrer/step-pret-a-livrer.component').then(
+                  m => m.StepPretALivrerComponent
+                ),
+            },
+            {
               path: 'livraison',
               loadComponent: () =>
                 import('./ordres-reparation/ordre-reparation-detail/steps/step-livraison/step-livraison.component').then(
                   m => m.StepLivraisonComponent
                 ),
             },
-            {
-              path: 'cloture',
-              loadComponent: () =>
-                import('./ordres-reparation/ordre-reparation-detail/steps/step-cloture/step-cloture.component').then(
-                  m => m.StepClotureComponent
-                ),
-            },
+            // Redirections de rétro-compatibilité
+            { path: 'approvisionnement', redirectTo: 'ordre-travail', pathMatch: 'full' },
+            { path: 'bon-sortie', redirectTo: 'ordre-travail', pathMatch: 'full' },
+            { path: 'assignation', redirectTo: 'ordre-travail', pathMatch: 'full' },
+            { path: 'reparation', redirectTo: 'ordre-travail', pathMatch: 'full' },
+            { path: 'cloture', redirectTo: 'livraison', pathMatch: 'full' },
           ],
         },
         {
@@ -228,10 +213,8 @@ export const AGENT_PORTAL_ROUTES: Routes = [
             },
             {
               path: 'approvisionnement',
-              loadComponent: () =>
-                import('./ordres-travail/ordre-travail-detail/steps/step-approvisionnement/step-approvisionnement.component').then(
-                  m => m.StepApprovisionnementComponent
-                ),
+              redirectTo: 'bon-sortie',
+              pathMatch: 'full',
             },
             {
               path: 'bon-sortie',
@@ -254,27 +237,10 @@ export const AGENT_PORTAL_ROUTES: Routes = [
                   m => m.StepReparationComponent
                 ),
             },
-            {
-              path: 'paiement',
-              loadComponent: () =>
-                import('./ordres-travail/ordre-travail-detail/steps/step-paiement/step-paiement.component').then(
-                  m => m.StepPaiementComponent
-                ),
-            },
-            {
-              path: 'pret-a-livrer',
-              loadComponent: () =>
-                import('./ordres-travail/ordre-travail-detail/steps/step-pret-a-livrer/step-pret-a-livrer.component').then(
-                  m => m.StepPretALivrerComponent
-                ),
-            },
-            {
-              path: 'livraison',
-              loadComponent: () =>
-                import('./ordres-travail/ordre-travail-detail/steps/step-livraison/step-livraison.component').then(
-                  m => m.StepLivraisonComponent
-                ),
-            },
+            // Redirections pour les étapes retirées de l'OT
+            { path: 'paiement', redirectTo: 'reparation', pathMatch: 'full' },
+            { path: 'pret-a-livrer', redirectTo: 'reparation', pathMatch: 'full' },
+            { path: 'livraison', redirectTo: 'reparation', pathMatch: 'full' },
           ],
         },
         {

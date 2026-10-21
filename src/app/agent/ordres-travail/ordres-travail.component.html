@@ -162,10 +162,10 @@
                     <div class="flex items-center gap-1.5">
                       <div class="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
                         <div class="h-full rounded-full transition-all"
-                          [style.width.%]="(etapeNum / 8) * 100"
-                          [ngClass]="etapeNum === 8 ? 'bg-emerald-500' : 'bg-oas-accent'"></div>
+                          [style.width.%]="(etapeNum / 4) * 100"
+                          [ngClass]="etapeNum === 4 ? 'bg-emerald-500' : 'bg-oas-accent'"></div>
                       </div>
-                      <span class="text-[10px] font-mono font-bold text-oas-muted">{{ etapeNum }}/8</span>
+                      <span class="text-[10px] font-mono font-bold text-oas-muted">{{ etapeNum }}/4</span>
                     </div>
                   </div>
                 </td>
@@ -214,20 +214,9 @@
       </div>
 
       <!-- Pagination -->
-      @if (totalPages > 1) {
-        <div class="px-5 py-3 border-t border-oas-line flex items-center justify-between text-xs text-oas-muted">
-          <span>Page {{ currentPage + 1 }} sur {{ totalPages }} ({{ totalElements }} ordres)</span>
-          <div class="flex items-center gap-1">
-            <button (click)="changePage(currentPage - 1)" [disabled]="currentPage === 0"
-              class="px-2.5 py-1 rounded-lg border border-oas-line hover:bg-oas-bg disabled:opacity-40 cursor-pointer">
-              Précédent
-            </button>
-            <button (click)="changePage(currentPage + 1)" [disabled]="currentPage >= totalPages - 1"
-              class="px-2.5 py-1 rounded-lg border border-oas-line hover:bg-oas-bg disabled:opacity-40 cursor-pointer">
-              Suivant
-            </button>
-          </div>
-        </div>
+      @if (totalElements > 0) {
+        <app-pagination [page]="currentPage + 1" [totalPages]="totalPages" [total]="totalElements" [pageSize]="pageSize"
+          (prev)="prevPage()" (next)="nextPage()" (pageChange)="onPageChange1Based($event)" />
       }
     }
   </div>

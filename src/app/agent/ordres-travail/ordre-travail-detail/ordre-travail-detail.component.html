@@ -29,23 +29,31 @@
       </div>
     </div>
 
-    <!-- Infos Véhicule & Client rapide dans l'en-tête -->
-    @if (loadedOT?.vehicule || loadedOT?.vehiculeImmatriculation) {
+    <!-- Infos Véhicule, Client & Proforma rapide dans l'en-tête -->
+    @if (loadedOT?.vehicule || loadedOT?.vehiculeImmatriculation || getProformaDisplay()) {
       <div class="flex items-center gap-4 bg-oas-bg/70 px-4 py-2.5 rounded-xl border border-oas-line text-xs">
-        <div>
-          <span class="text-oas-muted font-medium block">Véhicule</span>
-          <strong class="text-oas-ink font-bold">{{ loadedOT?.vehicule?.immatriculation || loadedOT?.vehiculeImmatriculation }}</strong>
-          @if (loadedOT?.vehicule?.marque || loadedOT?.vehiculeMarqueModele) {
-            <span class="text-oas-muted ml-1">({{ loadedOT?.vehicule?.marque ? (loadedOT?.vehicule?.marque + ' ' + (loadedOT?.vehicule?.modele || '')) : loadedOT?.vehiculeMarqueModele }})</span>
-          }
-        </div>
+        @if (loadedOT?.vehicule || loadedOT?.vehiculeImmatriculation) {
+          <div>
+            <span class="text-oas-muted font-medium block">Véhicule</span>
+            <strong class="text-oas-ink font-bold">{{ loadedOT?.vehicule?.immatriculation || loadedOT?.vehiculeImmatriculation }}</strong>
+            @if (loadedOT?.vehicule?.marque || loadedOT?.vehiculeMarqueModele) {
+              <span class="text-oas-muted ml-1">({{ loadedOT?.vehicule?.marque ? (loadedOT?.vehicule?.marque + ' ' + (loadedOT?.vehicule?.modele || '')) : loadedOT?.vehiculeMarqueModele }})</span>
+            }
+          </div>
+        }
         @if (getClientDisplay()) {
-          <div class="border-l border-oas-line pl-4">
+          <div [ngClass]="{'border-l border-oas-line pl-4': loadedOT?.vehicule || loadedOT?.vehiculeImmatriculation}">
             <span class="text-oas-muted font-medium block">Client</span>
             <strong class="text-oas-ink font-bold">{{ getClientDisplay() }}</strong>
             @if (getClientPhone()) {
               <span class="text-oas-muted ml-1">({{ getClientPhone() }})</span>
             }
+          </div>
+        }
+        @if (getProformaDisplay()) {
+          <div class="border-l border-oas-line pl-4">
+            <span class="text-oas-muted font-medium block">Proforma</span>
+            <strong class="text-oas-ink font-bold">{{ getProformaDisplay() }}</strong>
           </div>
         }
       </div>
@@ -54,9 +62,9 @@
 
   <app-alert [error]="errorMessage"></app-alert>
 
-  <!-- Stepper de progression (8 étapes) -->
+  <!-- Stepper de progression (4 étapes) -->
   <div class="bg-white rounded-2xl border border-oas-line p-5 shadow-xs overflow-x-auto">
-    <div class="flex items-center min-w-[760px]">
+    <div class="flex items-center min-w-[500px]">
       @for (step of statutSteps; track step.path; let i = $index) {
         @let stepNumber = step.etape;
         @let isAllowed = stepNumber <= maxAllowedStep;

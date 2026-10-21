@@ -1,0 +1,256 @@
+<div class="space-y-6">
+  <!-- En-tête de l'étape -->
+  <div class="flex flex-wrap items-center justify-between gap-4 border-b border-oas-line pb-4">
+    <div>
+      <h2 class="text-lg font-bold text-oas-ink flex items-center gap-2">
+        <span class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-black shadow-2xs">5</span>
+        Exécution Atelier · Ordre de Travail
+      </h2>
+      <p class="text-xs text-oas-muted mt-0.5">
+        Suivi en temps réel des travaux d'atelier, de la sortie des pièces et de l'avancement technique.
+      </p>
+    </div>
+
+    @if (otId) {
+      <div class="flex items-center gap-2">
+        <a [routerLink]="['/app/ordres-travail', otId]" target="_blank"
+          class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-oas-accent hover:bg-oas-accent/90 text-white text-xs font-bold transition shadow-xs cursor-pointer">
+          <span>Ouvrir l'Ordre de Travail</span>
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+        </a>
+      </div>
+    }
+  </div>
+
+  <app-alert [error]="errorMessage" [success]="successMessage"></app-alert>
+
+  @if (loading) {
+    <div class="flex flex-col items-center justify-center py-16 text-oas-muted">
+      <div class="w-9 h-9 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+      <p class="text-sm font-medium">Chargement du suivi atelier...</p>
+    </div>
+  } @else if (!otId) {
+    <!-- Aucun OT créé -->
+    <div class="p-8 rounded-2xl border border-dashed border-oas-line bg-slate-50/60 text-center space-y-4">
+      <div class="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center mx-auto shadow-2xs">
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+      </div>
+      <div>
+        <h3 class="text-base font-bold text-oas-ink">Aucun Ordre de Travail actif</h3>
+        <p class="text-xs text-oas-muted mt-1 max-w-md mx-auto">
+          La proforma chiffrée a été validée. Vous pouvez maintenant initialiser l'Ordre de Travail pour démarrer la sortie des pièces et l'affectation des mécaniciens.
+        </p>
+      </div>
+      <button (click)="creerOrdreTravail()" [disabled]="creatingOT"
+        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-oas-accent hover:bg-oas-accent/90 text-white font-bold text-sm shadow-sm transition disabled:opacity-50 cursor-pointer">
+        @if (creatingOT) {
+          <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          <span>Création en cours...</span>
+        } @else {
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          <span>Créer l'Ordre de Travail</span>
+        }
+      </button>
+    </div>
+  } @else {
+
+    <!-- Carte Principale de Synthèse OT -->
+    <div class="p-6 rounded-2xl border border-oas-line bg-gradient-to-br from-white via-slate-50/40 to-indigo-50/20 shadow-xs">
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div class="flex items-center gap-3.5">
+          <div class="w-12 h-12 rounded-xl bg-indigo-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-lg font-black text-oas-ink tracking-tight">{{ otNumero }}</h3>
+              @let c = getStatutBadgeClass(otStatut);
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-bold border"
+                [class]="c.bg + ' ' + c.text + ' ' + c.border">
+                {{ otStatut }}
+              </span>
+            </div>
+            <p class="text-xs text-oas-muted mt-0.5">
+              {{ otEtapeLabel }}
+            </p>
+          </div>
+        </div>
+
+
+      </div>
+
+      <!-- Progression des 5 étapes de l'OT -->
+      <div class="bg-white rounded-xl border border-oas-line p-4 shadow-2xs space-y-3">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-oas-muted block">Cycle d'exécution atelier (5 étapes)</span>
+        <div class="grid grid-cols-1 sm:grid-cols-5 gap-2">
+          <!-- 1. Récapitulatif -->
+          <div class="p-2.5 rounded-lg border text-xs"
+            [class]="otEtape >= 1 ? 'border-blue-200 bg-blue-50/60 text-blue-900' : 'border-oas-line bg-slate-50 text-oas-muted'">
+            <div class="flex items-center justify-between mb-1">
+              <span class="font-bold">1. Récapitulatif</span>
+              @if (otEtape > 1) {
+                <svg class="w-3.5 h-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              }
+            </div>
+            <p class="text-[10px] text-oas-muted">Vérification des pièces</p>
+          </div>
+
+          <!-- 2. Bon de Sortie -->
+          <div class="p-2.5 rounded-lg border text-xs"
+            [class]="otEtape >= 2 ? 'border-orange-200 bg-orange-50/60 text-orange-900' : 'border-oas-line bg-slate-50 text-oas-muted'">
+            <div class="flex items-center justify-between mb-1">
+              <span class="font-bold">2. Bon de Sortie</span>
+              @if (otEtape > 2) {
+                <svg class="w-3.5 h-3.5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              }
+            </div>
+            <p class="text-[10px] text-oas-muted">Déstockage magasin</p>
+          </div>
+
+          <!-- 3. Assignation -->
+          <div class="p-2.5 rounded-lg border text-xs"
+            [class]="otEtape >= 3 ? 'border-purple-200 bg-purple-50/60 text-purple-900' : 'border-oas-line bg-slate-50 text-oas-muted'">
+            <div class="flex items-center justify-between mb-1">
+              <span class="font-bold">3. Techniciens</span>
+              @if (otEtape > 3) {
+                <svg class="w-3.5 h-3.5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              }
+            </div>
+            <p class="text-[10px] text-oas-muted">Affectation équipe</p>
+          </div>
+
+          <!-- 4. Réparation -->
+          <div class="p-2.5 rounded-lg border text-xs"
+            [class]="otEtape >= 4 ? 'border-indigo-200 bg-indigo-50/60 text-indigo-900' : 'border-oas-line bg-slate-50 text-oas-muted'">
+            <div class="flex items-center justify-between mb-1">
+              <span class="font-bold">4. Réparation</span>
+              @if (otStatut === 'REPARATION') {
+                <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+              } @else if (otEtape > 4 || isOtTermine) {
+                <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              }
+            </div>
+            <p class="text-[10px] text-oas-muted">Exécution technique</p>
+          </div>
+
+          <!-- 5. Terminé -->
+          <div class="p-2.5 rounded-lg border text-xs"
+            [class]="isOtTermine ? 'border-emerald-300 bg-emerald-50 text-emerald-950 font-semibold' : 'border-oas-line bg-slate-50 text-oas-muted'">
+            <div class="flex items-center justify-between mb-1">
+              <span class="font-bold">5. Terminé</span>
+              @if (isOtTermine) {
+                <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              }
+            </div>
+            <p class="text-[10px]" [class]="isOtTermine ? 'text-emerald-700' : 'text-oas-muted'">Clôture atelier</p>
+          </div>
+        </div>
+
+
+      </div>
+    </div>
+
+    <!-- Grille détails : Techniciens & Rapport -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Techniciens affectés -->
+      <div class="p-4 rounded-xl border border-oas-line bg-white shadow-xs">
+        <h4 class="text-xs font-bold uppercase tracking-wider text-oas-muted mb-3 flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          Techniciens affectés à la réparation
+        </h4>
+
+        @if (data?.ordreTravail?.techniciensReparation && data!.ordreTravail!.techniciensReparation!.length > 0) {
+          <div class="divide-y divide-oas-line">
+            @for (t of data!.ordreTravail!.techniciensReparation; track t.id) {
+              <div class="py-2 flex items-center justify-between text-xs">
+                <span class="font-bold text-oas-ink">{{ t.nom }} {{ t.prenom }}</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800">
+                  {{ t.specialite || 'Mécanicien' }}
+                </span>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="text-xs text-oas-muted py-3">Aucun technicien affecté pour le moment.</p>
+        }
+      </div>
+
+      <!-- Détails techniques -->
+      <div class="p-4 rounded-xl border border-oas-line bg-white shadow-xs">
+        <h4 class="text-xs font-bold uppercase tracking-wider text-oas-muted mb-3 flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          Rapport & Planning Technique
+        </h4>
+        <div class="space-y-2 text-xs">
+          <div class="flex justify-between">
+            <span class="text-oas-muted">Début des travaux :</span>
+            <span class="font-bold text-oas-ink">
+              {{ data?.ordreTravail?.dateDebutReparation ? (data?.ordreTravail?.dateDebutReparation | date:'dd/MM/yyyy HH:mm') : 'Non renseigné' }}
+            </span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-oas-muted">Fin des travaux :</span>
+            <span class="font-bold text-oas-ink">
+              {{ data?.ordreTravail?.dateFinReparation ? (data?.ordreTravail?.dateFinReparation | date:'dd/MM/yyyy HH:mm') : 'En cours' }}
+            </span>
+          </div>
+          @if (data?.ordreTravail?.rapportReparation) {
+            <div class="pt-2 border-t border-oas-line">
+              <span class="text-oas-muted block mb-1">Rapport d'intervention :</span>
+              <p class="text-oas-ink bg-slate-50 p-2.5 rounded-lg border border-oas-line leading-relaxed">
+                {{ data?.ordreTravail?.rapportReparation }}
+              </p>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Bouton pour passer à l'étape suivante de l'OR (Paiement) -->
+    <!-- <div class="flex justify-between items-center pt-4 border-t border-oas-line">
+      <a [routerLink]="['/app/ordres-travail', otId]"
+        class="inline-flex items-center gap-1.5 text-xs font-semibold text-oas-accent hover:underline">
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        <span>Gérer l'intervention dans le module Ordres de Travail</span>
+      </a> -->
+<!--
+      <button (click)="passerAuPaiement()" [disabled]="advancing"
+        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-oas-accent hover:bg-oas-accent/90 text-white font-bold text-sm shadow-sm transition disabled:opacity-50 cursor-pointer">
+        @if (advancing) {
+          <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          <span>En cours...</span>
+        } @else {
+          <span>Valider & Passer au Paiement</span>
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        }
+      </button>
+    </div>-->
+
+  }
+</div>

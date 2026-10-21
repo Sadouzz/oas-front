@@ -29,7 +29,11 @@ import {
   StepDiagnosticResponseDto,
   StepPiecesMoResponseDto,
   StepProformaResponseDto,
-  StepApprovisionnementResponseDto
+  StepApprovisionnementResponseDto,
+  StepOrdreTravailResponseDto,
+  StepPaiementResponseDto,
+  StepPretALivrerResponseDto,
+  StepLivraisonResponseDto
 } from './models/responses';
 
 @Injectable({ providedIn: 'root' })
@@ -138,41 +142,42 @@ export class OrdreReparationService {
     return this.http.put(`${this.api}/${id}/step-proforma`, data, { responseType: 'text' }).pipe(map(() => void 0));
   }
 
-  // 5. Approvisionnement (Bon de Commande)
-  getStepApprovisionnement(id: number): Observable<StepApprovisionnementResponseDto> {
-    return this.http.get<StepApprovisionnementResponseDto>(`${this.api}/${id}/step-approvisionnement`);
+  // 5. Ordre de Travail (Suivi OT)
+  getStepOrdreTravail(id: number): Observable<StepOrdreTravailResponseDto> {
+    return this.http.get<any>(`${this.api}/${id}/step-ordre-travail`).pipe(
+      map((res: any) => (res && res.data !== undefined ? res.data : res))
+    );
   }
 
-  updateStepApprovisionnement(id: number, data: StepApprovisionnementDto): Observable<void> {
-    return this.http.put(`${this.api}/${id}/step-approvisionnement`, data, { responseType: 'text' }).pipe(map(() => void 0));
+  // 6. Paiement
+  getStepPaiement(id: number): Observable<StepPaiementResponseDto> {
+    return this.http.get<any>(`${this.api}/${id}/step-paiement`).pipe(
+      map((res: any) => (res && res.data !== undefined ? res.data : res))
+    );
   }
 
-  // 6. Attente BS (Bon de Sortie)
-  updateStepBonSortie(id: number, data: StepBonSortieDto): Observable<void> {
-    return this.http.put(`${this.api}/${id}/step-bon-sortie`, data, { responseType: 'text' }).pipe(map(() => void 0));
-  }
-
-  // 7. Assignation Technicien
-  updateStepAssignation(id: number, data: StepAssignationDto): Observable<void> {
-    return this.http.put(`${this.api}/${id}/step-assignation`, data, { responseType: 'text' }).pipe(map(() => void 0));
-  }
-
-  // 8. Réparation
-  updateStepReparation(id: number, data: StepReparationDto): Observable<void> {
-    return this.http.put(`${this.api}/${id}/step-reparation`, data, { responseType: 'text' }).pipe(map(() => void 0));
-  }
-
-  // 9. Paiement
   updateStepPaiement(id: number, data: StepPaiementDto): Observable<void> {
     return this.http.put(`${this.api}/${id}/step-paiement`, data, { responseType: 'text' }).pipe(map(() => void 0));
   }
 
-  // 10. Prêt à livrer
+  // 7. Prêt à livrer
+  getStepPretALivrer(id: number): Observable<StepPretALivrerResponseDto> {
+    return this.http.get<any>(`${this.api}/${id}/step-pret-a-livrer`).pipe(
+      map((res: any) => (res && res.data !== undefined ? res.data : res))
+    );
+  }
+
   updateStepPretALivrer(id: number, data: StepPretALivrerDto): Observable<void> {
     return this.http.put(`${this.api}/${id}/step-pret-a-livrer`, data, { responseType: 'text' }).pipe(map(() => void 0));
   }
 
-  // 11. Livré
+  // 8. Livré
+  getStepLivraison(id: number): Observable<StepLivraisonResponseDto> {
+    return this.http.get<any>(`${this.api}/${id}/step-livraison`).pipe(
+      map((res: any) => (res && res.data !== undefined ? res.data : res))
+    );
+  }
+
   updateStepLivraison(id: number, data: StepLivraisonDto): Observable<void> {
     return this.http.put(`${this.api}/${id}/step-livraison`, data, { responseType: 'text' }).pipe(map(() => void 0));
   }

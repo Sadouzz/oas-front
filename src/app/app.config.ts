@@ -1,8 +1,9 @@
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, provideZoneChangeDetection, provideAppInitializer, inject } from '@angular/core';
 import { provideRouter, withInMemoryScrolling, withDebugTracing } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { apiResponseInterceptor } from './core/interceptors/api-response.interceptor';
+import { AuthService } from './core/services/auth.service';
 
 import { routes } from './app.routes';
 
@@ -75,6 +76,10 @@ import {
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
+    provideAppInitializer(() => {
+      const authService = inject(AuthService);
+      return authService.initAuth();
+    }),
     provideRouter(routes, withInMemoryScrolling({ scrollPositionRestoration: 'enabled' })),
     provideHttpClient(withInterceptors([authInterceptor, apiResponseInterceptor])),
     provideLucideIcons(

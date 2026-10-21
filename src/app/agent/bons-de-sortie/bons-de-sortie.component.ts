@@ -157,7 +157,12 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
   get canCreate(): boolean { return ['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_AGENT', 'ROLE_AGENT_MAGASIN', 'ROLE_CHEF_ATELIER'].includes(this.role); }
   get canValidate(): boolean { return ['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER'].includes(this.role); }
   canValidateBon(bon: BonDeSortie): boolean {
-    return this.canValidate && ['PAIEMENT', 'PRET_A_LIVRER', 'LIVRE'].includes(bon.ordreReparationStatut ?? '');
+    // Si un OT existe, sa fin effective est la condition de validation.
+    // Le statut OR reste le repli historique pour les anciens BS sans OT.
+    const reparationTerminee = bon.ordreTravailId
+      ? bon.ordreTravailStatut === 'TERMINE'
+      : ['PAIEMENT', 'PRET_A_LIVRER', 'LIVRE'].includes(bon.ordreReparationStatut ?? '');
+    return this.canValidate && reparationTerminee;
   }
 
   selectedClient: UserModel | null = null;

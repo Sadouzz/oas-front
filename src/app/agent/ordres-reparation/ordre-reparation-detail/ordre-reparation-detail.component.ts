@@ -11,13 +11,10 @@ export const STEP_ROUTES: { step: number; path: string; statut: StatutOrdre; lab
   { step: 2, path: 'diagnostic', statut: 'DIAGNOSTIC', label: 'Diagnostic' },
   { step: 3, path: 'pieces-mo', statut: 'PIECES_MO', label: 'Pièces & MO' },
   { step: 4, path: 'proforma', statut: 'PROFORMA', label: 'Proforma' },
-  { step: 5, path: 'approvisionnement', statut: 'BON_DE_COMMANDE', label: 'Approv.' },
-  { step: 6, path: 'bon-sortie', statut: 'BON_DE_SORTIE', label: 'Attente BS' },
-  { step: 7, path: 'assignation', statut: 'ASSIGN_TECHNICIEN', label: 'Assign. Tech.' },
-  { step: 8, path: 'reparation', statut: 'REPARATION', label: 'Réparation' },
-  { step: 9, path: 'paiement', statut: 'PAIEMENT', label: 'Paiement' },
-  { step: 10, path: 'livraison', statut: 'PRET_A_LIVRER', label: 'Prêt' },
-  { step: 11, path: 'cloture', statut: 'LIVRE', label: 'Livré' },
+  { step: 5, path: 'ordre-travail', statut: 'ORDRE_DE_TRAVAIL', label: 'Ordre de Travail' },
+  { step: 6, path: 'paiement', statut: 'PAIEMENT', label: 'Paiement' },
+  { step: 7, path: 'pret-a-livrer', statut: 'PRET_A_LIVRER', label: 'Prêt' },
+  { step: 8, path: 'livraison', statut: 'LIVRE', label: 'Livré' },
 ];
 
 @Component({
@@ -63,14 +60,16 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
       if (this.activeChild) {
         return !this.activeChild.hasAtLeastOneItem;
       }
-      // On utilise le flag hasPiecesMo du résumé (si renvoyé par le backend)
       return !(this.loadedOrdre?.hasPiecesMo);
     }
     if (this.currentStep === 4) {
       return !this.activeChild?.isProformaValide;
     }
     if (this.currentStep === 5) {
-      return !!this.activeChild?.hasRuptureStock;
+      if (this.activeChild) {
+        return !this.activeChild.isOtTermine;
+      }
+      return true;
     }
     return false;
   }
@@ -104,11 +103,13 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
       }
     }
     if (this.currentStep === 5) {
-      if (this.activeChild?.hasRuptureStock) {
+      if (this.activeChild && !this.activeChild.isOtTermine) {
+        this.activeChild.errorMessage = "L'Ordre de Travail doit être au statut TERMINE pour pouvoir passer au paiement.";
+        this.activeChild.cdr?.markForCheck();
         return;
       }
-      if (this.activeChild && typeof this.activeChild.passerEtapeSuivante === 'function') {
-        this.activeChild.passerEtapeSuivante();
+      if (this.activeChild && typeof this.activeChild.passerAuPaiement === 'function') {
+        this.activeChild.passerAuPaiement();
         return;
       }
     }
@@ -128,19 +129,15 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
       case 3:
         return 'Valider les pièces & MO';
       case 4:
-        return 'Suivant';
+        return 'Passer à l\'Ordre de Travail';
       case 5:
-        return this.activeChild?.hasRuptureStock ? 'Pièces manquantes en stock' : 'Passer au Bon de Sortie';
+        return 'Passer au paiement';
       case 6:
-        return 'Créer le Bon de Sortie Magasin';
-      case 7:
-        return 'Démarrer les travaux';
-      case 8:
-        return 'Terminer les travaux';
-      case 9:
         return 'Valider le paiement';
-      case 10:
-        return 'Enregistrer la livraison';
+      case 7:
+        return 'Marquer prêt pour livraison';
+      case 8:
+        return 'Clôturer la livraison';
       default:
         return 'Étape suivante';
     }
@@ -250,20 +247,21 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
       case 'EN_ATTENTE_PIECES_MO': return 'pieces-mo';
       case 'PROFORMA':
       case 'EN_ATTENTE_PROFORMA': return 'proforma';
+      case 'ORDRE_DE_TRAVAIL':
       case 'BON_DE_COMMANDE':
       case 'PROFORMA_VALIDE':
-      case 'EN_ATTENTE_COMMANDE': return 'approvisionnement';
+      case 'EN_ATTENTE_COMMANDE':
       case 'BON_DE_SORTIE':
-      case 'EN_ATTENTE_SORTIE': return 'bon-sortie';
+      case 'EN_ATTENTE_SORTIE':
       case 'ASSIGN_TECHNICIEN':
-      case 'EN_ATTENTE_MECANICIEN': return 'assignation';
+      case 'EN_ATTENTE_MECANICIEN':
       case 'REPARATION':
-      case 'EN_COURS': return 'reparation';
+      case 'EN_COURS': return 'ordre-travail';
       case 'PAIEMENT':
       case 'EN_ATTENTE_PAIEMENT': return 'paiement';
-      case 'PRET_A_LIVRER':
+      case 'PRET_A_LIVRER': return 'pret-a-livrer';
+      case 'LIVRE':
       case 'TERMINE': return 'livraison';
-      case 'LIVRE': return 'cloture';
       default: return 'reception';
     }
   }
@@ -294,7 +292,7 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
   }
 
   nextStep(): void {
-    if (this.currentStep < 11) {
+    if (this.currentStep < 8) {
       this.goToStep(this.currentStep + 1);
     }
   }

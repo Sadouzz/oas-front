@@ -49,9 +49,9 @@
     }
   </div>
 
-  <!-- Stepper de progression -->
+  <!-- Stepper de progression (8 étapes) -->
   <div class="bg-white rounded-2xl border border-oas-line p-5 shadow-sm overflow-x-auto">
-    <div class="flex items-center min-w-[800px]">
+    <div class="flex items-center min-w-[700px]">
       @for (step of statutSteps; track step.path; let i = $index) {
         @let stepNumber = step.step;
         @let isAllowed = stepNumber <= maxAllowedStep;
@@ -110,7 +110,7 @@
       }
     </div>
 
-    @if (currentStep < 11) {
+    @if (currentStep < 8) {
       <button type="button" (click)="validerEtapeCourante()" [disabled]="isNextStepDisabled()"
         class="bg-oas-accent hover:bg-oas-accent-dark text-white text-sm font-bold px-6 py-2.5 rounded-xl flex items-center gap-2 transition shadow-lg shadow-oas-accent/25 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:bg-slate-300 disabled:text-slate-500 cursor-pointer">
         @if (activeChild?.saving) {

@@ -50,25 +50,29 @@ export class StepRecapitulatifComponent implements OnInit {
     });
   }
 
-  continuerVersApprovisionnement(): void {
+  continuerVersBonSortie(): void {
     this.advancing = true;
-    // Si l'OT est encore à l'étape RECAPITULATIF, on avance son statut vers BON_DE_COMMANDE
+    // Si l'OT est encore à l'étape RECAPITULATIF, on avance son statut vers BON_DE_SORTIE (étape 2)
     if (this.data?.statut === StatutOrdreTravail.RECAPITULATIF) {
-      this.otService.updateStatut(this.otId, StatutOrdreTravail.BON_DE_COMMANDE).subscribe({
+      this.otService.updateStatut(this.otId, StatutOrdreTravail.BON_DE_SORTIE).subscribe({
         next: () => {
           this.advancing = false;
-          this.router.navigate(['/app/ordres-travail', this.otId, 'approvisionnement']);
+          this.router.navigate(['/app/ordres-travail', this.otId, 'bon-sortie']);
         },
         error: () => {
-          // Si le changement de statut échoue côté backend pour une raison ou s'il est déjà passé, on navigue quand même
           this.advancing = false;
-          this.router.navigate(['/app/ordres-travail', this.otId, 'approvisionnement']);
+          this.router.navigate(['/app/ordres-travail', this.otId, 'bon-sortie']);
         }
       });
     } else {
       this.advancing = false;
-      this.router.navigate(['/app/ordres-travail', this.otId, 'approvisionnement']);
+      this.router.navigate(['/app/ordres-travail', this.otId, 'bon-sortie']);
     }
+  }
+
+  // Alias rétrocompatible
+  continuerVersApprovisionnement(): void {
+    this.continuerVersBonSortie();
   }
 
   getClientNom(): string {

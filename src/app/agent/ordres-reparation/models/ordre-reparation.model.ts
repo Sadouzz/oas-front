@@ -2,18 +2,14 @@ import type { DiagnosticModel } from '../../diagnostics/models/diagnostic.model'
 import type { FicheAtelierDetailsResponse, LigneDefaut } from '../../fiches-atelier/models/fiche-atelier.model';
 
 export enum StatutOrdreReparation {
-  RECEPTION = 'RECEPTION',
-  A_FAIRE = 'A_FAIRE',
-  DIAGNOSTIC = 'DIAGNOSTIC',
-  PIECES_MO = 'PIECES_MO',
-  PROFORMA = 'PROFORMA',
-  BON_DE_COMMANDE = 'BON_DE_COMMANDE',
-  BON_DE_SORTIE = 'BON_DE_SORTIE',
-  ASSIGN_TECHNICIEN = 'ASSIGN_TECHNICIEN',
-  REPARATION = 'REPARATION',
-  PAIEMENT = 'PAIEMENT',
-  PRET_A_LIVRER = 'PRET_A_LIVRER',
-  LIVRE = 'LIVRE'
+  RECEPTION = 'RECEPTION',                 // Étape 1
+  DIAGNOSTIC = 'DIAGNOSTIC',               // Étape 2
+  PIECES_MO = 'PIECES_MO',                 // Étape 3
+  PROFORMA = 'PROFORMA',                   // Étape 4
+  ORDRE_DE_TRAVAIL = 'ORDRE_DE_TRAVAIL',   // Étape 5 (nouveau : suivi de l'OT)
+  PAIEMENT = 'PAIEMENT',                   // Étape 6 (remis dans l'OR)
+  PRET_A_LIVRER = 'PRET_A_LIVRER',         // Étape 7
+  LIVRE = 'LIVRE'                          // Étape 8
 }
 
 export type StatutOrdre =
@@ -26,6 +22,7 @@ export type StatutOrdre =
   | 'PROFORMA'
   | 'EN_ATTENTE_PROFORMA'
   | 'PROFORMA_VALIDE'
+  | 'ORDRE_DE_TRAVAIL'
   | 'BON_DE_COMMANDE'
   | 'EN_ATTENTE_COMMANDE'
   | 'BON_DE_SORTIE'
@@ -50,33 +47,31 @@ export const STATUT_ETAPES: Record<string, number> = {
   PROFORMA: 4,
   EN_ATTENTE_PROFORMA: 4,
   PROFORMA_VALIDE: 5,
+  ORDRE_DE_TRAVAIL: 5,
   BON_DE_COMMANDE: 5,
   EN_ATTENTE_COMMANDE: 5,
-  BON_DE_SORTIE: 6,
-  EN_ATTENTE_SORTIE: 6,
-  ASSIGN_TECHNICIEN: 7,
-  EN_ATTENTE_MECANICIEN: 7,
-  REPARATION: 8,
-  EN_COURS: 8,
-  PAIEMENT: 9,
-  EN_ATTENTE_PAIEMENT: 9,
-  PRET_A_LIVRER: 10,
-  TERMINE: 10,
-  LIVRE: 11
+  BON_DE_SORTIE: 5,
+  EN_ATTENTE_SORTIE: 5,
+  ASSIGN_TECHNICIEN: 5,
+  EN_ATTENTE_MECANICIEN: 5,
+  REPARATION: 5,
+  EN_COURS: 5,
+  PAIEMENT: 6,
+  EN_ATTENTE_PAIEMENT: 6,
+  PRET_A_LIVRER: 7,
+  TERMINE: 7,
+  LIVRE: 8
 };
 
 export const ETAPES_ORDRE_REPARATION: { etape: number; statut: StatutOrdre; label: string; path: string }[] = [
-  { etape: 1,  statut: 'RECEPTION',         label: 'Réception',     path: 'reception' },
-  { etape: 2,  statut: 'DIAGNOSTIC',        label: 'Diagnostic',    path: 'diagnostic' },
-  { etape: 3,  statut: 'PIECES_MO',         label: 'Pièces & MO',   path: 'pieces-mo' },
-  { etape: 4,  statut: 'PROFORMA',          label: 'Proforma',      path: 'proforma' },
-  { etape: 5,  statut: 'BON_DE_COMMANDE',   label: 'Approv.',       path: 'approvisionnement' },
-  { etape: 6,  statut: 'BON_DE_SORTIE',     label: 'Attente BS',    path: 'bon-sortie' },
-  { etape: 7,  statut: 'ASSIGN_TECHNICIEN', label: 'Assign. Tech.', path: 'assignation' },
-  { etape: 8,  statut: 'REPARATION',        label: 'Réparation',    path: 'reparation' },
-  { etape: 9,  statut: 'PAIEMENT',          label: 'Paiement',      path: 'paiement' },
-  { etape: 10, statut: 'PRET_A_LIVRER',     label: 'Prêt',          path: 'livraison' },
-  { etape: 11, statut: 'LIVRE',             label: 'Livré',         path: 'cloture' }
+  { etape: 1,  statut: 'RECEPTION',         label: 'Réception',        path: 'reception' },
+  { etape: 2,  statut: 'DIAGNOSTIC',        label: 'Diagnostic',       path: 'diagnostic' },
+  { etape: 3,  statut: 'PIECES_MO',         label: 'Pièces & MO',      path: 'pieces-mo' },
+  { etape: 4,  statut: 'PROFORMA',          label: 'Proforma',         path: 'proforma' },
+  { etape: 5,  statut: 'ORDRE_DE_TRAVAIL',  label: 'Ordre de Travail', path: 'ordre-travail' },
+  { etape: 6,  statut: 'PAIEMENT',          label: 'Paiement',         path: 'paiement' },
+  { etape: 7,  statut: 'PRET_A_LIVRER',     label: 'Prêt',             path: 'pret-a-livrer' },
+  { etape: 8,  statut: 'LIVRE',             label: 'Livré',            path: 'livraison' }
 ];
 
 export function getEtapeFromStatut(statut: string | StatutOrdreReparation | null | undefined): number {
@@ -125,7 +120,7 @@ export interface OrdreReparation {
   diagnostic?: DiagnosticModel | null;
   techniciens?: { id: number; firstName: string; lastName: string; specialite?: string | null }[];
   techniciensReparation?: { id: number; firstName: string; lastName: string; specialite?: string | null }[];
-  bonDeSortie?: { id: number; reference: string; statut: string } | null;
+  bonsDeSortie?: { id: number; reference: string; statut: string }[];
   lignesOrdreReparationPieces?: {
     id: number;
     piece?: { id: number; reference?: string; designation?: string; prix?: number; type?: string; stockMagasin?: number; stockAtelier?: number };
@@ -165,6 +160,7 @@ export interface OrdreReparationRequest {
 }
 
 // ==========================================
-// DTOs par étape (Exportés depuis le dossier steps)
+// DTOs par étape (Exportés depuis le dossier steps & responses)
 // ==========================================
 export * from './steps';
+export * from './responses';

@@ -1,23 +1,17 @@
 export enum StatutOrdreTravail {
   RECAPITULATIF = 'RECAPITULATIF',         // Étape 1 : Récapitulatif (Proforma, Client, Véhicule)
-  BON_DE_COMMANDE = 'BON_DE_COMMANDE',     // Étape 2 : Approvisionnement
-  BON_DE_SORTIE = 'BON_DE_SORTIE',         // Étape 3 : Attente Bon de Sortie magasin
-  ASSIGN_TECHNICIEN = 'ASSIGN_TECHNICIEN', // Étape 4 : Affectation des techniciens
-  REPARATION = 'REPARATION',               // Étape 5 : Réparation en cours / rapport
-  PAIEMENT = 'PAIEMENT',                   // Étape 6 : Paiement / Facturation
-  PRET_A_LIVRER = 'PRET_A_LIVRER',         // Étape 7 : Prêt à livrer / Préparation
-  LIVRE = 'LIVRE'                          // Étape 8 : Véhicule livré au client
+  BON_DE_SORTIE = 'BON_DE_SORTIE',         // Étape 2 : Attente Bon de Sortie magasin
+  ASSIGN_TECHNICIEN = 'ASSIGN_TECHNICIEN', // Étape 3 : Affectation des techniciens
+  REPARATION = 'REPARATION',               // Étape 4 : Réparation en cours / rapport
+  TERMINE = 'TERMINE'                      // Étape 5 : Intervention clôturée / terminée
 }
 
 export const STATUT_OT_ETAPES: Record<string, number> = {
   RECAPITULATIF: 1,
-  BON_DE_COMMANDE: 2,
-  BON_DE_SORTIE: 3,
-  ASSIGN_TECHNICIEN: 4,
-  REPARATION: 5,
-  PAIEMENT: 6,
-  PRET_A_LIVRER: 7,
-  LIVRE: 8
+  BON_DE_SORTIE: 2,
+  ASSIGN_TECHNICIEN: 3,
+  REPARATION: 4,
+  TERMINE: 5
 };
 
 export interface EtapeOrdreTravailConfig {
@@ -30,13 +24,10 @@ export interface EtapeOrdreTravailConfig {
 
 export const ETAPES_ORDRE_TRAVAIL: EtapeOrdreTravailConfig[] = [
   { etape: 1, statut: StatutOrdreTravail.RECAPITULATIF,     label: 'Récapitulatif', path: 'recapitulatif',     description: 'Proforma, client et véhicule chiffrés' },
-  { etape: 2, statut: StatutOrdreTravail.BON_DE_COMMANDE,   label: 'Approv.',       path: 'approvisionnement', description: 'Commandes fournisseurs' },
-  { etape: 3, statut: StatutOrdreTravail.BON_DE_SORTIE,     label: 'Attente BS',    path: 'bon-sortie',        description: 'Sortie pièces du magasin' },
-  { etape: 4, statut: StatutOrdreTravail.ASSIGN_TECHNICIEN, label: 'Assignation',   path: 'assignation',       description: 'Affectation des techniciens' },
-  { etape: 5, statut: StatutOrdreTravail.REPARATION,        label: 'Réparation',    path: 'reparation',        description: 'Exécution technique et rapport' },
-  { etape: 6, statut: StatutOrdreTravail.PAIEMENT,          label: 'Paiement',      path: 'paiement',          description: 'Facturation et règlement' },
-  { etape: 7, statut: StatutOrdreTravail.PRET_A_LIVRER,     label: 'Prêt',          path: 'pret-a-livrer',     description: 'Préparation et contrôle qualité' },
-  { etape: 8, statut: StatutOrdreTravail.LIVRE,             label: 'Livré',         path: 'livraison',         description: 'Clôture et remise au client' }
+  { etape: 2, statut: StatutOrdreTravail.BON_DE_SORTIE,     label: 'Attente BS',    path: 'bon-sortie',        description: 'Sortie pièces du magasin' },
+  { etape: 3, statut: StatutOrdreTravail.ASSIGN_TECHNICIEN, label: 'Assignation',   path: 'assignation',       description: 'Affectation des techniciens' },
+  { etape: 4, statut: StatutOrdreTravail.REPARATION,        label: 'Réparation',    path: 'reparation',        description: 'Exécution technique et rapport' },
+  { etape: 5, statut: StatutOrdreTravail.TERMINE,           label: 'Terminé',       path: 'reparation',        description: 'Intervention terminée' }
 ];
 
 export function getEtapeFromStatutOT(statut: string | StatutOrdreTravail | null | undefined): number {
@@ -53,20 +44,14 @@ export function getStatutColorOT(statut: StatutOrdreTravail | string | undefined
   switch (statut) {
     case StatutOrdreTravail.RECAPITULATIF:
       return { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' };
-    case StatutOrdreTravail.BON_DE_COMMANDE:
-      return { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' };
     case StatutOrdreTravail.BON_DE_SORTIE:
       return { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' };
     case StatutOrdreTravail.ASSIGN_TECHNICIEN:
       return { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' };
     case StatutOrdreTravail.REPARATION:
       return { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200' };
-    case StatutOrdreTravail.PAIEMENT:
-      return { bg: 'bg-yellow-50', text: 'text-yellow-800', border: 'border-yellow-200' };
-    case StatutOrdreTravail.PRET_A_LIVRER:
-      return { bg: 'bg-cyan-50', text: 'text-cyan-700', border: 'border-cyan-200' };
-    case StatutOrdreTravail.LIVRE:
-      return { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' };
+    case StatutOrdreTravail.TERMINE:
+      return { bg: 'bg-emerald-100', text: 'text-emerald-800', border: 'border-emerald-300' };
     default:
       return { bg: 'bg-slate-50', text: 'text-slate-700', border: 'border-slate-200' };
   }
@@ -187,6 +172,11 @@ export interface StepApprovisionnementResponseDto extends StepBaseDto {
 }
 
 // Étape 3 : Bon de Sortie
+export interface DocumentDto {
+  id: number;
+  numero: string; // Référence du document (ex: "DK-BS-2026-0005")
+}
+
 export interface PieceBonSortieDto {
   ligneId?: number;
   pieceId?: number;
@@ -200,30 +190,34 @@ export interface PieceBonSortieDto {
   prixUnitaire?: number;
 }
 
-export interface StepBonSortieResponseDto extends StepBaseDto {
+export interface BonDeSortieSummaryDto {
+  id: number;
+  numero?: string;
+  reference?: string;
+  statut: string; // "EN_ATTENTE", "VALIDE", etc.
+  dateSortiePrevue?: string;
+  dateSortieEffective?: string;
+  remarques?: string;
+  remarque?: string;
+  lignesBonDeSortiePieces?: any[] | null;
+}
+
+export interface StepBonSortieResponse extends StepBaseDto {
   vehiculeId?: number;
   proformaId?: number;
+  proformaNumero?: string;
   ordreReparationId?: number;
   ordreReparationStatut?: string;
   quantiteTotalePieces?: number;
   montantTotalBons?: number;
-  bonsDeSortie?: import('../../bons-de-sortie/models/bon-de-sortie.model').BonDeSortie[];
   clientId?: number;
-  hasBonDeSortie: boolean;
-  proformaNumero?: string;
+  hasBonDeSortie?: boolean; // true si bonsDeSortie.length > 0
+  bonsDeSortie?: import('../../bons-de-sortie/models/bon-de-sortie.model').BonDeSortie[];
+  bonDeSortie?: BonDeSortieSummaryDto | null; // Rétro-compatibilité
   piecesManquantesProforma?: PieceBonSortieDto[];
-  bonDeSortie?: {
-    id: number;
-    numero?: string;
-    reference?: string;
-    statut: string;
-    dateSortiePrevue?: string;
-    dateSortieEffective?: string;
-    remarques?: string;
-    remarque?: string;
-    lignesBonDeSortiePieces?: any[];
-  } | null;
 }
+
+export type StepBonSortieResponseDto = StepBonSortieResponse;
 
 // Étape 4 : Assignation Techniciens
 export interface TechnicienSummary {
@@ -311,6 +305,11 @@ export interface StepLivraisonDto {
 
 // ─── Modèle Principal OrdreTravail ────────────────────────────────
 
+export interface DocumentDto {
+  id: number;
+  numero: string;
+}
+
 export interface OrdreTravailSummaryDto {
   id: number;
   numero: string;
@@ -345,6 +344,8 @@ export interface OrdreTravailSummaryDto {
   nombreTechniciens?: number;
   nombreBonsCommande?: number;
   nombreBonsSortie?: number;
+  bonsDeCommande?: DocumentDto[];
+  bonsDeSortie?: DocumentDto[];
   createdAt?: string;
   updatedAt?: string;
 }
@@ -372,9 +373,33 @@ export interface OrdreTravail extends OrdreTravailSummaryDto {
 export interface OrdreTravailRequest {
   numero?: string;
   descriptionTravaux?: string;
+  clientId?: number;
   vehiculeId?: number;
   proformaId?: number;
   ordreReparationId?: number;
+  statut?: StatutOrdreTravail;
   dateDebutPrevue?: string;
   tempsEstimeHeures?: number;
+  technicienIds?: number[];
+  bonDeCommandeIds?: number[];
+  bonDeSortieIds?: number[];
+  bonDeSortieId?: number;
+}
+
+export interface OrdreTravailResponse {
+  id: number;
+  numero: string;
+  statut: StatutOrdreTravail;
+  etape: number;
+  client: any;
+  vehicule: any;
+  proformaId?: number;
+  proformaNumero?: string;
+  ordreReparationId?: number;
+  ordreReparationNumero?: string;
+  techniciens: any[];
+  bonsDeCommande: DocumentDto[];
+  bonsDeSortie: DocumentDto[];
+  createdAt: string;
+  updatedAt: string;
 }

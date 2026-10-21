@@ -89,8 +89,10 @@ function handle401Error(
         // Release concurrent 401 requests as well; leaving the subject at null
         // would keep their observables pending forever.
         refreshTokenSubject.next('');
-        authService.logout();
-        router.navigate(['/login'], { replaceUrl: true });
+        if (err?.status === 401 || err?.status === 403) {
+          authService.logout();
+          router.navigate(['/login'], { replaceUrl: true });
+        }
         return throwError(() => err);
       }),
       finalize(() => {

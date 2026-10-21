@@ -44,21 +44,26 @@ export interface BonDeSortie {
   id: number;
   reference: string;
   date: string;
-  statut: 'EN_ATTENTE' | 'VALIDE';
+  statut: 'EN_ATTENTE' | 'VALIDE' | string;
   remarque: string;
   dateValidation: string | null;
   client: { id: number; firstName: string; lastName: string; phone: string } | null;
   vehicule: { id: number; immatriculation: string; marque: string; modele: string } | null;
   agentEmetteur: { id: number; username: string; firstName: string; lastName: string } | null;
   agentValidateur?: { id: number; username: string; firstName: string; lastName: string };
+  ordreReparationId?: number | null;
+  ordreReparation?: { id: number; numero: string } | null;
+  ordreTravailId?: number | null;
+  ordreTravail?: { id: number; numero: string } | null;
   lignesBonDeSortiePieces: LigneBonDeSortie[] | null;
-  ordreReparationId?: number;
-  ordreTravailId?: number;
   ordreReparationStatut?: string;
+  ordreTravailStatut?: string;
   montantTotalPieces?: number;
   montantTotalMainDoeuvre?: number;
   montantTotal?: number;
 }
+
+export type BonDeSortieListResponse = BonDeSortie;
 
 export interface BonDeSortieRequest {
   clientId: number;

@@ -50,8 +50,10 @@ export class StepBonSortieComponent implements OnInit {
 
   get canValidateBonDeSortie(): boolean {
     const role = this.authService.getRole() ?? '';
+    // Cette étape est rattachée à un OT : seul son statut TERMINE autorise la validation.
+    const reparationTerminee = this.data?.statut === 'TERMINE';
     return ['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER'].includes(role)
-      && ['PAIEMENT', 'PRET_A_LIVRER', 'LIVRE'].includes(this.data?.ordreReparationStatut ?? '');
+      && reparationTerminee;
   }
 
   ngOnInit(): void {
