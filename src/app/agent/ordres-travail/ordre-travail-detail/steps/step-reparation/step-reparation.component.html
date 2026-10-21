@@ -3,7 +3,7 @@
   <div class="flex flex-wrap items-center justify-between gap-4 border-b border-oas-line pb-4">
     <div>
       <h2 class="text-lg font-bold text-oas-ink flex items-center gap-2">
-        <span class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-black">5</span>
+        <span class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-black">4</span>
         Exécution des Réparations & Rapport d'Atelier
       </h2>
       <p class="text-xs text-oas-muted mt-0.5">
@@ -68,22 +68,41 @@
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
-        Étape précédente
+        Étape précédente · Assignation
       </a>
 
-      <button (click)="terminerReparation()"
-        [disabled]="saving || !rapportReparation.trim()"
-        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-sm transition disabled:opacity-50 cursor-pointer">
-        @if (saving) {
-          <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-          <span>Validation en cours...</span>
-        } @else {
-          <span>Valider la Réparation & Passer au Paiement</span>
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-          </svg>
+      <div class="flex items-center gap-3">
+        @if (isReparationTerminee || data.rapportReparation) {
+          @if (data.ordreReparationId) {
+            <a [routerLink]="['/app/ordres-reparation', data.ordreReparationId, 'paiement']"
+              class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-sm transition cursor-pointer">
+              <span>Aller au Paiement (OR {{ data.ordreReparationNumero || ('#' + data.ordreReparationId) }})</span>
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+          } @else {
+            <a routerLink="/app/ordres-reparation"
+              class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-sm transition cursor-pointer">
+              <span>Retour aux Ordres de Réparation</span>
+            </a>
+          }
         }
-      </button>
+
+        <button (click)="terminerReparation()"
+          [disabled]="saving || !rapportReparation.trim()"
+          class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-sm transition disabled:opacity-50 cursor-pointer">
+          @if (saving) {
+            <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <span>Enregistrement...</span>
+          } @else {
+            <span>{{ isReparationTerminee || data.rapportReparation ? 'Mettre à jour le Rapport' : 'Valider & Clôturer la Réparation' }}</span>
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+          }
+        </button>
+      </div>
     </div>
 
   }

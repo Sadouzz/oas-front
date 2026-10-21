@@ -113,11 +113,11 @@ export class StepLivraisonComponent implements OnInit {
     this.ordreService.restituerVehicule(this.ordreId, this.canvas.toDataURL('image/png'), this.garantieMois).subscribe({
       next: () => {
         this.saving = false;
-        this.successMessage = 'Véhicule livré avec succès ! Redirection...';
+        this.successMessage = 'Véhicule remis et livré au client avec succès ! Ordre de réparation clôturé.';
+        if (this.loadedOrdre) {
+          this.loadedOrdre.statut = 'LIVRE';
+        }
         this.cdr.markForCheck();
-        setTimeout(() => {
-          this.router.navigate(['/app/ordres-reparation', this.ordreId, 'cloture']);
-        }, 800);
       },
       error: (err) => {
         this.saving = false;

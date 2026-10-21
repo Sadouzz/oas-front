@@ -360,32 +360,15 @@ export class StepProformaComponent implements OnInit {
     this.saving = true;
     this.errorMessage = '';
 
-    const hasRupture = this.lignesPiecesAffichees.some((l: any) => {
-      if (l.isCustom) return false;
-      const dispo = (l.piece?.stockMagasin ?? 0) + (l.piece?.stockAtelier ?? 0);
-      return (l.quantite ?? 0) > dispo;
-    });
-
-    const nextStatut = hasRupture ? 'BON_DE_COMMANDE' : 'BON_DE_SORTIE';
-    this.ordreService.updateStatut(this.ordreId, nextStatut).subscribe({
+    this.ordreService.updateStatut(this.ordreId, 'ORDRE_DE_TRAVAIL').subscribe({
       next: () => {
         this.saving = false;
         this.cdr.markForCheck();
-
-        if (hasRupture) {
-          this.router.navigate(['/app/ordres-reparation', this.ordreId, 'approvisionnement']);
-        } else {
-          this.router.navigate(['/app/ordres-reparation', this.ordreId, 'bon-sortie']);
-        }
+        this.router.navigate(['/app/ordres-reparation', this.ordreId, 'ordre-travail']);
       },
-      error: (err) => {
+      error: () => {
         this.saving = false;
-        // Si le statut est déjà synchronisé côté backend, on autorise la navigation
-        if (hasRupture) {
-          this.router.navigate(['/app/ordres-reparation', this.ordreId, 'approvisionnement']);
-        } else {
-          this.router.navigate(['/app/ordres-reparation', this.ordreId, 'bon-sortie']);
-        }
+        this.router.navigate(['/app/ordres-reparation', this.ordreId, 'ordre-travail']);
       }
     });
   }

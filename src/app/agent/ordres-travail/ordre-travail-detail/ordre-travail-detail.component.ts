@@ -169,5 +169,27 @@ export class OrdreTravailDetailComponent implements OnInit, OnDestroy {
       this.activeChild?.data?.client;
     return c?.phone || c?.telephone || (this.loadedOT as any).clientPhone || '';
   }
+
+  getProformaDisplay(): string {
+    if (!this.loadedOT && !this.activeChild) return '';
+    return (
+      this.loadedOT?.proformaNumero ||
+      this.loadedOT?.proforma?.numero ||
+      this.activeChild?.data?.proformaNumero ||
+      this.activeChild?.data?.proforma?.numero ||
+      (this.loadedOT?.proformaId ? `PF #${this.loadedOT.proformaId}` : '') ||
+      (this.activeChild?.data?.proformaId ? `PF #${this.activeChild.data.proformaId}` : '')
+    );
+  }
+
+  getProformaId(): number | null {
+    return (
+      this.loadedOT?.proformaId ||
+      this.loadedOT?.proforma?.id ||
+      this.activeChild?.data?.proformaId ||
+      this.activeChild?.data?.proforma?.id ||
+      null
+    );
+  }
 }
 

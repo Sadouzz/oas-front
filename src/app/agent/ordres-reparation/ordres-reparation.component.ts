@@ -165,17 +165,17 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
     }
 
     const params = {
-      page: 0,
-      size: 1000,
+      page: this.page - 1,
+      size: this.pageSize,
       ...extra
     };
 
     this.service.getAll(params).subscribe({
       next: (res: any) => {
-        const items = extractContent<OrdreReparation>(res);
-        this.rawOrdres = (items && items.length) ? items : (this.applyPageResponse<OrdreReparation>(res) || []);
-
-        this.applyFilter();
+        const items = this.applyPageResponse<OrdreReparation>(res);
+        this.rawOrdres = items || [];
+        this.filteredOrdres = this.rawOrdres;
+        this.ordres = this.rawOrdres;
 
         this.loading = false;
         this.cdr.markForCheck();
@@ -196,32 +196,31 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
   }
 
   get paged(): OrdreReparation[] {
-    const start = (this.page - 1) * this.pageSize;
-    return this.filteredOrdres.slice(start, start + this.pageSize);
+    return this.filteredOrdres;
   }
 
   override get totalPages(): number {
-    return Math.max(1, Math.ceil(this.totalElements / this.pageSize));
+    return this.serverTotalPages || Math.max(1, Math.ceil(this.totalElements / this.pageSize));
   }
 
   override prevPage(): void {
     if (this.page > 1) {
       this.page--;
-      this.cdr.markForCheck();
+      this.loadData();
     }
   }
 
   override nextPage(): void {
     if (this.page < this.totalPages) {
       this.page++;
-      this.cdr.markForCheck();
+      this.loadData();
     }
   }
 
   override goToPage(p: number): void {
     if (p >= 1 && p <= this.totalPages && p !== this.page) {
       this.page = p;
-      this.cdr.markForCheck();
+      this.loadData();
     }
   }
 
@@ -404,10 +403,12 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
 
     this.filteredOrdres = list;
     this.ordres = list;
-    this.totalElements = list.length;
-    this.serverTotalPages = Math.max(1, Math.ceil(this.totalElements / this.pageSize));
+    if (!this.serverTotalPages || this.serverTotalPages <= 1) {
+      this.totalElements = list.length;
+      this.serverTotalPages = Math.max(1, Math.ceil(this.totalElements / this.pageSize));
+    }
 
-    if (this.page > this.serverTotalPages) {
+    if (this.page > this.totalPages) {
       this.page = 1;
     }
   }

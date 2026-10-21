@@ -93,7 +93,23 @@
           } @else {
           @for (bon of paged; track bon.id) {
           <tr class="hover:bg-oas-bg transition border-b border-oas-line">
-            <td class="px-5 py-4 font-mono font-bold text-oas-accent text-xs">{{ bon.reference }}</td>
+            <td class="px-5 py-4">
+              <span class="font-mono font-bold text-oas-accent text-xs block">{{ bon.reference }}</span>
+              <div class="flex items-center gap-1 mt-1 flex-wrap">
+                @if (bon.ordreReparation || bon.ordreReparationId) {
+                  <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200"
+                    title="Ordre de Réparation associé">
+                    OR: {{ bon.ordreReparation?.numero || ('#' + bon.ordreReparationId) }}
+                  </span>
+                }
+                @if (bon.ordreTravail || bon.ordreTravailId) {
+                  <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-orange-50 text-orange-700 border border-orange-200"
+                    title="Ordre de Travail associé">
+                    OT: {{ bon.ordreTravail?.numero || ('#' + bon.ordreTravailId) }}
+                  </span>
+                }
+              </div>
+            </td>
             <td class="px-5 py-4 text-xs text-oas-muted whitespace-nowrap">{{ formatDate(bon.date) }}</td>
             <td class="px-5 py-4">
               <p class="font-semibold text-oas-ink text-xs">{{ bon.client?.firstName }} {{ bon.client?.lastName }}</p>

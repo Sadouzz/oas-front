@@ -41,8 +41,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
           if (req.url.includes('/refresh')) {
             isRefreshing = false;
             refreshTokenSubject.next(null);
-            authService.logout();
-            router.navigate(['/login'], { replaceUrl: true });
+            if (error.status === 401 || error.status === 403) {
+              authService.logout();
+              router.navigate(['/login'], { replaceUrl: true });
+            }
           }
           return throwError(() => error);
         }
@@ -89,11 +91,14 @@ function handle401Error(
       }),
       catchError((err) => {
         isRefreshing = false;
-        // Release concurrent 401 requests as well; leaving the subject at null
-        // would keep their observables pending forever.
+        // Libérer les requêtes concurrentes en attente
         refreshTokenSubject.next('');
-        authService.logout();
-        router.navigate(['/login'], { replaceUrl: true });
+        // Ne déconnecter que si l'erreur est bien 401/403 (cookie invalide côté serveur)
+        // et non pas une perte de réseau momentanée (status 0)
+        if (err?.status === 401 || err?.status === 403) {
+          authService.logout();
+          router.navigate(['/login'], { replaceUrl: true });
+        }
         return throwError(() => err);
       })
     );

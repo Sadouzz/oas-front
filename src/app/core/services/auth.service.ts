@@ -23,7 +23,82 @@ export class AuthService {
     // Retire l'ancien jeton persistant lisible par JavaScript. Le jeton d'accès reste
     // en mémoire; seul le jeton de renouvellement est conservé dans un cookie HttpOnly.
     this.cookieService.delete('token');
-    this.scheduleAutoRefresh();
+    this.setupLifecycleListeners();
+  }
+
+  /**
+   * Initialisation au démarrage d'Angular (APP_INITIALIZER) :
+   * Si une session existe dans les cookies, rafraîchit immédiatement le jeton d'accès
+   * pour éviter tout flash "non connecté" et garantir la présence du Bearer token dès la 1ère requête.
+   */
+  initAuth(): Promise<void> {
+    const hasSessionCookie = !!(this.cookieService.get('username') || this.cookieService.get('role'));
+    if (!hasSessionCookie) {
+      return Promise.resolve();
+    }
+
+    return new Promise<void>((resolve) => {
+      this.refreshToken().subscribe({
+        next: () => {
+          resolve();
+        },
+        error: (err) => {
+          // Si le serveur rejette explicitement avec 401 ou 403, le cookie est invalide/révoqué
+          if (err?.status === 401 || err?.status === 403) {
+            this.logout();
+          }
+          // En cas d'erreur réseau temporaire (status 0, etc.), on résout sans déconnecter
+          resolve();
+        }
+      });
+    });
+  }
+
+  /**
+   * Écoute le retour sur l'onglet (sortie de veille du PC ou changement d'onglet)
+   * et la reconnexion au réseau pour rafraîchir le jeton proactivement avant expiration.
+   */
+  private setupLifecycleListeners(): void {
+    if (typeof window === 'undefined') return;
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        this.checkAndRefreshIfNecessary();
+      }
+    });
+
+    window.addEventListener('online', () => {
+      this.checkAndRefreshIfNecessary();
+    });
+  }
+
+  private checkAndRefreshIfNecessary(): void {
+    const hasSessionCookie = !!(this.cookieService.get('username') || this.cookieService.get('role'));
+    if (!hasSessionCookie) return;
+
+    const token = this.getToken();
+    if (!token || this.isTokenExpired() || this.tokenExpiresSoon(120_000)) {
+      this.refreshToken().subscribe({
+        next: () => {},
+        error: (err) => {
+          if (err?.status === 401 || err?.status === 403) {
+            this.logout();
+            this.router.navigate(['/login'], { replaceUrl: true });
+          }
+        }
+      });
+    }
+  }
+
+  tokenExpiresSoon(thresholdMs = 60_000): boolean {
+    const token = this.getToken();
+    if (!token) return true;
+    try {
+      const { exp } = jwtDecode<{ exp: number }>(token);
+      return (exp * 1000) - Date.now() <= thresholdMs;
+    } catch {
+      return true;
+    }
   }
 
   login(credentials: LoginRequest): Observable<AuthResponse> {
@@ -151,10 +226,14 @@ export class AuthService {
               // Nouveau token obtenu et nouveau timer planifié dans le tap()
             },
             error: (err) => {
-              console.warn('[AuthService] Échec du rafraîchissement automatique du token:', err);
-              if (this.isTokenExpired()) {
+              console.warn('[AuthService] Échec du rafraîchissement proactif du token:', err);
+              if (err?.status === 401 || err?.status === 403) {
                 this.logout();
                 this.router.navigate(['/login'], { replaceUrl: true });
+              } else {
+                // Erreur réseau temporaire : réessayer dans 10 secondes au lieu de déconnecter brutalement
+                this.clearAutoRefreshTimer();
+                this.expirationTimer = setTimeout(() => this.scheduleAutoRefresh(), 10_000);
               }
             }
           });
@@ -163,8 +242,14 @@ export class AuthService {
         // Token déjà expiré, tenter un refresh immédiat
         this.refreshToken().subscribe({
           next: () => {},
-          error: () => {
-            this.logout();
+          error: (err) => {
+            if (err?.status === 401 || err?.status === 403) {
+              this.logout();
+              this.router.navigate(['/login'], { replaceUrl: true });
+            } else {
+              this.clearAutoRefreshTimer();
+              this.expirationTimer = setTimeout(() => this.scheduleAutoRefresh(), 5_000);
+            }
           }
         });
       }
