@@ -54,6 +54,7 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
   ordresReparation: OrdreReparation[] = [];
   fichesFiltrees: OrdreReparation[] = [];
   invoiceTemplates: PdfTemplate[] = [];
+  downloadLayoutKey: 'AVEC_ENTETE' | 'SANS_ENTETE' = 'AVEC_ENTETE';
 
   clientOpen = false;
   vehiculeOpen = false;
@@ -388,11 +389,11 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
   }
 
   downloadPdf(id: number) {
-    this.service.downloadPdf(id).subscribe(blob => {
+    this.service.downloadPdf(id, this.downloadLayoutKey).subscribe(blob => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `facture-${id}.pdf`;
+      a.download = `facture-${id}-${this.downloadLayoutKey === 'AVEC_ENTETE' ? 'avec-entete' : 'sans-entete'}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     });
@@ -405,6 +406,24 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
 
   formatDate(d: string): string { return new Date(d).toLocaleDateString('fr-FR'); }
   fmt(n: number): string { return new Intl.NumberFormat('fr-FR').format(n ?? 0); }
+
+  remiseGeneraleFacture(facture: FactureModel): number {
+    const remisePieces = (facture.lignesPieces ?? []).reduce((total, ligne) => {
+      const brut = (Number(ligne.quantite) || 0) * (Number(ligne.prix) || 0);
+      const net = Number.isFinite(Number(ligne.montantTotal))
+        ? Number(ligne.montantTotal)
+        : Math.round(brut * (1 - (Number(ligne.tauxRemise) || 0) / 100));
+      return total + brut - net;
+    }, 0);
+    const remiseMainDoeuvre = (facture.lignesMainDoeuvres ?? []).reduce((total, ligne) => {
+      const brut = (Number(ligne.nbreHeure) || 0) * (Number(ligne.tarifHoraire) || 0);
+      const net = Number.isFinite(Number(ligne.montantTotal))
+        ? Number(ligne.montantTotal)
+        : Math.round(brut * (1 - (Number(ligne.tauxRemise) || 0) / 100));
+      return total + brut - net;
+    }, 0);
+    return remisePieces + remiseMainDoeuvre;
+  }
 
   get paged(): FactureModel[] {
     return this.filtered;

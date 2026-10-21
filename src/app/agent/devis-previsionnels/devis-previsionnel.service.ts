@@ -45,8 +45,8 @@ export class DevisPrevisionnelService {
     return this.http.put<DevisPrevisionnel>(`${this.api}/${id}/valider`, {});
   }
 
-  downloadPdf(id: number): Observable<Blob> {
-    return this.http.get(`${this.api}/${id}/pdf`, { responseType: 'blob' });
+  downloadPdf(id: number, layoutKey: 'AVEC_ENTETE' | 'SANS_ENTETE' = 'AVEC_ENTETE'): Observable<Blob> {
+    return this.http.get(`${this.api}/${id}/pdf`, { params: { layoutKey }, responseType: 'blob' });
   }
 }
 

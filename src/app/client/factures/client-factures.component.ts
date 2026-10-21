@@ -109,4 +109,18 @@ export class ClientFacturesComponent implements OnInit {
   closeDetail(): void {
     this.selected = null;
   }
+
+  remiseGenerale(facture: FactureModel): number {
+    const remisePieces = (facture.lignesPieces ?? []).reduce((s, ligne) => {
+      const brut = (Number(ligne.quantite) || 0) * (Number(ligne.prix) || 0);
+      const net = Number(ligne.montantTotal ?? Math.round(brut * (1 - (Number(ligne.tauxRemise) || 0) / 100)));
+      return s + brut - net;
+    }, 0);
+    const remiseMo = (facture.lignesMainDoeuvres ?? []).reduce((s, ligne) => {
+      const brut = (Number(ligne.nbreHeure) || 0) * (Number(ligne.tarifHoraire) || 0);
+      const net = Number(ligne.montantTotal ?? Math.round(brut * (1 - (Number(ligne.tauxRemise) || 0) / 100)));
+      return s + brut - net;
+    }, 0);
+    return remisePieces + remiseMo;
+  }
 }

@@ -83,14 +83,17 @@ export class BonsReceptionComponent extends BasePaginatedComponent implements On
     });
   }
 
-  downloadPdf(id: number) {
-    this.service.downloadPdf(id).subscribe(blob => {
+  downloadPdf(id: number, layoutKey: 'AVEC_ENTETE' | 'SANS_ENTETE') {
+    this.service.downloadPdf(id, layoutKey).subscribe({
+      next: blob => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `bon-reception-${id}.pdf`;
+      a.download = `bon-reception-${id}-${layoutKey === 'AVEC_ENTETE' ? 'avec-entete' : 'sans-entete'}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
+      },
+      error: () => this.notifyError('Impossible de télécharger le bon de réception.'),
     });
   }
 

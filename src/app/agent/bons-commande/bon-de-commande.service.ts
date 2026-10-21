@@ -67,7 +67,7 @@ export class BonDeCommandeService {
     return this.http.post<BonDeCommande>(`${this.api}/${id}/receptionner-reception`, data);
   }
 
-  downloadPdf(id: number): Observable<Blob> {
-    return this.http.get(`${this.api}/${id}/pdf`, { responseType: 'blob' });
+  downloadPdf(id: number, layoutKey: 'AVEC_ENTETE' | 'SANS_ENTETE'): Observable<Blob> {
+    return this.http.get(`${this.api}/${id}/pdf`, { params: { layoutKey }, responseType: 'blob' });
   }
 }

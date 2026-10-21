@@ -12,7 +12,7 @@
         <div class="mb-2 flex items-center gap-2 rounded-lg border border-oas-line p-2.5">
           <button type="button" (click)="select(template)" class="min-w-0 flex-1 text-left">
             <span class="block truncate text-sm font-semibold">{{ template.name }} <span class="text-oas-muted">v{{ template.version }}</span></span>
-            <span class="block text-xs text-oas-muted">{{ labelsFor(template) }}{{ (template.documentTypes || [template.documentType]).includes('FACTURE') ? ' · ' + (template.layoutKey === 'SANS_ENTETE' ? 'Sans entête' : 'Avec entête') : '' }}{{ template.active ? ' · Disponible' : '' }}</span>
+            <span class="block text-xs text-oas-muted">{{ labelsFor(template) }}{{ supportsLayout(template) ? ' · ' + (template.layoutKey === 'SANS_ENTETE' ? 'Sans entête' : 'Avec entête') : '' }}{{ template.active ? ' · Disponible' : '' }}</span>
           </button>
           @if (!template.active) { <button type="button" (click)="activate(template)" class="rounded-md border border-oas-line px-2 py-1 text-xs font-semibold">Rendre disponible</button> }
           @else if (template.documentType === 'FACTURE') { <button type="button" (click)="deactivate(template)" class="rounded-md border border-oas-line px-2 py-1 text-xs font-semibold">Retirer</button> }
@@ -26,7 +26,7 @@
         </label>
         <fieldset class="rounded-lg border border-oas-line p-3"><legend class="px-1 text-sm font-semibold text-oas-ink">Types de documents associés</legend><p class="mb-2 text-xs text-oas-muted">Le modèle apparaîtra dans le choix de tous les types cochés. Une modification sera enregistrée comme nouvelle version.</p><button type="button" (click)="toggleAllAssignments(!documentTypes.every(type => isAssigned(type.id)))" class="mb-2 rounded-lg border border-oas-line px-2.5 py-1.5 text-xs font-semibold">{{ documentTypes.every(type => isAssigned(type.id)) ? 'Retirer la sélection globale' : 'Affecter à tous les types' }}</button><div class="grid gap-2 sm:grid-cols-2">@for (type of documentTypes; track type.id) { <label class="flex items-center gap-2 text-sm"><input type="checkbox" [checked]="isAssigned(type.id)" (change)="toggleAssignment(type.id, $any($event.target).checked)" />{{ type.label }}</label> }</div>@if (assignedDocumentTypes.length > 1) { <p class="mt-2 text-xs text-oas-muted">Les tableaux de lignes pièces/main-d’œuvre dynamiques sont réservés aux modèles affectés uniquement aux factures.</p> }</fieldset>
       </div>
-      @if (assignedDocumentTypes.includes('FACTURE')) {
+      @if (supportsLayout()) {
         <label class="mt-4 block text-sm font-semibold text-oas-ink">Présentation
           <select [(ngModel)]="layoutKey" class="mt-1 w-full rounded-lg border border-oas-line bg-white px-3 py-2 font-normal"><option value="AVEC_ENTETE">Avec entête, images et pied de page</option><option value="SANS_ENTETE">Sans entête, texte et tableaux</option></select>
         </label>

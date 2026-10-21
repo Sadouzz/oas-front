@@ -59,45 +59,10 @@ export class StepBonSortieComponent implements OnInit {
 
   creerBonDeSortie(): void {
     if (!this.loadedOrdre) return;
-    this.saving = true;
-
     const clientId = this.loadedOrdre.vehicule?.client?.id || 0;
     const vehiculeId = this.loadedOrdre.vehicule?.id || 0;
-
-    const lignes = (this.loadedOrdre.lignesOrdreReparationPieces || []).map((l: any) => ({
-      pieceId: l.piece ? l.piece.id : null,
-      quantite: l.quantite,
-      prix: l.prix || l.piece?.prix || null,
-      isCustom: !!l.isCustom,
-      designationPds: l.designationPds
-    }));
-
-    this.bdsService.creer({
-      clientId,
-      vehiculeId,
-      ordreReparationId: this.ordreId,
-      lignesPieces: lignes,
-      remarque: `BDS généré pour ordre ${this.loadedOrdre.numero || this.ordreId}`
-    }).subscribe({
-      next: () => {
-        this.ordreService.updateStatut(this.ordreId, 'ASSIGN_TECHNICIEN').subscribe({
-          next: () => {
-            this.saving = false;
-            this.successMessage = 'Bon de sortie créé avec succès. Redirection vers l\'assignation...';
-            this.cdr.markForCheck();
-            this.router.navigate(['/app/ordres-reparation', this.ordreId, 'assignation']);
-          },
-          error: () => {
-            this.saving = false;
-            this.router.navigate(['/app/ordres-reparation', this.ordreId, 'assignation']);
-          }
-        });
-      },
-      error: (err: any) => {
-        this.saving = false;
-        this.errorMessage = err.error?.message || 'Erreur lors de la création du bon de sortie.';
-        this.cdr.markForCheck();
-      }
+    this.router.navigate(['/app/bons-de-sortie'], {
+      queryParams: { action: 'new', clientId, vehiculeId, ordreReparationId: this.ordreId }
     });
   }
 }

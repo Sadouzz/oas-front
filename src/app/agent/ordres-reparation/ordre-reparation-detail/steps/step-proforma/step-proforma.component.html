@@ -104,7 +104,8 @@
                   <th class="px-4 py-3 w-16 text-center">Type</th>
                   <th class="px-4 py-3">Désignation</th>
                   <th class="px-3 py-3 text-center w-24">Quantité</th>
-                  <th class="px-4 py-3 text-right w-36">Prix unitaire HT</th>
+                  <th class="px-4 py-3 text-right w-36">Prix unitaire net HT</th>
+                  <th class="px-4 py-3 text-right w-32">Remise</th>
                   <th class="px-4 py-3 text-right w-40">Total HT</th>
                 </tr>
               </thead>
@@ -116,6 +117,7 @@
                   @let pQte = getPieceQuantite(ligne);
                   @let pPrix = getPiecePrixUnitaire(ligne);
                   @let pTot = getPieceTotal(ligne);
+                  @let pRemise = getPieceTauxRemise(ligne);
 
                   <tr class="hover:bg-slate-50/70 transition">
                     <td class="px-4 py-3 text-center">
@@ -145,7 +147,14 @@
                       {{ pQte }}
                     </td>
                     <td class="px-4 py-3 text-right font-medium text-oas-muted whitespace-nowrap">
-                      {{ pPrix | number }} FCFA
+                      @if (pRemise > 0) { <span class="block text-[10px] line-through">{{ pPrix | number }}</span> }
+                      <span [class.font-bold]="pRemise > 0" [class.text-oas-ink]="pRemise > 0">{{ getPiecePrixUnitaireNet(ligne) | number }} FCFA</span>
+                    </td>
+                    <td class="px-4 py-3 text-right whitespace-nowrap">
+                      @if (pRemise > 0) {
+                        <span class="block font-bold text-emerald-700">−{{ pRemise }} %</span>
+                        <span class="text-[10px] text-oas-muted">−{{ getPieceMontantRemise(ligne) | number }} FCFA</span>
+                      } @else { <span class="text-oas-muted">—</span> }
                     </td>
                     <td class="px-4 py-3 text-right font-extrabold text-oas-ink whitespace-nowrap">
                       {{ pTot | number }} FCFA
@@ -155,7 +164,7 @@
               </tbody>
               <tfoot class="bg-oas-bg/70 border-t border-oas-line font-bold text-xs text-oas-ink">
                 <tr>
-                  <td colspan="4" class="px-4 py-2.5 text-right text-oas-muted">Sous-total Pièces HT :</td>
+                  <td colspan="5" class="px-4 py-2.5 text-right text-oas-muted">Pièces après remise générale :</td>
                   <td class="px-4 py-2.5 text-right font-black text-oas-ink whitespace-nowrap">
                     {{ totalPiecesEstime | number }} FCFA
                   </td>
@@ -191,7 +200,8 @@
                 <tr>
                   <th class="px-4 py-3">Prestation / Intervention</th>
                   <th class="px-3 py-3 text-center w-24">Heures / Qté</th>
-                  <th class="px-4 py-3 text-right w-36">Tarif horaire HT</th>
+                  <th class="px-4 py-3 text-right w-36">Tarif horaire net HT</th>
+                  <th class="px-4 py-3 text-right w-32">Remise</th>
                   <th class="px-4 py-3 text-right w-40">Total HT</th>
                 </tr>
               </thead>
@@ -214,7 +224,14 @@
                       {{ moH }} h
                     </td>
                     <td class="px-4 py-3 text-right font-medium text-oas-muted whitespace-nowrap">
-                      {{ moTarif | number }} FCFA
+                      @if (getMOTauxRemise(ligne) > 0) { <span class="block text-[10px] line-through">{{ moTarif | number }}</span> }
+                      <span [class.font-bold]="getMOTauxRemise(ligne) > 0" [class.text-oas-ink]="getMOTauxRemise(ligne) > 0">{{ getMOTarifHoraireNet(ligne) | number }} FCFA</span>
+                    </td>
+                    <td class="px-4 py-3 text-right whitespace-nowrap">
+                      @if (getMOTauxRemise(ligne) > 0) {
+                        <span class="block font-bold text-emerald-700">−{{ getMOTauxRemise(ligne) }} %</span>
+                        <span class="text-[10px] text-oas-muted">−{{ getMOMontantRemise(ligne) | number }} FCFA</span>
+                      } @else { <span class="text-oas-muted">—</span> }
                     </td>
                     <td class="px-4 py-3 text-right font-extrabold text-oas-ink whitespace-nowrap">
                       {{ moTot | number }} FCFA
@@ -224,7 +241,7 @@
               </tbody>
               <tfoot class="bg-oas-bg/70 border-t border-oas-line font-bold text-xs text-oas-ink">
                 <tr>
-                  <td colspan="3" class="px-4 py-2.5 text-right text-oas-muted">Sous-total Main-d'œuvre HT :</td>
+                  <td colspan="4" class="px-4 py-2.5 text-right text-oas-muted">Main-d’œuvre après remise générale :</td>
                   <td class="px-4 py-2.5 text-right font-black text-oas-ink whitespace-nowrap">
                     {{ totalMOEstime | number }} FCFA
                   </td>
@@ -245,24 +262,42 @@
       <div class="bg-white border border-oas-line rounded-2xl p-5 shadow-2xs space-y-3">
         <h3 class="text-sm font-bold text-oas-ink uppercase tracking-wide">Récapitulatif Financier</h3>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-2">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
           <div class="p-3 bg-oas-bg/50 rounded-xl border border-oas-line">
-            <span class="text-[11px] text-oas-muted block font-medium">Sous-total Pièces</span>
+            <span class="text-[11px] text-oas-muted block font-medium">Pièces après remise générale</span>
             <strong class="text-sm font-bold text-oas-ink">{{ totalPiecesEstime | number }} FCFA</strong>
           </div>
           <div class="p-3 bg-oas-bg/50 rounded-xl border border-oas-line">
-            <span class="text-[11px] text-oas-muted block font-medium">Sous-total Main-d'œuvre</span>
+            <span class="text-[11px] text-oas-muted block font-medium">Main-d'œuvre après remise générale</span>
             <strong class="text-sm font-bold text-oas-ink">{{ totalMOEstime | number }} FCFA</strong>
           </div>
           <div class="p-3 bg-oas-bg/50 rounded-xl border border-oas-line">
-            <span class="text-[11px] text-oas-muted block font-medium">Total HT</span>
+            <span class="text-[11px] text-oas-muted block font-medium">Remises générales appliquées</span>
+            <strong class="text-sm font-bold text-oas-ink">−{{ montantRemiseGenerale | number }} FCFA</strong>
+          </div>
+          <div class="p-3 bg-oas-bg/50 rounded-xl border border-oas-line">
+            <span class="text-[11px] text-oas-muted block font-medium">Total après remises générales</span>
+            <strong class="text-sm font-bold text-oas-ink">{{ (totalPiecesEstime + totalMOEstime) | number }} FCFA</strong>
+          </div>
+          @if (tauxRemiseClient > 0 || proformaChargee.montantRemiseClient > 0) {
+            <div class="p-3 bg-oas-bg/50 rounded-xl border border-oas-line">
+              <span class="text-[11px] text-oas-muted block font-medium">Remise compte client ({{ tauxRemiseClient }} %)</span>
+              <strong class="text-sm font-bold text-oas-ink">−{{ (proformaChargee.montantRemiseClient || totalPiecesEstime * tauxRemiseClient / 100) | number }} FCFA</strong>
+            </div>
+          }
+          <div class="p-3 bg-oas-bg/50 rounded-xl border border-oas-line">
+            <span class="text-[11px] text-oas-muted block font-medium">Pièces après remise compte client</span>
+            <strong class="text-sm font-bold text-oas-ink">{{ (totalPiecesEstime - (proformaChargee.montantRemiseClient || totalPiecesEstime * tauxRemiseClient / 100)) | number }} FCFA</strong>
+          </div>
+          <div class="p-3 bg-oas-bg/50 rounded-xl border border-oas-line">
+            <span class="text-[11px] text-oas-muted block font-medium">Total HT après remises</span>
             <strong class="text-sm font-extrabold text-oas-ink">{{ (proformaChargee.montantHT || totalHTCalcule) | number }} FCFA</strong>
           </div>
           <div class="p-3 bg-oas-bg/50 rounded-xl border border-oas-line">
             <span class="text-[11px] text-oas-muted block font-medium">TVA ({{ tvaTaux }}%)</span>
             <strong class="text-sm font-bold text-oas-ink">{{ (proformaChargee.montantTVA || totalTVACalcule) | number }} FCFA</strong>
           </div>
-          <div class="p-3 bg-oas-accent/10 rounded-xl border border-oas-accent/30 sm:col-span-3 lg:col-span-1">
+          <div class="p-3 bg-oas-accent/10 rounded-xl border border-oas-accent/30">
             <span class="text-[11px] text-oas-accent font-bold block uppercase">Net à Payer (TTC)</span>
             <strong class="text-base font-black text-oas-accent whitespace-nowrap">{{ (proformaChargee.montantTTC || totalTTCCalcule) | number }} FCFA</strong>
           </div>
@@ -293,6 +328,9 @@
             </div>
           </div>
           <div class="flex items-center gap-3">
+            <select [value]="downloadLayoutKey" (change)="downloadLayoutKey = $any($event.target).value" class="px-3 py-2.5 border border-oas-line rounded-xl text-xs bg-white">
+              <option value="AVEC_ENTETE">Avec en-tête</option><option value="SANS_ENTETE">Sans en-tête</option>
+            </select>
             <button type="button" (click)="telechargerPdf()" [disabled]="telechargementEnCours"
               class="px-4 py-2.5 border border-oas-line hover:bg-oas-bg text-oas-ink rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer">
               <svg class="w-4 h-4 text-oas-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -353,6 +391,9 @@
             </div>
           </div>
           <div class="flex items-center gap-3">
+            <select [value]="downloadLayoutKey" (change)="downloadLayoutKey = $any($event.target).value" class="px-3 py-2.5 border border-oas-line rounded-xl text-xs bg-white">
+              <option value="AVEC_ENTETE">Avec en-tête</option><option value="SANS_ENTETE">Sans en-tête</option>
+            </select>
             <a [routerLink]="['/app/ordres-reparation', ordreId, 'pieces-mo']"
                title="Modifier les pièces et la main-d'œuvre (Étape 3)"
                class="px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer">

@@ -127,7 +127,7 @@
                   <div class="border border-oas-line rounded-xl divide-y divide-oas-line mb-4 overflow-hidden">
                     @for (ligne of selected.lignesPieces; track ligne.id) {
                       <div class="flex justify-between px-3 py-2 text-sm">
-                        <span class="text-oas-ink2">{{ ligne.designationPiece }} × {{ ligne.quantite }}</span>
+                        <span class="text-oas-ink2">{{ ligne.designationPiece }} × {{ ligne.quantite }} <small class="block text-oas-muted">Remise générale : {{ ligne.tauxRemise || 0 }} %</small></span>
                         <span class="font-mono-data font-semibold text-oas-ink">{{ ligne.montantTotal | number:'1.0-0' }} F</span>
                       </div>
                     }
@@ -139,15 +139,22 @@
                   <div class="border border-oas-line rounded-xl divide-y divide-oas-line mb-4 overflow-hidden">
                     @for (ligne of selected.lignesMainDoeuvres; track ligne.id) {
                       <div class="flex justify-between px-3 py-2 text-sm">
-                        <span class="text-oas-ink2">{{ ligne.nbreHeure }} h × {{ ligne.tarifHoraire | number:'1.0-0' }} F</span>
-                        <span class="font-mono-data font-semibold text-oas-ink">{{ ligne.nbreHeure * ligne.tarifHoraire | number:'1.0-0' }} F</span>
+                        <span class="text-oas-ink2">{{ ligne.nbreHeure }} h × {{ ligne.tarifHoraire | number:'1.0-0' }} F <small class="block text-oas-muted">Remise générale : {{ ligne.tauxRemise || 0 }} %</small></span>
+                        <span class="font-mono-data font-semibold text-oas-ink">{{ ligne.montantTotal | number:'1.0-0' }} F</span>
                       </div>
                     }
                   </div>
                 }
 
                 <div class="border-t border-oas-line pt-4 mt-2 space-y-1 text-sm">
-                  <div class="flex justify-between"><span class="text-oas-muted">Total HT</span><span class="font-mono-data">{{ selected.montantHT | number:'1.0-0' }} F</span></div>
+                  @if (remiseGenerale(selected) > 0) {
+                    <div class="flex justify-between"><span class="text-oas-muted">Remises générales par ligne</span><span class="font-mono-data">−{{ remiseGenerale(selected) | number:'1.0-0' }} F</span></div>
+                  }
+                  <div class="flex justify-between"><span class="text-oas-muted">Total après remises générales</span><span class="font-mono-data">{{ (selected.montantHT + (selected.montantRemiseClient || 0)) | number:'1.0-0' }} F</span></div>
+                  @if ((selected.montantRemiseClient || 0) > 0) {
+                    <div class="flex justify-between"><span class="text-oas-muted">Remise compte client ({{ selected.tauxRemiseClient || 0 }} %), sur les pièces</span><span class="font-mono-data">−{{ selected.montantRemiseClient | number:'1.0-0' }} F</span></div>
+                  }
+                  <div class="flex justify-between"><span class="text-oas-muted">Total HT après remises</span><span class="font-mono-data">{{ selected.montantHT | number:'1.0-0' }} F</span></div>
                   <div class="flex justify-between"><span class="text-oas-muted">TVA</span><span class="font-mono-data">{{ selected.montantTVA | number:'1.0-0' }} F</span></div>
                   <div class="flex justify-between font-extrabold text-base text-oas-ink pt-1"><span>Total TTC</span><span class="font-mono-data">{{ selected.montantTTC | number:'1.0-0' }} F</span></div>
                 </div>

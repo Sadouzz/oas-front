@@ -1,533 +1,66 @@
-<div class="space-y-6">
-  <!-- En-tête de l'étape -->
-  <div class="flex flex-wrap items-center justify-between gap-4 border-b border-oas-line pb-4">
+<section class="space-y-5">
+  <header class="flex flex-wrap items-start justify-between gap-4">
     <div>
-      <h2 class="text-lg font-bold text-oas-ink flex items-center gap-2">
-        <span class="w-7 h-7 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center text-sm font-black shadow-2xs">3</span>
-        Sortie Pièces du Magasin (Bon de Sortie)
-      </h2>
-      <p class="text-xs text-oas-muted mt-0.5">
-        Générez un Bon de Sortie unique pour toutes les pièces requises et validez-le pour déstocker les pièces vers l'atelier.
-      </p>
+      <p class="text-xs font-bold uppercase tracking-wide text-oas-muted">Étape · Bons de sortie</p>
+      <h2 class="text-xl font-black text-oas-ink">Bons de sortie de l’ordre</h2>
+      <p class="text-sm text-oas-muted">Chaque BS reste lié à cet OT et à son ordre de réparation. Les pièces et quantités sont ajoutées dans la page de création.</p>
     </div>
-    <div class="flex items-center gap-2">
-      <a routerLink="/app/bons-de-sortie"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-oas-line bg-white hover:bg-oas-bg text-xs font-semibold text-oas-ink transition shadow-2xs">
-        <svg class="w-3.5 h-3.5 text-oas-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-        </svg>
-        Module Bons de Sortie
-      </a>
-    </div>
-  </div>
+    <button type="button" (click)="creerBonDeSortie()" [disabled]="loading || creating"
+      class="rounded-lg bg-oas-accent px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50">
+      Créer un bon de sortie
+    </button>
+  </header>
 
   <app-alert [error]="errorMessage" [success]="successMessage"></app-alert>
 
   @if (loading) {
-    <div class="flex flex-col items-center justify-center py-16 text-oas-muted">
-      <div class="w-9 h-9 border-3 border-orange-500 border-t-transparent rounded-full animate-spin mb-3"></div>
-      <p class="text-sm font-medium">Chargement des données du Bon de Sortie...</p>
+    <div class="rounded-xl border border-oas-line bg-white p-8 text-center text-sm text-oas-muted">Chargement des bons de sortie…</div>
+  } @else if (bonsDeSortie.length === 0) {
+    <div class="rounded-xl border border-dashed border-oas-line bg-white p-8 text-center">
+      <p class="font-semibold text-oas-ink">Aucun bon de sortie associé à cet OT.</p>
+      <p class="mt-1 text-sm text-oas-muted">La liste des lignes est vide jusqu’à la création d’un BS.</p>
     </div>
-  } @else if (data) {
-
-    <!-- KPI / Synthèse de l'étape -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-      <!-- Proforma liée -->
-      <div class="p-3.5 rounded-xl border border-oas-line bg-white shadow-2xs">
-        <span class="text-xs font-medium text-oas-muted block mb-1">Proforma de Référence</span>
-        <div class="flex items-center gap-2">
-          <div class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </div>
-          <div>
-            <span class="text-sm font-bold text-oas-ink">{{ data.proformaNumero || 'Non renseignée' }}</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Nombre de pièces -->
-      <div class="p-3.5 rounded-xl border border-oas-line bg-white shadow-2xs">
-        <span class="text-xs font-medium text-oas-muted block mb-1">Pièces Nécessaires</span>
-        <div class="flex items-center gap-2">
-          <div class="w-7 h-7 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-            </svg>
-          </div>
-          <div>
-            <span class="text-sm font-bold text-oas-ink">{{ piecesToIssue.length }} référence(s)</span>
-            <span class="text-xs text-oas-muted ml-1">({{ totalQuantiteDemandee }} unité{{ totalQuantiteDemandee > 1 ? 's' : '' }})</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Statut Bon de Sortie -->
-      <div class="p-3.5 rounded-xl border border-oas-line bg-white shadow-2xs">
-        <span class="text-xs font-medium text-oas-muted block mb-1">État Bon de Sortie</span>
-        <div class="flex items-center gap-2">
-          @if (isBonValide()) {
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              VALIDÉ (SORTI)
-            </span>
-          } @else if (hasBonDeSortie()) {
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
-              <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-              EN ATTENTE
-            </span>
-          } @else {
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
-              NON CRÉÉ
-            </span>
+  } @else {
+    <div class="overflow-x-auto rounded-xl border border-oas-line bg-white">
+      <table class="w-full text-sm text-left">
+        <thead class="bg-oas-bg text-xs uppercase text-oas-muted"><tr><th class="px-4 py-3">Bon</th><th class="px-4 py-3">Date</th><th class="px-4 py-3">Lignes</th><th class="px-4 py-3 text-right">Quantités pièces</th><th class="px-4 py-3 text-right">Montant net</th><th class="px-4 py-3">Statut</th></tr></thead>
+        <tbody class="divide-y divide-oas-line">
+          @for (bon of bonsDeSortie; track bon.id) {
+            <tr class="cursor-pointer hover:bg-oas-bg/70" (click)="ouvrirDetailBon(bon)">
+              <td class="px-4 py-3 font-bold text-oas-accent">{{ bon.reference }}</td>
+              <td class="px-4 py-3">{{ bon.date | date:'dd/MM/yyyy HH:mm' }}</td>
+              <td class="px-4 py-3">{{ bon.lignesBonDeSortiePieces?.length || 0 }}</td>
+              <td class="px-4 py-3 text-right">{{ quantitePiecesBon(bon) }}</td>
+              <td class="px-4 py-3 text-right font-semibold">{{ bon.montantTotal || 0 | number }} FCFA</td>
+              <td class="px-4 py-3"><span class="rounded-full px-2 py-1 text-xs font-bold" [class.bg-emerald-100]="bon.statut === 'VALIDE'" [class.text-emerald-800]="bon.statut === 'VALIDE'" [class.bg-amber-100]="bon.statut !== 'VALIDE'" [class.text-amber-800]="bon.statut !== 'VALIDE'">{{ bon.statut === 'VALIDE' ? 'Validé' : 'En attente' }}</span></td>
+            </tr>
           }
-        </div>
-      </div>
-
-      <!-- Véhicule -->
-      <div class="p-3.5 rounded-xl border border-oas-line bg-white shadow-2xs">
-        <span class="text-xs font-medium text-oas-muted block mb-1">Véhicule Associé</span>
-        <div class="flex items-center gap-2">
-          <div class="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-            </svg>
-          </div>
-          <span class="text-xs font-bold text-oas-ink truncate">
-            {{ loadedOT?.vehicule?.immatriculation || ('ID Véhicule: #' + (data.vehiculeId || loadedOT?.vehiculeId || '—')) }}
-          </span>
-        </div>
-      </div>
+        </tbody>
+        <tfoot class="border-t-2 border-oas-line bg-oas-bg font-bold"><tr><td colspan="3" class="px-4 py-3">Récapitulatif de tous les BS</td><td class="px-4 py-3 text-right">{{ quantitePiecesTotale }}</td><td class="px-4 py-3 text-right">{{ montantBonsTotal | number }} FCFA</td><td></td></tr></tfoot>
+      </table>
     </div>
-
-    <!-- CAS 1 : BON DE SORTIE DÉJÀ EXISTANT -->
-    @if (hasBonDeSortie()) {
-      <div class="p-5 sm:p-6 rounded-2xl border border-oas-line bg-white shadow-sm space-y-5">
-        <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-oas-line">
-          <div class="flex items-center gap-3.5">
-            <div class="w-12 h-12 rounded-xl flex items-center justify-center font-black text-lg shadow-xs"
-              [class]="isBonValide() ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-orange-100 text-orange-700 border border-orange-200'">
-              BS
-            </div>
-            <div>
-              <div class="flex items-center gap-2">
-                <span class="text-xs font-semibold uppercase tracking-wider text-oas-muted">Bon de Sortie Magasin</span>
-                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold"
-                  [class]="isBonValide() ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-orange-100 text-orange-800 border border-orange-200'">
-                  {{ isBonValide() ? 'VALIDÉ' : 'EN ATTENTE DE VALIDATION' }}
-                </span>
-              </div>
-              <h3 class="text-lg font-black text-oas-ink mt-0.5">
-                {{ fullBonDeSortie?.reference || data.bonDeSortie?.reference || data.bonDeSortie?.numero || ('BS #' + (fullBonDeSortie?.id || data.bonDeSortie?.id)) }}
-              </h3>
-            </div>
-          </div>
-
-          <!-- Bouton de validation rapide sur la même page -->
-          @if (!isBonValide()) {
-            <button (click)="openValidateModal()"
-              [disabled]="validating"
-              class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition disabled:opacity-50 cursor-pointer">
-              @if (validating) {
-                <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span>Validation en cours...</span>
-              } @else {
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                <span>Valider le Bon de Sortie</span>
-              }
-            </button>
-          } @else {
-            <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold">
-              <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>Pièces transférées à l'atelier</span>
-            </div>
-          }
-        </div>
-
-        <!-- Alerte informative selon le statut -->
-        @if (!isBonValide()) {
-          <div class="p-4 rounded-xl bg-amber-50/70 border border-amber-200/80 text-amber-900 text-xs flex items-start gap-3">
-            <svg class="w-5 h-5 text-amber-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <div class="space-y-1">
-              <strong class="font-bold text-amber-950 block">Bon de Sortie en attente de déstockage</strong>
-              <p>
-                Ce bon de sortie regroupe l'ensemble des pièces requises. Cliquez sur <strong>« Valider le Bon de Sortie »</strong> ci-dessus pour effectuer le déstockage informatique effectif et permettre aux techniciens de démarrer l'intervention.
-              </p>
-            </div>
-          </div>
-        } @else {
-          <div class="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200/80 text-emerald-900 text-xs flex items-start gap-3">
-            <svg class="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <div class="space-y-1">
-              <strong class="font-bold text-emerald-950 block">Sortie magasin validée avec succès</strong>
-              <p>
-                Toutes les pièces de ce bon de sortie ont été déduites du stock magasin et affectées à l'atelier. Vous pouvez désormais passer à l'affectation des techniciens.
-              </p>
-            </div>
-          </div>
-        }
-
-        <!-- Détails du Bon de Sortie -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs pt-1">
-          <div>
-            <span class="text-oas-muted block mb-0.5">Date d'émission :</span>
-            <strong class="text-oas-ink font-semibold">
-              {{ (fullBonDeSortie?.date || data.bonDeSortie?.dateSortiePrevue) ? ((fullBonDeSortie?.date || data.bonDeSortie?.dateSortiePrevue) | date:'dd/MM/yyyy HH:mm') : '—' }}
-            </strong>
-          </div>
-          <div>
-            <span class="text-oas-muted block mb-0.5">Date validation / sortie :</span>
-            <strong class="text-emerald-700 font-semibold">
-              {{ (fullBonDeSortie?.dateValidation || data.bonDeSortie?.dateSortieEffective) ? ((fullBonDeSortie?.dateValidation || data.bonDeSortie?.dateSortieEffective) | date:'dd/MM/yyyy HH:mm') : 'En attente' }}
-            </strong>
-          </div>
-          <div>
-            <span class="text-oas-muted block mb-0.5">Émetteur :</span>
-            <strong class="text-oas-ink font-semibold">
-              {{ fullBonDeSortie?.agentEmetteur ? (fullBonDeSortie.agentEmetteur.firstName + ' ' + fullBonDeSortie.agentEmetteur.lastName) : 'Service Magasin' }}
-            </strong>
-          </div>
-          <div>
-            <span class="text-oas-muted block mb-0.5">Validateur :</span>
-            <strong class="text-oas-ink font-semibold">
-              {{ fullBonDeSortie?.agentValidateur ? (fullBonDeSortie.agentValidateur.firstName + ' ' + fullBonDeSortie.agentValidateur.lastName) : (isBonValide() ? 'Validé' : 'Non validé') }}
-            </strong>
-          </div>
-        </div>
-
-        @if (fullBonDeSortie?.remarque || data.bonDeSortie?.remarque || data.bonDeSortie?.remarques) {
-          <div class="text-xs bg-slate-50 p-3 rounded-xl border border-oas-line text-oas-ink">
-            <span class="text-oas-muted font-medium block mb-0.5">Observation / Remarque :</span>
-            <span>{{ fullBonDeSortie?.remarque || data.bonDeSortie?.remarque || data.bonDeSortie?.remarques }}</span>
-          </div>
-        }
-
-        <!-- Liste des pièces incluses dans le Bon de Sortie -->
-        <div class="pt-2">
-          <h4 class="text-xs font-bold uppercase tracking-wider text-oas-muted mb-2.5 flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-            </svg>
-            Pièces incluses dans ce Bon de Sortie
-          </h4>
-
-          <div class="overflow-x-auto rounded-xl border border-oas-line">
-            <table class="w-full text-left text-xs">
-              <thead class="bg-slate-50 border-b border-oas-line text-oas-muted font-semibold">
-                <tr>
-                  <th class="p-3">Réf. & Désignation</th>
-                  <th class="p-3 text-center">Quantité sortie</th>
-                  <th class="p-3 text-right">Prix Unitaire</th>
-                  <th class="p-3 text-right">Montant Total</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-oas-line bg-white">
-                @if (fullBonDeSortie?.lignesBonDeSortiePieces && fullBonDeSortie.lignesBonDeSortiePieces.length > 0) {
-                  @for (l of fullBonDeSortie.lignesBonDeSortiePieces; track l.id) {
-                    <tr class="hover:bg-slate-50/50">
-                      <td class="p-3">
-                        <span class="font-bold text-oas-ink block">{{ l.piece?.designation || ('Pièce #' + (l.piece?.id || l.id)) }}</span>
-                        <span class="text-2xs text-oas-muted font-mono">{{ l.piece?.reference || '—' }}</span>
-                      </td>
-                      <td class="p-3 text-center font-bold text-oas-ink">
-                        <span class="inline-flex px-2 py-0.5 rounded-md bg-orange-50 text-orange-700 border border-orange-200">
-                          {{ l.quantite }}
-                        </span>
-                      </td>
-                      <td class="p-3 text-right text-oas-ink">
-                        {{ (l.piece?.prix || 0) | number:'1.0-0' }} F CFA
-                      </td>
-                      <td class="p-3 text-right font-bold text-oas-ink">
-                        {{ ((l.quantite || 0) * (l.piece?.prix || 0)) | number:'1.0-0' }} F CFA
-                      </td>
-                    </tr>
-                  }
-                } @else if (piecesToIssue.length > 0) {
-                  @for (p of piecesToIssue; track p.pieceId || p.ligneId || p.reference) {
-                    <tr class="hover:bg-slate-50/50">
-                      <td class="p-3">
-                        <span class="font-bold text-oas-ink block">{{ p.designation }}</span>
-                        <span class="text-2xs text-oas-muted font-mono">{{ p.reference || '—' }}</span>
-                      </td>
-                      <td class="p-3 text-center font-bold text-oas-ink">
-                        <span class="inline-flex px-2 py-0.5 rounded-md bg-orange-50 text-orange-700 border border-orange-200">
-                          {{ p.quantiteASortir || p.quantiteDemandee }}
-                        </span>
-                      </td>
-                      <td class="p-3 text-right text-oas-ink">
-                        {{ (p.prixUnitaire || 0) | number:'1.0-0' }} F CFA
-                      </td>
-                      <td class="p-3 text-right font-bold text-oas-ink">
-                        {{ ((p.quantiteASortir || p.quantiteDemandee || 0) * (p.prixUnitaire || 0)) | number:'1.0-0' }} F CFA
-                      </td>
-                    </tr>
-                  }
-                } @else {
-                  <tr>
-                    <td colspan="4" class="p-4 text-center text-oas-muted">
-                      Aucune ligne de pièce détaillée disponible.
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-    } @else {
-
-      <!-- CAS 2 : AUCUN BON DE SORTIE GÉNÉRÉ ENCORE -->
-      <div class="space-y-4">
-        <div class="p-5 rounded-2xl border border-oas-line bg-white shadow-sm space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h3 class="text-base font-bold text-oas-ink flex items-center gap-2">
-                <svg class="w-5 h-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-                Pièces à sortir du magasin pour l'intervention
-              </h3>
-              <p class="text-xs text-oas-muted mt-0.5">
-                Vérifiez les quantités et créez un bon de sortie unique pour déstocker l'ensemble des pièces vers l'atelier.
-              </p>
-            </div>
-
-            <div class="flex items-center gap-2">
-              <button type="button" (click)="toggleSelectAll(true)"
-                class="px-2.5 py-1 text-2xs font-semibold rounded-lg border border-oas-line bg-white hover:bg-slate-50 text-oas-ink transition cursor-pointer">
-                Tout sélectionner
-              </button>
-            </div>
-          </div>
-
-          <!-- Tableau des pièces -->
-          @if (piecesToIssue.length > 0) {
-            <div class="overflow-x-auto rounded-xl border border-oas-line">
-              <table class="w-full text-left text-xs">
-                <thead class="bg-slate-50 border-b border-oas-line text-oas-muted font-semibold">
-                  <tr>
-                    <th class="p-3 w-10 text-center">
-                      <input type="checkbox"
-                        [checked]="allSelected"
-                        (change)="toggleSelectAll($any($event.target).checked)"
-                        class="rounded border-gray-300 text-orange-600 focus:ring-orange-500 cursor-pointer" />
-                    </th>
-                    <th class="p-3">Pièce & Référence</th>
-                    <th class="p-3 text-center">Qté Proforma</th>
-                    <th class="p-3 text-center">Stock Magasin</th>
-                    <th class="p-3 text-center">Stock Atelier</th>
-                    <th class="p-3 text-center w-32">Qté à Sortir</th>
-                    <th class="p-3 text-right">Prix Unitaire</th>
-                    <th class="p-3 text-right">Montant Total</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-oas-line bg-white">
-                  @for (p of piecesToIssue; track p.pieceId || p.ligneId || p.reference) {
-                    <tr class="hover:bg-slate-50/50" [class.bg-orange-50/20]="p.selected">
-                      <td class="p-3 text-center">
-                        <input type="checkbox"
-                          [(ngModel)]="p.selected"
-                          class="rounded border-gray-300 text-orange-600 focus:ring-orange-500 cursor-pointer" />
-                      </td>
-                      <td class="p-3">
-                        <span class="font-bold text-oas-ink block">{{ p.designation }}</span>
-                        <span class="text-2xs text-oas-muted font-mono">{{ p.reference || '—' }}</span>
-                      </td>
-                      <td class="p-3 text-center font-bold text-oas-ink">
-                        {{ p.quantiteDemandee }}
-                      </td>
-                      <td class="p-3 text-center">
-                        <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-bold"
-                          [class]="(p.stockMagasin || 0) >= (p.quantiteASortir || p.quantiteDemandee) ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-red-100 text-red-800 border border-red-200'">
-                          {{ p.stockMagasin || 0 }} en stock
-                        </span>
-                      </td>
-                      <td class="p-3 text-center text-oas-muted font-semibold">
-                        {{ p.stockAtelier || 0 }}
-                      </td>
-                      <td class="p-3 text-center">
-                        <input type="number" min="1"
-                          [(ngModel)]="p.quantiteASortir"
-                          class="w-20 px-2 py-1 text-center font-bold rounded-lg border border-oas-line focus:outline-none focus:ring-2 focus:ring-orange-500 text-xs bg-white text-oas-ink" />
-                      </td>
-                      <td class="p-3 text-right text-oas-muted">
-                        {{ (p.prixUnitaire || 0) | number:'1.0-0' }} F CFA
-                      </td>
-                      <td class="p-3 text-right font-bold text-oas-ink">
-                        {{ ((p.quantiteASortir || 0) * (p.prixUnitaire || 0)) | number:'1.0-0' }} F CFA
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-
-            <!-- Alerte stock insuffisant -->
-            @if (hasStockInsuffisant) {
-              <div class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-2">
-                <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                <span>
-                  Certaines pièces sélectionnées ont un stock magasin inférieur à la quantité demandée.
-                </span>
-              </div>
-            }
-
-            <!-- Observation / Remarque pour le bon -->
-            <div>
-              <label class="block text-xs font-semibold text-oas-ink mb-1">
-                Remarque ou consigne particulière (facultatif) :
-              </label>
-              <textarea [(ngModel)]="remarque" rows="2"
-                placeholder="Ex : Pièces sorties pour révision complète du moteur..."
-                class="w-full text-xs rounded-xl border border-oas-line p-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-slate-50/50"></textarea>
-            </div>
-
-            <!-- Barre de création du Bon de Sortie Unique -->
-            <div class="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-orange-50/60 border border-orange-200/80">
-              <div class="text-xs text-orange-950">
-                <span class="font-bold block text-sm">Créer 1 Bon de Sortie pour l'ensemble des pièces</span>
-                <span class="text-orange-800">
-                  {{ selectedPieces.length }} référence(s) sélectionnée(s) • {{ totalQuantiteASortir }} pièce(s) au total • Valeur : <strong>{{ totalValeurEstimee | number:'1.0-0' }} F CFA</strong>
-                </span>
-              </div>
-
-              <button (click)="creerBonDeSortie()"
-                [disabled]="creating || selectedPieces.length === 0"
-                class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs shadow-md transition disabled:opacity-50 cursor-pointer">
-                @if (creating) {
-                  <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Génération en cours...</span>
-                } @else {
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  <span>Créer le Bon de Sortie (Toutes les pièces)</span>
-                }
-              </button>
-            </div>
-
-          } @else {
-            <div class="p-8 text-center bg-slate-50/50 rounded-xl border border-dashed border-oas-line">
-              <svg class="w-10 h-10 text-oas-muted mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <h4 class="text-sm font-bold text-oas-ink">Aucune pièce requise pour cet Ordre de Travail</h4>
-              <p class="text-xs text-oas-muted mt-1 max-w-sm mx-auto">
-                Toutes les pièces nécessaires ont déjà été allouées ou la proforma ne comporte aucune pièce détachée.
-              </p>
-            </div>
-          }
-        </div>
-      </div>
-    }
-
-    <!-- MODAL DE CONFIRMATION DE VALIDATION -->
-    @if (showValidateModal) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fadeIn">
-        <div class="bg-white rounded-2xl shadow-xl border border-oas-line max-w-md w-full p-6 space-y-4">
-          <div class="flex items-start gap-3.5">
-            <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <div>
-              <h3 class="text-base font-bold text-oas-ink">Validation du Bon de Sortie</h3>
-              <p class="text-xs text-oas-muted mt-0.5">
-                Confirmation de la sortie effective des pièces du magasin.
-              </p>
-            </div>
-          </div>
-
-          <div class="p-3.5 rounded-xl bg-slate-50 border border-oas-line text-xs text-oas-ink space-y-2">
-            <p>
-              Êtes-vous sûr de vouloir valider le Bon de Sortie
-              <strong>{{ fullBonDeSortie?.reference || data.bonDeSortie?.reference || data.bonDeSortie?.numero || ('#' + (fullBonDeSortie?.id || data.bonDeSortie?.id)) }}</strong> ?
-            </p>
-            <div class="p-2.5 rounded-lg bg-amber-50 text-amber-900 border border-amber-200 text-2xs">
-              <strong>Impact immédiat :</strong> Les pièces seront déduites des stocks magasin et transférées dans le stock atelier pour l'exécution des travaux de cet Ordre de Travail.
-            </div>
-          </div>
-
-          <div class="flex items-center justify-end gap-3 pt-2">
-            <button (click)="closeValidateModal()"
-              [disabled]="validating"
-              class="px-4 py-2 rounded-xl border border-oas-line text-xs font-semibold text-oas-muted hover:text-oas-ink transition cursor-pointer">
-              Annuler
-            </button>
-            <button (click)="confirmerValidation()"
-              [disabled]="validating"
-              class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition disabled:opacity-50 cursor-pointer">
-              @if (validating) {
-                <div class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span>Validation...</span>
-              } @else {
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                <span>Confirmer la sortie</span>
-              }
-            </button>
-          </div>
-        </div>
-      </div>
-    }
-
-    <!-- Boutons d'action en bas de page -->
-    <div class="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-oas-line">
-      <a [routerLink]="['/app/ordres-travail', otId, 'approvisionnement']"
-        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-oas-line text-xs font-semibold text-oas-muted hover:text-oas-ink transition cursor-pointer">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-        Étape précédente
-      </a>
-
-      <div class="flex flex-wrap items-center gap-3">
-        @if (!canPasserAEtapeSuivante) {
-          <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-medium">
-            <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <span>
-              @if (!hasBonDeSortie()) {
-                Créez puis validez le bon de sortie pour continuer
-              } @else {
-                Le bon de sortie doit être validé pour continuer
-              }
-            </span>
-          </div>
-        }
-
-        <button (click)="continuerVersAssignation()"
-          [disabled]="advancing || !canPasserAEtapeSuivante"
-          [title]="!canPasserAEtapeSuivante ? 'Le Bon de Sortie doit être validé avant de pouvoir continuer' : ''"
-          class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm transition"
-          [ngClass]="canPasserAEtapeSuivante ? 'bg-oas-accent hover:bg-oas-accent/90 text-white cursor-pointer' : 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300 shadow-none'">
-          @if (advancing) {
-            <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            <span>En cours...</span>
-          } @else {
-            <span>Passer à l'Affectation des Techniciens</span>
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
-          }
-        </button>
-      </div>
-    </div>
-
   }
-</div>
+
+  <footer class="flex flex-wrap items-center justify-between gap-3 border-t border-oas-line pt-4">
+    <a routerLink="/app/ordres-travail" class="text-sm font-semibold text-oas-muted hover:text-oas-ink">Retour aux OT</a>
+    <button type="button" (click)="continuerVersAssignation()" [disabled]="advancing || !canPasserAEtapeSuivante"
+      class="rounded-lg bg-oas-accent px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50">Continuer</button>
+  </footer>
+</section>
+
+@if (selectedBonDetail) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="selectedBonDetail = null">
+    <section class="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl" (click)="$event.stopPropagation()">
+      <header class="mb-4 flex items-center justify-between"><div><h3 class="text-lg font-black">{{ selectedBonDetail.reference }}</h3><p class="text-xs text-oas-muted">Détail du bon de sortie</p></div><button type="button" (click)="selectedBonDetail = null" class="rounded-lg px-3 py-2 hover:bg-oas-bg" aria-label="Fermer">✕</button></header>
+      <table class="w-full text-sm"><thead class="bg-oas-bg text-xs uppercase text-oas-muted"><tr><th class="px-3 py-2 text-left">Type</th><th class="px-3 py-2 text-left">Désignation</th><th class="px-3 py-2 text-right">Quantité / heures</th><th class="px-3 py-2 text-right">Prix unit.</th><th class="px-3 py-2 text-right">Total</th></tr></thead><tbody class="divide-y divide-oas-line">
+        @for (ligne of selectedBonDetail.lignesBonDeSortiePieces || []; track ligne.id) {<tr><td class="px-3 py-2">{{ ligne.type || 'PDP' }}</td><td class="px-3 py-2">{{ ligne.designation || ligne.piece?.designation || '—' }}</td><td class="px-3 py-2 text-right">{{ ligne.quantite }}</td><td class="px-3 py-2 text-right">{{ ligne.prix || 0 | number }} FCFA</td><td class="px-3 py-2 text-right">{{ ((ligne.prix || 0) * ligne.quantite) | number }} FCFA</td></tr>}
+      </tbody></table>
+      <div class="mt-4 rounded-xl bg-oas-bg p-4 text-sm"><p class="font-black">Total : {{ selectedBonDetail.montantTotal || 0 | number }} FCFA</p></div>
+      @if (canValidateBonDeSortie && selectedBonDetail.statut === 'EN_ATTENTE') {<button type="button" (click)="fullBonDeSortie = selectedBonDetail; openValidateModal()" class="mt-4 rounded-lg bg-oas-accent px-4 py-2 text-sm font-bold text-white">Valider après réparation</button>}
+    </section>
+  </div>
+}
+
+@if (showValidateModal && canValidateBonDeSortie) {
+  <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4"><section class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"><h3 class="text-lg font-black">Valider le BS</h3><p class="my-4 text-sm text-oas-muted">Confirmez la sortie effective après réparation du véhicule.</p><div class="flex justify-end gap-2"><button type="button" (click)="closeValidateModal()" class="rounded-lg border px-4 py-2">Annuler</button><button type="button" (click)="confirmerValidation()" [disabled]="validating" class="rounded-lg bg-oas-accent px-4 py-2 font-bold text-white disabled:opacity-50">{{ validating ? 'Validation…' : 'Confirmer' }}</button></div></section></div>
+}

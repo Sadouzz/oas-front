@@ -157,10 +157,11 @@ export interface OrdreReparationRequest {
     pieceId?: number | null; 
     quantite: number; 
     prix?: number | null;
+    tauxRemise?: number;
     isCustom?: boolean;
     designationPds?: string;
   }[];
-  lignesMainDoeuvres?: { mainDoeuvreId: number; nbreHeure: number; prix?: number | null }[];
+  lignesMainDoeuvres?: { mainDoeuvreId: number; nbreHeure: number; prix?: number | null; tauxRemise?: number }[];
 }
 
 // ==========================================

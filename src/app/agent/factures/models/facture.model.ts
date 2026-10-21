@@ -9,6 +9,8 @@ export interface FactureModel {
   montantTimbre: number;
   montantAutre: number;
   montantTotal: number;
+  tauxRemiseClient?: number | null;
+  montantRemiseClient?: number | null;
   agentId: number;
   agentNom: string;
   remarque: string | null;
@@ -23,8 +25,8 @@ export interface FactureModel {
   annee: number | null;
   numeroBonDeCommande: string | null;
   modePaiement?: string | null;
-  lignesPieces: { id: number; pieceId: number; designationPiece: string; quantite: number; prix: number; montantTotal: number }[];
-  lignesMainDoeuvres: { id: number; mainDoeuvreId: number; descriptionMainDoeuvre: string; nbreHeure: number; tarifHoraire: number; montantTotal: number }[];
+  lignesPieces: { id: number; pieceId: number; designationPiece: string; quantite: number; prix: number; montantTotal: number; tauxRemise?: number }[];
+  lignesMainDoeuvres: { id: number; mainDoeuvreId: number; descriptionMainDoeuvre: string; nbreHeure: number; tarifHoraire: number; montantTotal: number; tauxRemise?: number }[];
   montantPaye: number;
   resteAPayer: number;
   statutPaiement: 'NON_PAYE' | 'PARTIEL' | 'PAYE';

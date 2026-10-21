@@ -115,6 +115,7 @@ export class StepProformaComponent implements OnInit {
   }
 
   telechargementEnCours = false;
+  downloadLayoutKey: 'AVEC_ENTETE' | 'SANS_ENTETE' = 'AVEC_ENTETE';
 
   get lignesPiecesAffichees(): any[] {
     if (this.proformaChargee?.lignesPieces && this.proformaChargee.lignesPieces.length > 0) {
@@ -165,6 +166,10 @@ export class StepProformaComponent implements OnInit {
     return Number(ligne?.quantite) || 0;
   }
 
+  getPieceTauxRemise(ligne: any): number {
+    return Math.max(0, Math.min(100, Number(ligne?.tauxRemise) || 0));
+  }
+
   getPiecePrixUnitaire(ligne: any): number {
     if (ligne?.prix != null && Number(ligne.prix) > 0) return Number(ligne.prix);
     if (ligne?.prixUnitaire != null && Number(ligne.prixUnitaire) > 0) return Number(ligne.prixUnitaire);
@@ -172,10 +177,22 @@ export class StepProformaComponent implements OnInit {
     return 0;
   }
 
-  getPieceTotal(ligne: any): number {
-    if (ligne?.montantTotal != null && Number(ligne.montantTotal) > 0) return Number(ligne.montantTotal);
-    if (ligne?.total != null && Number(ligne.total) > 0) return Number(ligne.total);
+  getPieceTotalBrut(ligne: any): number {
+    if (ligne?.montantTotal != null && Number(ligne.montantTotal) >= 0) return Number(ligne.montantTotal);
+    if (ligne?.total != null && Number(ligne.total) >= 0) return Number(ligne.total);
     return this.getPiecePrixUnitaire(ligne) * this.getPieceQuantite(ligne);
+  }
+
+  getPieceMontantRemise(ligne: any): number {
+    return this.getPieceTotalBrut(ligne) * this.getPieceTauxRemise(ligne) / 100;
+  }
+
+  getPieceTotal(ligne: any): number {
+    return this.getPieceTotalBrut(ligne) - this.getPieceMontantRemise(ligne);
+  }
+
+  getPiecePrixUnitaireNet(ligne: any): number {
+    return this.getPiecePrixUnitaire(ligne) * (1 - this.getPieceTauxRemise(ligne) / 100);
   }
 
   getMODescription(ligne: any): string {
@@ -199,9 +216,41 @@ export class StepProformaComponent implements OnInit {
   }
 
   getMOTotal(ligne: any): number {
-    if (ligne?.montantTotal != null && ligne?.montantTotal !== 0) return Number(ligne.montantTotal);
-    if (ligne?.total != null && ligne?.total !== 0) return Number(ligne.total);
+    return this.getMOTotalBrut(ligne) - this.getMOMontantRemise(ligne);
+  }
+
+  getMOTauxRemise(ligne: any): number {
+    return Math.max(0, Math.min(100, Number(ligne?.tauxRemise) || 0));
+  }
+
+  getMOMontantRemise(ligne: any): number {
+    return this.getMOTotalBrut(ligne) * this.getMOTauxRemise(ligne) / 100;
+  }
+
+  getMOTotalBrut(ligne: any): number {
+    if (ligne?.montantTotal != null) return Number(ligne.montantTotal) || 0;
+    if (ligne?.total != null) return Number(ligne.total) || 0;
     return this.getMOTarifHoraire(ligne) * this.getMOHeures(ligne);
+  }
+
+  getMOTarifHoraireNet(ligne: any): number {
+    return this.getMOTarifHoraire(ligne) * (1 - this.getMOTauxRemise(ligne) / 100);
+  }
+
+  get tauxRemiseClient(): number {
+    return Math.max(0, Math.min(100, Number(this.proformaChargee?.tauxRemiseClient) || 0));
+  }
+
+  get montantRemiseGenerale(): number {
+    return this.lignesPiecesAffichees.reduce((sum, ligne) => sum + this.getPieceMontantRemise(ligne), 0)
+      + this.lignesMainDoeuvreAffichees.reduce((sum, ligne) => sum + this.getMOMontantRemise(ligne), 0);
+  }
+
+  get totalApresRemiseCompteClient(): number {
+    const montantRemiseClient = this.proformaChargee?.montantRemiseClient != null
+      ? Number(this.proformaChargee.montantRemiseClient) || 0
+      : this.totalPiecesEstime * this.tauxRemiseClient / 100;
+    return this.totalPiecesEstime - montantRemiseClient + this.totalMOEstime;
   }
 
   get totalPiecesEstime(): number {
@@ -209,14 +258,14 @@ export class StepProformaComponent implements OnInit {
   }
 
   get totalMOEstime(): number {
-    return this.lignesMainDoeuvreAffichees.reduce((acc, l) => acc + this.getMOTotal(l), 0);
+    return this.lignesMainDoeuvreAffichees.reduce((acc, l) => acc + this.getMOTotalBrut(l) - this.getMOMontantRemise(l), 0);
   }
 
   get totalHTCalcule(): number {
     if (this.proformaChargee?.montantHT != null && this.proformaChargee.montantHT > 0) {
       return this.proformaChargee.montantHT;
     }
-    return this.totalPiecesEstime + this.totalMOEstime;
+    return this.totalApresRemiseCompteClient;
   }
 
   get tvaTaux(): number {
@@ -401,16 +450,16 @@ export class StepProformaComponent implements OnInit {
     this.passerEtapeSuivante();
   }
 
-  telechargerPdf(): void {
+  telechargerPdf(layoutKey: 'AVEC_ENTETE' | 'SANS_ENTETE' = this.downloadLayoutKey): void {
     if (!this.proformaChargee?.id) return;
     this.telechargementEnCours = true;
-    this.proformaService.downloadPdf(this.proformaChargee.id).subscribe({
+    this.proformaService.downloadPdf(this.proformaChargee.id, layoutKey).subscribe({
       next: (blob) => {
         this.telechargementEnCours = false;
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `proforma-${this.proformaChargee.numero || this.proformaChargee.id}.pdf`;
+        a.download = `proforma-${this.proformaChargee.numero || this.proformaChargee.id}-${layoutKey === 'AVEC_ENTETE' ? 'avec-entete' : 'sans-entete'}.pdf`;
         a.click();
         window.URL.revokeObjectURL(url);
         this.cdr.markForCheck();

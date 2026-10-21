@@ -47,6 +47,7 @@ export class AvoirsTtc extends BasePaginatedComponent implements OnInit {
   loading = true;
   saving = false;
   selectedAvoir: AvoirTTC | null = null;
+  downloadLayoutKey: 'AVEC_ENTETE' | 'SANS_ENTETE' = 'AVEC_ENTETE';
   showCreateModal = false;
   showDetailModal = false;
 
@@ -361,12 +362,12 @@ export class AvoirsTtc extends BasePaginatedComponent implements OnInit {
   }
 
   downloadPdf(a: AvoirTTC) {
-    this.service.downloadPdf(a.id).subscribe({
+    this.service.downloadPdf(a.id, this.downloadLayoutKey).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const anchor = document.createElement('a');
         anchor.href = url;
-        anchor.download = `AvoirTTC_${a.numero || a.id}.pdf`;
+        anchor.download = `AvoirTTC_${a.numero || a.id}_${this.downloadLayoutKey === 'AVEC_ENTETE' ? 'avec-entete' : 'sans-entete'}.pdf`;
         anchor.click();
         window.URL.revokeObjectURL(url);
       },

@@ -958,12 +958,12 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
     });
   }
 
-  downloadPdf(id: number) {
-    this.service.downloadPdf(id).subscribe(blob => {
+  downloadPdf(id: number, layoutKey: 'AVEC_ENTETE' | 'SANS_ENTETE') {
+    this.service.downloadPdf(id, layoutKey).subscribe(blob => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `bon-commande-${id}.pdf`;
+      a.download = `bon-commande-${id}-${layoutKey === 'AVEC_ENTETE' ? 'avec-entete' : 'sans-entete'}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     });

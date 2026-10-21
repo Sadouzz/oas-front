@@ -4,6 +4,7 @@ export interface LignePieceDto {
   pieceId?: number | null; 
   quantite: number; 
   prix?: number | null;
+  tauxRemise?: number;
   isCustom?: boolean;
   designationPds?: string;
 }
@@ -12,6 +13,7 @@ export interface LigneMoDto {
   mainDoeuvreId: number; 
   nbreHeure: number; 
   prix?: number | null;
+  tauxRemise?: number;
 }
 
 export interface StepPiecesMoDto extends BaseStepDto {

@@ -1,7 +1,11 @@
 export interface LigneBonDeSortie {
   id: number;
   piece: { id: number; reference: string; designation?: string; numeroDeSerie?: string; prix?: number; stockMagasin?: number; stockAtelier?: number } | null;
+  mainDoeuvreId?: number | null;
+  type?: 'PDP' | 'PDG' | 'PDS' | 'MAIN_DOEUVRE';
+  designation?: string;
   quantite: number;
+  prix?: number;
 }
 
 
@@ -48,6 +52,12 @@ export interface BonDeSortie {
   agentEmetteur: { id: number; username: string; firstName: string; lastName: string } | null;
   agentValidateur?: { id: number; username: string; firstName: string; lastName: string };
   lignesBonDeSortiePieces: LigneBonDeSortie[] | null;
+  ordreReparationId?: number;
+  ordreTravailId?: number;
+  ordreReparationStatut?: string;
+  montantTotalPieces?: number;
+  montantTotalMainDoeuvre?: number;
+  montantTotal?: number;
 }
 
 export interface BonDeSortieRequest {
@@ -62,6 +72,9 @@ export interface BonDeSortieRequest {
     prixUnitaire?: number | null;
     isCustom?: boolean;
     designationPds?: string;
+    type?: 'PDP' | 'PDG' | 'PDS' | 'MAIN_DOEUVRE';
+    mainDoeuvreId?: number | null;
+    designation?: string;
   }[];
   remarque?: string;
 }

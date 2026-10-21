@@ -204,6 +204,10 @@ export interface StepBonSortieResponseDto extends StepBaseDto {
   vehiculeId?: number;
   proformaId?: number;
   ordreReparationId?: number;
+  ordreReparationStatut?: string;
+  quantiteTotalePieces?: number;
+  montantTotalBons?: number;
+  bonsDeSortie?: import('../../bons-de-sortie/models/bon-de-sortie.model').BonDeSortie[];
   clientId?: number;
   hasBonDeSortie: boolean;
   proformaNumero?: string;

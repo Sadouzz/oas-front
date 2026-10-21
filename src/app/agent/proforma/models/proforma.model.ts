@@ -12,6 +12,7 @@ export interface LignePiece {
   prix: number;
   prixUnitaire?: number;
   montantTotal?: number;
+  tauxRemise?: number;
 }
 
 export interface LigneMD {
@@ -22,6 +23,7 @@ export interface LigneMD {
   nbreHeure: number;
   tarifHoraire: number;
   montantTotal?: number;
+  tauxRemise?: number;
 }
 
 export interface Proforma {
@@ -47,6 +49,7 @@ export interface Proforma {
   modele: string | null;
   annee: number | null;
   numeroBonDeCommande: string | null;
+  ordreReparationId?: number | null;
   statut?: string;
   visibleClient?: boolean;
   tauxRemiseClient?: number | null;

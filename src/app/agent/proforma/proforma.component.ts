@@ -29,6 +29,7 @@ export interface LignePieceFormItem {
   prix: number;
   manquant?: number;
   stockDisponible?: number;
+  tauxRemise?: number;
 }
 
 export interface LigneMOFormItem {
@@ -38,6 +39,7 @@ export interface LigneMOFormItem {
   descriptionMainDoeuvre?: string;
   nbreHeure: number;
   tarifHoraire: number;
+  tauxRemise?: number;
 }
 
 @Component({
@@ -95,6 +97,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
   editingId: number | null = null;
   selectedProforma: Proforma | null = null;
   selectedProformaForPrint: any = null;
+  downloadLayoutKey: 'AVEC_ENTETE' | 'SANS_ENTETE' = 'AVEC_ENTETE';
 
   clientOpen = false;
   vehiculeOpen = false;
@@ -760,6 +763,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
           designationPds: des,
           quantite: qte,
           prix: unitPrice,
+          tauxRemise: Number(l.tauxRemise) || 0,
           stockDisponible: catPiece ? ((catPiece.stockMagasin ?? 0) + (catPiece.stockAtelier ?? 0)) : 0,
           manquant: catPiece ? Math.max(0, qte - (catPiece.stockMagasin ?? 0)) : 0,
         });
@@ -797,6 +801,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
           descriptionMainDoeuvre: desc,
           nbreHeure: heures,
           tarifHoraire: tarif,
+          tauxRemise: Number(l.tauxRemise) || 0,
         });
       }
     }
@@ -838,6 +843,23 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
     }
   }
   closeDetail() { this.selectedProforma = null; }
+
+  creerBonDeSortie(proforma: Proforma): void {
+    if (!proforma.ordreReparationId || !proforma.clientId || !proforma.vehiculeId) {
+      this.errorMessage = 'Ce proforma doit être lié à un OR, un client et un véhicule pour créer un bon de sortie.';
+      return;
+    }
+    this.closeDetail();
+    this.router.navigate(['/app/bons-de-sortie'], {
+      queryParams: {
+        action: 'new',
+        clientId: proforma.clientId,
+        vehiculeId: proforma.vehiculeId,
+        ordreReparationId: proforma.ordreReparationId,
+        returnTo: 'proforma'
+      }
+    });
+  }
 
   get hasAtLeastOneItem(): boolean {
     return this.lignesPieces.length > 0 || this.lignesMO.length > 0;
@@ -974,18 +996,18 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
   }
 
   downloadPdf(id: number) {
-    this.service.downloadPdf(id).subscribe(blob => {
+    this.service.downloadPdf(id, this.downloadLayoutKey).subscribe(blob => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `proforma-${id}.pdf`;
+      a.download = `proforma-${id}-${this.downloadLayoutKey === 'AVEC_ENTETE' ? 'avec-entete' : 'sans-entete'}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     });
   }
 
   ouvrirPdf(id: number) {
-    this.service.downloadPdf(id).subscribe({
+    this.service.downloadPdf(id, this.downloadLayoutKey).subscribe({
       next: (blob) => {
         const file = new Blob([blob], { type: 'application/pdf' });
         const fileURL = URL.createObjectURL(file);
@@ -1025,21 +1047,25 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
           reference: lp.referencePiece || lp.piece?.reference || lp.reference || (lp.isCustom ? 'PDS' : '-'),
           designation: lp.designationPiece || lp.piece?.designation || lp.designationPds || lp.designation || '-',
           quantite: lp.quantite,
-          remise: lp.remise || 0,
+          remise: Number(lp.tauxRemise) || 0,
+          montantRemise: Math.max(0, (lp.quantite || 0) * (lp.prix || lp.prixUnitaire || 0) - (lp.montantTotal ?? (lp.quantite || 0) * (lp.prix || lp.prixUnitaire || 0) * (1 - (Number(lp.tauxRemise) || 0) / 100))),
           prixUnitaire: lp.prixUnitaire || lp.prix || (lp.quantite ? (lp.montantTotal / lp.quantite) : 0),
-          totalLigne: lp.montantTotal || ((lp.quantite || 0) * (lp.prix || lp.prixUnitaire || 0))
+        totalLigne: lp.montantTotal ?? (lp.quantite || 0) * (lp.prix || lp.prixUnitaire || 0) * (1 - (Number(lp.tauxRemise) || 0) / 100)
         })),
         ...(target.lignesMainDoeuvres || []).map((lmo: any) => ({
           reference: 'MO',
           designation: lmo.descriptionMainDoeuvre || lmo.mainDoeuvre?.description || lmo.mainDoeuvre?.categorie?.nom || 'Main-d\'œuvre',
           quantite: lmo.nbreHeure || lmo.quantite || 1,
-          remise: 0,
+          remise: Number(lmo.tauxRemise) || 0,
+          montantRemise: Math.max(0, (lmo.nbreHeure || 1) * (lmo.tarifHoraire || lmo.prix || 0) - (lmo.montantTotal ?? (lmo.nbreHeure || 1) * (lmo.tarifHoraire || lmo.prix || 0) * (1 - (Number(lmo.tauxRemise) || 0) / 100))),
           prixUnitaire: lmo.tarifHoraire || lmo.prix || 0,
-          totalLigne: lmo.montantTotal || ((lmo.nbreHeure || 1) * (lmo.tarifHoraire || lmo.prix || 0))
+          totalLigne: lmo.montantTotal ?? (lmo.nbreHeure || 1) * (lmo.tarifHoraire || lmo.prix || 0) * (1 - (Number(lmo.tauxRemise) || 0) / 100)
         }))
       ],
       remarques: target.remarque || '',
       totalHT: target.montantHT || target.totalHt || 0,
+      montantRemiseGenerale: (target.lignesPieces || []).reduce((sum: number, line: any) => sum + Math.max(0, (line.quantite || 0) * (line.prix || 0) - (line.montantTotal ?? (line.quantite || 0) * (line.prix || 0) * (1 - (Number(line.tauxRemise) || 0) / 100))), 0)
+        + (target.lignesMainDoeuvres || []).reduce((sum: number, line: any) => sum + Math.max(0, (line.nbreHeure || 0) * (line.tarifHoraire || 0) - (line.montantTotal ?? (line.nbreHeure || 0) * (line.tarifHoraire || 0) * (1 - (Number(line.tauxRemise) || 0) / 100))), 0),
       tva: target.montantTVA || target.montantTva || 0,
       timbre: target.montantTimbre || target.timbre || 0,
       totalTTC: target.montantTTC || target.totalTtc || target.montantTotal || 0,
@@ -1053,11 +1079,11 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
 
   // Calculs dynamiques
   get totalPieces(): number {
-    return this.lignesPieces.reduce((s, l) => s + (Number(l.quantite) || 0) * (Number(l.prix) || 0), 0);
+    return this.lignesPieces.reduce((s, l) => s + (Number(l.quantite) || 0) * (Number(l.prix) || 0) * (1 - (Number(l.tauxRemise) || 0) / 100), 0);
   }
 
   get totalMO(): number {
-    return this.lignesMO.reduce((s, l) => s + (Number(l.nbreHeure) || 0) * (Number(l.tarifHoraire) || 0), 0);
+    return this.lignesMO.reduce((s, l) => s + (Number(l.nbreHeure) || 0) * (Number(l.tarifHoraire) || 0) * (1 - (Number(l.tauxRemise) || 0) / 100), 0);
   }
 
   get totalHT(): number {
@@ -1097,6 +1123,30 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
 
   formatDate(d: string): string { return d ? new Date(d).toLocaleDateString('fr-FR') : '-'; }
   fmt(n: number): string { return new Intl.NumberFormat('fr-FR').format(n ?? 0); }
+
+  get remiseGeneraleDetail(): number {
+    const p = this.selectedProforma;
+    if (!p) return 0;
+    const remisePieces = (p.lignesPieces ?? []).reduce((total, ligne) => {
+      const brut = (Number(ligne.quantite) || 0) * (Number(ligne.prix) || 0);
+      const net = Math.round(brut * (1 - (Number(ligne.tauxRemise) || 0) / 100));
+      return total + brut - net;
+    }, 0);
+    const remiseMainDoeuvre = (p.lignesMainDoeuvres ?? []).reduce((total, ligne) => {
+      const brut = (Number(ligne.nbreHeure) || 0) * (Number(ligne.tarifHoraire) || 0);
+      const net = Math.round(brut * (1 - (Number(ligne.tauxRemise) || 0) / 100));
+      return total + brut - net;
+    }, 0);
+    return remisePieces + remiseMainDoeuvre;
+  }
+
+  get totalApresRemiseGeneraleDetail(): number {
+    const p = this.selectedProforma;
+    if (!p) return 0;
+    const pieces = (p.lignesPieces ?? []).reduce((s, l) => s + Math.round((Number(l.quantite) || 0) * (Number(l.prix) || 0) * (1 - (Number(l.tauxRemise) || 0) / 100)), 0);
+    const mainDoeuvre = (p.lignesMainDoeuvres ?? []).reduce((s, l) => s + Math.round((Number(l.nbreHeure) || 0) * (Number(l.tarifHoraire) || 0) * (1 - (Number(l.tauxRemise) || 0) / 100)), 0);
+    return pieces + mainDoeuvre;
+  }
 
   get paged(): Proforma[] {
     return this.filtered;

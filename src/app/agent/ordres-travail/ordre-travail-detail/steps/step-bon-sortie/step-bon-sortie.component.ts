@@ -7,6 +7,7 @@ import { StepBonSortieResponseDto, StatutOrdreTravail, PieceBonSortieDto, OrdreT
 import { BonDeSortieService } from '../../../../bons-de-sortie/bon-de-sortie.service';
 import { BonDeSortie, BonDeSortieRequest } from '../../../../bons-de-sortie/models/bon-de-sortie.model';
 import { AlertComponent } from '../../../../../shared/components/alert/alert.component';
+import { AuthService } from '../../../../../core/services/auth.service';
 
 export interface PieceSortieItem extends PieceBonSortieDto {
   selected: boolean;
@@ -23,6 +24,7 @@ export class StepBonSortieComponent implements OnInit {
   private router = inject(Router);
   private otService = inject(OrdreTravailService);
   private bdsService = inject(BonDeSortieService);
+  private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
   private ngZone = inject(NgZone);
 
@@ -30,6 +32,8 @@ export class StepBonSortieComponent implements OnInit {
   data: StepBonSortieResponseDto | null = null;
   loadedOT: OrdreTravail | null = null;
   fullBonDeSortie: BonDeSortie | null = null;
+  bonsDeSortie: BonDeSortie[] = [];
+  selectedBonDetail: BonDeSortie | null = null;
 
   piecesToIssue: PieceSortieItem[] = [];
   remarque = '';
@@ -43,6 +47,12 @@ export class StepBonSortieComponent implements OnInit {
   showValidateModal = false;
   errorMessage = '';
   successMessage = '';
+
+  get canValidateBonDeSortie(): boolean {
+    const role = this.authService.getRole() ?? '';
+    return ['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER'].includes(role)
+      && ['PAIEMENT', 'PRET_A_LIVRER', 'LIVRE'].includes(this.data?.ordreReparationStatut ?? '');
+  }
 
   ngOnInit(): void {
     const idParam = this.route.snapshot.paramMap.get('id') || this.route.parent?.snapshot.paramMap.get('id');
@@ -63,19 +73,17 @@ export class StepBonSortieComponent implements OnInit {
       next: (res) => {
         this.ngZone.run(() => {
           this.data = res;
+          this.bonsDeSortie = res.bonsDeSortie || [];
           this.loading = false;
           this.initPieces(res);
 
           // Si le backend renvoie directement le bon de sortie
-          if (res.bonDeSortie?.id) {
+          if (res.bonDeSortie?.id && this.bonsDeSortie.length === 0) {
             this.loadFullBonDeSortie(res.bonDeSortie.id);
           } else if (this.fullBonDeSortie?.id) {
             // Si un bon de sortie a déjà été créé ou chargé localement, on le conserve !
             this.patchDataWithBon(this.fullBonDeSortie);
             this.loadFullBonDeSortie(this.fullBonDeSortie.id);
-          } else if (res.vehiculeId) {
-            // Recherche automatique si un bon de sortie existe déjà pour ce véhicule / ordre
-            this.searchExistingBonDeSortie(res.vehiculeId, res.ordreReparationId);
           } else {
             this.fullBonDeSortie = null;
           }
@@ -102,35 +110,6 @@ export class StepBonSortieComponent implements OnInit {
         });
       },
       error: () => {}
-    });
-  }
-
-  searchExistingBonDeSortie(vehiculeId: number, ordreReparationId?: number): void {
-    this.bdsService.getAll({ vehiculeId }).subscribe({
-      next: (bons) => {
-        this.ngZone.run(() => {
-          const list = Array.isArray(bons) ? bons : ((bons as any)?.data?.content || (bons as any)?.content || (bons as any)?.data || []);
-          if (list && list.length > 0) {
-            // Chercher le bon qui correspond à cet ordre de réparation ou ordre de travail
-            const match = list.find((b: any) =>
-              (ordreReparationId && (b.ordreReparationId === ordreReparationId || b.ordreReparation?.id === ordreReparationId)) ||
-              (b.ordreTravailId === this.otId || b.ordreTravail?.id === this.otId)
-            ) || list[0];
-
-            if (match) {
-              this.fullBonDeSortie = match;
-              this.patchDataWithBon(match);
-              if (match.id) {
-                this.loadFullBonDeSortie(match.id);
-              }
-            }
-          }
-          this.cdr.detectChanges();
-        });
-      },
-      error: () => {
-        this.cdr.detectChanges();
-      }
     });
   }
 
@@ -236,106 +215,46 @@ export class StepBonSortieComponent implements OnInit {
     );
   }
 
+  quantitePiecesBon(bon: BonDeSortie): number {
+    return (bon.lignesBonDeSortiePieces || []).reduce((total, ligne) => total + (ligne.type === 'MAIN_DOEUVRE' ? 0 : Number(ligne.quantite) || 0), 0);
+  }
+
+  get quantitePiecesTotale(): number {
+    return this.bonsDeSortie.reduce((total, bon) => total + this.quantitePiecesBon(bon), 0);
+  }
+
+  get montantBonsTotal(): number {
+    return this.bonsDeSortie.reduce((total, bon) => total + Number(bon.montantTotal || 0), 0);
+  }
+
   get canPasserAEtapeSuivante(): boolean {
-    // Si aucune pièce n'est requise et aucun bon n'existe, on peut avancer
-    if (!this.hasBonDeSortie() && this.piecesToIssue.length === 0) {
-      return true;
-    }
-    // Dès lors qu'un bon existe ou que des pièces sont requises, le bon doit obligatoirement être validé
-    return this.isBonValide();
+    return this.piecesToIssue.length === 0 || this.bonsDeSortie.length > 0 || this.hasBonDeSortie();
   }
 
   // --- Création du Bon de Sortie ---
 
   creerBonDeSortie(): void {
     if (!this.data) return;
-
-    const selected = this.selectedPieces;
-    if (selected.length === 0) {
-      this.errorMessage = 'Veuillez sélectionner au moins une pièce pour créer le Bon de Sortie.';
-      this.cdr.detectChanges();
+    const clientId = this.data.clientId || this.loadedOT?.client?.id || this.loadedOT?.vehicule?.client?.id;
+    const vehiculeId = this.data.vehiculeId || this.loadedOT?.vehicule?.id;
+    if (!clientId || !vehiculeId || !this.data.ordreReparationId) {
+      this.errorMessage = 'Le client, le véhicule et l’ordre de réparation sont requis pour créer le BS.';
       return;
     }
-
-    for (const p of selected) {
-      const qte = Number(p.quantiteASortir) || 0;
-      if (qte <= 0) {
-        this.errorMessage = `La quantité à sortir pour "${p.designation}" doit être supérieure à 0.`;
-        this.cdr.detectChanges();
-        return;
-      }
-    }
-
-    this.creating = true;
-    this.errorMessage = '';
-    this.successMessage = '';
-    this.cdr.detectChanges();
-
-    const clientId = this.data.clientId || this.loadedOT?.client?.id || this.loadedOT?.vehicule?.client?.id || 0;
-    const vehiculeId = this.data.vehiculeId || this.loadedOT?.vehicule?.id || 0;
-    const ordreReparationId = this.data.ordreReparationId || this.loadedOT?.ordreReparationId;
-
-    const lignesPieces = selected.map(p => ({
-      pieceId: p.pieceId || null,
-      quantite: Number(p.quantiteASortir) || 1,
-      prix: p.prixUnitaire ?? null,
-      prixUnitaire: p.prixUnitaire ?? null,
-      isCustom: !p.pieceId,
-      designationPds: p.designation
-    }));
-
-    const defaultRemarque = `Sortie magasin pour OT ${this.data.numero || ('#' + this.otId)}${this.data.proformaNumero ? ' (Proforma ' + this.data.proformaNumero + ')' : ''}`;
-
-    const payload: BonDeSortieRequest = {
-      clientId,
-      vehiculeId,
-      ordreReparationId: ordreReparationId ?? undefined,
-      ordreTravailId: this.otId,
-      lignesPieces,
-      remarque: this.remarque.trim() || defaultRemarque
-    };
-
-    this.bdsService.creer(payload).subscribe({
-      next: (createdBS: any) => {
-        this.ngZone.run(() => {
-          this.creating = false;
-          const ref = createdBS?.reference || ('#' + createdBS?.id);
-          this.successMessage = `Bon de Sortie ${ref} créé avec succès avec toutes les pièces ! Vous pouvez désormais le valider ci-dessous.`;
-
-          // 1. Immédiatement mettre à jour l'état avec le Bon de Sortie créé
-          if (createdBS) {
-            this.fullBonDeSortie = createdBS;
-            this.patchDataWithBon(createdBS);
-          }
-
-          // 2. Synchroniser vers le backend si l'endpoint de synchronisation d'étape existe
-          if (createdBS?.id) {
-            this.otService.updateStepBonSortie(this.otId, {
-              bonDeSortieId: createdBS.id,
-              statut: StatutOrdreTravail.BON_DE_SORTIE
-            }).subscribe({
-              next: () => {},
-              error: () => {}
-            });
-            this.loadFullBonDeSortie(createdBS.id);
-          }
-
-          this.cdr.detectChanges();
-        });
-      },
-      error: (err: any) => {
-        this.ngZone.run(() => {
-          this.creating = false;
-          this.errorMessage = err.error?.message || err.message || 'Erreur lors de la création du Bon de Sortie.';
-          this.cdr.detectChanges();
-        });
-      }
+    this.router.navigate(['/app/bons-de-sortie'], {
+      queryParams: { action: 'new', clientId, vehiculeId, ordreReparationId: this.data.ordreReparationId, ordreTravailId: this.otId }
     });
+  }
+
+  ouvrirDetailBon(bon: BonDeSortie): void {
+    this.selectedBonDetail = bon;
+    this.bdsService.getById(bon.id).subscribe({ next: full => { this.selectedBonDetail = full; this.cdr.detectChanges(); } });
   }
 
   // --- Validation du Bon de Sortie ---
 
   openValidateModal(): void {
+    if (!this.canValidateBonDeSortie) return;
     this.showValidateModal = true;
     this.cdr.detectChanges();
   }
@@ -347,6 +266,7 @@ export class StepBonSortieComponent implements OnInit {
   }
 
   confirmerValidation(): void {
+    if (!this.canValidateBonDeSortie) return;
     const bonId = this.fullBonDeSortie?.id || this.data?.bonDeSortie?.id;
     if (!bonId) {
       this.errorMessage = 'Aucun Bon de Sortie trouvé à valider.';
@@ -365,7 +285,7 @@ export class StepBonSortieComponent implements OnInit {
           this.validating = false;
           this.showValidateModal = false;
           const ref = validated?.reference || ('#' + bonId);
-          this.successMessage = `Bon de Sortie ${ref} validé avec succès ! Les pièces ont été déstockées vers l'atelier.`;
+          this.successMessage = `Bon de Sortie ${ref} validé après réparation.`;
 
           if (validated) {
             this.fullBonDeSortie = validated;
@@ -393,7 +313,7 @@ export class StepBonSortieComponent implements OnInit {
 
   continuerVersAssignation(): void {
     if (!this.canPasserAEtapeSuivante) {
-      this.errorMessage = 'Le Bon de Sortie doit obligatoirement être validé avant de pouvoir passer à l\'affectation des techniciens.';
+      this.errorMessage = 'Créez au moins un Bon de Sortie lié à cet ordre avant de continuer.';
       this.cdr.detectChanges();
       return;
     }

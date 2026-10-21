@@ -27,6 +27,7 @@ export interface LignePiece {
   designationPds?: string;
   prixTotal?: number;
   prixUnitaire?: number;
+  tauxRemise?: number;
   quantite: number;
   stockDisponible?: number;
   manquant: number;
@@ -38,6 +39,7 @@ export interface LigneMO {
   mo: MainDoeuvreModel;
   quantite: number;
   prixUnitaire?: number;
+  tauxRemise?: number;
 }
 
 @Component({
@@ -117,26 +119,37 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
 
   get totalPieces(): number {
     return this.lignesPieces.reduce((sum, l) => {
+      let montantBrut: number;
       if (l.isCustom || l.piece?.type === 'PDG') {
         const tot = l.prixTotal != null && l.prixTotal >= 0
           ? Number(l.prixTotal)
           : ((l.prixUnitaire || 0) * (l.quantite || 0));
-        return sum + tot;
+        montantBrut = tot;
+      } else {
+        const price = l.prixUnitaire != null ? l.prixUnitaire : (l.piece?.prix ?? 0);
+        montantBrut = price * (l.quantite || 0);
       }
-      const price = l.prixUnitaire != null ? l.prixUnitaire : (l.piece?.prix ?? 0);
-      return sum + price * (l.quantite || 0);
+      return sum + montantBrut * (1 - Math.max(0, Math.min(100, Number(l.tauxRemise) || 0)) / 100);
     }, 0);
   }
 
   get totalMO(): number {
     return this.lignesMO.reduce((sum, l) => {
       const price = l.prixUnitaire != null ? l.prixUnitaire : (l.mo?.prix ?? 0);
-      return sum + price * (l.quantite || 0);
+      return sum + price * (l.quantite || 0) * (1 - Math.max(0, Math.min(100, Number(l.tauxRemise) || 0)) / 100);
     }, 0);
   }
 
+  get tauxRemiseClient(): number {
+    return Math.max(0, Math.min(100, Number(this.loadedOrdre?.tauxRemiseClient) || 0));
+  }
+
+  get montantRemiseClient(): number {
+    return this.totalPieces * this.tauxRemiseClient / 100;
+  }
+
   get totalGeneral(): number {
-    return this.totalPieces + this.totalMO;
+    return this.totalPieces - this.montantRemiseClient + this.totalMO;
   }
 
   get hasRuptureStock(): boolean {
@@ -276,7 +289,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
           for (const l of proformaPieces) {
             const pieceId = l.pieceId ?? l.piece?.id ?? null;
             const isCustom = !!(l.isCustom || l.custom || !pieceId || l.designationPds);
-            const key = isCustom
+            const key = l.id != null ? `line_${l.id}` : isCustom
               ? `custom_${(l.designationPds || l.designationPiece || '').trim().toLowerCase()}`
               : `cat_${pieceId}`;
 
@@ -323,6 +336,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
                 isCustom,
                 designationPds: des,
                 prixUnitaire: unitPrice,
+                tauxRemise: Number(l.tauxRemise) || 0,
                 prixTotal: totalItem,
                 stockDisponible: isCustom ? 0 : ((resolvedPiece?.stockMagasin ?? 0) + (resolvedPiece?.stockAtelier ?? 0)),
                 manquant: 0,
@@ -357,7 +371,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
               description: l.descriptionMainDoeuvre || l.description || 'Prestation main-d’œuvre',
               prix: l.tarifHoraire ?? l.prix
             };
-            const mapKey = resolvedMO.id || (l.descriptionMainDoeuvre || l.description || 'mo');
+            const mapKey = l.id != null ? `line_${l.id}` : resolvedMO.id || (l.descriptionMainDoeuvre || l.description || 'mo');
 
             let unitPrice = 0;
             if (l.tarifHoraire != null && Number(l.tarifHoraire) >= 0) {
@@ -384,7 +398,8 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
               moMap.set(mapKey, {
                 mo: resolvedMO,
                 quantite: qte,
-                prixUnitaire: unitPrice
+                prixUnitaire: unitPrice,
+                tauxRemise: Number(l.tauxRemise) || 0
               });
             }
           }
@@ -398,7 +413,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
           const fetchedPieces = ordre.lignesOrdreReparationPieces || (ordre as any).lignesPieces || [];
           for (const l of fetchedPieces) {
             const pieceId = l.piece?.id ?? (l as any).pieceId;
-            const key = l.isCustom 
+            const key = l.id != null ? `line_${l.id}` : l.isCustom
               ? `custom_${(l.designationPds || '').trim().toLowerCase()}`
               : `cat_${pieceId}`;
 
@@ -446,6 +461,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
                 isCustom: !!l.isCustom,
                 designationPds: l.designationPds,
                 prixUnitaire: unitPrice,
+                tauxRemise: Number(l.tauxRemise) || 0,
                 prixTotal: totalItem,
                 stockDisponible: l.isCustom ? 0 : ((resolvedPiece?.stockMagasin ?? 0) + (resolvedPiece?.stockAtelier ?? 0)),
                 manquant: 0,
@@ -478,8 +494,9 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
 
             const resolvedMO = catalogMO || l.mainDoeuvre || { id: l.id || Date.now(), description: l.description, prix: l.prix };
             const moId = resolvedMO.id;
+            const moKey = l.id != null ? `line_${l.id}` : moId;
 
-            if (!moId) continue;
+            if (!moId && l.id == null) continue;
 
             let unitPrice = 0;
             if (l.prix != null && Number(l.prix) > 0) {
@@ -488,17 +505,18 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
               unitPrice = Number(resolvedMO.prix);
             }
 
-            if (moMap.has(moId)) {
-              const item = moMap.get(moId);
+            if (moMap.has(moKey)) {
+              const item = moMap.get(moKey);
               item.quantite += (l.nbreHeure ?? l.heures ?? 1);
               if ((item.prixUnitaire == null || item.prixUnitaire === 0) && unitPrice > 0) {
                 item.prixUnitaire = unitPrice;
               }
             } else {
-              moMap.set(moId, {
+              moMap.set(moKey, {
                 mo: resolvedMO,
                 quantite: l.nbreHeure ?? l.heures ?? 1,
-                prixUnitaire: unitPrice
+                prixUnitaire: unitPrice,
+                tauxRemise: Number(l.tauxRemise) || 0
               });
             }
           }
@@ -569,23 +587,17 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
     const defaultPrice = p.prixUnitaire ?? p.prix ?? (p as any).prixDeVente ?? (p as any).prixVente ?? 0;
     const unitPrice = this.prixAjouterPdp != null && this.prixAjouterPdp >= 0 ? Number(this.prixAjouterPdp) : Number(defaultPrice);
 
-    const existing = this.lignesPieces.find(l => !l.isCustom && l.piece?.id === p.id);
-    if (existing) {
-      existing.quantite += this.qteAjouterPdp;
-      existing.prixUnitaire = unitPrice;
-      existing.manquant = Math.max(0, existing.quantite - (existing.piece?.stockMagasin ?? 0));
-      existing.aSortirMagasin = existing.manquant > 0 ? 0 : 1;
-    } else {
-      this.lignesPieces.push({
+    const qteDejaDemandee = this.lignesPieces.filter(l => !l.isCustom && l.piece?.id === p.id).reduce((sum, l) => sum + l.quantite, 0);
+    this.lignesPieces.push({
         isCustom: false,
         piece: p,
         quantite: this.qteAjouterPdp,
         prixUnitaire: unitPrice,
+        tauxRemise: 0,
         stockDisponible: (p.stockMagasin ?? 0) + (p.stockAtelier ?? 0),
-        manquant: Math.max(0, this.qteAjouterPdp - (p.stockMagasin ?? 0)),
-        aSortirMagasin: Math.max(0, this.qteAjouterPdp - (p.stockMagasin ?? 0)) > 0 ? 0 : 1
+        manquant: Math.max(0, qteDejaDemandee + this.qteAjouterPdp - (p.stockMagasin ?? 0)),
+        aSortirMagasin: Math.max(0, qteDejaDemandee + this.qteAjouterPdp - (p.stockMagasin ?? 0)) > 0 ? 0 : 1
       });
-    }
 
     this.piecePdpAjouter = null;
     this.qteAjouterPdp = 1;
@@ -604,25 +616,17 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
       : (Number(defaultPrice) * qte);
     const unitPrice = qte > 0 ? Math.round(total / qte) : 0;
 
-    const existing = this.lignesPieces.find(l => !l.isCustom && l.piece?.id === p.id);
-    if (existing) {
-      existing.quantite += qte;
-      existing.prixTotal = (existing.prixTotal || 0) + total;
-      existing.prixUnitaire = existing.quantite > 0 ? Math.round(existing.prixTotal / existing.quantite) : 0;
-      existing.manquant = Math.max(0, existing.quantite - (existing.piece?.stockMagasin ?? 0));
-      existing.aSortirMagasin = existing.manquant > 0 ? 0 : 1;
-    } else {
-      this.lignesPieces.push({
+    this.lignesPieces.push({
         isCustom: false,
         piece: p,
         quantite: qte,
         prixTotal: total,
         prixUnitaire: unitPrice,
+        tauxRemise: 0,
         stockDisponible: (p.stockMagasin ?? 0) + (p.stockAtelier ?? 0),
         manquant: Math.max(0, qte - (p.stockMagasin ?? 0)),
         aSortirMagasin: Math.max(0, qte - (p.stockMagasin ?? 0)) > 0 ? 0 : 1
       });
-    }
 
     this.piecePdgAjouter = null;
     this.qteAjouterPdg = 1;
@@ -638,22 +642,16 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
     const unitPrice = qte > 0 ? Math.round(total / qte) : 0;
     const des = this.pieceCustomDesignation.trim();
 
-    const existing = this.lignesPieces.find(l => l.isCustom && (l.designationPds || '').trim().toLowerCase() === des.toLowerCase());
-    if (existing) {
-      existing.quantite += qte;
-      existing.prixTotal = (existing.prixTotal || 0) + total;
-      existing.prixUnitaire = existing.quantite > 0 ? Math.round(existing.prixTotal / existing.quantite) : 0;
-    } else {
-      this.lignesPieces.push({
+    this.lignesPieces.push({
         isCustom: true,
         designationPds: des,
         prixTotal: total,
         prixUnitaire: unitPrice,
+        tauxRemise: 0,
         quantite: qte,
         manquant: 0,
         aSortirMagasin: 0
       });
-    }
     this.pieceCustomDesignation = '';
     this.pieceCustomPrixTotal = null;
     this.pieceCustomQuantite = 1;
@@ -706,13 +704,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
     const m = this.allMO.find(item => item.id === Number(this.moAjouter));
     if (!m) return;
     const unitPrice = this.prixAjouterMO != null && this.prixAjouterMO >= 0 ? this.prixAjouterMO : (m.prix ?? 0);
-    const existing = this.lignesMO.find(l => l.mo?.id === m.id);
-    if (existing) {
-      existing.quantite += this.qteAjouterMO;
-      existing.prixUnitaire = unitPrice;
-    } else {
-      this.lignesMO.push({ mo: m, quantite: this.qteAjouterMO, prixUnitaire: unitPrice });
-    }
+    this.lignesMO.push({ mo: m, quantite: this.qteAjouterMO, prixUnitaire: unitPrice, tauxRemise: 0 });
     this.moAjouter = null;
     this.qteAjouterMO = 1;
     this.prixAjouterMO = null;
@@ -745,6 +737,14 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const tauxRemiseInvalide = [...this.lignesPieces, ...this.lignesMO]
+      .some(l => !Number.isFinite(Number(l.tauxRemise ?? 0)) || Number(l.tauxRemise ?? 0) < 0 || Number(l.tauxRemise ?? 0) > 100);
+    if (tauxRemiseInvalide) {
+      this.errorMessage = 'Chaque remise doit être comprise entre 0 et 100 %.';
+      this.cdr.markForCheck();
+      return;
+    }
+
     const payloadLignesPieces = this.lignesPieces.map(l => {
       const pieceId = l.isCustom ? null : (l.piece?.id ?? null);
       const catPiece = pieceId ? this.allPieces.find(p => p.id === pieceId) : null;
@@ -767,6 +767,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
         pieceId,
         quantite: l.quantite,
         prix: finalPrice,
+        tauxRemise: Math.max(0, Math.min(100, Number(l.tauxRemise) || 0)),
         isCustom: l.isCustom ?? false,
         designationPds: l.isCustom ? l.designationPds : undefined,
       };
@@ -788,6 +789,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
         mainDoeuvreId: moId,
         nbreHeure: l.quantite,
         prix: finalPrice,
+        tauxRemise: Math.max(0, Math.min(100, Number(l.tauxRemise) || 0)),
       };
     });
 

@@ -42,6 +42,7 @@ export class AvoirsHt extends BasePaginatedComponent implements OnInit {
   loading = true;
   saving = false;
   selectedAvoir: AvoirHT | null = null;
+  downloadLayoutKey: 'AVEC_ENTETE' | 'SANS_ENTETE' = 'AVEC_ENTETE';
   showCreateModal = false;
   showDetailModal = false;
 
@@ -333,12 +334,12 @@ export class AvoirsHt extends BasePaginatedComponent implements OnInit {
   }
 
   downloadPdf(a: AvoirHT) {
-    this.service.downloadPdf(a.id).subscribe({
+    this.service.downloadPdf(a.id, this.downloadLayoutKey).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const anchor = document.createElement('a');
         anchor.href = url;
-        anchor.download = `AvoirHT_${a.numero || a.id}.pdf`;
+        anchor.download = `AvoirHT_${a.numero || a.id}_${this.downloadLayoutKey === 'AVEC_ENTETE' ? 'avec-entete' : 'sans-entete'}.pdf`;
         anchor.click();
         window.URL.revokeObjectURL(url);
       },

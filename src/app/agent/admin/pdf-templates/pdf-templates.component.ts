@@ -22,7 +22,7 @@ export class PdfTemplatesComponent implements OnInit, OnDestroy {
     { id: 'AVOIR_TTC', label: 'Avoir TTC' }, { id: 'DIAGNOSTIC', label: 'Diagnostic' }
   ];
   readonly tokenHelp: Record<string, string[]> = {
-    FACTURE: ['numero', 'date', 'dateEcheance', 'agentNom', 'clientNom', 'immatriculation', 'marque', 'modele', 'annee', 'chassis', 'kilometrage', 'numeroBonDeCommande', 'montantHT', 'tauxRemiseClient', 'montantRemiseClient', 'montantTVA', 'montantTimbre', 'montantAutre', 'montantTTC', 'montantTotal', 'montantPaye', 'resteAPayer', 'remarque'],
+    FACTURE: ['numero', 'date', 'dateEcheance', 'agentNom', 'clientNom', 'immatriculation', 'marque', 'modele', 'annee', 'chassis', 'kilometrage', 'numeroBonDeCommande', 'montantHT', 'montantRemiseGenerale', 'tauxRemiseClient', 'montantRemiseClient', 'montantTVA', 'montantTimbre', 'montantAutre', 'montantTTC', 'montantTotal', 'montantPaye', 'resteAPayer', 'remarque'],
     PROFORMA: ['numero', 'clientNom', 'immatriculation', 'marque', 'modele', 'montantHT', 'tauxRemiseClient', 'montantRemiseClient', 'montantTTC', 'remarque'],
     DEVIS_PREVISIONNEL: ['numero', 'date', 'clientNom', 'immatriculation', 'marque', 'modele', 'montantTotal', 'reparations'],
     BON_COMMANDE: ['numero', 'date', 'statut', 'fournisseur', 'immatriculation', 'montantHT', 'montantTTC'],
@@ -37,8 +37,8 @@ export class PdfTemplatesComponent implements OnInit, OnDestroy {
   ];
   readonly tableSources = [{ id: '', label: 'Tableau libre' }, { id: 'LIGNES_PIECES', label: 'Pièces facturées' }, { id: 'LIGNES_MAIN_DOEUVRE', label: 'Main-d’œuvre' }];
   tableFieldsFor(block: PdfBlock): string[] {
-    return block.dataSource === 'LIGNES_PIECES' ? ['reference', 'designation', 'quantite', 'prixUnitaire', 'montant']
-      : block.dataSource === 'LIGNES_MAIN_DOEUVRE' ? ['designation', 'heures', 'quantite', 'prixUnitaire', 'montant'] : [];
+    return block.dataSource === 'LIGNES_PIECES' ? ['reference', 'designation', 'quantite', 'prixUnitaire', 'tauxRemise', 'montantBrut', 'montantRemise', 'montant']
+      : block.dataSource === 'LIGNES_MAIN_DOEUVRE' ? ['designation', 'heures', 'quantite', 'prixUnitaire', 'tauxRemise', 'montantBrut', 'montantRemise', 'montant'] : [];
   }
   templates: PdfTemplate[] = [];
   selectedId: number | null = null;
@@ -71,7 +71,7 @@ export class PdfTemplatesComponent implements OnInit, OnDestroy {
   select(template: PdfTemplate): void {
     this.selectedId = template.id; this.name = template.name; this.documentType = template.documentType;
     this.assignedDocumentTypes = [...(template.documentTypes?.length ? template.documentTypes : [template.documentType])];
-    this.layoutKey = template.layoutKey || 'AVEC_ENTETE';
+    this.layoutKey = template.layoutKey === 'SANS_ENTETE' ? 'SANS_ENTETE' : 'AVEC_ENTETE';
     this.active = template.active; this.blocks = template.blocks.map(block => ({ ...block })); this.notice = ''; this.error = '';
   }
   addBlock(kind: PdfBlockKind = 'text'): void { this.blocks.push(this.createBlock(kind)); }
@@ -82,19 +82,19 @@ export class PdfTemplatesComponent implements OnInit, OnDestroy {
     [this.blocks[index], this.blocks[next]] = [this.blocks[next], this.blocks[index]];
   }
   private createBlock(kind: PdfBlockKind): PdfBlock {
-    const tableContent = kind === 'table' ? 'Référence\tDésignation\tQté\tPrix unitaire\tTotal\n{{reference}}\t{{designation}}\t{{quantite}}\t{{prixUnitaire}}\t{{montant}}' : '';
+    const tableContent = kind === 'table' ? 'Référence\tDésignation\tQté\tPrix unitaire\tRemise (%)\tTotal net\n{{reference}}\t{{designation}}\t{{quantite}}\t{{prixUnitaire}}\t{{tauxRemise}}\t{{montant}}' : '';
     return { id: crypto.randomUUID(), kind, content: kind === 'heading' ? 'Titre du document' : tableContent, align: 'left', width: '100%',
       positionMode: 'flow', offsetX: 0, offsetY: 0,
-      headerRow: kind === 'table', dataSource: kind === 'table' ? 'LIGNES_PIECES' : undefined, columnWidths: kind === 'table' ? '15%,35%,10%,20%,20%' : undefined };
+      headerRow: kind === 'table', dataSource: kind === 'table' ? 'LIGNES_PIECES' : undefined, columnWidths: kind === 'table' ? '13%,32%,8%,16%,12%,19%' : undefined };
   }
   changeTableSource(block: PdfBlock, source: string): void {
     block.dataSource = source || undefined;
     if (source === 'LIGNES_MAIN_DOEUVRE') {
-      block.content = 'Désignation\tHeures\tTarif horaire\tTotal\n{{designation}}\t{{heures}}\t{{prixUnitaire}}\t{{montant}}';
-      block.columnWidths = '40%,15%,20%,25%';
+      block.content = 'Désignation\tHeures\tTarif horaire\tRemise (%)\tTotal net\n{{designation}}\t{{heures}}\t{{prixUnitaire}}\t{{tauxRemise}}\t{{montant}}';
+      block.columnWidths = '34%,12%,18%,13%,23%';
     } else if (source === 'LIGNES_PIECES') {
-      block.content = 'Référence\tDésignation\tQté\tPrix unitaire\tTotal\n{{reference}}\t{{designation}}\t{{quantite}}\t{{prixUnitaire}}\t{{montant}}';
-      block.columnWidths = '15%,35%,10%,20%,20%';
+      block.content = 'Référence\tDésignation\tQté\tPrix unitaire\tRemise (%)\tTotal net\n{{reference}}\t{{designation}}\t{{quantite}}\t{{prixUnitaire}}\t{{tauxRemise}}\t{{montant}}';
+      block.columnWidths = '13%,32%,8%,16%,12%,19%';
     }
   }
   isAssigned(type: string): boolean { return this.assignedDocumentTypes.includes(type); }
@@ -160,5 +160,9 @@ export class PdfTemplatesComponent implements OnInit, OnDestroy {
   labelsFor(template: PdfTemplate): string { return (template.documentTypes?.length ? template.documentTypes : [template.documentType]).map(type => this.labelOf(type)).join(', '); }
   tokensForType(): string[] { return this.tokenHelp[this.documentType] || []; }
   tableSourcesForType() { return this.documentType === 'FACTURE' ? this.tableSources : [this.tableSources[0]]; }
-  private payload(): PdfTemplatePayload { return { name: this.name.trim() || 'Aperçu', documentType: this.assignedDocumentTypes.includes('FACTURE') ? 'FACTURE' : this.documentType, documentTypes: [...this.assignedDocumentTypes], layoutKey: this.assignedDocumentTypes.includes('FACTURE') ? this.layoutKey : 'STANDARD', active: this.active, blocks: this.blocks.map((block, index) => ({ ...block, id: block.id || `block-${index}` })) }; }
+  supportsLayout(template?: PdfTemplate): boolean {
+    const types = template ? (template.documentTypes?.length ? template.documentTypes : [template.documentType]) : this.assignedDocumentTypes;
+    return types.every(type => ['FACTURE', 'PROFORMA', 'DEVIS_PREVISIONNEL', 'BON_COMMANDE', 'BON_RECEPTION', 'AVOIR_HT', 'AVOIR_TTC', 'DIAGNOSTIC'].includes(type));
+  }
+  private payload(): PdfTemplatePayload { return { name: this.name.trim() || 'Aperçu', documentType: this.assignedDocumentTypes.includes('FACTURE') ? 'FACTURE' : this.documentType, documentTypes: [...this.assignedDocumentTypes], layoutKey: this.supportsLayout() ? this.layoutKey : 'STANDARD', active: this.active, blocks: this.blocks.map((block, index) => ({ ...block, id: block.id || `block-${index}` })) }; }
 }

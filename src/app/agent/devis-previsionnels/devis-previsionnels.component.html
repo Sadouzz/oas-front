@@ -6,11 +6,19 @@
       <h1 class="text-2xl font-bold text-oas-ink">Devis Prévisionnels</h1>
       <p class="text-sm text-oas-muted mt-1">{{ totalElements }} devis</p>
     </div>
-    <button (click)="openNew()"
-            class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-11 rounded-lg flex items-center justify-center gap-2 transition cursor-pointer w-full sm:w-auto">
-      <svg lucidePlus class="w-4 h-4"></svg>
-      Nouveau devis
-    </button>
+    <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+      <label class="block text-xs font-semibold text-oas-muted">Présentation du PDF
+        <select (change)="downloadLayoutKey = $any($event.target).value" class="mt-1 w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm font-normal text-oas-ink">
+          <option value="AVEC_ENTETE">Avec en-tête</option>
+          <option value="SANS_ENTETE">Sans en-tête</option>
+        </select>
+      </label>
+      <button (click)="openNew()"
+              class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-11 rounded-lg flex items-center justify-center gap-2 transition cursor-pointer w-full sm:w-auto">
+        <svg lucidePlus class="w-4 h-4"></svg>
+        Nouveau devis
+      </button>
+    </div>
   </div>
 
   <app-alert [success]="successMessage" [error]="errorMessage" />

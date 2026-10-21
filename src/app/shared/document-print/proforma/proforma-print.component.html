@@ -60,7 +60,7 @@
         <td>{{ ligne.reference || ligne.referencePiece || '-' }}</td>
         <td class="text-left">{{ ligne.designation || ligne.designationPiece || ligne.designationPds || '-' }}</td>
         <td>{{ ligne.quantite }}</td>
-        <td>{{ ligne.remise || 0 }}</td>
+        <td>{{ ligne.remise || 0 }} %<span *ngIf="ligne.montantRemise > 0" style="display:block; font-size:9px;">−{{ ligne.montantRemise | number:'1.0-0' }}</span></td>
         <td class="text-right">{{ getLignePrix(ligne) | number:'1.0-0' }}</td>
         <td class="text-right">{{ getLigneTotal(ligne) | number:'1.0-0' }}</td>
       </tr>
@@ -106,6 +106,10 @@
         </tr>
       </tbody>
     </table>
+    <div style="text-align:right; margin:8px 0; font-size:11px;" *ngIf="data?.montantRemiseGenerale > 0 || data?.montantRemiseClient > 0">
+      <div *ngIf="data?.montantRemiseGenerale > 0">Remises générales appliquées par ligne : −{{ data.montantRemiseGenerale | number:'1.0-0' }} FCFA</div>
+      <div *ngIf="data?.montantRemiseClient > 0">Remise compte client sur les pièces ({{ data.tauxRemiseClient || 0 }} %) : −{{ data.montantRemiseClient | number:'1.0-0' }} FCFA</div>
+    </div>
     <!-- MONTANT EN TOUTES LETTRES -->
     <div class="montant-lettres-box">
       {{ getMontantEnLettres() }}

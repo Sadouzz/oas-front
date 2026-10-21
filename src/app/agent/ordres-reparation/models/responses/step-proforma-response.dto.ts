@@ -7,6 +7,8 @@ export interface StepProformaResponseDto extends BaseStepResponseDto {
     montantHT?: number;
     montantTVA?: number;
     montantTTC?: number;
+    tauxRemiseClient?: number;
+    montantRemiseClient?: number;
     numero?: string;
     visibleClient?: boolean;
     dateCreation?: string;
@@ -16,6 +18,7 @@ export interface StepProformaResponseDto extends BaseStepResponseDto {
       quantite?: number;
       prix?: number;
       montantTotal?: number;
+      tauxRemise?: number;
       isCustom?: boolean;
     }[];
     lignesMainDoeuvres?: {
@@ -24,6 +27,7 @@ export interface StepProformaResponseDto extends BaseStepResponseDto {
       nbreHeure?: number;
       tarifHoraire?: number;
       montantTotal?: number;
+      tauxRemise?: number;
     }[];
   };
   vehicule?: {

@@ -13,11 +13,13 @@ export class BonDeSortieService {
   private http = inject(HttpClient);
   private api = `${environment.apiUrl}/api/bons-de-sortie`;
 
-  getAll(params?: PageParams & { statut?: string; clientId?: number; vehiculeId?: number }): Observable<BonDeSortie[]> {
+  getAll(params?: PageParams & { statut?: string; clientId?: number; vehiculeId?: number; ordreReparationId?: number; ordreTravailId?: number }): Observable<BonDeSortie[]> {
     const p: Record<string, string> = {};
     if (params?.statut) p['statut'] = params.statut;
     if (params?.clientId) p['clientId'] = String(params.clientId);
     if (params?.vehiculeId) p['vehiculeId'] = String(params.vehiculeId);
+    if (params?.ordreReparationId) p['ordreReparationId'] = String(params.ordreReparationId);
+    if (params?.ordreTravailId) p['ordreTravailId'] = String(params.ordreTravailId);
     if (params?.page !== undefined) p['page'] = params.page.toString();
     if (params?.size !== undefined) p['size'] = params.size.toString();
     if (params?.keyword) p['keyword'] = params.keyword;

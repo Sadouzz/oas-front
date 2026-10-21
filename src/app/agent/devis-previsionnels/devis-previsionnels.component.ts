@@ -3,7 +3,6 @@ import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule, DecimalPipe } from '@angular/common';
-import { environment } from '../../../environments/environment';
 import { DevisPrevisionnelService } from './devis-previsionnel.service';
 import { ClientService } from '../clients/client.service';
 import { VehiculeService } from '../vehicules/vehicule.service';
@@ -41,6 +40,7 @@ export class DevisPrevisionnelsComponent extends BasePaginatedComponent implemen
   successMessage = '';
   errorMessage = '';
   selectedDevisForPrint: any = null;
+  downloadLayoutKey: 'AVEC_ENTETE' | 'SANS_ENTETE' = 'AVEC_ENTETE';
 
   filterClientId = '';
   private searchTimeout: any;
@@ -200,7 +200,18 @@ export class DevisPrevisionnelsComponent extends BasePaginatedComponent implemen
   }
 
   ouvrirPdf(id: number) {
-    window.open(`${environment.apiUrl}/api/devis-previsionnels/${id}/pdf`, '_blank');
+    this.service.downloadPdf(id, this.downloadLayoutKey).subscribe({
+      next: blob => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      },
+      error: () => this.notifyError('Impossible de télécharger le devis en PDF.'),
+    });
   }
 
   formatDate(d: string): string { return new Date(d).toLocaleDateString('fr-FR'); }
