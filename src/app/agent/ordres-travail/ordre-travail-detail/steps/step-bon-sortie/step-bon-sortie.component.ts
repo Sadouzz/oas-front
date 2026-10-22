@@ -180,20 +180,62 @@ export class StepBonSortieComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
+  get piecesRequises(): PieceBonSortieDto[] {
+    return this.data?.piecesManquantesProforma || [];
+  }
+
+  getResteASortir(p: PieceBonSortieDto): number {
+    if (p.quantiteASortir != null) {
+      return Number(p.quantiteASortir);
+    }
+    const demandee = Number(p.quantiteDemandee) || 0;
+    const sortie = Number(p.quantiteSortie) || 0;
+    return Math.max(0, demandee - sortie);
+  }
+
+  getQuantiteSortie(p: PieceBonSortieDto): number {
+    if (p.quantiteSortie != null) {
+      return Number(p.quantiteSortie);
+    }
+    const demandee = Number(p.quantiteDemandee) || 0;
+    const aSortir = Number(p.quantiteASortir) || 0;
+    return Math.max(0, demandee - aSortir);
+  }
+
+  get totalQuantiteDemandee(): number {
+    if (this.piecesRequises.length > 0) {
+      return this.piecesRequises.reduce((acc, p) => acc + (Number(p.quantiteDemandee) || 0), 0);
+    }
+    return this.piecesToIssue.reduce((acc, p) => acc + (p.quantiteDemandee || 0), 0);
+  }
+
+  get totalQuantiteSortie(): number {
+    return this.piecesRequises.reduce((acc, p) => acc + this.getQuantiteSortie(p), 0);
+  }
+
+  get totalQuantiteRestante(): number {
+    return this.piecesRequises.reduce((acc, p) => acc + this.getResteASortir(p), 0);
+  }
+
+  get isToutesPiecesSorties(): boolean {
+    if (this.piecesRequises.length === 0) return true;
+    return this.piecesRequises.every(p => this.getResteASortir(p) <= 0);
+  }
+
+  get isPartiellementSorti(): boolean {
+    return this.totalQuantiteSortie > 0 && this.totalQuantiteRestante > 0;
+  }
+
   get selectedPieces(): PieceSortieItem[] {
     return this.piecesToIssue.filter(p => p.selected);
   }
 
-  get totalQuantiteDemandee(): number {
-    return this.piecesToIssue.reduce((acc, p) => acc + (p.quantiteDemandee || 0), 0);
-  }
-
   get totalQuantiteASortir(): number {
-    return this.selectedPieces.reduce((acc, p) => acc + (Number(p.quantiteASortir) || 0), 0);
+    return this.selectedPieces.reduce((acc: number, p: PieceSortieItem) => acc + (Number(p.quantiteASortir) || 0), 0);
   }
 
   get totalValeurEstimee(): number {
-    return this.selectedPieces.reduce((acc, p) => {
+    return this.selectedPieces.reduce((acc: number, p: PieceSortieItem) => {
       const qte = Number(p.quantiteASortir) || 0;
       const pu = Number(p.prixUnitaire) || 0;
       return acc + (qte * pu);
@@ -201,7 +243,7 @@ export class StepBonSortieComponent implements OnInit {
   }
 
   get hasStockInsuffisant(): boolean {
-    return this.selectedPieces.some(p => (Number(p.stockMagasin) || 0) < (Number(p.quantiteASortir) || 0));
+    return this.selectedPieces.some((p: PieceSortieItem) => (Number(p.stockMagasin) || 0) < (Number(p.quantiteASortir) || 0));
   }
 
   isBonValide(): boolean {
@@ -230,7 +272,7 @@ export class StepBonSortieComponent implements OnInit {
   }
 
   get canPasserAEtapeSuivante(): boolean {
-    return this.piecesToIssue.length === 0 || this.bonsDeSortie.length > 0 || this.hasBonDeSortie();
+    return this.piecesRequises.length === 0 || this.bonsDeSortie.length > 0 || this.hasBonDeSortie();
   }
 
   // --- Création du Bon de Sortie ---
