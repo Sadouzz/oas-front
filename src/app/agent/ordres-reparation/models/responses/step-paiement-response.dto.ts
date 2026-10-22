@@ -2,6 +2,7 @@ import { BaseStepResponseDto } from './base-response.dto';
 
 export interface StepPaiementResponseDto extends BaseStepResponseDto {
   etape?: number;
+  clientId?: number;
   facture?: {
     id: number;
     numero?: string;

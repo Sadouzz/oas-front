@@ -60,12 +60,6 @@ export class StepPaiementComponent implements OnInit {
         this.ngZone.run(() => {
           this.data = res;
           this.loading = false;
-
-          // Si aucune facture directe, recherche dans la liste des factures
-          if (!this.hasFacture()) {
-            this.searchExistingFacture(this.ordreId);
-          }
-
           this.cdr.detectChanges();
         });
       },
@@ -79,36 +73,6 @@ export class StepPaiementComponent implements OnInit {
     });
   }
 
-  searchExistingFacture(ordreId: number): void {
-    this.factureService.getAll().subscribe({
-      next: (list: any) => {
-        this.ngZone.run(() => {
-          const items = Array.isArray(list) ? list : (list?.content || list?.data || []);
-          const match = items.find((f: any) =>
-            (f.ordreReparationId && Number(f.ordreReparationId) === Number(ordreId)) ||
-            (f.ordreReparation && Number(f.ordreReparation.id) === Number(ordreId))
-          );
-          if (match && this.data) {
-            this.data.facture = {
-              id: match.id,
-              numero: match.numero,
-              client: match.clientNom || '',
-              vehicule: match.immatriculation || '',
-              statut: match.statutPaiement || 'NON_PAYE',
-              montantAPayer: match.montantTotal,
-              montantPaye: match.montantPaye || 0,
-              montantRestant: match.resteAPayer !== undefined ? match.resteAPayer : match.montantTotal,
-              montantTotal: match.montantTotal,
-              modePaiement: match.modePaiement || 'ESPECE'
-            };
-            this.cdr.detectChanges();
-          }
-        });
-      },
-      error: () => {}
-    });
-  }
-
   hasFacture(): boolean {
     return !!(this.data?.facture?.id);
   }
@@ -116,7 +80,8 @@ export class StepPaiementComponent implements OnInit {
   isFacturePayee(): boolean {
     if (!this.data?.facture) return false;
     const s = (this.data.facture.statut || '').toUpperCase();
-    return s === 'PAYE' || s === 'PAYEE' || (this.data.facture.montantRestant || 0) <= 0;
+    const restant = this.data.facture.montantRestant;
+    return s === 'PAYE' && restant != null && Number.isFinite(restant) && restant <= 0;
   }
 
   // --- Modal Création Facture ---
@@ -135,6 +100,11 @@ export class StepPaiementComponent implements OnInit {
 
   creerFacture(): void {
     if (!this.data) return;
+    if (!this.data.clientId || !this.data.vehiculeId) {
+      this.errorMessage = 'Le client et le véhicule de cet ordre de réparation sont obligatoires pour créer la facture.';
+      this.cdr.detectChanges();
+      return;
+    }
 
     this.creatingFacture = true;
     this.errorMessage = '';
@@ -142,8 +112,8 @@ export class StepPaiementComponent implements OnInit {
     this.cdr.detectChanges();
 
     const request: FactureCreateRequest = {
-      clientId: 0,
-      vehiculeId: this.data.vehiculeId || 0,
+      clientId: this.data.clientId,
+      vehiculeId: this.data.vehiculeId,
       ordreReparationId: this.ordreId,
       remarque: this.remarqueFacture.trim() || `Facture pour OR ${this.data.numero || ('#' + this.ordreId)}`,
       modePaiement: this.modePaiement || 'ESPECE',
@@ -230,10 +200,11 @@ export class StepPaiementComponent implements OnInit {
           this.router.navigate(['/app/ordres-reparation', this.ordreId, 'pret-a-livrer']);
         });
       },
-      error: () => {
+      error: (err: any) => {
         this.ngZone.run(() => {
           this.advancing = false;
-          this.router.navigate(['/app/ordres-reparation', this.ordreId, 'pret-a-livrer']);
+          this.errorMessage = err.error?.message || 'Impossible de passer à la livraison.';
+          this.cdr.detectChanges();
         });
       }
     });

@@ -366,17 +366,17 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
     }
 
     this.paySaving = true;
-    this.service.payFacture(this.factureToPay.id, this.payMontant, this.payMethode).subscribe({
+    const factureId = this.factureToPay.id;
+    this.service.payFacture(factureId, this.payMontant, this.payMethode).subscribe({
       next: () => {
         this.paySaving = false;
         this.closePayModal();
         this.load();
         this.notify('Paiement enregistré avec succès !');
-        // Si c'était un détail ouvert, on recharge le détail
-        if (this.selectedFacture?.id === this.factureToPay?.id) {
-          this.service.getAll().subscribe(res => {
-            const updated = res.find(f => f.id === this.selectedFacture!.id);
-            if (updated) this.selectedFacture = updated;
+        if (this.selectedFacture?.id === factureId) {
+          this.service.getById(factureId).subscribe(updated => {
+            this.selectedFacture = updated;
+            this.cdr.markForCheck();
           });
         }
       },

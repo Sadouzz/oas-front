@@ -41,8 +41,8 @@ export class FactureService {
   }
 
   payFacture(id: number, montant: number, methodePaiement: string): Observable<any> {
-    return this.http.post(`${environment.apiUrl}/api/admin/portal/factures/${id}/payer`, null, {
-      params: { montant: montant.toString(), methodePaiement }
+    return this.http.post(`${environment.apiUrl}/api/recus/payer`, null, {
+      params: { factureId: id.toString(), montant: montant.toString(), methodePaiement }
     });
   }
 

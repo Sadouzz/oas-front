@@ -13,12 +13,14 @@ const STATUT_LABELS: Record<string, string> = {
   EN_ATTENTE: 'En attente',
   ACCEPTE: 'Accepté',
   REJETE: 'Refusé',
+  CONVERTIE: 'Converti en facture',
 };
 
 const STATUT_TONES: Record<string, BadgeTone> = {
   EN_ATTENTE: 'pending',
   ACCEPTE: 'success',
   REJETE: 'danger',
+  CONVERTIE: 'success',
 };
 
 @Component({
@@ -115,7 +117,7 @@ export class ClientProformasComponent implements OnInit {
 
   isPending(proforma: Proforma): boolean {
     const status = (proforma.statut || 'EN_ATTENTE').trim().toUpperCase();
-    return !['ACCEPTE', 'REJETE', 'ANNULEE', 'PAYEE', 'PARTIELLEMENT_PAYEE'].includes(status);
+    return !['ACCEPTE', 'REJETE', 'ANNULEE', 'PAYEE', 'PARTIELLEMENT_PAYEE', 'CONVERTIE'].includes(status);
   }
 
   statutLabel(proforma: Proforma): string {
