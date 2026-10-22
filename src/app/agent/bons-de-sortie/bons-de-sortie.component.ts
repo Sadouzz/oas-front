@@ -93,6 +93,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
   piecePdsDesignationAjouter = '';
   mainDoeuvreAjouter: number | null = null;
   contextOrdreReparationId: number | null = null;
+  contextOrdreReparationNumero: string | null = null;
   contextOrdreTravailId: number | null = null;
   returnToContext: string | null = null;
   private quantitesPrevues = new Map<string, number>();
@@ -544,9 +545,10 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     this.piecePdgAjouter = null;
     this.piecePdsDesignationAjouter = '';
     this.mainDoeuvreAjouter = null;
+    this.contextOrdreReparationNumero = context['ordreReparationNumero'] || null;
     this.contextOrdreReparationId = context['ordreReparationId'] ? Number(context['ordreReparationId']) : null;
     this.contextOrdreTravailId = context['ordreTravailId'] ? Number(context['ordreTravailId']) : null;
-    this.returnToContext = context['returnTo'] === 'proforma' ? 'proforma' : null;
+    this.returnToContext = context['returnTo'] || null;
     this.quantitesPrevues.clear();
     this.quantitesDejaSorties.clear();
     this.chargementsContexteEnCours = 0;
@@ -576,6 +578,21 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
       this.chargementQuantitesOR = true;
       this.ordreReparationService.getById(this.contextOrdreReparationId).pipe(finalize(() => this.finChargementContexte())).subscribe({
         next: ordre => {
+          if (!this.contextOrdreReparationNumero && ordre.numero) {
+            this.contextOrdreReparationNumero = ordre.numero;
+          }
+          if (!this.form.get('clientId')?.value && ordre.vehicule?.client?.id) {
+            const cId = ordre.vehicule.client.id;
+            this.clientService.getById(cId).subscribe(client => {
+              this.selectedClient = client as unknown as UserModel;
+              this.form.patchValue({ clientId: cId });
+              this.vehiculeService.getByClient(cId).subscribe(vehicles => {
+                this.vehiculesFiltres = extractContent<VehiculeModel>(vehicles as any);
+                if (ordre.vehicule?.id) this.form.patchValue({ vehiculeId: ordre.vehicule.id });
+                this.cdr.markForCheck();
+              });
+            });
+          }
           for (const ligne of ordre.lignesOrdreReparationPieces ?? []) {
             const key = ligne.piece?.id ? `piece:${ligne.piece.id}` : `pds:${(ligne.designationPds ?? '').trim().toLocaleLowerCase()}`;
             this.quantitesPrevues.set(key, ligne.quantite ?? 0);
@@ -587,6 +604,17 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
         },
         error: () => { this.errorMessage = 'Impossible de charger les quantités prévues sur l’ordre de réparation.'; this.cdr.markForCheck(); }
       });
+      if (!this.contextOrdreTravailId) {
+        this.ordreReparationService.getStepOrdreTravail(this.contextOrdreReparationId).subscribe({
+          next: stepOt => {
+            if (stepOt?.ordreTravailId && !this.contextOrdreTravailId) {
+              this.contextOrdreTravailId = stepOt.ordreTravailId;
+              this.cdr.markForCheck();
+            }
+          },
+          error: () => {}
+        });
+      }
       this.bonService.getAll({ ordreReparationId: this.contextOrdreReparationId, page: 0, size: 1000 }).pipe(finalize(() => this.finChargementContexte())).subscribe({
         next: response => {
           for (const bon of extractContent<BonDeSortie>(response as any)) {
@@ -630,6 +658,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     this.piecePdsDesignationAjouter = '';
     this.mainDoeuvreAjouter = null;
     this.contextOrdreReparationId = null;
+    this.contextOrdreReparationNumero = null;
     this.contextOrdreTravailId = null;
     this.returnToContext = null;
     this.qteAjouterPdp = 1;
@@ -706,6 +735,8 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
         this.closeCreate();
         if (returnToContext === 'proforma') {
           this.router.navigate(['/app/proforma']);
+        } else if (returnToContext === 'ordres-reparation') {
+          this.router.navigate(['/app/ordres-reparation']);
         } else if (ordreTravailId) {
           this.router.navigate(['/app/ordres-travail', ordreTravailId, 'bon-sortie']);
         } else if (ordreReparationId) {

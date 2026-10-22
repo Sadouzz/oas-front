@@ -589,6 +589,23 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
     return cat?.prix ? Number(cat.prix) : 0;
   }
 
+  // ─── Bon de Sortie rattaché ───────────────────────────
+  openCreateBS(f: OrdreReparation | null): void {
+    if (!f) return;
+    const clientId = f.vehicule?.client?.id;
+    const vehiculeId = f.vehicule?.id;
+    const queryParams: Record<string, any> = {
+      action: 'new',
+      ordreReparationId: f.id,
+      ordreReparationNumero: f.numero,
+      returnTo: 'ordres-reparation'
+    };
+    if (clientId) queryParams['clientId'] = clientId;
+    if (vehiculeId) queryParams['vehiculeId'] = vehiculeId;
+
+    this.router.navigate(['/app/bons-de-sortie'], { queryParams });
+  }
+
   // ─── Modal Devis Prévisionnel ─────────────────────────
   openCreateDevis(f: OrdreReparation): void {
     this.selectedOrdreForDevis = f;
