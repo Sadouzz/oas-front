@@ -17,6 +17,7 @@ import { BasePaginatedComponent } from '../../shared/components/base-paginated.c
 import { ProformaPrintComponent, montantEnLettresFCFA } from '../../shared/document-print';
 import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select.component';
 import { FiscalConfigurationService } from '../gestion-tva/fiscal-configuration.service';
+import { CompteFinancierResponse } from '../clients/models/client-model';
 
 export interface LignePieceFormItem {
   id?: number;
@@ -76,6 +77,11 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
   private otService = inject(OrdreTravailService);
   private currentTvaRate = 18;
   private currentTimbreFiscal = 100;
+  private remiseClientLookupVersion = 0;
+  private remiseClientChargeePour: number | null = null;
+  remiseClientPourcentage = 0;
+  remiseClientEnChargement = false;
+  remiseClientErreur = '';
 
   proformas: Proforma[] = [];
   filtered: Proforma[] = [];
@@ -595,6 +601,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
   selectClient(c: ClientModel) {
     this.clientVehicules = this.vehicules.filter(v => v.client?.id === c.id);
     this.form.patchValue({ clientId: c.id, vehiculeId: null, immatriculation: '', numeroChassis: '', marque: '', modele: '', annee: null });
+    this.chargerRemiseCompteClient(c.id, true);
     this.clientFilter = '';
     this.clientOpen = false;
   }
@@ -635,6 +642,11 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
       montantAutre: 0,
       tvaRate: this.currentTvaRate,
     });
+    this.remiseClientLookupVersion++;
+    this.remiseClientChargeePour = null;
+    this.remiseClientPourcentage = 0;
+    this.remiseClientEnChargement = false;
+    this.remiseClientErreur = '';
 
     this.lignesPieces = [];
     this.lignesMO = [];
@@ -720,6 +732,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
       montantTimbre: p.montantTimbre ?? 0,
       montantAutre: p.montantAutre ?? 0,
     });
+    if (clientId) this.chargerRemiseCompteClient(Number(clientId));
 
     // 1. Charger les lignes de pièces existantes
     const rawPieces: any[] = p.lignesPieces || p.pieces || [];
@@ -865,6 +878,41 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
     return this.lignesPieces.length > 0 || this.lignesMO.length > 0;
   }
 
+  private chargerRemiseCompteClient(clientId: number, forcer = false): void {
+    if (!forcer && this.remiseClientChargeePour === clientId) return;
+    const version = ++this.remiseClientLookupVersion;
+    this.remiseClientChargeePour = clientId;
+    this.remiseClientPourcentage = 0;
+    this.remiseClientErreur = '';
+    const client = this.clients.find(c => c.id === clientId);
+
+    // Le serveur applique la remise compte uniquement aux entreprises fidèles
+    // dont le compte financier est actif. On reprend ces mêmes conditions ici.
+    if (!client || client.typeClient !== 'ENTREPRISE' || !client.clientFidele) {
+      this.remiseClientEnChargement = false;
+      return;
+    }
+
+    this.remiseClientEnChargement = true;
+    this.clientService.getCompteFinancier(clientId).subscribe({
+      next: (compte: CompteFinancierResponse) => {
+        if (version !== this.remiseClientLookupVersion || Number(this.form.get('clientId')?.value) !== clientId) return;
+        this.remiseClientPourcentage = compte.compteActif && compte.typeClient === 'ENTREPRISE'
+          ? Math.max(0, Math.min(100, Number(compte.remisePourcentage) || 0))
+          : 0;
+        this.remiseClientEnChargement = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        if (version !== this.remiseClientLookupVersion) return;
+        this.remiseClientChargeePour = null;
+        this.remiseClientErreur = 'Impossible de vérifier la remise du compte client. Réessayez avant d’enregistrer.';
+        this.remiseClientEnChargement = false;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
   save() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -872,6 +920,17 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
     }
     if (!this.hasAtLeastOneItem) {
       this.notifyError("Veuillez ajouter au moins une pièce détachée ou une prestation de main-d'œuvre.");
+      return;
+    }
+    if ([...this.lignesPieces, ...this.lignesMO].some(l => {
+      const taux = Number(l.tauxRemise ?? 0);
+      return !Number.isFinite(taux) || taux < 0 || taux > 100;
+    })) {
+      this.notifyError('Chaque remise générale doit être comprise entre 0 et 100 %.');
+      return;
+    }
+    if (this.remiseClientEnChargement || this.remiseClientErreur) {
+      this.notifyError(this.remiseClientErreur || 'Vérification de la remise du compte client en cours.');
       return;
     }
 
@@ -898,11 +957,13 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
         designationPds: l.isCustom ? l.designationPds : undefined,
         quantite: Number(l.quantite),
         prix: Number(l.prix),
+        tauxRemise: Number(l.tauxRemise) || 0,
       })),
       lignesMainDoeuvres: this.lignesMO.map(l => ({
         mainDoeuvreId: Number(l.mainDoeuvreId),
         nbreHeure: Number(l.nbreHeure),
         tarifHoraire: Number(l.tarifHoraire),
+        tauxRemise: Number(l.tauxRemise) || 0,
       })),
     };
 
@@ -1079,15 +1140,59 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
 
   // Calculs dynamiques
   get totalPieces(): number {
-    return this.lignesPieces.reduce((s, l) => s + (Number(l.quantite) || 0) * (Number(l.prix) || 0) * (1 - (Number(l.tauxRemise) || 0) / 100), 0);
+    return this.lignesPieces.reduce((s, l) => s + this.montantLignePieceNet(l), 0);
   }
 
   get totalMO(): number {
-    return this.lignesMO.reduce((s, l) => s + (Number(l.nbreHeure) || 0) * (Number(l.tarifHoraire) || 0) * (1 - (Number(l.tauxRemise) || 0) / 100), 0);
+    return this.lignesMO.reduce((s, l) => s + this.montantLigneMoNet(l), 0);
+  }
+
+  montantLignePieceNet(ligne: LignePieceFormItem): number {
+    const brut = (Number(ligne.quantite) || 0) * (Number(ligne.prix) || 0);
+    return this.arrondirMontant(brut * (1 - this.tauxRemiseLigne(ligne.tauxRemise) / 100));
+  }
+
+  montantRemisePiece(ligne: LignePieceFormItem): number {
+    return this.arrondirMontant((Number(ligne.quantite) || 0) * (Number(ligne.prix) || 0) - this.montantLignePieceNet(ligne));
+  }
+
+  montantLigneMoNet(ligne: LigneMOFormItem): number {
+    const brut = (Number(ligne.nbreHeure) || 0) * (Number(ligne.tarifHoraire) || 0);
+    return this.arrondirMontant(brut * (1 - this.tauxRemiseLigne(ligne.tauxRemise) / 100));
+  }
+
+  private tauxRemiseLigne(taux: number | undefined): number {
+    const valeur = Number(taux) || 0;
+    return Math.max(0, Math.min(100, valeur));
+  }
+
+  onRemiseGeneraleChange(): void {
+    this.cdr.markForCheck();
+  }
+
+  montantRemiseMo(ligne: LigneMOFormItem): number {
+    return this.arrondirMontant((Number(ligne.nbreHeure) || 0) * (Number(ligne.tarifHoraire) || 0) - this.montantLigneMoNet(ligne));
+  }
+
+  private arrondirMontant(montant: number): number {
+    return Math.round((montant + Number.EPSILON) * 100) / 100;
+  }
+
+  get montantRemiseGenerale(): number {
+    return this.lignesPieces.reduce((total, ligne) => total + this.montantRemisePiece(ligne), 0)
+      + this.lignesMO.reduce((total, ligne) => total + this.montantRemiseMo(ligne), 0);
+  }
+
+  get montantRemiseCompteClient(): number {
+    return this.arrondirMontant(this.totalPieces * this.remiseClientPourcentage / 100);
+  }
+
+  get totalPiecesApresRemiseClient(): number {
+    return this.arrondirMontant(this.totalPieces - this.montantRemiseCompteClient);
   }
 
   get totalHT(): number {
-    return this.totalPieces + this.totalMO;
+    return this.totalPiecesApresRemiseClient + this.totalMO;
   }
 
   get tvaRate(): number {
@@ -1096,13 +1201,16 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
   }
 
   get montantTVA(): number {
-    return Math.round(this.totalHT * (this.tvaRate / 100));
+    return this.arrondirMontant(this.totalHT * (this.tvaRate / 100));
   }
 
   get totalTTC(): number {
-    const timbre = Number(this.form.get('montantTimbre')?.value) || 0;
-    const autre = Number(this.form.get('montantAutre')?.value) || 0;
-    return this.totalHT + this.montantTVA + timbre + autre;
+    return this.totalHT + this.montantTVA + this.montantTimbreEtAutres;
+  }
+
+  get montantTimbreEtAutres(): number {
+    return (Number(this.form.get('montantTimbre')?.value) || 0)
+      + (Number(this.form.get('montantAutre')?.value) || 0);
   }
 
   get montantBonCommandeForm(): number {

@@ -81,11 +81,13 @@ export interface ProformaRequest {
     designationPds?: string;
     quantite: number;
     prix: number;
+    tauxRemise?: number;
   }[];
   lignesMainDoeuvres: {
     mainDoeuvreId: number;
     nbreHeure: number;
     tarifHoraire: number;
+    tauxRemise?: number;
   }[];
 }
 
