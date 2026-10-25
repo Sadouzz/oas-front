@@ -47,3 +47,8 @@ contxte.md
 /public/garage-photos
 /public/videos
 /public/mechanic_working.png
+
+# Environment files
+.env
+.env*.local
+!.env.example
