@@ -244,6 +244,7 @@
                 <th class="px-4 py-3 text-right">Quantités pièces</th>
                 <th class="px-4 py-3 text-right">Montant net</th>
                 <th class="px-4 py-3">Statut</th>
+                <th class="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-oas-line">
@@ -263,6 +264,23 @@
                       {{ bon.statut === 'VALIDE' ? 'Validé' : 'En attente' }}
                     </span>
                   </td>
+                  <td class="px-4 py-3 text-right" (click)="$event.stopPropagation()">
+                    <div class="flex items-center justify-end gap-2">
+                      <button type="button" (click)="ouvrirDetailBon(bon)"
+                        class="rounded-lg border border-oas-line bg-white px-2.5 py-1 text-xs font-semibold text-oas-ink hover:bg-oas-bg transition cursor-pointer">
+                        Voir
+                      </button>
+                      @if (canValidateBonDeSortie && bon.statut === 'EN_ATTENTE') {
+                        <button type="button" (click)="fullBonDeSortie = bon; openValidateModal()"
+                          class="inline-flex items-center gap-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 text-xs font-bold transition cursor-pointer shadow-2xs">
+                          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                          Valider
+                        </button>
+                      }
+                    </div>
+                  </td>
                 </tr>
               }
             </tbody>
@@ -271,6 +289,7 @@
                 <td colspan="3" class="px-4 py-3">Récapitulatif de tous les BS</td>
                 <td class="px-4 py-3 text-right">{{ quantitePiecesTotale }}</td>
                 <td class="px-4 py-3 text-right">{{ montantBonsTotal | number }} FCFA</td>
+                <td></td>
                 <td></td>
               </tr>
             </tfoot>
@@ -292,40 +311,266 @@
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="selectedBonDetail = null">
     <section class="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl" (click)="$event.stopPropagation()">
       <header class="mb-4 flex items-center justify-between"><div><h3 class="text-lg font-black">{{ selectedBonDetail.reference }}</h3><p class="text-xs text-oas-muted">Détail du bon de sortie</p></div><button type="button" (click)="selectedBonDetail = null" class="rounded-lg px-3 py-2 hover:bg-oas-bg" aria-label="Fermer">✕</button></header>
-      <table class="w-full text-sm"><thead class="bg-oas-bg text-xs uppercase text-oas-muted"><tr><th class="px-3 py-2 text-left">Type</th><th class="px-3 py-2 text-left">Désignation</th><th class="px-3 py-2 text-right">Quantité / heures</th><th class="px-3 py-2 text-right">Prix unit.</th><th class="px-3 py-2 text-right">Total</th></tr></thead><tbody class="divide-y divide-oas-line">
-        @for (ligne of selectedBonDetail.lignesBonDeSortiePieces || []; track ligne.id) {
-          <tr>
-            <td class="px-3 py-2 font-bold">
-              <span class="px-1.5 py-0.5 rounded text-[10px] font-black"
-                [ngClass]="ligne.type === 'MAIN_DOEUVRE' ? 'bg-purple-100 text-purple-800 border border-purple-200' : (ligne.type === 'PDG' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-blue-100 text-blue-800 border border-blue-200')">
-                {{ ligne.type === 'MAIN_DOEUVRE' ? 'MO' : (ligne.type || 'PDP') }}
-              </span>
-            </td>
-            <td class="px-3 py-2">
-              <div class="font-medium text-oas-ink">{{ ligne.type === 'MAIN_DOEUVRE' ? (ligne.designation || 'Main d\'œuvre') : (ligne.piece?.reference ? (ligne.piece.reference + ' — ') : '') + (ligne.designation || ligne.piece?.designation || '—') }}</div>
-              @if (ligne.type !== 'MAIN_DOEUVRE' && !isPieceDansProforma(ligne)) {
-                <span class="inline-flex items-center gap-1 mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
-                  Non prévue au proforma
-                </span>
-              }
-              @if (ligne.tauxRemise && ligne.tauxRemise > 0) {
-                <span class="inline-flex items-center gap-1 mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                  Remise : {{ ligne.tauxRemise }}%
-                </span>
-              }
-            </td>
-            <td class="px-3 py-2 text-right">{{ ligne.quantite }}{{ ligne.type === 'MAIN_DOEUVRE' ? 'h' : '' }}</td>
-            <td class="px-3 py-2 text-right">{{ (ligne.prix || 0) | number }} FCFA</td>
-            <td class="px-3 py-2 text-right font-bold">{{ (ligne.montantTotal != null ? ligne.montantTotal : ((ligne.prix || 0) * ligne.quantite)) | number }} FCFA</td>
-          </tr>
+      <!-- SECTION 1 : PIÈCES DÉTACHÉES -->
+      <div class="mb-5">
+        <div class="flex items-center justify-between mb-2.5">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-oas-ink flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+            <span>Pièces détachées ({{ modalPieces.length }})</span>
+          </h4>
+          <span class="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200/80 px-2.5 py-0.5 rounded-full">
+            Sous-total : {{ sousTotalPieces | number }} FCFA
+          </span>
+        </div>
+
+        @if (modalPieces.length > 0) {
+          <div class="border border-oas-line rounded-xl overflow-hidden">
+            <table class="w-full text-xs text-left">
+              <thead class="bg-slate-50 uppercase tracking-wider font-semibold text-oas-muted border-b border-oas-line">
+                <tr>
+                  <th class="px-3 py-2">Type</th>
+                  <th class="px-3 py-2">Désignation</th>
+                  <th class="px-3 py-2 text-right">Quantité</th>
+                  <th class="px-3 py-2 text-right">Prix unit.</th>
+                  <th class="px-3 py-2 text-right">Total net</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-oas-line">
+                @for (ligne of modalPieces; track ligne.id) {
+                  <tr class="hover:bg-slate-50/50 transition">
+                    <td class="px-3 py-2 font-bold">
+                      <span class="px-1.5 py-0.5 rounded text-[10px] font-black"
+                        [ngClass]="ligne.type === 'PDG' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-blue-100 text-blue-800 border border-blue-200'">
+                        {{ ligne.type || 'PDP' }}
+                      </span>
+                    </td>
+                    <td class="px-3 py-2">
+                      <div class="font-medium text-oas-ink">
+                        {{ ligne.piece?.reference ? (ligne.piece.reference + ' — ') : '' }}{{ ligne.designation || ligne.piece?.designation || '—' }}
+                      </div>
+                      <div class="flex items-center gap-1.5 flex-wrap mt-0.5">
+                        @if (!isPieceDansProforma(ligne)) {
+                          <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                            Non prévue au proforma
+                          </span>
+                        }
+                        @if (ligne.tauxRemise && ligne.tauxRemise > 0) {
+                          <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                            Remise : {{ ligne.tauxRemise }}%
+                          </span>
+                        }
+                      </div>
+                    </td>
+                    <td class="px-3 py-2 text-right font-medium">{{ ligne.quantite }}</td>
+                    <td class="px-3 py-2 text-right text-oas-muted">{{ (ligne.prix || 0) | number }} FCFA</td>
+                    <td class="px-3 py-2 text-right font-bold text-oas-ink">
+                      {{ (ligne.montantTotal != null ? ligne.montantTotal : ((ligne.prix || 0) * (ligne.quantite || 1))) | number }} FCFA
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <div class="p-3 text-center text-xs text-oas-muted italic bg-slate-50 rounded-xl border border-oas-line">
+            Aucune pièce détachée sur ce bon de sortie.
+          </div>
         }
-      </tbody></table>
-      <div class="mt-4 rounded-xl bg-oas-bg p-4 text-sm"><p class="font-black">Total : {{ selectedBonDetail.montantTotal || 0 | number }} FCFA</p></div>
-      @if (canValidateBonDeSortie && selectedBonDetail.statut === 'EN_ATTENTE') {<button type="button" (click)="fullBonDeSortie = selectedBonDetail; openValidateModal()" class="mt-4 rounded-lg bg-oas-accent px-4 py-2 text-sm font-bold text-white">Valider après réparation</button>}
+      </div>
+
+      <!-- SECTION 2 : MAIN-D'ŒUVRE -->
+      <div class="mb-5">
+        <div class="flex items-center justify-between mb-2.5">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-oas-ink flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-purple-600"></span>
+            <span>Main-d'œuvre ({{ modalMainDoeuvres.length }})</span>
+          </h4>
+          <span class="text-xs font-bold text-purple-700 bg-purple-50 border border-purple-200/80 px-2.5 py-0.5 rounded-full">
+            Sous-total : {{ sousTotalMainDoeuvre | number }} FCFA
+          </span>
+        </div>
+
+        @if (modalMainDoeuvres.length > 0) {
+          <div class="border border-oas-line rounded-xl overflow-hidden">
+            <table class="w-full text-xs text-left">
+              <thead class="bg-slate-50 uppercase tracking-wider font-semibold text-oas-muted border-b border-oas-line">
+                <tr>
+                  <th class="px-3 py-2">Code</th>
+                  <th class="px-3 py-2">Désignation</th>
+                  <th class="px-3 py-2 text-right">Heures</th>
+                  <th class="px-3 py-2 text-right">Tarif horaire</th>
+                  <th class="px-3 py-2 text-right">Total net</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-oas-line">
+                @for (mo of modalMainDoeuvres; track mo.id || mo.mainDoeuvreId) {
+                  <tr class="hover:bg-slate-50/50 transition">
+                    <td class="px-3 py-2 font-mono font-bold text-purple-700">
+                      <span class="px-1.5 py-0.5 rounded text-[10px] font-black bg-purple-100 text-purple-800 border border-purple-200">
+                        {{ mo.code || 'MO' }}
+                      </span>
+                    </td>
+                    <td class="px-3 py-2">
+                      <div class="font-medium text-oas-ink">{{ mo.designation || 'Main d\'œuvre' }}</div>
+                      @if (mo.tauxRemise && mo.tauxRemise > 0) {
+                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 mt-0.5">
+                          Remise : {{ mo.tauxRemise }}%
+                        </span>
+                      }
+                    </td>
+                    <td class="px-3 py-2 text-right font-medium">{{ mo.nbreHeure ?? mo.quantite ?? 1 }}h</td>
+                    <td class="px-3 py-2 text-right text-oas-muted">{{ (mo.tarifHoraire ?? mo.prix ?? 0) | number }} FCFA/h</td>
+                    <td class="px-3 py-2 text-right font-bold text-oas-ink">
+                      {{ (mo.montantTotal != null ? mo.montantTotal : (((mo.tarifHoraire ?? mo.prix ?? 0) * (mo.nbreHeure ?? mo.quantite ?? 1)))) | number }} FCFA
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <div class="p-3 text-center text-xs text-oas-muted italic bg-slate-50 rounded-xl border border-oas-line">
+            Aucune ligne de main-d'œuvre sur ce bon de sortie.
+          </div>
+        }
+      </div>
+
+      <!-- RÉCAPITULATIF FINANCIER & ACTIONS -->
+      <div class="mt-4 rounded-xl bg-slate-50 border border-oas-line p-4 text-xs">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pb-3 border-b border-oas-line/70">
+          <div>
+            <span class="text-oas-muted block font-medium">Sous-total Pièces</span>
+            <span class="text-sm font-bold text-oas-ink">{{ sousTotalPieces | number }} FCFA</span>
+          </div>
+          <div>
+            <span class="text-oas-muted block font-medium">Sous-total Main-d'œuvre</span>
+            <span class="text-sm font-bold text-purple-800">{{ sousTotalMainDoeuvre | number }} FCFA</span>
+          </div>
+          <div>
+            <span class="text-oas-muted block font-medium uppercase text-[10px]">Total Général Net</span>
+            <span class="text-base font-black text-oas-ink">{{ (selectedBonDetail.montantTotal || (sousTotalPieces + sousTotalMainDoeuvre)) | number }} FCFA</span>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-3">
+          <div class="flex items-center gap-2">
+            <span class="text-oas-muted font-medium">Statut du bon :</span>
+            <span class="rounded-full px-2.5 py-0.5 text-xs font-bold"
+              [class.bg-emerald-100]="selectedBonDetail.statut === 'VALIDE'"
+              [class.text-emerald-800]="selectedBonDetail.statut === 'VALIDE'"
+              [class.bg-amber-100]="selectedBonDetail.statut !== 'VALIDE'"
+              [class.text-amber-800]="selectedBonDetail.statut !== 'VALIDE'">
+              {{ selectedBonDetail.statut === 'VALIDE' ? 'Validé' : 'En attente de validation' }}
+            </span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" (click)="selectedBonDetail = null"
+              class="rounded-xl border border-oas-line bg-white px-4 py-2 text-xs font-semibold text-oas-ink hover:bg-slate-100 transition cursor-pointer">
+              Fermer
+            </button>
+
+            @if (canValidateBonDeSortie && selectedBonDetail.statut === 'EN_ATTENTE') {
+              <button type="button" (click)="fullBonDeSortie = selectedBonDetail; openValidateModal()"
+                class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-4 py-2 text-xs font-bold text-white shadow-xs transition cursor-pointer">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                Valider ce bon (sortie atelier)
+              </button>
+            }
+          </div>
+        </div>
+      </div>
     </section>
   </div>
 }
 
 @if (showValidateModal && canValidateBonDeSortie) {
-  <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4"><section class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"><h3 class="text-lg font-black">Valider le BS</h3><p class="my-4 text-sm text-oas-muted">Confirmez la sortie effective après réparation du véhicule.</p><div class="flex justify-end gap-2"><button type="button" (click)="closeValidateModal()" class="rounded-lg border px-4 py-2">Annuler</button><button type="button" (click)="confirmerValidation()" [disabled]="validating" class="rounded-lg bg-oas-accent px-4 py-2 font-bold text-white disabled:opacity-50">{{ validating ? 'Validation…' : 'Confirmer' }}</button></div></section></div>
+  <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4" (click)="closeValidateModal()">
+    <section class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl" (click)="$event.stopPropagation()">
+      <h3 class="text-lg font-black text-oas-ink">Valider le Bon de Sortie</h3>
+      <p class="my-4 text-sm text-oas-muted leading-relaxed">
+        Confirmez-vous la sortie effective des pièces détachées et de la main-d'œuvre pour le bon 
+        <strong class="text-oas-ink">{{ fullBonDeSortie?.reference || selectedBonDetail?.reference || '#' + (fullBonDeSortie?.id || '') }}</strong> ?
+      </p>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" (click)="closeValidateModal()" [disabled]="validating"
+          class="rounded-xl border border-oas-line px-4 py-2 text-sm font-semibold text-oas-ink hover:bg-oas-bg transition cursor-pointer">
+          Annuler
+        </button>
+        <button type="button" (click)="confirmerValidation()" [disabled]="validating"
+          class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-5 py-2 text-sm font-bold text-white shadow-xs transition cursor-pointer disabled:opacity-50">
+          @if (validating) {
+            <svg class="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+            Validation…
+          } @else {
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            Confirmer la sortie
+          }
+        </button>
+      </div>
+    </section>
+  </div>
+}
+
+@if (showPiecesIncompletesModal) {
+  <div class="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4" (click)="showPiecesIncompletesModal = false">
+    <section class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl border border-amber-200" (click)="$event.stopPropagation()">
+      <div class="flex items-start gap-4">
+        <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0 shadow-2xs">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        <div class="flex-1">
+          <h3 class="text-base font-black text-oas-ink">Sortie incomplète des pièces</h3>
+          <p class="text-xs text-oas-muted mt-1 leading-relaxed">
+            Toutes les pièces prévues dans le proforma n'ont pas encore été sorties du magasin.
+          </p>
+        </div>
+        <button type="button" (click)="showPiecesIncompletesModal = false" class="text-oas-muted hover:text-oas-ink p-1 rounded-lg">✕</button>
+      </div>
+
+      <div class="my-4 rounded-xl bg-amber-50/70 border border-amber-200 p-4 text-xs space-y-2">
+        <div class="flex items-center justify-between font-semibold text-amber-900">
+          <span>Reste à sortir du magasin :</span>
+          <span class="font-mono text-sm font-black text-amber-800">{{ totalQuantiteRestante | number }} unité(s)</span>
+        </div>
+        <div class="text-[11px] text-amber-800/80 leading-normal">
+          Vous avez sorti <strong class="text-amber-950 font-bold">{{ totalQuantiteSortie | number }}</strong> pièce(s) sur les <strong class="text-amber-950 font-bold">{{ totalQuantiteDemandee | number }}</strong> demandées au proforma.
+        </div>
+      </div>
+
+      <p class="text-xs text-slate-600 mb-5 leading-relaxed font-medium">
+        Êtes-vous sûr de vouloir continuer vers l'affectation et les réparations en atelier malgré les pièces non sorties ?
+      </p>
+
+      <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-oas-line">
+        <button type="button" (click)="showPiecesIncompletesModal = false"
+          class="rounded-xl border border-oas-line bg-white px-4 py-2 text-xs font-semibold text-oas-ink hover:bg-slate-100 transition cursor-pointer">
+          Annuler (Rester sur l'étape)
+        </button>
+        <button type="button" (click)="procederVersAssignation()" [disabled]="advancing"
+          class="inline-flex items-center gap-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 text-xs font-bold shadow-xs transition cursor-pointer disabled:opacity-50">
+          @if (advancing) {
+            <svg class="animate-spin w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+            <span>Passage en cours...</span>
+          } @else {
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+            <span>Oui, continuer vers réparation</span>
+          }
+        </button>
+      </div>
+    </section>
+  </div>
 }

@@ -45,15 +45,13 @@ export class StepBonSortieComponent implements OnInit {
   advancing = false;
 
   showValidateModal = false;
+  showPiecesIncompletesModal = false;
   errorMessage = '';
   successMessage = '';
 
   get canValidateBonDeSortie(): boolean {
     const role = this.authService.getRole() ?? '';
-    // Cette étape est rattachée à un OT : seul son statut TERMINE autorise la validation.
-    const reparationTerminee = this.data?.statut === 'TERMINE';
-    return ['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER'].includes(role)
-      && reparationTerminee;
+    return ['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER', 'ROLE_AGENT'].includes(role);
   }
 
   ngOnInit(): void {
@@ -312,6 +310,36 @@ export class StepBonSortieComponent implements OnInit {
     });
   }
 
+  get modalPieces(): any[] {
+    if (!this.selectedBonDetail) return [];
+    if (this.selectedBonDetail.lignesPieces && this.selectedBonDetail.lignesPieces.length > 0) {
+      return this.selectedBonDetail.lignesPieces;
+    }
+    return (this.selectedBonDetail.lignesBonDeSortiePieces || []).filter((l: any) => l.type !== 'MAIN_DOEUVRE');
+  }
+
+  get modalMainDoeuvres(): any[] {
+    if (!this.selectedBonDetail) return [];
+    if (this.selectedBonDetail.lignesMainDoeuvres && this.selectedBonDetail.lignesMainDoeuvres.length > 0) {
+      return this.selectedBonDetail.lignesMainDoeuvres;
+    }
+    return (this.selectedBonDetail.lignesBonDeSortiePieces || []).filter((l: any) => l.type === 'MAIN_DOEUVRE');
+  }
+
+  get sousTotalPieces(): number {
+    if (this.selectedBonDetail?.montantTotalPieces != null) {
+      return this.selectedBonDetail.montantTotalPieces;
+    }
+    return this.modalPieces.reduce((acc, p) => acc + (p.montantTotal != null ? Number(p.montantTotal) : ((Number(p.prix) || 0) * (Number(p.quantite) || 0))), 0);
+  }
+
+  get sousTotalMainDoeuvre(): number {
+    if (this.selectedBonDetail?.montantTotalMainDoeuvre != null) {
+      return this.selectedBonDetail.montantTotalMainDoeuvre;
+    }
+    return this.modalMainDoeuvres.reduce((acc, m) => acc + (m.montantTotal != null ? Number(m.montantTotal) : ((Number(m.tarifHoraire ?? m.prix) || 0) * (Number(m.nbreHeure ?? m.quantite) || 0))), 0);
+  }
+
   // --- Création du Bon de Sortie ---
 
   creerBonDeSortie(): void {
@@ -353,7 +381,7 @@ export class StepBonSortieComponent implements OnInit {
 
   confirmerValidation(): void {
     if (!this.canValidateBonDeSortie) return;
-    const bonId = this.fullBonDeSortie?.id || this.data?.bonDeSortie?.id;
+    const bonId = this.fullBonDeSortie?.id || this.selectedBonDetail?.id || this.data?.bonDeSortie?.id;
     if (!bonId) {
       this.errorMessage = 'Aucun Bon de Sortie trouvé à valider.';
       this.cdr.detectChanges();
@@ -370,11 +398,18 @@ export class StepBonSortieComponent implements OnInit {
         this.ngZone.run(() => {
           this.validating = false;
           this.showValidateModal = false;
-          const ref = validated?.reference || ('#' + bonId);
-          this.successMessage = `Bon de Sortie ${ref} validé après réparation.`;
+          const ref = validated?.reference || this.fullBonDeSortie?.reference || this.selectedBonDetail?.reference || ('#' + bonId);
+          this.successMessage = `Bon de Sortie ${ref} validé avec succès ! Sortie atelier effectuée.`;
+
+          if (this.selectedBonDetail && this.selectedBonDetail.id === bonId) {
+            this.selectedBonDetail.statut = 'VALIDE';
+            if (validated) {
+              this.selectedBonDetail = this.normaliserBon(validated);
+            }
+          }
 
           if (validated) {
-            this.fullBonDeSortie = validated;
+            this.fullBonDeSortie = this.normaliserBon(validated);
             this.patchDataWithBon(validated);
           } else if (this.fullBonDeSortie) {
             this.fullBonDeSortie.statut = 'VALIDE';
@@ -388,7 +423,8 @@ export class StepBonSortieComponent implements OnInit {
       error: (err: any) => {
         this.ngZone.run(() => {
           this.validating = false;
-          this.errorMessage = err.error?.message || err.message || 'Erreur lors de la validation du Bon de Sortie.';
+          const msg = err.error?.message || (typeof err.error === 'string' ? err.error : '') || err.message || '';
+          this.errorMessage = msg || 'Erreur lors de la validation du Bon de Sortie.';
           this.cdr.detectChanges();
         });
       }
@@ -404,6 +440,17 @@ export class StepBonSortieComponent implements OnInit {
       return;
     }
 
+    if (!this.isToutesPiecesSorties) {
+      this.showPiecesIncompletesModal = true;
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.procederVersAssignation();
+  }
+
+  procederVersAssignation(): void {
+    this.showPiecesIncompletesModal = false;
     this.advancing = true;
     this.cdr.detectChanges();
 

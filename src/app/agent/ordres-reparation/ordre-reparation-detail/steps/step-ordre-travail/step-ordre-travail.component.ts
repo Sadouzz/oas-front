@@ -6,6 +6,7 @@ import { OrdreTravailService } from '../../../../ordres-travail/ordre-travail.se
 import { StepOrdreTravailResponseDto } from '../../../models/responses/step-ordre-travail-response.dto';
 import { StatutOrdreReparation } from '../../../models/ordre-reparation.model';
 import { AlertComponent } from '../../../../../shared/components/alert/alert.component';
+import { getEtapeFromStatutOT, getPathFromEtapeOT } from '../../../../ordres-travail/models/ordre-travail.model';
 
 @Component({
   selector: 'app-step-ordre-travail',
@@ -121,6 +122,16 @@ export class StepOrdreTravailComponent implements OnInit {
 
   get otEtape(): number {
     return this.data?.ordreTravailEtape || 1;
+  }
+
+  get otCurrentPath(): string {
+    const etapeFromStatut = getEtapeFromStatutOT(this.otStatut);
+    const etape = Math.max(etapeFromStatut, this.otEtape || 1);
+    return getPathFromEtapeOT(etape);
+  }
+
+  getStepPath(stepNumber: number): string {
+    return getPathFromEtapeOT(stepNumber);
   }
 
   get otEtapeLabel(): string {

@@ -6,7 +6,7 @@ import { OrdreReparationService } from '../../../ordre-reparation.service';
 import { ProformaService } from '../../../../proforma/proforma.service';
 import { FiscalConfigurationService } from '../../../../gestion-tva/fiscal-configuration.service';
 import { OrdreTravailService } from '../../../../ordres-travail/ordre-travail.service';
-import { OrdreTravail } from '../../../../ordres-travail/models/ordre-travail.model';
+import { OrdreTravail, getEtapeFromStatutOT, getPathFromEtapeOT } from '../../../../ordres-travail/models/ordre-travail.model';
 
 import { AlertComponent } from '../../../../../shared/components/alert/alert.component';
 import {
@@ -491,6 +491,12 @@ export class StepProformaComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
+  getOtPath(ot: any): string {
+    if (!ot) return 'recapitulatif';
+    const etape = ot.etape || getEtapeFromStatutOT(ot.statut);
+    return getPathFromEtapeOT(etape);
+  }
+
   confirmerCreationOT(): void {
     this.showConfirmOTModal = false;
     this.creationOTEnCours = true;
@@ -504,7 +510,8 @@ export class StepProformaComponent implements OnInit {
         this.successMessage = `Ordre de Travail ${ot.numero} créé avec succès. Redirection vers l'atelier...`;
         this.cdr.markForCheck();
         setTimeout(() => {
-          this.router.navigate(['/app/ordres-travail', ot.id]);
+          const path = this.getOtPath(ot);
+          this.router.navigate(['/app/ordres-travail', ot.id, path]);
         }, 600);
       },
       error: (err) => {

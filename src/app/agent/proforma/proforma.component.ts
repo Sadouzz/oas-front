@@ -11,7 +11,7 @@ import { PieceDetacheeService } from '../pieces-detachees/piece-detachee.service
 import { MainDoeuvreService } from '../main-doeuvre/main-doeuvre.service';
 import { OrdreTravailService } from '../ordres-travail/ordre-travail.service';
 import { CommonModule, NgClass } from '@angular/common';
-import { Proforma, BonDeCommande, ClientModel, VehiculeModel, PieceDetache, MainDoeuvreModel, extractContent } from '../../shared/models/index';
+import { Proforma, BonDeCommande, ClientModel, VehiculeModel, PieceDetache, MainDoeuvreModel, extractContent, getEtapeFromStatutOT, getPathFromEtapeOT } from '../../shared/models/index';
 import { LucidePencil, LucideTrash2, LucidePlus, LucideSearch, LucideX } from '@lucide/angular';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 import { ProformaPrintComponent, montantEnLettresFCFA } from '../../shared/document-print';
@@ -1039,8 +1039,9 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
     if (!await this.confirmation.confirm('Initier un Ordre de Travail (OT) d\'atelier à partir de ce proforma validé ?')) return;
     this.otService.createFromProforma(proformaId).subscribe({
       next: (ot) => {
-        this.notify('Ordre de Travail initié avec succès.');
-        this.router.navigate(['/app/ordres-travail', ot.id]);
+        const etape = ot.etape || getEtapeFromStatutOT(ot.statut);
+        const path = getPathFromEtapeOT(etape);
+        this.router.navigate(['/app/ordres-travail', ot.id, path]);
       },
       error: (err) => {
         this.notifyError(err.error?.message || 'Erreur lors de la création de l\'ordre de travail.');
