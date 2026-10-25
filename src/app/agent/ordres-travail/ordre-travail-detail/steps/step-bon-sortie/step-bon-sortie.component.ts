@@ -67,6 +67,26 @@ export class StepBonSortieComponent implements OnInit {
     this.loadOTSummary();
   }
 
+  normaliserBon(bon: any): BonDeSortie {
+    if (!bon) return bon;
+    if (bon.lignesPieces && (!bon.lignesBonDeSortiePieces || bon.lignesBonDeSortiePieces.length === 0)) {
+      bon.lignesBonDeSortiePieces = [
+        ...bon.lignesPieces,
+        ...(bon.lignesMainDoeuvres || []).map((m: any) => ({
+          id: m.id,
+          mainDoeuvreId: m.mainDoeuvreId,
+          type: 'MAIN_DOEUVRE',
+          designation: m.designation || m.code || 'Main d\'œuvre',
+          quantite: m.nbreHeure ?? m.quantite ?? 1,
+          prix: m.tarifHoraire ?? m.prix ?? 0,
+          tauxRemise: m.tauxRemise ?? 0,
+          montantTotal: m.montantTotal
+        }))
+      ];
+    }
+    return bon;
+  }
+
   loadData(): void {
     this.loading = true;
     this.cdr.detectChanges();
@@ -75,7 +95,7 @@ export class StepBonSortieComponent implements OnInit {
       next: (res) => {
         this.ngZone.run(() => {
           this.data = res;
-          this.bonsDeSortie = res.bonsDeSortie || [];
+          this.bonsDeSortie = (res.bonsDeSortie || []).map(b => this.normaliserBon(b));
           this.loading = false;
           this.initPieces(res);
 
@@ -117,17 +137,18 @@ export class StepBonSortieComponent implements OnInit {
 
   patchDataWithBon(bon: any): void {
     if (!this.data) return;
+    const b = this.normaliserBon(bon);
     this.data.hasBonDeSortie = true;
     this.data.bonDeSortie = {
-      id: bon.id,
-      reference: bon.reference || ('BS #' + bon.id),
-      numero: bon.reference || ('BS #' + bon.id),
-      statut: bon.statut || 'EN_ATTENTE',
-      dateSortiePrevue: bon.date,
-      dateSortieEffective: bon.dateValidation || undefined,
-      remarques: bon.remarque,
-      remarque: bon.remarque,
-      lignesBonDeSortiePieces: bon.lignesBonDeSortiePieces || []
+      id: b.id,
+      reference: b.reference || ('BS #' + b.id),
+      numero: b.reference || ('BS #' + b.id),
+      statut: b.statut || 'EN_ATTENTE',
+      dateSortiePrevue: b.date,
+      dateSortieEffective: b.dateValidation || undefined,
+      remarques: b.remarque,
+      remarque: b.remarque,
+      lignesBonDeSortiePieces: b.lignesBonDeSortiePieces || []
     };
   }
 
@@ -136,8 +157,8 @@ export class StepBonSortieComponent implements OnInit {
     this.bdsService.getById(bonId).subscribe({
       next: (bon) => {
         this.ngZone.run(() => {
-          this.fullBonDeSortie = bon;
-          this.patchDataWithBon(bon);
+          this.fullBonDeSortie = this.normaliserBon(bon);
+          this.patchDataWithBon(this.fullBonDeSortie);
           this.loadingBDS = false;
           this.cdr.detectChanges();
         });
@@ -260,7 +281,8 @@ export class StepBonSortieComponent implements OnInit {
   }
 
   quantitePiecesBon(bon: BonDeSortie): number {
-    return (bon.lignesBonDeSortiePieces || []).reduce((total, ligne) => total + (ligne.type === 'MAIN_DOEUVRE' ? 0 : Number(ligne.quantite) || 0), 0);
+    const lignes = bon.lignesPieces || bon.lignesBonDeSortiePieces || [];
+    return lignes.reduce((total, ligne) => total + (ligne.type === 'MAIN_DOEUVRE' ? 0 : Number(ligne.quantite) || 0), 0);
   }
 
   get quantitePiecesTotale(): number {
@@ -306,8 +328,13 @@ export class StepBonSortieComponent implements OnInit {
   }
 
   ouvrirDetailBon(bon: BonDeSortie): void {
-    this.selectedBonDetail = bon;
-    this.bdsService.getById(bon.id).subscribe({ next: full => { this.selectedBonDetail = full; this.cdr.detectChanges(); } });
+    this.selectedBonDetail = this.normaliserBon(bon);
+    this.bdsService.getById(bon.id).subscribe({
+      next: full => {
+        this.selectedBonDetail = this.normaliserBon(full);
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   // --- Validation du Bon de Sortie ---

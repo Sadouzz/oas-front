@@ -232,6 +232,15 @@ export interface StepBonSortieResponse extends StepBaseDto {
   bonsDeSortie?: import('../../bons-de-sortie/models/bon-de-sortie.model').BonDeSortie[];
   bonDeSortie?: BonDeSortieSummaryDto | null; // Rétro-compatibilité
   piecesManquantesProforma?: PieceBonSortieDto[];
+  mainDoeuvresProforma?: {
+    ligneId?: number;
+    mainDoeuvreId?: number;
+    code?: string;
+    designation: string;
+    nbreHeure: number;
+    tarifHoraire: number;
+    tauxRemise?: number;
+  }[];
 }
 
 export type StepBonSortieResponseDto = StepBonSortieResponse;

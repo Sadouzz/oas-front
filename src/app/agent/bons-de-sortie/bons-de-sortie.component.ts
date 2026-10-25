@@ -11,6 +11,7 @@ import { PieceDetacheeService } from '../pieces-detachees/piece-detachee.service
 import { MainDoeuvreService } from '../main-doeuvre/main-doeuvre.service';
 import { OrdreReparationService } from '../ordres-reparation/ordre-reparation.service';
 import { OrdreTravailService } from '../ordres-travail/ordre-travail.service';
+import { OrdreTravail } from '../ordres-travail/models/ordre-travail.model';
 import { ProformaService } from '../proforma/proforma.service';
 import { Proforma } from '../proforma/models/proforma.model';
 import { AuthService } from '../../core/services/auth.service';
@@ -111,6 +112,10 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
   contextOrdreReparationId: number | null = null;
   contextOrdreReparationNumero: string | null = null;
   contextOrdreTravailId: number | null = null;
+  contextOrdreTravailNumero: string | null = null;
+  selectedOrdreTravailId: number | null = null;
+  ordresTravailFiltres: OrdreTravail[] = [];
+  loadingOrdresTravail = false;
   returnToContext: string | null = null;
   private quantitesPrevues = new Map<string, number>();
   private quantitesDejaSorties = new Map<string, number>();
@@ -641,12 +646,32 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     }, 300);
   }
 
+  formatOrdreTravail = (ot: OrdreTravail): string => {
+    if (!ot) return '';
+    const num = ot.numero || `OT #${ot.id}`;
+    const orRef = ot.ordreReparationNumero ? ` (OR: ${ot.ordreReparationNumero})` : '';
+    const statut = ot.statut ? ` — ${ot.statut}` : '';
+    return `${num}${orRef}${statut}`;
+  };
+
+  get selectedOrdreTravail(): OrdreTravail | null {
+    const id = this.selectedOrdreTravailId || this.contextOrdreTravailId;
+    if (!id) return null;
+    return this.ordresTravailFiltres.find(o => o.id == id) || null;
+  }
+
   selectClient(c: UserModel) {
     this.selectedClient = c;
     this.form.patchValue({ clientId: c.id, vehiculeId: null });
     this.vehiculesFiltres = [];
     this.clientFilter = '';
     this.clientOpen = false;
+    this.selectedOrdreTravailId = null;
+    this.contextOrdreTravailId = null;
+    this.contextOrdreTravailNumero = null;
+    this.contextOrdreReparationId = null;
+    this.contextOrdreReparationNumero = null;
+    this.ordresTravailFiltres = [];
     if (c.id) {
       this.loadingVehicules = true;
       this.vehiculeService.getByClient(c.id).subscribe({
@@ -668,6 +693,447 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     this.form.patchValue({ vehiculeId: v.id });
     this.vehiculeFilter = '';
     this.vehiculeOpen = false;
+    this.selectedOrdreTravailId = null;
+    this.contextOrdreTravailId = null;
+    this.contextOrdreTravailNumero = null;
+    this.contextOrdreReparationId = null;
+    this.contextOrdreReparationNumero = null;
+    this.loadOrdresTravailPourVehicule(v.id, v.immatriculation);
+    this.cdr.markForCheck();
+  }
+
+  loadOrdresTravailPourVehicule(vehiculeId?: number | null, immatriculation?: string, ordreTravailId?: number | null) {
+    this.loadingOrdresTravail = true;
+    const targetOtId = ordreTravailId || this.contextOrdreTravailId || this.selectedOrdreTravailId;
+
+    if (targetOtId) {
+      this.otService.getById(Number(targetOtId)).subscribe({
+        next: (specificOt) => {
+          if (specificOt) {
+            this.contextOrdreTravailNumero = specificOt.numero || `OT #${specificOt.id}`;
+            if (!this.ordresTravailFiltres.some(o => o.id === specificOt.id)) {
+              this.ordresTravailFiltres = [specificOt, ...this.ordresTravailFiltres];
+            }
+            this.selectedOrdreTravailId = specificOt.id;
+            if (specificOt.ordreReparationId && !this.contextOrdreReparationId) {
+              this.contextOrdreReparationId = specificOt.ordreReparationId;
+              this.contextOrdreReparationNumero = specificOt.ordreReparationNumero || null;
+            }
+            if (!this.form.get('vehiculeId')?.value && (specificOt.vehicule?.id || specificOt.vehiculeId)) {
+              const vId = Number(specificOt.vehicule?.id || specificOt.vehiculeId);
+              this.form.patchValue({ vehiculeId: vId });
+              if (specificOt.vehicule && !this.vehiculesFiltres.some(v => v.id === vId)) {
+                this.vehiculesFiltres = [specificOt.vehicule as any, ...this.vehiculesFiltres];
+              }
+            }
+            if (!this.form.get('clientId')?.value && (specificOt.client?.id || (specificOt as any).clientId || specificOt.vehicule?.client?.id)) {
+              const cId = Number(specificOt.client?.id || (specificOt as any).clientId || specificOt.vehicule?.client?.id);
+              this.form.patchValue({ clientId: cId });
+            }
+            this.cdr.markForCheck();
+          }
+        },
+        error: () => {}
+      });
+    }
+
+    this.otService.getAll({ size: 1000 }).subscribe({
+      next: (res) => {
+        const all = extractContent<OrdreTravail>(res as any);
+        const vId = vehiculeId ? Number(vehiculeId) : null;
+        const immat = (immatriculation || '').trim();
+        const cId = Number(this.form.get('clientId')?.value);
+        const clean = (s: string) => (s || '').replace(/\s+/g, '').toLowerCase();
+        const cleanImmat = clean(immat);
+
+        let matches = all.filter(ot => {
+          if (targetOtId && ot.id === Number(targetOtId)) return true;
+          const otVehiculeId = Number(ot.vehiculeId ?? ot.vehicule?.id ?? 0);
+          if (vId && otVehiculeId === vId) return true;
+          const otImmat = clean(ot.vehiculeImmatriculation || ot.vehicule?.immatriculation || '');
+          if (cleanImmat && otImmat && (otImmat === cleanImmat || otImmat.includes(cleanImmat) || cleanImmat.includes(otImmat))) return true;
+          return false;
+        });
+
+        if (matches.length === 0 && cId) {
+          matches = all.filter(ot => {
+            const otClientId = Number((ot as any).clientId || ot.client?.id || ot.vehicule?.client?.id || 0);
+            return otClientId === cId;
+          });
+        }
+
+        if (matches.length === 0 && all.length > 0) {
+          matches = all;
+        }
+
+        for (const existing of this.ordresTravailFiltres) {
+          if (!matches.some(m => m.id === existing.id)) {
+            matches.unshift(existing);
+          }
+        }
+
+        this.ordresTravailFiltres = matches;
+        this.loadingOrdresTravail = false;
+
+        if (targetOtId) {
+          this.selectedOrdreTravailId = Number(targetOtId);
+          const found = this.ordresTravailFiltres.find(o => o.id === Number(targetOtId));
+          if (found) {
+            if (!this.contextOrdreTravailNumero) {
+              this.contextOrdreTravailNumero = found.numero || `OT #${found.id}`;
+            }
+            if (found.ordreReparationId && !this.contextOrdreReparationId) {
+              this.contextOrdreReparationId = found.ordreReparationId;
+              this.contextOrdreReparationNumero = found.ordreReparationNumero || null;
+            }
+          }
+        }
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.loadingOrdresTravail = false;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  onOrdreTravailSelected(otId: number | null): void {
+    this.selectedOrdreTravailId = otId ? Number(otId) : null;
+    this.contextOrdreTravailId = this.selectedOrdreTravailId;
+
+    if (!otId) {
+      this.contextOrdreTravailNumero = null;
+      this.contextOrdreReparationId = null;
+      this.contextOrdreReparationNumero = null;
+      this.proformaContexte = null;
+      this.piecesProformaSet.clear();
+      this.quantitesProforma.clear();
+      this.remisesProforma.clear();
+      this.quantitesPrevues.clear();
+      this.quantitesDejaSorties.clear();
+      this.cdr.markForCheck();
+      return;
+    }
+
+    const ot = this.ordresTravailFiltres.find(o => o.id === Number(otId));
+    if (ot) {
+      this.contextOrdreTravailNumero = ot.numero || `OT #${ot.id}`;
+      if (ot.ordreReparationId) {
+        this.contextOrdreReparationId = ot.ordreReparationId;
+        this.contextOrdreReparationNumero = ot.ordreReparationNumero || null;
+      }
+      if (!this.form.get('clientId')?.value && ot.client?.id) {
+        this.form.patchValue({ clientId: ot.client.id });
+      }
+    }
+
+    this.chargerContexteOrdre(this.contextOrdreReparationId, this.contextOrdreTravailId);
+  }
+
+  chargerContexteOrdre(orId: number | null, otId: number | null): void {
+    if (orId) {
+      this.chargementsContexteEnCours = 3;
+      this.chargementQuantitesOR = true;
+      this.ordreReparationService.getById(orId).pipe(finalize(() => this.finChargementContexte())).subscribe({
+        next: ordre => {
+          if (!this.contextOrdreReparationNumero && ordre.numero) {
+            this.contextOrdreReparationNumero = ordre.numero;
+          }
+          if (!this.form.get('clientId')?.value && ordre.vehicule?.client?.id) {
+            const cId = ordre.vehicule.client.id;
+            this.clientService.getById(cId).subscribe(client => {
+              this.selectedClient = client as unknown as UserModel;
+              this.form.patchValue({ clientId: cId });
+              this.vehiculeService.getByClient(cId).subscribe(vehicles => {
+                this.vehiculesFiltres = extractContent<VehiculeModel>(vehicles as any);
+                if (ordre.vehicule?.id) this.form.patchValue({ vehiculeId: ordre.vehicule.id });
+                this.cdr.markForCheck();
+              });
+            });
+          }
+          for (const ligne of ordre.lignesOrdreReparationPieces ?? []) {
+            const key = ligne.piece?.id ? `piece:${ligne.piece.id}` : `pds:${(ligne.designationPds ?? '').trim().toLocaleLowerCase()}`;
+            this.quantitesPrevues.set(key, ligne.quantite ?? 0);
+          }
+          for (const ligne of ordre.lignesOrdreReparationMainDoeuvres ?? []) {
+            if (ligne.mainDoeuvre?.id) this.quantitesPrevues.set(`mo:${ligne.mainDoeuvre.id}`, ligne.nbreHeure ?? 0);
+          }
+          this.cdr.markForCheck();
+        },
+        error: () => { this.errorMessage = 'Impossible de charger les quantités prévues sur l’ordre de réparation.'; this.cdr.markForCheck(); }
+      });
+
+      this.proformaService.getByOrdreReparationId(orId).pipe(finalize(() => this.finChargementContexte())).subscribe({
+        next: proforma => {
+          this.proformaContexte = proforma;
+          for (const ligne of proforma.lignesPieces ?? []) {
+            const key = ligne.pieceId
+              ? `piece:${ligne.pieceId}`
+              : (ligne.piece?.id ? `piece:${ligne.piece.id}` : `pds:${(ligne.designationPds || ligne.designationPiece || '').trim().toLowerCase()}`);
+            this.piecesProformaSet.add(key);
+            this.quantitesProforma.set(key, (this.quantitesProforma.get(key) ?? 0) + (ligne.quantite || 0));
+            if (!this.quantitesPrevues.has(key)) {
+              this.quantitesPrevues.set(key, ligne.quantite || 0);
+            }
+            if (ligne.tauxRemise != null) {
+              this.remisesProforma.set(key, Number(ligne.tauxRemise) || 0);
+            }
+          }
+          for (const ligne of proforma.lignesMainDoeuvres ?? []) {
+            if (ligne.mainDoeuvreId) {
+              const key = `mo:${ligne.mainDoeuvreId}`;
+              this.piecesProformaSet.add(key);
+              this.quantitesProforma.set(key, (this.quantitesProforma.get(key) ?? 0) + (ligne.nbreHeure || 0));
+              if (!this.quantitesPrevues.has(key)) {
+                this.quantitesPrevues.set(key, ligne.nbreHeure || 0);
+              }
+              if (ligne.tauxRemise != null) {
+                this.remisesProforma.set(key, Number(ligne.tauxRemise) || 0);
+              }
+            }
+          }
+          this.cdr.markForCheck();
+        },
+        error: () => {}
+      });
+
+      this.bonService.getAll({ ordreReparationId: orId, page: 0, size: 1000 }).pipe(finalize(() => this.finChargementContexte())).subscribe({
+        next: response => {
+          for (const bon of extractContent<BonDeSortie>(response as any)) {
+            for (const ligne of bon.lignesBonDeSortiePieces ?? []) {
+              const key = ligne.type === 'MAIN_DOEUVRE' ? `mo:${ligne.mainDoeuvreId}`
+                : ligne.piece?.id ? `piece:${ligne.piece.id}` : `pds:${(ligne.designation ?? '').trim().toLocaleLowerCase()}`;
+              this.quantitesDejaSorties.set(key, (this.quantitesDejaSorties.get(key) ?? 0) + (ligne.quantite || 0));
+            }
+          }
+          this.cdr.markForCheck();
+        },
+        error: () => { this.errorMessage = 'Impossible de charger les quantités déjà sorties pour cet ordre.'; this.cdr.markForCheck(); }
+      });
+    }
+
+    if (otId) {
+      this.otService.getStepRecapitulatif(Number(otId)).subscribe({
+        next: (recap: any) => {
+          if (recap?.proforma && !this.proformaContexte) {
+            this.proformaContexte = recap.proforma;
+            this.remplirQuantitesDepuisProforma(recap.proforma);
+          }
+          if (recap?.proformaId && !this.proformaContexte) {
+            this.proformaService.getById(Number(recap.proformaId)).subscribe({
+              next: pf => {
+                this.proformaContexte = pf;
+                this.remplirQuantitesDepuisProforma(pf);
+                this.cdr.markForCheck();
+              },
+              error: () => {}
+            });
+          }
+          this.cdr.markForCheck();
+        },
+        error: () => {}
+      });
+
+      this.otService.getStepBonSortie(otId).subscribe({
+        next: step => {
+          if (step.proformaId && !this.proformaContexte) {
+            this.proformaService.getById(Number(step.proformaId)).subscribe({
+              next: pf => {
+                this.proformaContexte = pf;
+                this.remplirQuantitesDepuisProforma(pf);
+                this.cdr.markForCheck();
+              },
+              error: () => {}
+            });
+          }
+          for (const p of step.piecesManquantesProforma ?? []) {
+            const key = p.pieceId
+              ? `piece:${p.pieceId}`
+              : `pds:${(p.designation || '').trim().toLowerCase()}`;
+            this.piecesProformaSet.add(key);
+            this.quantitesProforma.set(key, (this.quantitesProforma.get(key) ?? 0) + (p.quantiteDemandee || 0));
+            if (!this.quantitesPrevues.has(key)) {
+              this.quantitesPrevues.set(key, p.quantiteDemandee || 0);
+            }
+          }
+          this.cdr.markForCheck();
+        },
+        error: () => {}
+      });
+    }
+  }
+
+  private remplirQuantitesDepuisProforma(proforma: any): void {
+    if (!proforma) return;
+    const pieces = proforma.lignesPieces ?? proforma.pieces ?? [];
+    for (const ligne of pieces) {
+      const key = ligne.pieceId
+        ? `piece:${ligne.pieceId}`
+        : (ligne.piece?.id ? `piece:${ligne.piece.id}` : `pds:${(ligne.designationPds || ligne.designationPiece || ligne.nom || ligne.designation || '').trim().toLowerCase()}`);
+      this.piecesProformaSet.add(key);
+      this.quantitesProforma.set(key, (this.quantitesProforma.get(key) ?? 0) + (ligne.quantite || 0));
+      if (!this.quantitesPrevues.has(key)) {
+        this.quantitesPrevues.set(key, ligne.quantite || 0);
+      }
+      if (ligne.tauxRemise != null) {
+        this.remisesProforma.set(key, Number(ligne.tauxRemise) || 0);
+      }
+    }
+    const moList = proforma.lignesMainDoeuvres ?? proforma.lignesMainDoeuvre ?? [];
+    for (const ligne of moList) {
+      const id = ligne.mainDoeuvreId || ligne.id;
+      if (id) {
+        const key = `mo:${id}`;
+        this.piecesProformaSet.add(key);
+        this.quantitesProforma.set(key, (this.quantitesProforma.get(key) ?? 0) + (ligne.nbreHeure || 0));
+        if (!this.quantitesPrevues.has(key)) {
+          this.quantitesPrevues.set(key, ligne.nbreHeure || 0);
+        }
+        if (ligne.tauxRemise != null) {
+          this.remisesProforma.set(key, Number(ligne.tauxRemise) || 0);
+        }
+      }
+    }
+  }
+
+  importerLignesProforma(): void {
+    const otId = this.selectedOrdreTravailId || this.contextOrdreTravailId;
+    const orId = this.contextOrdreReparationId;
+
+    if (!this.proformaContexte) {
+      if (otId) {
+        this.otService.getStepRecapitulatif(Number(otId)).subscribe({
+          next: (recap: any) => {
+            if (recap?.proforma) {
+              this.proformaContexte = recap.proforma;
+              this.remplirQuantitesDepuisProforma(recap.proforma);
+              this.executerImportLignesProforma();
+            } else if (recap?.proformaId) {
+              this.proformaService.getById(Number(recap.proformaId)).subscribe({
+                next: pf => {
+                  this.proformaContexte = pf;
+                  this.remplirQuantitesDepuisProforma(pf);
+                  this.executerImportLignesProforma();
+                },
+                error: () => {
+                  if (orId) this.chargerDepuisOrEtImporter(orId);
+                }
+              });
+            } else if (orId) {
+              this.chargerDepuisOrEtImporter(orId);
+            }
+          },
+          error: () => {
+            if (orId) this.chargerDepuisOrEtImporter(orId);
+          }
+        });
+        return;
+      } else if (orId) {
+        this.chargerDepuisOrEtImporter(orId);
+        return;
+      }
+    }
+
+    this.executerImportLignesProforma();
+  }
+
+  private chargerDepuisOrEtImporter(orId: number): void {
+    this.proformaService.getByOrdreReparationId(Number(orId)).subscribe({
+      next: pf => {
+        this.proformaContexte = pf;
+        this.remplirQuantitesDepuisProforma(pf);
+        this.executerImportLignesProforma();
+      },
+      error: () => {
+        this.errorMessage = 'Impossible de récupérer le proforma lié.';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  private executerImportLignesProforma(): void {
+    if (!this.proformaContexte) return;
+    const pieces = this.proformaContexte.lignesPieces ?? (this.proformaContexte as any).pieces ?? [];
+
+    for (const rawLp of pieces) {
+      const lp = rawLp as any;
+      const piece = lp.piece || (lp.pieceId ? {
+        id: lp.pieceId,
+        reference: lp.referencePiece || lp.reference || '',
+        designation: lp.designationPiece || lp.designationPds || lp.designation || lp.nom || '',
+        stockMagasin: 99
+      } : null);
+      const designation = lp.designationPiece || lp.designationPds || lp.designation || lp.nom || piece?.designation || '';
+      const rawType = (lp.type || (piece ? 'PDP' : 'PDS')).toUpperCase();
+      const type: 'PDP' | 'PDG' | 'PDS' = (rawType === 'PDG' || rawType === 'PDS') ? rawType : 'PDP';
+      const qteDemandee = Number(lp.quantite) || 1;
+      const prix = Number(lp.prix ?? lp.prixUnitaire ?? piece?.prix ?? 0);
+      const tauxRemise = Number(lp.tauxRemise) || 0;
+      const key = piece?.id ? `piece:${piece.id}` : `pds:${designation.trim().toLowerCase()}`;
+
+      // Éviter les doublons stricts
+      const dejaPresent = this.lignesPieces.some(l => {
+        if (piece?.id && l.piece?.id === piece.id) return true;
+        if (!piece?.id && l.designation?.trim().toLowerCase() === designation.trim().toLowerCase()) return true;
+        return false;
+      });
+      if (dejaPresent) continue;
+
+      const dejaSorti = this.quantitesDejaSorties.get(key) ?? 0;
+      const prevu = this.quantitesPrevues.get(key) ?? qteDemandee;
+      const reste = Math.max(0, prevu - dejaSorti);
+
+      this.lignesPieces.push({
+        type,
+        piece: piece as any,
+        designation,
+        quantite: reste > 0 ? reste : qteDemandee,
+        prix,
+        tauxRemise,
+        horsProforma: false,
+        dejaSortieProforma: reste === 0,
+        depassementProforma: false,
+        qteProforma: prevu,
+        dejaSortie: dejaSorti
+      });
+    }
+
+    const moList = this.proformaContexte.lignesMainDoeuvres ?? (this.proformaContexte as any).lignesMainDoeuvre ?? [];
+    for (const rawLm of moList) {
+      const lm = rawLm as any;
+      const moId = lm.mainDoeuvreId || lm.mainDoeuvre?.id || lm.id;
+      const mo = lm.mainDoeuvre || (moId ? {
+        id: moId,
+        description: lm.descriptionMainDoeuvre || lm.designation || '',
+        prix: lm.tarifHoraire ?? lm.prix
+      } : null);
+      const designation = lm.descriptionMainDoeuvre || lm.designation || mo?.description || 'Main d\'œuvre';
+      const heures = Number(lm.nbreHeure) || 1;
+      const tarif = Number(lm.tarifHoraire ?? mo?.prix ?? 0);
+      const tauxRemise = Number(lm.tauxRemise) || 0;
+      const key = `mo:${moId}`;
+
+      const dejaPresent = this.lignesPieces.some(l => l.type === 'MAIN_DOEUVRE' && (l.mainDoeuvre?.id === moId || l.designation === designation));
+      if (dejaPresent) continue;
+
+      const dejaSorti = this.quantitesDejaSorties.get(key) ?? 0;
+      const prevu = this.quantitesPrevues.get(key) ?? heures;
+      const reste = Math.max(0, prevu - dejaSorti);
+
+      this.lignesPieces.push({
+        type: 'MAIN_DOEUVRE',
+        mainDoeuvre: mo as any,
+        designation,
+        quantite: reste > 0 ? reste : heures,
+        prix: tarif,
+        tauxRemise,
+        horsProforma: false,
+        dejaSortieProforma: reste === 0,
+        depassementProforma: false,
+        qteProforma: prevu,
+        dejaSortie: dejaSorti
+      });
+    }
     this.cdr.markForCheck();
   }
 
@@ -702,11 +1168,31 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     this.bonService.getAll(this.getPageParams()).subscribe({
       next: (d) => {
         const arr = this.applyPageResponse<BonDeSortie>(d);
-        this.bons = arr.sort((a: any, b: any) => b.id - a.id);
+        this.bons = arr.map(b => this.normaliserBon(b)).sort((a: any, b: any) => b.id - a.id);
         this.applyFilter(); this.cdr.markForCheck(); this.loading = false; this.cdr.markForCheck();
       },
       error: () => { this.loading = false; this.cdr.markForCheck(); }
     });
+  }
+
+  normaliserBon(bon: any): BonDeSortie {
+    if (!bon) return bon;
+    if (bon.lignesPieces && (!bon.lignesBonDeSortiePieces || bon.lignesBonDeSortiePieces.length === 0)) {
+      bon.lignesBonDeSortiePieces = [
+        ...bon.lignesPieces,
+        ...(bon.lignesMainDoeuvres || []).map((m: any) => ({
+          id: m.id,
+          mainDoeuvreId: m.mainDoeuvreId,
+          type: 'MAIN_DOEUVRE',
+          designation: m.designation || m.code || 'Main d\'œuvre',
+          quantite: m.nbreHeure ?? m.quantite ?? 1,
+          prix: m.tarifHoraire ?? m.prix ?? 0,
+          tauxRemise: m.tauxRemise ?? 0,
+          montantTotal: m.montantTotal
+        }))
+      ];
+    }
+    return bon;
   }
 
   applyFilter() {
@@ -759,11 +1245,16 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     this.contextOrdreReparationNumero = context['ordreReparationNumero'] || null;
     this.contextOrdreReparationId = context['ordreReparationId'] ? Number(context['ordreReparationId']) : null;
     this.contextOrdreTravailId = context['ordreTravailId'] ? Number(context['ordreTravailId']) : null;
+    this.contextOrdreTravailNumero = context['ordreTravailNumero'] || null;
+    this.selectedOrdreTravailId = this.contextOrdreTravailId;
+    this.ordresTravailFiltres = [];
+    this.loadingOrdresTravail = false;
     this.returnToContext = context['returnTo'] || null;
     this.quantitesPrevues.clear();
     this.quantitesDejaSorties.clear();
     this.piecesProformaSet.clear();
     this.quantitesProforma.clear();
+    this.remisesProforma.clear();
     this.proformaContexte = null;
     this.chargementsContexteEnCours = 0;
     this.chargementQuantitesOR = false;
@@ -787,121 +1278,26 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     this.loadPdpPieces('', 'PDP');
     this.loadPdpPieces('', 'PDG');
     this.loadMainDoeuvres();
-    if (this.contextOrdreReparationId) {
-      this.chargementsContexteEnCours = 3;
-      this.chargementQuantitesOR = true;
-      this.ordreReparationService.getById(this.contextOrdreReparationId).pipe(finalize(() => this.finChargementContexte())).subscribe({
-        next: ordre => {
-          if (!this.contextOrdreReparationNumero && ordre.numero) {
-            this.contextOrdreReparationNumero = ordre.numero;
-          }
-          if (!this.form.get('clientId')?.value && ordre.vehicule?.client?.id) {
-            const cId = ordre.vehicule.client.id;
-            this.clientService.getById(cId).subscribe(client => {
-              this.selectedClient = client as unknown as UserModel;
-              this.form.patchValue({ clientId: cId });
-              this.vehiculeService.getByClient(cId).subscribe(vehicles => {
-                this.vehiculesFiltres = extractContent<VehiculeModel>(vehicles as any);
-                if (ordre.vehicule?.id) this.form.patchValue({ vehiculeId: ordre.vehicule.id });
-                this.cdr.markForCheck();
-              });
-            });
-          }
-          for (const ligne of ordre.lignesOrdreReparationPieces ?? []) {
-            const key = ligne.piece?.id ? `piece:${ligne.piece.id}` : `pds:${(ligne.designationPds ?? '').trim().toLocaleLowerCase()}`;
-            this.quantitesPrevues.set(key, ligne.quantite ?? 0);
-          }
-          for (const ligne of ordre.lignesOrdreReparationMainDoeuvres ?? []) {
-            if (ligne.mainDoeuvre?.id) this.quantitesPrevues.set(`mo:${ligne.mainDoeuvre.id}`, ligne.nbreHeure ?? 0);
-          }
-          this.cdr.markForCheck();
-        },
-        error: () => { this.errorMessage = 'Impossible de charger les quantités prévues sur l’ordre de réparation.'; this.cdr.markForCheck(); }
-      });
-      // Chargement de la proforma associée à l'ordre de réparation
-      this.proformaService.getByOrdreReparationId(this.contextOrdreReparationId).pipe(finalize(() => this.finChargementContexte())).subscribe({
-        next: proforma => {
-          this.proformaContexte = proforma;
-          for (const ligne of proforma.lignesPieces ?? []) {
-            const key = ligne.pieceId
-              ? `piece:${ligne.pieceId}`
-              : (ligne.piece?.id ? `piece:${ligne.piece.id}` : `pds:${(ligne.designationPds || ligne.designationPiece || '').trim().toLowerCase()}`);
-            this.piecesProformaSet.add(key);
-            this.quantitesProforma.set(key, (this.quantitesProforma.get(key) ?? 0) + (ligne.quantite || 0));
-            if (!this.quantitesPrevues.has(key)) {
-              this.quantitesPrevues.set(key, ligne.quantite || 0);
-            }
-            if (ligne.tauxRemise != null) {
-              this.remisesProforma.set(key, Number(ligne.tauxRemise) || 0);
-            }
-          }
-          for (const ligne of proforma.lignesMainDoeuvres ?? []) {
-            if (ligne.mainDoeuvreId) {
-              const key = `mo:${ligne.mainDoeuvreId}`;
-              this.piecesProformaSet.add(key);
-              this.quantitesProforma.set(key, (this.quantitesProforma.get(key) ?? 0) + (ligne.nbreHeure || 0));
-              if (!this.quantitesPrevues.has(key)) {
-                this.quantitesPrevues.set(key, ligne.nbreHeure || 0);
-              }
-              if (ligne.tauxRemise != null) {
-                this.remisesProforma.set(key, Number(ligne.tauxRemise) || 0);
-              }
-            }
-          }
-          this.cdr.markForCheck();
-        },
-        error: () => {}
-      });
-      if (!this.contextOrdreTravailId) {
-        this.ordreReparationService.getStepOrdreTravail(this.contextOrdreReparationId).subscribe({
-          next: stepOt => {
-            if (stepOt?.ordreTravailId && !this.contextOrdreTravailId) {
-              this.contextOrdreTravailId = stepOt.ordreTravailId;
-              this.cdr.markForCheck();
-            }
-          },
-          error: () => {}
-        });
-      }
-      this.bonService.getAll({ ordreReparationId: this.contextOrdreReparationId, page: 0, size: 1000 }).pipe(finalize(() => this.finChargementContexte())).subscribe({
-        next: response => {
-          for (const bon of extractContent<BonDeSortie>(response as any)) {
-            for (const ligne of bon.lignesBonDeSortiePieces ?? []) {
-              const key = ligne.type === 'MAIN_DOEUVRE' ? `mo:${ligne.mainDoeuvreId}`
-                : ligne.piece?.id ? `piece:${ligne.piece.id}` : `pds:${(ligne.designation ?? '').trim().toLocaleLowerCase()}`;
-              this.quantitesDejaSorties.set(key, (this.quantitesDejaSorties.get(key) ?? 0) + (ligne.quantite || 0));
-            }
-          }
-          this.cdr.markForCheck();
-        },
-        error: () => { this.errorMessage = 'Impossible de charger les quantités déjà sorties pour cet ordre.'; this.cdr.markForCheck(); }
-      });
+
+    if (this.contextOrdreReparationId || this.contextOrdreTravailId) {
+      this.chargerContexteOrdre(this.contextOrdreReparationId, this.contextOrdreTravailId);
     }
+
     if (this.contextOrdreTravailId) {
-      this.otService.getStepBonSortie(this.contextOrdreTravailId).subscribe({
-        next: step => {
-          for (const p of step.piecesManquantesProforma ?? []) {
-            const key = p.pieceId
-              ? `piece:${p.pieceId}`
-              : `pds:${(p.designation || '').trim().toLowerCase()}`;
-            this.piecesProformaSet.add(key);
-            this.quantitesProforma.set(key, (this.quantitesProforma.get(key) ?? 0) + (p.quantiteDemandee || 0));
-            if (!this.quantitesPrevues.has(key)) {
-              this.quantitesPrevues.set(key, p.quantiteDemandee || 0);
-            }
-          }
-          this.cdr.markForCheck();
-        },
-        error: () => {}
-      });
+      this.loadOrdresTravailPourVehicule(context['vehiculeId'] ? Number(context['vehiculeId']) : null, undefined, this.contextOrdreTravailId);
     }
+
     if (context['clientId']) {
       this.clientService.getById(Number(context['clientId'])).subscribe(client => {
         this.selectedClient = client as unknown as UserModel;
         this.form.patchValue({ clientId: Number(context['clientId']) });
         this.vehiculeService.getByClient(Number(context['clientId'])).subscribe(vehicles => {
           this.vehiculesFiltres = extractContent<VehiculeModel>(vehicles as any);
-          if (context['vehiculeId']) this.form.patchValue({ vehiculeId: Number(context['vehiculeId']) });
+          if (context['vehiculeId']) {
+            const vFound = this.vehiculesFiltres.find(x => x.id === Number(context['vehiculeId']));
+            this.form.patchValue({ vehiculeId: Number(context['vehiculeId']) });
+            this.loadOrdresTravailPourVehicule(Number(context['vehiculeId']), vFound?.immatriculation, this.contextOrdreTravailId);
+          }
           this.cdr.markForCheck();
         });
       });
@@ -926,6 +1322,10 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     this.contextOrdreReparationId = null;
     this.contextOrdreReparationNumero = null;
     this.contextOrdreTravailId = null;
+    this.contextOrdreTravailNumero = null;
+    this.selectedOrdreTravailId = null;
+    this.ordresTravailFiltres = [];
+    this.loadingOrdresTravail = false;
     this.returnToContext = null;
     this.qteAjouterPdp = 1;
     this.prixAjouterPdp = null;
@@ -1072,12 +1472,12 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
   }
 
   openDetail(bon: BonDeSortie) {
-    this.selectedBon = bon;
+    this.selectedBon = this.normaliserBon(bon);
     this.showDetailModal = true;
     this.bonService.getById(bon.id).subscribe({
       next: (fullBon) => {
         if (fullBon) {
-          this.selectedBon = fullBon;
+          this.selectedBon = this.normaliserBon(fullBon);
           this.cdr.markForCheck();
         }
       },
@@ -1325,13 +1725,17 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
   getLignePrix(l: any): number {
     if (!l) return 0;
     if (l.prix != null && l.prix !== '') return Number(l.prix);
+    if (l.tarifHoraire != null && l.tarifHoraire !== '') return Number(l.tarifHoraire);
     if (l.prixUnitaire != null && l.prixUnitaire !== '') return Number(l.prixUnitaire);
     if (l.piece?.prix != null && l.piece?.prix !== '') return Number(l.piece.prix);
     return 0;
   }
 
   getLigneTotal(l: any): number {
-    return this.getLignePrix(l) * (Number(l?.quantite) || 0);
+    if (l?.montantTotal != null) return Number(l.montantTotal);
+    const brut = this.getLignePrix(l) * (Number(l?.quantite) || 0);
+    const remise = Number(l?.tauxRemise) || 0;
+    return Math.round((brut * (1 - remise / 100) + Number.EPSILON) * 100) / 100;
   }
 
   formatDate(d?: string): string {

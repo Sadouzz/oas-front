@@ -6,6 +6,8 @@ export interface LigneBonDeSortie {
   designation?: string;
   quantite: number;
   prix?: number;
+  tauxRemise?: number;
+  montantTotal?: number;
 }
 
 
@@ -55,12 +57,16 @@ export interface BonDeSortie {
   ordreReparation?: { id: number; numero: string } | null;
   ordreTravailId?: number | null;
   ordreTravail?: { id: number; numero: string } | null;
-  lignesBonDeSortiePieces: LigneBonDeSortie[] | null;
+  lignesBonDeSortiePieces?: LigneBonDeSortie[] | null;
+  lignesPieces?: LigneBonDeSortie[] | null;
+  lignesMainDoeuvres?: any[] | null;
   ordreReparationStatut?: string;
   ordreTravailStatut?: string;
   montantTotalPieces?: number;
   montantTotalMainDoeuvre?: number;
   montantTotal?: number;
+  proformaId?: number | null;
+  proformaNumero?: string | null;
 }
 
 export type BonDeSortieListResponse = BonDeSortie;
