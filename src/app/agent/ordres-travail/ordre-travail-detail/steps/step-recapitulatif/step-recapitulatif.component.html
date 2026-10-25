@@ -1,38 +1,96 @@
 <div class="space-y-6">
-  <!-- En-tête de l'étape -->
-  <div class="flex flex-wrap items-center justify-between gap-4 border-b border-oas-line pb-4">
+
+  <!-- ========================================== -->
+  <!-- EN-TETE SPECIFIQUE A L'IMPRESSION PAPIER   -->
+  <!-- ========================================== -->
+  <div class="hidden print:block border-b-2 border-slate-900 pb-4 mb-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-black text-slate-950 uppercase tracking-tight">OAS ATELIER AUTOMOBILE</h1>
+        <p class="text-xs text-slate-600 font-semibold">Service Après-Vente & Maintenance Technique</p>
+      </div>
+      <div class="text-right">
+        <span class="inline-block px-3 py-1 bg-slate-900 text-white text-xs font-black rounded uppercase tracking-wider">
+          ORDRE DE TRAVAIL
+        </span>
+        <div class="text-lg font-black text-slate-950 mt-1">{{ data?.numero || ('OT #' + otId) }}</div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-200 text-xs">
+      <div>
+        <span class="text-slate-500 font-bold block">Ordre de Réparation lié :</span>
+        <strong class="text-slate-900 font-black">{{ orNumeroDisplay }}</strong>
+      </div>
+      <div>
+        <span class="text-slate-500 font-bold block">Proforma validé :</span>
+        <strong class="text-slate-900 font-black">{{ data?.proforma?.numero || '—' }}</strong>
+      </div>
+      <div class="text-right">
+        <span class="text-slate-500 font-bold block">Date & Heure d'émission :</span>
+        <strong class="text-slate-900 font-black">{{ dateImpression | date:'dd/MM/yyyy HH:mm' }}</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- EN-TETE A L'ECRAN (Masqué à l'impression)  -->
+  <!-- ========================================== -->
+  <div class="flex flex-wrap items-center justify-between gap-4 border-b border-oas-line pb-4 print:hidden">
     <div>
       <h2 class="text-lg font-bold text-oas-ink flex items-center gap-2">
-        <span class="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-black">1</span>
+        <span class="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-black shadow-2xs">1</span>
         Récapitulatif de l'Ordre de Travail
       </h2>
       <p class="text-xs text-oas-muted mt-0.5">
-        Vérification des informations validées issues du Proforma chiffré, du client et du véhicule.
+        Contrôle technique des travaux demandés, des défauts, du diagnostic et des pièces validées avant lancement.
       </p>
     </div>
-    @if (data?.proforma?.numero) {
-      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-oas-bg border border-oas-line text-xs">
-        <span class="text-oas-muted font-medium">Proforma d'origine :</span>
-        <span class="font-bold text-oas-ink">{{ data?.proforma?.numero }}</span>
-        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
-          {{ data?.proforma?.statut || 'VALIDÉ' }}
-        </span>
-      </div>
-    }
+
+    <div class="flex items-center gap-2.5 flex-wrap">
+      @if (orNumeroDisplay && orNumeroDisplay !== '—') {
+        <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 border border-indigo-200 text-xs text-indigo-900">
+          <span class="text-indigo-600 font-medium">OR d'origine :</span>
+          <span class="font-extrabold">{{ orNumeroDisplay }}</span>
+        </div>
+      }
+
+      @if (data?.proforma?.numero) {
+        <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-900">
+          <span class="text-emerald-700 font-medium">Proforma :</span>
+          <span class="font-extrabold">{{ data?.proforma?.numero }}</span>
+          <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-200/80 text-emerald-900">
+            VALIDÉ
+          </span>
+        </div>
+      }
+
+      <!-- Bouton d'impression principal -->
+      <button type="button" (click)="imprimer()"
+        title="Imprimer l'Ordre de Travail complet (format A4)"
+        class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition shadow-xs cursor-pointer">
+        <svg class="w-4 h-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+        </svg>
+        <span>Imprimer</span>
+      </button>
+    </div>
   </div>
 
   <app-alert [error]="errorMessage" [success]="successMessage"></app-alert>
 
   <!-- Loader -->
   @if (loading) {
-    <div class="flex flex-col items-center justify-center py-12 text-oas-muted">
+    <div class="flex flex-col items-center justify-center py-12 text-oas-muted print:hidden">
       <div class="w-8 h-8 border-3 border-oas-accent border-t-transparent rounded-full animate-spin mb-3"></div>
-      <p class="text-sm font-medium">Chargement du récapitulatif...</p>
+      <p class="text-sm font-medium">Chargement du récapitulatif atelier...</p>
     </div>
   } @else if (data) {
 
-    <!-- Cartes Résumé Véhicule & Client -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- ========================================== -->
+    <!-- 1. CARTES RESUME VEHICULE & CLIENT         -->
+    <!-- ========================================== -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 document-print-card">
       <!-- Véhicule -->
       <div class="p-4 rounded-xl border border-oas-line bg-gradient-to-br from-white to-slate-50/50 shadow-xs">
         <div class="flex items-center justify-between mb-3">
@@ -47,19 +105,19 @@
             {{ data.vehicule?.immatriculation || 'N/A' }}
           </span>
         </div>
-        <div class="space-y-1.5 text-sm">
+        <div class="space-y-1.5 text-xs">
           <div class="flex justify-between">
-            <span class="text-oas-muted text-xs">Marque & Modèle :</span>
-            <span class="font-semibold text-oas-ink">{{ data.vehicule?.marque || '—' }} {{ data.vehicule?.modele || '' }}</span>
+            <span class="text-oas-muted">Marque & Modèle :</span>
+            <span class="font-bold text-oas-ink">{{ data.vehicule?.marque || '—' }} {{ data.vehicule?.modele || '' }}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-oas-muted text-xs">Kilométrage initial :</span>
-            <span class="font-mono text-xs font-bold text-oas-ink">{{ data.vehicule?.kilometrage ? (data.vehicule?.kilometrage | number) + ' km' : 'Non renseigné' }}</span>
+            <span class="text-oas-muted">Kilométrage :</span>
+            <span class="font-mono font-bold text-oas-ink">{{ data.vehicule?.kilometrage ? (data.vehicule?.kilometrage | number) + ' km' : 'Non renseigné' }}</span>
           </div>
-          @if (data.ordreReparationNumero) {
+          @if (orNumeroDisplay && orNumeroDisplay !== '—') {
             <div class="flex justify-between">
-              <span class="text-oas-muted text-xs">Ordre de Réparation lié :</span>
-              <span class="font-bold text-oas-accent text-xs">{{ data.ordreReparationNumero }}</span>
+              <span class="text-oas-muted">Ordre de Réparation lié :</span>
+              <span class="font-bold text-indigo-700">{{ orNumeroDisplay }}</span>
             </div>
           }
         </div>
@@ -76,29 +134,319 @@
           </span>
           <span class="text-xs font-semibold text-oas-muted">ID #{{ data.client?.id || '—' }}</span>
         </div>
-        <div class="space-y-1.5 text-sm">
+        <div class="space-y-1.5 text-xs">
           <div class="flex justify-between">
-            <span class="text-oas-muted text-xs">Nom complet :</span>
-            <span class="font-semibold text-oas-ink">
-              {{ getClientNom() }}
-            </span>
+            <span class="text-oas-muted">Nom complet :</span>
+            <span class="font-bold text-oas-ink">{{ getClientNom() }}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-oas-muted text-xs">Téléphone :</span>
-            <span class="font-semibold text-oas-ink">{{ getClientPhone() }}</span>
+            <span class="text-oas-muted">Téléphone :</span>
+            <span class="font-bold text-oas-ink">{{ getClientPhone() }}</span>
           </div>
           @if (data.client?.email) {
             <div class="flex justify-between">
-              <span class="text-oas-muted text-xs">Email :</span>
-              <span class="text-xs text-oas-muted">{{ data.client?.email }}</span>
+              <span class="text-oas-muted">Email :</span>
+              <span class="text-oas-muted truncate max-w-[200px]">{{ data.client?.email }}</span>
             </div>
           }
         </div>
       </div>
     </div>
 
-    <!-- Tableau des Pièces Chiffrées -->
-    <div class="border border-oas-line rounded-xl overflow-hidden bg-white shadow-xs">
+    <!-- ========================================================================= -->
+    <!-- 2. DONNEES TECHNIQUES ISSUES DE L'ORDRE DE REPARATION (OR)                -->
+    <!--    - Travaux demandés                                                    -->
+    <!--    - Défauts constatés OR                                                -->
+    <!-- ========================================================================= -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 document-print-card">
+      
+      <!-- Travaux demandés (Issus de l'OR) -->
+      <div class="p-4 rounded-xl border border-amber-200/80 bg-gradient-to-br from-white via-amber-50/20 to-amber-50/40 shadow-xs flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-amber-950 flex items-center gap-1.5">
+              <svg class="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              <span>Travaux demandés</span>
+              <span class="text-[10px] text-amber-700 font-semibold">(Issus de l'OR)</span>
+            </h3>
+            @if (travauxDemandesList.length > 0) {
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                {{ travauxDemandesList.length }} tâche{{ travauxDemandesList.length > 1 ? 's' : '' }}
+              </span>
+            }
+          </div>
+
+          @if (hasTravauxDemandes) {
+            <!-- Liste à puces des travaux -->
+            @if (travauxDemandesList.length > 0) {
+              <div class="space-y-1.5 mb-2.5">
+                @for (t of travauxDemandesList; track $index) {
+                  <div class="flex items-start gap-2 p-2 rounded-lg bg-white/90 border border-amber-200/70 text-xs text-amber-950 shadow-2xs">
+                    <svg class="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span class="font-medium leading-relaxed">{{ t.nom }}</span>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Description générale des travaux si disponible -->
+            @if (descriptionTravaux) {
+              <div class="mt-2 pt-2 border-t border-amber-200/50">
+                <span class="text-[11px] font-bold text-amber-900 block mb-1">Précisions client / réception :</span>
+                <p class="text-xs text-slate-800 bg-white/80 p-2.5 rounded-lg border border-amber-200/70 leading-relaxed whitespace-pre-wrap">
+                  {{ descriptionTravaux }}
+                </p>
+              </div>
+            }
+          } @else {
+            <div class="p-4 rounded-lg bg-white/70 border border-dashed border-amber-200 text-center text-xs text-amber-800/80">
+              Aucun travail spécifique décrit dans l'Ordre de Réparation d'origine.
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Défauts constatés à la réception (Issus de l'OR) -->
+      <div class="p-4 rounded-xl border border-rose-200/80 bg-gradient-to-br from-white via-rose-50/20 to-rose-50/40 shadow-xs flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-rose-950 flex items-center gap-1.5">
+              <svg class="w-4 h-4 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span>Défauts constatés</span>
+              <span class="text-[10px] text-rose-700 font-semibold">(Issus de l'OR)</span>
+            </h3>
+            @if (defautsConstatesList.length > 0) {
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
+                {{ defautsConstatesList.length }} anomalie{{ defautsConstatesList.length > 1 ? 's' : '' }}
+              </span>
+            }
+          </div>
+
+          @if (hasDefautsConstates) {
+            <!-- Liste des défauts structurés -->
+            @if (defautsConstatesList.length > 0) {
+              <div class="space-y-1.5 mb-2.5">
+                @for (d of defautsConstatesList; track $index) {
+                  <div class="flex items-center justify-between gap-2 p-2 rounded-lg bg-white/90 border border-rose-200/70 text-xs text-rose-950 shadow-2xs">
+                    <div class="flex items-center gap-2 min-w-0">
+                      <span class="w-2 h-2 rounded-full bg-rose-500 flex-shrink-0"></span>
+                      <span class="font-medium truncate">{{ d.nom || d.description || d }}</span>
+                    </div>
+                    @if (d.gravite) {
+                      <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
+                        [class]="d.gravite === 'CRITIQUE' || d.gravite === 'ELEVEE' ? 'bg-red-100 text-red-800' : 'bg-rose-100 text-rose-800'">
+                        {{ d.gravite }}
+                      </span>
+                    }
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Note globale sur les défauts si disponible -->
+            @if (texteDefautsConstates) {
+              <div class="mt-2 pt-2 border-t border-rose-200/50">
+                <span class="text-[11px] font-bold text-rose-900 block mb-1">Rapport visuel à l'arrivée :</span>
+                <p class="text-xs text-slate-800 bg-white/80 p-2.5 rounded-lg border border-rose-200/70 leading-relaxed whitespace-pre-wrap">
+                  {{ texteDefautsConstates }}
+                </p>
+              </div>
+            }
+          } @else {
+            <div class="p-4 rounded-lg bg-white/70 border border-dashed border-rose-200 text-center text-xs text-rose-800/80">
+              Aucun défaut particulier signalé lors de la réception du véhicule.
+            </div>
+          }
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 3. REMARQUES & OBSERVATIONS DU DIAGNOSTIC ATELIER (Issu de l'OR)          -->
+    <!-- ========================================================================= -->
+    <div class="p-5 rounded-xl border border-indigo-200 bg-gradient-to-br from-white via-indigo-50/15 to-slate-50 shadow-xs document-print-card space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-indigo-100 pb-3">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-indigo-950 flex items-center gap-2">
+          <svg class="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <span>Remarques & Diagnostic Technique</span>
+          <span class="text-[10px] text-indigo-600 font-semibold">(Issu de l'OR)</span>
+        </h3>
+
+        @if (stepDiagnostic?.diagnostic?.statut) {
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-indigo-100 text-indigo-800 border border-indigo-200">
+            Diagnostic : {{ stepDiagnostic?.diagnostic?.statut }}
+          </span>
+        }
+      </div>
+
+      <!-- Pannes détectées (mise en évidence) -->
+      @if (pannesDetectees) {
+        <div class="p-3.5 rounded-xl bg-orange-50 border border-orange-200/80 text-xs">
+          <div class="flex items-center gap-2 mb-1 text-orange-950 font-bold">
+            <svg class="w-4 h-4 text-orange-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span>Pannes détectées lors du diagnostic technique :</span>
+          </div>
+          <p class="text-orange-900 leading-relaxed whitespace-pre-wrap pl-6">
+            {{ pannesDetectees }}
+          </p>
+        </div>
+      }
+
+      <!-- Observations et recommandations générales -->
+      @if (observationsDiagnostic || recommandationsDiagnostic) {
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+          @if (observationsDiagnostic) {
+            <div class="p-3 rounded-lg bg-slate-50 border border-slate-200">
+              <strong class="text-slate-900 block mb-1 font-bold">Observations techniques :</strong>
+              <p class="text-slate-700 leading-relaxed whitespace-pre-wrap">{{ observationsDiagnostic }}</p>
+            </div>
+          }
+          @if (recommandationsDiagnostic) {
+            <div class="p-3 rounded-lg bg-indigo-50/50 border border-indigo-200">
+              <strong class="text-indigo-950 block mb-1 font-bold">Recommandations atelier :</strong>
+              <p class="text-indigo-900 leading-relaxed whitespace-pre-wrap">{{ recommandationsDiagnostic }}</p>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Liste détaillée des remarques des techniciens -->
+      @if (remarquesDiagnosticList.length > 0) {
+        <div class="space-y-2 pt-1">
+          <span class="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">
+            Commentaires & notes des techniciens ({{ remarquesDiagnosticList.length }}) :
+          </span>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+            @for (r of remarquesDiagnosticList; track (r.id || $index)) {
+              <div class="p-3 rounded-xl bg-amber-50/50 border border-amber-200/70 text-xs space-y-1">
+                <div class="flex items-center justify-between text-[11px]">
+                  <span class="font-bold text-amber-950 flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    {{ r.technicienNom || 'Technicien Diagnostic' }}
+                  </span>
+                  @if (r.createdAt) {
+                    <span class="text-slate-500 font-mono text-[10px]">
+                      {{ r.createdAt | date:'dd/MM/yyyy HH:mm' }}
+                    </span>
+                  }
+                </div>
+                <p class="text-slate-800 leading-relaxed pt-0.5">
+                  {{ r.contenu }}
+                </p>
+              </div>
+            }
+          </div>
+        </div>
+      } @else if (!pannesDetectees && !observationsDiagnostic && !recommandationsDiagnostic) {
+        <p class="text-xs text-oas-muted italic py-1">
+          Aucune observation particulière enregistrée lors du diagnostic technique.
+        </p>
+      }
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 4. DOCUMENTS & PHOTOS DU DIAGNOSTIC (Issus de l'OR)                       -->
+    <!-- ========================================================================= -->
+    <div class="p-5 rounded-xl border border-teal-200 bg-gradient-to-br from-white via-teal-50/15 to-slate-50 shadow-xs document-print-card space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-teal-100 pb-3">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-teal-950 flex items-center gap-2">
+          <svg class="w-4 h-4 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <span>Documents & Photos du Diagnostic</span>
+          <span class="text-[10px] text-teal-600 font-semibold">(Issus de l'OR)</span>
+        </h3>
+
+        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-teal-100 text-teal-900 border border-teal-200">
+          {{ piecesJointesDiagnostic.length }} document{{ piecesJointesDiagnostic.length > 1 ? 's' : '' }}
+        </span>
+      </div>
+
+      @if (hasDocsDiagnostic) {
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          @for (pj of piecesJointesDiagnostic; track (pj.id || $index)) {
+            <div class="group relative rounded-xl border border-oas-line bg-white hover:border-teal-400 overflow-hidden shadow-2xs hover:shadow-md transition flex flex-col">
+              
+              <!-- Zone Aperçu (Image ou PDF) -->
+              <div class="relative w-full h-32 bg-slate-100 flex items-center justify-center overflow-hidden cursor-pointer"
+                (click)="openDocPreview(pj)">
+                
+                @if (isImageDoc(pj)) {
+                  <img [src]="pj.url" [alt]="pj.remarque || 'Document diagnostic'"
+                    class="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+                  
+                  <!-- Overlay au survol pour agrandir -->
+                  <div class="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2 print:hidden">
+                    <span class="px-2.5 py-1 rounded-lg bg-white/95 text-slate-900 font-bold text-[11px] shadow-sm flex items-center gap-1">
+                      <svg class="w-3.5 h-3.5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                      </svg>
+                      Agrandir
+                    </span>
+                  </div>
+                } @else {
+                  <!-- Icône Document PDF -->
+                  <div class="flex flex-col items-center justify-center p-3 text-center">
+                    <div class="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center mb-1 font-bold text-xs shadow-2xs">
+                      PDF
+                    </div>
+                    <span class="text-[11px] font-bold text-slate-800 line-clamp-1">Fiche Diagnostic</span>
+                    <span class="text-[9px] text-teal-700 font-semibold mt-0.5 group-hover:underline">Consulter le PDF</span>
+                  </div>
+                }
+              </div>
+
+              <!-- Métadonnées en bas de vignette -->
+              <div class="p-2 bg-white text-[10px] space-y-0.5 flex-1 flex flex-col justify-between border-t border-oas-line">
+                @if (pj.remarque) {
+                  <p class="font-medium text-slate-800 line-clamp-2" [title]="pj.remarque">
+                    {{ pj.remarque }}
+                  </p>
+                } @else {
+                  <p class="font-medium text-slate-500 italic">Sans légende</p>
+                }
+
+                <div class="flex items-center justify-between text-slate-400 pt-1 text-[9px]">
+                  <span>{{ pj.technicienNom || 'Technicien' }}</span>
+                  <a [href]="pj.url" target="_blank" rel="noopener"
+                    (click)="$event.stopPropagation()"
+                    class="text-teal-600 hover:text-teal-800 font-bold hover:underline print:hidden">
+                    Ouvrir ↗
+                  </a>
+                </div>
+              </div>
+
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="p-6 rounded-xl border border-dashed border-teal-200 bg-white/70 text-center text-xs text-teal-800/80">
+          <svg class="w-8 h-8 text-teal-300 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <p class="font-bold text-slate-700">Aucun document joint au diagnostic</p>
+          <p class="text-[11px] text-slate-500 mt-0.5">Aucune photo ni fichier PDF n'a été téléversé lors de l'étape diagnostic de cet OR.</p>
+        </div>
+      }
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 5. TABLEAU DES PIECES CHIFFREES            -->
+    <!-- ========================================== -->
+    <div class="border border-oas-line rounded-xl overflow-hidden bg-white shadow-xs document-print-card">
       <div class="bg-oas-bg/70 px-4 py-3 border-b border-oas-line flex items-center justify-between">
         <h3 class="text-xs font-bold uppercase tracking-wider text-oas-ink flex items-center gap-2">
           <span>Pièces & Fournitures chiffrées</span>
@@ -114,9 +462,9 @@
               <th class="px-4 py-2.5">Désignation</th>
               <th class="px-4 py-2.5">Type</th>
               <th class="px-4 py-2.5 text-center">Quantité</th>
-              <th class="px-4 py-2.5 text-right">Prix unitaire HT avant remise</th>
-              <th class="px-4 py-2.5 text-right">Remise générale</th>
-              <th class="px-4 py-2.5 text-right">Total HT après remise</th>
+              <th class="px-4 py-2.5 text-right">Prix unitaire HT</th>
+              <th class="px-4 py-2.5 text-right">Remise</th>
+              <th class="px-4 py-2.5 text-right">Total HT</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-oas-line">
@@ -142,7 +490,6 @@
                 <td class="px-4 py-2.5 text-right font-mono text-oas-muted">{{ p.prix | number:'1.0-0' }} FCFA</td>
                 <td class="px-4 py-2.5 text-right whitespace-nowrap">
                   <span class="font-semibold">{{ p.tauxRemise || 0 }} %</span>
-                  <span class="block text-[10px] text-oas-muted">−{{ ((p.quantite * p.prix) - p.montantTotal) | number:'1.0-0' }} FCFA</span>
                 </td>
                 <td class="px-4 py-2.5 text-right font-mono font-bold text-oas-ink">{{ p.montantTotal | number:'1.0-0' }} FCFA</td>
               </tr>
@@ -158,8 +505,10 @@
       </div>
     </div>
 
-    <!-- Tableau de la Main d'œuvre -->
-    <div class="border border-oas-line rounded-xl overflow-hidden bg-white shadow-xs">
+    <!-- ========================================== -->
+    <!-- 6. TABLEAU DE LA MAIN D'OEUVRE             -->
+    <!-- ========================================== -->
+    <div class="border border-oas-line rounded-xl overflow-hidden bg-white shadow-xs document-print-card">
       <div class="bg-oas-bg/70 px-4 py-3 border-b border-oas-line flex items-center justify-between">
         <h3 class="text-xs font-bold uppercase tracking-wider text-oas-ink flex items-center gap-2">
           <span>Prestations de Main-d'œuvre</span>
@@ -174,9 +523,9 @@
             <tr>
               <th class="px-4 py-2.5">Prestation / Tâche</th>
               <th class="px-4 py-2.5 text-center">Nbre Heures</th>
-              <th class="px-4 py-2.5 text-right">Tarif horaire HT avant remise</th>
-              <th class="px-4 py-2.5 text-right">Remise générale</th>
-              <th class="px-4 py-2.5 text-right">Total HT après remise</th>
+              <th class="px-4 py-2.5 text-right">Tarif horaire HT</th>
+              <th class="px-4 py-2.5 text-right">Remise</th>
+              <th class="px-4 py-2.5 text-right">Total HT</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-oas-line">
@@ -187,7 +536,6 @@
                 <td class="px-4 py-2.5 text-right font-mono text-oas-muted">{{ mo.tarifHoraire | number:'1.0-0' }} FCFA/h</td>
                 <td class="px-4 py-2.5 text-right whitespace-nowrap">
                   <span class="font-semibold">{{ mo.tauxRemise || 0 }} %</span>
-                  <span class="block text-[10px] text-oas-muted">−{{ ((mo.nbreHeure * mo.tarifHoraire) - mo.montantTotal) | number:'1.0-0' }} FCFA</span>
                 </td>
                 <td class="px-4 py-2.5 text-right font-mono font-bold text-oas-ink">{{ mo.montantTotal | number:'1.0-0' }} FCFA</td>
               </tr>
@@ -203,9 +551,11 @@
       </div>
     </div>
 
-    <!-- Tableau des Pièces Manquantes (si rupture de stock) -->
+    <!-- ========================================== -->
+    <!-- 7. TABLEAU DES RUPTURES DE STOCK           -->
+    <!-- ========================================== -->
     @if (hasPiecesManquantes) {
-      <div class="border border-red-200 rounded-xl overflow-hidden bg-white shadow-xs">
+      <div class="border border-red-200 rounded-xl overflow-hidden bg-white shadow-xs document-print-card">
         <div class="bg-red-50/70 px-4 py-3 border-b border-red-200 flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-2">
             <span class="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse"></span>
@@ -217,9 +567,6 @@
             </h3>
           </div>
           <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-red-100 text-red-800 border border-red-200 text-xs font-bold">
-            <svg class="w-3.5 h-3.5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
             Approvisionnement requis : {{ totalPiecesManquantes }} unité{{ totalPiecesManquantes > 1 ? 's' : '' }}
           </span>
         </div>
@@ -228,7 +575,7 @@
           <table class="w-full text-left text-xs">
             <thead class="bg-red-50/30 text-red-900/80 uppercase tracking-wider font-semibold border-b border-red-100">
               <tr>
-                <th class="px-4 py-2.5">Désignation & Référence</th>
+                <th class="px-4 py-2.5">Désignation</th>
                 <th class="px-4 py-2.5">Type</th>
                 <th class="px-4 py-2.5 text-center">Qté Demandée</th>
                 <th class="px-4 py-2.5 text-center">Stock Magasin</th>
@@ -238,36 +585,24 @@
             <tbody class="divide-y divide-red-100">
               @for (pm of piecesManquantes; track (pm.ligneId || pm.pieceId || $index)) {
                 <tr class="hover:bg-red-50/20 transition">
-                  <!-- Désignation & Réf -->
                   <td class="px-4 py-3">
                     <div class="font-bold text-oas-ink">{{ pm.designation }}</div>
                     @if (pm.reference) {
-                      <div class="flex items-center gap-1.5 mt-0.5">
-                        <span class="font-mono text-[10px] text-oas-muted bg-slate-100 px-1.5 py-0.5 rounded border border-oas-line">
-                          Réf: {{ pm.reference }}
-                        </span>
-                      </div>
+                      <span class="font-mono text-[10px] text-oas-muted bg-slate-100 px-1.5 py-0.5 rounded border border-oas-line">
+                        Réf: {{ pm.reference }}
+                      </span>
                     }
                   </td>
-                  <!-- Type -->
                   <td class="px-4 py-3">
                     <span class="px-2 py-0.5 rounded text-[10px] font-bold"
                       [class]="pm.type === 'PDP' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'">
                       {{ pm.type || (pm.isCustom ? 'PDG' : 'PDP') }}
                     </span>
                   </td>
-                  <!-- Qté Demandée -->
-                  <td class="px-4 py-3 text-center font-mono font-bold text-oas-ink">
-                    {{ pm.quantiteDemandee }}
+                  <td class="px-4 py-3 text-center font-mono font-bold text-oas-ink">{{ pm.quantiteDemandee }}</td>
+                  <td class="px-4 py-3 text-center font-mono font-bold" [class]="(pm.stockMagasin || 0) > 0 ? 'text-amber-700' : 'text-red-600'">
+                    {{ pm.stockMagasin || 0 }}
                   </td>
-                  <!-- Stock Magasin -->
-                  <td class="px-4 py-3 text-center">
-                    <span class="font-mono font-bold"
-                      [class]="(pm.stockMagasin || 0) > 0 ? 'text-amber-700' : 'text-red-600'">
-                      {{ pm.stockMagasin || 0 }}
-                    </span>
-                  </td>
-                  <!-- Manquant -->
                   <td class="px-4 py-3 text-center">
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-mono font-extrabold text-xs bg-red-100 text-red-700 border border-red-300">
                       -{{ pm.quantiteManquante }}
@@ -279,48 +614,43 @@
           </table>
         </div>
       </div>
-    } @else if (data.proforma?.lignesPieces && data.proforma!.lignesPieces!.length > 0) {
-      <!-- Toutes les pièces en stock -->
-      <div class="p-4 rounded-xl border bg-emerald-50/70 border-emerald-200 shadow-2xs flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center flex-shrink-0">
-            <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <div>
-            <h4 class="text-xs font-bold text-emerald-950 uppercase tracking-wide">Stock Magasin Vérifié · Aucune Rupture</h4>
-            <p class="text-xs text-emerald-800/90 mt-0.5">Toutes les pièces chiffrées sont disponibles en quantité suffisante pour l'intervention.</p>
-          </div>
-        </div>
-        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-          100% Disponible
-        </span>
-      </div>
     }
 
-    <!-- Récapitulatif Financier Total -->
-    @if (data.proforma) {
-      <div class="flex justify-end">
-        <div class="w-full md:w-80 rounded-xl border border-oas-line bg-slate-50 p-4 space-y-2 text-xs">
-          <div class="flex justify-between text-oas-muted">
-            <span>Total HT :</span>
-            <span class="font-mono font-bold text-oas-ink">{{ data.proforma.montantHT | number:'1.0-0' }} FCFA</span>
-          </div>
-          <div class="flex justify-between text-oas-muted">
-            <span>TVA :</span>
-            <span class="font-mono font-bold text-oas-ink">{{ data.proforma.montantTVA | number:'1.0-0' }} FCFA</span>
-          </div>
-          <div class="pt-2 border-t border-oas-line flex justify-between text-sm">
-            <span class="font-bold text-oas-ink">Total TTC :</span>
-            <span class="font-mono font-black text-oas-accent">{{ data.proforma.montantTTC | number:'1.0-0' }} FCFA</span>
-          </div>
-        </div>
-      </div>
-    }
+    <!-- ========================================== -->
+    <!-- 8. RECAPITULATIF FINANCIER                 -->
+    <!-- ========================================== -->
 
-    <!-- Bouton d'action pour passer à l'étape suivante -->
-    <div class="flex justify-end pt-4 border-t border-oas-line">
+
+    <!-- ========================================== -->
+    <!-- SIGNATURES (Uniquement à l'impression)     -->
+    <!-- ========================================== -->
+    <div class="hidden print:grid grid-cols-3 gap-6 pt-6 border-t-2 border-slate-300 text-xs">
+      <div class="border border-slate-300 rounded-lg p-3 h-28 flex flex-col justify-between">
+        <strong class="text-slate-900 block font-bold">Visa Chef d'Atelier</strong>
+        <span class="text-[10px] text-slate-400">Date & Signature</span>
+      </div>
+      <div class="border border-slate-300 rounded-lg p-3 h-28 flex flex-col justify-between">
+        <strong class="text-slate-900 block font-bold">Visa Mécanicien Responsable</strong>
+        <span class="text-[10px] text-slate-400">Date & Signature</span>
+      </div>
+      <div class="border border-slate-300 rounded-lg p-3 h-28 flex flex-col justify-between">
+        <strong class="text-slate-900 block font-bold">Accord / Émargement Client</strong>
+        <span class="text-[10px] text-slate-400">Bon pour accord</span>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 9. BOUTONS D'ACTION (Masqués à l'impression)-->
+    <!-- ========================================== -->
+    <div class="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-oas-line print:hidden">
+      <!-- <button type="button" (click)="imprimer()"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs shadow-xs transition cursor-pointer">
+        <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+        </svg>
+        <span>Imprimer l'Ordre de Travail</span>
+      </button> -->
+
       <button (click)="continuerVersBonSortie()"
         [disabled]="advancing"
         class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-oas-accent hover:bg-oas-accent/90 text-white font-bold text-sm shadow-sm transition disabled:opacity-50 cursor-pointer">
@@ -338,3 +668,173 @@
 
   }
 </div>
+
+<!-- ========================================================================= -->
+<!-- MODAL VISIONNEUSE / LIGHTBOX DOCUMENT DIAGNOSTIC                         -->
+<!-- ========================================================================= -->
+@if (selectedDocPreview) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-150 print:hidden"
+    (click)="closeDocPreview()">
+    
+    <div class="relative max-w-4xl w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+      (click)="$event.stopPropagation()">
+      
+      <!-- En-tête du modal -->
+      <div class="px-5 py-3.5 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <span class="w-7 h-7 rounded-lg bg-teal-500/20 text-teal-400 flex items-center justify-center text-xs font-bold">
+            {{ isImageDoc(selectedDocPreview) ? 'IMG' : 'DOC' }}
+          </span>
+          <div>
+            <h4 class="text-xs font-bold leading-tight">
+              {{ selectedDocPreview.remarque || 'Document du diagnostic' }}
+            </h4>
+            <p class="text-[10px] text-slate-400">
+              Ajouté par {{ selectedDocPreview.technicienNom || 'Technicien diagnostic' }}
+              @if (selectedDocPreview.createdAt) {
+                · {{ selectedDocPreview.createdAt | date:'dd/MM/yyyy HH:mm' }}
+              }
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <a [href]="selectedDocPreview.url" target="_blank" rel="noopener"
+            title="Ouvrir dans un nouvel onglet"
+            class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
+          <button type="button" (click)="closeDocPreview()"
+            class="p-2 rounded-lg bg-slate-800 hover:bg-red-600 text-slate-300 hover:text-white transition cursor-pointer">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Corps du modal (Aperçu grand format) -->
+      <div class="p-4 overflow-auto flex items-center justify-center bg-slate-900/5 max-h-[75vh]">
+        @if (isImageDoc(selectedDocPreview)) {
+          <img [src]="selectedDocPreview.url"
+            [alt]="selectedDocPreview.remarque || 'Aperçu document'"
+            class="max-w-full max-h-[70vh] object-contain rounded-xl shadow-md border border-slate-200" />
+        } @else {
+          <iframe [src]="getSafeUrl(selectedDocPreview.url)"
+            class="w-full h-[65vh] rounded-xl border border-slate-200"
+            title="Aperçu PDF"></iframe>
+        }
+      </div>
+
+      <!-- Pied du modal -->
+      <div class="px-5 py-3 bg-slate-50 border-t border-oas-line flex items-center justify-between text-xs">
+        <span class="text-oas-muted">{{ selectedDocPreview.remarque || 'Document issu du diagnostic atelier' }}</span>
+        <button type="button" (click)="closeDocPreview()"
+          class="px-4 py-1.5 rounded-lg bg-slate-900 text-white font-bold hover:bg-slate-800 transition cursor-pointer">
+          Fermer
+        </button>
+      </div>
+
+    </div>
+  </div>
+}
+
+<!-- ========================================================================= -->
+<!-- MODAL DE CONFIRMATION DE RUPTURE DE STOCK (PIECES MANQUANTES)             -->
+<!-- ========================================================================= -->
+@if (showRuptureConfirmModal) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-150 print:hidden"
+    (click)="annulerRuptureModal()">
+    
+    <div class="relative max-w-lg w-full bg-white rounded-2xl shadow-2xl border border-red-200 overflow-hidden"
+      (click)="$event.stopPropagation()">
+      
+      <!-- En-tête modal -->
+      <div class="px-6 py-4 bg-red-50 border-b border-red-100 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0 shadow-2xs">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-sm font-black text-red-950 uppercase tracking-tight">Rupture de Stock Détectée</h3>
+          <p class="text-xs text-red-700 mt-0.5">Pièces manquantes requises pour cette intervention</p>
+        </div>
+      </div>
+
+      <!-- Contenu modal -->
+      <div class="p-6 space-y-4 text-xs">
+        <p class="text-slate-700 leading-relaxed">
+          Attention, <strong class="text-red-700 font-bold">{{ piecesManquantes.length }} pièce{{ piecesManquantes.length > 1 ? 's sont' : ' est' }} en rupture de stock</strong> dans le magasin (total de <strong class="text-red-700 font-bold">{{ totalPiecesManquantes }} unité{{ totalPiecesManquantes > 1 ? 's' : '' }} manquante{{ totalPiecesManquantes > 1 ? 's' : '' }}</strong>).
+        </p>
+
+        <!-- Mini-tableau récapitulatif des pièces manquantes -->
+        <div class="rounded-xl border border-red-200 overflow-hidden bg-red-50/20 max-h-48 overflow-y-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-red-50 text-red-900 font-bold border-b border-red-100">
+              <tr>
+                <th class="px-3 py-2">Pièce</th>
+                <th class="px-3 py-2 text-center">Demandé</th>
+                <th class="px-3 py-2 text-center">Stock</th>
+                <th class="px-3 py-2 text-center">Manquant</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-red-100">
+              @for (pm of piecesManquantes; track (pm.ligneId || pm.pieceId || $index)) {
+                <tr>
+                  <td class="px-3 py-2">
+                    <span class="font-bold text-slate-900 block">{{ pm.designation }}</span>
+                    @if (pm.reference) {
+                      <span class="text-[10px] text-slate-500 font-mono">Réf: {{ pm.reference }}</span>
+                    }
+                  </td>
+                  <td class="px-3 py-2 text-center font-mono font-bold">{{ pm.quantiteDemandee }}</td>
+                  <td class="px-3 py-2 text-center font-mono font-bold text-amber-700">{{ pm.stockMagasin || 0 }}</td>
+                  <td class="px-3 py-2 text-center font-mono font-black text-red-600">-{{ pm.quantiteManquante }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-xs flex items-start gap-2">
+          <svg class="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p class="leading-relaxed">
+            Si vous continuez vers le <strong>Bon de Sortie</strong>, seules les quantités disponibles en stock pourront être sorties immédiatement. Un approvisionnement sera nécessaire pour le reliquat.
+          </p>
+        </div>
+
+        <p class="text-slate-800 font-bold text-center pt-1 text-xs">
+          Voulez-vous vraiment continuer vers le Bon de Sortie ?
+        </p>
+      </div>
+
+      <!-- Boutons d'action -->
+      <div class="px-6 py-4 bg-slate-50 border-t border-oas-line flex items-center justify-end gap-3">
+        <button type="button" (click)="annulerRuptureModal()"
+          class="px-4 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold transition cursor-pointer">
+          Annuler
+        </button>
+
+        <button type="button" (click)="confirmerEtPasserAuBonSortie()"
+          [disabled]="advancing"
+          class="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-sm transition disabled:opacity-50 cursor-pointer">
+          @if (advancing) {
+            <div class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <span>En cours...</span>
+          } @else {
+            <span>Oui, continuer quand même</span>
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+          }
+        </button>
+      </div>
+
+    </div>
+  </div>
+}

@@ -10,6 +10,9 @@ import { VehiculeService } from '../vehicules/vehicule.service';
 import { PieceDetacheeService } from '../pieces-detachees/piece-detachee.service';
 import { MainDoeuvreService } from '../main-doeuvre/main-doeuvre.service';
 import { OrdreReparationService } from '../ordres-reparation/ordre-reparation.service';
+import { OrdreTravailService } from '../ordres-travail/ordre-travail.service';
+import { ProformaService } from '../proforma/proforma.service';
+import { Proforma } from '../proforma/models/proforma.model';
 import { AuthService } from '../../core/services/auth.service';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
@@ -25,6 +28,12 @@ export interface LignePieceBS {
   designation: string;
   quantite: number;
   prix?: number | null;
+  tauxRemise?: number;
+  horsProforma?: boolean;
+  dejaSortieProforma?: boolean;
+  depassementProforma?: boolean;
+  qteProforma?: number;
+  dejaSortie?: number;
 }
 
 type TypePieceBS = 'PDP' | 'PDG';
@@ -66,7 +75,7 @@ export interface LigneDetailStockValidation {
   templateUrl: './bons-de-sortie.component.html',
 })
 export class BonsDeSortieComponent extends BasePaginatedComponent implements OnInit {
-  private cdr = inject(ChangeDetectorRef);
+  cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -76,7 +85,14 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
   private pieceService = inject(PieceDetacheeService);
   private mainDoeuvreService = inject(MainDoeuvreService);
   private ordreReparationService = inject(OrdreReparationService);
+  private proformaService = inject(ProformaService);
+  private otService = inject(OrdreTravailService);
   private authService = inject(AuthService);
+
+  proformaContexte: Proforma | null = null;
+  piecesProformaSet = new Set<string>();
+  quantitesProforma = new Map<string, number>();
+  remisesProforma = new Map<string, number>();
 
   bons: BonDeSortie[] = [];
   filtered: BonDeSortie[] = [];
@@ -273,15 +289,47 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     return val != null && val !== ('' as any) && !isNaN(Number(val)) ? Number(val) : null;
   }
 
+  montantLignePieceNet(ligne: LignePieceBS): number {
+    const brut = (Number(ligne.quantite) || 0) * (Number(ligne.prix) || 0);
+    return this.arrondirMontant(brut * (1 - this.tauxRemiseLigne(ligne.tauxRemise) / 100));
+  }
+
+  montantRemisePiece(ligne: LignePieceBS): number {
+    return this.arrondirMontant((Number(ligne.quantite) || 0) * (Number(ligne.prix) || 0) - this.montantLignePieceNet(ligne));
+  }
+
+  tauxRemiseLigne(taux: number | undefined): number {
+    const valeur = Number(taux) || 0;
+    return Math.max(0, Math.min(100, valeur));
+  }
+
+  arrondirMontant(montant: number): number {
+    return Math.round((montant + Number.EPSILON) * 100) / 100;
+  }
+
+  fmt(val: number | null | undefined): string {
+    if (val == null) return '0';
+    return Math.round(val).toLocaleString('fr-FR');
+  }
+
+  onRemiseGeneraleChange(): void {
+    this.cdr.markForCheck();
+  }
+
   get totalPdp(): number {
-    return this.lignesPiecesPdp.reduce((sum, l) => {
-      const price = Number(l.prix) || 0;
-      return sum + (price * (Number(l.quantite) || 0));
-    }, 0);
+    return this.lignesPdp.reduce((sum, l) => sum + this.montantLignePieceNet(l), 0);
   }
 
   get totalGeneral(): number {
-    return this.totalPdp;
+    return this.lignesPieces.reduce((sum, l) => sum + this.montantLignePieceNet(l), 0);
+  }
+
+  get totalBrut(): number {
+    return this.lignesPieces.reduce((sum, l) => sum + ((Number(l.quantite) || 0) * (Number(l.prix) || 0)), 0);
+  }
+
+  get totalRemise(): number {
+    return this.lignesPieces.reduce((sum, l) => sum + this.montantRemisePiece(l), 0);
   }
 
   formatPiece = (p: PieceDetache) => {
@@ -330,6 +378,101 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     }
   }
 
+  getPieceStatusInfo(
+    type: TypePieceBS | 'PDS' | 'MAIN_DOEUVRE',
+    piece: PieceDetache | null | undefined,
+    designation: string,
+    quantiteSaisie: number
+  ): {
+    isHorsProforma: boolean;
+    isDejaSortiComplet: boolean;
+    isDepassement: boolean;
+    qteProforma: number;
+    dejaSorti: number;
+    message: string;
+  } {
+    if (!this.contextOrdreReparationId && !this.contextOrdreTravailId) {
+      return { isHorsProforma: false, isDejaSortiComplet: false, isDepassement: false, qteProforma: 0, dejaSorti: 0, message: '' };
+    }
+
+    const key = type === 'MAIN_DOEUVRE' && piece?.id
+      ? `mo:${piece.id}`
+      : piece?.id
+        ? `piece:${piece.id}`
+        : `pds:${(designation || '').trim().toLowerCase()}`;
+
+    const hasProformaData = this.piecesProformaSet.size > 0 || this.quantitesPrevues.size > 0;
+    const isDansProforma = this.piecesProformaSet.has(key) || this.quantitesPrevues.has(key);
+
+    if (hasProformaData && !isDansProforma) {
+      return {
+        isHorsProforma: true,
+        isDejaSortiComplet: false,
+        isDepassement: false,
+        qteProforma: 0,
+        dejaSorti: 0,
+        message: 'Cette pièce n\'est pas dans le proforma validé pour cet ordre.'
+      };
+    }
+
+    const qteProforma = this.quantitesProforma.get(key) ?? this.quantitesPrevues.get(key) ?? 0;
+    const dejaSorti = this.quantitesDejaSorties.get(key) ?? 0;
+    const dejaAjoute = this.lignesPieces
+      .filter(l => this.cleLigne(l) === key)
+      .reduce((sum, l) => sum + (Number(l.quantite) || 0), 0);
+
+    if (qteProforma > 0 && dejaSorti >= qteProforma) {
+      return {
+        isHorsProforma: false,
+        isDejaSortiComplet: true,
+        isDepassement: true,
+        qteProforma,
+        dejaSorti,
+        message: `Vous avez déjà sorti le nombre de pièces nécessaires qui était sur le proforma (${dejaSorti}/${qteProforma} sortie(s)).`
+      };
+    }
+
+    if (qteProforma > 0 && (dejaSorti + dejaAjoute + quantiteSaisie) > qteProforma) {
+      return {
+        isHorsProforma: false,
+        isDejaSortiComplet: false,
+        isDepassement: true,
+        qteProforma,
+        dejaSorti,
+        message: `Attention : cette quantité (${dejaSorti + dejaAjoute + quantiteSaisie}) dépasse les ${qteProforma} pièce(s) prévue(s) sur le proforma (déjà sorti : ${dejaSorti}).`
+      };
+    }
+
+    return { isHorsProforma: false, isDejaSortiComplet: false, isDepassement: false, qteProforma, dejaSorti, message: '' };
+  }
+
+  get infoPiecePdpSelectionnee() {
+    if (!this.piecePdpAjouter) return null;
+    const p = this.findSelectedPiece('PDP');
+    if (!p) return null;
+    return this.getPieceStatusInfo('PDP', p, p.designation, Number(this.qteAjouterPdp) || 1);
+  }
+
+  get infoPiecePdgSelectionnee() {
+    if (!this.piecePdgAjouter) return null;
+    const p = this.findSelectedPiece('PDG');
+    if (!p) return null;
+    return this.getPieceStatusInfo('PDG', p, p.designation, Number(this.qteAjouterPdg) || 1);
+  }
+
+  get infoPiecePdsSaisie() {
+    if (!this.piecePdsDesignationAjouter || !this.piecePdsDesignationAjouter.trim()) return null;
+    return this.getPieceStatusInfo('PDS', null, this.piecePdsDesignationAjouter, Number(this.qteAjouterPds) || 1);
+  }
+
+  get hasLignesHorsProforma(): boolean {
+    return this.lignesPieces.some(l => l.horsProforma);
+  }
+
+  get hasLignesDepassementProforma(): boolean {
+    return this.lignesPieces.some(l => l.depassementProforma || l.dejaSortieProforma);
+  }
+
   addPiecePdp(type: TypePieceBS): void {
     this.errorMessage = '';
     const selectedId = type === 'PDP' ? this.piecePdpAjouter : this.piecePdgAjouter;
@@ -351,7 +494,22 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
       return;
     }
     const prix = prixSaisi != null && prixSaisi !== ('' as any) ? Number(prixSaisi) : (this.getPiecePrice(piece) ?? 0);
-    this.lignesPieces.push({ type, piece, designation: piece.designation, quantite: qteDemandee, prix });
+    const info = this.getPieceStatusInfo(type, piece, piece.designation, qteDemandee);
+    const remiseKey = piece ? `piece:${piece.id}` : '';
+    const tauxRemise = this.remisesProforma.get(remiseKey) ?? 0;
+    this.lignesPieces.push({
+      type,
+      piece,
+      designation: piece.designation,
+      quantite: qteDemandee,
+      prix,
+      tauxRemise,
+      horsProforma: info.isHorsProforma,
+      dejaSortieProforma: info.isDejaSortiComplet,
+      depassementProforma: info.isDepassement,
+      qteProforma: info.qteProforma,
+      dejaSortie: info.dejaSorti
+    });
 
     if (type === 'PDP') { this.piecePdpAjouter = null; this.qteAjouterPdp = 1; this.prixAjouterPdp = null; }
     else { this.piecePdgAjouter = null; this.qteAjouterPdg = 1; this.prixAjouterPdg = null; }
@@ -364,7 +522,21 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     const quantite = Number(this.qteAjouterPds) || 0;
     if (!designation) { this.errorMessage = 'Renseignez la désignation de la pièce PDS.'; return; }
     if (quantite <= 0) { this.errorMessage = 'La quantité doit être supérieure à zéro.'; return; }
-    this.lignesPieces.push({ type: 'PDS', designation, quantite, prix: Number(this.prixAjouterPds) || 0 });
+    const info = this.getPieceStatusInfo('PDS', null, designation, quantite);
+    const remiseKey = `pds:${designation.toLowerCase()}`;
+    const tauxRemise = this.remisesProforma.get(remiseKey) ?? 0;
+    this.lignesPieces.push({
+      type: 'PDS',
+      designation,
+      quantite,
+      prix: Number(this.prixAjouterPds) || 0,
+      tauxRemise,
+      horsProforma: info.isHorsProforma,
+      dejaSortieProforma: info.isDejaSortiComplet,
+      depassementProforma: info.isDepassement,
+      qteProforma: info.qteProforma,
+      dejaSortie: info.dejaSorti
+    });
     this.piecePdsDesignationAjouter = '';
     this.qteAjouterPds = 1;
     this.prixAjouterPds = null;
@@ -377,7 +549,22 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     const mo = this.mainDoeuvres.find(item => item.id === Number(this.mainDoeuvreAjouter));
     if (!mo) { this.errorMessage = 'Sélectionnez une main-d’œuvre.'; return; }
     if (qte <= 0) { this.errorMessage = 'Le nombre d’heures doit être supérieur à zéro.'; return; }
-    this.lignesPieces.push({ type: 'MAIN_DOEUVRE', mainDoeuvre: mo, designation: mo.description, quantite: qte, prix: Number(this.prixAjouterMO ?? mo.prix) });
+    const info = this.getPieceStatusInfo('MAIN_DOEUVRE', mo as any, mo.description, qte);
+    const remiseKey = `mo:${mo.id}`;
+    const tauxRemise = this.remisesProforma.get(remiseKey) ?? 0;
+    this.lignesPieces.push({
+      type: 'MAIN_DOEUVRE',
+      mainDoeuvre: mo,
+      designation: mo.description,
+      quantite: qte,
+      prix: Number(this.prixAjouterMO ?? mo.prix),
+      tauxRemise,
+      horsProforma: info.isHorsProforma,
+      dejaSortieProforma: info.isDejaSortiComplet,
+      depassementProforma: info.isDepassement,
+      qteProforma: info.qteProforma,
+      dejaSortie: info.dejaSorti
+    });
     this.mainDoeuvreAjouter = null;
     this.qteAjouterMO = 1;
     this.prixAjouterMO = null;
@@ -385,22 +572,45 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
   }
 
   onLineQteChange(l: LignePieceBS) {
-    if (l.type !== 'PDP' || !l.piece) { this.errorMessage = Number(l.quantite) > 0 ? '' : 'La quantité doit être supérieure à zéro.'; return; }
-    const stock = l.piece.stockMagasin ?? 0;
-    const qte = Number(l.quantite) || 0;
-    if (qte > stock) {
-      this.errorMessage = `Attention : la quantité pour "${l.designation}" (${qte}) dépasse le stock magasin disponible (${stock}).`;
-    } else if (qte <= 0) {
-      this.errorMessage = `La quantité pour "${l.designation}" doit être au moins de 1.`;
+    if (l.type !== 'PDP' || !l.piece) {
+      this.errorMessage = Number(l.quantite) > 0 ? '' : 'La quantité doit être supérieure à zéro.';
     } else {
-      this.errorMessage = '';
+      const stock = l.piece.stockMagasin ?? 0;
+      const qte = Number(l.quantite) || 0;
+      if (qte > stock) {
+        this.errorMessage = `Attention : la quantité pour "${l.designation}" (${qte}) dépasse le stock magasin disponible (${stock}).`;
+      } else if (qte <= 0) {
+        this.errorMessage = `La quantité pour "${l.designation}" doit être au moins de 1.`;
+      } else {
+        this.errorMessage = '';
+      }
     }
+
+    const info = this.getPieceStatusInfo(l.type, l.piece, l.designation, Number(l.quantite) || 0);
+    l.horsProforma = info.isHorsProforma;
+    l.dejaSortieProforma = info.isDejaSortiComplet;
+    l.depassementProforma = info.isDepassement;
+    l.qteProforma = info.qteProforma;
+    l.dejaSortie = info.dejaSorti;
     this.cdr.markForCheck();
+  }
+
+  incrementPiece(l: LignePieceBS): void {
+    l.quantite = (Number(l.quantite) || 0) + 1;
+    this.onLineQteChange(l);
+  }
+
+  decrementPiece(l: LignePieceBS): void {
+    if ((Number(l.quantite) || 0) > 1) {
+      l.quantite = (Number(l.quantite) || 0) - 1;
+      this.onLineQteChange(l);
+    }
   }
 
   removePiece(item: LignePieceBS) {
     this.lignesPieces = this.lignesPieces.filter(l => l !== item);
     this.errorMessage = '';
+    this.cdr.markForCheck();
   }
 
   loadClients(keyword: string = '') {
@@ -458,6 +668,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     this.form.patchValue({ vehiculeId: v.id });
     this.vehiculeFilter = '';
     this.vehiculeOpen = false;
+    this.cdr.markForCheck();
   }
 
   // ── Lifecycle ───────────────────────────────────────────────────
@@ -551,6 +762,9 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     this.returnToContext = context['returnTo'] || null;
     this.quantitesPrevues.clear();
     this.quantitesDejaSorties.clear();
+    this.piecesProformaSet.clear();
+    this.quantitesProforma.clear();
+    this.proformaContexte = null;
     this.chargementsContexteEnCours = 0;
     this.chargementQuantitesOR = false;
     this.qteAjouterPdp = 1;
@@ -574,7 +788,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     this.loadPdpPieces('', 'PDG');
     this.loadMainDoeuvres();
     if (this.contextOrdreReparationId) {
-      this.chargementsContexteEnCours = 2;
+      this.chargementsContexteEnCours = 3;
       this.chargementQuantitesOR = true;
       this.ordreReparationService.getById(this.contextOrdreReparationId).pipe(finalize(() => this.finChargementContexte())).subscribe({
         next: ordre => {
@@ -604,6 +818,40 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
         },
         error: () => { this.errorMessage = 'Impossible de charger les quantités prévues sur l’ordre de réparation.'; this.cdr.markForCheck(); }
       });
+      // Chargement de la proforma associée à l'ordre de réparation
+      this.proformaService.getByOrdreReparationId(this.contextOrdreReparationId).pipe(finalize(() => this.finChargementContexte())).subscribe({
+        next: proforma => {
+          this.proformaContexte = proforma;
+          for (const ligne of proforma.lignesPieces ?? []) {
+            const key = ligne.pieceId
+              ? `piece:${ligne.pieceId}`
+              : (ligne.piece?.id ? `piece:${ligne.piece.id}` : `pds:${(ligne.designationPds || ligne.designationPiece || '').trim().toLowerCase()}`);
+            this.piecesProformaSet.add(key);
+            this.quantitesProforma.set(key, (this.quantitesProforma.get(key) ?? 0) + (ligne.quantite || 0));
+            if (!this.quantitesPrevues.has(key)) {
+              this.quantitesPrevues.set(key, ligne.quantite || 0);
+            }
+            if (ligne.tauxRemise != null) {
+              this.remisesProforma.set(key, Number(ligne.tauxRemise) || 0);
+            }
+          }
+          for (const ligne of proforma.lignesMainDoeuvres ?? []) {
+            if (ligne.mainDoeuvreId) {
+              const key = `mo:${ligne.mainDoeuvreId}`;
+              this.piecesProformaSet.add(key);
+              this.quantitesProforma.set(key, (this.quantitesProforma.get(key) ?? 0) + (ligne.nbreHeure || 0));
+              if (!this.quantitesPrevues.has(key)) {
+                this.quantitesPrevues.set(key, ligne.nbreHeure || 0);
+              }
+              if (ligne.tauxRemise != null) {
+                this.remisesProforma.set(key, Number(ligne.tauxRemise) || 0);
+              }
+            }
+          }
+          this.cdr.markForCheck();
+        },
+        error: () => {}
+      });
       if (!this.contextOrdreTravailId) {
         this.ordreReparationService.getStepOrdreTravail(this.contextOrdreReparationId).subscribe({
           next: stepOt => {
@@ -627,6 +875,24 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
           this.cdr.markForCheck();
         },
         error: () => { this.errorMessage = 'Impossible de charger les quantités déjà sorties pour cet ordre.'; this.cdr.markForCheck(); }
+      });
+    }
+    if (this.contextOrdreTravailId) {
+      this.otService.getStepBonSortie(this.contextOrdreTravailId).subscribe({
+        next: step => {
+          for (const p of step.piecesManquantesProforma ?? []) {
+            const key = p.pieceId
+              ? `piece:${p.pieceId}`
+              : `pds:${(p.designation || '').trim().toLowerCase()}`;
+            this.piecesProformaSet.add(key);
+            this.quantitesProforma.set(key, (this.quantitesProforma.get(key) ?? 0) + (p.quantiteDemandee || 0));
+            if (!this.quantitesPrevues.has(key)) {
+              this.quantitesPrevues.set(key, p.quantiteDemandee || 0);
+            }
+          }
+          this.cdr.markForCheck();
+        },
+        error: () => {}
       });
     }
     if (context['clientId']) {
@@ -676,62 +942,105 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     this.vehiculeOpen = false;
     this.clientFilter = '';
     this.vehiculeFilter = '';
+    this.piecesProformaSet.clear();
+    this.quantitesProforma.clear();
+    this.remisesProforma.clear();
+    this.proformaContexte = null;
     this.cdr.markForCheck();
     this.cdr.detectChanges();
   }
 
+  scrollToModalTop(): void {
+    try {
+      const el = document.getElementById('modal-bs-body');
+      if (el) {
+        el.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } catch {}
+  }
+
   save() {
+    this.errorMessage = '';
     const val = this.form.value as any;
     const ordreTravailId = this.contextOrdreTravailId;
     const ordreReparationId = this.contextOrdreReparationId;
     const returnToContext = this.returnToContext;
-    const lignesPieces = this.lignesPieces.map(l => {
-      return {
-        pieceId: l.piece?.id ?? null,
-        mainDoeuvreId: l.mainDoeuvre?.id ?? null,
-        type: l.type,
-        designation: l.designation,
-        quantite: Number(l.quantite) || 1,
-        prix: Number(l.prix) || 0,
-        prixUnitaire: Number(l.prix) || 0
-      };
-    });
 
-    if (lignesPieces.length === 0) {
-      this.errorMessage = 'Ajoutez au moins une pièce ou une main-d’œuvre.';
+    if (!val.clientId || this.form.get('clientId')?.invalid) {
+      this.errorMessage = 'Veuillez sélectionner un client obligatoire.';
+      this.form.get('clientId')?.markAsTouched();
+      this.scrollToModalTop();
+      this.cdr.markForCheck();
       return;
     }
+
+    if (!val.vehiculeId || this.form.get('vehiculeId')?.invalid) {
+      this.errorMessage = 'Veuillez sélectionner un véhicule obligatoire pour ce bon de sortie.';
+      this.form.get('vehiculeId')?.markAsTouched();
+      this.scrollToModalTop();
+      this.cdr.markForCheck();
+      return;
+    }
+
+    if (this.lignesPieces.length === 0) {
+      this.errorMessage = 'Ajoutez au moins une pièce ou une main-d’œuvre.';
+      this.cdr.markForCheck();
+      return;
+    }
+
+    const piecesOnly = this.lignesPieces.filter(l => l.type !== 'MAIN_DOEUVRE');
+    const moOnly = this.lignesPieces.filter(l => l.type === 'MAIN_DOEUVRE');
 
     const depassement = this.lignesPieces.find(l => l.type === 'PDP' && l.piece && (Number(l.quantite) || 0) > (l.piece.stockMagasin ?? 0));
     if (depassement) {
       this.errorMessage = `La quantité pour "${depassement.designation}" (${depassement.quantite}) dépasse le stock magasin disponible (${depassement.piece?.stockMagasin ?? 0}).`;
+      this.cdr.markForCheck();
       return;
     }
 
     const quantiteInvalide = this.lignesPieces.find(l => (Number(l.quantite) || 0) <= 0);
     if (quantiteInvalide) {
       this.errorMessage = `La quantité pour "${quantiteInvalide.designation}" doit être supérieure à 0.`;
+      this.cdr.markForCheck();
       return;
     }
 
-    if (this.form.get('clientId')!.invalid || this.form.get('vehiculeId')!.invalid || this.saving) {
-      this.form.markAllAsTouched();
-      return;
-    }
+    if (this.saving) return;
     this.saving = true;
     this.cdr.markForCheck();
 
+    const lignesPiecesPayload = piecesOnly.map(l => ({
+      pieceId: l.piece?.id ?? null,
+      type: l.type as 'PDP' | 'PDG' | 'PDS',
+      designation: l.designation,
+      quantite: Number(l.quantite) || 1,
+      prix: Number(l.prix) || 0,
+      prixUnitaire: Number(l.prix) || 0,
+      tauxRemise: Number(l.tauxRemise) || 0
+    }));
+
+    const lignesMainDoeuvresPayload = moOnly.map(l => ({
+      mainDoeuvreId: l.mainDoeuvre?.id ?? null,
+      designation: l.designation,
+      nbreHeure: Number(l.quantite) || 1,
+      quantite: Number(l.quantite) || 1,
+      tarifHoraire: Number(l.prix) || 0,
+      prix: Number(l.prix) || 0,
+      tauxRemise: Number(l.tauxRemise) || 0
+    }));
+
     this.bonService.creer({
-      clientId: val.clientId,
-      vehiculeId: val.vehiculeId,
-      ordreReparationId: ordreReparationId ?? undefined,
-      ordreTravailId: ordreTravailId ?? undefined,
-      remarque: val.remarque,
-      lignesPieces
+      clientId: Number(val.clientId),
+      vehiculeId: Number(val.vehiculeId),
+      ordreReparationId: ordreReparationId ? Number(ordreReparationId) : undefined,
+      ordreTravailId: ordreTravailId ? Number(ordreTravailId) : undefined,
+      remarque: val.remarque || '',
+      lignesPieces: lignesPiecesPayload,
+      lignesMainDoeuvres: lignesMainDoeuvresPayload
     } as any).subscribe({
       next: () => {
         this.saving = false;
-        this.showSuccess('Bon de sortie créé !');
+        this.showSuccess('Bon de sortie créé avec succès !');
         this.closeCreate();
         if (returnToContext === 'proforma') {
           this.router.navigate(['/app/proforma']);
@@ -749,8 +1058,13 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
       },
       error: (err: any) => {
         this.saving = false;
-        const msg = err.error?.message ?? (typeof err.error === 'string' ? err.error : '');
-        this.errorMessage = msg || 'Erreur lors de la création.';
+        const msg = err.error?.message
+          || (Array.isArray(err.error?.errors) ? err.error.errors.map((e: any) => e.defaultMessage || e.message).join(', ') : null)
+          || (typeof err.error === 'string' ? err.error : null)
+          || err.message
+          || 'Erreur lors de la création du bon de sortie.';
+        this.errorMessage = msg;
+        this.scrollToModalTop();
         this.cdr.markForCheck();
         this.cdr.detectChanges();
       }

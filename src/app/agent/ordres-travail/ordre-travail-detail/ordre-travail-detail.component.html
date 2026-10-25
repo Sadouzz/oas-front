@@ -1,7 +1,7 @@
 <div class="space-y-6 pb-12">
 
   <!-- En-tête de la page -->
-  <div class="bg-white border border-oas-line rounded-2xl shadow-xs px-6 py-5 flex flex-wrap items-center justify-between gap-4">
+  <div class="bg-white border border-oas-line rounded-2xl shadow-xs px-6 py-5 flex flex-wrap items-center justify-between gap-4 print:hidden">
     <div class="flex items-center gap-4">
       <a routerLink="/app/ordres-travail"
         class="w-10 h-10 rounded-xl border border-oas-line hover:bg-oas-bg flex items-center justify-center text-oas-muted hover:text-oas-ink transition cursor-pointer shadow-2xs">
@@ -63,7 +63,7 @@
   <app-alert [error]="errorMessage"></app-alert>
 
   <!-- Stepper de progression (4 étapes) -->
-  <div class="bg-white rounded-2xl border border-oas-line p-5 shadow-xs overflow-x-auto">
+  <div class="bg-white rounded-2xl border border-oas-line p-5 shadow-xs overflow-x-auto print:hidden">
     <div class="flex items-center min-w-[500px]">
       @for (step of statutSteps; track step.path; let i = $index) {
         @let stepNumber = step.etape;
@@ -107,7 +107,7 @@
   </div>
 
   <!-- Contenu actif via Router-Outlet -->
-  <div class="bg-white rounded-2xl border border-oas-line p-6 shadow-xs">
+  <div class="bg-white rounded-2xl border border-oas-line p-6 shadow-xs print:p-0 print:border-none print:shadow-none print:bg-transparent">
     <router-outlet (activate)="onActivate($event)"></router-outlet>
   </div>
 

@@ -270,7 +270,22 @@
     <section class="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl" (click)="$event.stopPropagation()">
       <header class="mb-4 flex items-center justify-between"><div><h3 class="text-lg font-black">{{ selectedBonDetail.reference }}</h3><p class="text-xs text-oas-muted">Détail du bon de sortie</p></div><button type="button" (click)="selectedBonDetail = null" class="rounded-lg px-3 py-2 hover:bg-oas-bg" aria-label="Fermer">✕</button></header>
       <table class="w-full text-sm"><thead class="bg-oas-bg text-xs uppercase text-oas-muted"><tr><th class="px-3 py-2 text-left">Type</th><th class="px-3 py-2 text-left">Désignation</th><th class="px-3 py-2 text-right">Quantité / heures</th><th class="px-3 py-2 text-right">Prix unit.</th><th class="px-3 py-2 text-right">Total</th></tr></thead><tbody class="divide-y divide-oas-line">
-        @for (ligne of selectedBonDetail.lignesBonDeSortiePieces || []; track ligne.id) {<tr><td class="px-3 py-2">{{ ligne.type || 'PDP' }}</td><td class="px-3 py-2">{{ ligne.designation || ligne.piece?.designation || '—' }}</td><td class="px-3 py-2 text-right">{{ ligne.quantite }}</td><td class="px-3 py-2 text-right">{{ ligne.prix || 0 | number }} FCFA</td><td class="px-3 py-2 text-right">{{ ((ligne.prix || 0) * ligne.quantite) | number }} FCFA</td></tr>}
+        @for (ligne of selectedBonDetail.lignesBonDeSortiePieces || []; track ligne.id) {
+          <tr>
+            <td class="px-3 py-2 font-bold">{{ ligne.type || 'PDP' }}</td>
+            <td class="px-3 py-2">
+              <div class="font-medium text-oas-ink">{{ ligne.designation || ligne.piece?.designation || '—' }}</div>
+              @if (ligne.type !== 'MAIN_DOEUVRE' && !isPieceDansProforma(ligne)) {
+                <span class="inline-flex items-center gap-1 mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                  Non prévue au proforma
+                </span>
+              }
+            </td>
+            <td class="px-3 py-2 text-right">{{ ligne.quantite }}</td>
+            <td class="px-3 py-2 text-right">{{ ligne.prix || 0 | number }} FCFA</td>
+            <td class="px-3 py-2 text-right">{{ ((ligne.prix || 0) * ligne.quantite) | number }} FCFA</td>
+          </tr>
+        }
       </tbody></table>
       <div class="mt-4 rounded-xl bg-oas-bg p-4 text-sm"><p class="font-black">Total : {{ selectedBonDetail.montantTotal || 0 | number }} FCFA</p></div>
       @if (canValidateBonDeSortie && selectedBonDetail.statut === 'EN_ATTENTE') {<button type="button" (click)="fullBonDeSortie = selectedBonDetail; openValidateModal()" class="mt-4 rounded-lg bg-oas-accent px-4 py-2 text-sm font-bold text-white">Valider après réparation</button>}

@@ -37,6 +37,7 @@ export class BonDeSortieService {
       ordreReparationId: data.ordreReparationId,
       ordreTravailId: data.ordreTravailId,
       lignesPieces: data.lignesPieces,
+      lignesMainDoeuvres: data.lignesMainDoeuvres,
       remarque: data.remarque,
     });
   }

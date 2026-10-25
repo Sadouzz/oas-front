@@ -70,16 +70,27 @@ export interface BonDeSortieRequest {
   vehiculeId: number;
   ordreReparationId?: number;
   ordreTravailId?: number;
-  lignesPieces: {
+  lignesPieces?: {
     pieceId?: number | null;
     quantite: number;
     prix?: number | null;
     prixUnitaire?: number | null;
+    tauxRemise?: number | null;
     isCustom?: boolean;
     designationPds?: string;
     type?: 'PDP' | 'PDG' | 'PDS' | 'MAIN_DOEUVRE';
     mainDoeuvreId?: number | null;
     designation?: string;
   }[];
+  lignesMainDoeuvres?: {
+    mainDoeuvreId?: number | null;
+    nbreHeure?: number;
+    quantite?: number;
+    tarifHoraire?: number | null;
+    prix?: number | null;
+    tauxRemise?: number | null;
+    designation?: string;
+  }[];
   remarque?: string;
 }
+

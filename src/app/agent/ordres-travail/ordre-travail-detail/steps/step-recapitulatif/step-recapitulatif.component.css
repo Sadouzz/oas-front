@@ -1,0 +1,55 @@
+/* Styles spécifiques pour le récapitulatif OT et impression */
+
+@media print {
+  /* Cacher les éléments interactifs et navigation */
+  .print\\:hidden,
+  button,
+  .no-print,
+  nav,
+  aside,
+  header {
+    display: none !important;
+  }
+
+  /* Rendre visibles les blocs réservés à l'impression */
+  .print\\:block {
+    display: block !important;
+  }
+
+  .print\\:flex {
+    display: flex !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #111827 !important;
+    font-size: 11pt !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .document-print-card {
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 12px !important;
+  }
+
+  /* Tableaux d'impression */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  th, td {
+    padding: 6px 8px !important;
+    border: 1px solid #cbd5e1 !important;
+  }
+
+  th {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+    font-weight: 700 !important;
+  }
+}

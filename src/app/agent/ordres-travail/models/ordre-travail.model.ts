@@ -122,6 +122,19 @@ export interface StepRecapitulatifResponseDto extends StepBaseDto {
     }[];
   };
   piecesManquantesProforma?: PieceApprovisionnementDto[];
+  // Infos issues de l'OR d'origine
+  ordreReparation?: any;
+  travauxDemandes?: string | any[];
+  lignesTravaux?: any[];
+  descriptionTravaux?: string;
+  defautsConstates?: string | any[];
+  lignesDefauts?: any[];
+  listeDefauts?: string;
+  remarquesDiagnostic?: any[];
+  piecesJointesDiagnostic?: any[];
+  pannesDetectees?: string;
+  observationsDiagnostic?: string;
+  recommandationsDiagnostic?: string;
 }
 
 // Étape 2 : Approvisionnement

@@ -1,20 +1,30 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { OrdreTravailService } from '../../../ordre-travail.service';
 import { StepRecapitulatifResponseDto, StatutOrdreTravail, PieceApprovisionnementDto } from '../../../models/ordre-travail.model';
 import { AlertComponent } from '../../../../../shared/components/alert/alert.component';
+import { OrdreReparationService } from '../../../../ordres-reparation/ordre-reparation.service';
+import { DiagnosticService } from '../../../../diagnostics/diagnostic.service';
+import { OrdreReparation } from '../../../../ordres-reparation/models/ordre-reparation.model';
+import { StepDiagnosticResponseDto } from '../../../../ordres-reparation/models/responses/step-diagnostic-response.dto';
+import { DiagnosticResponse, PieceJointeDiagnostic, RemarqueDiagnostic } from '../../../../diagnostics/models/diagnostic.model';
 
 @Component({
   selector: 'app-step-recapitulatif',
   standalone: true,
-  imports: [CommonModule, AlertComponent],
-  templateUrl: './step-recapitulatif.component.html'
+  imports: [CommonModule, AlertComponent, DatePipe],
+  templateUrl: './step-recapitulatif.component.html',
+  styleUrls: ['./step-recapitulatif.component.css']
 })
 export class StepRecapitulatifComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private otService = inject(OrdreTravailService);
+  private ordreReparationService = inject(OrdreReparationService);
+  private diagnosticService = inject(DiagnosticService);
+  private sanitizer = inject(DomSanitizer);
   private cdr = inject(ChangeDetectorRef);
 
   otId!: number;
@@ -24,6 +34,19 @@ export class StepRecapitulatifComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
 
+  // Données issues de l'Ordre de Réparation lié
+  ordreReparation: OrdreReparation | null = null;
+  stepDiagnostic: StepDiagnosticResponseDto | null = null;
+  diagnosticFromService: DiagnosticResponse | null = null;
+  loadingOrData = false;
+
+  // Prévisualisation document (Lightbox modal)
+  selectedDocPreview: PieceJointeDiagnostic | null = null;
+  autoPrint = false;
+
+  // Modal de confirmation en cas de pièces manquantes (rupture)
+  showRuptureConfirmModal = false;
+
   ngOnInit(): void {
     const idParam = this.route.snapshot.paramMap.get('id') || this.route.parent?.snapshot.paramMap.get('id');
     if (!idParam) {
@@ -31,6 +54,11 @@ export class StepRecapitulatifComponent implements OnInit {
       return;
     }
     this.otId = +idParam;
+
+    if (this.route.snapshot.queryParamMap.get('print') === 'true') {
+      this.autoPrint = true;
+    }
+
     this.loadData();
   }
 
@@ -40,7 +68,14 @@ export class StepRecapitulatifComponent implements OnInit {
       next: (res) => {
         this.data = res;
         this.loading = false;
+        this.loadOrdreReparationData(res);
         this.cdr.markForCheck();
+
+        if (this.autoPrint) {
+          setTimeout(() => {
+            this.imprimer();
+          }, 600);
+        }
       },
       error: (err) => {
         this.loading = false;
@@ -50,9 +85,225 @@ export class StepRecapitulatifComponent implements OnInit {
     });
   }
 
+  loadOrdreReparationData(res: StepRecapitulatifResponseDto): void {
+    // Si l'OR est déjà embarqué dans la réponse
+    if ((res as any)?.ordreReparation && typeof (res as any).ordreReparation === 'object') {
+      this.ordreReparation = (res as any).ordreReparation;
+    }
+
+    const orId = res.ordreReparationId || (res as any)?.ordreReparation?.id;
+    if (orId) {
+      this.fetchOrDetails(orId);
+    } else {
+      // Fallback: chercher dans le summary de l'OT si l'ID n'était pas dans le step-recapitulatif
+      this.otService.getSummary(this.otId).subscribe({
+        next: (ot) => {
+          const fallbackOrId = ot.ordreReparationId || (ot as any)?.ordreReparation?.id;
+          if (fallbackOrId) {
+            this.fetchOrDetails(fallbackOrId);
+          }
+        }
+      });
+    }
+  }
+
+  fetchOrDetails(orId: number): void {
+    this.loadingOrData = true;
+
+    // 1. Récupération de l'OR complet (travaux demandés, défauts constatés, fiche atelier)
+    this.ordreReparationService.getById(orId).subscribe({
+      next: (ordre) => {
+        this.ordreReparation = ordre;
+        this.loadingOrData = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.loadingOrData = false;
+        this.cdr.markForCheck();
+      }
+    });
+
+    // 2. Récupération du diagnostic de l'OR (remarques techniciens, documents et photos)
+    this.ordreReparationService.getStepDiagnostic(orId).subscribe({
+      next: (diagDto) => {
+        this.stepDiagnostic = diagDto;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        // Fallback avec le diagnosticService direct
+        this.diagnosticService.getByOrdreReparationId(orId).subscribe({
+          next: (diagResp) => {
+            if (diagResp) {
+              this.diagnosticFromService = diagResp;
+              this.cdr.markForCheck();
+            }
+          }
+        });
+      }
+    });
+  }
+
+  // ─── Getters pour les Travaux demandés (issus de l'OR) ───────────
+
+  get travauxDemandesList(): { nom: string; verrouille?: boolean }[] {
+    const list = this.ordreReparation?.lignesTravaux ||
+      (this.ordreReparation?.ficheAtelier as any)?.lignesTravaux ||
+      (this.data as any)?.lignesTravaux ||
+      (this.data as any)?.travauxDemandes;
+    if (Array.isArray(list) && list.length > 0) {
+      return list;
+    }
+    return [];
+  }
+
+  get descriptionTravaux(): string {
+    return this.ordreReparation?.descriptionTravaux ||
+      (this.ordreReparation?.ficheAtelier as any)?.travauxDemandes ||
+      (this.data as any)?.descriptionTravaux ||
+      '';
+  }
+
+  get hasTravauxDemandes(): boolean {
+    return this.travauxDemandesList.length > 0 || !!(this.descriptionTravaux && this.descriptionTravaux.trim());
+  }
+
+  // ─── Getters pour les Défauts constatés (issus de l'OR) ─────────
+
+  get defautsConstatesList(): any[] {
+    const list = this.ordreReparation?.lignesDefauts ||
+      (this.ordreReparation?.ficheAtelier as any)?.lignesDefauts ||
+      (this.data as any)?.lignesDefauts ||
+      (this.data as any)?.defautsConstates;
+    if (Array.isArray(list) && list.length > 0) {
+      return list;
+    }
+    return [];
+  }
+
+  get texteDefautsConstates(): string {
+    return this.ordreReparation?.listeDefauts ||
+      this.stepDiagnostic?.listeDefauts ||
+      (this.ordreReparation?.ficheAtelier as any)?.listeDefauts ||
+      (this.data as any)?.listeDefauts ||
+      '';
+  }
+
+  get hasDefautsConstates(): boolean {
+    return this.defautsConstatesList.length > 0 || !!(this.texteDefautsConstates && this.texteDefautsConstates.trim());
+  }
+
+  // ─── Getters pour les Remarques & Observations Diagnostic ─────────
+
+  get remarquesDiagnosticList(): RemarqueDiagnostic[] {
+    const list = this.stepDiagnostic?.diagnostic?.remarques ||
+      this.ordreReparation?.diagnostic?.remarques ||
+      this.diagnosticFromService?.remarques ||
+      (this.data as any)?.remarquesDiagnostic;
+    if (Array.isArray(list) && list.length > 0) {
+      return list;
+    }
+    return [];
+  }
+
+  get pannesDetectees(): string {
+    return this.stepDiagnostic?.diagnostic?.pannesDetectees ||
+      this.ordreReparation?.diagnostic?.pannesDetectees ||
+      this.diagnosticFromService?.pannesDetectees ||
+      (this.data as any)?.pannesDetectees ||
+      '';
+  }
+
+  get observationsDiagnostic(): string {
+    return this.ordreReparation?.diagnostic?.observations ||
+      this.diagnosticFromService?.observations ||
+      (this.data as any)?.observationsDiagnostic ||
+      '';
+  }
+
+  get recommandationsDiagnostic(): string {
+    return this.ordreReparation?.diagnostic?.recommandations ||
+      this.diagnosticFromService?.recommandations ||
+      (this.data as any)?.recommandationsDiagnostic ||
+      '';
+  }
+
+  get hasDiagnosticInfo(): boolean {
+    return this.remarquesDiagnosticList.length > 0 ||
+      !!(this.pannesDetectees && this.pannesDetectees.trim()) ||
+      !!(this.observationsDiagnostic && this.observationsDiagnostic.trim()) ||
+      !!(this.recommandationsDiagnostic && this.recommandationsDiagnostic.trim());
+  }
+
+  // ─── Getters pour les Documents du diagnostic ───────────────────
+
+  get piecesJointesDiagnostic(): PieceJointeDiagnostic[] {
+    const list = this.stepDiagnostic?.diagnostic?.piecesJointes ||
+      this.ordreReparation?.diagnostic?.piecesJointes ||
+      this.diagnosticFromService?.piecesJointes ||
+      (this.data as any)?.piecesJointesDiagnostic;
+    if (Array.isArray(list) && list.length > 0) {
+      return list;
+    }
+    return [];
+  }
+
+  get hasDocsDiagnostic(): boolean {
+    return this.piecesJointesDiagnostic.length > 0;
+  }
+
+  // ─── Visualiseur / Modal Document ───────────────────────────────
+
+  openDocPreview(doc: PieceJointeDiagnostic): void {
+    this.selectedDocPreview = doc;
+    this.cdr.markForCheck();
+  }
+
+  closeDocPreview(): void {
+    this.selectedDocPreview = null;
+    this.cdr.markForCheck();
+  }
+
+  isImageDoc(doc?: PieceJointeDiagnostic | null): boolean {
+    if (!doc) return false;
+    if (doc.type === 'PHOTO') return true;
+    const url = (doc.url || '').toLowerCase();
+    return url.endsWith('.png') || url.endsWith('.jpg') || url.endsWith('.jpeg') || url.endsWith('.webp') || url.endsWith('.gif');
+  }
+
+  // ─── Impression de l'Ordre de Travail ───────────────────────────
+
+  getSafeUrl(url: string): SafeResourceUrl {
+    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+  }
+
+  imprimer(): void {
+    window.print();
+  }
+
+  get dateImpression(): Date {
+    return new Date();
+  }
+
+  get orNumeroDisplay(): string {
+    return this.data?.ordreReparationNumero ||
+      this.ordreReparation?.numero ||
+      (this.data?.ordreReparationId ? `OR #${this.data.ordreReparationId}` : '—');
+  }
+
+  // ─── Navigation et helpers existants ────────────────────────────
+
   continuerVersBonSortie(): void {
+    if (this.hasPiecesManquantes) {
+      this.showRuptureConfirmModal = true;
+      this.cdr.markForCheck();
+      return;
+    }
+    this.confirmerEtPasserAuBonSortie();
+  }
+
+  confirmerEtPasserAuBonSortie(): void {
+    this.showRuptureConfirmModal = false;
     this.advancing = true;
-    // Si l'OT est encore à l'étape RECAPITULATIF, on avance son statut vers BON_DE_SORTIE (étape 2)
     if (this.data?.statut === StatutOrdreTravail.RECAPITULATIF) {
       this.otService.updateStatut(this.otId, StatutOrdreTravail.BON_DE_SORTIE).subscribe({
         next: () => {
@@ -70,7 +321,11 @@ export class StepRecapitulatifComponent implements OnInit {
     }
   }
 
-  // Alias rétrocompatible
+  annulerRuptureModal(): void {
+    this.showRuptureConfirmModal = false;
+    this.cdr.markForCheck();
+  }
+
   continuerVersApprovisionnement(): void {
     this.continuerVersBonSortie();
   }

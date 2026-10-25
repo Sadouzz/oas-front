@@ -275,6 +275,21 @@ export class StepBonSortieComponent implements OnInit {
     return this.piecesRequises.length === 0 || this.bonsDeSortie.length > 0 || this.hasBonDeSortie();
   }
 
+  isPieceDansProforma(ligne: any): boolean {
+    if (!ligne) return false;
+    if (this.piecesRequises.length === 0) return false;
+    const pieceId = ligne.pieceId || ligne.piece?.id;
+    const designation = (ligne.designation || ligne.piece?.designation || '').trim().toLowerCase();
+    const reference = (ligne.reference || ligne.piece?.reference || '').trim().toLowerCase();
+
+    return this.piecesRequises.some(p => {
+      if (pieceId && p.pieceId && p.pieceId === pieceId) return true;
+      if (reference && p.reference && p.reference.trim().toLowerCase() === reference) return true;
+      if (designation && p.designation && p.designation.trim().toLowerCase() === designation) return true;
+      return false;
+    });
+  }
+
   // --- Création du Bon de Sortie ---
 
   creerBonDeSortie(): void {
