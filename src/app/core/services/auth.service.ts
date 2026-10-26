@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap, map, finalize, shareReplay } from 'rxjs';
+import { Observable, tap, map, finalize, shareReplay, from, firstValueFrom, catchError, timer, switchMap, throwError } from 'rxjs';
 import { jwtDecode } from 'jwt-decode';
 import { environment } from '../../../environments/environment';
 import { AuthResponse, LoginRequest, RegisterRequest, CheckAvailabilityResponse } from '../../shared/models';
@@ -122,7 +122,12 @@ export class AuthService {
   refreshToken(): Observable<AuthResponse> {
     if (this.refreshInFlight) return this.refreshInFlight;
 
-    this.refreshInFlight = this.http.post<any>(`${this.api}/refresh`, {}, { withCredentials: true }).pipe(
+    this.refreshInFlight = this.refreshRequest().pipe(
+      // Un autre onglet a pu faire tourner le cookie de refresh entre-temps : on réessaie une fois
+      // avec le cookie à jour avant de considérer la session comme invalide.
+      catchError(err => err?.status === 401
+        ? timer(300).pipe(switchMap(() => this.refreshRequest()))
+        : throwError(() => err)),
       map(res => (res && res.data) ? res.data : res),
       tap((response: AuthResponse) => {
         if (response && response.token) {
@@ -140,6 +145,17 @@ export class AuthService {
       shareReplay({ bufferSize: 1, refCount: false })
     );
     return this.refreshInFlight;
+  }
+
+  /**
+   * Le refresh token est à usage unique (rotation) et partagé entre tous les onglets via le cookie.
+   * Web Locks sérialise les renouvellements pour éviter que deux onglets envoient le même cookie
+   * simultanément (ce qui est rejeté en 401 puis déconnecte tout le monde).
+   */
+  private refreshRequest(): Observable<any> {
+    const call = () => firstValueFrom(this.http.post<any>(`${this.api}/refresh`, {}, { withCredentials: true }));
+    const locks = typeof navigator !== 'undefined' ? (navigator as any).locks : undefined;
+    return from(locks ? locks.request('oas-auth-refresh', call) : call());
   }
 
   register(data: RegisterRequest): Observable<void> {

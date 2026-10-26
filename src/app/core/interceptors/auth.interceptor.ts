@@ -39,12 +39,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
                                req.url.includes('/signout');
 
         if (isAuthEndpoint) {
-          if (req.url.includes('/refresh')) {
-            isRefreshing = false;
-            refreshTokenSubject.next(null);
-            authService.logout();
-            router.navigate(['/login'], { replaceUrl: true });
-          }
+          // Pour /refresh, AuthService réessaie une fois (rotation du cookie par un autre onglet);
+          // les appelants (initAuth, garde, handle401Error) gèrent la déconnexion finale.
           return throwError(() => error);
         }
 
