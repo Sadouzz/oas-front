@@ -17,7 +17,6 @@ import { BasePaginatedComponent } from '../../shared/components/base-paginated.c
 import { ProformaPrintComponent, montantEnLettresFCFA } from '../../shared/document-print';
 import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select.component';
 import { FiscalConfigurationService } from '../gestion-tva/fiscal-configuration.service';
-import { CompteFinancierResponse } from '../clients/models/client-model';
 
 export interface LignePieceFormItem {
   id?: number;
@@ -129,6 +128,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
     numeroBonDeCommande: [''],
     remarque: [''],
     tvaRate: [18],
+    appliquerTVA: [true],
     montantTimbre: [0],
     montantAutre: [0],
   });
@@ -641,6 +641,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
       montantTimbre: this.currentTimbreFiscal,
       montantAutre: 0,
       tvaRate: this.currentTvaRate,
+      appliquerTVA: true,
     });
     this.remiseClientLookupVersion++;
     this.remiseClientChargeePour = null;
@@ -729,6 +730,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
       numeroBonDeCommande: bcNum,
       remarque: p.remarque ?? '',
       tvaRate: p.tvaRate ?? p.tva ?? 18,
+      appliquerTVA: p.tvaApplicable ?? (Number(p.montantTVA) > 0),
       montantTimbre: p.montantTimbre ?? 0,
       montantAutre: p.montantAutre ?? 0,
     });
@@ -886,20 +888,18 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
     this.remiseClientErreur = '';
     const client = this.clients.find(c => c.id === clientId);
 
-    // Le serveur applique la remise compte uniquement aux entreprises fidèles
-    // dont le compte financier est actif. On reprend ces mêmes conditions ici.
-    if (!client || client.typeClient !== 'ENTREPRISE' || !client.clientFidele) {
+    if (client) {
+      this.remiseClientPourcentage = Math.max(0, Math.min(100, Number(client.montantRemise) || 0));
       this.remiseClientEnChargement = false;
+      this.cdr.markForCheck();
       return;
     }
 
     this.remiseClientEnChargement = true;
-    this.clientService.getCompteFinancier(clientId).subscribe({
-      next: (compte: CompteFinancierResponse) => {
+    this.clientService.getById(clientId).subscribe({
+      next: (clientDetail) => {
         if (version !== this.remiseClientLookupVersion || Number(this.form.get('clientId')?.value) !== clientId) return;
-        this.remiseClientPourcentage = compte.compteActif && compte.typeClient === 'ENTREPRISE'
-          ? Math.max(0, Math.min(100, Number(compte.remisePourcentage) || 0))
-          : 0;
+        this.remiseClientPourcentage = Math.max(0, Math.min(100, Number(clientDetail.montantRemise) || 0));
         this.remiseClientEnChargement = false;
         this.cdr.markForCheck();
       },
@@ -948,6 +948,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
       numeroBonDeCommande: raw.numeroBonDeCommande || undefined,
       remarque: raw.remarque || undefined,
       tvaRate: raw.tvaRate ? Number(raw.tvaRate) : 18,
+      appliquerTVA: raw.appliquerTVA !== false,
       montantTimbre: Number(raw.montantTimbre) || 0,
       montantAutre: Number(raw.montantAutre) || 0,
       lignesPieces: this.lignesPieces.map(l => ({
@@ -1202,7 +1203,9 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
   }
 
   get montantTVA(): number {
-    return this.arrondirMontant(this.totalHT * (this.tvaRate / 100));
+    return this.form.get('appliquerTVA')?.value === false
+      ? 0
+      : this.arrondirMontant(this.totalHT * (this.tvaRate / 100));
   }
 
   get totalTTC(): number {

@@ -954,6 +954,10 @@
       }
 
       <!-- Récapitulatif -->
+      <label class="mb-3 flex items-center gap-2 rounded-xl border border-oas-accent/30 bg-oas-accent/5 px-4 py-3 text-sm font-semibold text-oas-ink cursor-pointer">
+        <input type="checkbox" [(ngModel)]="appliquerTVA" [ngModelOptions]="{ standalone: true }" class="accent-oas-accent" />
+        Appliquer la TVA ({{ tvaRate }} %)
+      </label>
       <div class="bg-oas-bg rounded-2xl p-4 border border-oas-line flex flex-wrap items-center justify-between gap-4 text-sm">
         <div class="space-y-0.5">
           <p class="font-bold text-oas-ink text-xs uppercase tracking-wide">Récapitulatif</p>
@@ -970,6 +974,12 @@
           }
           <span class="text-xs text-oas-muted font-semibold uppercase block">Total après remise</span>
           <strong class="text-lg font-black text-oas-accent">{{ fmt(totalGeneral) }} FCFA</strong>
+          @if (appliquerTVA) {
+            <span class="block text-xs text-oas-muted">TVA : {{ fmt(montantTVAForm) }} FCFA</span>
+            <span class="block text-xs font-bold text-oas-ink">Total TTC : {{ fmt(montantTTCForm) }} FCFA</span>
+          } @else {
+            <span class="block text-xs text-oas-muted">TVA désactivée</span>
+          }
         </div>
       </div>
 
@@ -1210,6 +1220,10 @@
                 <td class="px-4 py-3 text-right text-sm font-black text-blue-700 whitespace-nowrap">{{ totalSelectedBon | number }} FCFA</td>
                 @if (selectedBon.statut === 'EN_ATTENTE') { <td></td> }
               </tr>
+              @if (selectedBon.tvaApplicable ?? ((selectedBon.montantTVA || 0) > 0)) {
+                <tr class="bg-white border-t border-blue-100"><td colspan="3" class="px-4 py-2 text-right text-xs text-oas-muted">TVA</td><td class="px-4 py-2 text-right text-sm">{{ (selectedBon.montantTVA || 0) | number }} FCFA</td>@if (selectedBon.statut === 'EN_ATTENTE') { <td></td> }</tr>
+                <tr class="bg-blue-50 border-t border-blue-100 font-bold"><td colspan="3" class="px-4 py-2 text-right text-xs text-oas-ink">Total TTC</td><td class="px-4 py-2 text-right text-sm">{{ (selectedBon.montantTTC ?? selectedBon.montantTotal ?? totalSelectedBon) | number }} FCFA</td>@if (selectedBon.statut === 'EN_ATTENTE') { <td></td> }</tr>
+              }
             </tfoot>
             }
           </table>

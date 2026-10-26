@@ -33,6 +33,7 @@ export interface Proforma {
   dateModification: string;
   montantHT: number;
   montantTVA: number;
+  tvaApplicable?: boolean | null;
   montantTTC: number;
   montantTimbre: number;
   montantAutre: number;
@@ -72,6 +73,7 @@ export interface ProformaRequest {
   numeroBonDeCommande?: string;
   remarque?: string;
   tvaRate?: number | null;
+  appliquerTVA?: boolean;
   montantTimbre?: number;
   montantAutre?: number;
   lignesPieces: {

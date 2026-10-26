@@ -280,9 +280,14 @@
               </div>
             }
             <div class="flex justify-between pt-1.5 border-t border-oas-line">
-              <span class="font-bold text-oas-ink">Total Net HT</span>
+              <span class="font-bold text-oas-ink">{{ (selectedNote.tvaApplicable ?? ((selectedNote.montantTVA || 0) > 0)) ? 'Total TTC' : 'Total HT net' }}</span>
               <span class="font-bold text-oas-accent text-base">{{ fmt(selectedNote.montantTotal) }} FCFA</span>
             </div>
+            @if (selectedNote.tvaApplicable ?? ((selectedNote.montantTVA || 0) > 0)) {
+              <div class="flex justify-between"><span class="text-oas-muted">TVA</span><span class="font-semibold">{{ fmt(selectedNote.montantTVA || 0) }} FCFA</span></div>
+            } @else {
+              <div class="flex justify-between"><span class="text-oas-muted">TVA</span><span class="font-semibold">Désactivée</span></div>
+            }
           </div>
 
           <!-- Actions -->
@@ -493,10 +498,11 @@
               <p class="text-xs text-oas-muted text-center py-4">Toutes les fiches de ce véhicule ont déjà une note de prix.</p>
             }
 
-            <!-- Note HT : Pas de taxes -->
-            <p class="text-xs text-oas-muted mt-4 bg-oas-bg rounded-lg px-3 py-2.5">
-              Note de prix en montant Hors Taxes (HT) : Aucun droit de timbre ni TVA appliqués.
-            </p>
+            <label class="mt-4 flex items-center gap-2 rounded-lg bg-oas-bg px-3 py-2.5 text-sm text-oas-ink">
+              <input type="checkbox" formControlName="appliquerTVA" class="accent-oas-accent" />
+              Appliquer la TVA selon la configuration fiscale du garage
+            </label>
+            <p class="text-xs text-oas-muted mt-1">Aucun droit de timbre n’est appliqué sur une note de prix.</p>
 
             <!-- Mode de paiement -->
             <div class="mt-4">

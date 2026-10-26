@@ -4,6 +4,7 @@ export interface AvoirTTC {
     dateCreation: string;
     montantHT: number;
     montantTVA: number;
+    tvaApplicable?: boolean | null;
     montantTTC: number;
     montantTimbre: number;
     montantTotal: number;

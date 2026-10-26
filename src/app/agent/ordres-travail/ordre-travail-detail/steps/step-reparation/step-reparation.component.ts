@@ -52,7 +52,7 @@ export class StepReparationComponent implements OnInit {
           now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
           this.dateFinReparation = now.toISOString().slice(0, 16);
         }
-        this.isReparationTerminee = res.statut === StatutOrdreTravail.TERMINE || (!!res.dateFinReparation && !!res.rapportReparation);
+        this.isReparationTerminee = res.statut === StatutOrdreTravail.TERMINE;
         this.loading = false;
         this.cdr.markForCheck();
       },
@@ -83,9 +83,12 @@ export class StepReparationComponent implements OnInit {
     };
 
     this.otService.updateStepReparation(this.otId, payload).subscribe({
-      next: () => {
+      next: (res) => {
         this.saving = false;
         this.isReparationTerminee = true;
+        if (this.data) {
+          this.data = { ...this.data, avertissementsBonsDeSortie: res.avertissementsBonsDeSortie ?? [] };
+        }
         this.successMessage = 'Rapport technique validé et Ordre de Travail marqué comme TERMINE avec succès ! Vous pouvez maintenant basculer sur l\'Ordre de Réparation pour le paiement et la livraison.';
         this.cdr.markForCheck();
       },

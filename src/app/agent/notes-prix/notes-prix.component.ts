@@ -72,6 +72,7 @@ export class NotesPrixComponent extends BasePaginatedComponent implements OnInit
     kilometrage: [null as number | null],
     remarque: [''],
     modePaiement: ['ESPECE', Validators.required],
+    appliquerTVA: [false],
   });
 
   ngOnInit() {
@@ -182,7 +183,7 @@ export class NotesPrixComponent extends BasePaginatedComponent implements OnInit
 
   openCreate() {
     if (!this.form.get('clientId')?.value) {
-      this.form.reset({ remarque: '', modePaiement: 'ESPECE' });
+      this.form.reset({ remarque: '', modePaiement: 'ESPECE', appliquerTVA: false });
       this.vehiculesFiltres = [];
       this.clientFilter = '';
       this.vehiculeFilter = '';
@@ -312,13 +313,14 @@ export class NotesPrixComponent extends BasePaginatedComponent implements OnInit
       kilometrage: val.kilometrage || null,
       remarque: val.remarque || null,
       modePaiement: val.modePaiement,
+      appliquerTVA: val.appliquerTVA === true,
     };
 
     this.service.create(request).subscribe({
       next: (res: any) => {
         this.saving = false;
         this.closeCreate();
-        this.form.reset({ remarque: '', modePaiement: 'ESPECE' });
+        this.form.reset({ remarque: '', modePaiement: 'ESPECE', appliquerTVA: false });
         this.createStep = 1;
         this.load();
         this.notify('Note de prix ' + (res.numero || '') + ' créée avec succès !');

@@ -249,7 +249,7 @@
           </div>
           <div class="flex justify-between">
             <span class="text-oas-muted">TVA</span>
-            <span class="font-semibold text-oas-ink">{{ fmt(selectedBon.montantTVA) }} FCFA</span>
+            <span class="font-semibold text-oas-ink">{{ selectedBon.tvaApplicable === false ? 'Désactivée' : fmt(selectedBon.montantTVA) + ' FCFA' }}</span>
           </div>
           <div class="flex justify-between">
             <span class="text-oas-muted">Timbre</span>

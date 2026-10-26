@@ -305,10 +305,14 @@
               <span class="text-oas-muted">Total HT après remises</span>
               <span class="font-semibold text-oas-ink">{{ fmt(selectedFacture.montantHT) }} FCFA</span>
             </div>
-            <div class="flex justify-between">
-              <span class="text-oas-muted">TVA</span>
-              <span class="font-semibold text-oas-ink">{{ fmt(selectedFacture.montantTVA) }} FCFA</span>
-            </div>
+            @if (selectedFacture.tvaApplicable ?? (selectedFacture.montantTVA > 0)) {
+              <div class="flex justify-between">
+                <span class="text-oas-muted">TVA</span>
+                <span class="font-semibold text-oas-ink">{{ fmt(selectedFacture.montantTVA) }} FCFA</span>
+              </div>
+            } @else {
+              <div class="flex justify-between text-xs text-oas-muted"><span>TVA</span><span>Désactivée pour ce document</span></div>
+            }
             @if (selectedFacture.montantTimbre > 0) {
               <div class="flex justify-between">
                 <span class="text-oas-muted">Timbre</span>
@@ -543,10 +547,11 @@
               <p class="text-xs text-oas-muted text-center py-4">Toutes les fiches de ce véhicule ont déjà une facture.</p>
             }
 
-            <!-- Les paramètres fiscaux globaux sont appliqués à la création. -->
-            <p class="text-xs text-oas-muted mt-4 bg-oas-bg rounded-lg px-3 py-2.5">
-              Les paramètres fiscaux globaux (TVA, timbre et taxes supplémentaires) sont appliqués automatiquement à l’émission.
-            </p>
+            <label class="mt-4 flex items-center gap-2.5 rounded-lg border border-oas-line bg-oas-bg px-3 py-3 cursor-pointer">
+              <input type="checkbox" formControlName="appliquerTVA" class="accent-oas-accent"/>
+              <span class="text-sm font-semibold text-oas-ink">Appliquer la TVA au taux fiscal configuré</span>
+            </label>
+            <p class="text-xs text-oas-muted">Le choix est enregistré sur la facture. Le timbre fiscal reste géré séparément par la configuration fiscale.</p>
 
             <!-- Mode de paiement -->
             <div class="mt-4">
@@ -626,9 +631,16 @@
           </div>
         </div>
 
+        @if (payMethode === 'SOLDE_PREPAYE') {
+          <div class="rounded-xl p-4 border" [class.bg-emerald-50]="walletBalance !== null && walletBalance >= payMontant" [class.border-emerald-200]="walletBalance !== null && walletBalance >= payMontant" [class.bg-amber-50]="walletBalance === null || walletBalance < payMontant" [class.border-amber-200]="walletBalance === null || walletBalance < payMontant">
+            <div class="flex justify-between text-sm"><span>Solde prépayé disponible</span><strong>{{ walletBalance === null ? 'Chargement…' : (fmt(walletBalance) + ' FCFA') }}</strong></div>
+            <p class="text-xs mt-1">Le solde ne sera débité que si le paiement est validé. Un montant inférieur permet un paiement partiel.</p>
+          </div>
+        }
+
         <div>
           <label class="block text-xs font-semibold text-oas-ink mb-1">Montant du paiement (FCFA)</label>
-          <input type="number" [(ngModel)]="payMontant" min="1" [max]="factureToPay.resteAPayer"
+          <input type="number" [(ngModel)]="payMontant" min="1" [max]="payMaxMontant"
                  class="w-full px-4 py-3 rounded-xl bg-white border border-oas-line text-oas-ink font-semibold focus:outline-none focus:border-oas-accent focus:ring-1 focus:ring-oas-accent transition"/>
         </div>
 
@@ -638,6 +650,7 @@
             <option value="ESPECE">Espèces</option>
             <option value="CHEQUE">Chèque</option>
             <option value="VIREMENT">Virement</option>
+            <option value="SOLDE_PREPAYE">Solde prépayé</option>
           </select>
         </div>
       </div>

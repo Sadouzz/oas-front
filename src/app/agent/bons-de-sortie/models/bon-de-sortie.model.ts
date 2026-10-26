@@ -65,6 +65,9 @@ export interface BonDeSortie {
   montantTotalPieces?: number;
   montantTotalMainDoeuvre?: number;
   montantTotal?: number;
+  tvaApplicable?: boolean | null;
+  montantTVA?: number;
+  montantTTC?: number;
   proformaId?: number | null;
   proformaNumero?: string | null;
 }
@@ -98,5 +101,6 @@ export interface BonDeSortieRequest {
     designation?: string;
   }[];
   remarque?: string;
+  appliquerTVA?: boolean;
 }
 

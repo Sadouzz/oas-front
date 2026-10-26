@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ClientModel, ClientListResponse, CreateClientPayload, UpdateClientPayload, FidelePayload, CompteFinancierPayload, CompteFinancierResponse, MouvementCreditResponse } from './models/client-model';
+import { ClientModel, ClientListResponse, CreateClientPayload, UpdateClientPayload, FidelePayload, CompteFinancierPayload, CompteFinancierResponse, PortefeuilleClientResponse } from './models/client-model';
 import { PageParams } from '../../shared/models';
 
 @Injectable({ providedIn: 'root' })
@@ -70,16 +70,20 @@ export class ClientService {
     return this.http.get<CompteFinancierResponse>(`${this.api}/${id}/compte-financier`);
   }
 
-  getMouvementsCredit(id: number): Observable<MouvementCreditResponse[]> {
-    return this.http.get<MouvementCreditResponse[]>(`${this.api}/${id}/compte-financier/mouvements`);
-  }
-
   configurerCompteFinancier(id: number, payload: CompteFinancierPayload): Observable<CompteFinancierResponse> {
     return this.http.put<CompteFinancierResponse>(`${this.api}/${id}/compte-financier`, payload);
   }
 
-  ajouterCredit(id: number, montant: number, commentaire?: string): Observable<CompteFinancierResponse> {
-    return this.http.post<CompteFinancierResponse>(`${this.api}/${id}/compte-financier/credits`, { montant, commentaire });
+  getPortefeuille(id: number): Observable<PortefeuilleClientResponse> {
+    return this.http.get<PortefeuilleClientResponse>(`${this.api}/${id}/portefeuille-prepaye`);
+  }
+
+  alimenterPortefeuille(id: number, payload: { montant: number; modePaiement?: string; commentaire?: string }): Observable<PortefeuilleClientResponse> {
+    return this.http.post<PortefeuilleClientResponse>(`${this.api}/${id}/portefeuille-prepaye/alimentations`, payload);
+  }
+
+  configurerRemise(id: number, montantRemise: number): Observable<ClientListResponse> {
+    return this.http.put<ClientListResponse>(`${this.api}/${id}/remise`, { montantRemise });
   }
 
   updateConditionsFinancieres(id: number, payload: { echeanceJours: number | null; plafondPeriode: number | null }): Observable<ClientModel> {

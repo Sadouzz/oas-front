@@ -5,6 +5,7 @@ export interface FactureModel {
   dateModification: string;
   montantHT: number;
   montantTVA: number;
+  tvaApplicable?: boolean | null;
   montantTTC: number;
   montantTimbre: number;
   montantAutre: number;
@@ -45,6 +46,7 @@ export interface FactureCreateRequest {
   montantTimbre?: number | null;
   montantAutre?: number | null;
   modePaiement: string;
+  appliquerTVA?: boolean;
   pdfTemplateId?: number | null;
   pdfLayoutKey?: 'AVEC_ENTETE' | 'SANS_ENTETE';
 }

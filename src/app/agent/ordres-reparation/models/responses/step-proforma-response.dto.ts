@@ -6,6 +6,7 @@ export interface StepProformaResponseDto extends BaseStepResponseDto {
     statut: string;
     montantHT?: number;
     montantTVA?: number;
+    tvaApplicable?: boolean | null;
     montantTTC?: number;
     montantTimbre?: number;
     montantTotal?: number;

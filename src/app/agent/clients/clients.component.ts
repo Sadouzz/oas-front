@@ -1,4 +1,5 @@
 import { ConfirmationService } from '../../shared/components/confirmation/confirmation.service';
+import { AuthService } from '../../core/services/auth.service';
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NgClass, DatePipe, DecimalPipe } from '@angular/common';
@@ -8,7 +9,7 @@ import { VehiculeService } from '../vehicules/vehicule.service';
 import { BonDeSortieService } from '../bons-de-sortie/bon-de-sortie.service';
 import { FactureService, FactureModel } from '../factures/facture.service';
 import { ClientModel, ClientListResponse, VehiculeModel, extractContent, PageParams } from '../../shared/models/index';
-import { CompteFinancierPayload, CompteFinancierResponse, MouvementCreditResponse } from './models/client-model';
+import { CompteFinancierPayload, CompteFinancierResponse, PortefeuilleClientResponse } from './models/client-model';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
@@ -23,6 +24,7 @@ import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, Lu
 })
 export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   private confirmation = inject(ConfirmationService);
+  private authService = inject(AuthService);
 
   private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
@@ -54,7 +56,11 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   showFideleModal = false;
   fideleClient: ClientListResponse | null = null;
   compteFinancier: CompteFinancierResponse | null = null;
-  mouvementsCredit: MouvementCreditResponse[] = [];
+  showRemiseModal = false;
+  remiseClient: ClientListResponse | null = null;
+  showPortefeuilleModal = false;
+  portefeuilleClient: ClientListResponse | null = null;
+  portefeuille: PortefeuilleClientResponse | null = null;
   showConditionsModal = false;
   conditionsClient: ClientListResponse | null = null;
   
@@ -120,14 +126,21 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   fideleForm = this.fb.group({
     raisonSociale: ['', Validators.required],
     ninea: ['', [Validators.required, Validators.pattern(/^[A-Za-z0-9]{3,40}$/)]],
-    remisePourcentage: [0 as number, [Validators.required, Validators.min(0), Validators.max(100)]],
-    echeance: [null as number | null, [Validators.min(1), Validators.max(3650)]],
-    montantPlafondEcheance: [null as number | null, Validators.min(0)],
-    rccm: [''],
-    rib: [''],
-    montantCredit: [null as number | null, Validators.min(0.01)],
-    commentaireCredit: [''],
-    actif: [true],
+    echeance: [null as number | null, [Validators.required, Validators.min(1), Validators.max(3650)]],
+    montantPlafondEcheance: [null as number | null, [Validators.required, Validators.min(0.01)]],
+    rccm: ['', Validators.required],
+    rib: ['', Validators.required],
+    actif: [true as boolean, Validators.required],
+  });
+
+  remiseForm = this.fb.group({
+    montantRemise: [0, [Validators.required, Validators.min(0), Validators.max(100)]],
+  });
+
+  portefeuilleForm = this.fb.group({
+    montant: [null as number | null, [Validators.required, Validators.min(0.01)]],
+    modePaiement: ['ESPECE', Validators.required],
+    commentaire: [''],
   });
 
   conditionsForm = this.fb.group({
@@ -605,17 +618,13 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   openFideleModal(client: ClientListResponse) {
     this.fideleClient = client;
     this.compteFinancier = null;
-    this.mouvementsCredit = [];
     this.fideleForm.patchValue({
       raisonSociale: client.raisonSociale ?? '',
-      remisePourcentage: client.montantRemise ?? 0,
       echeance: client.echeance ?? null,
       montantPlafondEcheance: client.montantPlafondEcheance ?? null,
       ninea: client.numeroEntreprise ?? '',
       rccm: client.rccm ?? '',
       rib: client.rib ?? '',
-      montantCredit: null,
-      commentaireCredit: ''
     });
     this.errorMessage = '';
     this.showFideleModal = true;
@@ -623,12 +632,6 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
       next: account => {
         this.compteFinancier = account;
         this.fideleForm.patchValue({ actif: account.compteExiste ? account.compteActif : true });
-        if (account.compteExiste) {
-          this.clientService.getMouvementsCredit(client.id).subscribe({
-            next: rows => { this.mouvementsCredit = rows; this.cdr.markForCheck(); },
-            error: () => { this.mouvementsCredit = []; }
-          });
-        }
         this.cdr.markForCheck();
       },
       error: () => { this.compteFinancier = null; }
@@ -683,44 +686,100 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
     if (this.fideleForm.invalid || !this.fideleClient || this.saving) return;
     this.saving = true;
     const raw = this.fideleForm.getRawValue();
-    if (Number(raw.montantCredit ?? 0) > 0 && !raw.actif) {
-      this.errorMessage = 'Activez le compte financier avant d’y ajouter un crédit.';
-      return;
-    }
     const id = this.fideleClient.id;
     const payload: CompteFinancierPayload = {
       raisonSociale: raw.raisonSociale!.trim(),
       ninea: raw.ninea!.trim(),
-      remisePourcentage: Number(raw.remisePourcentage),
-      echeanceJours: raw.echeance,
-      plafondPeriode: raw.montantPlafondEcheance,
-      rccm: raw.rccm?.trim() || null,
-      rib: raw.rib?.trim() || null,
+      echeanceJours: Number(raw.echeance),
+      plafondPeriode: Number(raw.montantPlafondEcheance),
+      rccm: raw.rccm!.trim(),
+      rib: raw.rib!.trim(),
       actif: raw.actif ?? true,
     };
-    const montantCredit = Number(raw.montantCredit ?? 0);
     this.clientService.configurerCompteFinancier(id, payload).subscribe({
-      next: (res) => {
-        const complete = () => {
-          this.saving = false;
-          this.showSuccess(`Compte financier enregistré pour ${this.fideleClient?.firstName ?? 'le client'}.`);
-          this.closeFideleModal();
-          this.loadAll();
-        };
-        if (montantCredit > 0) {
-          this.clientService.ajouterCredit(id, montantCredit, raw.commentaireCredit || undefined).subscribe({
-            next: () => complete(),
-            error: (err: any) => {
-              this.saving = false;
-              this.errorMessage = err.error?.message || 'Le compte a été enregistré, mais le crédit n’a pas pu être ajouté. Réessayez depuis le compte.';
-              this.clientService.getCompteFinancier(id).subscribe({ next: account => this.compteFinancier = account });
-            }
-          });
-        } else complete();
+      next: () => {
+        this.saving = false;
+        this.showSuccess(`Compte entreprise enregistré pour ${this.fideleClient?.firstName ?? 'le client'}.`);
+        this.closeFideleModal();
+        this.loadAll();
       },
       error: (err: any) => {
         this.saving = false;
         this.errorMessage = err.error?.message || 'Erreur lors de la mise à jour de fidélité.';
+      }
+    });
+  }
+
+  openRemiseModal(client: ClientListResponse) {
+    this.remiseClient = client;
+    this.remiseForm.setValue({ montantRemise: client.montantRemise ?? 0 });
+    this.errorMessage = '';
+    this.showRemiseModal = true;
+  }
+
+  closeRemiseModal() {
+    this.showRemiseModal = false;
+    this.remiseClient = null;
+    this.remiseForm.reset({ montantRemise: 0 });
+  }
+
+  saveRemise() {
+    if (this.remiseForm.invalid || !this.remiseClient || this.saving) return;
+    this.saving = true;
+    this.clientService.configurerRemise(this.remiseClient.id, Number(this.remiseForm.get('montantRemise')?.value)).subscribe({
+      next: () => {
+        this.saving = false;
+        this.showSuccess(`Remise client mise à jour pour ${this.remiseClient?.firstName ?? 'le client'}.`);
+        this.closeRemiseModal();
+        this.loadAll();
+      },
+      error: (err: any) => {
+        this.saving = false;
+        this.errorMessage = err.error?.message || 'Impossible de mettre à jour la remise client.';
+      }
+    });
+  }
+
+  openPortefeuilleModal(client: ClientListResponse) {
+    this.portefeuilleClient = client;
+    this.portefeuille = null;
+    this.portefeuilleForm.reset({ montant: null, modePaiement: 'ESPECE', commentaire: '' });
+    this.errorMessage = '';
+    this.showPortefeuilleModal = true;
+    this.clientService.getPortefeuille(client.id).subscribe({
+      next: response => { this.portefeuille = response; this.cdr.markForCheck(); },
+      error: (err: any) => {
+        this.errorMessage = err.error?.message || 'Impossible de charger le solde prépayé.';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  closePortefeuilleModal() {
+    this.showPortefeuilleModal = false;
+    this.portefeuilleClient = null;
+    this.portefeuille = null;
+    this.portefeuilleForm.reset({ montant: null, modePaiement: 'ESPECE', commentaire: '' });
+  }
+
+  alimenterPortefeuille() {
+    if (this.portefeuilleForm.invalid || !this.portefeuilleClient || this.saving) return;
+    this.saving = true;
+    const value = this.portefeuilleForm.getRawValue();
+    this.clientService.alimenterPortefeuille(this.portefeuilleClient.id, {
+      montant: Number(value.montant), modePaiement: value.modePaiement ?? 'ESPECE',
+      commentaire: value.commentaire?.trim() || undefined,
+    }).subscribe({
+      next: response => {
+        this.portefeuille = response;
+        this.portefeuilleForm.reset({ montant: null, modePaiement: 'ESPECE', commentaire: '' });
+        this.saving = false;
+        this.showSuccess('Versement ajouté au solde prépayé.');
+        this.cdr.markForCheck();
+      },
+      error: (err: any) => {
+        this.saving = false;
+        this.errorMessage = err.error?.message || 'Impossible d’alimenter le solde prépayé.';
       }
     });
   }
@@ -764,6 +823,11 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
 
   get canHardDelete(): boolean {
     return this.riskVehicleCount === 0 && this.riskBonCount === 0 && this.riskFactures.length === 0;
+  }
+
+  get peutConfigurerRemise(): boolean {
+    const role = this.authService.getRole();
+    return role === 'ROLE_MASTER' || role === 'ROLE_SUPER_AGENT';
   }
 
   get fCreate() { return this.createForm.controls; }

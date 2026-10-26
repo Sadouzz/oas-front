@@ -160,7 +160,7 @@
                     <div class="flex justify-between"><span class="text-oas-muted">Remise compte client ({{ selected.tauxRemiseClient || 0 }} %), sur les pièces</span><span class="font-mono-data">−{{ selected.montantRemiseClient | number:'1.0-0' }} F</span></div>
                   }
                   <div class="flex justify-between"><span class="text-oas-muted">Total HT après remises</span><span class="font-mono-data">{{ selected.montantHT | number:'1.0-0' }} F</span></div>
-                  <div class="flex justify-between"><span class="text-oas-muted">TVA</span><span class="font-mono-data">{{ selected.montantTVA | number:'1.0-0' }} F</span></div>
+                  <div class="flex justify-between"><span class="text-oas-muted">TVA</span><span class="font-mono-data">{{ selected.tvaApplicable === false ? 'Désactivée' : (selected.montantTVA | number:'1.0-0') + ' F' }}</span></div>
                   <div class="flex justify-between font-extrabold text-base text-oas-ink pt-1"><span>Total TTC</span><span class="font-mono-data">{{ selected.montantTTC | number:'1.0-0' }} F</span></div>
                 </div>
 

@@ -319,11 +319,13 @@
               <span class="text-oas-muted font-medium">Total HT après remises</span>
               <span class="font-bold text-oas-ink">{{ fmt(selectedProforma.montantHT) }} FCFA</span>
             </div>
-            @if (selectedProforma.montantTVA > 0) {
+            @if (selectedProforma.tvaApplicable ?? (selectedProforma.montantTVA > 0)) {
               <div class="flex justify-between">
                 <span class="text-oas-muted font-medium">TVA ({{ tvaRate }}%)</span>
                 <span class="font-bold text-oas-ink">{{ fmt(selectedProforma.montantTVA) }} FCFA</span>
               </div>
+            } @else {
+              <div class="flex justify-between text-xs text-oas-muted"><span>TVA</span><span>Désactivée pour ce document</span></div>
             }
             @if (selectedProforma.montantTimbre > 0) {
               <div class="flex justify-between">
@@ -1134,10 +1136,18 @@
                 <span class="text-oas-muted block font-medium">Total HT après remises</span>
                 <strong class="text-sm font-bold text-oas-ink">{{ fmt(totalHT) }} FCFA</strong>
               </div>
-              <div class="p-3 bg-white rounded-xl border border-oas-line">
-                <span class="text-oas-muted block font-medium">TVA ({{ tvaRate }} %)</span>
-                <strong class="text-sm font-bold text-oas-ink">{{ fmt(montantTVA) }} FCFA</strong>
-              </div>
+              <label class="p-3 bg-white rounded-xl border border-oas-line flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" formControlName="appliquerTVA" class="accent-oas-accent"/>
+                <span class="text-sm font-semibold text-oas-ink">Appliquer la TVA ({{ tvaRate }} %)</span>
+              </label>
+              @if (form.get('appliquerTVA')?.value) {
+                <div class="p-3 bg-white rounded-xl border border-oas-line flex justify-between">
+                  <span class="text-oas-muted font-medium">TVA</span>
+                  <strong class="text-sm font-bold text-oas-ink">{{ fmt(montantTVA) }} FCFA</strong>
+                </div>
+              } @else {
+                <div class="p-3 bg-oas-bg rounded-xl border border-oas-line text-sm text-oas-muted">TVA désactivée pour ce proforma.</div>
+              }
               <div class="p-3 bg-white rounded-xl border border-oas-line">
                 <span class="text-oas-muted block font-medium">Timbre fiscal + autres frais</span>
                 <strong class="text-sm font-bold text-oas-ink">{{ fmt(montantTimbreEtAutres) }} FCFA</strong>

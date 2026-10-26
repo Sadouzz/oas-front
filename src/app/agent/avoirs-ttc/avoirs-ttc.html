@@ -464,7 +464,7 @@
         </div>
         <div class="flex justify-between text-sky-900">
           <span>TVA :</span>
-          <span class="font-mono font-semibold">{{ selectedAvoir.montantTVA | number:'1.0-0' }} F CFA</span>
+          <span class="font-mono font-semibold">{{ selectedAvoir.tvaApplicable === false ? 'Désactivée' : (selectedAvoir.montantTVA | number:'1.0-0') + ' F CFA' }}</span>
         </div>
         @if (selectedAvoir.montantTimbre > 0) {
         <div class="flex justify-between text-sky-900">

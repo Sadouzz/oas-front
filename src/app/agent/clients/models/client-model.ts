@@ -75,7 +75,6 @@ export interface UpdateClientPayload {
 }
 
 export interface FidelePayload {
-  montantRemise?: number | null;
   echeance?: number | null;
   montantPlafondEcheance?: number | null;
   ninea?: string | null;
@@ -86,12 +85,11 @@ export interface FidelePayload {
 export interface CompteFinancierPayload {
   raisonSociale: string;
   ninea: string;
-  remisePourcentage: number;
-  echeanceJours: number | null;
-  plafondPeriode: number | null;
-  rccm?: string | null;
-  rib?: string | null;
-  actif?: boolean;
+  echeanceJours: number;
+  plafondPeriode: number;
+  rccm: string;
+  rib: string;
+  actif: boolean;
 }
 
 export interface CompteFinancierResponse {
@@ -101,8 +99,6 @@ export interface CompteFinancierResponse {
   ninea: string | null;
   compteActif: boolean;
   compteExiste: boolean;
-  remisePourcentage: number;
-  soldeCredit: number;
   echeanceJours: number | null;
   plafondPeriode: number | null;
   encoursImpayes: number;
@@ -115,10 +111,24 @@ export interface CompteFinancierResponse {
   compteCreeLe: string | null;
 }
 
-export interface MouvementCreditResponse {
+export interface PortefeuilleClientResponse {
+  clientId: number;
+  solde: number;
+  dateCreation: string | null;
+  dateModification: string | null;
+  mouvements: MouvementPortefeuilleResponse[];
+}
+
+export interface MouvementPortefeuilleResponse {
   id: number;
+  type: 'ALIMENTATION' | 'PAIEMENT_FACTURE';
   montant: number;
+  modePaiement: string | null;
   commentaire: string | null;
+  factureId: number | null;
+  factureNumero: string | null;
+  recuId: number | null;
+  recuNumero: string | null;
   acteurId: number | null;
   dateCreation: string;
 }

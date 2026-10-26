@@ -290,10 +290,12 @@ export class StepProformaComponent implements OnInit {
   }
 
   get totalTVACalcule(): number {
+    if (this.proformaChargee?.tvaApplicable === false) return 0;
     if (this.proformaChargee?.montantTVA != null && this.proformaChargee.montantTVA > 0) {
       return this.proformaChargee.montantTVA;
     }
-    return Math.round(this.totalHTCalcule * (this.tvaTaux / 100));
+    if (this.proformaChargee?.tvaApplicable === true) return Math.round(this.totalHTCalcule * (this.tvaTaux / 100));
+    return this.proformaChargee?.montantTVA ?? 0;
   }
 
   get totalTTCCalcule(): number {

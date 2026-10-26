@@ -275,12 +275,14 @@ export interface StepReparationResponseDto extends StepBaseDto {
   rapportReparation?: string;
   dateFinReparation?: string;
   techniciensReparation?: TechnicienSummary[];
+  avertissementsBonsDeSortie?: string[];
 }
 
 export interface StepReparationDto {
   rapportReparation: string;
   dateFinReparation: string;
   statut?: StatutOrdreTravail;
+  avertissementsBonsDeSortie?: string[];
 }
 
 // Étape 6 : Paiement
@@ -391,6 +393,7 @@ export interface OrdreTravail extends OrdreTravailSummaryDto {
   clientNom?: string;
   vehiculeImmatriculation?: string;
   vehiculeMarqueModele?: string;
+  clientId?: number;
   vehiculeId?: number;
   techniciens?: TechnicienSummary[];
   proforma?: any;

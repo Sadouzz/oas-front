@@ -50,5 +50,15 @@ contxte.md
 
 # Environment files
 .env
+.env.*
 .env*.local
-!.env.example
+!.env.example
+# Local tooling caches and temporary output
+.eslintcache
+.stylelintcache
+*.log
+*.tmp
+*.bak
+*.swp
+*.tsbuildinfo
+*~

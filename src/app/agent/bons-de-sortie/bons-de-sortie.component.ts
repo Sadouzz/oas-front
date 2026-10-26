@@ -15,6 +15,7 @@ import { OrdreTravail } from '../ordres-travail/models/ordre-travail.model';
 import { ProformaService } from '../proforma/proforma.service';
 import { Proforma } from '../proforma/models/proforma.model';
 import { AuthService } from '../../core/services/auth.service';
+import { FiscalConfigurationService } from '../gestion-tva/fiscal-configuration.service';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
@@ -89,6 +90,9 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
   private proformaService = inject(ProformaService);
   private otService = inject(OrdreTravailService);
   private authService = inject(AuthService);
+  private fiscalConfigurationService = inject(FiscalConfigurationService);
+  tvaRate = 18;
+  appliquerTVA = false;
 
   proformaContexte: Proforma | null = null;
   piecesProformaSet = new Set<string>();
@@ -116,6 +120,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
   selectedOrdreTravailId: number | null = null;
   ordresTravailFiltres: OrdreTravail[] = [];
   loadingOrdresTravail = false;
+  private ordresTravailLoadVersion = 0;
   returnToContext: string | null = null;
   private quantitesPrevues = new Map<string, number>();
   private quantitesDejaSorties = new Map<string, number>();
@@ -328,6 +333,9 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
   get totalGeneral(): number {
     return this.lignesPieces.reduce((sum, l) => sum + this.montantLignePieceNet(l), 0);
   }
+
+  get montantTVAForm(): number { return this.appliquerTVA ? Math.round(this.totalGeneral * this.tvaRate / 100) : 0; }
+  get montantTTCForm(): number { return this.totalGeneral + this.montantTVAForm; }
 
   get totalBrut(): number {
     return this.lignesPieces.reduce((sum, l) => sum + ((Number(l.quantite) || 0) * (Number(l.prix) || 0)), 0);
@@ -661,6 +669,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
   }
 
   selectClient(c: UserModel) {
+    this.ordresTravailLoadVersion++;
     this.selectedClient = c;
     this.form.patchValue({ clientId: c.id, vehiculeId: null });
     this.vehiculesFiltres = [];
@@ -698,99 +707,74 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     this.contextOrdreTravailNumero = null;
     this.contextOrdreReparationId = null;
     this.contextOrdreReparationNumero = null;
-    this.loadOrdresTravailPourVehicule(v.id, v.immatriculation);
+    this.loadOrdresTravailPourVehicule(v.id);
     this.cdr.markForCheck();
   }
 
-  loadOrdresTravailPourVehicule(vehiculeId?: number | null, immatriculation?: string, ordreTravailId?: number | null) {
+  loadOrdresTravailPourVehicule(vehiculeId?: number | null, ordreTravailId?: number | null) {
+    const loadVersion = ++this.ordresTravailLoadVersion;
     this.loadingOrdresTravail = true;
     const targetOtId = ordreTravailId || this.contextOrdreTravailId || this.selectedOrdreTravailId;
+    const selectedVehiculeId = Number(vehiculeId || this.form.get('vehiculeId')?.value || 0);
+    const selectedClientId = Number(this.form.get('clientId')?.value || 0);
 
-    if (targetOtId) {
-      this.otService.getById(Number(targetOtId)).subscribe({
-        next: (specificOt) => {
-          if (specificOt) {
-            this.contextOrdreTravailNumero = specificOt.numero || `OT #${specificOt.id}`;
-            if (!this.ordresTravailFiltres.some(o => o.id === specificOt.id)) {
-              this.ordresTravailFiltres = [specificOt, ...this.ordresTravailFiltres];
-            }
-            this.selectedOrdreTravailId = specificOt.id;
-            if (specificOt.ordreReparationId && !this.contextOrdreReparationId) {
-              this.contextOrdreReparationId = specificOt.ordreReparationId;
-              this.contextOrdreReparationNumero = specificOt.ordreReparationNumero || null;
-            }
-            if (!this.form.get('vehiculeId')?.value && (specificOt.vehicule?.id || specificOt.vehiculeId)) {
-              const vId = Number(specificOt.vehicule?.id || specificOt.vehiculeId);
-              this.form.patchValue({ vehiculeId: vId });
-              if (specificOt.vehicule && !this.vehiculesFiltres.some(v => v.id === vId)) {
-                this.vehiculesFiltres = [specificOt.vehicule as any, ...this.vehiculesFiltres];
-              }
-            }
-            if (!this.form.get('clientId')?.value && (specificOt.client?.id || (specificOt as any).clientId || specificOt.vehicule?.client?.id)) {
-              const cId = Number(specificOt.client?.id || (specificOt as any).clientId || specificOt.vehicule?.client?.id);
-              this.form.patchValue({ clientId: cId });
-            }
-            this.cdr.markForCheck();
-          }
-        },
-        error: () => {}
-      });
+    if (!selectedVehiculeId || !selectedClientId) {
+      this.ordresTravailFiltres = [];
+      this.loadingOrdresTravail = false;
+      this.cdr.markForCheck();
+      return;
     }
+
+    const belongsToSelection = (ot: OrdreTravail): boolean => {
+      const otVehiculeId = Number(ot.vehiculeId ?? ot.vehicule?.id ?? 0);
+      const otClientId = Number((ot as any).clientId || ot.client?.id || ot.vehicule?.client?.id || 0);
+      return otVehiculeId === selectedVehiculeId && otClientId === selectedClientId;
+    };
+
+    const applyOptions = (options: OrdreTravail[]) => {
+      if (loadVersion !== this.ordresTravailLoadVersion) return;
+      if (Number(this.form.get('clientId')?.value || 0) !== selectedClientId
+          || Number(this.form.get('vehiculeId')?.value || 0) !== selectedVehiculeId) return;
+      this.ordresTravailFiltres = options;
+      this.loadingOrdresTravail = false;
+
+      const target = targetOtId ? Number(targetOtId) : null;
+      const found = target ? options.find(ot => ot.id === target) : null;
+      if (target) {
+        this.selectedOrdreTravailId = found?.id ?? null;
+        this.contextOrdreTravailId = found?.id ?? null;
+        this.contextOrdreTravailNumero = found?.numero || (found ? `OT #${found.id}` : null);
+        if (found?.ordreReparationId) {
+          this.contextOrdreReparationId = found.ordreReparationId;
+          this.contextOrdreReparationNumero = found.ordreReparationNumero || null;
+        } else if (!found) {
+          this.contextOrdreReparationId = null;
+          this.contextOrdreReparationNumero = null;
+        }
+      }
+      this.cdr.markForCheck();
+    };
 
     this.otService.getAll({ size: 1000 }).subscribe({
       next: (res) => {
-        const all = extractContent<OrdreTravail>(res as any);
-        const vId = vehiculeId ? Number(vehiculeId) : null;
-        const immat = (immatriculation || '').trim();
-        const cId = Number(this.form.get('clientId')?.value);
-        const clean = (s: string) => (s || '').replace(/\s+/g, '').toLowerCase();
-        const cleanImmat = clean(immat);
+        const matches = extractContent<OrdreTravail>(res as any).filter(belongsToSelection);
+        if (!targetOtId || matches.some(ot => ot.id === Number(targetOtId))) {
+          applyOptions(matches);
+          return;
+        }
 
-        let matches = all.filter(ot => {
-          if (targetOtId && ot.id === Number(targetOtId)) return true;
-          const otVehiculeId = Number(ot.vehiculeId ?? ot.vehicule?.id ?? 0);
-          if (vId && otVehiculeId === vId) return true;
-          const otImmat = clean(ot.vehiculeImmatriculation || ot.vehicule?.immatriculation || '');
-          if (cleanImmat && otImmat && (otImmat === cleanImmat || otImmat.includes(cleanImmat) || cleanImmat.includes(otImmat))) return true;
-          return false;
+        this.otService.getById(Number(targetOtId)).subscribe({
+          next: specificOt => {
+            if (loadVersion !== this.ordresTravailLoadVersion) return;
+            if (specificOt && belongsToSelection(specificOt)) matches.unshift(specificOt);
+            applyOptions(matches);
+          },
+          error: () => applyOptions(matches)
         });
-
-        if (matches.length === 0 && cId) {
-          matches = all.filter(ot => {
-            const otClientId = Number((ot as any).clientId || ot.client?.id || ot.vehicule?.client?.id || 0);
-            return otClientId === cId;
-          });
-        }
-
-        if (matches.length === 0 && all.length > 0) {
-          matches = all;
-        }
-
-        for (const existing of this.ordresTravailFiltres) {
-          if (!matches.some(m => m.id === existing.id)) {
-            matches.unshift(existing);
-          }
-        }
-
-        this.ordresTravailFiltres = matches;
-        this.loadingOrdresTravail = false;
-
-        if (targetOtId) {
-          this.selectedOrdreTravailId = Number(targetOtId);
-          const found = this.ordresTravailFiltres.find(o => o.id === Number(targetOtId));
-          if (found) {
-            if (!this.contextOrdreTravailNumero) {
-              this.contextOrdreTravailNumero = found.numero || `OT #${found.id}`;
-            }
-            if (found.ordreReparationId && !this.contextOrdreReparationId) {
-              this.contextOrdreReparationId = found.ordreReparationId;
-              this.contextOrdreReparationNumero = found.ordreReparationNumero || null;
-            }
-          }
-        }
-        this.cdr.markForCheck();
       },
       error: () => {
+        if (loadVersion !== this.ordresTravailLoadVersion) return;
+        this.ordresTravailFiltres = [];
         this.loadingOrdresTravail = false;
         this.cdr.markForCheck();
       }
@@ -846,7 +830,10 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
               this.form.patchValue({ clientId: cId });
               this.vehiculeService.getByClient(cId).subscribe(vehicles => {
                 this.vehiculesFiltres = extractContent<VehiculeModel>(vehicles as any);
-                if (ordre.vehicule?.id) this.form.patchValue({ vehiculeId: ordre.vehicule.id });
+                if (ordre.vehicule?.id) {
+                  this.form.patchValue({ vehiculeId: ordre.vehicule.id });
+                  this.loadOrdresTravailPourVehicule(ordre.vehicule.id, this.contextOrdreTravailId);
+                }
                 this.cdr.markForCheck();
               });
             });
@@ -1236,6 +1223,9 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
   // ── WIZARD ─────────────────────────────────────────────────────
 
   openCreate(context: Record<string, any> = {}) {
+    this.fiscalConfigurationService.getCurrent().subscribe({ next: config => { this.tvaRate = config.tvaRate; this.cdr.markForCheck(); } });
+    this.appliquerTVA = false;
+    this.ordresTravailLoadVersion++;
     this.form.reset({ remarque: '' });
     this.lignesPieces = [];
     this.piecePdpAjouter = null;
@@ -1284,7 +1274,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     }
 
     if (this.contextOrdreTravailId) {
-      this.loadOrdresTravailPourVehicule(context['vehiculeId'] ? Number(context['vehiculeId']) : null, undefined, this.contextOrdreTravailId);
+      this.loadOrdresTravailPourVehicule(context['vehiculeId'] ? Number(context['vehiculeId']) : null, this.contextOrdreTravailId);
     }
 
     if (context['clientId']) {
@@ -1294,9 +1284,8 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
         this.vehiculeService.getByClient(Number(context['clientId'])).subscribe(vehicles => {
           this.vehiculesFiltres = extractContent<VehiculeModel>(vehicles as any);
           if (context['vehiculeId']) {
-            const vFound = this.vehiculesFiltres.find(x => x.id === Number(context['vehiculeId']));
             this.form.patchValue({ vehiculeId: Number(context['vehiculeId']) });
-            this.loadOrdresTravailPourVehicule(Number(context['vehiculeId']), vFound?.immatriculation, this.contextOrdreTravailId);
+            this.loadOrdresTravailPourVehicule(Number(context['vehiculeId']), this.contextOrdreTravailId);
           }
           this.cdr.markForCheck();
         });
@@ -1311,6 +1300,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
   }
 
   closeCreate() {
+    this.ordresTravailLoadVersion++;
     this.showCreateModal = false;
     this.errorMessage = '';
     this.saving = false;
@@ -1435,6 +1425,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
       ordreReparationId: ordreReparationId ? Number(ordreReparationId) : undefined,
       ordreTravailId: ordreTravailId ? Number(ordreTravailId) : undefined,
       remarque: val.remarque || '',
+      appliquerTVA: this.appliquerTVA,
       lignesPieces: lignesPiecesPayload,
       lignesMainDoeuvres: lignesMainDoeuvresPayload
     } as any).subscribe({

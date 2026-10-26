@@ -219,10 +219,10 @@ export class OrdreTravailService {
     );
   }
 
-  updateStepReparation(id: number, data: StepReparationDto): Observable<void> {
-    return this.http
-      .put(`${this.api}/${id}/step-reparation`, data, { responseType: 'text' })
-      .pipe(map(() => void 0));
+  updateStepReparation(id: number, data: StepReparationDto): Observable<StepReparationDto> {
+    return this.http.put<any>(`${this.api}/${id}/step-reparation`, data).pipe(
+      map((res: any) => (res && res.data !== undefined ? res.data : res))
+    );
   }
 
   // Étape 6 : Paiement

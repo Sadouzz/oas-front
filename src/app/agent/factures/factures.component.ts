@@ -48,6 +48,7 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
   payMontant = 0;
   payMethode = 'ESPECE';
   paySaving = false;
+  walletBalance: number | null = null;
 
   clients: UserModel[] = [];
   vehiculesFiltres: VehiculeModel[] = [];
@@ -55,6 +56,13 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
   fichesFiltrees: OrdreReparation[] = [];
   invoiceTemplates: PdfTemplate[] = [];
   downloadLayoutKey: 'AVEC_ENTETE' | 'SANS_ENTETE' = 'AVEC_ENTETE';
+
+  get payMaxMontant(): number {
+    if (!this.factureToPay) return 0;
+    return this.payMethode === 'SOLDE_PREPAYE' && this.walletBalance !== null
+      ? Math.min(this.factureToPay.resteAPayer, this.walletBalance)
+      : this.factureToPay.resteAPayer;
+  }
 
   clientOpen = false;
   vehiculeOpen = false;
@@ -78,6 +86,7 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
     kilometrage: [null as number | null],
     remarque: [''],
     modePaiement: ['ESPECE', Validators.required],
+    appliquerTVA: [true],
     pdfLayoutKey: ['AVEC_ENTETE'],
     pdfTemplateId: [null as number | null],
   });
@@ -169,7 +178,7 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
 
   openCreate() {
     if (!this.form.get('clientId')?.value) {
-      this.form.reset({ remarque: '', modePaiement: 'ESPECE' });
+      this.form.reset({ remarque: '', modePaiement: 'ESPECE', appliquerTVA: true });
       this.vehiculesFiltres = [];
       this.clientFilter = '';
       this.vehiculeFilter = '';
@@ -302,13 +311,14 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
       modePaiement: val.modePaiement,
       pdfLayoutKey: val.pdfLayoutKey || 'AVEC_ENTETE',
       pdfTemplateId: val.pdfTemplateId ? Number(val.pdfTemplateId) : null,
+      appliquerTVA: val.appliquerTVA !== false,
     };
 
     this.service.create(request).subscribe({
       next: (res: any) => {
         this.saving = false;
         this.closeCreate();
-        this.form.reset({ remarque: '', modePaiement: 'ESPECE' });
+        this.form.reset({ remarque: '', modePaiement: 'ESPECE', appliquerTVA: true });
         this.createStep = 1;
         this.load();
         this.notify('Facture ' + res.numero + ' créée avec succès !');
@@ -349,19 +359,29 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
     this.factureToPay = f;
     this.payMontant = f.resteAPayer;
     this.payMethode = 'ESPECE';
+    this.walletBalance = null;
     this.showPayModal = true;
+    this.clientService.getPortefeuille(f.clientId).subscribe({
+      next: wallet => { this.walletBalance = wallet.solde; this.cdr.markForCheck(); },
+      error: () => { this.walletBalance = 0; this.cdr.markForCheck(); },
+    });
   }
 
   closePayModal() {
     this.showPayModal = false;
     this.factureToPay = null;
     this.paySaving = false;
+    this.walletBalance = null;
   }
 
   submitPayment() {
     if (!this.factureToPay || this.paySaving) return;
     if (this.payMontant <= 0 || this.payMontant > this.factureToPay.resteAPayer) {
       this.notifyError('Montant invalide');
+      return;
+    }
+    if (this.payMethode === 'SOLDE_PREPAYE' && (this.walletBalance === null || this.payMontant > this.walletBalance)) {
+      this.notifyError(this.walletBalance === null ? 'Le solde prépayé est en cours de chargement.' : 'Le montant dépasse le solde prépayé disponible.');
       return;
     }
 
@@ -400,7 +420,7 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
   }
 
   modePaiementLabel(mp: string | null | undefined): string {
-    const m: Record<string, string> = { CHEQUE: 'Chèque', ESPECE: 'Espèces', HORS_TAXE: 'Hors taxe' };
+    const m: Record<string, string> = { CHEQUE: 'Chèque', ESPECE: 'Espèces', VIREMENT: 'Virement', SOLDE_PREPAYE: 'Solde prépayé', HORS_TAXE: 'Hors taxe' };
     return m[mp ?? ''] ?? mp ?? '—';
   }
 

@@ -14,6 +14,18 @@
 
   <app-alert [error]="errorMessage" [success]="successMessage"></app-alert>
 
+  @if (data?.avertissementsBonsDeSortie?.length) {
+    <div class="rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-950" role="status">
+      <p class="font-bold">Attention : certains éléments demandés ne figurent pas encore sur des bons de sortie validés.</p>
+      <p class="mt-1 text-sm">Vous pouvez quand même terminer le OT; cet écart ne bloque pas la clôture.</p>
+      <ul class="mt-2 list-disc pl-5 text-sm space-y-1">
+        @for (avertissement of data?.avertissementsBonsDeSortie; track $index) {
+          <li>{{ avertissement }}</li>
+        }
+      </ul>
+    </div>
+  }
+
   @if (loading) {
     <div class="flex flex-col items-center justify-center py-12 text-oas-muted">
       <div class="w-8 h-8 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin mb-3"></div>
@@ -72,7 +84,7 @@
       </a>
 
       <div class="flex items-center gap-3">
-        @if (isReparationTerminee || data.rapportReparation) {
+        @if (isReparationTerminee) {
           @if (data.ordreReparationId) {
             <a [routerLink]="['/app/ordres-reparation', data.ordreReparationId, 'paiement']"
               class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-sm transition cursor-pointer">
@@ -96,7 +108,7 @@
             <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
             <span>Enregistrement...</span>
           } @else {
-            <span>{{ isReparationTerminee || data.rapportReparation ? 'Mettre à jour le Rapport' : 'Valider & Clôturer la Réparation' }}</span>
+            <span>{{ isReparationTerminee ? 'Mettre à jour le Rapport' : 'Valider & Clôturer la Réparation' }}</span>
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
             </svg>

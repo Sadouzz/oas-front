@@ -5,6 +5,8 @@ export interface NoteDePrixModel {
   dateModification?: string;
   montantHT: number;
   montantTotal: number;
+  montantTVA?: number;
+  tvaApplicable?: boolean | null;
   montantPaye: number;
   resteAPayer: number;
   statutPaiement?: 'NON_PAYE' | 'PARTIEL' | 'PAYE' | string;
@@ -38,6 +40,7 @@ export interface NoteDePrixCreateRequest {
   numeroBonDeCommande?: string | null;
   remarque?: string | null;
   modePaiement?: string | null;
+  appliquerTVA?: boolean;
   montantAutre?: number | null;
   lignesPieces?: { pieceId: number; quantite: number; prix: number }[];
   lignesMainDoeuvres?: { mainDoeuvreId: number; nbreHeure: number; tarifHoraire: number }[];
