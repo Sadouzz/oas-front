@@ -79,6 +79,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
     '/bons-reception': { label: 'Bon de réception', section: 'Réapprovisionnement' },
     '/fournisseurs': { label: 'Fournisseurs', section: 'Réapprovisionnement' },
     '/factures': { label: 'Facture', section: 'Facture TTC' },
+    '/bons-livraison': { label: 'Bon de livraison', section: 'Facture TTC' },
     '/bons-commande': { label: 'BC', section: 'Facture TTC' },
     '/proformas': { label: 'Proforma', section: 'Facture TTC' },
     '/avoirs-ttc': { label: 'Avoir TTC', section: 'Facture TTC' },

@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, ChangeDetectorRef, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { OrdreReparationService } from '../../../ordre-reparation.service';
 import { AlertComponent } from '../../../../../shared/components/alert/alert.component';
 import { OrdreReparation } from '../../../../../shared/models';
@@ -9,7 +9,7 @@ import { OrdreReparation } from '../../../../../shared/models';
 @Component({
   selector: 'app-step-livraison',
   standalone: true,
-  imports: [CommonModule, FormsModule, AlertComponent],
+  imports: [CommonModule, FormsModule, AlertComponent, RouterLink],
   templateUrl: './step-livraison.component.html'
 })
 export class StepLivraisonComponent implements OnInit {

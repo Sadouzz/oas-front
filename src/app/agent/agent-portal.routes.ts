@@ -289,6 +289,11 @@ export const AGENT_PORTAL_ROUTES: Routes = [
             import('./bons-reception/bons-reception.component').then(m => m.BonsReceptionComponent),
         },
         {
+          path: 'bons-livraison',
+          loadComponent: () =>
+            import('./bons-livraison/bons-livraison.component').then(m => m.BonsLivraisonComponent),
+        },
+        {
           path: 'proformas',
           loadComponent: () =>
             import('./proforma/proforma.component').then(m => m.ProformaComponent),

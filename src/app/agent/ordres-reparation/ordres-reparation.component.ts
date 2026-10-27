@@ -340,9 +340,9 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
     });
   }
 
-  createFactureFromOrdre(): void {
+  createBonLivraisonFromOrdre(): void {
     if (!this.selectedOrdre) return;
-    this.openEdit(this.selectedOrdre);
+    this.router.navigate(['/app/bons-livraison'], { queryParams: { ordreId: this.selectedOrdre.id } });
   }
 
   // ─── Filtres & Recherche (recherche directe en base de données) ──────────────────
