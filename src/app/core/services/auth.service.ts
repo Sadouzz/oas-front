@@ -16,24 +16,67 @@ export class AuthService {
   private cookieService = inject(CookieService);
   private api = `${environment.apiUrl}/api/auth`;
   private expirationTimer: any;
+  private readonly TOKEN_STORAGE_KEY = 'oas_access_token';
   private accessToken: string | null = null;
   private refreshInFlight?: Observable<AuthResponse>;
 
   constructor() {
-    // Retire l'ancien jeton persistant lisible par JavaScript. Le jeton d'accès reste
-    // en mémoire; seul le jeton de renouvellement est conservé dans un cookie HttpOnly.
-    this.cookieService.delete('token');
     this.setupLifecycleListeners();
+    this.setupStorageListener();
+
+    // Si un jeton valide est déjà présent en cache local, activer immédiatement le timer de renouvellement
+    if (this.getToken() && !this.isTokenExpired()) {
+      this.scheduleAutoRefresh();
+    }
+  }
+
+  private setupStorageListener(): void {
+    if (typeof window === 'undefined') return;
+
+    window.addEventListener('storage', (event) => {
+      if (event.key === this.TOKEN_STORAGE_KEY) {
+        this.accessToken = event.newValue;
+        if (event.newValue && !this.isTokenExpired()) {
+          this.scheduleAutoRefresh();
+        } else if (!event.newValue) {
+          this.clearAutoRefreshTimer();
+        }
+      }
+    });
+  }
+
+  private saveToken(token: string | null): void {
+    this.accessToken = token;
+    try {
+      if (typeof localStorage !== 'undefined') {
+        if (token) {
+          localStorage.setItem(this.TOKEN_STORAGE_KEY, token);
+        } else {
+          localStorage.removeItem(this.TOKEN_STORAGE_KEY);
+        }
+      }
+    } catch {
+      // Ignore si le stockage est restreint
+    }
   }
 
   /**
    * Initialisation au démarrage d'Angular (APP_INITIALIZER) :
-   * Si une session existe dans les cookies, rafraîchit immédiatement le jeton d'accès
-   * pour éviter tout flash "non connecté" et garantir la présence du Bearer token dès la 1ère requête.
+   * - Si un jeton valide est déjà présent en mémoire ou localStorage (ex: nouvel onglet via Ctrl+Clic),
+   *   la promesse résout immédiatement sans appel réseau bloquant.
+   * - Si le jeton est manquant ou proche de l'expiration, tente un rafraîchissement via le refresh token.
    */
   initAuth(): Promise<void> {
+    const token = this.getToken();
     const hasSessionCookie = !!(this.cookieService.get('username') || this.cookieService.get('role'));
-    if (!hasSessionCookie) {
+
+    if (!token && !hasSessionCookie) {
+      return Promise.resolve();
+    }
+
+    // Si on a déjà un token non expiré (avec marge de sécurité de 60s), pas d'appel réseau bloquant au démarrage
+    if (token && !this.tokenExpiresSoon(60_000)) {
+      this.scheduleAutoRefresh();
       return Promise.resolve();
     }
 
@@ -43,11 +86,12 @@ export class AuthService {
           resolve();
         },
         error: (err) => {
-          // Si le serveur rejette explicitement avec 401 ou 403, le cookie est invalide/révoqué
-          if (err?.status === 401 || err?.status === 403) {
-            this.logout();
+          // Si le serveur rejette explicitement avec 401 ou 403 et qu'on n'a aucun token valide
+          if (!token || this.isTokenExpired()) {
+            if (err?.status === 401 || err?.status === 403) {
+              this.logout();
+            }
           }
-          // En cas d'erreur réseau temporaire (status 0, etc.), on résout sans déconnecter
           resolve();
         }
       });
@@ -106,7 +150,7 @@ export class AuthService {
       map(res => (res && res.data) ? res.data : res),
       tap((response: AuthResponse) => {
         if (response && response.token) {
-          this.accessToken = response.token;
+          this.saveToken(response.token);
           this.cookieService.set('username', response.username, 7);
           this.cookieService.set('role', response.role, 7);
 
@@ -131,7 +175,7 @@ export class AuthService {
       map(res => (res && res.data) ? res.data : res),
       tap((response: AuthResponse) => {
         if (response && response.token) {
-          this.accessToken = response.token;
+          this.saveToken(response.token);
           if (response.username) this.cookieService.set('username', response.username, 7);
           if (response.role) this.cookieService.set('role', response.role, 7);
 
@@ -176,7 +220,7 @@ export class AuthService {
       next: () => {},
       error: () => {}
     });
-    this.accessToken = null;
+    this.saveToken(null);
     this.cookieService.delete('token');
     this.cookieService.delete('username');
     this.cookieService.delete('role');
@@ -185,6 +229,13 @@ export class AuthService {
   }
 
   getToken(): string | null {
+    if (!this.accessToken && typeof localStorage !== 'undefined') {
+      try {
+        this.accessToken = localStorage.getItem(this.TOKEN_STORAGE_KEY);
+      } catch {
+        // Ignorer si stockage inaccessible
+      }
+    }
     return this.accessToken;
   }
 

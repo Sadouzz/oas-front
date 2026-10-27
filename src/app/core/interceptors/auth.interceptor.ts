@@ -69,6 +69,13 @@ function handle401Error(
   router: Router,
   garageContextService: GarageContextService
 ) {
+  // Si un autre onglet a déjà rafraîchi le jeton, utiliser immédiatement le nouveau jeton sans relancer un refresh concurrent
+  const currentToken = authService.getToken();
+  const reqAuth = req.headers.get('Authorization');
+  if (currentToken && reqAuth && reqAuth !== `Bearer ${currentToken}`) {
+    return next(buildRetryRequest(req, currentToken, garageContextService));
+  }
+
   if (!isRefreshing) {
     isRefreshing = true;
     refreshTokenSubject.next(null);
