@@ -34,13 +34,17 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       if (error.status === 401) {
         // Ne pas tenter de refresh si la requête était déjà signin, signup, refresh ou signout
         const isAuthEndpoint = req.url.includes('/signin') ||
-                               req.url.includes('/signup') ||
-                               req.url.includes('/refresh') ||
-                               req.url.includes('/signout');
+          req.url.includes('/signup') ||
+          req.url.includes('/refresh') ||
+          req.url.includes('/signout');
 
         if (isAuthEndpoint) {
-          // Pour /refresh, AuthService réessaie une fois (rotation du cookie par un autre onglet);
-          // les appelants (initAuth, garde, handle401Error) gèrent la déconnexion finale.
+          if (req.url.includes('/refresh')) {
+            isRefreshing = false;
+            refreshTokenSubject.next(null);
+            authService.logout();
+            router.navigate(['/login'], { replaceUrl: true });
+          }
           return throwError(() => error);
         }
 
@@ -69,13 +73,6 @@ function handle401Error(
   router: Router,
   garageContextService: GarageContextService
 ) {
-  // Si un autre onglet a déjà rafraîchi le jeton, utiliser immédiatement le nouveau jeton sans relancer un refresh concurrent
-  const currentToken = authService.getToken();
-  const reqAuth = req.headers.get('Authorization');
-  if (currentToken && reqAuth && reqAuth !== `Bearer ${currentToken}`) {
-    return next(buildRetryRequest(req, currentToken, garageContextService));
-  }
-
   if (!isRefreshing) {
     isRefreshing = true;
     refreshTokenSubject.next(null);
@@ -123,5 +120,4 @@ function buildRetryRequest(req: HttpRequest<any>, token: string, garageContextSe
   }
   return req.clone({ headers, context: req.context.set(AUTH_RETRY, true), withCredentials: true });
 }
-
 

@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap, map, finalize, shareReplay, from, firstValueFrom, catchError, timer, switchMap, throwError } from 'rxjs';
+import { Observable, tap, map, finalize, shareReplay } from 'rxjs';
 import { jwtDecode } from 'jwt-decode';
 import { environment } from '../../../environments/environment';
 import { AuthResponse, LoginRequest, RegisterRequest, CheckAvailabilityResponse } from '../../shared/models';
@@ -16,67 +16,24 @@ export class AuthService {
   private cookieService = inject(CookieService);
   private api = `${environment.apiUrl}/api/auth`;
   private expirationTimer: any;
-  private readonly TOKEN_STORAGE_KEY = 'oas_access_token';
   private accessToken: string | null = null;
   private refreshInFlight?: Observable<AuthResponse>;
 
   constructor() {
+    // Retire l'ancien jeton persistant lisible par JavaScript. Le jeton d'accès reste
+    // en mémoire; seul le jeton de renouvellement est conservé dans un cookie HttpOnly.
+    this.cookieService.delete('token');
     this.setupLifecycleListeners();
-    this.setupStorageListener();
-
-    // Si un jeton valide est déjà présent en cache local, activer immédiatement le timer de renouvellement
-    if (this.getToken() && !this.isTokenExpired()) {
-      this.scheduleAutoRefresh();
-    }
-  }
-
-  private setupStorageListener(): void {
-    if (typeof window === 'undefined') return;
-
-    window.addEventListener('storage', (event) => {
-      if (event.key === this.TOKEN_STORAGE_KEY) {
-        this.accessToken = event.newValue;
-        if (event.newValue && !this.isTokenExpired()) {
-          this.scheduleAutoRefresh();
-        } else if (!event.newValue) {
-          this.clearAutoRefreshTimer();
-        }
-      }
-    });
-  }
-
-  private saveToken(token: string | null): void {
-    this.accessToken = token;
-    try {
-      if (typeof localStorage !== 'undefined') {
-        if (token) {
-          localStorage.setItem(this.TOKEN_STORAGE_KEY, token);
-        } else {
-          localStorage.removeItem(this.TOKEN_STORAGE_KEY);
-        }
-      }
-    } catch {
-      // Ignore si le stockage est restreint
-    }
   }
 
   /**
    * Initialisation au démarrage d'Angular (APP_INITIALIZER) :
-   * - Si un jeton valide est déjà présent en mémoire ou localStorage (ex: nouvel onglet via Ctrl+Clic),
-   *   la promesse résout immédiatement sans appel réseau bloquant.
-   * - Si le jeton est manquant ou proche de l'expiration, tente un rafraîchissement via le refresh token.
+   * Si une session existe dans les cookies, rafraîchit immédiatement le jeton d'accès
+   * pour éviter tout flash "non connecté" et garantir la présence du Bearer token dès la 1ère requête.
    */
   initAuth(): Promise<void> {
-    const token = this.getToken();
     const hasSessionCookie = !!(this.cookieService.get('username') || this.cookieService.get('role'));
-
-    if (!token && !hasSessionCookie) {
-      return Promise.resolve();
-    }
-
-    // Si on a déjà un token non expiré (avec marge de sécurité de 60s), pas d'appel réseau bloquant au démarrage
-    if (token && !this.tokenExpiresSoon(60_000)) {
-      this.scheduleAutoRefresh();
+    if (!hasSessionCookie) {
       return Promise.resolve();
     }
 
@@ -86,12 +43,11 @@ export class AuthService {
           resolve();
         },
         error: (err) => {
-          // Si le serveur rejette explicitement avec 401 ou 403 et qu'on n'a aucun token valide
-          if (!token || this.isTokenExpired()) {
-            if (err?.status === 401 || err?.status === 403) {
-              this.logout();
-            }
+          // Si le serveur rejette explicitement avec 401 ou 403, le cookie est invalide/révoqué
+          if (err?.status === 401 || err?.status === 403) {
+            this.logout();
           }
+          // En cas d'erreur réseau temporaire (status 0, etc.), on résout sans déconnecter
           resolve();
         }
       });
@@ -123,7 +79,7 @@ export class AuthService {
     const token = this.getToken();
     if (!token || this.isTokenExpired() || this.tokenExpiresSoon(120_000)) {
       this.refreshToken().subscribe({
-        next: () => {},
+        next: () => { },
         error: (err) => {
           if (err?.status === 401 || err?.status === 403) {
             this.logout();
@@ -150,7 +106,7 @@ export class AuthService {
       map(res => (res && res.data) ? res.data : res),
       tap((response: AuthResponse) => {
         if (response && response.token) {
-          this.saveToken(response.token);
+          this.accessToken = response.token;
           this.cookieService.set('username', response.username, 7);
           this.cookieService.set('role', response.role, 7);
 
@@ -166,16 +122,11 @@ export class AuthService {
   refreshToken(): Observable<AuthResponse> {
     if (this.refreshInFlight) return this.refreshInFlight;
 
-    this.refreshInFlight = this.refreshRequest().pipe(
-      // Un autre onglet a pu faire tourner le cookie de refresh entre-temps : on réessaie une fois
-      // avec le cookie à jour avant de considérer la session comme invalide.
-      catchError(err => err?.status === 401
-        ? timer(300).pipe(switchMap(() => this.refreshRequest()))
-        : throwError(() => err)),
+    this.refreshInFlight = this.http.post<any>(`${this.api}/refresh`, {}, { withCredentials: true }).pipe(
       map(res => (res && res.data) ? res.data : res),
       tap((response: AuthResponse) => {
         if (response && response.token) {
-          this.saveToken(response.token);
+          this.accessToken = response.token;
           if (response.username) this.cookieService.set('username', response.username, 7);
           if (response.role) this.cookieService.set('role', response.role, 7);
 
@@ -189,17 +140,6 @@ export class AuthService {
       shareReplay({ bufferSize: 1, refCount: false })
     );
     return this.refreshInFlight;
-  }
-
-  /**
-   * Le refresh token est à usage unique (rotation) et partagé entre tous les onglets via le cookie.
-   * Web Locks sérialise les renouvellements pour éviter que deux onglets envoient le même cookie
-   * simultanément (ce qui est rejeté en 401 puis déconnecte tout le monde).
-   */
-  private refreshRequest(): Observable<any> {
-    const call = () => firstValueFrom(this.http.post<any>(`${this.api}/refresh`, {}, { withCredentials: true }));
-    const locks = typeof navigator !== 'undefined' ? (navigator as any).locks : undefined;
-    return from(locks ? locks.request('oas-auth-refresh', call) : call());
   }
 
   register(data: RegisterRequest): Observable<void> {
@@ -217,10 +157,10 @@ export class AuthService {
 
   logout(): void {
     this.http.post(`${this.api}/signout`, {}, { withCredentials: true }).subscribe({
-      next: () => {},
-      error: () => {}
+      next: () => { },
+      error: () => { }
     });
-    this.saveToken(null);
+    this.accessToken = null;
     this.cookieService.delete('token');
     this.cookieService.delete('username');
     this.cookieService.delete('role');
@@ -229,13 +169,6 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    if (!this.accessToken && typeof localStorage !== 'undefined') {
-      try {
-        this.accessToken = localStorage.getItem(this.TOKEN_STORAGE_KEY);
-      } catch {
-        // Ignorer si stockage inaccessible
-      }
-    }
     return this.accessToken;
   }
 
@@ -308,7 +241,7 @@ export class AuthService {
       } else {
         // Token déjà expiré, tenter un refresh immédiat
         this.refreshToken().subscribe({
-          next: () => {},
+          next: () => { },
           error: (err) => {
             if (err?.status === 401 || err?.status === 403) {
               this.logout();
@@ -377,4 +310,3 @@ export class AuthService {
     return this.http.post<any>(`${this.api}/me/change-password`, { oldPassword, newPassword });
   }
 }
-
