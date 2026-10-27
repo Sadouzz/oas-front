@@ -15,6 +15,8 @@ import {
   StepAssignationDto,
   StepReparationResponseDto,
   StepReparationDto,
+  DocumentOrdreTravailDto,
+  TypeDocumentOt,
   StepPaiementResponseDto,
   StepPretALivrerResponseDto,
   StepPretALivrerDto,
@@ -222,6 +224,36 @@ export class OrdreTravailService {
   updateStepReparation(id: number, data: StepReparationDto): Observable<StepReparationDto> {
     return this.http.put<any>(`${this.api}/${id}/step-reparation`, data).pipe(
       map((res: any) => (res && res.data !== undefined ? res.data : res))
+    );
+  }
+
+  // Documents & Photos de l'Ordre de Travail (Étape Réparation)
+  getStepReparationDocuments(id: number): Observable<DocumentOrdreTravailDto[]> {
+    return this.http.get<any>(`${this.api}/${id}/step-reparation/documents`).pipe(
+      map((res: any) => (res && res.data !== undefined ? res.data : (Array.isArray(res) ? res : [])))
+    );
+  }
+
+  addDocumentOt(id: number, data: Partial<DocumentOrdreTravailDto>): Observable<DocumentOrdreTravailDto> {
+    return this.http.post<any>(`${this.api}/${id}/step-reparation/documents`, data).pipe(
+      map((res: any) => (res && res.data !== undefined ? res.data : res))
+    );
+  }
+
+  uploadDocumentOt(id: number, file: File, type?: TypeDocumentOt, remarque?: string): Observable<DocumentOrdreTravailDto> {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (type) formData.append('type', type);
+    if (remarque) formData.append('remarque', remarque);
+
+    return this.http.post<any>(`${this.api}/${id}/step-reparation/documents/upload`, formData).pipe(
+      map((res: any) => (res && res.data !== undefined ? res.data : res))
+    );
+  }
+
+  deleteDocumentOt(id: number, documentId: number): Observable<void> {
+    return this.http.delete(`${this.api}/${id}/documents/${documentId}`, { responseType: 'text' }).pipe(
+      map(() => void 0)
     );
   }
 

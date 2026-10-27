@@ -65,6 +65,13 @@
         </div>
       }
 
+      @if (ficheAtelier?.numero) {
+        <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-900">
+          <span class="text-blue-700 font-medium">Fiche Atelier :</span>
+          <span class="font-extrabold">{{ ficheAtelier?.numero }}</span>
+        </div>
+      }
+
       <!-- Bouton d'impression principal -->
       <button type="button" (click)="imprimer()"
         title="Imprimer l'Ordre de Travail complet (format A4)"
@@ -169,7 +176,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
               <span>Travaux demandés</span>
-              <span class="text-[10px] text-amber-700 font-semibold">(Issus de l'OR)</span>
+              <span class="text-[10px] text-amber-700 font-semibold">(Issus de l'OR / Fiche atelier)</span>
             </h3>
             @if (travauxDemandesList.length > 0) {
               <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
@@ -193,8 +200,8 @@
               </div>
             }
 
-            <!-- Description générale des travaux si disponible -->
-            @if (descriptionTravaux) {
+            <!-- Description générale des travaux si disponible et non redondante -->
+            @if (descriptionTravaux && !hasSingleTravailMatchingDescription) {
               <div class="mt-2 pt-2 border-t border-amber-200/50">
                 <span class="text-[11px] font-bold text-amber-900 block mb-1">Précisions client / réception :</span>
                 <p class="text-xs text-slate-800 bg-white/80 p-2.5 rounded-lg border border-amber-200/70 leading-relaxed whitespace-pre-wrap">
@@ -204,13 +211,13 @@
             }
           } @else {
             <div class="p-4 rounded-lg bg-white/70 border border-dashed border-amber-200 text-center text-xs text-amber-800/80">
-              Aucun travail spécifique décrit dans l'Ordre de Réparation d'origine.
+              Aucun travail spécifique décrit dans l'Ordre de Réparation ou la Fiche Atelier d'origine.
             </div>
           }
         </div>
       </div>
 
-      <!-- Défauts constatés à la réception (Issus de l'OR) -->
+      <!-- Défauts constatés à la réception (Issus de l'OR / Fiche atelier) -->
       <div class="p-4 rounded-xl border border-rose-200/80 bg-gradient-to-br from-white via-rose-50/20 to-rose-50/40 shadow-xs flex flex-col justify-between">
         <div>
           <div class="flex items-center justify-between mb-3">
@@ -219,7 +226,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
               <span>Défauts constatés</span>
-              <span class="text-[10px] text-rose-700 font-semibold">(Issus de l'OR)</span>
+              <span class="text-[10px] text-rose-700 font-semibold">(Issus de l'OR / Fiche atelier)</span>
             </h3>
             @if (defautsConstatesList.length > 0) {
               <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
@@ -236,14 +243,14 @@
                   <div class="flex items-center justify-between gap-2 p-2 rounded-lg bg-white/90 border border-rose-200/70 text-xs text-rose-950 shadow-2xs">
                     <div class="flex items-center gap-2 min-w-0">
                       <span class="w-2 h-2 rounded-full bg-rose-500 flex-shrink-0"></span>
-                      <span class="font-medium truncate">{{ d.nom || d.description || d }}</span>
+                      <span class="font-bold text-rose-900">{{ d.nom || 'Anomalie' }}</span>
+                      @if (d.designation || d.description) {
+                        <span class="text-xs text-rose-950 font-medium">· {{ d.designation || d.description }}</span>
+                      }
                     </div>
-                    @if (d.gravite) {
-                      <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
-                        [class]="d.gravite === 'CRITIQUE' || d.gravite === 'ELEVEE' ? 'bg-red-100 text-red-800' : 'bg-rose-100 text-rose-800'">
-                        {{ d.gravite }}
-                      </span>
-                    }
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-rose-100 text-rose-800 border border-rose-200">
+                      {{ d.gravite || 'Signalé' }}
+                    </span>
                   </div>
                 }
               </div>
@@ -252,7 +259,7 @@
             <!-- Note globale sur les défauts si disponible -->
             @if (texteDefautsConstates) {
               <div class="mt-2 pt-2 border-t border-rose-200/50">
-                <span class="text-[11px] font-bold text-rose-900 block mb-1">Rapport visuel à l'arrivée :</span>
+                <span class="text-[11px] font-bold text-rose-900 block mb-1">Observations / Remarques réception :</span>
                 <p class="text-xs text-slate-800 bg-white/80 p-2.5 rounded-lg border border-rose-200/70 leading-relaxed whitespace-pre-wrap">
                   {{ texteDefautsConstates }}
                 </p>
@@ -267,6 +274,60 @@
       </div>
 
     </div>
+
+    <!-- ========================================================================= -->
+    <!-- 2.bis ÉTAT DES LIEUX & RÉCEPTION DU VÉHICULE (FICHE ATELIER)              -->
+    <!-- ========================================================================= -->
+    @if (hasFicheAtelierData) {
+      <div class="p-4 rounded-xl border border-blue-200/80 bg-gradient-to-br from-white via-blue-50/15 to-slate-50 shadow-xs document-print-card space-y-3">
+        <div class=" flex flex-wrap items-center justify-between gap-2 border-b border-blue-100 pb-2.5">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-blue-950 flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            <span>État des lieux & Réception atelier</span>
+            <span class="text-[10px] text-blue-600 font-semibold">(Fiche {{ ficheAtelier?.numero || ('#' + (ficheAtelier?.id || '')) }})</span>
+          </h3>
+
+          <div class="flex items-center gap-3 text-xs text-blue-950 font-medium flex-wrap">
+            @if (ficheAtelier?.kilometrage) {
+              <span class="bg-blue-100/70 px-2 py-0.5 rounded text-[11px]">Kilométrage : <strong>{{ ficheAtelier?.kilometrage }} km</strong></span>
+            }
+            @if (ficheAtelier?.niveauEssence) {
+              <span class="bg-blue-100/70 px-2 py-0.5 rounded text-[11px]">Carburant : <strong>{{ ficheAtelier?.niveauEssence }}%</strong></span>
+            }
+            @if (ficheAtelier?.nomChauffeur) {
+              <span class="bg-blue-100/70 px-2 py-0.5 rounded text-[11px]">Chauffeur : <strong>{{ ficheAtelier?.nomChauffeur }}</strong> ({{ ficheAtelier?.telephoneChauffeur || '-' }})</span>
+            }
+          </div>
+        </div>
+
+        @if (lignesReceptionList.length > 0) {
+          <div>
+            <span class="text-[11px] font-bold text-slate-700 block mb-2">Points de contrôle à l'arrivée :</span>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+              @for (item of lignesReceptionList; track $index) {
+                <div class="p-2 rounded-lg border text-xs flex items-center justify-between gap-1.5 transition"
+                  [ngClass]="item.etat === true || item.statut === 'OUI' || item.valeur === 'OUI' || item.oui === true
+                             ? 'bg-emerald-50/70 border-emerald-200 text-emerald-900' 
+                             : item.etat === false || item.statut === 'NON' || item.valeur === 'NON' || item.non === true
+                               ? 'bg-red-50/70 border-red-200 text-red-900'
+                               : 'bg-slate-50 border-slate-200 text-slate-500'">
+                  <span class="font-medium truncate text-[11px]">{{ item.nom }}</span>
+                  @if (item.etat === true || item.statut === 'OUI' || item.valeur === 'OUI' || item.oui === true) {
+                    <span class="px-1.5 py-0.2 rounded text-[9px] font-black bg-emerald-200 text-emerald-800">OUI</span>
+                  } @else if (item.etat === false || item.statut === 'NON' || item.valeur === 'NON' || item.non === true) {
+                    <span class="px-1.5 py-0.2 rounded text-[9px] font-black bg-red-200 text-red-800">NON</span>
+                  } @else {
+                    <span class="text-[10px] text-slate-400 font-bold">—</span>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
 
     <!-- ========================================================================= -->
     <!-- 3. REMARQUES & OBSERVATIONS DU DIAGNOSTIC ATELIER (Issu de l'OR)          -->
@@ -481,9 +542,14 @@
                   }
                 </td>
                 <td class="px-4 py-2.5">
-                  <span class="px-2 py-0.5 rounded text-[10px] font-bold"
-                    [class]="p.type === 'PDP' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'">
-                    {{ p.type || (p.isCustom ? 'PDG' : 'PDP') }}
+                  @let pieceType = p.type || pm?.type || (p.isCustom ? 'PDS' : 'PDP');
+                  <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider border"
+                    [ngClass]="pieceType === 'PDP' 
+                               ? 'bg-blue-100 text-blue-800 border-blue-300' 
+                               : pieceType === 'PDG'
+                                 ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                                 : 'bg-amber-100 text-amber-800 border-amber-300'">
+                    {{ pieceType }}
                   </span>
                 </td>
                 <td class="px-4 py-2.5 text-center font-mono font-bold">{{ p.quantite }}</td>
@@ -531,7 +597,7 @@
           <tbody class="divide-y divide-oas-line">
             @for (mo of lignesMainDoeuvreList; track mo.id) {
               <tr class="hover:bg-slate-50/60 transition">
-                <td class="px-4 py-2.5 font-medium text-oas-ink">{{ mo.designation }}</td>
+                <td class="px-4 py-2.5 font-medium text-oas-ink">{{ mo.nom || mo.designation || mo.description || mo.mainDoeuvre?.nom || mo.mainDoeuvre?.description || 'Main-d\'œuvre' }}</td>
                 <td class="px-4 py-2.5 text-center font-mono font-bold">{{ mo.nbreHeure }} h</td>
                 <td class="px-4 py-2.5 text-right font-mono text-oas-muted">{{ mo.tarifHoraire | number:'1.0-0' }} FCFA/h</td>
                 <td class="px-4 py-2.5 text-right whitespace-nowrap">

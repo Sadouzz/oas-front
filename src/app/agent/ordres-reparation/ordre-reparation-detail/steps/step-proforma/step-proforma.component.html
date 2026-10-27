@@ -259,47 +259,118 @@
       <!-- ══════════════════════════════════════════════════════════════════════ -->
       <!-- 4. RÉCAPITULATIF FINANCIER                                            -->
       <!-- ══════════════════════════════════════════════════════════════════════ -->
-      <div class="bg-white border border-oas-line rounded-2xl p-5 shadow-2xs space-y-3">
-        <h3 class="text-sm font-bold text-oas-ink uppercase tracking-wide">Récapitulatif Financier</h3>
+      <div class="bg-white border border-oas-line rounded-2xl p-5 shadow-xs space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-oas-line/70 pb-3">
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 text-xs font-bold">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </span>
+            <h3 class="text-sm font-black text-oas-ink uppercase tracking-wide">Récapitulatif Financier</h3>
+          </div>
+          <div class="flex items-center gap-2">
+            @if (tauxRemiseClient > 0) {
+              <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                Remise client : {{ tauxRemiseClient }}%
+              </span>
+            }
+            <span class="px-2.5 py-1 rounded-full text-xs font-bold"
+              [ngClass]="proformaChargee.tvaApplicable === false ? 'bg-slate-100 text-slate-700' : 'bg-blue-50 text-blue-700 border border-blue-200'">
+              {{ proformaChargee.tvaApplicable === false ? 'TVA Exonérée' : 'TVA ' + tvaTaux + '%' }}
+            </span>
+          </div>
+        </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
-          <div class="p-3 bg-oas-bg/50 rounded-xl border border-oas-line">
-            <span class="text-[11px] text-oas-muted block font-medium">Pièces après remise générale</span>
-            <strong class="text-sm font-bold text-oas-ink">{{ totalPiecesEstime | number }} FCFA</strong>
+        <!-- 4 Cartes de synthèse principales -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <!-- Pièces HT -->
+          <div class="p-3.5 bg-slate-50/70 rounded-xl border border-oas-line">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-oas-muted block">Pièces (Net HT)</span>
+            <p class="text-lg font-black text-oas-ink mt-0.5">{{ totalPiecesNet | number }} <span class="text-xs font-normal text-oas-muted">FCFA</span></p>
+            @if (tauxRemiseClient > 0 && montantRemiseClientCalcule > 0) {
+              <span class="text-[10px] text-emerald-700 font-medium block mt-0.5 truncate" title="Remise compte client déduite">
+                Dont remise client : −{{ montantRemiseClientCalcule | number }} FCFA
+              </span>
+            }
           </div>
-          <div class="p-3 bg-oas-bg/50 rounded-xl border border-oas-line">
-            <span class="text-[11px] text-oas-muted block font-medium">Main-d'œuvre après remise générale</span>
-            <strong class="text-sm font-bold text-oas-ink">{{ totalMOEstime | number }} FCFA</strong>
+
+          <!-- Main-d'œuvre HT -->
+          <div class="p-3.5 bg-slate-50/70 rounded-xl border border-oas-line">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-oas-muted block">Main-d'œuvre HT</span>
+            <p class="text-lg font-black text-oas-ink mt-0.5">{{ totalMOEstime | number }} <span class="text-xs font-normal text-oas-muted">FCFA</span></p>
+            @if (montantRemiseGenerale > 0) {
+              <span class="text-[10px] text-emerald-700 font-medium block mt-0.5 truncate" title="Remises sur lignes déduites">
+                Remises lignes : −{{ montantRemiseGenerale | number }} FCFA
+              </span>
+            }
           </div>
-          <div class="p-3 bg-oas-bg/50 rounded-xl border border-oas-line">
-            <span class="text-[11px] text-oas-muted block font-medium">Remises générales appliquées</span>
-            <strong class="text-sm font-bold text-oas-ink">−{{ montantRemiseGenerale | number }} FCFA</strong>
+
+          <!-- Total HT -->
+          <div class="p-3.5 bg-slate-50/70 rounded-xl border border-oas-line">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-oas-muted block">Total Général HT</span>
+            <p class="text-lg font-black text-oas-ink mt-0.5">{{ (proformaChargee.montantHT || totalHTCalcule) | number }} <span class="text-xs font-normal text-oas-muted">FCFA</span></p>
+            <span class="text-[10px] text-oas-muted block mt-0.5">
+              + TVA : {{ (proformaChargee.montantTVA || totalTVACalcule) | number }} FCFA
+            </span>
           </div>
-          <div class="p-3 bg-oas-bg/50 rounded-xl border border-oas-line">
-            <span class="text-[11px] text-oas-muted block font-medium">Total après remises générales</span>
-            <strong class="text-sm font-bold text-oas-ink">{{ (totalPiecesEstime + totalMOEstime) | number }} FCFA</strong>
+
+          <!-- Net à Payer (TTC) -->
+          <div class="p-3.5 bg-gradient-to-br from-indigo-600 to-blue-700 rounded-xl text-white shadow-xs">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-blue-100 block">Net à Payer (TTC)</span>
+            <p class="text-xl font-black text-white mt-0.5">{{ totalTTCCalcule | number }} <span class="text-xs font-semibold text-blue-200">FCFA</span></p>
+            <span class="text-[10px] text-blue-100 block mt-0.5">
+              Montant total final
+            </span>
           </div>
-          @if (tauxRemiseClient > 0 || proformaChargee.montantRemiseClient > 0) {
-            <div class="p-3 bg-oas-bg/50 rounded-xl border border-oas-line">
-              <span class="text-[11px] text-oas-muted block font-medium">Remise compte client ({{ tauxRemiseClient }} %)</span>
-              <strong class="text-sm font-bold text-oas-ink">−{{ (proformaChargee.montantRemiseClient || totalPiecesEstime * tauxRemiseClient / 100) | number }} FCFA</strong>
+        </div>
+
+        <!-- Détail structuré & aéré (Ventilation comptable) -->
+        <div class="bg-slate-50/60 rounded-xl border border-oas-line/80 p-4 text-xs space-y-2">
+          <div class="flex items-center justify-between text-oas-muted">
+            <span>Sous-total Pièces détachées :</span>
+            <span class="font-bold text-oas-ink">{{ totalPiecesEstime | number }} FCFA</span>
+          </div>
+
+          @if (tauxRemiseClient > 0 && montantRemiseClientCalcule > 0) {
+            <div class="flex items-center justify-between text-emerald-700 font-medium">
+              <span>Remise compte client ({{ tauxRemiseClient }}% sur pièces) :</span>
+              <span class="font-bold">−{{ montantRemiseClientCalcule | number }} FCFA</span>
             </div>
           }
-          <div class="p-3 bg-oas-bg/50 rounded-xl border border-oas-line">
-            <span class="text-[11px] text-oas-muted block font-medium">Pièces après remise compte client</span>
-            <strong class="text-sm font-bold text-oas-ink">{{ (totalPiecesEstime - (proformaChargee.montantRemiseClient || totalPiecesEstime * tauxRemiseClient / 100)) | number }} FCFA</strong>
+
+          <div class="flex items-center justify-between text-oas-muted">
+            <span>Sous-total Main-d'œuvre :</span>
+            <span class="font-bold text-oas-ink">{{ totalMOEstime | number }} FCFA</span>
           </div>
-          <div class="p-3 bg-oas-bg/50 rounded-xl border border-oas-line">
-            <span class="text-[11px] text-oas-muted block font-medium">Total HT après remises</span>
-            <strong class="text-sm font-extrabold text-oas-ink">{{ (proformaChargee.montantHT || totalHTCalcule) | number }} FCFA</strong>
+
+          @if (montantRemiseGenerale > 0) {
+            <div class="flex items-center justify-between text-emerald-700 font-medium">
+              <span>Remises commerciales sur les lignes :</span>
+              <span class="font-bold">−{{ montantRemiseGenerale | number }} FCFA</span>
+            </div>
+          }
+
+          <div class="border-t border-oas-line/70 pt-2 flex items-center justify-between font-bold text-oas-ink">
+            <span>Total Hors Taxes (HT Net) :</span>
+            <span class="text-sm font-black">{{ (proformaChargee.montantHT || totalHTCalcule) | number }} FCFA</span>
           </div>
-          <div class="p-3 bg-oas-bg/50 rounded-xl border border-oas-line">
-            <span class="text-[11px] text-oas-muted block font-medium">{{ proformaChargee.tvaApplicable === false ? 'TVA désactivée' : 'TVA (' + tvaTaux + '%)' }}</span>
-            <strong class="text-sm font-bold text-oas-ink">{{ (proformaChargee.montantTVA || totalTVACalcule) | number }} FCFA</strong>
+
+          <div class="flex items-center justify-between text-oas-muted">
+            <span>{{ proformaChargee.tvaApplicable === false ? 'TVA (Désactivée) :' : 'TVA (' + tvaTaux + '%) :' }}</span>
+            <span class="font-bold text-oas-ink">{{ (proformaChargee.montantTVA || totalTVACalcule) | number }} FCFA</span>
           </div>
-          <div class="p-3 bg-oas-accent/10 rounded-xl border border-oas-accent/30">
-            <span class="text-[11px] text-oas-accent font-bold block uppercase">Net à Payer (TTC)</span>
-            <strong class="text-base font-black text-oas-accent whitespace-nowrap">{{ totalTTCCalcule | number }} FCFA</strong>
+
+          @if (proformaChargee.montantTimbre && proformaChargee.montantTimbre > 0) {
+            <div class="flex items-center justify-between text-oas-muted">
+              <span>Timbre fiscal :</span>
+              <span class="font-bold text-oas-ink">{{ proformaChargee.montantTimbre | number }} FCFA</span>
+            </div>
+          }
+
+          <div class="border-t-2 border-oas-line pt-2 flex items-center justify-between text-sm font-black">
+            <span class="text-oas-ink uppercase tracking-wide">Total Net à Payer (TTC) :</span>
+            <span class="text-base text-indigo-700 font-black">{{ totalTTCCalcule | number }} FCFA</span>
           </div>
         </div>
 
@@ -602,7 +673,7 @@
 <div class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 transition-opacity" (click)="closeModalEnvoi()">
   <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden border border-oas-line" (click)="$event.stopPropagation()">
     <!-- Header -->
-    <div class="px-6 py-4 border-b border-oas-line flex items-center justify-between bg-blue-50/60 flex-shrink-0">
+    <div class="px-6 py-4 border-b border-oas-line flex items-center justify-between bg-blue-50/70 flex-shrink-0">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0 shadow-2xs">
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -610,7 +681,7 @@
           </svg>
         </div>
         <div>
-          <h3 class="font-bold text-base text-oas-ink">Envoyer la proforma au client</h3>
+          <h3 class="font-black text-base text-oas-ink">Envoyer la proforma au client</h3>
           <p class="text-xs font-mono font-bold text-blue-700 mt-0.5">{{ proformaChargee.numero }}</p>
         </div>
       </div>
@@ -638,29 +709,43 @@
       </div>
 
       <!-- Informations Client & Véhicule -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 bg-oas-bg/70 rounded-xl border border-oas-line">
-        <div>
-          <span class="text-[11px] text-oas-muted font-medium block">Client</span>
-          <span class="font-bold text-oas-ink text-sm">
-            {{ proformaChargee.clientNom || (loadedOrdre?.vehicule?.client ? (loadedOrdre?.vehicule?.client?.firstName + ' ' + loadedOrdre?.vehicule?.client?.lastName) : '—') }}
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 bg-slate-50/80 rounded-xl border border-oas-line">
+        <div class="flex items-center gap-2.5">
+          <span class="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0 font-bold text-xs">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
           </span>
+          <div class="min-w-0">
+            <span class="text-[10px] uppercase font-bold text-oas-muted block tracking-wide">Client</span>
+            <span class="font-bold text-oas-ink text-xs truncate block">
+              {{ proformaChargee.clientNom || (loadedOrdre?.vehicule?.client ? (loadedOrdre?.vehicule?.client?.firstName + ' ' + loadedOrdre?.vehicule?.client?.lastName) : '—') }}
+            </span>
+          </div>
         </div>
-        <div>
-          <span class="text-[11px] text-oas-muted font-medium block">Véhicule</span>
-          <span class="font-mono font-bold text-oas-ink text-sm">
-            {{ proformaChargee.immatriculation || loadedOrdre?.vehicule?.immatriculation || '—' }}
+        <div class="flex items-center gap-2.5">
+          <span class="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center flex-shrink-0 font-bold text-xs">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h8m-8 4h8m-4 4h4M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" />
+            </svg>
           </span>
+          <div class="min-w-0">
+            <span class="text-[10px] uppercase font-bold text-oas-muted block tracking-wide">Véhicule</span>
+            <span class="font-mono font-bold text-oas-ink text-xs truncate block">
+              {{ proformaChargee.immatriculation || loadedOrdre?.vehicule?.immatriculation || '—' }}
+            </span>
+          </div>
         </div>
       </div>
 
       <!-- Détail des Pièces Détachées -->
-      <div class="bg-white border border-oas-line rounded-xl p-3.5 space-y-2.5">
+      <div class="bg-white border border-oas-line rounded-xl p-3.5 space-y-2">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-blue-600"></span>
             <h4 class="font-bold text-xs text-oas-ink uppercase tracking-wide">Pièces détachées & Fournitures</h4>
           </div>
-          <span class="text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">
+          <span class="text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200/60">
             {{ lignesPiecesAffichees.length }} article{{ lignesPiecesAffichees.length > 1 ? 's' : '' }}
           </span>
         </div>
@@ -668,14 +753,12 @@
         @if (lignesPiecesAffichees.length > 0) {
           <div class="overflow-x-auto rounded-lg border border-oas-line">
             <table class="w-full text-xs text-left">
-              <thead class="bg-oas-bg text-oas-muted uppercase font-bold text-[10px] border-b border-oas-line">
+              <thead class="bg-slate-50 text-oas-muted uppercase font-bold text-[10px] border-b border-oas-line">
                 <tr>
-                  <th class="px-2.5 py-2">Type</th>
                   <th class="px-3 py-2">Désignation</th>
-                  <th class="px-2.5 py-2 text-center">Qté</th>
-                  <th class="px-3 py-2 text-right">Prix unitaire HT avant remise</th>
-                  <th class="px-3 py-2 text-right">Remise générale</th>
-                  <th class="px-3 py-2 text-right">Total HT après remise</th>
+                  <th class="px-2.5 py-2 text-center w-16">Qté</th>
+                  <th class="px-3 py-2 text-right w-28">Prix Unit. HT</th>
+                  <th class="px-3 py-2 text-right w-32">Total HT Net</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-oas-line">
@@ -686,33 +769,38 @@
                   @let pQte = getPieceQuantite(ligne);
                   @let pPrix = getPiecePrixUnitaire(ligne);
                   @let pTot = getPieceTotal(ligne);
+                  @let pTaux = getPieceTauxRemise(ligne);
 
                   <tr class="hover:bg-slate-50/70 transition">
-                    <td class="px-2.5 py-2 font-mono text-[10px]">
-                      <span class="px-1.5 py-0.5 rounded text-[10px] font-bold"
-                            [class.bg-blue-50]="pType !== 'PDS'"
-                            [class.text-blue-700]="pType !== 'PDS'"
-                            [class.bg-amber-50]="pType === 'PDS'"
-                            [class.text-amber-700]="pType === 'PDS'">
-                        {{ pType }}
-                      </span>
-                    </td>
                     <td class="px-3 py-2">
-                      <div class="font-semibold text-oas-ink">{{ pDesig }}</div>
+                      <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold"
+                              [class.bg-blue-50]="pType !== 'PDS'"
+                              [class.text-blue-700]="pType !== 'PDS'"
+                              [class.bg-amber-50]="pType === 'PDS'"
+                              [class.text-amber-700]="pType === 'PDS'">
+                          {{ pType }}
+                        </span>
+                        <span class="font-semibold text-oas-ink">{{ pDesig }}</span>
+                      </div>
                       @if (pRef && pRef !== pDesig) {
-                        <div class="text-[10px] text-oas-muted font-mono">Réf: {{ pRef }}</div>
+                        <div class="text-[10px] text-oas-muted font-mono mt-0.5">Réf: {{ pRef }}</div>
                       }
                     </td>
                     <td class="px-2.5 py-2 text-center font-bold text-oas-ink">{{ pQte }}</td>
                     <td class="px-3 py-2 text-right text-oas-muted">{{ pPrix | number }} FCFA</td>
-                    <td class="px-3 py-2 text-right whitespace-nowrap">{{ getPieceTauxRemise(ligne) }} %<span class="block text-[10px] text-oas-muted">−{{ getPieceMontantRemise(ligne) | number }} FCFA</span></td>
-                    <td class="px-3 py-2 text-right font-extrabold text-oas-ink">{{ pTot | number }} FCFA</td>
+                    <td class="px-3 py-2 text-right font-bold text-oas-ink">
+                      {{ pTot | number }} FCFA
+                      @if (pTaux > 0) {
+                        <span class="block text-[10px] text-emerald-600 font-normal">(-{{ pTaux }}%)</span>
+                      }
+                    </td>
                   </tr>
                 }
               </tbody>
-              <tfoot class="bg-oas-bg/70 border-t border-oas-line font-bold text-xs text-oas-ink">
+              <tfoot class="bg-slate-50/80 border-t border-oas-line font-bold text-xs">
                 <tr>
-                  <td colspan="5" class="px-3 py-2 text-right text-oas-muted">Sous-total Pièces HT après remise générale :</td>
+                  <td colspan="3" class="px-3 py-2 text-right text-oas-muted">Sous-total Pièces HT :</td>
                   <td class="px-3 py-2 text-right font-black text-oas-ink whitespace-nowrap">
                     {{ totalPiecesEstime | number }} FCFA
                   </td>
@@ -721,20 +809,20 @@
             </table>
           </div>
         } @else {
-          <div class="p-3 rounded-lg bg-oas-bg/50 border border-oas-line text-[11px] text-oas-muted text-center italic">
+          <div class="p-3 rounded-lg bg-slate-50 border border-oas-line text-[11px] text-oas-muted text-center italic">
             Aucune pièce détachée incluse.
           </div>
         }
       </div>
 
       <!-- Détail de la Main-d'œuvre -->
-      <div class="bg-white border border-oas-line rounded-xl p-3.5 space-y-2.5">
+      <div class="bg-white border border-oas-line rounded-xl p-3.5 space-y-2">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-purple-600"></span>
             <h4 class="font-bold text-xs text-oas-ink uppercase tracking-wide">Prestations de Main-d'œuvre</h4>
           </div>
-          <span class="text-[11px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full">
+          <span class="text-[11px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200/60">
             {{ lignesMainDoeuvreAffichees.length }} prestation{{ lignesMainDoeuvreAffichees.length > 1 ? 's' : '' }}
           </span>
         </div>
@@ -742,13 +830,12 @@
         @if (lignesMainDoeuvreAffichees.length > 0) {
           <div class="overflow-x-auto rounded-lg border border-oas-line">
             <table class="w-full text-xs text-left">
-              <thead class="bg-oas-bg text-oas-muted uppercase font-bold text-[10px] border-b border-oas-line">
+              <thead class="bg-slate-50 text-oas-muted uppercase font-bold text-[10px] border-b border-oas-line">
                 <tr>
                   <th class="px-3 py-2">Prestation / Intervention</th>
-                  <th class="px-2.5 py-2 text-center">Heures / Qté</th>
-                  <th class="px-3 py-2 text-right">Tarif horaire HT avant remise</th>
-                  <th class="px-3 py-2 text-right">Remise générale</th>
-                  <th class="px-3 py-2 text-right">Total HT après remise</th>
+                  <th class="px-2.5 py-2 text-center w-24">Durée</th>
+                  <th class="px-3 py-2 text-right w-28">Tarif/h HT</th>
+                  <th class="px-3 py-2 text-right w-32">Total HT Net</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-oas-line">
@@ -758,6 +845,7 @@
                   @let moH = getMOHeures(ligne);
                   @let moTarif = getMOTarifHoraire(ligne);
                   @let moTot = getMOTotal(ligne);
+                  @let moTaux = getMOTauxRemise(ligne);
 
                   <tr class="hover:bg-slate-50/70 transition">
                     <td class="px-3 py-2">
@@ -768,14 +856,18 @@
                     </td>
                     <td class="px-2.5 py-2 text-center font-bold text-oas-ink">{{ moH }} h</td>
                     <td class="px-3 py-2 text-right text-oas-muted">{{ moTarif | number }} FCFA</td>
-                    <td class="px-3 py-2 text-right whitespace-nowrap">{{ getMOTauxRemise(ligne) }} %<span class="block text-[10px] text-oas-muted">−{{ getMOMontantRemise(ligne) | number }} FCFA</span></td>
-                    <td class="px-3 py-2 text-right font-extrabold text-oas-ink">{{ moTot | number }} FCFA</td>
+                    <td class="px-3 py-2 text-right font-bold text-oas-ink">
+                      {{ moTot | number }} FCFA
+                      @if (moTaux > 0) {
+                        <span class="block text-[10px] text-emerald-600 font-normal">(-{{ moTaux }}%)</span>
+                      }
+                    </td>
                   </tr>
                 }
               </tbody>
-              <tfoot class="bg-oas-bg/70 border-t border-oas-line font-bold text-xs text-oas-ink">
+              <tfoot class="bg-slate-50/80 border-t border-oas-line font-bold text-xs">
                 <tr>
-                  <td colspan="4" class="px-3 py-2 text-right text-oas-muted">Sous-total Main-d'œuvre HT après remise générale :</td>
+                  <td colspan="3" class="px-3 py-2 text-right text-oas-muted">Sous-total Main-d'œuvre HT :</td>
                   <td class="px-3 py-2 text-right font-black text-oas-ink whitespace-nowrap">
                     {{ totalMOEstime | number }} FCFA
                   </td>
@@ -784,33 +876,60 @@
             </table>
           </div>
         } @else {
-          <div class="p-3 rounded-lg bg-oas-bg/50 border border-oas-line text-[11px] text-oas-muted text-center italic">
+          <div class="p-3 rounded-lg bg-slate-50 border border-oas-line text-[11px] text-oas-muted text-center italic">
             Aucune prestation de main-d'œuvre incluse.
           </div>
         }
       </div>
 
-      <!-- Récapitulatif Financier Complet -->
-      <div class="bg-blue-50/40 rounded-xl p-4 border border-blue-200/70 space-y-2">
+      <!-- Récapitulatif Financier Complet & Cohérent -->
+      <div class="bg-slate-50 rounded-xl p-4 border border-oas-line space-y-2">
         <div class="flex justify-between items-center text-xs">
-          <span class="text-oas-muted">Sous-total Pièces HT :</span>
+          <span class="text-oas-muted font-medium">Sous-total Pièces détachées HT :</span>
           <span class="font-bold text-oas-ink">{{ totalPiecesEstime | number }} FCFA</span>
         </div>
+
+        @if (tauxRemiseClient > 0 && montantRemiseClientCalcule > 0) {
+          <div class="flex justify-between items-center text-xs text-emerald-700 font-medium">
+            <span>Remise compte client ({{ tauxRemiseClient }}% sur pièces) :</span>
+            <span class="font-bold">−{{ montantRemiseClientCalcule | number }} FCFA</span>
+          </div>
+        }
+
         <div class="flex justify-between items-center text-xs">
-          <span class="text-oas-muted">Sous-total Main-d'œuvre HT :</span>
+          <span class="text-oas-muted font-medium">Sous-total Main-d'œuvre HT :</span>
           <span class="font-bold text-oas-ink">{{ totalMOEstime | number }} FCFA</span>
         </div>
-        <div class="flex justify-between items-center text-xs pt-1 border-t border-blue-200/50">
-          <span class="text-oas-muted font-medium">Montant Total HT :</span>
-          <span class="font-bold text-oas-ink">{{ totalHTCalcule | number }} FCFA</span>
+
+        @if (montantRemiseGenerale > 0) {
+          <div class="flex justify-between items-center text-xs text-emerald-700 font-medium">
+            <span>Remises commerciales sur lignes :</span>
+            <span class="font-bold">−{{ montantRemiseGenerale | number }} FCFA</span>
+          </div>
+        }
+
+        <div class="flex justify-between items-center text-xs pt-2 border-t border-oas-line/70 font-bold">
+          <span class="text-oas-ink">Montant Total Net HT :</span>
+          <span class="font-black text-oas-ink">{{ (proformaChargee.montantHT || totalHTCalcule) | number }} FCFA</span>
         </div>
+
         <div class="flex justify-between items-center text-xs">
-          <span class="text-oas-muted font-medium">TVA ({{ tvaTaux }}%) :</span>
-          <span class="font-bold text-oas-ink">{{ totalTVACalcule | number }} FCFA</span>
+          <span class="text-oas-muted font-medium">
+            {{ proformaChargee.tvaApplicable === false ? 'TVA (Désactivée) :' : 'TVA (' + tvaTaux + '%) :' }}
+          </span>
+          <span class="font-bold text-oas-ink">{{ (proformaChargee.montantTVA || totalTVACalcule) | number }} FCFA</span>
         </div>
-        <div class="flex justify-between items-center pt-2 border-t border-blue-200 font-extrabold text-sm">
-          <span class="text-blue-900 uppercase">Net à payer (TTC) :</span>
-          <span class="text-base font-black text-blue-700">
+
+        @if (proformaChargee.montantTimbre && proformaChargee.montantTimbre > 0) {
+          <div class="flex justify-between items-center text-xs">
+            <span class="text-oas-muted font-medium">Timbre fiscal :</span>
+            <span class="font-bold text-oas-ink">{{ proformaChargee.montantTimbre | number }} FCFA</span>
+          </div>
+        }
+
+        <div class="flex justify-between items-center pt-2.5 border-t-2 border-blue-300 font-extrabold text-sm">
+          <span class="text-blue-950 uppercase tracking-wide">Net à Payer (TTC) :</span>
+          <span class="text-lg font-black text-blue-700">
             {{ totalTTCCalcule | number }} FCFA
           </span>
         </div>
@@ -818,9 +937,9 @@
     </div>
 
     <!-- Footer -->
-    <div class="px-6 py-4 border-t border-oas-line bg-oas-bg/40 flex items-center justify-end gap-3 flex-shrink-0">
+    <div class="px-6 py-4 border-t border-oas-line bg-slate-50 flex items-center justify-end gap-3 flex-shrink-0">
       <button type="button" (click)="closeModalEnvoi()"
-        class="px-4 py-2.5 rounded-xl border border-oas-line text-oas-ink font-semibold text-xs hover:bg-white transition cursor-pointer">
+        class="px-4 py-2.5 rounded-xl border border-oas-line bg-white text-oas-ink font-semibold text-xs hover:bg-slate-100 transition cursor-pointer">
         Annuler
       </button>
       <button type="button" (click)="confirmerEnvoiAuClient()" [disabled]="envoiEnCours"
@@ -850,7 +969,7 @@
 <div class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 transition-opacity" (click)="closeModalValider()">
   <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden border border-oas-line" (click)="$event.stopPropagation()">
     <!-- Header -->
-    <div class="px-6 py-4 border-b border-oas-line flex items-center justify-between bg-emerald-50/60 flex-shrink-0">
+    <div class="px-6 py-4 border-b border-oas-line flex items-center justify-between bg-emerald-50/70 flex-shrink-0">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0 shadow-2xs">
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -858,7 +977,7 @@
           </svg>
         </div>
         <div>
-          <h3 class="font-bold text-base text-oas-ink">Validation de la Facture Proforma</h3>
+          <h3 class="font-black text-base text-oas-ink">Validation de la Facture Proforma</h3>
           <p class="text-xs font-mono font-bold text-emerald-700 mt-0.5">{{ proformaChargee.numero }}</p>
         </div>
       </div>
@@ -870,45 +989,59 @@
       </button>
     </div>
 
-    <!-- Scrollable Body with Full Details -->
+    <!-- Scrollable Body -->
     <div class="p-6 space-y-4 overflow-y-auto flex-1 text-xs">
       <!-- Explication accord client -->
       <div class="p-3.5 bg-emerald-50/70 border border-emerald-200/80 rounded-xl text-xs text-emerald-950 flex items-start gap-3">
         <svg class="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <div class="space-y-1">
+        <div>
           <p class="font-bold text-emerald-900">Confirmation de l'accord client</p>
-          <p class="text-emerald-800 leading-relaxed">
-            Confirmez-vous l'accord du client sur cette facture proforma ? Cette validation enregistrera le devis comme accepté et permettra de poursuivre vers les étapes suivantes de l'ordre de réparation.
+          <p class="text-emerald-800 leading-relaxed mt-0.5">
+            Confirmez-vous l'accord du client sur cette facture proforma ? Cette action enregistrera le devis comme <strong>accepté</strong> pour poursuivre les réparations.
           </p>
         </div>
       </div>
 
       <!-- Informations Client & Véhicule -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 bg-oas-bg/70 rounded-xl border border-oas-line">
-        <div>
-          <span class="text-[11px] text-oas-muted font-medium block">Client</span>
-          <span class="font-bold text-oas-ink text-sm">
-            {{ proformaChargee.clientNom || (loadedOrdre?.vehicule?.client ? (loadedOrdre?.vehicule?.client?.firstName + ' ' + loadedOrdre?.vehicule?.client?.lastName) : '—') }}
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 bg-slate-50/80 rounded-xl border border-oas-line">
+        <div class="flex items-center gap-2.5">
+          <span class="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0 font-bold text-xs">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
           </span>
+          <div class="min-w-0">
+            <span class="text-[10px] uppercase font-bold text-oas-muted block tracking-wide">Client</span>
+            <span class="font-bold text-oas-ink text-xs truncate block">
+              {{ proformaChargee.clientNom || (loadedOrdre?.vehicule?.client ? (loadedOrdre?.vehicule?.client?.firstName + ' ' + loadedOrdre?.vehicule?.client?.lastName) : '—') }}
+            </span>
+          </div>
         </div>
-        <div>
-          <span class="text-[11px] text-oas-muted font-medium block">Véhicule</span>
-          <span class="font-mono font-bold text-oas-ink text-sm">
-            {{ proformaChargee.immatriculation || loadedOrdre?.vehicule?.immatriculation || '—' }}
+        <div class="flex items-center gap-2.5">
+          <span class="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center flex-shrink-0 font-bold text-xs">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h8m-8 4h8m-4 4h4M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" />
+            </svg>
           </span>
+          <div class="min-w-0">
+            <span class="text-[10px] uppercase font-bold text-oas-muted block tracking-wide">Véhicule</span>
+            <span class="font-mono font-bold text-oas-ink text-xs truncate block">
+              {{ proformaChargee.immatriculation || loadedOrdre?.vehicule?.immatriculation || '—' }}
+            </span>
+          </div>
         </div>
       </div>
 
       <!-- Détail des Pièces Détachées -->
-      <div class="bg-white border border-oas-line rounded-xl p-3.5 space-y-2.5">
+      <div class="bg-white border border-oas-line rounded-xl p-3.5 space-y-2">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-blue-600"></span>
             <h4 class="font-bold text-xs text-oas-ink uppercase tracking-wide">Pièces détachées & Fournitures</h4>
           </div>
-          <span class="text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">
+          <span class="text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200/60">
             {{ lignesPiecesAffichees.length }} article{{ lignesPiecesAffichees.length > 1 ? 's' : '' }}
           </span>
         </div>
@@ -916,14 +1049,12 @@
         @if (lignesPiecesAffichees.length > 0) {
           <div class="overflow-x-auto rounded-lg border border-oas-line">
             <table class="w-full text-xs text-left">
-              <thead class="bg-oas-bg text-oas-muted uppercase font-bold text-[10px] border-b border-oas-line">
+              <thead class="bg-slate-50 text-oas-muted uppercase font-bold text-[10px] border-b border-oas-line">
                 <tr>
-                  <th class="px-2.5 py-2">Type</th>
                   <th class="px-3 py-2">Désignation</th>
-                  <th class="px-2.5 py-2 text-center">Qté</th>
-                  <th class="px-3 py-2 text-right">Prix unitaire HT avant remise</th>
-                  <th class="px-3 py-2 text-right">Remise générale</th>
-                  <th class="px-3 py-2 text-right">Total HT après remise</th>
+                  <th class="px-2.5 py-2 text-center w-16">Qté</th>
+                  <th class="px-3 py-2 text-right w-28">Prix Unit. HT</th>
+                  <th class="px-3 py-2 text-right w-32">Total HT Net</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-oas-line">
@@ -934,33 +1065,38 @@
                   @let pQte = getPieceQuantite(ligne);
                   @let pPrix = getPiecePrixUnitaire(ligne);
                   @let pTot = getPieceTotal(ligne);
+                  @let pTaux = getPieceTauxRemise(ligne);
 
                   <tr class="hover:bg-slate-50/70 transition">
-                    <td class="px-2.5 py-2 font-mono text-[10px]">
-                      <span class="px-1.5 py-0.5 rounded text-[10px] font-bold"
-                            [class.bg-blue-50]="pType !== 'PDS'"
-                            [class.text-blue-700]="pType !== 'PDS'"
-                            [class.bg-amber-50]="pType === 'PDS'"
-                            [class.text-amber-700]="pType === 'PDS'">
-                        {{ pType }}
-                      </span>
-                    </td>
                     <td class="px-3 py-2">
-                      <div class="font-semibold text-oas-ink">{{ pDesig }}</div>
+                      <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold"
+                              [class.bg-blue-50]="pType !== 'PDS'"
+                              [class.text-blue-700]="pType !== 'PDS'"
+                              [class.bg-amber-50]="pType === 'PDS'"
+                              [class.text-amber-700]="pType === 'PDS'">
+                          {{ pType }}
+                        </span>
+                        <span class="font-semibold text-oas-ink">{{ pDesig }}</span>
+                      </div>
                       @if (pRef && pRef !== pDesig) {
-                        <div class="text-[10px] text-oas-muted font-mono">Réf: {{ pRef }}</div>
+                        <div class="text-[10px] text-oas-muted font-mono mt-0.5">Réf: {{ pRef }}</div>
                       }
                     </td>
                     <td class="px-2.5 py-2 text-center font-bold text-oas-ink">{{ pQte }}</td>
                     <td class="px-3 py-2 text-right text-oas-muted">{{ pPrix | number }} FCFA</td>
-                    <td class="px-3 py-2 text-right whitespace-nowrap">{{ getPieceTauxRemise(ligne) }} %<span class="block text-[10px] text-oas-muted">−{{ getPieceMontantRemise(ligne) | number }} FCFA</span></td>
-                    <td class="px-3 py-2 text-right font-extrabold text-oas-ink">{{ pTot | number }} FCFA</td>
+                    <td class="px-3 py-2 text-right font-bold text-oas-ink">
+                      {{ pTot | number }} FCFA
+                      @if (pTaux > 0) {
+                        <span class="block text-[10px] text-emerald-600 font-normal">(-{{ pTaux }}%)</span>
+                      }
+                    </td>
                   </tr>
                 }
               </tbody>
-              <tfoot class="bg-oas-bg/70 border-t border-oas-line font-bold text-xs text-oas-ink">
+              <tfoot class="bg-slate-50/80 border-t border-oas-line font-bold text-xs">
                 <tr>
-                  <td colspan="5" class="px-3 py-2 text-right text-oas-muted">Sous-total Pièces HT après remise générale :</td>
+                  <td colspan="3" class="px-3 py-2 text-right text-oas-muted">Sous-total Pièces HT :</td>
                   <td class="px-3 py-2 text-right font-black text-oas-ink whitespace-nowrap">
                     {{ totalPiecesEstime | number }} FCFA
                   </td>
@@ -969,20 +1105,20 @@
             </table>
           </div>
         } @else {
-          <div class="p-3 rounded-lg bg-oas-bg/50 border border-oas-line text-[11px] text-oas-muted text-center italic">
+          <div class="p-3 rounded-lg bg-slate-50 border border-oas-line text-[11px] text-oas-muted text-center italic">
             Aucune pièce détachée incluse.
           </div>
         }
       </div>
 
       <!-- Détail de la Main-d'œuvre -->
-      <div class="bg-white border border-oas-line rounded-xl p-3.5 space-y-2.5">
+      <div class="bg-white border border-oas-line rounded-xl p-3.5 space-y-2">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-purple-600"></span>
             <h4 class="font-bold text-xs text-oas-ink uppercase tracking-wide">Prestations de Main-d'œuvre</h4>
           </div>
-          <span class="text-[11px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full">
+          <span class="text-[11px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200/60">
             {{ lignesMainDoeuvreAffichees.length }} prestation{{ lignesMainDoeuvreAffichees.length > 1 ? 's' : '' }}
           </span>
         </div>
@@ -990,13 +1126,12 @@
         @if (lignesMainDoeuvreAffichees.length > 0) {
           <div class="overflow-x-auto rounded-lg border border-oas-line">
             <table class="w-full text-xs text-left">
-              <thead class="bg-oas-bg text-oas-muted uppercase font-bold text-[10px] border-b border-oas-line">
+              <thead class="bg-slate-50 text-oas-muted uppercase font-bold text-[10px] border-b border-oas-line">
                 <tr>
                   <th class="px-3 py-2">Prestation / Intervention</th>
-                  <th class="px-2.5 py-2 text-center">Heures / Qté</th>
-                  <th class="px-3 py-2 text-right">Tarif horaire HT avant remise</th>
-                  <th class="px-3 py-2 text-right">Remise générale</th>
-                  <th class="px-3 py-2 text-right">Total HT après remise</th>
+                  <th class="px-2.5 py-2 text-center w-24">Durée</th>
+                  <th class="px-3 py-2 text-right w-28">Tarif/h HT</th>
+                  <th class="px-3 py-2 text-right w-32">Total HT Net</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-oas-line">
@@ -1006,6 +1141,7 @@
                   @let moH = getMOHeures(ligne);
                   @let moTarif = getMOTarifHoraire(ligne);
                   @let moTot = getMOTotal(ligne);
+                  @let moTaux = getMOTauxRemise(ligne);
 
                   <tr class="hover:bg-slate-50/70 transition">
                     <td class="px-3 py-2">
@@ -1016,14 +1152,18 @@
                     </td>
                     <td class="px-2.5 py-2 text-center font-bold text-oas-ink">{{ moH }} h</td>
                     <td class="px-3 py-2 text-right text-oas-muted">{{ moTarif | number }} FCFA</td>
-                    <td class="px-3 py-2 text-right whitespace-nowrap">{{ getMOTauxRemise(ligne) }} %<span class="block text-[10px] text-oas-muted">−{{ getMOMontantRemise(ligne) | number }} FCFA</span></td>
-                    <td class="px-3 py-2 text-right font-extrabold text-oas-ink">{{ moTot | number }} FCFA</td>
+                    <td class="px-3 py-2 text-right font-bold text-oas-ink">
+                      {{ moTot | number }} FCFA
+                      @if (moTaux > 0) {
+                        <span class="block text-[10px] text-emerald-600 font-normal">(-{{ moTaux }}%)</span>
+                      }
+                    </td>
                   </tr>
                 }
               </tbody>
-              <tfoot class="bg-oas-bg/70 border-t border-oas-line font-bold text-xs text-oas-ink">
+              <tfoot class="bg-slate-50/80 border-t border-oas-line font-bold text-xs">
                 <tr>
-                  <td colspan="4" class="px-3 py-2 text-right text-oas-muted">Sous-total Main-d'œuvre HT après remise générale :</td>
+                  <td colspan="3" class="px-3 py-2 text-right text-oas-muted">Sous-total Main-d'œuvre HT :</td>
                   <td class="px-3 py-2 text-right font-black text-oas-ink whitespace-nowrap">
                     {{ totalMOEstime | number }} FCFA
                   </td>
@@ -1032,33 +1172,60 @@
             </table>
           </div>
         } @else {
-          <div class="p-3 rounded-lg bg-oas-bg/50 border border-oas-line text-[11px] text-oas-muted text-center italic">
+          <div class="p-3 rounded-lg bg-slate-50 border border-oas-line text-[11px] text-oas-muted text-center italic">
             Aucune prestation de main-d'œuvre incluse.
           </div>
         }
       </div>
 
-      <!-- Récapitulatif Financier Complet -->
-      <div class="bg-emerald-50/40 rounded-xl p-4 border border-emerald-200/70 space-y-2">
+      <!-- Récapitulatif Financier Complet & Cohérent -->
+      <div class="bg-slate-50 rounded-xl p-4 border border-oas-line space-y-2">
         <div class="flex justify-between items-center text-xs">
-          <span class="text-oas-muted">Sous-total Pièces HT :</span>
+          <span class="text-oas-muted font-medium">Sous-total Pièces détachées HT :</span>
           <span class="font-bold text-oas-ink">{{ totalPiecesEstime | number }} FCFA</span>
         </div>
+
+        @if (tauxRemiseClient > 0 && montantRemiseClientCalcule > 0) {
+          <div class="flex justify-between items-center text-xs text-emerald-700 font-medium">
+            <span>Remise compte client ({{ tauxRemiseClient }}% sur pièces) :</span>
+            <span class="font-bold">−{{ montantRemiseClientCalcule | number }} FCFA</span>
+          </div>
+        }
+
         <div class="flex justify-between items-center text-xs">
-          <span class="text-oas-muted">Sous-total Main-d'œuvre HT :</span>
+          <span class="text-oas-muted font-medium">Sous-total Main-d'œuvre HT :</span>
           <span class="font-bold text-oas-ink">{{ totalMOEstime | number }} FCFA</span>
         </div>
-        <div class="flex justify-between items-center text-xs pt-1 border-t border-emerald-200/50">
-          <span class="text-oas-muted font-medium">Montant Total HT :</span>
-          <span class="font-bold text-oas-ink">{{ totalHTCalcule | number }} FCFA</span>
+
+        @if (montantRemiseGenerale > 0) {
+          <div class="flex justify-between items-center text-xs text-emerald-700 font-medium">
+            <span>Remises commerciales sur lignes :</span>
+            <span class="font-bold">−{{ montantRemiseGenerale | number }} FCFA</span>
+          </div>
+        }
+
+        <div class="flex justify-between items-center text-xs pt-2 border-t border-oas-line/70 font-bold">
+          <span class="text-oas-ink">Montant Total Net HT :</span>
+          <span class="font-black text-oas-ink">{{ (proformaChargee.montantHT || totalHTCalcule) | number }} FCFA</span>
         </div>
+
         <div class="flex justify-between items-center text-xs">
-          <span class="text-oas-muted font-medium">TVA ({{ tvaTaux }}%) :</span>
-          <span class="font-bold text-oas-ink">{{ totalTVACalcule | number }} FCFA</span>
+          <span class="text-oas-muted font-medium">
+            {{ proformaChargee.tvaApplicable === false ? 'TVA (Désactivée) :' : 'TVA (' + tvaTaux + '%) :' }}
+          </span>
+          <span class="font-bold text-oas-ink">{{ (proformaChargee.montantTVA || totalTVACalcule) | number }} FCFA</span>
         </div>
-        <div class="flex justify-between items-center pt-2 border-t border-emerald-200 font-extrabold text-sm">
-          <span class="text-emerald-900 uppercase">Net à payer (TTC) :</span>
-          <span class="text-base font-black text-emerald-700">
+
+        @if (proformaChargee.montantTimbre && proformaChargee.montantTimbre > 0) {
+          <div class="flex justify-between items-center text-xs">
+            <span class="text-oas-muted font-medium">Timbre fiscal :</span>
+            <span class="font-bold text-oas-ink">{{ proformaChargee.montantTimbre | number }} FCFA</span>
+          </div>
+        }
+
+        <div class="flex justify-between items-center pt-2.5 border-t-2 border-emerald-300 font-extrabold text-sm">
+          <span class="text-emerald-950 uppercase tracking-wide">Net à Payer (TTC) :</span>
+          <span class="text-lg font-black text-emerald-700">
             {{ totalTTCCalcule | number }} FCFA
           </span>
         </div>
@@ -1066,9 +1233,9 @@
     </div>
 
     <!-- Footer -->
-    <div class="px-6 py-4 border-t border-oas-line bg-oas-bg/40 flex items-center justify-end gap-3 flex-shrink-0">
+    <div class="px-6 py-4 border-t border-oas-line bg-slate-50 flex items-center justify-end gap-3 flex-shrink-0">
       <button type="button" (click)="closeModalValider()"
-        class="px-4 py-2.5 rounded-xl border border-oas-line text-oas-ink font-semibold text-xs hover:bg-white transition cursor-pointer">
+        class="px-4 py-2.5 rounded-xl border border-oas-line bg-white text-oas-ink font-semibold text-xs hover:bg-slate-100 transition cursor-pointer">
         Annuler
       </button>
       <button type="button" (click)="confirmerValidationProforma()" [disabled]="validationEnCours"

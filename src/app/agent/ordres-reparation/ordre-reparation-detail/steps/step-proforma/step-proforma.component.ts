@@ -263,11 +263,19 @@ export class StepProformaComponent implements OnInit {
       + this.lignesMainDoeuvreAffichees.reduce((sum, ligne) => sum + this.getMOMontantRemise(ligne), 0);
   }
 
+  get montantRemiseClientCalcule(): number {
+    if (this.proformaChargee?.montantRemiseClient != null) {
+      return Number(this.proformaChargee.montantRemiseClient) || 0;
+    }
+    return this.totalPiecesEstime * this.tauxRemiseClient / 100;
+  }
+
+  get totalPiecesNet(): number {
+    return Math.max(0, this.totalPiecesEstime - this.montantRemiseClientCalcule);
+  }
+
   get totalApresRemiseCompteClient(): number {
-    const montantRemiseClient = this.proformaChargee?.montantRemiseClient != null
-      ? Number(this.proformaChargee.montantRemiseClient) || 0
-      : this.totalPiecesEstime * this.tauxRemiseClient / 100;
-    return this.totalPiecesEstime - montantRemiseClient + this.totalMOEstime;
+    return this.totalPiecesNet + this.totalMOEstime;
   }
 
   get totalPiecesEstime(): number {

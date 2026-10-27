@@ -34,9 +34,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       if (error.status === 401) {
         // Ne pas tenter de refresh si la requête était déjà signin, signup, refresh ou signout
         const isAuthEndpoint = req.url.includes('/signin') ||
-                               req.url.includes('/signup') ||
-                               req.url.includes('/refresh') ||
-                               req.url.includes('/signout');
+          req.url.includes('/signup') ||
+          req.url.includes('/refresh') ||
+          req.url.includes('/signout');
 
         if (isAuthEndpoint) {
           if (req.url.includes('/refresh')) {
@@ -120,5 +120,4 @@ function buildRetryRequest(req: HttpRequest<any>, token: string, garageContextSe
   }
   return req.clone({ headers, context: req.context.set(AUTH_RETRY, true), withCredentials: true });
 }
-
 

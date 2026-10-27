@@ -307,13 +307,13 @@
 
                           <!-- Initials avatar -->
                           <div class="w-7 h-7 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-[10px] flex-shrink-0">
-                            {{ getInitials(t.firstName, t.lastName) }}
+                            {{ getInitials(t.firstName, t.lastName, t) }}
                           </div>
 
                           <!-- Nom & Détails -->
                           <div class="min-w-0">
                             <div class="font-bold text-xs truncate">
-                              {{ t.firstName }} {{ t.lastName }}
+                              {{ getTechnicienFullName(t) }}
                             </div>
                             <div class="flex items-center gap-1.5 text-[10px] text-oas-muted truncate">
                               <span class="inline-block px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 font-medium">
@@ -405,11 +405,11 @@
               <div class="flex items-center justify-between gap-3 p-3 rounded-xl border border-emerald-200/80 bg-white shadow-xs hover:shadow-sm transition">
                 <div class="flex items-center gap-2.5 min-w-0">
                   <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 text-white font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-xs">
-                    {{ getInitials(t.firstName, t.lastName) }}
+                    {{ getInitials(t.firstName, t.lastName, t) }}
                   </div>
                   <div class="min-w-0">
                     <span class="text-xs font-bold text-oas-ink truncate block">
-                      {{ t.firstName }} {{ t.lastName }}
+                      {{ getTechnicienFullName(t) }}
                     </span>
                     <div class="flex items-center gap-1.5 mt-0.5">
                       <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 truncate">

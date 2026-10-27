@@ -79,7 +79,7 @@ export class AuthService {
     const token = this.getToken();
     if (!token || this.isTokenExpired() || this.tokenExpiresSoon(120_000)) {
       this.refreshToken().subscribe({
-        next: () => {},
+        next: () => { },
         error: (err) => {
           if (err?.status === 401 || err?.status === 403) {
             this.logout();
@@ -157,8 +157,8 @@ export class AuthService {
 
   logout(): void {
     this.http.post(`${this.api}/signout`, {}, { withCredentials: true }).subscribe({
-      next: () => {},
-      error: () => {}
+      next: () => { },
+      error: () => { }
     });
     this.accessToken = null;
     this.cookieService.delete('token');
@@ -241,7 +241,7 @@ export class AuthService {
       } else {
         // Token déjà expiré, tenter un refresh immédiat
         this.refreshToken().subscribe({
-          next: () => {},
+          next: () => { },
           error: (err) => {
             if (err?.status === 401 || err?.status === 403) {
               this.logout();
@@ -310,4 +310,3 @@ export class AuthService {
     return this.http.post<any>(`${this.api}/me/change-password`, { oldPassword, newPassword });
   }
 }
-
