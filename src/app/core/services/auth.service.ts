@@ -20,20 +20,42 @@ export class AuthService {
   private refreshInFlight?: Observable<AuthResponse>;
 
   constructor() {
-    // Retire l'ancien jeton persistant lisible par JavaScript. Le jeton d'accès reste
-    // en mémoire; seul le jeton de renouvellement est conservé dans un cookie HttpOnly.
-    this.cookieService.delete('token');
+    // Nettoie tout résidu éventuel de localStorage pour garantir le stockage exclusif sur cookies
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('oas_access_token');
+      }
+    } catch {
+      // Ignorer si le stockage est restreint
+    }
+
     this.setupLifecycleListeners();
+
+    // Si un jeton valide est présent dans les cookies, initialiser le jeton et le timer
+    const token = this.getToken();
+    if (token && !this.isTokenExpired()) {
+      this.scheduleAutoRefresh();
+    }
   }
 
   /**
    * Initialisation au démarrage d'Angular (APP_INITIALIZER) :
-   * Si une session existe dans les cookies, rafraîchit immédiatement le jeton d'accès
-   * pour éviter tout flash "non connecté" et garantir la présence du Bearer token dès la 1ère requête.
+   * - Si un jeton d'accès valide est déjà présent dans les cookies (ex: nouvel onglet via Ctrl+Clic),
+   *   résout immédiatement sans appel réseau bloquant.
+   * - Si le jeton est manquant ou proche de l'expiration, tente un rafraîchissement via le refresh token.
    */
   initAuth(): Promise<void> {
-    const hasSessionCookie = !!(this.cookieService.get('username') || this.cookieService.get('role'));
-    if (!hasSessionCookie) {
+    const token = this.getToken();
+    const hasSession = !!(token || this.cookieService.get('username') || this.cookieService.get('role'));
+
+    if (!hasSession) {
+      return Promise.resolve();
+    }
+
+    // Si le jeton présent dans les cookies est toujours valide (marge de sécurité de 60s),
+    // pas besoin d'appel réseau bloquant au démarrage de l'onglet !
+    if (token && !this.tokenExpiresSoon(60_000)) {
+      this.scheduleAutoRefresh();
       return Promise.resolve();
     }
 
@@ -43,11 +65,12 @@ export class AuthService {
           resolve();
         },
         error: (err) => {
-          // Si le serveur rejette explicitement avec 401 ou 403, le cookie est invalide/révoqué
-          if (err?.status === 401 || err?.status === 403) {
-            this.logout();
+          // Si le serveur rejette avec 401/403 et qu'on n'a aucun jeton valide dans les cookies
+          if (!token || this.isTokenExpired()) {
+            if (err?.status === 401 || err?.status === 403) {
+              this.logout();
+            }
           }
-          // En cas d'erreur réseau temporaire (status 0, etc.), on résout sans déconnecter
           resolve();
         }
       });
@@ -107,6 +130,7 @@ export class AuthService {
       tap((response: AuthResponse) => {
         if (response && response.token) {
           this.accessToken = response.token;
+          this.cookieService.set('token', response.token, 7);
           this.cookieService.set('username', response.username, 7);
           this.cookieService.set('role', response.role, 7);
 
@@ -127,6 +151,7 @@ export class AuthService {
       tap((response: AuthResponse) => {
         if (response && response.token) {
           this.accessToken = response.token;
+          this.cookieService.set('token', response.token, 7);
           if (response.username) this.cookieService.set('username', response.username, 7);
           if (response.role) this.cookieService.set('role', response.role, 7);
 
@@ -169,6 +194,12 @@ export class AuthService {
   }
 
   getToken(): string | null {
+    if (!this.accessToken) {
+      const cookieToken = this.cookieService.get('token');
+      if (cookieToken) {
+        this.accessToken = cookieToken;
+      }
+    }
     return this.accessToken;
   }
 
