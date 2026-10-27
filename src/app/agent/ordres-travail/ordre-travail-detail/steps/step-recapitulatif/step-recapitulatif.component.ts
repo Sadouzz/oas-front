@@ -2,12 +2,17 @@ import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { OrdreTravailService } from '../../../ordre-travail.service';
 import { StepRecapitulatifResponseDto, StatutOrdreTravail, PieceApprovisionnementDto } from '../../../models/ordre-travail.model';
 import { AlertComponent } from '../../../../../shared/components/alert/alert.component';
 import { OrdreReparationService } from '../../../../ordres-reparation/ordre-reparation.service';
 import { DiagnosticService } from '../../../../diagnostics/diagnostic.service';
+import { FicheAtelierService } from '../../../../fiches-atelier/fiche-atelier.service';
+import { FicheAtelierDetailsResponse } from '../../../../fiches-atelier/models/fiche-atelier.model';
 import { OrdreReparation } from '../../../../ordres-reparation/models/ordre-reparation.model';
+import { StepReceptionResponseDto } from '../../../../ordres-reparation/models/responses/step-reception-response.dto';
 import { StepDiagnosticResponseDto } from '../../../../ordres-reparation/models/responses/step-diagnostic-response.dto';
 import { DiagnosticResponse, PieceJointeDiagnostic, RemarqueDiagnostic } from '../../../../diagnostics/models/diagnostic.model';
 
@@ -24,6 +29,7 @@ export class StepRecapitulatifComponent implements OnInit {
   private otService = inject(OrdreTravailService);
   private ordreReparationService = inject(OrdreReparationService);
   private diagnosticService = inject(DiagnosticService);
+  private ficheAtelierService = inject(FicheAtelierService);
   private sanitizer = inject(DomSanitizer);
   private cdr = inject(ChangeDetectorRef);
 
@@ -34,8 +40,10 @@ export class StepRecapitulatifComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
 
-  // Données issues de l'Ordre de Réparation lié
+  // Données issues de l'Ordre de Réparation lié & Fiche Atelier
   ordreReparation: OrdreReparation | null = null;
+  stepReception: StepReceptionResponseDto | null = null;
+  ficheAtelier: FicheAtelierDetailsResponse | null = null;
   stepDiagnostic: StepDiagnosticResponseDto | null = null;
   diagnosticFromService: DiagnosticResponse | null = null;
   loadingOrData = false;
@@ -89,6 +97,9 @@ export class StepRecapitulatifComponent implements OnInit {
     // Si l'OR est déjà embarqué dans la réponse
     if ((res as any)?.ordreReparation && typeof (res as any).ordreReparation === 'object') {
       this.ordreReparation = (res as any).ordreReparation;
+      if (this.ordreReparation?.ficheAtelier) {
+        this.ficheAtelier = this.ordreReparation.ficheAtelier;
+      }
     }
 
     const orId = res.ordreReparationId || (res as any)?.ordreReparation?.id;
@@ -111,9 +122,18 @@ export class StepRecapitulatifComponent implements OnInit {
     this.loadingOrData = true;
 
     // 1. Récupération de l'OR complet (travaux demandés, défauts constatés, fiche atelier)
-    this.ordreReparationService.getById(orId).subscribe({
+    this.ordreReparationService.getById(orId).pipe(catchError(() => of(null))).subscribe({
       next: (ordre) => {
-        this.ordreReparation = ordre;
+        if (ordre) {
+          this.ordreReparation = ordre;
+          if (ordre.ficheAtelier) {
+            this.ficheAtelier = ordre.ficheAtelier;
+          }
+          const faId = (ordre as any).ficheAtelierId || ordre.ficheAtelier?.id;
+          if (faId && !this.ficheAtelier) {
+            this.fetchFicheAtelier(faId);
+          }
+        }
         this.loadingOrData = false;
         this.cdr.markForCheck();
       },
@@ -123,15 +143,34 @@ export class StepRecapitulatifComponent implements OnInit {
       }
     });
 
-    // 2. Récupération du diagnostic de l'OR (remarques techniciens, documents et photos)
-    this.ordreReparationService.getStepDiagnostic(orId).subscribe({
+    // 2. Récupération du Step 1 (Réception) de l'OR (qui contient descriptionTravaux, ficheAtelier, lignesTravaux...)
+    this.ordreReparationService.getStepReception(orId).pipe(catchError(() => of(null))).subscribe({
+      next: (stepRec) => {
+        if (stepRec) {
+          this.stepReception = stepRec;
+          if (stepRec.ficheAtelier) {
+            this.ficheAtelier = stepRec.ficheAtelier;
+          }
+          const faId = stepRec.ficheAtelierId || (stepRec as any).ficheAtelier?.id;
+          if (faId && !this.ficheAtelier) {
+            this.fetchFicheAtelier(faId);
+          }
+          this.cdr.markForCheck();
+        }
+      }
+    });
+
+    // 3. Récupération du diagnostic de l'OR (remarques techniciens, documents et photos)
+    this.ordreReparationService.getStepDiagnostic(orId).pipe(catchError(() => of(null))).subscribe({
       next: (diagDto) => {
-        this.stepDiagnostic = diagDto;
-        this.cdr.markForCheck();
+        if (diagDto) {
+          this.stepDiagnostic = diagDto;
+          this.cdr.markForCheck();
+        }
       },
       error: () => {
         // Fallback avec le diagnosticService direct
-        this.diagnosticService.getByOrdreReparationId(orId).subscribe({
+        this.diagnosticService.getByOrdreReparationId(orId).pipe(catchError(() => of(null))).subscribe({
           next: (diagResp) => {
             if (diagResp) {
               this.diagnosticFromService = diagResp;
@@ -141,55 +180,131 @@ export class StepRecapitulatifComponent implements OnInit {
         });
       }
     });
+
+    // Sécurité : si aucune fiche atelier n'est chargée après 350ms, essayer de la charger avec orId
+    setTimeout(() => {
+      if (!this.ficheAtelier && orId) {
+        this.fetchFicheAtelier(orId);
+      }
+    }, 350);
   }
 
-  // ─── Getters pour les Travaux demandés (issus de l'OR) ───────────
+  fetchFicheAtelier(faId: number): void {
+    if (!faId) return;
+    this.ficheAtelierService.getById(faId).pipe(catchError(() => of(null))).subscribe({
+      next: (fa) => {
+        if (fa) {
+          this.ficheAtelier = fa;
+          this.cdr.markForCheck();
+        }
+      }
+    });
+  }
+
+  // ─── Getters pour les Travaux demandés (issus de l'OR & Fiche Atelier) ───
+
+  get descriptionTravaux(): string {
+    return this.stepReception?.descriptionTravaux ||
+      this.ordreReparation?.descriptionTravaux ||
+      this.ficheAtelier?.designationTravaux ||
+      (this.ordreReparation?.ficheAtelier as any)?.designationTravaux ||
+      (this.ordreReparation?.ficheAtelier as any)?.travauxDemandes ||
+      (this.ficheAtelier as any)?.travauxDemandes ||
+      (this.data as any)?.descriptionTravaux ||
+      (this.data as any)?.designationTravaux ||
+      '';
+  }
 
   get travauxDemandesList(): { nom: string; verrouille?: boolean }[] {
-    const list = this.ordreReparation?.lignesTravaux ||
+    const list = this.stepReception?.lignesTravaux ||
+      this.ordreReparation?.lignesTravaux ||
       (this.ordreReparation?.ficheAtelier as any)?.lignesTravaux ||
+      (this.ficheAtelier as any)?.lignesTravaux ||
       (this.data as any)?.lignesTravaux ||
       (this.data as any)?.travauxDemandes;
+
     if (Array.isArray(list) && list.length > 0) {
-      return list;
+      return list.map(item => typeof item === 'string' ? { nom: item } : item);
     }
+
+    const desc = this.descriptionTravaux;
+    if (desc && desc.includes('\n')) {
+      return desc.split('\n')
+        .map(s => s.trim())
+        .filter(s => s.length > 0)
+        .map(nom => ({ nom }));
+    }
+
+    if (desc && desc.trim().length > 0) {
+      return [{ nom: desc.trim() }];
+    }
+
     return [];
   }
 
-  get descriptionTravaux(): string {
-    return this.ordreReparation?.descriptionTravaux ||
-      (this.ordreReparation?.ficheAtelier as any)?.travauxDemandes ||
-      (this.data as any)?.descriptionTravaux ||
-      '';
+  get hasSingleTravailMatchingDescription(): boolean {
+    if (this.travauxDemandesList.length === 1 && this.descriptionTravaux) {
+      return this.travauxDemandesList[0].nom.trim().toLowerCase() === this.descriptionTravaux.trim().toLowerCase();
+    }
+    return false;
   }
 
   get hasTravauxDemandes(): boolean {
     return this.travauxDemandesList.length > 0 || !!(this.descriptionTravaux && this.descriptionTravaux.trim());
   }
 
-  // ─── Getters pour les Défauts constatés (issus de l'OR) ─────────
+  // ─── Getters pour les Défauts constatés (issus de l'OR & Fiche Atelier) ───
 
   get defautsConstatesList(): any[] {
-    const list = this.ordreReparation?.lignesDefauts ||
+    const rawList = this.stepReception?.lignesDefauts ||
+      this.ordreReparation?.lignesDefauts ||
+      this.ficheAtelier?.lignesDefauts ||
+      this.ficheAtelier?.defautsConstates ||
       (this.ordreReparation?.ficheAtelier as any)?.lignesDefauts ||
+      (this.ficheAtelier as any)?.defautsConstates ||
       (this.data as any)?.lignesDefauts ||
       (this.data as any)?.defautsConstates;
-    if (Array.isArray(list) && list.length > 0) {
-      return list;
+
+    if (Array.isArray(rawList) && rawList.length > 0) {
+      return rawList.filter((d: any) => {
+        if (!d) return false;
+        if (d.present === true || d.present === 'true') return true;
+        if (d.present === false || d.present === 'false') return false;
+        return !!(d.designation && d.designation.trim());
+      });
     }
     return [];
   }
 
   get texteDefautsConstates(): string {
-    return this.ordreReparation?.listeDefauts ||
+    return this.ficheAtelier?.nb ||
+      this.stepReception?.listeDefauts ||
+      this.ordreReparation?.listeDefauts ||
       this.stepDiagnostic?.listeDefauts ||
       (this.ordreReparation?.ficheAtelier as any)?.listeDefauts ||
+      (this.ficheAtelier as any)?.listeDefauts ||
       (this.data as any)?.listeDefauts ||
       '';
   }
 
   get hasDefautsConstates(): boolean {
     return this.defautsConstatesList.length > 0 || !!(this.texteDefautsConstates && this.texteDefautsConstates.trim());
+  }
+
+  // ─── Getters pour l'État des lieux & Réception atelier ─────────────
+
+  get lignesReceptionList(): any[] {
+    const raw = this.stepReception?.lignesReception ||
+      this.ordreReparation?.lignesReception ||
+      this.ficheAtelier?.lignesReception ||
+      this.ficheAtelier?.reception ||
+      (this.ordreReparation?.ficheAtelier as any)?.lignesReception ||
+      (this.data as any)?.lignesReception;
+    return Array.isArray(raw) ? raw : [];
+  }
+
+  get hasFicheAtelierData(): boolean {
+    return !!(this.ficheAtelier || this.lignesReceptionList.length > 0);
   }
 
   // ─── Getters pour les Remarques & Observations Diagnostic ─────────

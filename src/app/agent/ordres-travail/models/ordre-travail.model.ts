@@ -223,6 +223,7 @@ export interface StepBonSortieResponse extends StepBaseDto {
   vehiculeId?: number;
   proformaId?: number;
   proformaNumero?: string;
+  documents?: DocumentOrdreTravailDto[];
   ordreReparationId?: number;
   ordreReparationStatut?: string;
   quantiteTotalePieces?: number;
@@ -270,19 +271,40 @@ export interface StepAssignationDto {
   tempsEstimeHeures?: number;
 }
 
-// Étape 5 : Réparation
+// Étape 4 (ou 5) : Réparation & Documents
+export type TypeDocumentOt = 'PHOTO' | 'PDF' | 'DOCUMENT' | 'AUTRE';
+
+export interface DocumentOrdreTravailDto {
+  id?: number;
+  ordreTravailId?: number;
+  nomFichier?: string;
+  url: string;                  // URL Cloudinary ou externe
+  type: TypeDocumentOt;        // 'PHOTO' | 'PDF' | 'DOCUMENT' | 'AUTRE'
+  taille?: number;              // en octets
+  remarque?: string;            // commentaire ou description
+  publicId?: string;            // public_id Cloudinary (optionnel)
+  etape?: number;               // 4 pour l'étape réparation
+  technicienId?: number;
+  technicienNom?: string;
+  createdAt?: string;
+}
+
 export interface StepReparationResponseDto extends StepBaseDto {
   rapportReparation?: string;
   dateFinReparation?: string;
   techniciensReparation?: TechnicienSummary[];
   avertissementsBonsDeSortie?: string[];
+  documents?: DocumentOrdreTravailDto[];
+  piecesJointes?: DocumentOrdreTravailDto[];
 }
 
 export interface StepReparationDto {
   rapportReparation: string;
   dateFinReparation: string;
-  statut?: StatutOrdreTravail;
+  statut?: StatutOrdreTravail | string;
   avertissementsBonsDeSortie?: string[];
+  documents?: DocumentOrdreTravailDto[];
+  piecesJointes?: DocumentOrdreTravailDto[];
 }
 
 // Étape 6 : Paiement
@@ -348,6 +370,7 @@ export interface OrdreTravailSummaryDto {
   ordreReparationNumero?: string;
   proformaId?: number;
   proformaNumero?: string;
+  documents?: DocumentOrdreTravailDto[];
   vehicule?: {
     id: number;
     immatriculation: string;
@@ -424,6 +447,7 @@ export interface OrdreTravailResponse {
   vehicule: any;
   proformaId?: number;
   proformaNumero?: string;
+  documents?: DocumentOrdreTravailDto[];
   ordreReparationId?: number;
   ordreReparationNumero?: string;
   techniciens: any[];

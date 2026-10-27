@@ -57,7 +57,7 @@ export class StepDiagnosticComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
 
-  allTechniciens: Technicien[] = [];
+  allTechniciens: any[] = [];
   readonly specialitesTechnicien = SPECIALITES_TECHNICIEN;
   specialiteFiltreDiagnostic: Specialite | '' = '';
   specialiteDropdownOpen = false;
@@ -67,7 +67,7 @@ export class StepDiagnosticComponent implements OnInit {
   technicienSearchTerm = '';
   technicienSearchSubject = new Subject<string>();
   techniciensLoading = false;
-  knownTechniciensMap = new Map<number, { id: number; firstName: string; lastName: string; specialite?: string | null; matricule?: string; phone?: string }>();
+  knownTechniciensMap = new Map<number, any>();
 
   selectedTechniciens: number[] = [];
   technicienToggling: number | null = null;
@@ -158,11 +158,14 @@ export class StepDiagnosticComponent implements OnInit {
         this.techniciensLoading = false;
         const fetched = extractContent<Technicien>(res as any);
         if (fetched && fetched.length > 0) {
-          const map = new Map<number, Technicien>();
-          this.allTechniciens.forEach(t => map.set(t.id, t));
-          fetched.forEach(t => map.set(t.id, t));
+          const map = new Map<number, any>();
+          this.allTechniciens.forEach(t => map.set(t.id, this.normalizeTechnicien(t)));
+          fetched.forEach(t => {
+            const norm = this.normalizeTechnicien(t);
+            map.set(norm.id, norm);
+            this.knownTechniciensMap.set(norm.id, norm);
+          });
           this.allTechniciens = Array.from(map.values());
-          fetched.forEach(t => this.knownTechniciensMap.set(t.id, t));
         }
         this.cdr.markForCheck();
       },
@@ -173,18 +176,53 @@ export class StepDiagnosticComponent implements OnInit {
     });
   }
 
-  get techniciensDiagnosticFiltres(): Technicien[] {
+  normalizeTechnicien(t: any): any {
+    if (!t) return null;
+    const firstName = (t.firstName || t.prenom || (t.technicienNom ? t.technicienNom.split(' ')[0] : '') || '').trim();
+    const lastName = (t.lastName || t.nom || (t.technicienNom ? t.technicienNom.split(' ').slice(1).join(' ') : '') || '').trim();
+    const fullName = t.technicienNom || (firstName || lastName ? `${firstName} ${lastName}`.trim() : (t.username || `Technicien #${t.id}`));
+    const phone = t.phone || t.telephone || '';
+    const specialite = t.specialite || t.specialiteCode || null;
+
+    return {
+      ...t,
+      id: t.id,
+      firstName,
+      lastName,
+      prenom: firstName,
+      nom: lastName,
+      fullName,
+      phone,
+      telephone: phone,
+      specialite,
+      specialiteCode: t.specialiteCode || t.specialite || null,
+      matricule: t.matricule || `#${t.id}`
+    };
+  }
+
+  getTechnicienFullName(t: any): string {
+    if (!t) return '';
+    if (t.fullName && t.fullName.trim()) return t.fullName.trim();
+    if (t.technicienNom && t.technicienNom.trim()) return t.technicienNom.trim();
+    const f = (t.firstName || t.prenom || '').trim();
+    const l = (t.lastName || t.nom || '').trim();
+    const combined = `${f} ${l}`.trim();
+    if (combined) return combined;
+    if (t.username && t.username.trim()) return t.username.trim();
+    return t.id ? `Technicien #${t.id}` : 'Technicien';
+  }
+
+  get techniciensDiagnosticFiltres(): any[] {
     let list = this.allTechniciens;
     if (this.specialiteFiltreDiagnostic) {
-      console.log("this.allTechniciens", list[0].specialite)
-      list = list.filter(t => t.specialiteCode === this.specialiteFiltreDiagnostic);
+      list = list.filter(t => (t.specialiteCode || t.specialite) === this.specialiteFiltreDiagnostic);
     }
     if (this.technicienSearchTerm && this.technicienSearchTerm.trim()) {
       const term = this.technicienSearchTerm.trim().toLowerCase();
       list = list.filter(t => {
-        const fullName = `${t.firstName || ''} ${t.lastName || ''}`.toLowerCase();
+        const fullName = this.getTechnicienFullName(t).toLowerCase();
         const matricule = (t.matricule || '').toLowerCase();
-        const phone = (t.phone || '').toLowerCase();
+        const phone = (t.phone || t.telephone || '').toLowerCase();
         const email = (t.email || '').toLowerCase();
         return fullName.includes(term) || matricule.includes(term) || phone.includes(term) || email.includes(term);
       });
@@ -193,26 +231,37 @@ export class StepDiagnosticComponent implements OnInit {
     return list;
   }
 
-  get assignedTechniciens(): { id: number; firstName: string; lastName: string; specialite?: string | null; matricule?: string; phone?: string }[] {
+  get assignedTechniciens(): any[] {
     return this.selectedTechniciens
       .map(id => {
         if (this.knownTechniciensMap.has(id)) {
-          return this.knownTechniciensMap.get(id)!;
+          return this.normalizeTechnicien(this.knownTechniciensMap.get(id)!);
         }
         const fromAll = this.allTechniciens.find(t => t.id === id);
         if (fromAll) {
-          this.knownTechniciensMap.set(id, fromAll);
-          return fromAll;
+          const norm = this.normalizeTechnicien(fromAll);
+          this.knownTechniciensMap.set(id, norm);
+          return norm;
         }
         const fromOrdre = this.loadedOrdre?.techniciensAssocies?.find(t => t.id === id);
         if (fromOrdre) {
-          this.knownTechniciensMap.set(id, fromOrdre);
-          return fromOrdre;
+          const norm = this.normalizeTechnicien(fromOrdre);
+          this.knownTechniciensMap.set(id, norm);
+          return norm;
+        }
+        if (this.loadedOrdre?.diagnostic?.technicienId === id) {
+          const norm = this.normalizeTechnicien({
+            id,
+            technicienNom: this.loadedOrdre.diagnostic.technicienNom
+          });
+          this.knownTechniciensMap.set(id, norm);
+          return norm;
         }
         return {
           id,
           firstName: 'Technicien',
           lastName: `#${id}`,
+          fullName: `Technicien #${id}`,
           specialite: null,
           matricule: `#${id}`,
           phone: ''
@@ -226,10 +275,33 @@ export class StepDiagnosticComponent implements OnInit {
     return found ? found.label : spec;
   }
 
-  getInitials(firstName?: string | null, lastName?: string | null): string {
-    const f = (firstName || '').trim().charAt(0).toUpperCase();
-    const l = (lastName || '').trim().charAt(0).toUpperCase();
-    return (f + l) || 'T';
+  getInitials(firstName?: string | null, lastName?: string | null, t?: any): string {
+    let f = (firstName || t?.firstName || t?.prenom || '').trim();
+    let l = (lastName || t?.lastName || t?.nom || '').trim();
+    
+    if (!f && !l && t?.technicienNom) {
+      const parts = t.technicienNom.trim().split(/\s+/);
+      if (parts.length >= 2) {
+        f = parts[0];
+        l = parts[parts.length - 1];
+      } else if (parts.length === 1) {
+        f = parts[0];
+      }
+    }
+
+    if (!f && !l && t?.fullName) {
+      const parts = t.fullName.trim().split(/\s+/);
+      if (parts.length >= 2) {
+        f = parts[0];
+        l = parts[parts.length - 1];
+      } else if (parts.length === 1) {
+        f = parts[0];
+      }
+    }
+
+    const initialF = f ? f.charAt(0).toUpperCase() : '';
+    const initialL = l ? l.charAt(0).toUpperCase() : '';
+    return (initialF + initialL) || 'T';
   }
 
   statutDiagnostic: StatutDiagnostic = 'EN_ATTENTE';
@@ -267,9 +339,9 @@ export class StepDiagnosticComponent implements OnInit {
     }
     this.technicienService.getAll(params).subscribe({
       next: (res) => {
-        const fetched = extractContent<Technicien>(res as any);
-        this.allTechniciens = fetched;
-        fetched.forEach(t => this.knownTechniciensMap.set(t.id, t));
+        const fetched = extractContent<Technicien>(res as any) || [];
+        this.allTechniciens = fetched.map(t => this.normalizeTechnicien(t));
+        this.allTechniciens.forEach(t => this.knownTechniciensMap.set(t.id, t));
         this.loadOrdre();
       },
       error: () => {
@@ -282,8 +354,24 @@ export class StepDiagnosticComponent implements OnInit {
     this.ordreService.getStepDiagnostic(this.ordreId).subscribe({
       next: (o: StepDiagnosticResponseDto) => {
         this.loadedOrdre = o;
-        (o.techniciensAssocies || []).forEach(t => this.knownTechniciensMap.set(t.id, t));
+        (o.techniciensAssocies || []).forEach(t => {
+          const norm = this.normalizeTechnicien(t);
+          this.knownTechniciensMap.set(norm.id, norm);
+        });
         this.selectedTechniciens = (o.techniciensAssocies || []).map(t => t.id);
+
+        // Fallback si la liste associée est vide mais que diagnostic.technicienId est présent
+        if (this.selectedTechniciens.length === 0 && o.diagnostic?.technicienId) {
+          const techId = o.diagnostic.technicienId;
+          this.selectedTechniciens = [techId];
+          if (!this.knownTechniciensMap.has(techId)) {
+            const norm = this.normalizeTechnicien({
+              id: techId,
+              technicienNom: o.diagnostic.technicienNom
+            });
+            this.knownTechniciensMap.set(techId, norm);
+          }
+        }
 
         // Détermine le statut initial du diagnostic
         if (o.diagnostic?.statut) {

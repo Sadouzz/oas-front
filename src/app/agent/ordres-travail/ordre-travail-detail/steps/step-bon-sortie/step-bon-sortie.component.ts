@@ -95,7 +95,7 @@ export class StepBonSortieComponent implements OnInit {
           this.data = res;
           this.bonsDeSortie = (res.bonsDeSortie || []).map(b => this.normaliserBon(b));
           this.loading = false;
-          this.initPieces(res);
+          // this.initPieces(res);
 
           // Si le backend renvoie directement le bon de sortie
           if (res.bonDeSortie?.id && this.bonsDeSortie.length === 0) {
@@ -170,6 +170,7 @@ export class StepBonSortieComponent implements OnInit {
     });
   }
 
+  /*
   initPieces(res: StepBonSortieResponseDto): void {
     const list = res.piecesManquantesProforma || [];
     this.piecesToIssue = list.map((p) => {
@@ -264,6 +265,7 @@ export class StepBonSortieComponent implements OnInit {
   get hasStockInsuffisant(): boolean {
     return this.selectedPieces.some((p: PieceSortieItem) => (Number(p.stockMagasin) || 0) < (Number(p.quantiteASortir) || 0));
   }
+  */
 
   isBonValide(): boolean {
     const bds = this.fullBonDeSortie || this.data?.bonDeSortie;
@@ -292,9 +294,10 @@ export class StepBonSortieComponent implements OnInit {
   }
 
   get canPasserAEtapeSuivante(): boolean {
-    return this.piecesRequises.length === 0 || this.bonsDeSortie.length > 0 || this.hasBonDeSortie();
+    return /* this.piecesRequises.length === 0 || */ this.bonsDeSortie.length > 0 || this.hasBonDeSortie();
   }
 
+  /*
   isPieceDansProforma(ligne: any): boolean {
     if (!ligne) return false;
     if (this.piecesRequises.length === 0) return false;
@@ -309,6 +312,7 @@ export class StepBonSortieComponent implements OnInit {
       return false;
     });
   }
+  */
 
   get modalPieces(): any[] {
     if (!this.selectedBonDetail) return [];
@@ -440,11 +444,13 @@ export class StepBonSortieComponent implements OnInit {
       return;
     }
 
+    /*
     if (!this.isToutesPiecesSorties) {
       this.showPiecesIncompletesModal = true;
       this.cdr.detectChanges();
       return;
     }
+    */
 
     this.procederVersAssignation();
   }

@@ -94,10 +94,13 @@ export class StepReceptionComponent implements OnInit {
         this.fullOrdre = ordre;
         this.selectedVehicule = step.vehicule || ordre?.vehicule || null;
 
+        const ficheDirect = step.ficheAtelier || ordre?.ficheAtelier;
+        const initialDesc = step.descriptionTravaux || ordre?.descriptionTravaux || ficheDirect?.designationTravaux || '';
+
         this.step1Form.patchValue({
           numero: step.numero || ordre?.numero || '',
           vehiculeId: step.vehiculeId ?? step.vehicule?.id ?? ordre?.vehicule?.id ?? null,
-          descriptionTravaux: step.descriptionTravaux || ordre?.descriptionTravaux || '',
+          descriptionTravaux: initialDesc,
         });
 
         // 1. Lignes de réception
@@ -109,11 +112,13 @@ export class StepReceptionComponent implements OnInit {
         this.setLignesTravaux(step.lignesTravaux || ordre?.lignesTravaux || []);
 
         // 2. Recherche et chargement de la Fiche Atelier liée
-        const ficheDirect = step.ficheAtelier || ordre?.ficheAtelier;
         const ficheId = step.ficheAtelierId || (ordre as any)?.ficheAtelierId || ficheDirect?.id;
 
         if (ficheDirect) {
           this.ficheAtelier = ficheDirect;
+          if (!this.step1Form.get('descriptionTravaux')?.value && ficheDirect.designationTravaux) {
+            this.step1Form.patchValue({ descriptionTravaux: ficheDirect.designationTravaux });
+          }
           this.initDefautsAndComplementaryData(ficheDirect, step, ordre);
           this.loading = false;
           this.cdr.markForCheck();
@@ -121,6 +126,9 @@ export class StepReceptionComponent implements OnInit {
           this.ficheAtelierService.getById(ficheId).pipe(catchError(() => of(null))).subscribe({
             next: (fiche) => {
               this.ficheAtelier = fiche;
+              if (fiche?.designationTravaux && !this.step1Form.get('descriptionTravaux')?.value) {
+                this.step1Form.patchValue({ descriptionTravaux: fiche.designationTravaux });
+              }
               this.initDefautsAndComplementaryData(fiche, step, ordre);
               this.loading = false;
               this.cdr.markForCheck();
@@ -192,6 +200,10 @@ export class StepReceptionComponent implements OnInit {
 
     this.listeDefautsText = step.listeDefauts || ordre?.listeDefauts || '';
     this.notesFicheAtelier = fiche?.nb || '';
+
+    if (fiche?.designationTravaux && !this.step1Form.get('descriptionTravaux')?.value) {
+      this.step1Form.patchValue({ descriptionTravaux: fiche.designationTravaux });
+    }
 
     // Si on a des informations complémentaires de la fiche atelier (kilométrage, etc.)
     if (fiche && this.selectedVehicule) {
