@@ -8,6 +8,7 @@ RUN npm install
 
 # Copier le code et build
 COPY . .
+ENV NODE_ENV=production
 RUN npm run build -- --configuration=production
 
 # Etape 2: Nginx

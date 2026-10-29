@@ -85,3 +85,27 @@ fs.writeFileSync(targetProdPath, prodConfigFile);
 console.log(`[set-env] Configuration des environnements générée :`);
 console.log(`  - Dev  API URL (environment.ts)      : ${devApiUrl}`);
 console.log(`  - Prod API URL (environment.prod.ts) : ${prodApiUrl}`);
+
+// 5. Ajustement dynamique du CSP pour la production
+// Lors d'un build de production (ex: Docker avec NODE_ENV=production ou CI/CD),
+// on épure connect-src dans src/index.html pour ne garder que l'API officielle et Cloudinary,
+// tout en laissant les liens de test (localhost, oas-test.de) intacts dans le repo Git pour l'équipe.
+const isProdBuild = process.env.NODE_ENV === 'production' || process.argv.includes('--configuration=production') || process.argv.includes('--prod');
+const indexPath = path.resolve(__dirname, 'src/index.html');
+
+if (isProdBuild && prodApiUrl && fs.existsSync(indexPath)) {
+  const indexContent = fs.readFileSync(indexPath, 'utf8');
+  const wssUrl = prodApiUrl.replace(/^http(s?):/, 'wss:');
+  const strictConnectSrc = `connect-src 'self' ${prodApiUrl} ${wssUrl} https://api.cloudinary.com;`;
+  
+  const updatedContent = indexContent.replace(
+    /connect-src\s+[^;]+;/g,
+    strictConnectSrc
+  );
+  
+  if (updatedContent !== indexContent) {
+    fs.writeFileSync(indexPath, updatedContent);
+    console.log(`[set-env] Production détectée : CSP connect-src épuré automatiquement -> ${strictConnectSrc}`);
+  }
+}
+
