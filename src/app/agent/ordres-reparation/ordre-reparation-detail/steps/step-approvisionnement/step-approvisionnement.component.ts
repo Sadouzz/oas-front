@@ -138,12 +138,8 @@ export class StepApprovisionnementComponent implements OnInit, OnDestroy {
     }
     */
     const demandee = Number(p.quantiteCommande || 0);
-    console.log("demandee: ", p);
-    console.log("demandee: ", demandee);
     const recu = Number(p.quantiteRecue || 0);
-    console.log("recu: ", recu);
     if (demandee > recu) {
-      console.log(demandee - recu);
       return demandee - recu;
     }
     return 0;

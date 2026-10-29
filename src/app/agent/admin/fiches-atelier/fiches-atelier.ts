@@ -516,8 +516,6 @@ export class FichesAtelier implements OnInit {
       signatureBase64: this.sigClientEl ? this.sigClientEl.nativeElement.toDataURL('image/png') : undefined
     };
 
-    console.log(request);
-
     this.service.create(request).subscribe({
       next: () => {
         if (rdvId) {
