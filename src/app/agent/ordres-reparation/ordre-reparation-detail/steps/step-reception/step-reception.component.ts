@@ -6,15 +6,11 @@ import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { OrdreReparationService } from '../../../ordre-reparation.service';
 import { DiagnosticService } from '../../../../diagnostics/diagnostic.service';
-import { VehiculeService } from '../../../../vehicules/vehicule.service';
 import { FicheAtelierService } from '../../../../fiches-atelier/fiche-atelier.service';
 import { AlertComponent } from '../../../../../shared/components/alert/alert.component';
 import {
   OrdreReparation,
-  VehiculeModel,
   LigneReceptionOrdre,
-  LigneTravailOrdre,
-  StatutOrdre,
   StepReceptionDto
 } from '../../../../../shared/models';
 import { StepReceptionResponseDto } from '../../../models/responses/step-reception-response.dto';
@@ -22,9 +18,7 @@ import {
   FicheAtelierDetailsResponse,
   FicheAtelierRequest,
   LigneDefaut,
-  LigneReception,
-  DEFAULT_LIGNES_RECEPTION,
-  DEFAULT_RUBRIQUES_DEFAUTS
+  LigneReception
 } from '../../../../fiches-atelier/models/fiche-atelier.model';
 
 @Component({
@@ -38,7 +32,6 @@ export class StepReceptionComponent implements OnInit {
   private router = inject(Router);
   private ordreService = inject(OrdreReparationService);
   private diagnosticService = inject(DiagnosticService);
-  private vehiculeService = inject(VehiculeService);
   private ficheAtelierService = inject(FicheAtelierService);
   private fb = inject(FormBuilder);
   private cdr = inject(ChangeDetectorRef);
@@ -50,7 +43,6 @@ export class StepReceptionComponent implements OnInit {
   selectedVehicule: any = null;
 
   lignesDefauts: LigneDefaut[] = [];
-  listeDefautsText = '';
 
   loading = true;
   saving = false;
@@ -59,18 +51,12 @@ export class StepReceptionComponent implements OnInit {
 
   step1Form: FormGroup = this.fb.group({
     numero: [''],
-    vehiculeId: [null, Validators.required],
     lignesReception: this.fb.array([]),
-    lignesTravaux: this.fb.array([]),
     descriptionTravaux: [''],
   });
 
   get lignesReception(): FormArray {
     return this.step1Form.get('lignesReception') as FormArray;
-  }
-
-  get lignesTravaux(): FormArray {
-    return this.step1Form.get('lignesTravaux') as FormArray;
   }
 
   ngOnInit(): void {
@@ -99,7 +85,6 @@ export class StepReceptionComponent implements OnInit {
 
         this.step1Form.patchValue({
           numero: step.numero || ordre?.numero || '',
-          vehiculeId: step.vehiculeId ?? step.vehicule?.id ?? ordre?.vehicule?.id ?? null,
           descriptionTravaux: initialDesc,
         });
 
@@ -109,7 +94,6 @@ export class StepReceptionComponent implements OnInit {
           : (ordre?.lignesReception && ordre.lignesReception.length > 0 ? ordre.lignesReception : []);
 
         this.setLignesReception(initialLignesRec);
-        this.setLignesTravaux(step.lignesTravaux || ordre?.lignesTravaux || []);
 
         // 2. Recherche et chargement de la Fiche Atelier liée
         const ficheId = step.ficheAtelierId || (ordre as any)?.ficheAtelierId || ficheDirect?.id;
@@ -154,7 +138,6 @@ export class StepReceptionComponent implements OnInit {
   }
 
   notesFicheAtelier = '';
-  nouveauDefautNom = '';
 
   private initDefautsAndComplementaryData(
     fiche: FicheAtelierDetailsResponse | null,
@@ -168,8 +151,6 @@ export class StepReceptionComponent implements OnInit {
         etat: l.etat,
         verrouille: false
       })));
-    } else if (this.lignesReception.length === 0) {
-      this.setLignesReception(DEFAULT_LIGNES_RECEPTION.map(nom => ({ nom, etat: null, verrouille: false })));
     }
 
     // Récupération et normalisation des défauts constatés
@@ -185,9 +166,6 @@ export class StepReceptionComponent implements OnInit {
     }
 
     const defautsMap = new Map<string, LigneDefaut>();
-    DEFAULT_RUBRIQUES_DEFAUTS.forEach(nom => {
-      defautsMap.set(nom.toLowerCase(), { nom, present: false, designation: '' });
-    });
     rawDefauts.forEach(d => {
       if (!d.nom) return;
       defautsMap.set(d.nom.toLowerCase(), {
@@ -198,7 +176,6 @@ export class StepReceptionComponent implements OnInit {
     });
     this.lignesDefauts = Array.from(defautsMap.values());
 
-    this.listeDefautsText = step.listeDefauts || ordre?.listeDefauts || '';
     this.notesFicheAtelier = fiche?.nb || '';
 
     if (fiche?.designationTravaux && !this.step1Form.get('descriptionTravaux')?.value) {
@@ -229,70 +206,10 @@ export class StepReceptionComponent implements OnInit {
 
   private getCurrentSnapshot(): string {
     const raw = this.step1Form.getRawValue();
-    const defauts = (this.lignesDefauts || []).map(d => ({
-      nom: (d.nom || '').trim(),
-      present: !!d.present,
-      designation: (d.designation || '').trim()
-    }));
-    const rec = (this.lignesReception.getRawValue() || []).map((l: any) => ({
-      nom: (l.nom || '').trim(),
-      etat: l.etat ?? null
-    }));
     return JSON.stringify({
       descriptionTravaux: (raw.descriptionTravaux || '').trim(),
-      lignesReception: rec,
-      lignesDefauts: defauts,
       notesFicheAtelier: (this.notesFicheAtelier || '').trim()
     });
-  }
-
-  toggleDefautPresent(defaut: LigneDefaut): void {
-    defaut.present = !defaut.present;
-    if (!defaut.present) {
-      defaut.designation = '';
-    }
-    this.cdr.markForCheck();
-  }
-
-  addCustomDefaut(): void {
-    const nom = (this.nouveauDefautNom || '').trim();
-    if (!nom) return;
-    if (this.lignesDefauts.some(d => d.nom.toLowerCase() === nom.toLowerCase())) {
-      this.nouveauDefautNom = '';
-      return;
-    }
-    this.lignesDefauts.push({
-      nom,
-      present: true,
-      designation: ''
-    });
-    this.nouveauDefautNom = '';
-    this.cdr.markForCheck();
-  }
-
-  removeDefaut(index: number): void {
-    this.lignesDefauts.splice(index, 1);
-    this.cdr.markForCheck();
-  }
-
-  private buildLigneTravailGroup(l: LigneTravailOrdre) {
-    return this.fb.group({
-      nom: [l.nom, Validators.required],
-      verrouille: [false],
-    });
-  }
-
-  private setLignesTravaux(lignes: LigneTravailOrdre[] | null | undefined) {
-    this.lignesTravaux.clear();
-    (lignes || []).forEach(l => this.lignesTravaux.push(this.buildLigneTravailGroup(l)));
-  }
-
-  addLigneTravail(): void {
-    this.lignesTravaux.push(this.buildLigneTravailGroup({ nom: '', verrouille: false }));
-  }
-
-  removeLigneTravail(index: number): void {
-    this.lignesTravaux.removeAt(index);
   }
 
   private buildLigneReceptionGroup(l: LigneReceptionOrdre | LigneReception) {
@@ -305,37 +222,7 @@ export class StepReceptionComponent implements OnInit {
 
   private setLignesReception(lignes: (LigneReceptionOrdre | LigneReception)[] | null | undefined) {
     this.lignesReception.clear();
-    const list = (lignes && lignes.length > 0) ? lignes : DEFAULT_LIGNES_RECEPTION.map(nom => ({ nom, etat: null }));
-    list.forEach(l => this.lignesReception.push(this.buildLigneReceptionGroup(l)));
-  }
-
-  nouveauPointNom = '';
-
-  addLigneReception(): void {
-    this.lignesReception.push(this.buildLigneReceptionGroup({ nom: '', etat: null, verrouille: false }));
-  }
-
-  addCustomPointReception(): void {
-    const nom = (this.nouveauPointNom || '').trim();
-    if (!nom) return;
-    this.lignesReception.push(this.buildLigneReceptionGroup({ nom, etat: null, verrouille: false }));
-    this.nouveauPointNom = '';
-    this.cdr.markForCheck();
-  }
-
-  setLigneReceptionEtat(index: number, val: boolean): void {
-    const ctrl = this.lignesReception.at(index);
-    if (!ctrl) return;
-    const current = ctrl.get('etat')?.value;
-    ctrl.get('etat')?.setValue(current === val ? null : val);
-    ctrl.markAsDirty();
-    ctrl.markAsTouched();
-    this.cdr.markForCheck();
-  }
-
-  removeLigneReception(index: number): void {
-    this.lignesReception.removeAt(index);
-    this.cdr.markForCheck();
+    (lignes || []).forEach(l => this.lignesReception.push(this.buildLigneReceptionGroup(l)));
   }
 
   validateStep(): void {
@@ -346,27 +233,8 @@ export class StepReceptionComponent implements OnInit {
     const raw = this.step1Form.getRawValue();
     const descriptionTravaux = (raw.descriptionTravaux || '').trim();
 
-    const lignesRec: LigneReceptionOrdre[] = (this.lignesReception.getRawValue() || []).map((l: any) => ({
-      nom: (l.nom || '').trim(),
-      etat: l.etat ?? null,
-      verrouille: false
-    })).filter((l: any) => !!l.nom);
-
-    const lignesDef: LigneDefaut[] = (this.lignesDefauts || []).map(d => ({
-      nom: (d.nom || '').trim(),
-      present: !!d.present,
-      designation: d.present ? (d.designation || '').trim() : ''
-    }));
-
     const ordrePayload: StepReceptionDto = {
-      numero: raw.numero,
-      descriptionTravaux: descriptionTravaux,
-      lignesTravaux: (raw.lignesTravaux || []) as LigneTravailOrdre[],
-      lignesReception: lignesRec,
-      listeDefauts: this.listeDefautsText,
-      lignesDefauts: lignesDef,
-      vehiculeId: Number(raw.vehiculeId),
-      statut: (this.loadedOrdre?.statut || 'DIAGNOSTIC') as StatutOrdre
+      descriptionTravaux
     };
 
     this.saving = true;
@@ -382,16 +250,12 @@ export class StepReceptionComponent implements OnInit {
           const ficheReq: FicheAtelierRequest = {
             rendezVousId: this.ficheAtelier.rendezVousId ?? null,
             clientId: this.ficheAtelier.clientId || this.selectedVehicule?.clientId || 0,
-            vehiculeId: Number(raw.vehiculeId),
+            vehiculeId: this.ficheAtelier.vehiculeId,
             nomChauffeur: this.ficheAtelier.nomChauffeur,
             telephoneChauffeur: this.ficheAtelier.telephoneChauffeur,
             niveauEssence: this.ficheAtelier.niveauEssence,
             kilometrage: this.selectedVehicule?.kilometrage || this.ficheAtelier.kilometrage,
             designationTravaux: descriptionTravaux,
-            lignesReception: lignesRec.map(l => ({ nom: l.nom, etat: l.etat })),
-            reception: lignesRec.map(l => ({ nom: l.nom, etat: l.etat })),
-            lignesDefauts: lignesDef,
-            defautsConstates: lignesDef,
             nb: (this.notesFicheAtelier || '').trim(),
             signatureReceptionnaireBase64: this.ficheAtelier.signatureReceptionnaireBase64,
             signatureBase64: this.ficheAtelier.signatureBase64,

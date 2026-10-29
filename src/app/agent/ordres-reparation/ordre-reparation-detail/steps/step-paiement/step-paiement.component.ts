@@ -5,7 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { OrdreReparationService } from '../../../ordre-reparation.service';
 import { StepPaiementResponseDto } from '../../../models/responses/step-paiement-response.dto';
 import { FactureService } from '../../../../factures/facture.service';
-import { FactureCreateRequest } from '../../../../factures/models/facture.model';
+import { BonDeLivraisonService } from '../../../../bons-livraison/bon-de-livraison.service';
 import { AlertComponent } from '../../../../../shared/components/alert/alert.component';
 
 @Component({
@@ -19,6 +19,7 @@ export class StepPaiementComponent implements OnInit {
   private router = inject(Router);
   private ordreService = inject(OrdreReparationService);
   private factureService = inject(FactureService);
+  private bonDeLivraisonService = inject(BonDeLivraisonService);
   private cdr = inject(ChangeDetectorRef);
   private ngZone = inject(NgZone);
 
@@ -31,8 +32,8 @@ export class StepPaiementComponent implements OnInit {
   paying = false;
 
   showCreateFactureModal = false;
-  modePaiement = 'ESPECE';
   remarqueFacture = '';
+  appliquerTVA = true;
 
   showPayModal = false;
   payMontant = 0;
@@ -59,6 +60,7 @@ export class StepPaiementComponent implements OnInit {
       next: (res) => {
         this.ngZone.run(() => {
           this.data = res;
+          this.appliquerTVA = res.tvaApplicable ?? true;
           this.loading = false;
           this.cdr.detectChanges();
         });
@@ -88,6 +90,7 @@ export class StepPaiementComponent implements OnInit {
 
   ouvrirModalCreationFacture(): void {
     this.showCreateFactureModal = true;
+    this.appliquerTVA = this.data?.tvaApplicable ?? true;
     this.remarqueFacture = `Facture pour Ordre de Réparation ${this.data?.numero || ('#' + this.ordreId)}`;
     this.cdr.detectChanges();
   }
@@ -111,27 +114,21 @@ export class StepPaiementComponent implements OnInit {
     this.successMessage = '';
     this.cdr.detectChanges();
 
-    const request: FactureCreateRequest = {
-      clientId: this.data.clientId,
-      vehiculeId: this.data.vehiculeId,
-      ordreReparationId: this.ordreId,
-      remarque: this.remarqueFacture.trim() || `Facture pour OR ${this.data.numero || ('#' + this.ordreId)}`,
-      modePaiement: this.modePaiement || 'ESPECE',
-      pdfLayoutKey: 'AVEC_ENTETE'
-    };
-
-    this.factureService.create(request).subscribe({
-      next: (res: any) => {
+    this.bonDeLivraisonService.creerFactureDepuisOrdre(this.ordreId, {
+      appliquerTVA: this.appliquerTVA,
+      remarque: this.remarqueFacture.trim() || `Facture pour OR ${this.data.numero || ('#' + this.ordreId)}`
+    }).subscribe({
+      next: (res) => {
         this.ngZone.run(() => {
           this.creatingFacture = false;
           this.showCreateFactureModal = false;
           const ref = res?.numero || ('#' + res?.id);
-          this.successMessage = `Facture ${ref} créée avec succès !`;
+          this.successMessage = `Le BL et la facture ${ref} sont disponibles. La facture est affichée ci-dessous.`;
           this.loadData();
           this.cdr.detectChanges();
         });
       },
-      error: (err: any) => {
+      error: (err) => {
         this.ngZone.run(() => {
           this.creatingFacture = false;
           this.errorMessage = err.error?.message || err.message || 'Erreur lors de la création de la facture.';

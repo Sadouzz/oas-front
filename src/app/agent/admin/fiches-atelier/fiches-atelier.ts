@@ -21,6 +21,25 @@ import { LucidePlus, LucideTrash2, LucideArrowLeft, LucideSave, LucideX } from '
 import { SearchableSelectComponent } from '../../../shared/components/searchable-select/searchable-select.component';
 import { PhoneInputComponent } from '../../../shared/components/phone-input/phone-input.component';
 
+const RUBRIQUES_EXCLUES_FICHE_ATELIER = new Set(['peinture', 'tolerie']);
+const RUBRIQUES_AJOUTEES_FICHE_ATELIER = ['Carrosserie', 'Pneumatique', 'Vitrage', 'Lavage'];
+
+function normaliserRubrique(nom: string): string {
+  return nom.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('fr');
+}
+
+function preparerRubriquesFicheAtelier(rubriques: string[]): string[] {
+  const dejaAjoutees = new Set<string>();
+  return [...rubriques, ...RUBRIQUES_AJOUTEES_FICHE_ATELIER].filter(nom => {
+    const normalisee = normaliserRubrique(nom);
+    if (!normalisee || RUBRIQUES_EXCLUES_FICHE_ATELIER.has(normalisee) || dejaAjoutees.has(normalisee)) {
+      return false;
+    }
+    dejaAjoutees.add(normalisee);
+    return true;
+  });
+}
+
 @Component({
   selector: 'app-fiches-atelier',
   standalone: true,
@@ -87,7 +106,7 @@ export class FichesAtelier implements OnInit {
   private signatureClientDessinee = false;
 
   defaultReception: string[] = [...DEFAULT_LIGNES_RECEPTION];
-  defaultDefauts: string[] = [...DEFAULT_RUBRIQUES_DEFAUTS];
+  defaultDefauts: string[] = preparerRubriquesFicheAtelier(DEFAULT_RUBRIQUES_DEFAUTS);
 
   ngOnInit(): void {
     const rdvIdParam = this.route.snapshot.paramMap.get('rendezVousId');
@@ -164,9 +183,11 @@ export class FichesAtelier implements OnInit {
             ];
           }
           if (cfg.rubriquesDefauts && cfg.rubriquesDefauts.length > 0) {
-            this.defaultDefauts = cfg.rubriquesDefauts
-              .filter(item => !item.archive)
+            const rubriquesConfigurees = cfg.rubriquesDefauts
+              .filter(item => !item.archive
+                && !RUBRIQUES_EXCLUES_FICHE_ATELIER.has(normaliserRubrique(item.nom)))
               .map(item => item.nom);
+            this.defaultDefauts = preparerRubriquesFicheAtelier(rubriquesConfigurees);
           }
           this.populateDefaultLines();
           this.cdr.markForCheck();

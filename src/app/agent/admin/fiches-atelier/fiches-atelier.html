@@ -188,7 +188,7 @@
 
       <!-- Défauts -->
       <div class="bg-white rounded-lg border border-oas-line p-6 shadow-sm">
-        <h3 class="text-lg font-bold text-oas-ink mb-4 pb-2 border-b border-oas-line">Défauts constatés à la réception</h3>
+        <h3 class="text-lg font-bold text-oas-ink mb-4 pb-2 border-b border-oas-line">Défauts signalés</h3>
         <div class="grid grid-cols-1 gap-3" formArrayName="lignesDefauts">
           @for (ctrl of lignesDefauts.controls; track $index) {
             <div [formGroupName]="$index"
@@ -216,10 +216,6 @@
             </div>
           }
         </div>
-        <button type="button" (click)="addDefaut()" class="mt-4 flex items-center gap-2 text-sm text-oas-accent font-semibold hover:bg-oas-accent/10 px-3 py-1.5 rounded-lg transition cursor-pointer">
-          <svg lucidePlus class="w-4 h-4"></svg>
-          Ajouter une rubrique
-        </button>
       </div>
 
       <!-- Remarques supplémentaires -->
@@ -260,7 +256,7 @@
         <!-- Signature Client -->
         <div class="bg-white rounded-lg border border-oas-line p-6 shadow-sm">
           <div class="flex items-center justify-between mb-3">
-            <label class="block text-sm font-semibold text-oas-ink">Signature du client / chauffeur</label>
+            <label class="block text-sm font-semibold text-oas-ink">Signature du client</label>
             <button type="button" (click)="clearSignatureClient()" class="text-xs text-red-500 hover:text-red-600 font-medium px-2 py-1 bg-red-50 hover:bg-red-100 rounded transition cursor-pointer">
               Effacer
             </button>

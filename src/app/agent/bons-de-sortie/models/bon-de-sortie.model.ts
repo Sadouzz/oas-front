@@ -1,6 +1,6 @@
 export interface LigneBonDeSortie {
   id: number;
-  piece: { id: number; reference: string; designation?: string; numeroDeSerie?: string; prix?: number; stockMagasin?: number; stockAtelier?: number } | null;
+  piece: { id: number; reference: string; designation?: string; numeroDeSerie?: string; prix?: number; prixUnitaire?: number | null; stockMagasin?: number; stockAtelier?: number } | null;
   mainDoeuvreId?: number | null;
   type?: 'PDP' | 'PDG' | 'PDS' | 'MAIN_DOEUVRE';
   designation?: string;
@@ -8,6 +8,8 @@ export interface LigneBonDeSortie {
   prix?: number;
   tauxRemise?: number;
   montantTotal?: number;
+  dateHeureSaisie?: string | null;
+  proformaLineId?: number | null;
 }
 
 
@@ -87,6 +89,7 @@ export interface BonDeSortieRequest {
     tauxRemise?: number | null;
     isCustom?: boolean;
     designationPds?: string;
+    proformaLineId?: number;
     type?: 'PDP' | 'PDG' | 'PDS' | 'MAIN_DOEUVRE';
     mainDoeuvreId?: number | null;
     designation?: string;

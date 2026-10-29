@@ -214,20 +214,14 @@
       </div>
 
       <div class="space-y-4 text-xs">
-        <div>
-          <label class="block font-semibold text-oas-muted uppercase tracking-wider mb-1">
-            Mode de Règlement Initial
-          </label>
-          <select [(ngModel)]="modePaiement"
-            class="w-full px-3 py-2 rounded-xl border border-oas-line bg-white text-sm text-oas-ink focus:outline-hidden focus:ring-2 focus:ring-oas-accent shadow-2xs">
-            <option value="ESPECE">Espèces</option>
-            <option value="VIREMENT">Virement bancaire</option>
-            <option value="CHEQUE">Chèque</option>
-            <option value="ORANGE_MONEY">Orange Money</option>
-            <option value="WAVE">Wave</option>
-            <option value="CARTE_BANCAIRE">Carte Bancaire</option>
-          </select>
-        </div>
+        <p class="rounded-xl border border-blue-200 bg-blue-50 p-3 text-blue-900 leading-relaxed">
+          Le système crée le bon de livraison à partir de tous les bons de sortie validés de cet OR, puis génère la facture.
+          Le règlement se fera ensuite dans l’étape Paiement.
+        </p>
+        <label class="flex items-center gap-2 text-sm font-semibold text-oas-ink">
+          <input type="checkbox" [(ngModel)]="appliquerTVA" class="accent-oas-accent w-4 h-4">
+          Appliquer la TVA sur le BL et la facture
+        </label>
 
         <div>
           <label class="block font-semibold text-oas-muted uppercase tracking-wider mb-1">

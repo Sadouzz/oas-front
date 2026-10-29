@@ -30,6 +30,9 @@ export interface LignePieceBS {
   designation: string;
   quantite: number;
   prix?: number | null;
+  dateHeureSaisie?: string | null;
+  proformaLineId?: number | null;
+  sourceProformaLineKey?: string;
   tauxRemise?: number;
   horsProforma?: boolean;
   dejaSortieProforma?: boolean;
@@ -124,6 +127,8 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
   returnToContext: string | null = null;
   private quantitesPrevues = new Map<string, number>();
   private quantitesDejaSorties = new Map<string, number>();
+  private quantitesDejaSortiesParProforma = new Map<number, number>();
+  private quantitesDejaSortiesSansSource = new Map<string, number>();
   chargementQuantitesOR = false;
   private chargementsContexteEnCours = 0;
   qteAjouterPdp = 1;
@@ -274,7 +279,22 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
   private cleLigne(ligne: LignePieceBS): string {
     if (ligne.type === 'MAIN_DOEUVRE') return `mo:${ligne.mainDoeuvre?.id}`;
     if (ligne.piece) return `piece:${ligne.piece.id}`;
-    return `pds:${ligne.designation.trim().toLocaleLowerCase()}`;
+    return this.clePds(ligne.designation, ligne.prix);
+  }
+
+  private clePds(designation: string, prix?: number | null): string {
+    const base = `pds:${(designation || '').trim().toLocaleLowerCase()}`;
+    return prix == null ? base : `${base}:${Math.round(Number(prix) || 0)}`;
+  }
+
+  private quantitePdsMap(map: Map<string, number>, designation: string, prix?: number | null): number {
+    const base = this.clePds(designation);
+    if (prix != null) return map.get(this.clePds(designation, prix)) ?? map.get(base) ?? 0;
+    let total = map.get(base) ?? 0;
+    for (const [key, quantity] of map) {
+      if (key.startsWith(`${base}:`)) total += quantity;
+    }
+    return total;
   }
 
   onPdpSearch(term: string, type: TypePieceBS): void {
@@ -295,8 +315,21 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
 
   getPiecePrice(p?: PieceDetache | null): number | null {
     if (!p) return null;
-    const val = p.prixUnitaire ?? p.prix ?? (p as any).prixDeVente ?? (p as any).prixVente ?? p.prixGros;
+    const val = p.prixUnitaire;
     return val != null && val !== ('' as any) && !isNaN(Number(val)) ? Number(val) : null;
+  }
+
+  getDocumentPiecePrice(piece?: PieceDetache | null): number | null {
+    if (!piece) return null;
+    const statut = this.proformaContexte?.statut;
+    const proformaValide = ['ACCEPTE', 'PAYEE', 'PARTIELLEMENT_PAYEE', 'CONVERTIE'].includes(statut ?? '');
+    if (proformaValide) {
+      const ligne = (this.proformaContexte?.lignesPieces ?? []).find((item: any) =>
+        Number(item.pieceId ?? item.piece?.id) === Number(piece.id));
+      const prixHistorique = ligne?.prixUnitaire ?? ligne?.prix;
+      if (prixHistorique != null && Number.isFinite(Number(prixHistorique))) return Number(prixHistorique);
+    }
+    return this.getPiecePrice(piece);
   }
 
   montantLignePieceNet(ligne: LignePieceBS): number {
@@ -347,7 +380,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
 
   formatPiece = (p: PieceDetache) => {
     const stock = p.stockMagasin != null ? `(Stock: ${p.stockMagasin})` : '';
-    const price = this.getPiecePrice(p);
+    const price = this.getDocumentPiecePrice(p);
     const prix = price != null ? `— ${price} FCFA` : '';
     return `${p.reference} — ${p.designation} ${prix} ${stock}`.trim();
   };
@@ -408,14 +441,18 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
       return { isHorsProforma: false, isDejaSortiComplet: false, isDepassement: false, qteProforma: 0, dejaSorti: 0, message: '' };
     }
 
+    const prixSaisi = type === 'PDS' ? Number(this.prixAjouterPds) || 0 : null;
     const key = type === 'MAIN_DOEUVRE' && piece?.id
       ? `mo:${piece.id}`
       : piece?.id
         ? `piece:${piece.id}`
-        : `pds:${(designation || '').trim().toLowerCase()}`;
+        : this.clePds(designation, prixSaisi);
 
     const hasProformaData = this.piecesProformaSet.size > 0 || this.quantitesPrevues.size > 0;
-    const isDansProforma = this.piecesProformaSet.has(key) || this.quantitesPrevues.has(key);
+    const isDansProforma = this.piecesProformaSet.has(key)
+      || (type === 'PDS' && this.piecesProformaSet.has(this.clePds(designation)))
+      || this.quantitesPrevues.has(key)
+      || (type === 'PDS' && this.quantitesPrevues.has(this.clePds(designation)));
 
     if (hasProformaData && !isDansProforma) {
       return {
@@ -428,10 +465,22 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
       };
     }
 
-    const qteProforma = this.quantitesProforma.get(key) ?? this.quantitesPrevues.get(key) ?? 0;
-    const dejaSorti = this.quantitesDejaSorties.get(key) ?? 0;
+    const qteProforma = type === 'PDS'
+      ? (this.quantitePdsMap(this.quantitesProforma, designation, prixSaisi)
+        || this.quantitePdsMap(this.quantitesPrevues, designation, prixSaisi))
+      : (this.quantitesProforma.get(key) ?? this.quantitesPrevues.get(key) ?? 0);
+    const hasExactPdsPlan = type === 'PDS' && prixSaisi != null
+      && (this.quantitesProforma.has(this.clePds(designation, prixSaisi))
+        || this.quantitesPrevues.has(this.clePds(designation, prixSaisi)));
+    const dejaSorti = type === 'PDS'
+      ? (hasExactPdsPlan
+        ? this.quantitesDejaSorties.get(key) ?? 0
+        : this.quantitePdsMap(this.quantitesDejaSorties, designation))
+      : this.quantitesDejaSorties.get(key) ?? 0;
     const dejaAjoute = this.lignesPieces
-      .filter(l => this.cleLigne(l) === key)
+      .filter(l => type === 'PDS' && !hasExactPdsPlan
+        ? l.type === 'PDS' && this.clePds(l.designation) === this.clePds(designation)
+        : this.cleLigne(l) === key)
       .reduce((sum, l) => sum + (Number(l.quantite) || 0), 0);
 
     if (qteProforma > 0 && dejaSorti >= qteProforma) {
@@ -506,7 +555,16 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
       this.errorMessage = `Stock magasin insuffisant pour "${piece.designation}" : ${stock} disponible(s).`;
       return;
     }
-    const prix = prixSaisi != null && prixSaisi !== ('' as any) ? Number(prixSaisi) : (this.getPiecePrice(piece) ?? 0);
+    const cataloguePrice = this.getDocumentPiecePrice(piece);
+    if (type === 'PDP' && cataloguePrice == null) {
+      this.errorMessage = 'Le prix de cette PDP doit être renseigné dans le catalogue avant son utilisation.';
+      return;
+    }
+    if (type === 'PDG' && cataloguePrice == null && (prixSaisi == null || prixSaisi === ('' as any) || Number(prixSaisi) < 0)) {
+      this.errorMessage = 'Le prix de cette PDG est absent du catalogue. Saisissez un prix pour cette ligne.';
+      return;
+    }
+    const prix = cataloguePrice != null ? cataloguePrice : Number(prixSaisi);
     const info = this.getPieceStatusInfo(type, piece, piece.designation, qteDemandee);
     const remiseKey = piece ? `piece:${piece.id}` : '';
     const tauxRemise = this.remisesProforma.get(remiseKey) ?? 0;
@@ -516,6 +574,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
       designation: piece.designation,
       quantite: qteDemandee,
       prix,
+      ...(type === 'PDG' ? { dateHeureSaisie: new Date().toISOString() } : {}),
       tauxRemise,
       horsProforma: info.isHorsProforma,
       dejaSortieProforma: info.isDejaSortiComplet,
@@ -535,14 +594,16 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     const quantite = Number(this.qteAjouterPds) || 0;
     if (!designation) { this.errorMessage = 'Renseignez la désignation de la pièce PDS.'; return; }
     if (quantite <= 0) { this.errorMessage = 'La quantité doit être supérieure à zéro.'; return; }
+    const prix = Number(this.prixAjouterPds) || 0;
     const info = this.getPieceStatusInfo('PDS', null, designation, quantite);
-    const remiseKey = `pds:${designation.toLowerCase()}`;
+    const remiseKey = this.clePds(designation, prix);
     const tauxRemise = this.remisesProforma.get(remiseKey) ?? 0;
     this.lignesPieces.push({
       type: 'PDS',
       designation,
       quantite,
-      prix: Number(this.prixAjouterPds) || 0,
+      prix,
+      dateHeureSaisie: new Date().toISOString(),
       tauxRemise,
       horsProforma: info.isHorsProforma,
       dejaSortieProforma: info.isDejaSortiComplet,
@@ -795,6 +856,8 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
       this.remisesProforma.clear();
       this.quantitesPrevues.clear();
       this.quantitesDejaSorties.clear();
+      this.quantitesDejaSortiesParProforma.clear();
+      this.quantitesDejaSortiesSansSource.clear();
       this.cdr.markForCheck();
       return;
     }
@@ -839,7 +902,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
             });
           }
           for (const ligne of ordre.lignesOrdreReparationPieces ?? []) {
-            const key = ligne.piece?.id ? `piece:${ligne.piece.id}` : `pds:${(ligne.designationPds ?? '').trim().toLocaleLowerCase()}`;
+            const key = ligne.piece?.id ? `piece:${ligne.piece.id}` : this.clePds(ligne.designationPds ?? '');
             this.quantitesPrevues.set(key, ligne.quantite ?? 0);
           }
           for (const ligne of ordre.lignesOrdreReparationMainDoeuvres ?? []) {
@@ -856,7 +919,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
           for (const ligne of proforma.lignesPieces ?? []) {
             const key = ligne.pieceId
               ? `piece:${ligne.pieceId}`
-              : (ligne.piece?.id ? `piece:${ligne.piece.id}` : `pds:${(ligne.designationPds || ligne.designationPiece || '').trim().toLowerCase()}`);
+              : (ligne.piece?.id ? `piece:${ligne.piece.id}` : this.clePds(ligne.designationPds || ligne.designationPiece || '', ligne.prix ?? ligne.prixUnitaire ?? null));
             this.piecesProformaSet.add(key);
             this.quantitesProforma.set(key, (this.quantitesProforma.get(key) ?? 0) + (ligne.quantite || 0));
             if (!this.quantitesPrevues.has(key)) {
@@ -889,8 +952,15 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
           for (const bon of extractContent<BonDeSortie>(response as any)) {
             for (const ligne of bon.lignesBonDeSortiePieces ?? []) {
               const key = ligne.type === 'MAIN_DOEUVRE' ? `mo:${ligne.mainDoeuvreId}`
-                : ligne.piece?.id ? `piece:${ligne.piece.id}` : `pds:${(ligne.designation ?? '').trim().toLocaleLowerCase()}`;
+              : ligne.piece?.id ? `piece:${ligne.piece.id}` : this.clePds(ligne.designation ?? '', ligne.prix);
               this.quantitesDejaSorties.set(key, (this.quantitesDejaSorties.get(key) ?? 0) + (ligne.quantite || 0));
+              if (ligne.proformaLineId != null) {
+                this.quantitesDejaSortiesParProforma.set(ligne.proformaLineId,
+                  (this.quantitesDejaSortiesParProforma.get(ligne.proformaLineId) ?? 0) + (ligne.quantite || 0));
+              } else {
+                this.quantitesDejaSortiesSansSource.set(key,
+                  (this.quantitesDejaSortiesSansSource.get(key) ?? 0) + (ligne.quantite || 0));
+              }
             }
           }
           this.cdr.markForCheck();
@@ -936,7 +1006,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
           for (const p of step.piecesManquantesProforma ?? []) {
             const key = p.pieceId
               ? `piece:${p.pieceId}`
-              : `pds:${(p.designation || '').trim().toLowerCase()}`;
+              : this.clePds(p.designation || '', (p as any).prix ?? null);
             this.piecesProformaSet.add(key);
             this.quantitesProforma.set(key, (this.quantitesProforma.get(key) ?? 0) + (p.quantiteDemandee || 0));
             if (!this.quantitesPrevues.has(key)) {
@@ -956,7 +1026,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     for (const ligne of pieces) {
       const key = ligne.pieceId
         ? `piece:${ligne.pieceId}`
-        : (ligne.piece?.id ? `piece:${ligne.piece.id}` : `pds:${(ligne.designationPds || ligne.designationPiece || ligne.nom || ligne.designation || '').trim().toLowerCase()}`);
+        : (ligne.piece?.id ? `piece:${ligne.piece.id}` : this.clePds(ligne.designationPds || ligne.designationPiece || ligne.nom || ligne.designation || '', ligne.prix ?? ligne.prixUnitaire ?? null));
       this.piecesProformaSet.add(key);
       this.quantitesProforma.set(key, (this.quantitesProforma.get(key) ?? 0) + (ligne.quantite || 0));
       if (!this.quantitesPrevues.has(key)) {
@@ -1041,8 +1111,9 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
   private executerImportLignesProforma(): void {
     if (!this.proformaContexte) return;
     const pieces = this.proformaContexte.lignesPieces ?? (this.proformaContexte as any).pieces ?? [];
+    const quantitesLegacyRestantes = new Map(this.quantitesDejaSortiesSansSource);
 
-    for (const rawLp of pieces) {
+    for (const [index, rawLp] of pieces.entries()) {
       const lp = rawLp as any;
       const piece = lp.piece || (lp.pieceId ? {
         id: lp.pieceId,
@@ -1056,18 +1127,41 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
       const qteDemandee = Number(lp.quantite) || 1;
       const prix = Number(lp.prix ?? lp.prixUnitaire ?? piece?.prix ?? 0);
       const tauxRemise = Number(lp.tauxRemise) || 0;
-      const key = piece?.id ? `piece:${piece.id}` : `pds:${designation.trim().toLowerCase()}`;
+      const key = piece?.id ? `piece:${piece.id}` : this.clePds(designation, prix);
+      const sourceProformaLineKey = lp.id != null ? `proforma-line:${lp.id}` : `proforma-index:${index}`;
 
-      // Éviter les doublons stricts
+      // Ne pas réimporter une ligne déjà importée; les PDG sources restent distincts, même pour le même article.
       const dejaPresent = this.lignesPieces.some(l => {
-        if (piece?.id && l.piece?.id === piece.id) return true;
-        if (!piece?.id && l.designation?.trim().toLowerCase() === designation.trim().toLowerCase()) return true;
+        if (l.sourceProformaLineKey === sourceProformaLineKey) return true;
+        if (type !== 'PDG' && piece?.id && l.piece?.id === piece.id) return true;
+        if (!piece?.id && l.type === 'PDS'
+            && this.clePds(l.designation, l.prix) === this.clePds(designation, prix)) return true;
         return false;
       });
       if (dejaPresent) continue;
 
-      const dejaSorti = this.quantitesDejaSorties.get(key) ?? 0;
-      const prevu = this.quantitesPrevues.get(key) ?? qteDemandee;
+      const hasExactPdsPlan = !piece?.id && (this.quantitesProforma.has(key) || this.quantitesPrevues.has(key));
+      let dejaSorti: number;
+      let prevu: number;
+      const proformaLineId = type === 'PDG' && lp.id != null ? Number(lp.id) : null;
+      if (proformaLineId != null) {
+        const dejaSortiDeCetteLigne = this.quantitesDejaSortiesParProforma.get(proformaLineId) ?? 0;
+        const cleLegacy = piece?.id ? `piece:${piece.id}` : key;
+        const legacyDisponible = quantitesLegacyRestantes.get(cleLegacy) ?? 0;
+        const legacyUtilise = Math.min(legacyDisponible, Math.max(0, qteDemandee - dejaSortiDeCetteLigne));
+        quantitesLegacyRestantes.set(cleLegacy, legacyDisponible - legacyUtilise);
+        dejaSorti = dejaSortiDeCetteLigne + legacyUtilise;
+        prevu = qteDemandee;
+      } else {
+        dejaSorti = piece?.id
+          ? this.quantitesDejaSorties.get(key) ?? 0
+          : hasExactPdsPlan
+            ? this.quantitesDejaSorties.get(key) ?? 0
+            : this.quantitePdsMap(this.quantitesDejaSorties, designation);
+        prevu = piece?.id
+          ? this.quantitesPrevues.get(key) ?? qteDemandee
+          : this.quantitePdsMap(this.quantitesPrevues, designation, prix) || qteDemandee;
+      }
       const reste = Math.max(0, prevu - dejaSorti);
 
       this.lignesPieces.push({
@@ -1076,6 +1170,9 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
         designation,
         quantite: reste > 0 ? reste : qteDemandee,
         prix,
+        ...((!piece?.id || type === 'PDG') ? { dateHeureSaisie: new Date().toISOString() } : {}),
+        ...(type === 'PDG' ? { sourceProformaLineKey } : {}),
+        ...(proformaLineId != null ? { proformaLineId } : {}),
         tauxRemise,
         horsProforma: false,
         dejaSortieProforma: reste === 0,
@@ -1242,6 +1339,8 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     this.returnToContext = context['returnTo'] || null;
     this.quantitesPrevues.clear();
     this.quantitesDejaSorties.clear();
+    this.quantitesDejaSortiesParProforma.clear();
+    this.quantitesDejaSortiesSansSource.clear();
     this.piecesProformaSet.clear();
     this.quantitesProforma.clear();
     this.remisesProforma.clear();
@@ -1406,7 +1505,8 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
       quantite: Number(l.quantite) || 1,
       prix: Number(l.prix) || 0,
       prixUnitaire: Number(l.prix) || 0,
-      tauxRemise: Number(l.tauxRemise) || 0
+      tauxRemise: Number(l.tauxRemise) || 0,
+      proformaLineId: l.proformaLineId ?? undefined
     }));
 
     const lignesMainDoeuvresPayload = moOnly.map(l => ({
@@ -1718,7 +1818,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     if (l.prix != null && l.prix !== '') return Number(l.prix);
     if (l.tarifHoraire != null && l.tarifHoraire !== '') return Number(l.tarifHoraire);
     if (l.prixUnitaire != null && l.prixUnitaire !== '') return Number(l.prixUnitaire);
-    if (l.piece?.prix != null && l.piece?.prix !== '') return Number(l.piece.prix);
+    if (l.piece?.prixUnitaire != null && l.piece?.prixUnitaire !== '') return Number(l.piece.prixUnitaire);
     return 0;
   }
 

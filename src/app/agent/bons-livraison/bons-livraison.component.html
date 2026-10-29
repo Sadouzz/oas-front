@@ -1,0 +1,250 @@
+<div>
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-oas-ink">Bons de Livraison</h1>
+      <p class="text-sm text-oas-muted mt-1">{{ bons.length }} bon(s) affiché(s) sur {{ totalElements }}</p>
+    </div>
+    @if (canCreate) {
+    <button type="button" (click)="openCreate()"
+      class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-11 rounded-lg flex items-center gap-2 transition cursor-pointer">
+      <svg lucidePlus class="w-4 h-4"></svg>
+      Nouveau bon
+    </button>
+    }
+  </div>
+
+  <app-alert [success]="successMessage" [error]="errorMessage" />
+
+  <div class="bg-white rounded-lg border border-oas-line p-3 mb-4 shadow-sm space-y-3">
+    <div class="flex flex-col sm:flex-row gap-3">
+      <div class="relative flex-1">
+        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-oas-muted"><svg lucideSearch class="w-4 h-4"></svg></span>
+        <input type="text" (input)="onSearch($event)" placeholder="Référence BL, OR, client ou immatriculation..."
+          class="w-full pl-9 pr-4 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition" />
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg border border-oas-line shadow-card overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead><tr class="border-b border-oas-line bg-oas-bg/40">
+          <th class="text-left text-xs font-bold text-oas-muted px-5 py-3">Référence</th>
+          <th class="text-left text-xs font-bold text-oas-muted px-5 py-3">Date</th>
+          <th class="text-left text-xs font-bold text-oas-muted px-5 py-3">Client</th>
+          <th class="text-left text-xs font-bold text-oas-muted px-5 py-3">Véhicule</th>
+          <th class="text-left text-xs font-bold text-oas-muted px-5 py-3">Ordre de réparation</th>
+          <th class="text-left text-xs font-bold text-oas-muted px-5 py-3">Bons de sortie</th>
+          <th class="text-left text-xs font-bold text-oas-muted px-5 py-3">Facturation</th>
+          <th class="text-right text-xs font-bold text-oas-muted px-5 py-3">Total TTC</th>
+          <th class="text-right text-xs font-bold text-oas-muted px-5 py-3">Actions</th>
+        </tr></thead>
+        <tbody>
+          @if (loading) {
+            <tr><td colspan="9" class="text-center py-14 text-oas-muted">
+              <svg lucideLoader2 class="animate-spin h-5 w-5 mx-auto mb-2 text-oas-accent"></svg>Chargement...
+            </td></tr>
+          } @else {
+            @for (bon of bons; track bon.id) {
+              <tr class="hover:bg-oas-bg transition border-b border-oas-line">
+                <td class="px-5 py-4"><span class="font-mono font-bold text-oas-accent text-xs">{{ bon.numero }}</span></td>
+                <td class="px-5 py-4 text-xs text-oas-muted whitespace-nowrap">{{ bon.dateCreation | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td class="px-5 py-4"><span class="font-semibold text-oas-ink text-xs">{{ bon.clientNom }}</span></td>
+                <td class="px-5 py-4 text-xs font-mono font-semibold text-oas-ink2">{{ bon.immatriculation }}</td>
+                <td class="px-5 py-4"><span class="inline-flex px-2 py-0.5 rounded text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200">{{ bon.ordreReparationNumero }}</span></td>
+                <td class="px-5 py-4 text-xs text-oas-ink2">{{ (bon.bonsDeSortieReferences || []).join(', ') || '—' }}</td>
+                <td class="px-5 py-4 text-xs">
+                  @if (bon.factureNumero) {
+                    <span class="inline-flex px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">{{ bon.factureNumero }}</span>
+                  } @else if (bon.noteDePrixNumero) {
+                    <span class="inline-flex px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">{{ bon.noteDePrixNumero }}</span>
+                  } @else {
+                    <span class="inline-flex px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">À convertir</span>
+                  }
+                </td>
+                <td class="px-5 py-4 text-right font-bold text-xs whitespace-nowrap">{{ bon.montantTTC | number:'1.0-0' }} FCFA</td>
+                <td class="px-5 py-4"><div class="flex items-center justify-end gap-1">
+                  <button type="button" (click)="openDetail(bon)" title="Voir le détail" class="p-1.5 rounded-lg hover:bg-oas-info-bg text-oas-muted hover:text-oas-info transition cursor-pointer">
+                    <svg lucideEye class="w-4 h-4"></svg>
+                  </button>
+                  <button type="button" (click)="print(bon)" title="Imprimer" class="p-1.5 rounded-lg hover:bg-oas-bg text-oas-muted hover:text-oas-ink transition cursor-pointer">
+                    <svg lucidePrinter class="w-4 h-4"></svg>
+                  </button>
+                </div></td>
+              </tr>
+            } @empty {
+              <tr><td colspan="9" class="text-center py-14 text-oas-muted text-sm">Aucun bon de livraison</td></tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (totalElements > 0) {
+      <app-pagination [page]="page" [totalPages]="totalPages" [total]="totalElements" [pageSize]="pageSize"
+        (prev)="prevPage()" (next)="nextPage()" />
+    }
+  </div>
+</div>
+
+@if (showCreateModal) {
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" (click)="closeCreate()">
+    <div class="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[92vh] flex flex-col min-h-[460px]" (click)="$event.stopPropagation()">
+      <div class="px-6 py-4 border-b border-oas-line flex-shrink-0">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="font-bold text-oas-ink">Nouveau bon de livraison</h3>
+          <button type="button" (click)="closeCreate()" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted cursor-pointer" aria-label="Fermer">
+            <svg lucideX class="w-5 h-5"></svg>
+          </button>
+        </div>
+        <p class="text-xs text-oas-muted">Les bons de sortie validés de l’ordre seront inclus automatiquement.</p>
+      </div>
+      <div class="flex-1 px-6 py-5 min-h-[380px] overflow-y-auto space-y-4">
+        @if (modalError) { <div class="px-3 py-2 bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-xs rounded-lg">{{ modalError }}</div> }
+        <div>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Ordre de réparation <span class="text-oas-bad">*</span></label>
+          <app-searchable-select [options]="ordres" bindValue="id" [bindLabel]="formatOrdre" [serverSearch]="true"
+            [(ngModel)]="ordreId" (ngModelChange)="onOrderChange($event)" [allowClear]="true"
+            (search)="onOrdreSearch($event)"
+            placeholder="Rechercher un ordre de réparation..." [disabled]="loadingOrdres" />
+          @if (ordresError) { <p class="mt-1 text-xs text-oas-bad">{{ ordresError }}</p> }
+          @if (ordres.length < ordresTotal) {
+            <button type="button" (click)="loadMoreOrdres()" [disabled]="loadingOrdres"
+              class="mt-2 text-xs font-semibold text-oas-accent hover:underline disabled:opacity-50 cursor-pointer">
+              {{ loadingOrdres ? 'Chargement...' : 'Charger plus d’ordres (' + ordres.length + ' sur ' + ordresTotal + ')' }}
+            </button>
+          }
+        </div>
+        @if (ordreId) {
+          <div class="bg-oas-bg/60 border border-oas-line rounded-xl p-4">
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+              <div><p class="text-[11px] font-bold uppercase tracking-wider text-oas-muted">Ordre de réparation</p>
+                <p class="text-sm font-bold text-oas-ink mt-1">{{ selectedOrdreLabel }}</p></div>
+              @if (!contexteOrdre?.bonDeLivraison) {
+                <span class="text-xs font-bold text-oas-accent">{{ bonsSortie.length }} bon(s) validé(s) inclus</span>
+              }
+            </div>
+          </div>
+          @if (loadingBs) {
+            <div class="text-center py-8 text-oas-muted text-sm"><svg lucideLoader2 class="animate-spin h-5 w-5 mx-auto mb-2 text-oas-accent"></svg>Chargement des bons de sortie...</div>
+          } @else if (contexteOrdre?.bonDeLivraison; as bonExistant) {
+            <div class="rounded-xl border border-blue-200 bg-blue-50 p-4 space-y-3">
+              <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-blue-800">Un bon de livraison existe déjà</p>
+                <p class="mt-1 text-sm font-bold text-oas-ink">{{ bonExistant.numero }} · {{ bonExistant.montantTTC | number:'1.0-0' }} FCFA</p>
+                @if (bonExistant.factureNumero) {
+                  <p class="mt-1 text-xs text-emerald-800">Facture associée : {{ bonExistant.factureNumero }}</p>
+                } @else if (bonExistant.noteDePrixNumero) {
+                  <p class="mt-1 text-xs text-blue-800">Note de prix associée : {{ bonExistant.noteDePrixNumero }}</p>
+                }
+              </div>
+              @if (!bonExistant.factureId) {
+                <button type="button" (click)="convertirFactureDuContexte()" [disabled]="actionLoading"
+                  class="px-3 py-2 rounded-lg bg-oas-ok text-white text-xs font-bold disabled:opacity-50 cursor-pointer">
+                  {{ actionLoading ? 'Conversion…' : 'Créer la facture depuis ce BL' }}
+                </button>
+              }
+            </div>
+          } @else if (bonsSortie.length) {
+            <div class="border border-oas-line rounded-xl overflow-hidden">
+              <div class="px-4 py-2.5 bg-oas-bg/50 border-b border-oas-line text-xs font-bold text-oas-muted">Bons qui seront inclus au BL</div>
+              @for (bs of bonsSortie; track bs.id) {
+                <div class="flex items-center gap-3 px-4 py-3 border-b border-oas-line last:border-0">
+                  <span class="flex-1 min-w-0"><span class="font-mono font-bold text-oas-accent text-xs">{{ bs.reference }}</span><span class="text-oas-muted text-xs ml-2">{{ bs.date | date:'dd/MM/yyyy' }}</span></span>
+                  <span class="font-semibold text-oas-ink text-xs whitespace-nowrap">{{ bs.montant | number:'1.0-0' }} FCFA</span>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="px-4 py-3 bg-oas-warn-bg border border-oas-warn/30 text-oas-warn text-xs rounded-lg">Aucun bon de sortie validé n’est lié à cet OR.</div>
+          }
+        }
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div><label class="block text-sm font-semibold text-oas-ink mb-1">Remarque</label><input type="text" [(ngModel)]="remarque" maxlength="500" placeholder="Optionnel..." class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"></div>
+          <label class="flex items-center gap-2 text-sm text-oas-ink self-end pb-2"><input type="checkbox" [(ngModel)]="appliquerTVA" class="accent-oas-accent w-4 h-4"> Appliquer la TVA</label>
+        </div>
+      </div>
+      <div class="px-6 py-4 border-t border-oas-line flex-shrink-0 flex items-center justify-between gap-3">
+        <div class="flex-1 min-w-0">
+          @if (modalError) {
+            <div class="inline-flex items-center px-3 py-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold max-w-full">
+              <span class="truncate" [title]="modalError">{{ modalError }}</span>
+            </div>
+          }
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <button type="button" (click)="closeCreate()" class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-lg border border-oas-line transition cursor-pointer text-sm">Annuler</button>
+          <button type="button" (click)="create()" [disabled]="saving || loadingBs || !ordreId || !bonsSortie.length || !!contexteOrdre?.bonDeLivraison" class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-5 h-10 rounded-lg transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm">{{ saving ? 'Création...' : 'Créer le bon' }}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showDetailModal && selectedBon) {
+  <div class="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-3 sm:p-4" (click)="closeDetail()">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden border border-oas-line" (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line bg-oas-bg/50 flex-shrink-0">
+        <div class="flex items-center gap-3.5"><div class="w-11 h-11 rounded-xl bg-oas-accent text-white flex items-center justify-center font-mono font-black text-sm shadow-sm">BL</div>
+          <div><h3 class="font-black text-lg text-oas-ink font-mono tracking-tight">{{ selectedBon.numero }}</h3><p class="text-xs text-oas-muted mt-0.5">Émis le {{ selectedBon.dateCreation | date:'dd/MM/yyyy HH:mm' }}</p></div></div>
+          <button type="button" (click)="closeDetail()" class="p-2 rounded-xl hover:bg-white text-oas-muted hover:text-oas-ink border border-transparent hover:border-oas-line cursor-pointer transition"><svg lucideX class="w-5 h-5"></svg></button>
+      </div>
+      <div class="overflow-y-auto flex-1 px-6 py-5 space-y-5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div class="bg-oas-bg/60 border border-oas-line/80 rounded-xl p-4 space-y-1.5"><p class="text-[11px] font-bold uppercase tracking-wider text-oas-muted">Client</p><p class="font-bold text-oas-ink text-sm">{{ selectedBon.clientNom }}</p></div>
+          <div class="bg-oas-bg/60 border border-oas-line/80 rounded-xl p-4 space-y-1.5"><p class="text-[11px] font-bold uppercase tracking-wider text-oas-muted">Véhicule</p><p class="font-mono font-bold text-xs text-oas-ink">{{ selectedBon.immatriculation }}</p></div>
+          <div class="bg-oas-bg/60 border border-oas-line/80 rounded-xl p-4 space-y-1.5"><p class="text-[11px] font-bold uppercase tracking-wider text-oas-muted">Ordre de réparation</p><p class="font-bold text-purple-700 text-sm">{{ selectedBon.ordreReparationNumero }}</p></div>
+          <div class="bg-oas-bg/60 border border-oas-line/80 rounded-xl p-4 space-y-1.5"><p class="text-[11px] font-bold uppercase tracking-wider text-oas-muted">TVA</p><p class="font-semibold text-sm">{{ selectedBon.tvaApplicable ? 'Activée' : 'Désactivée' }}</p></div>
+        </div>
+        @if (selectedBon.remarque) { <div class="bg-blue-50/70 border border-blue-200/80 rounded-xl p-3.5 text-xs text-blue-950"><span class="font-bold uppercase tracking-wide text-[10px] block">Remarque</span><p class="mt-1">{{ selectedBon.remarque }}</p></div> }
+        <div class="space-y-2.5"><div class="flex items-center justify-between"><h4 class="text-sm font-bold text-oas-ink">Bons de sortie liés</h4><span class="text-xs font-black text-oas-accent bg-oas-bg px-3 py-1 rounded-lg border border-oas-line">{{ selectedBon.bonsDeSortieReferences.length }} bon(s)</span></div>
+          <div class="border border-oas-line rounded-xl divide-y divide-oas-line">@for (ref of selectedBon.bonsDeSortieReferences; track ref) { <div class="px-4 py-3 font-mono text-xs font-bold text-oas-accent">{{ ref }}</div> }</div>
+        </div>
+        @if (loadingDetail) {
+          <p class="text-sm text-oas-muted text-center py-4">Chargement des lignes du bon…</p>
+        } @else if (selectedBon.lignesPieces?.length || selectedBon.lignesMainDoeuvres?.length) {
+          <section class="space-y-2">
+            <h4 class="text-sm font-bold text-oas-ink">Pièces et main-d’œuvre</h4>
+            <div class="border border-oas-line rounded-xl overflow-x-auto">
+              <table class="w-full text-xs text-left min-w-[680px]">
+                <thead class="bg-oas-bg/60 text-oas-muted uppercase"><tr>
+                  <th class="px-3 py-2.5">Désignation</th><th class="px-3 py-2.5 text-center">Qté</th>
+                  <th class="px-3 py-2.5 text-right">Prix unit.</th><th class="px-3 py-2.5">Saisies d’origine</th>
+                  <th class="px-3 py-2.5 text-right">Montant net</th>
+                </tr></thead>
+                <tbody class="divide-y divide-oas-line">
+                  @for (ligne of selectedBon.lignesPieces || []; track ligne.id) {
+                    <tr>
+                      <td class="px-3 py-3"><span class="font-semibold">{{ ligne.designation }}</span><span class="ml-2 text-[10px] text-oas-muted">{{ ligne.type }}</span>
+                        @if (ligne.tauxRemise > 0) { <span class="block text-[10px] text-emerald-700 mt-0.5">Remise {{ ligne.tauxRemise }}%</span> }
+                      </td>
+                      <td class="px-3 py-3 text-center font-semibold">{{ ligne.quantite }}</td>
+                      <td class="px-3 py-3 text-right whitespace-nowrap">{{ ligne.prix | number:'1.0-0' }} FCFA</td>
+                      <td class="px-3 py-3 text-oas-muted">
+                        @for (dateSaisie of ligne.datesHeuresSaisieSource || []; track $index) {
+                          <span class="block whitespace-nowrap">{{ dateSaisie | date:'dd/MM/yyyy HH:mm:ss' }}</span>
+                        } @empty { — }
+                      </td>
+                      <td class="px-3 py-3 text-right font-bold whitespace-nowrap">{{ ligne.prix * ligne.quantite * (1 - ligne.tauxRemise / 100) | number:'1.0-2' }} FCFA</td>
+                    </tr>
+                  }
+                  @for (ligne of selectedBon.lignesMainDoeuvres || []; track ligne.id) {
+                    <tr><td class="px-3 py-3 font-semibold">{{ ligne.designation }} <span class="text-[10px] text-oas-muted">MO</span></td>
+                      <td class="px-3 py-3 text-center font-semibold">{{ ligne.nbreHeure }} h</td>
+                      <td class="px-3 py-3 text-right whitespace-nowrap">{{ ligne.tarifHoraire | number:'1.0-0' }} FCFA</td><td class="px-3 py-3 text-oas-muted">—</td>
+                      <td class="px-3 py-3 text-right font-bold whitespace-nowrap">{{ ligne.tarifHoraire * ligne.nbreHeure * (1 - ligne.tauxRemise / 100) | number:'1.0-2' }} FCFA</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </section>
+        }
+        <div class="bg-oas-bg/70 border border-oas-line rounded-xl p-4 space-y-2 text-sm"><div class="flex justify-between"><span class="text-oas-muted">Total HT</span><strong>{{ selectedBon.montantHT | number:'1.0-0' }} FCFA</strong></div><div class="flex justify-between"><span class="text-oas-muted">TVA</span><strong>{{ selectedBon.montantTVA | number:'1.0-0' }} FCFA</strong></div><div class="flex justify-between border-t border-oas-line pt-2 text-base"><span class="font-bold">Total TTC</span><strong class="text-oas-accent">{{ selectedBon.montantTTC | number:'1.0-0' }} FCFA</strong></div></div>
+        @if (errorMessage) { <div class="px-3 py-2 bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-xs rounded-lg">{{ errorMessage }}</div> }
+      </div>
+      <div class="px-6 py-4 border-t border-oas-line flex flex-wrap items-center justify-between gap-2 flex-shrink-0">
+        <div class="flex gap-2"><button type="button" (click)="convertNote(selectedBon)" [disabled]="!!selectedBon.noteDePrixNumero || actionLoading" class="px-3 py-2 rounded-lg border border-oas-line text-oas-ink text-xs font-semibold hover:bg-oas-bg disabled:opacity-50 cursor-pointer">{{ selectedBon.noteDePrixNumero ? 'Note ' + selectedBon.noteDePrixNumero : 'Convertir en note de prix' }}</button><button type="button" (click)="convertFacture(selectedBon)" [disabled]="!!selectedBon.factureNumero || actionLoading" class="px-3 py-2 rounded-lg bg-oas-ok text-white text-xs font-bold hover:opacity-90 disabled:opacity-50 cursor-pointer">{{ selectedBon.factureNumero ? 'Facture ' + selectedBon.factureNumero : 'Créer la facture' }}</button></div>
+        <button type="button" (click)="print(selectedBon)" class="px-3 py-2 rounded-lg bg-oas-accent hover:bg-oas-accent-dark text-white text-xs font-bold cursor-pointer">Imprimer</button>
+      </div>
+    </div>
+  </div>
+}

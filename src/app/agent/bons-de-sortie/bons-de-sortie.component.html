@@ -408,12 +408,11 @@
             <input type="number" [(ngModel)]="qteAjouterPdp" min="1" placeholder="Qté"
               class="w-full px-3 py-2.5 rounded-xl border border-blue-200 bg-white text-sm font-bold text-center focus:outline-none focus:ring-2 focus:ring-blue-400/40 transition" />
           </div>
-          <div class="w-32">
-            <label class="block text-xs font-bold text-oas-muted mb-1">Prix</label>
-            <input type="number" [(ngModel)]="prixAjouterPdp" min="0" placeholder="Prix (FCFA)"
-              class="w-full px-3 py-2.5 rounded-xl border border-blue-200 bg-white text-sm font-bold text-right focus:outline-none focus:ring-2 focus:ring-blue-400/40 transition" />
+          <div class="w-36">
+            <label class="block text-xs font-bold text-oas-muted mb-1">Prix catalogue</label>
+            <div class="px-3 py-2.5 rounded-xl border border-blue-200 bg-blue-50 text-sm font-bold text-right">{{ getDocumentPiecePrice(selectedPiecePdp) ?? 'Non renseigné' }} {{ getDocumentPiecePrice(selectedPiecePdp) != null ? 'FCFA/u' : '' }}</div>
           </div>
-          <button type="button" (click)="addPiecePdp('PDP')" [disabled]="chargementQuantitesOR || !piecePdpAjouter || (selectedPiecePdp && ((selectedPiecePdp.stockMagasin ?? 0) <= 0 || qteAjouterPdp > (selectedPiecePdp.stockMagasin ?? 0)))"
+          <button type="button" (click)="addPiecePdp('PDP')" [disabled]="chargementQuantitesOR || !piecePdpAjouter || getDocumentPiecePrice(selectedPiecePdp) == null || (selectedPiecePdp && ((selectedPiecePdp.stockMagasin ?? 0) <= 0 || qteAjouterPdp > (selectedPiecePdp.stockMagasin ?? 0)))"
             class="px-5 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-xs font-bold transition cursor-pointer disabled:opacity-50 flex-shrink-0">
             Ajouter PDP
           </button>
@@ -461,6 +460,9 @@
                         </span>
                         <span>{{ l.piece?.reference ? (l.piece.reference + ' — ') : '' }}{{ l.designation }}</span>
                       </div>
+                      @if (l.dateHeureSaisie) {
+                        <div class="text-[10px] text-oas-muted mt-1">Saisie le {{ formatDate(l.dateHeureSaisie) }}</div>
+                      }
                       @if (l.horsProforma || l.dejaSortieProforma || l.depassementProforma) {
                         <div class="flex flex-wrap items-center gap-1.5 mt-1">
                           @if (l.horsProforma) {
@@ -490,13 +492,7 @@
                           class="w-6 h-6 rounded-md bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold flex items-center justify-center cursor-pointer transition text-xs">+</button>
                       </div>
                     </td>
-                    <td class="px-3 py-3 text-right">
-                      <div class="flex items-center justify-end gap-1">
-                        <input type="number" [(ngModel)]="l.prix" (ngModelChange)="onRemiseGeneraleChange()" min="0" placeholder="0"
-                          class="w-24 px-2 py-1 rounded-lg border border-blue-200 bg-white text-right font-bold text-xs focus:ring-2 focus:ring-blue-400/40 focus:outline-none transition"/>
-                        <span class="text-blue-800 text-[10px] font-semibold">FCFA</span>
-                      </div>
-                    </td>
+                    <td class="px-3 py-3 text-right"><span class="text-xs font-semibold text-blue-900 bg-blue-100/70 px-2 py-1 rounded-lg inline-block whitespace-nowrap">{{ l.prix | number }} FCFA/u</span></td>
                     <td class="px-3 py-3 text-right">
                       <input type="number" [(ngModel)]="l.tauxRemise" (ngModelChange)="onRemiseGeneraleChange()" min="0" max="100" step="0.01"
                         aria-label="Taux de remise générale appliqué à cette pièce"
@@ -558,12 +554,16 @@
             <input type="number" [(ngModel)]="qteAjouterPdg" min="1" placeholder="Qté"
               class="w-full px-3 py-2.5 rounded-xl border border-emerald-200 bg-white text-sm font-bold text-center focus:outline-none focus:ring-2 focus:ring-emerald-400/40 transition" />
           </div>
-          <div class="w-32">
-            <label class="block text-xs font-bold text-oas-muted mb-1">Prix</label>
-            <input type="number" [(ngModel)]="prixAjouterPdg" min="0" placeholder="Prix (FCFA)"
-              class="w-full px-3 py-2.5 rounded-xl border border-emerald-200 bg-white text-sm font-bold text-right focus:outline-none focus:ring-2 focus:ring-emerald-400/40 transition" />
+          <div class="w-36">
+            <label class="block text-xs font-bold text-oas-muted mb-1">Prix catalogue / ligne</label>
+            @if (getDocumentPiecePrice(selectedPiecePdg) != null) {
+              <div class="px-3 py-2.5 rounded-xl border border-emerald-200 bg-emerald-50 text-sm font-bold text-right">{{ getDocumentPiecePrice(selectedPiecePdg) | number }} FCFA/u</div>
+            } @else {
+              <input type="number" [(ngModel)]="prixAjouterPdg" min="0" placeholder="Prix de la ligne"
+                class="w-full px-3 py-2.5 rounded-xl border border-emerald-200 bg-white text-sm font-bold text-right focus:outline-none focus:ring-2 focus:ring-emerald-400/40 transition" />
+            }
           </div>
-          <button type="button" (click)="addPiecePdp('PDG')" [disabled]="chargementQuantitesOR || !piecePdgAjouter"
+          <button type="button" (click)="addPiecePdp('PDG')" [disabled]="chargementQuantitesOR || !piecePdgAjouter || (getDocumentPiecePrice(selectedPiecePdg) == null && (prixAjouterPdg == null || prixAjouterPdg < 0))"
             class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition cursor-pointer disabled:opacity-50 flex-shrink-0">
             Ajouter PDG
           </button>
@@ -641,11 +641,12 @@
                       </div>
                     </td>
                     <td class="px-3 py-3 text-right">
-                      <div class="flex items-center justify-end gap-1">
-                        <input type="number" [(ngModel)]="l.prix" (ngModelChange)="onRemiseGeneraleChange()" min="0" placeholder="0"
+                      @if (getDocumentPiecePrice($any(l.piece)) == null) {
+                        <input type="number" [(ngModel)]="l.prix" (ngModelChange)="onRemiseGeneraleChange()" min="0" placeholder="Prix de la ligne"
                           class="w-24 px-2 py-1 rounded-lg border border-emerald-200 bg-white text-right font-bold text-xs focus:ring-2 focus:ring-emerald-400/40 focus:outline-none transition"/>
-                        <span class="text-emerald-800 text-[10px] font-semibold">FCFA</span>
-                      </div>
+                      } @else {
+                        <span class="text-xs font-semibold text-emerald-900 bg-emerald-100/70 px-2 py-1 rounded-lg inline-block whitespace-nowrap">{{ l.prix | number }} FCFA/u</span>
+                      }
                     </td>
                     <td class="px-3 py-3 text-right">
                       <input type="number" [(ngModel)]="l.tauxRemise" (ngModelChange)="onRemiseGeneraleChange()" min="0" max="100" step="0.01"
@@ -755,6 +756,9 @@
                         </span>
                         <span>{{ l.designation }}</span>
                       </div>
+                      @if (l.dateHeureSaisie) {
+                        <div class="text-[10px] text-oas-muted mt-1">Saisie le {{ formatDate(l.dateHeureSaisie) }}</div>
+                      }
                       @if (l.horsProforma || l.dejaSortieProforma || l.depassementProforma) {
                         <div class="flex flex-wrap items-center gap-1.5 mt-1">
                           @if (l.horsProforma) {
@@ -1181,6 +1185,9 @@
                       }
                       @if (l.piece?.numeroDeSerie) {
                         <div class="text-[10px] text-oas-muted font-mono mt-0.5">N° Série: {{ l.piece?.numeroDeSerie }}</div>
+                      }
+                      @if ((l.type === 'PDS' || l.type === 'PDG') && l.dateHeureSaisie) {
+                        <div class="text-[10px] text-oas-muted mt-0.5">Saisie le {{ formatDate(l.dateHeureSaisie) }}</div>
                       }
                       @if (l.tauxRemise && l.tauxRemise > 0) {
                         <div class="text-[10px] text-emerald-600 font-semibold mt-0.5">Remise : {{ l.tauxRemise }}%</div>

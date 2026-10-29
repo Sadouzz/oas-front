@@ -257,6 +257,18 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
     return this.pieces.filter(p => p.type === 'PDG' && p.statut !== 'ARCHIVE');
   }
 
+  get selectedPiecePdp(): PieceDetache | undefined {
+    return this.piecesPdpFiltrees.find(p => p.id === Number(this.piecePdpAjouter));
+  }
+
+  get selectedPiecePdg(): PieceDetache | undefined {
+    return this.piecesPdgFiltrees.find(p => p.id === Number(this.piecePdgAjouter));
+  }
+
+  get preserveDocumentLinePrices(): boolean {
+    return ['ACCEPTE', 'PAYEE', 'PARTIELLEMENT_PAYEE'].includes(this.selectedProforma?.statut ?? '');
+  }
+
   get moFiltrees(): MainDoeuvreModel[] {
     return this.mainsDoeuvre.filter(m => !m.isArchived);
   }
@@ -283,7 +295,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
     if (!p) return '';
     const ref = p.reference ? `${p.reference} — ` : '';
     const des = p.designation || '';
-    const prix = p.prix != null ? ` (${this.fmt(p.prix)} FCFA)` : '';
+    const prix = p.prixUnitaire != null ? ` (${this.fmt(p.prixUnitaire)} FCFA)` : '';
     return `${ref}${des}${prix}`;
   };
 
@@ -302,7 +314,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
     }
     const p = this.pieces.find(item => item.id === Number(pieceId));
     if (p) {
-      const price = p.prixUnitaire ?? p.prix ?? (p as any).prixDeVente ?? (p as any).prixVente ?? (p as any).prixGros ?? null;
+      const price = p.prixUnitaire ?? null;
       this.prixAjouterPdp = price != null ? Number(price) : null;
     }
   }
@@ -314,7 +326,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
     }
     const p = this.pieces.find(item => item.id === Number(pieceId));
     if (p) {
-      const price = (p as any).prixGros ?? p.prixUnitaire ?? p.prix ?? (p as any).prixDeVente ?? (p as any).prixVente ?? null;
+      const price = p.prixUnitaire ?? null;
       this.prixAjouterPdg = price != null ? Number(price) : null;
     }
   }
@@ -337,12 +349,16 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
     const p = this.pieces.find(item => item.id === Number(this.piecePdpAjouter));
     if (!p) return;
 
-    const unitPrice = this.prixAjouterPdp != null && this.prixAjouterPdp >= 0 ? this.prixAjouterPdp : (p.prix ?? 0);
+    const unitPrice = p.prixUnitaire;
+    if (unitPrice == null || unitPrice < 0) {
+      this.errorMessage = 'Le prix de cette PDP doit être renseigné dans le catalogue avant son utilisation.';
+      return;
+    }
     const existing = this.lignesPieces.find(l => !l.isCustom && l.pieceId === p.id);
 
     if (existing) {
       existing.quantite += this.qteAjouterPdp;
-      if (unitPrice > 0) existing.prix = unitPrice;
+      if (!this.preserveDocumentLinePrices) existing.prix = unitPrice;
       this.onPieceQuantiteChange(existing);
     } else {
       const item: LignePieceFormItem = {
@@ -370,26 +386,23 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
     const p = this.pieces.find(item => item.id === Number(this.piecePdgAjouter));
     if (!p) return;
 
-    const unitPrice = this.prixAjouterPdg != null && this.prixAjouterPdg >= 0 ? this.prixAjouterPdg : (p.prix ?? 0);
-    const existing = this.lignesPieces.find(l => !l.isCustom && l.pieceId === p.id);
-
-    if (existing) {
-      existing.quantite += this.qteAjouterPdg;
-      if (unitPrice > 0) existing.prix = unitPrice;
-      this.onPieceQuantiteChange(existing);
-    } else {
-      const item: LignePieceFormItem = {
-        isCustom: false,
-        pieceId: p.id,
-        piece: p,
-        type: 'PDG',
-        quantite: this.qteAjouterPdg,
-        prix: unitPrice,
-        stockDisponible: (p.stockMagasin ?? 0) + (p.stockAtelier ?? 0),
-        manquant: Math.max(0, this.qteAjouterPdg - (p.stockMagasin ?? 0)),
-      };
-      this.lignesPieces.push(item);
+    const cataloguePrice = p.prixUnitaire;
+    if (cataloguePrice == null && (this.prixAjouterPdg == null || this.prixAjouterPdg < 0)) {
+      this.errorMessage = 'Le prix de cette PDG est absent du catalogue. Saisissez un prix pour cette ligne.';
+      return;
     }
+    const unitPrice = cataloguePrice != null ? Number(cataloguePrice) : Number(this.prixAjouterPdg);
+    const item: LignePieceFormItem = {
+      isCustom: false,
+      pieceId: p.id,
+      piece: p,
+      type: 'PDG',
+      quantite: this.qteAjouterPdg,
+      prix: unitPrice,
+      stockDisponible: (p.stockMagasin ?? 0) + (p.stockAtelier ?? 0),
+      manquant: Math.max(0, this.qteAjouterPdg - (p.stockMagasin ?? 0)),
+    };
+    this.lignesPieces.push(item);
 
     this.piecePdgAjouter = null;
     this.qteAjouterPdg = 1;
@@ -403,11 +416,12 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
     if (!des || this.pieceCustomQuantite <= 0) return;
 
     const unitPrice = this.pieceCustomPrix != null && this.pieceCustomPrix >= 0 ? this.pieceCustomPrix : 0;
-    const existing = this.lignesPieces.find(l => l.isCustom && (l.designationPds || '').toLowerCase() === des.toLowerCase());
+    const existing = this.lignesPieces.find(l => l.isCustom
+      && (l.designationPds || '').trim().toLocaleLowerCase() === des.toLocaleLowerCase()
+      && Math.round(Number(l.prix) || 0) === Math.round(unitPrice));
 
     if (existing) {
       existing.quantite += this.pieceCustomQuantite;
-      if (unitPrice > 0) existing.prix = unitPrice;
     } else {
       const item: LignePieceFormItem = {
         isCustom: true,
@@ -755,15 +769,16 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
         }
 
         const qte = Number(l.quantite ?? l.qte ?? 1) || 1;
+        const prixHistorique = l.prix ?? l.prixUnitaire;
         let unitPrice = 0;
-        if (l.prix != null && Number(l.prix) >= 0) {
-          unitPrice = Number(l.prix);
-        } else if (l.prixUnitaire != null && Number(l.prixUnitaire) >= 0) {
-          unitPrice = Number(l.prixUnitaire);
+        if (!isCustom && !this.preserveDocumentLinePrices && catPiece?.prixUnitaire != null) {
+          unitPrice = Number(catPiece.prixUnitaire);
+        } else if (!isCustom && !this.preserveDocumentLinePrices && pieceType === 'PDP') {
+          unitPrice = 0;
+        } else if (prixHistorique != null && Number(prixHistorique) >= 0) {
+          unitPrice = Number(prixHistorique);
         } else if (l.montantTotal != null && qte > 0) {
           unitPrice = Number(l.montantTotal) / qte;
-        } else if (catPiece?.prix != null) {
-          unitPrice = Number(catPiece.prix);
         }
 
         const des = l.designationPds || l.designationPiece || l.designation || catPiece?.designation || (isCustom ? 'Pièce à saisir' : 'Pièce détachée');
