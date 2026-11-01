@@ -357,10 +357,10 @@
           </button>
           @if (openSubSection === 'facture') {
           <div class="ml-3 pl-2.5 border-l border-white/10 space-y-0.5 mt-0.5">
-            <a routerLink="/app/factures" [queryParams]="{ action: 'new' }" routerLinkActive="oas-sub-active"
+            <a routerLink="/app/bons-livraison" routerLinkActive="oas-sub-active"
               class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
               <span class="w-1.5 h-1.5 rounded-full bg-oas-accent"></span>
-              Nouvelle facture
+              Créer via un BL
             </a>
             <a routerLink="/app/factures" [queryParams]="{ statut: 'EN_COURS' }" routerLinkActive="oas-sub-active"
               class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">

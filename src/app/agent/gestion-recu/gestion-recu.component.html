@@ -45,7 +45,7 @@
               <th class="px-5 py-3">N° Reçu</th>
               <th class="px-5 py-3">Client</th>
               <th class="px-5 py-3">Réf.</th>
-              <th class="px-5 py-3 text-right">Montant</th>
+              <th class="px-5 py-3 text-right">Imputé / encaissé</th>
               <th class="px-5 py-3 text-right">Date de paiement</th>
               <th class="px-5 py-3 text-center">Méthode</th>
             </tr>
@@ -70,7 +70,11 @@
                   }
                 </td>
                 <td class="px-5 py-3 text-right">
-                  <span class="font-extrabold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">{{ fmt(r.montant) }} FCFA</span>
+                  <div class="flex flex-col items-end gap-1">
+                    <span class="font-semibold text-oas-ink">Imputé : {{ fmt(r.montant) }} FCFA</span>
+                    @if ((r.montantTimbre || 0) > 0) { <span class="text-xs text-oas-muted">Timbre : {{ fmt(r.montantTimbre || 0) }} FCFA</span> }
+                    <span class="font-extrabold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">Encaissé : {{ fmt(r.montantEncaisse ?? r.montant) }} FCFA</span>
+                  </div>
                 </td>
                 <td class="px-5 py-3 text-right text-oas-muted">{{ formatDate(r.datePaiement) }}</td>
                 <td class="px-5 py-3 text-center">

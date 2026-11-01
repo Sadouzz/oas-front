@@ -304,10 +304,10 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     }, 300);
   }
 
-  get lignesPdp(): LignePieceBS[] { return this.lignesPieces.filter(l => l.type === 'PDP'); }
-  get lignesPdg(): LignePieceBS[] { return this.lignesPieces.filter(l => l.type === 'PDG'); }
-  get lignesPds(): LignePieceBS[] { return this.lignesPieces.filter(l => l.type === 'PDS'); }
-  get lignesMO(): LignePieceBS[] { return this.lignesPieces.filter(l => l.type === 'MAIN_DOEUVRE'); }
+  get lignesPdp(): LignePieceBS[] { return this.lignesPieces.filter(l => l.type === 'PDP').slice().reverse(); }
+  get lignesPdg(): LignePieceBS[] { return this.lignesPieces.filter(l => l.type === 'PDG').slice().reverse(); }
+  get lignesPds(): LignePieceBS[] { return this.lignesPieces.filter(l => l.type === 'PDS').slice().reverse(); }
+  get lignesMO(): LignePieceBS[] { return this.lignesPieces.filter(l => l.type === 'MAIN_DOEUVRE').slice().reverse(); }
 
   get lignesPiecesPdp(): LignePieceBS[] {
     return this.lignesPieces;
@@ -1113,7 +1113,10 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     const pieces = this.proformaContexte.lignesPieces ?? (this.proformaContexte as any).pieces ?? [];
     const quantitesLegacyRestantes = new Map(this.quantitesDejaSortiesSansSource);
 
-    for (const [index, rawLp] of pieces.entries()) {
+    // La réponse proforma est triée du plus récent au plus ancien. Importer
+    // dans l'ordre chronologique permet au BS de conserver la même chronologie.
+    for (let index = pieces.length - 1; index >= 0; index--) {
+      const rawLp = pieces[index];
       const lp = rawLp as any;
       const piece = lp.piece || (lp.pieceId ? {
         id: lp.pieceId,

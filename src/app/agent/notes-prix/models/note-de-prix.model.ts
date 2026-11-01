@@ -8,6 +8,8 @@ export interface NoteDePrixModel {
   montantTVA?: number;
   tvaApplicable?: boolean | null;
   montantPaye: number;
+  montantTimbrePaye?: number;
+  montantEncaisse?: number;
   resteAPayer: number;
   statutPaiement?: 'NON_PAYE' | 'PARTIEL' | 'PAYE' | string;
   statut?: string;

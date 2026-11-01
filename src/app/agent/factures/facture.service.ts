@@ -2,8 +2,8 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { FactureModel, FactureCreateRequest } from './models/facture.model';
-import { PageParams } from '@app/shared/models';
+import { FactureModel, FactureCreateRequest, FactureListModel } from './models/facture.model';
+import { PageParams, PageResponse } from '@app/shared/models';
 
 export type { FactureModel, FactureCreateRequest };
 
@@ -12,11 +12,11 @@ export class FactureService {
   private http = inject(HttpClient);
   private api = `${environment.apiUrl}/api/factures`;
 
-  getAll(params?: PageParams): Observable<FactureModel[]> {
+  getAll(params?: PageParams): Observable<PageResponse<FactureListModel>> {
     const p: Record<string, string> = {};
-    if (params?.page !== undefined) p['page'] = params.page.toString();
-    if (params?.size !== undefined) p['size'] = params.size.toString();
-    if (params?.keyword) p['keyword'] = params.keyword;
+    for (const [key, value] of Object.entries(params ?? {})) {
+      if (value !== undefined && value !== null && value !== '') p[key] = String(value);
+    }
     return this.http.get<any>(this.api, { params: p });
   }
 

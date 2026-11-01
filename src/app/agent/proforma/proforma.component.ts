@@ -75,7 +75,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
   private router = inject(Router);
   private otService = inject(OrdreTravailService);
   private currentTvaRate = 18;
-  private currentTimbreFiscal = 100;
+  currentTimbreFiscalRate = 1;
   private remiseClientLookupVersion = 0;
   private remiseClientChargeePour: number | null = null;
   remiseClientPourcentage = 0;
@@ -159,7 +159,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
 
   ngOnInit() {
     this.fiscalConfigurationService.getCurrent().subscribe({
-      next: config => { this.currentTvaRate = config.tvaRate; this.currentTimbreFiscal = config.timbreFiscal; },
+      next: config => { this.currentTvaRate = config.tvaRate; this.currentTimbreFiscalRate = config.timbreFiscalRate; },
       error: () => undefined,
     });
     this.load();
@@ -275,15 +275,15 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
 
   // Sous-listes de pièces par catégorie
   get lignesPiecesPdp(): LignePieceFormItem[] {
-    return this.lignesPieces.filter(l => !l.isCustom && (l.type === 'PDP' || l.piece?.type === 'PDP'));
+    return this.lignesPieces.filter(l => !l.isCustom && (l.type === 'PDP' || l.piece?.type === 'PDP')).slice().reverse();
   }
 
   get lignesPiecesPdg(): LignePieceFormItem[] {
-    return this.lignesPieces.filter(l => !l.isCustom && (l.type === 'PDG' || l.piece?.type === 'PDG'));
+    return this.lignesPieces.filter(l => !l.isCustom && (l.type === 'PDG' || l.piece?.type === 'PDG')).slice().reverse();
   }
 
   get lignesPiecesPds(): LignePieceFormItem[] {
-    return this.lignesPieces.filter(l => l.isCustom || l.type === 'PDS');
+    return this.lignesPieces.filter(l => l.isCustom || l.type === 'PDS').slice().reverse();
   }
 
   get lignesMOList(): LigneMOFormItem[] {
@@ -652,7 +652,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
 
     this.form.reset({
       kilometrage: 0,
-      montantTimbre: this.currentTimbreFiscal,
+      montantTimbre: 0,
       montantAutre: 0,
       tvaRate: this.currentTvaRate,
       appliquerTVA: true,
@@ -745,7 +745,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
       remarque: p.remarque ?? '',
       tvaRate: p.tvaRate ?? p.tva ?? 18,
       appliquerTVA: p.tvaApplicable ?? (Number(p.montantTVA) > 0),
-      montantTimbre: p.montantTimbre ?? 0,
+      montantTimbre: 0,
       montantAutre: p.montantAutre ?? 0,
     });
     if (clientId) this.chargerRemiseCompteClient(Number(clientId));
@@ -754,7 +754,9 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
     const rawPieces: any[] = p.lignesPieces || p.pieces || [];
     this.lignesPieces = [];
     if (rawPieces.length > 0) {
-      for (const l of rawPieces) {
+      // Les réponses API sont affichées du plus récent au plus ancien ; on
+      // conserve ici l'ordre chronologique pour les prochaines modifications.
+      for (const l of [...rawPieces].reverse()) {
         const pieceId = l.pieceId ?? l.piece?.id ?? null;
         const isCustom = !!(l.isCustom || l.custom || !pieceId || l.designationPds);
         const catPiece = !isCustom && pieceId ? this.pieces.find(x => x.id === Number(pieceId)) : (l.piece ?? null);
@@ -964,7 +966,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
       remarque: raw.remarque || undefined,
       tvaRate: raw.tvaRate ? Number(raw.tvaRate) : 18,
       appliquerTVA: raw.appliquerTVA !== false,
-      montantTimbre: Number(raw.montantTimbre) || 0,
+      montantTimbre: 0,
       montantAutre: Number(raw.montantAutre) || 0,
       lignesPieces: this.lignesPieces.map(l => ({
         pieceId: l.isCustom ? null : l.pieceId,
@@ -1143,7 +1145,8 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
       montantRemiseGenerale: (target.lignesPieces || []).reduce((sum: number, line: any) => sum + Math.max(0, (line.quantite || 0) * (line.prix || 0) - (line.montantTotal ?? (line.quantite || 0) * (line.prix || 0) * (1 - (Number(line.tauxRemise) || 0) / 100))), 0)
         + (target.lignesMainDoeuvres || []).reduce((sum: number, line: any) => sum + Math.max(0, (line.nbreHeure || 0) * (line.tarifHoraire || 0) - (line.montantTotal ?? (line.nbreHeure || 0) * (line.tarifHoraire || 0) * (1 - (Number(line.tauxRemise) || 0) / 100))), 0),
       tva: target.montantTVA || target.montantTva || 0,
-      timbre: target.montantTimbre || target.timbre || 0,
+      timbreFiscalRate: target.timbreFiscalRate ?? this.currentTimbreFiscalRate,
+      timbre: 0,
       tauxRemiseClient: target.tauxRemiseClient || 0,
       montantRemiseClient: target.montantRemiseClient || 0,
       totalTTC: target.montantTTC || target.totalTtc || target.montantTotal || 0,
@@ -1224,12 +1227,15 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
   }
 
   get totalTTC(): number {
-    return this.totalHT + this.montantTVA + this.montantTimbreEtAutres;
+    return this.totalHT + this.montantTVA + (Number(this.form.get('montantAutre')?.value) || 0);
   }
 
   get montantTimbreEtAutres(): number {
-    return (Number(this.form.get('montantTimbre')?.value) || 0)
-      + (Number(this.form.get('montantAutre')?.value) || 0);
+    return Number(this.form.get('montantAutre')?.value) || 0;
+  }
+
+  get tauxTimbreEspeces(): number {
+    return Number(this.selectedProforma?.timbreFiscalRate ?? this.currentTimbreFiscalRate) || 0;
   }
 
   get montantBonCommandeForm(): number {

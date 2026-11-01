@@ -7,7 +7,7 @@ import { forkJoin } from 'rxjs';
 import { ClientService } from './client.service';
 import { VehiculeService } from '../vehicules/vehicule.service';
 import { BonDeSortieService } from '../bons-de-sortie/bon-de-sortie.service';
-import { FactureService, FactureModel } from '../factures/facture.service';
+import { FactureService } from '../factures/facture.service';
 import { ClientModel, ClientListResponse, VehiculeModel, extractContent, PageParams } from '../../shared/models/index';
 import { CompteFinancierPayload, CompteFinancierResponse, PortefeuilleClientResponse } from './models/client-model';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
@@ -71,7 +71,7 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   riskLoading = false;
   riskVehicleCount = 0;
   riskBonCount = 0;
-  riskFactures: FactureModel[] = [];
+  riskFactureCount = 0;
 
   filterStatut = '';
 
@@ -329,18 +329,18 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
     this.riskLoading = true;
     this.riskVehicleCount = 0;
     this.riskBonCount = 0;
-    this.riskFactures = [];
+    this.riskFactureCount = 0;
     this.showRiskModal = true;
 
     forkJoin({
       vehicules: this.vehiculeService.getByClient(client.id),
       bons: this.bonService.getAll({ clientId: client.id }),
-      factures: this.factureService.getAll(),
+      factures: this.factureService.getAll({ page: 0, size: 1, client: String(client.id) }),
     }).subscribe({
       next: ({ vehicules, bons, factures }) => {
         this.riskVehicleCount = vehicules.length;
         this.riskBonCount = bons.length;
-        this.riskFactures = factures.filter(f => f.clientId === client.id);
+        this.riskFactureCount = factures.totalElements;
         this.riskLoading = false;
       },
       error: () => { this.riskLoading = false; }
@@ -822,7 +822,7 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   }
 
   get canHardDelete(): boolean {
-    return this.riskVehicleCount === 0 && this.riskBonCount === 0 && this.riskFactures.length === 0;
+    return this.riskVehicleCount === 0 && this.riskBonCount === 0 && this.riskFactureCount === 0;
   }
 
   get peutConfigurerRemise(): boolean {

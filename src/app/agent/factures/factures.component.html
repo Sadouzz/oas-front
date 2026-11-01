@@ -4,12 +4,12 @@
   <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4 flex items-center justify-between">
     <div>
       <h1 class="text-2xl font-bold text-oas-ink">Factures</h1>
-      <p class="text-sm text-oas-muted mt-1">{{ paged.length }} facture(s) affichée(s) sur {{ totalElements }}</p>
+      <p class="text-sm text-oas-muted mt-1">{{ totalElements }} facture(s) correspondent aux filtres</p>
     </div>
     <button (click)="openCreate()"
             class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-4 h-11 rounded-lg flex items-center gap-2 transition cursor-pointer">
       <svg lucidePlus class="w-4 h-4"></svg>
-      Creer une facture
+      Créer depuis un BL
     </button>
   </div>
 
@@ -17,7 +17,7 @@
   @if (successMessage) {
     <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg text-sm">{{ successMessage }}</div>
   }
-  @if (errorMessage && !showCreateModal) {
+  @if (errorMessage) {
     <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm">{{ errorMessage }}</div>
   }
 
@@ -28,7 +28,7 @@
         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-oas-muted">
           <svg lucideSearch class="w-4 h-4"></svg>
         </span>
-        <input (input)="onSearch($event)" placeholder="N° facture, nom client, immatriculation..."
+        <input (input)="onSearch($event)" placeholder="N° facture, client, véhicule, immatriculation..."
                class="w-full pl-9 pr-4 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
       </div>
       <select (change)="onStatutFilter($event)" [value]="filterStatut"
@@ -73,7 +73,7 @@
       </div>
       <div>
         <label class="block text-xs font-semibold text-oas-muted mb-1">Numéro ou nom client</label>
-        <input type="text" [(ngModel)]="filterClient" (input)="applyFilter()" placeholder="Ex: Client #12 ou Dupont..."
+        <input type="text" [(ngModel)]="filterClient" (change)="applyFilter()" placeholder="Ex: Client #12 ou Dupont..."
           class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink" />
       </div>
     </div>
@@ -103,7 +103,7 @@
           <tbody>
             @if (loading) {
               <tr>
-                <td colspan="7" class="text-center py-14 text-oas-muted">
+                <td [attr.colspan]="selectedFacture ? 3 : 7" class="text-center py-14 text-oas-muted">
                   <svg class="animate-spin h-5 w-5 mx-auto mb-2 text-oas-accent" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
@@ -113,7 +113,7 @@
               </tr>
             } @else if (paged.length === 0) {
               <tr>
-                <td colspan="7" class="text-center py-16 text-oas-muted text-sm">Aucune facture.</td>
+                <td [attr.colspan]="selectedFacture ? 3 : 7" class="text-center py-16 text-oas-muted text-sm">Aucune facture ne correspond aux filtres.</td>
               </tr>
             } @else {
               @for (f of paged; track f.id) {
@@ -124,7 +124,7 @@
                   @if (!selectedFacture) {
                     <td class="px-5 py-4 text-oas-ink text-sm">{{ f.clientNom }}</td>
                     <td class="px-5 py-4 text-oas-muted text-xs">{{ f.immatriculation ?? '&mdash;' }}</td>
-                    <td class="px-5 py-4 text-right font-semibold text-oas-ink">{{ fmt(f.montantTotal) }} FCFA</td>
+                    <td class="px-5 py-4 text-right font-semibold text-oas-ink">{{ fmt(f.montantTTC) }} FCFA</td>
                     <td class="px-5 py-4">
                       @if (f.statutPaiement === 'PAYE') {
                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">Payé</span>
@@ -181,6 +181,13 @@
 
         <div class="flex-1 overflow-y-auto p-5 space-y-5">
 
+          @if (selectedFactureLoading) {
+            <div class="flex items-center gap-2 text-sm text-oas-muted">
+              <span class="w-4 h-4 rounded-full border-2 border-oas-accent border-t-transparent animate-spin"></span>
+              Chargement des lignes et des règlements…
+            </div>
+          }
+
           <!-- Infos -->
           <div class="space-y-2 text-sm">
             <div class="flex justify-between">
@@ -207,10 +214,10 @@
               <span class="text-oas-muted">Kilometrage</span>
               <span class="font-semibold text-oas-ink">{{ selectedFacture.kilometrage }} km</span>
             </div>
-            @if (selectedFacture.modePaiement) {
+            @if (selectedFacture.numeroOrdreReparation) {
               <div class="flex justify-between">
-                <span class="text-oas-muted">Mode de paiement</span>
-                <span class="font-semibold text-oas-ink">{{ modePaiementLabel(selectedFacture.modePaiement) }}</span>
+                <span class="text-oas-muted">Ordre de réparation</span>
+                <span class="font-semibold text-oas-ink">{{ selectedFacture.numeroOrdreReparation }}</span>
               </div>
             }
             @if (selectedFacture.remarque) {
@@ -225,8 +232,8 @@
           @if (selectedFacture.lignesPieces.length > 0) {
             <div>
               <p class="text-xs font-bold text-oas-muted uppercase tracking-wide mb-2">Pieces ({{ selectedFacture.lignesPieces.length }})</p>
-              <div class="border border-oas-line rounded-lg overflow-hidden">
-                <table class="w-full text-xs">
+              <div class="border border-oas-line rounded-lg overflow-x-auto">
+                <table class="w-full min-w-[620px] text-xs">
                   <thead class="bg-oas-bg">
                     <tr>
                       <th class="text-left px-3 py-2 font-bold text-oas-muted">Piece</th>
@@ -256,8 +263,8 @@
           @if (selectedFacture.lignesMainDoeuvres.length > 0) {
             <div>
               <p class="text-xs font-bold text-oas-muted uppercase tracking-wide mb-2">Main d'oeuvre ({{ selectedFacture.lignesMainDoeuvres.length }})</p>
-              <div class="border border-oas-line rounded-lg overflow-hidden">
-                <table class="w-full text-xs">
+              <div class="border border-oas-line rounded-lg overflow-x-auto">
+                <table class="w-full min-w-[600px] text-xs">
                   <thead class="bg-oas-bg">
                     <tr>
                       <th class="text-left px-3 py-2 font-bold text-oas-muted">Description</th>
@@ -326,10 +333,29 @@
               </div>
             }
             <div class="flex justify-between pt-1.5 border-t border-oas-line">
-              <span class="font-bold text-oas-ink">Total</span>
+              <span class="font-bold text-oas-ink">Total à régler</span>
               <span class="font-bold text-oas-accent text-base">{{ fmt(selectedFacture.montantTotal) }} FCFA</span>
             </div>
           </div>
+
+          @if (selectedFacture.recus.length > 0) {
+            <div>
+              <p class="text-xs font-bold text-oas-muted uppercase tracking-wide mb-2">Règlements ({{ selectedFacture.recus.length }})</p>
+              <div class="border border-oas-line rounded-lg divide-y divide-oas-line">
+                @for (recu of selectedFacture.recus; track recu.id) {
+                  <div class="p-3 text-xs space-y-1">
+                    <div class="flex justify-between gap-2"><strong>{{ recu.numero }}</strong><span>{{ formatDate(recu.datePaiement) }}</span></div>
+                    <div class="flex justify-between"><span class="text-oas-muted">Mode</span><span>{{ modePaiementLabel(recu.modePaiement) }}</span></div>
+                    <div class="flex justify-between"><span class="text-oas-muted">Imputé sur facture</span><span>{{ fmt(recu.montant) }} FCFA</span></div>
+                    @if ((recu.montantTimbre || 0) > 0) {
+                      <div class="flex justify-between"><span class="text-oas-muted">Timbre espèces</span><span>{{ fmt(recu.montantTimbre || 0) }} FCFA</span></div>
+                    }
+                    <div class="flex justify-between font-bold"><span>Total encaissé</span><span>{{ fmt(recu.montantEncaisse ?? recu.montant) }} FCFA</span></div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
 
           <!-- Actions -->
           <div class="space-y-2">
@@ -358,252 +384,6 @@
 </div>
 
 <!-- Create Wizard Modal -->
-@if (showCreateModal) {
-  <div class="fixed inset-0 z-50 flex items-start justify-center bg-black/50 overflow-y-auto py-6">
-    <div class="bg-white rounded-lg shadow-2xl w-full max-w-2xl mx-4 my-auto">
-
-      <!-- Modal header -->
-      <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line">
-        <div>
-          <h2 class="text-base font-bold text-oas-ink">Creer une facture</h2>
-          <p class="text-xs text-oas-muted mt-0.5">Etape {{ createStep }} / 2</p>
-        </div>
-        <button (click)="closeCreate()" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted cursor-pointer">
-          <svg lucideX class="w-5 h-5"></svg>
-        </button>
-      </div>
-
-      <!-- Step indicators -->
-      <div class="flex items-center px-6 py-3 border-b border-oas-line gap-2">
-        @for (s of [1, 2]; track s) {
-          <div class="flex items-center gap-2 text-xs font-semibold"
-               [class.text-oas-accent]="createStep === s"
-               [class.text-oas-muted]="createStep !== s">
-            <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-2 transition"
-                  [class.border-oas-accent]="createStep === s"
-                  [class.bg-oas-accent]="createStep === s"
-                  [class.text-white]="createStep === s"
-                  [class.border-green-500]="s < createStep"
-                  [class.bg-green-500]="s < createStep"
-                  [class.border-oas-line]="s > createStep"
-                  [class.text-oas-muted]="s > createStep">
-              @if (s < createStep) {
-                <svg lucideCheck class="w-3.5 h-3.5"></svg>
-              } @else { {{ s }} }
-            </span>
-            @if (s === 1) { Client &amp; Vehicule }
-            @if (s === 2) { Fiche &amp; Paiement }
-          </div>
-          @if (s < 2) {
-            <span class="flex-1 h-px bg-oas-line"></span>
-          }
-        }
-      </div>
-
-      <!-- Error -->
-      @if (errorMessage) {
-        <div class="mx-6 mt-4 bg-red-50 border border-red-200 text-red-800 px-4 py-2.5 rounded-lg text-sm">{{ errorMessage }}</div>
-      }
-
-      <div class="px-6 py-5" [formGroup]="form">
-
-        <!-- STEP 1 -->
-        @if (createStep === 1) {
-          <div class="space-y-4">
-
-            <!-- Client -->
-            <div>
-              <label class="block text-sm font-semibold text-oas-ink mb-1">Client *</label>
-              @if (clientOpen) {
-                <div class="fixed inset-0 z-[5]" (click)="clientOpen = false"></div>
-              }
-              <div class="relative z-[10]">
-                <input type="text"
-                       [value]="clientOpen ? clientFilter : clientLabel"
-                       (focus)="clientOpen = true; clientFilter = ''"
-                       (input)="clientFilter = $any($event.target).value"
-                       placeholder="Rechercher un client..."
-                       class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"
-                       [class.border-oas-bad]="form.get('clientId')?.invalid && form.get('clientId')?.touched"/>
-                @if (clientOpen) {
-                  <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-oas-line rounded-lg shadow-xl z-[10] max-h-52 overflow-y-auto"
-                       (click)="$event.stopPropagation()">
-                    @for (c of filteredClients; track c.id) {
-                      <div (click)="selectClient(c)"
-                           class="px-3 py-2.5 hover:bg-oas-bg cursor-pointer text-sm text-oas-ink border-b border-oas-line last:border-0">
-                        <span class="font-medium">{{ c.firstName }} {{ c.lastName }}</span>
-                        @if (c.phone) { <span class="text-oas-muted ml-2 text-xs">{{ c.phone }}</span> }
-                      </div>
-                    }
-                    @if (filteredClients.length === 0) {
-                      <div class="px-3 py-3 text-sm text-oas-muted text-center">Aucun resultat</div>
-                    }
-                  </div>
-                }
-              </div>
-              @if (form.get('clientId')?.invalid && form.get('clientId')?.touched) {
-                <p class="text-xs text-oas-bad mt-1">Client requis.</p>
-              }
-            </div>
-
-            <!-- Vehicule -->
-            <div>
-              <label class="block text-sm font-semibold text-oas-ink mb-1">Vehicule *</label>
-              @if (vehiculeOpen) {
-                <div class="fixed inset-0 z-[5]" (click)="vehiculeOpen = false"></div>
-              }
-              <div class="relative z-[10]">
-                <input type="text"
-                       [value]="vehiculeOpen ? vehiculeFilter : vehiculeLabel"
-                       (focus)="vehiculeOpen = true; vehiculeFilter = ''"
-                       (input)="vehiculeFilter = $any($event.target).value"
-                       [placeholder]="form.get('clientId')?.value ? 'Rechercher un vehicule...' : 'Choisissez d\'abord un client'"
-                       [disabled]="!form.get('clientId')?.value"
-                       class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition disabled:opacity-50"
-                       [class.border-oas-bad]="form.get('vehiculeId')?.invalid && form.get('vehiculeId')?.touched"/>
-                @if (vehiculeOpen && form.get('clientId')?.value) {
-                  <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-oas-line rounded-lg shadow-xl z-[10] max-h-52 overflow-y-auto"
-                       (click)="$event.stopPropagation()">
-                    @for (v of filteredVehicules; track v.id) {
-                      <div (click)="selectVehicule(v)"
-                           class="px-3 py-2.5 hover:bg-oas-bg cursor-pointer text-sm text-oas-ink border-b border-oas-line last:border-0">
-                        <span class="font-medium font-mono">{{ v.immatriculation }}</span>
-                        <span class="text-oas-muted ml-2">{{ v.marque }} {{ v.modele }}</span>
-                      </div>
-                    }
-                    @if (filteredVehicules.length === 0) {
-                      <div class="px-3 py-3 text-sm text-oas-muted text-center">Aucun vehicule pour ce client</div>
-                    }
-                  </div>
-                }
-              </div>
-              @if (form.get('vehiculeId')?.invalid && form.get('vehiculeId')?.touched) {
-                <p class="text-xs text-oas-bad mt-1">Vehicule requis.</p>
-              }
-            </div>
-
-            <!-- Kilometrage + Remarque -->
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-semibold text-oas-ink mb-1">Kilometrage</label>
-                <input formControlName="kilometrage" type="number" min="0" placeholder="ex: 45000"
-                       class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
-              </div>
-              <div>
-                <label class="block text-sm font-semibold text-oas-ink mb-1">Remarque</label>
-                <input formControlName="remarque" placeholder="Observations..."
-                       class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition"/>
-              </div>
-            </div>
-          </div>
-        }
-
-        <!-- STEP 2 -->
-        @if (createStep === 2) {
-          <div class="space-y-4">
-            <p class="text-sm text-oas-muted">Selectionnez la ordre de réparation liee a cette facture.</p>
-            <div class="grid gap-3 sm:grid-cols-2"><label class="block text-sm font-semibold text-oas-ink">Présentation du PDF
-              <select [value]="form.get('pdfLayoutKey')?.value" (change)="changeInvoiceLayout($any($event.target).value)" class="mt-1 w-full rounded-lg border border-oas-line bg-white px-3 py-2"><option value="AVEC_ENTETE">Avec entête</option><option value="SANS_ENTETE">Sans entête</option></select></label>
-              <label class="block text-sm font-semibold text-oas-ink">Modèle de facture
-                <select formControlName="pdfTemplateId" class="mt-1 w-full rounded-lg border border-oas-line bg-white px-3 py-2"><option [ngValue]="null">Modèle par défaut</option>@for (template of invoiceTemplates; track template.id) { <option [ngValue]="template.id">{{ template.name }} · v{{ template.version }}</option> }</select></label>
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-oas-ink mb-1">Ordre de Réparation *</label>
-              @if (ficheOpen) {
-                <div class="fixed inset-0 z-[5]" (click)="ficheOpen = false"></div>
-              }
-              <div class="relative z-[10]">
-                <input type="text"
-                       [value]="ficheOpen ? ficheFilter : ordreReparationLabel"
-                       (focus)="ficheOpen = true; ficheFilter = ''"
-                       (input)="ficheFilter = $any($event.target).value"
-                       [placeholder]="fichesFiltrees.length > 0 ? 'Rechercher une fiche...' : 'Aucune fiche disponible'"
-                       [disabled]="fichesFiltrees.length === 0"
-                       class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition disabled:opacity-50"
-                       [class.border-oas-bad]="form.get('ordreReparationId')?.invalid && form.get('ordreReparationId')?.touched"/>
-                @if (ficheOpen && fichesFiltrees.length > 0) {
-                  <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-oas-line rounded-lg shadow-xl z-[10] max-h-52 overflow-y-auto"
-                       (click)="$event.stopPropagation()">
-                    @for (fiche of filteredFiches; track fiche.id) {
-                      <div (click)="selectFiche(fiche)"
-                           class="px-3 py-2.5 hover:bg-oas-bg cursor-pointer text-sm text-oas-ink border-b border-oas-line last:border-0">
-                        <span class="font-medium font-mono">Fiche #{{ fiche.numero }}</span>
-                        <span class="text-oas-muted ml-2">{{ fiche.statut }}</span>
-                      </div>
-                    }
-                    @if (filteredFiches.length === 0) {
-                      <div class="px-3 py-3 text-sm text-oas-muted text-center">Aucune fiche trouvée</div>
-                    }
-                  </div>
-                }
-              </div>
-              @if (form.get('ordreReparationId')?.invalid && form.get('ordreReparationId')?.touched) {
-                <p class="text-xs text-oas-bad mt-1">Ordre de Réparation requise.</p>
-              }
-            </div>
-            @if (fichesFiltrees.length === 0) {
-              <p class="text-xs text-oas-muted text-center py-4">Aucune ordre de réparation pour ce vehicule.</p>
-            } @else if (availableFiches.length === 0) {
-              <p class="text-xs text-oas-muted text-center py-4">Toutes les fiches de ce véhicule ont déjà une facture.</p>
-            }
-
-            <label class="mt-4 flex items-center gap-2.5 rounded-lg border border-oas-line bg-oas-bg px-3 py-3 cursor-pointer">
-              <input type="checkbox" formControlName="appliquerTVA" class="accent-oas-accent"/>
-              <span class="text-sm font-semibold text-oas-ink">Appliquer la TVA au taux fiscal configuré</span>
-            </label>
-            <p class="text-xs text-oas-muted">Le choix est enregistré sur la facture. Le timbre fiscal reste géré séparément par la configuration fiscale.</p>
-
-            <!-- Mode de paiement -->
-            <div class="mt-4">
-              <label class="block text-sm font-semibold text-oas-ink mb-1">Mode de paiement *</label>
-              <select formControlName="modePaiement"
-                      class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink"
-                      [class.border-oas-bad]="form.get('modePaiement')?.invalid && form.get('modePaiement')?.touched">
-                <option value="ESPECE">Especes</option>
-                <option value="CHEQUE">Cheque</option>
-                <option value="HORS_TAXE">Hors taxe</option>
-              </select>
-            </div>
-          </div>
-        }
-
-      </div>
-
-      <!-- Modal footer -->
-      <div class="flex items-center justify-between px-6 py-4 border-t border-oas-line">
-        <div>
-          @if (createStep > 1) {
-            <button type="button" (click)="goStep(createStep - 1)"
-                    class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-lg border border-oas-line transition cursor-pointer text-sm">
-              &larr; Precedent
-            </button>
-          }
-        </div>
-        <div class="flex gap-2">
-          <button type="button" (click)="closeCreate()"
-                  class="bg-white hover:bg-oas-bg text-oas-muted font-semibold px-4 h-10 rounded-lg border border-oas-line transition cursor-pointer text-sm">
-            Annuler
-          </button>
-          @if (createStep < 2) {
-            <button type="button" (click)="goStep(createStep + 1)"
-                    class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-5 h-10 rounded-lg transition cursor-pointer text-sm">
-              Suivant &rarr;
-            </button>
-          }
-          @if (createStep === 2) {
-            <button type="button" (click)="save()" [disabled]="saving"
-                    class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-5 h-10 rounded-lg flex items-center gap-2 transition cursor-pointer disabled:opacity-60 text-sm">
-              @if (saving) { <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> }
-              {{ saving ? 'Enregistrement...' : 'Creer la facture' }}
-            </button>
-          }
-        </div>
-      </div>
-
-    </div>
-  </div>
-}
-
 <!-- ═══════════════════════════════════════════════════════════ -->
 <!-- MODAL PAIEMENT                                              -->
 <!-- ═══════════════════════════════════════════════════════════ -->
@@ -639,7 +419,7 @@
         }
 
         <div>
-          <label class="block text-xs font-semibold text-oas-ink mb-1">Montant du paiement (FCFA)</label>
+          <label class="block text-xs font-semibold text-oas-ink mb-1">Montant imputé à la facture (FCFA)</label>
           <input type="number" [(ngModel)]="payMontant" min="1" [max]="payMaxMontant"
                  class="w-full px-4 py-3 rounded-xl bg-white border border-oas-line text-oas-ink font-semibold focus:outline-none focus:border-oas-accent focus:ring-1 focus:ring-oas-accent transition"/>
         </div>
@@ -652,6 +432,13 @@
             <option value="VIREMENT">Virement</option>
             <option value="SOLDE_PREPAYE">Solde prépayé</option>
           </select>
+        </div>
+        <div class="rounded-xl p-4 border border-amber-200 bg-amber-50 text-amber-950 space-y-1.5">
+          @if (payMethode === 'ESPECE') {
+            <div class="flex justify-between text-sm"><span>Timbre fiscal espèces ({{ timbreFiscalRate }} %)</span><strong>{{ fmt(payTimbreEspeces) }} FCFA</strong></div>
+          }
+          <div class="flex justify-between text-sm font-bold"><span>Total à remettre</span><strong>{{ fmt(payTotalEncaisse) }} FCFA</strong></div>
+          <p class="text-xs">Le timbre de {{ timbreFiscalRate }} % s’applique seulement au montant payé en espèces. Il ne réduit pas le reste dû sur la facture.</p>
         </div>
       </div>
 

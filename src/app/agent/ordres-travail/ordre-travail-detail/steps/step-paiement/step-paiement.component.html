@@ -279,10 +279,18 @@
 
           <div>
             <label class="block text-xs font-semibold text-oas-ink mb-1.5">
-              Montant à encaisser (F CFA) <span class="text-red-500">*</span>
+              Montant imputé à la facture (F CFA) <span class="text-red-500">*</span>
             </label>
             <input type="number" [(ngModel)]="payMontant" [max]="data.facture.montantRestant" min="1"
               class="w-full px-3 py-2 text-sm font-mono font-bold rounded-xl border border-oas-line bg-white text-oas-ink focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+          </div>
+
+          <div class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-amber-950 space-y-1 text-xs">
+            @if (payMethode === 'ESPECE') {
+              <div class="flex justify-between"><span>Timbre fiscal espèces ({{ tauxTimbrePaiement }} %)</span><strong>{{ payTimbreEspeces | number:'1.0-2' }} F CFA</strong></div>
+            }
+            <div class="flex justify-between font-bold"><span>Total à remettre</span><strong>{{ payTotalEncaisse | number:'1.0-2' }} F CFA</strong></div>
+            <p>Le timbre s’applique uniquement à la part réglée en espèces. Il ne réduit pas le reste dû sur la facture.</p>
           </div>
 
           <div>

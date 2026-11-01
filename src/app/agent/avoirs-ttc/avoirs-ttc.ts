@@ -40,7 +40,6 @@ export class AvoirsTtc extends BasePaginatedComponent implements OnInit {
   private authService = inject(AuthService);
   private fiscalConfigurationService = inject(FiscalConfigurationService);
   tvaRate = 18;
-  timbreFiscal = 100;
 
   avoirs: AvoirTTC[] = [];
   filtered: AvoirTTC[] = [];
@@ -71,7 +70,6 @@ export class AvoirsTtc extends BasePaginatedComponent implements OnInit {
     kilometrage: [0],
     remarque: [''],
     appliquerTVA: [true],
-    montantTimbre: [0],
     lignesPieces: this.fb.array([]),
     lignesMainDoeuvres: this.fb.array([]),
   });
@@ -115,8 +113,6 @@ export class AvoirsTtc extends BasePaginatedComponent implements OnInit {
     this.fiscalConfigurationService.getCurrent().subscribe({
       next: config => {
         this.tvaRate = config.tvaRate;
-        this.timbreFiscal = config.timbreFiscal;
-        this.form.patchValue({ montantTimbre: config.timbreFiscal });
       },
       error: () => undefined,
     });
@@ -204,7 +200,6 @@ export class AvoirsTtc extends BasePaginatedComponent implements OnInit {
       kilometrage: 0,
       remarque: '',
       appliquerTVA: true,
-      montantTimbre: this.timbreFiscal,
     });
     while (this.lignesPieces.length) this.lignesPieces.removeAt(0);
     while (this.lignesMainDoeuvres.length) this.lignesMainDoeuvres.removeAt(0);
@@ -293,8 +288,7 @@ export class AvoirsTtc extends BasePaginatedComponent implements OnInit {
   }
 
   get totalTTC(): number {
-    const timbre = Number(this.form.get('montantTimbre')?.value) || 0;
-    return this.totalHT + this.totalTVA + timbre;
+    return this.totalHT + this.totalTVA;
   }
 
   save() {
@@ -333,7 +327,7 @@ export class AvoirsTtc extends BasePaginatedComponent implements OnInit {
       kilometrage: val.kilometrage,
       remarque: val.remarque,
       appliquerTVA: val.appliquerTVA,
-      montantTimbre: val.montantTimbre,
+      montantTimbre: 0,
       lignesPieces,
       lignesMainDoeuvres
     }).subscribe({

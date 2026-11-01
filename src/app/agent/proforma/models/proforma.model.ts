@@ -36,6 +36,7 @@ export interface Proforma {
   tvaApplicable?: boolean | null;
   montantTTC: number;
   montantTimbre: number;
+  timbreFiscalRate?: number | null;
   montantAutre: number;
   montantTotal: number;
   agentNom: string;

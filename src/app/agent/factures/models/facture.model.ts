@@ -8,6 +8,7 @@ export interface FactureModel {
   tvaApplicable?: boolean | null;
   montantTTC: number;
   montantTimbre: number;
+  timbreFiscalRate?: number | null;
   montantAutre: number;
   montantTotal: number;
   tauxRemiseClient?: number | null;
@@ -35,6 +36,17 @@ export interface FactureModel {
   ordreReparationId?: number | null;
   numeroOrdreReparation?: string | null;
 }
+
+export type FactureListModel = Pick<FactureModel,
+  'id' | 'numero' | 'dateCreation' | 'montantHT' | 'montantTVA' | 'tvaApplicable' | 'montantTTC'
+  | 'montantTimbre' | 'timbreFiscalRate' | 'montantAutre' | 'montantTotal' | 'tauxRemiseClient'
+  | 'montantRemiseClient' | 'agentNom' | 'remarque' | 'kilometrage' | 'clientId' | 'clientNom'
+  | 'immatriculation' | 'marque' | 'modele' | 'annee' | 'montantPaye' | 'resteAPayer' | 'statutPaiement'>;
+
+export type FactureDetailsViewModel = FactureListModel & Pick<FactureModel,
+  'lignesPieces' | 'lignesMainDoeuvres' | 'recus'> & Partial<Pick<FactureModel,
+    'dateModification' | 'agentId' | 'vehiculeId' | 'numeroChassis' | 'numeroBonDeCommande'
+    | 'modePaiement' | 'ordreReparationId' | 'numeroOrdreReparation'>>;
 
 export interface FactureCreateRequest {
   clientId: number;

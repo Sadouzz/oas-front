@@ -6,6 +6,8 @@ export interface RecuModel {
   clientNom?: string;
   numeroOrdreReparation?: string;
   montant: number;
+  montantTimbre?: number;
+  montantEncaisse?: number;
   modePaiement: string | null;
   remarque: string | null;
   datePaiement: string;

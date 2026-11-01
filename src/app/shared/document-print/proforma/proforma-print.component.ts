@@ -88,8 +88,11 @@ export class ProformaPrintComponent {
   }
 
   getTimbre(): number {
-    if (!this.data) return 0;
-    return this.data.timbre ?? 0;
+    return Number(this.data?.timbre) || 0;
+  }
+
+  getTauxTimbreEspeces(): number {
+    return Number(this.data?.timbreFiscalRate ?? 1) || 0;
   }
 
   getTotalTTC(): number {

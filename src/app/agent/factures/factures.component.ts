@@ -1,26 +1,20 @@
 import { ConfirmationService } from '../../shared/components/confirmation/confirmation.service';
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
-import { FormArray, FormBuilder, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
-import { forkJoin } from 'rxjs';
-import { CommonModule, DecimalPipe, DatePipe, NgClass } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { CommonModule, NgClass } from '@angular/common';
 import { FactureService } from './facture.service';
-import { FactureModel, FactureCreateRequest } from './models/facture.model';
+import { FactureDetailsViewModel, FactureListModel, FactureModel } from './models/facture.model';
 import { ClientService } from '../clients/client.service';
-import { VehiculeService } from '../vehicules/vehicule.service';
-import { OrdreReparationService } from '../ordres-reparation/ordre-reparation.service';
-import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideReceipt, LucideEye, LucidePrinter } from '@lucide/angular';
+import { LucideSearch, LucidePlus, LucideTrash2, LucideX, LucideDownload, LucideReceipt } from '@lucide/angular';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
-import { UserModel, VehiculeModel, OrdreReparation, extractContent } from '../../shared/models';
-import { AlertComponent } from '../../shared/components/alert/alert.component';
-import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select.component';
-import { PdfTemplate, PdfTemplateService } from '../admin/pdf-templates/pdf-template.service';
+import { FiscalConfigurationService } from '../gestion-tva/fiscal-configuration.service';
 
 @Component({
   selector: 'app-factures',
   standalone: true,
-  imports: [ReactiveFormsModule, FormsModule, NgClass, PaginationComponent, LucideSearch, LucidePlus, LucideTrash2, LucideX, LucideDownload, LucideReceipt],
+  imports: [CommonModule, FormsModule, NgClass, PaginationComponent, LucideSearch, LucidePlus, LucideTrash2, LucideX, LucideDownload, LucideReceipt],
   templateUrl: './factures.component.html',
 })
 export class FacturesComponent extends BasePaginatedComponent implements OnInit {
@@ -28,33 +22,25 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
 
   private cdr = inject(ChangeDetectorRef);
   private service = inject(FactureService);
-  private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private clientService = inject(ClientService);
-  private vehiculeService = inject(VehiculeService);
-  private ficheService = inject(OrdreReparationService);
-  private pdfTemplateService = inject(PdfTemplateService);
+  private fiscalConfigurationService = inject(FiscalConfigurationService);
+  timbreFiscalRate = 1;
 
-  factures: FactureModel[] = [];
-  filtered: FactureModel[] = [];
+  factures: FactureListModel[] = [];
+  filtered: FactureListModel[] = [];
   loading = true;
-  saving = false;
-  selectedFacture: FactureModel | null = null;
-  showCreateModal = false;
-  createStep = 1;
+  selectedFacture: FactureDetailsViewModel | null = null;
+  selectedFactureLoading = false;
 
   showPayModal = false;
-  factureToPay: FactureModel | null = null;
+  factureToPay: FactureListModel | null = null;
   payMontant = 0;
   payMethode = 'ESPECE';
   paySaving = false;
   walletBalance: number | null = null;
 
-  clients: UserModel[] = [];
-  vehiculesFiltres: VehiculeModel[] = [];
-  ordresReparation: OrdreReparation[] = [];
-  fichesFiltrees: OrdreReparation[] = [];
-  invoiceTemplates: PdfTemplate[] = [];
   downloadLayoutKey: 'AVEC_ENTETE' | 'SANS_ENTETE' = 'AVEC_ENTETE';
 
   get payMaxMontant(): number {
@@ -64,12 +50,16 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
       : this.factureToPay.resteAPayer;
   }
 
-  clientOpen = false;
-  vehiculeOpen = false;
-  ficheOpen = false;
-  clientFilter = '';
-  vehiculeFilter = '';
-  ficheFilter = '';
+  get payTimbreEspeces(): number {
+    const rate = Number(this.factureToPay?.timbreFiscalRate ?? this.timbreFiscalRate);
+    return this.payMethode === 'ESPECE'
+      ? Math.round((Number(this.payMontant) || 0) * rate) / 100
+      : 0;
+  }
+
+  get payTotalEncaisse(): number {
+    return (Number(this.payMontant) || 0) + this.payTimbreEspeces;
+  }
 
   filterStatut = '';
   dateDebut = '';
@@ -79,43 +69,24 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
   successMessage = '';
   errorMessage = '';
 
-  form = this.fb.group({
-    clientId: [null as number | null, Validators.required],
-    vehiculeId: [null as number | null, Validators.required],
-    ordreReparationId: [null as number | null, Validators.required],
-    kilometrage: [null as number | null],
-    remarque: [''],
-    modePaiement: ['ESPECE', Validators.required],
-    appliquerTVA: [true],
-    pdfLayoutKey: ['AVEC_ENTETE'],
-    pdfTemplateId: [null as number | null],
-  });
-
   ngOnInit() {
-    this.loadData();
-    forkJoin({
-      clients: this.clientService.getAll(),
-      fiches: this.ficheService.getAll(),
-    }).subscribe({
-      next: ({ clients, fiches }) => {
-        this.clients = extractContent<UserModel>(clients as any).filter(c => c.enabled);
-        this.ordresReparation = extractContent<OrdreReparation>(fiches as any);
-      },
+    this.fiscalConfigurationService.getCurrent().subscribe({
+      next: config => { this.timbreFiscalRate = Number(config.timbreFiscalRate) || 0; },
+      error: () => undefined,
     });
-
     this.route.queryParams.subscribe(params => {
       if (params['action'] === 'new') {
-        this.openCreate();
+        this.router.navigate(['/app/bons-livraison']);
+        return;
       }
       if (params['statut']) {
         this.filterStatut = params['statut'];
-      } else if (!params['action']) {
+      } else {
         this.filterStatut = '';
       }
-      if (params['search'] === 'client-date') {
-        this.showDateFilter = true;
-      }
-      this.applyFilter(); this.cdr.markForCheck();
+      this.showDateFilter = params['search'] === 'client-date';
+      this.page = 1;
+      this.loadData();
     });
   }
 
@@ -125,225 +96,82 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
 
   load() {
     this.loading = true;
-    this.service.getAll(this.getPageParams()).subscribe({
+    this.errorMessage = '';
+    const params = {
+      ...this.getPageParams(),
+      statut: this.filterStatut || undefined,
+      dateDebut: this.dateDebut || undefined,
+      dateFin: this.dateFin || undefined,
+      client: this.filterClient.trim() || undefined,
+    };
+    this.service.getAll(params).subscribe({
       next: data => {
-        const arr = this.applyPageResponse<FactureModel>(data);
-        this.factures = arr.sort((a:any, b:any) => b.id - a.id);
-        this.applyFilter(); this.cdr.markForCheck(); this.loading = false; this.cdr.markForCheck();
+        const arr = this.applyPageResponse<FactureListModel>(data);
+        this.factures = arr;
+        this.filtered = arr;
+        this.loading = false;
+        this.cdr.markForCheck();
       },
-      error: () => this.loading = false,
+      error: err => {
+        this.factures = [];
+        this.filtered = [];
+        this.totalElements = 0;
+        this.serverTotalPages = 1;
+        this.errorMessage = err?.error?.message || 'Impossible de charger les factures.';
+        this.loading = false;
+        this.cdr.markForCheck();
+      },
     });
   }
 
   applyFilter() {
-    let data = this.factures;
-    if (this.filterStatut === 'EN_COURS') {
-      data = data.filter(f => f.statutPaiement !== 'PAYE');
-    } else if (this.filterStatut === 'PAYE') {
-      data = data.filter(f => f.statutPaiement === 'PAYE');
-    }
-    if (this.searchTerm) {
-      const kw = this.searchTerm.toLowerCase();
-      data = data.filter(f =>
-        f.numero.toLowerCase().includes(kw) ||
-        f.clientNom.toLowerCase().includes(kw) ||
-        (f.immatriculation ?? '').toLowerCase().includes(kw)
-      );
-    }
-    if (this.dateDebut) {
-      data = data.filter(f => f.dateCreation && f.dateCreation >= this.dateDebut);
-    }
-    if (this.dateFin) {
-      data = data.filter(f => f.dateCreation && f.dateCreation.slice(0, 10) <= this.dateFin);
-    }
-    if (this.filterClient) {
-      const cKw = this.filterClient.toLowerCase();
-      data = data.filter(f =>
-        f.clientNom.toLowerCase().includes(cKw) ||
-        String(f.clientId).includes(cKw)
-      );
-    }
-    this.filtered = data;
+    this.page = 1;
+    this.loadData();
   }
 
   onStatutFilter(e: Event) {
     this.filterStatut = (e.target as HTMLSelectElement).value;
     this.page = 1;
-    this.applyFilter(); this.cdr.markForCheck();
+    this.loadData();
   }
 
   // onSearch is inherited from BasePaginatedComponent
 
-  // ── Wizard ─────────────────────────────────────────────────────
-
   openCreate() {
-    if (!this.form.get('clientId')?.value) {
-      this.form.reset({ remarque: '', modePaiement: 'ESPECE', appliquerTVA: true });
-      this.vehiculesFiltres = [];
-      this.clientFilter = '';
-      this.vehiculeFilter = '';
-      this.createStep = 1;
-    }
-    this.clientOpen = false;
-    this.vehiculeOpen = false;
-    this.errorMessage = '';
-    this.showCreateModal = true;
-    this.loadInvoiceTemplates(String(this.form.get('pdfLayoutKey')?.value || 'AVEC_ENTETE'));
+    this.router.navigate(['/app/bons-livraison']);
   }
-
-  closeCreate() {
-    this.showCreateModal = false;
-    this.errorMessage = '';
-  }
-
-  goStep(n: number) {
-    this.errorMessage = '';
-    if (n > this.createStep && this.createStep === 1) {
-      const clientCtrl = this.form.get('clientId')!;
-      const vehiculeCtrl = this.form.get('vehiculeId')!;
-      if (!clientCtrl.value || !vehiculeCtrl.value) {
-        clientCtrl.markAsTouched();
-        vehiculeCtrl.markAsTouched();
-        this.errorMessage = 'Veuillez sélectionner un client et un véhicule.';
-        return;
-      }
-      this.fichesFiltrees = this.ordresReparation.filter(f => f.vehicule?.id === Number(vehiculeCtrl.value));
-    }
-    this.createStep = n;
-  }
-
-  // ── Step 1 helpers ─────────────────────────────────────────────
-
-  get clientLabel(): string {
-    const id = this.form.get('clientId')?.value;
-    if (!id) return '';
-    const c = this.clients.find(x => x.id === Number(id));
-    return c ? `${c.firstName} ${c.lastName}` : '';
-  }
-
-  get vehiculeLabel(): string {
-    const id = this.form.get('vehiculeId')?.value;
-    if (!id) return '';
-    const v = this.vehiculesFiltres.find(x => x.id === Number(id));
-    return v ? `${v.immatriculation} — ${v.marque} ${v.modele}` : '';
-  }
-
-  get filteredClients(): UserModel[] {
-    if (!this.clientFilter) return this.clients;
-    const kw = this.clientFilter.toLowerCase();
-    return this.clients.filter(c =>
-      `${c.firstName} ${c.lastName}`.toLowerCase().includes(kw) ||
-      (c.phone ?? '').toLowerCase().includes(kw)
-    );
-  }
-
-  get filteredVehicules() {
-    return this.vehiculesFiltres.filter(v =>
-      (v.immatriculation?.toLowerCase() || '').includes(this.vehiculeFilter.toLowerCase()) ||
-      (v.marque?.toLowerCase() || '').includes(this.vehiculeFilter.toLowerCase())
-    );
-  }
-
-  get availableFiches() {
-    return this.fichesFiltrees;
-  }
-
-  get filteredFiches() {
-    const kw = this.ficheFilter.toLowerCase();
-    return this.availableFiches.filter(f =>
-      (f.numero?.toLowerCase() || '').includes(kw)
-    );
-  }
-
-  selectClient(c: UserModel) {
-    this.form.patchValue({ clientId: c.id, vehiculeId: null });
-    this.vehiculesFiltres = [];
-    this.clientFilter = '';
-    this.clientOpen = false;
-    this.vehiculeService.getByClient(c.id).subscribe({
-      next: (d) => { this.vehiculesFiltres = d; },
-    });
-  }
-
-  selectVehicule(v: VehiculeModel) {
-    this.form.patchValue({ vehiculeId: v.id, ordreReparationId: null });
-    this.vehiculeFilter = '';
-    this.vehiculeOpen = false;
-    this.fichesFiltrees = this.ordresReparation.filter(f => f.vehicule?.id === v.id);
-  }
-
-  // ── Step 2 helpers ─────────────────────────────────────────────
-
-  get ordreReparationLabel(): string {
-    const id = this.form.get('ordreReparationId')?.value;
-    if (!id) return '';
-    const f = this.fichesFiltrees.find(x => x.id === Number(id));
-    return f ? `Fiche #${f.numero}` : '';
-  }
-
-  selectFiche(f: OrdreReparation) {
-    this.form.patchValue({ ordreReparationId: f.id });
-    this.ficheOpen = false;
-    this.ficheFilter = '';
-    this.loadInvoiceTemplates(String(this.form.get('pdfLayoutKey')?.value || 'AVEC_ENTETE'));
-  }
-
-  // ── Save ────────────────────────────────────────────────────────
-
-  save() {
-    if (this.saving) return;
-    const val = this.form.value as any;
-
-    if (!val.modePaiement || !val.ordreReparationId) {
-      this.form.markAllAsTouched();
-      this.errorMessage = 'Veuillez remplir tous les champs obligatoires.';
-      return;
-    }
-
-    this.saving = true;
-    this.errorMessage = '';
-
-    const request: FactureCreateRequest = {
-      clientId: Number(val.clientId),
-      vehiculeId: Number(val.vehiculeId),
-      ordreReparationId: Number(val.ordreReparationId),
-      remarque: val.remarque || null,
-      modePaiement: val.modePaiement,
-      pdfLayoutKey: val.pdfLayoutKey || 'AVEC_ENTETE',
-      pdfTemplateId: val.pdfTemplateId ? Number(val.pdfTemplateId) : null,
-      appliquerTVA: val.appliquerTVA !== false,
-    };
-
-    this.service.create(request).subscribe({
-      next: (res: any) => {
-        this.saving = false;
-        this.closeCreate();
-        this.form.reset({ remarque: '', modePaiement: 'ESPECE', appliquerTVA: true });
-        this.createStep = 1;
-        this.load();
-        this.notify('Facture ' + res.numero + ' créée avec succès !');
-      },
-      error: (err: any) => {
-        this.saving = false;
-        const msg = err.error?.message ?? (typeof err.error === 'string' ? err.error : '');
-        this.errorMessage = msg || 'Erreur lors de la création de la facture.';
-      },
-    });
-  }
-
-  loadInvoiceTemplates(layoutKey: string): void {
-    this.pdfTemplateService.activeInvoiceTemplates(layoutKey).subscribe({
-      next: templates => { this.invoiceTemplates = templates; const chosen = templates.some(t => t.id === Number(this.form.get('pdfTemplateId')?.value)); if (!chosen) this.form.patchValue({ pdfTemplateId: templates[0]?.id ?? null }); this.cdr.markForCheck(); },
-      error: () => { this.invoiceTemplates = []; this.cdr.markForCheck(); }
-    });
-  }
-
-  changeInvoiceLayout(layoutKey: string): void { this.form.patchValue({ pdfLayoutKey: layoutKey, pdfTemplateId: null }); this.loadInvoiceTemplates(layoutKey); }
 
   // ── Detail ──────────────────────────────────────────────────────
 
-  openDetail(f: FactureModel) { this.selectedFacture = f; }
-  closeDetail() { this.selectedFacture = null; }
+  openDetail(f: FactureListModel) {
+    this.selectedFacture = {
+      ...f,
+      lignesPieces: [],
+      lignesMainDoeuvres: [],
+      recus: [],
+    };
+    this.selectedFactureLoading = true;
+    this.service.getById(f.id).subscribe({
+      next: detail => {
+        if (this.selectedFacture?.id !== f.id) return;
+        this.selectedFacture = {
+          ...detail,
+          lignesPieces: detail.lignesPieces ?? [],
+          lignesMainDoeuvres: detail.lignesMainDoeuvres ?? [],
+          recus: detail.recus ?? [],
+        };
+        this.selectedFactureLoading = false;
+        this.cdr.markForCheck();
+      },
+      error: err => {
+        if (this.selectedFacture?.id !== f.id) return;
+        this.selectedFactureLoading = false;
+        this.errorMessage = err?.error?.message || 'Impossible de charger le détail de cette facture.';
+        this.cdr.markForCheck();
+      },
+    });
+  }
+  closeDetail() { this.selectedFacture = null; this.selectedFactureLoading = false; }
 
   async delete(id: number) {
     if (!await this.confirmation.confirm('Supprimer cette facture ?')) return;
@@ -355,7 +183,7 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
 
   // ── Payment ─────────────────────────────────────────────────────
 
-  openPayModal(f: FactureModel) {
+  openPayModal(f: FactureListModel) {
     this.factureToPay = f;
     this.payMontant = f.resteAPayer;
     this.payMethode = 'ESPECE';
@@ -424,10 +252,14 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
     return m[mp ?? ''] ?? mp ?? '—';
   }
 
-  formatDate(d: string): string { return new Date(d).toLocaleDateString('fr-FR'); }
+  formatDate(d: string | number[] | null | undefined): string {
+    if (!d) return '—';
+    const date = Array.isArray(d) ? new Date(d[0], (d[1] ?? 1) - 1, d[2] ?? 1) : new Date(d);
+    return Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString('fr-FR');
+  }
   fmt(n: number): string { return new Intl.NumberFormat('fr-FR').format(n ?? 0); }
 
-  remiseGeneraleFacture(facture: FactureModel): number {
+  remiseGeneraleFacture(facture: FactureDetailsViewModel): number {
     const remisePieces = (facture.lignesPieces ?? []).reduce((total, ligne) => {
       const brut = (Number(ligne.quantite) || 0) * (Number(ligne.prix) || 0);
       const net = Number.isFinite(Number(ligne.montantTotal))
@@ -445,7 +277,7 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
     return remisePieces + remiseMainDoeuvre;
   }
 
-  get paged(): FactureModel[] {
+  get paged(): FactureListModel[] {
     return this.filtered;
   }
 

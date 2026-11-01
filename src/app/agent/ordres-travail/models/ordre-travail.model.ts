@@ -318,6 +318,7 @@ export interface FactureSummaryDto {
   montantPaye?: number;
   montantRestant: number;
   montantTotal?: number;
+  timbreFiscalRate?: number | null;
   modePaiement?: string;
 }
 

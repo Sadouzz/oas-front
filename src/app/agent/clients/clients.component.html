@@ -911,15 +911,15 @@
               </div>
 
               <div class="flex items-start gap-3 rounded-lg border p-3"
-                   [ngClass]="riskFactures.length > 0 ? 'border-oas-bad/40 bg-oas-bad-bg' : 'border-oas-line bg-oas-bg'">
+                   [ngClass]="riskFactureCount > 0 ? 'border-oas-bad/40 bg-oas-bad-bg' : 'border-oas-line bg-oas-bg'">
                 <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                     [ngClass]="riskFactures.length > 0 ? 'bg-oas-bad/20' : 'bg-oas-line'">
-                  <svg lucideBanknote class="w-4 h-4" [ngClass]="riskFactures.length > 0 ? 'text-oas-bad' : 'text-oas-muted'"></svg>
+                     [ngClass]="riskFactureCount > 0 ? 'bg-oas-bad/20' : 'bg-oas-line'">
+                  <svg lucideBanknote class="w-4 h-4" [ngClass]="riskFactureCount > 0 ? 'text-oas-bad' : 'text-oas-muted'"></svg>
                 </div>
                 <div class="flex-1">
                   <div class="flex items-center justify-between">
-                    <p class="text-sm font-semibold" [ngClass]="riskFactures.length > 0 ? 'text-oas-bad' : 'text-oas-muted'">Facture(s)</p>
-                    <span class="text-sm font-bold" [ngClass]="riskFactures.length > 0 ? 'text-oas-bad' : 'text-oas-muted'">{{ riskFactures.length }}</span>
+                    <p class="text-sm font-semibold" [ngClass]="riskFactureCount > 0 ? 'text-oas-bad' : 'text-oas-muted'">Facture(s)</p>
+                    <span class="text-sm font-bold" [ngClass]="riskFactureCount > 0 ? 'text-oas-bad' : 'text-oas-muted'">{{ riskFactureCount }}</span>
                   </div>
                 </div>
               </div>

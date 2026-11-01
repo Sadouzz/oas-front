@@ -106,10 +106,10 @@
     <table class="table-doc">
       <thead>
         <tr>
-          <th style="width: 25%;">Total HT</th>
-          <th style="width: 25%;">TVA</th>
-          <th style="width: 25%;">Timbre</th>
-          <th style="width: 25%;">Montant Total TTC</th>
+          <th style="width: 20%;">Total HT</th>
+          <th style="width: 20%;">TVA</th>
+          <th style="width: 25%;">Timbre (historique)</th>
+          <th style="width: 35%;">Montant Total TTC</th>
         </tr>
       </thead>
       <tbody>
@@ -121,6 +121,13 @@
         </tr>
       </tbody>
     </table>
+    <div style="margin:8px 0; padding:8px; border:1px solid #f5d58a; background:#fff8e6; font-size:10px;">
+      @if (getTimbre() > 0) {
+        Ce document conserve le timbre fiscal enregistré à son émission. Pour les règlements, le timbre fiscal de {{ getTauxTimbreEspeces() }} % s’applique uniquement à la part payée en espèces.
+      } @else {
+        Si le règlement est effectué en espèces, un timbre fiscal de {{ getTauxTimbreEspeces() }} % s’applique uniquement à la part payée en espèces. Il n’est pas inclus dans le total de ce proforma.
+      }
+    </div>
     <div style="text-align:right; margin:8px 0; font-size:11px;" *ngIf="data?.montantRemiseGenerale > 0 || data?.montantRemiseClient > 0">
       <div *ngIf="data?.montantRemiseGenerale > 0">Remises générales appliquées par ligne : −{{ data.montantRemiseGenerale | number:'1.0-0' }} FCFA</div>
       <div *ngIf="data?.montantRemiseClient > 0">Remise compte client sur les pièces ({{ data.tauxRemiseClient || 0 }} %) : −{{ data.montantRemiseClient | number:'1.0-0' }} FCFA</div>

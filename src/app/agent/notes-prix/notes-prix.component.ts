@@ -13,6 +13,7 @@ import { LucideSearch, LucidePlus, LucideTrash2, LucideX, LucideDownload, Lucide
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 import { UserModel, VehiculeModel, OrdreReparation, extractContent } from '../../shared/models';
+import { FiscalConfigurationService } from '../gestion-tva/fiscal-configuration.service';
 
 @Component({
   selector: 'app-notes-prix',
@@ -30,6 +31,8 @@ export class NotesPrixComponent extends BasePaginatedComponent implements OnInit
   private clientService = inject(ClientService);
   private vehiculeService = inject(VehiculeService);
   private ordreReparationService = inject(OrdreReparationService);
+  private fiscalConfigurationService = inject(FiscalConfigurationService);
+  timbreFiscalRate = 1;
 
   notes: NoteDePrixModel[] = [];
   filtered: NoteDePrixModel[] = [];
@@ -44,6 +47,12 @@ export class NotesPrixComponent extends BasePaginatedComponent implements OnInit
   payMontant = 0;
   payMethode = 'ESPECE';
   paySaving = false;
+
+  get payTimbreEspeces(): number {
+    return this.payMethode === 'ESPECE' ? Math.round((Number(this.payMontant) || 0) * this.timbreFiscalRate) / 100 : 0;
+  }
+
+  get payTotalEncaisse(): number { return (Number(this.payMontant) || 0) + this.payTimbreEspeces; }
 
   clients: UserModel[] = [];
   vehiculesFiltres: VehiculeModel[] = [];
@@ -76,6 +85,10 @@ export class NotesPrixComponent extends BasePaginatedComponent implements OnInit
   });
 
   ngOnInit() {
+    this.fiscalConfigurationService.getCurrent().subscribe({
+      next: config => { this.timbreFiscalRate = Number(config.timbreFiscalRate) || 0; this.cdr.markForCheck(); },
+      error: () => undefined,
+    });
     this.loadData();
     forkJoin({
       //clients: this.clientService.getAll(),

@@ -329,7 +329,7 @@
             }
             @if (selectedProforma.montantTimbre > 0) {
               <div class="flex justify-between">
-                <span class="text-oas-muted font-medium">Timbre fiscal</span>
+                <span class="text-oas-muted font-medium">Timbre fiscal historique du document</span>
                 <span class="font-bold text-oas-ink">{{ fmt(selectedProforma.montantTimbre) }} FCFA</span>
               </div>
             }
@@ -1160,8 +1160,11 @@
                 <div class="p-3 bg-oas-bg rounded-xl border border-oas-line text-sm text-oas-muted">TVA désactivée pour ce proforma.</div>
               }
               <div class="p-3 bg-white rounded-xl border border-oas-line">
-                <span class="text-oas-muted block font-medium">Timbre fiscal + autres frais</span>
+                <span class="text-oas-muted block font-medium">Autres frais</span>
                 <strong class="text-sm font-bold text-oas-ink">{{ fmt(montantTimbreEtAutres) }} FCFA</strong>
+              </div>
+              <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900">
+                Si le règlement est effectué en espèces, un timbre fiscal de {{ tauxTimbreEspeces }} % s’applique uniquement à la part payée en espèces. Il n’est pas inclus dans le total de ce proforma.
               </div>
             </div>
 

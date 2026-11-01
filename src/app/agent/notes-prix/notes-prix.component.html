@@ -283,6 +283,10 @@
               <span class="font-bold text-oas-ink">{{ (selectedNote.tvaApplicable ?? ((selectedNote.montantTVA || 0) > 0)) ? 'Total TTC' : 'Total HT net' }}</span>
               <span class="font-bold text-oas-accent text-base">{{ fmt(selectedNote.montantTotal) }} FCFA</span>
             </div>
+            @if ((selectedNote.montantTimbrePaye || 0) > 0) {
+              <div class="flex justify-between"><span class="text-oas-muted">Timbre déjà encaissé en espèces</span><span class="font-semibold">{{ fmt(selectedNote.montantTimbrePaye || 0) }} FCFA</span></div>
+              <div class="flex justify-between"><span class="text-oas-muted">Total encaissé</span><span class="font-semibold">{{ fmt(selectedNote.montantEncaisse || 0) }} FCFA</span></div>
+            }
             @if (selectedNote.tvaApplicable ?? ((selectedNote.montantTVA || 0) > 0)) {
               <div class="flex justify-between"><span class="text-oas-muted">TVA</span><span class="font-semibold">{{ fmt(selectedNote.montantTVA || 0) }} FCFA</span></div>
             } @else {
@@ -583,7 +587,7 @@
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-oas-ink mb-1">Montant du paiement (FCFA)</label>
+          <label class="block text-xs font-semibold text-oas-ink mb-1">Montant imputé à la note de prix (FCFA)</label>
           <input type="number" [(ngModel)]="payMontant" min="1" [max]="noteToPay.resteAPayer"
                  class="w-full px-4 py-3 rounded-xl bg-white border border-oas-line text-oas-ink font-semibold focus:outline-none focus:border-oas-accent focus:ring-1 focus:ring-oas-accent transition"/>
         </div>
@@ -595,6 +599,13 @@
             <option value="CHEQUE">Chèque</option>
             <option value="VIREMENT">Virement</option>
           </select>
+        </div>
+        <div class="rounded-xl p-4 border border-amber-200 bg-amber-50 text-amber-950 space-y-1.5">
+          @if (payMethode === 'ESPECE') {
+            <div class="flex justify-between text-sm"><span>Timbre fiscal espèces ({{ timbreFiscalRate }} %)</span><strong>{{ fmt(payTimbreEspeces) }} FCFA</strong></div>
+          }
+          <div class="flex justify-between text-sm font-bold"><span>Total à remettre</span><strong>{{ fmt(payTotalEncaisse) }} FCFA</strong></div>
+          <p class="text-xs">Le timbre s’applique uniquement au montant réglé en espèces. Il ne réduit pas le reste à payer de la note.</p>
         </div>
       </div>
 

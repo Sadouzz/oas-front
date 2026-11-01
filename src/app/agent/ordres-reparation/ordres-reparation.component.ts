@@ -300,13 +300,11 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
     } catch (e) {}
 
     try {
-      this.factureService.getAll().subscribe({
-        next: (list: any[]) => {
-          if (list && list.length) {
-            const inv = list.find(it =>
-              (it.ordreReparationId && Number(it.ordreReparationId) === Number(o.id)) ||
-              (it.ordreReparation && Number(it.ordreReparation.id) === Number(o.id))
-            );
+      this.factureService.getAll({ page: 0, size: 1, ordreReparationId: o.id }).subscribe({
+        next: (response: any) => {
+          const list = Array.isArray(response) ? response : response?.content ?? response?.data?.content ?? [];
+          if (list.length) {
+            const inv = list[0];
             if (inv) {
               this.selectedOrdreInvoice = inv;
               this.invoiceCreated = true;
