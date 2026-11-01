@@ -2,7 +2,7 @@ name: Build & Deploy Frontend
 
 on:
   push:
-    branches: [main]
+    branches: [deploy, main]
 
 env:
   REGISTRY: ghcr.io
@@ -45,7 +45,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   deploy:
-    name: Deploy to VM
+    name: Deploy to VPS
     needs: build-and-push
     runs-on: ubuntu-latest
 
@@ -53,13 +53,13 @@ jobs:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.VM_HOST }}
-          username: ${{ secrets.VM_USER }}
-          key: ${{ secrets.VM_SSH_KEY }}
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            cd /opt/oas
+            cd /home/oas/apps/oas/deploy
             echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ secrets.GHCR_USER }} --password-stdin
-            docker compose pull nginx
-            docker compose up -d nginx
+            docker compose -p oas -f docker-compose.yml -f docker-compose.override.yml pull frontend
+            docker compose -p oas -f docker-compose.yml -f docker-compose.override.yml up -d frontend
             docker image prune -f
             echo "✅ Frontend deployed successfully"
