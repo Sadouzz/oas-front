@@ -8,8 +8,8 @@ import { OrdreReparation, StatutOrdre, VehiculeModel, STATUT_ETAPES, getEtapeFro
 
 export const STEP_ROUTES: { step: number; path: string; statut: StatutOrdre; label: string }[] = [
   { step: 1, path: 'reception', statut: 'RECEPTION', label: 'Réception' },
-  { step: 2, path: 'diagnostic', statut: 'DIAGNOSTIC', label: 'Diagnostic' },
-  { step: 3, path: 'pieces-mo', statut: 'PIECES_MO', label: 'Pièces & MO' },
+  { step: 2, path: 'diagnostic', statut: 'DIAGNOSTIC', label: 'Chef Atelier' },
+  { step: 3, path: 'pieces-mo', statut: 'PIECES_MO', label: 'OR' },
   { step: 4, path: 'proforma', statut: 'PROFORMA', label: 'Proforma' },
   { step: 5, path: 'ordre-travail', statut: 'ORDRE_DE_TRAVAIL', label: 'Ordre de Travail' },
   { step: 6, path: 'paiement', statut: 'PAIEMENT', label: 'Paiement' },
@@ -125,9 +125,9 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
       case 1:
         return 'Valider la réception';
       case 2:
-        return 'Passer aux pièces & MO';
+        return 'Passer à l’OR';
       case 3:
-        return 'Valider les pièces & MO';
+        return 'Valider l’OR';
       case 4:
         return 'Passer à l\'Ordre de Travail';
       case 5:
@@ -185,6 +185,10 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
         this.selectedVehicule = o?.vehicule as any;
         this.hasDiagnostic = !!o?.hasDiagnostic;
         this.cdr.markForCheck();
+        const lastSegment = this.router.url.split('?')[0].split('/').pop() || '';
+        if (this.statutToStep(o?.statut) >= 5 && ['reception', 'diagnostic', 'pieces-mo'].includes(lastSegment)) {
+          this.router.navigate(['/app/ordres-reparation', this.ordreId, 'proforma'], { replaceUrl: true });
+        }
       }
     });
   }
@@ -205,6 +209,11 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
         const urlClean = this.router.url.split('?')[0];
         const segments = urlClean.split('/');
         const lastSegment = segments[segments.length - 1];
+
+        if (this.statutToStep(o?.statut) >= 5 && ['reception', 'diagnostic', 'pieces-mo'].includes(lastSegment)) {
+          this.router.navigate(['/app/ordres-reparation', this.ordreId, 'proforma'], { replaceUrl: true });
+          return;
+        }
 
         if (!this.hasAutoRedirected && (lastSegment === this.ordreId.toString() || lastSegment === 'reception')) {
           this.hasAutoRedirected = true;
@@ -275,10 +284,17 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
     if ((s === 'RECEPTION' || s === 'A_FAIRE') && (this.hasDiagnostic || this.loadedOrdre?.diagnostic)) {
       s = 'DIAGNOSTIC';
     }
-    return Math.max(this.statutToStep(s), this.currentStep);
+    return this.statutToStep(s);
   }
 
   goToStep(n: number): void {
+    const statutEtape = this.statutToStep(this.loadedOrdre?.statut);
+    // Dès le passage à l'Ordre de Travail, seules les étapes Proforma et suivantes restent accessibles.
+    if (statutEtape >= 5 && n < 4) {
+      this.router.navigate(['/app/ordres-reparation', this.ordreId, 'proforma']);
+      return;
+    }
+    if (n > this.maxAllowedStep) return;
     const target = STEP_ROUTES.find(s => s.step === n);
     if (target) {
       this.router.navigate(['/app/ordres-reparation', this.ordreId, target.path]);
@@ -286,7 +302,7 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
   }
 
   prevStep(): void {
-    if (this.currentStep > 1) {
+    if (this.currentStep > 1 && !(this.maxAllowedStep >= 5 && this.currentStep <= 4)) {
       this.goToStep(this.currentStep - 1);
     }
   }

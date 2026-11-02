@@ -125,6 +125,7 @@ export interface FicheAtelierRequest {
   signatureReceptionnaireBase64?: string;
   signatureBase64?: string;
   signatureSortieBase64?: string;
+  conditionsAcceptees?: boolean;
 }
 
 export interface FicheAtelierDetailsResponse {
@@ -154,6 +155,8 @@ export interface FicheAtelierDetailsResponse {
   signatureReceptionnaireBase64?: string;
   signatureBase64?: string;
   signatureSortieBase64?: string;
+  conditionsAcceptees?: boolean;
+  conditionsAccepteesAt?: string;
   createdAt: string;
   updatedAt: string;
   hasOrdreReparation?: boolean;

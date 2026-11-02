@@ -27,6 +27,7 @@ export interface LignePieceFormItem {
   designationPds?: string;
   quantite: number;
   prix: number;
+  prixCatalogue?: number | null;
   manquant?: number;
   stockDisponible?: number;
   tauxRemise?: number;
@@ -113,6 +114,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
   successMessage = '';
   errorMessage = '';
   warningMessage = '';
+  returnTo: string | null = null;
 
   // Formulaire d'en-tête / métadonnées
   form: FormGroup = this.fb.group({
@@ -179,6 +181,12 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
 
         // Auto-open modal if openId or action is provided in query params
         this.route.queryParams.subscribe(params => {
+          const candidateReturnTo = params['returnTo'];
+          this.returnTo = typeof candidateReturnTo === 'string'
+            && candidateReturnTo.startsWith('/app/ordres-reparation/')
+            && !candidateReturnTo.includes('://')
+            ? candidateReturnTo
+            : null;
           if (params['action'] === 'new') {
             this.openNew();
           }
@@ -267,6 +275,11 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
 
   get preserveDocumentLinePrices(): boolean {
     return ['ACCEPTE', 'PAYEE', 'PARTIELLEMENT_PAYEE'].includes(this.selectedProforma?.statut ?? '');
+  }
+
+  getCataloguePriceForLine(line: LignePieceFormItem): number | null {
+    const price = line.prixCatalogue ?? line.piece?.prixUnitaire;
+    return price != null && Number.isFinite(Number(price)) ? Number(price) : null;
   }
 
   get moFiltrees(): MainDoeuvreModel[] {
@@ -399,6 +412,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
       type: 'PDG',
       quantite: this.qteAjouterPdg,
       prix: unitPrice,
+      prixCatalogue: cataloguePrice,
       stockDisponible: (p.stockMagasin ?? 0) + (p.stockAtelier ?? 0),
       manquant: Math.max(0, this.qteAjouterPdg - (p.stockMagasin ?? 0)),
     };
@@ -417,8 +431,9 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
 
     const unitPrice = this.pieceCustomPrix != null && this.pieceCustomPrix >= 0 ? this.pieceCustomPrix : 0;
     const existing = this.lignesPieces.find(l => l.isCustom
-      && (l.designationPds || '').trim().toLocaleLowerCase() === des.toLocaleLowerCase()
-      && Math.round(Number(l.prix) || 0) === Math.round(unitPrice));
+      && (l.designationPds || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase() === des.replace(/\s+/g, ' ').toLocaleLowerCase()
+      && Math.round(Number(l.prix) || 0) === Math.round(unitPrice)
+      && (Number(l.tauxRemise) || 0) === 0);
 
     if (existing) {
       existing.quantite += this.pieceCustomQuantite;
@@ -717,6 +732,16 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
     }
   }
 
+  closeEditModal(): void {
+    this.showModal = false;
+    this.cdr.markForCheck();
+    if (this.returnTo) {
+      const destination = this.returnTo;
+      this.returnTo = null;
+      this.router.navigateByUrl(destination);
+    }
+  }
+
   private populateFormFromProforma(p: any): void {
     const clientId = p.clientId || p.client?.id;
     this.clientVehicules = clientId ? this.vehicules.filter(v => v.client?.id === clientId) : [];
@@ -772,9 +797,10 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
 
         const qte = Number(l.quantite ?? l.qte ?? 1) || 1;
         const prixHistorique = l.prix ?? l.prixUnitaire;
+        const prixCatalogue = l.prixCatalogue ?? catPiece?.prixUnitaire ?? null;
         let unitPrice = 0;
-        if (!isCustom && !this.preserveDocumentLinePrices && catPiece?.prixUnitaire != null) {
-          unitPrice = Number(catPiece.prixUnitaire);
+        if (!isCustom && !this.preserveDocumentLinePrices && prixCatalogue != null) {
+          unitPrice = Number(prixCatalogue);
         } else if (!isCustom && !this.preserveDocumentLinePrices && pieceType === 'PDP') {
           unitPrice = 0;
         } else if (prixHistorique != null && Number(prixHistorique) >= 0) {
@@ -795,6 +821,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
           designationPds: des,
           quantite: qte,
           prix: unitPrice,
+          prixCatalogue: prixCatalogue == null ? null : Number(prixCatalogue),
           tauxRemise: Number(l.tauxRemise) || 0,
           stockDisponible: catPiece ? ((catPiece.stockMagasin ?? 0) + (catPiece.stockAtelier ?? 0)) : 0,
           manquant: catPiece ? Math.max(0, qte - (catPiece.stockMagasin ?? 0)) : 0,
@@ -993,6 +1020,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
       next: (savedProforma) => {
         this.showModal = false;
         this.load();
+        this.saving = false;
         if (this.selectedProforma && this.editingId === this.selectedProforma.id) {
           if (savedProforma && savedProforma.id) {
             this.selectedProforma = savedProforma;
@@ -1005,10 +1033,16 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
         }
         const warnings: string[] = savedProforma?.avertissementsFinanciers ?? [];
         if (warnings.length) {
-          this.saving = false;
           this.warningMessage = `${this.isNew ? 'Proforma créé' : 'Proforma mis à jour'} avec avertissement : ${warnings.join(' ')}`;
           setTimeout(() => this.warningMessage = '', 9000);
-        } else this.notify(this.isNew ? 'Proforma créé avec succès.' : 'Proforma mis à jour avec succès.');
+        } else {
+          this.notify(this.isNew ? 'Proforma créé avec succès.' : 'Proforma mis à jour avec succès.');
+          if (this.returnTo && !this.isNew) {
+            const destination = this.returnTo;
+            this.returnTo = null;
+            this.router.navigateByUrl(destination);
+          }
+        }
       },
       error: (err) => {
         this.saving = false;

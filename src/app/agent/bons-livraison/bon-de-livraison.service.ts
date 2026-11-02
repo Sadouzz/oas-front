@@ -38,6 +38,7 @@ export interface BonDeLivraisonOrdreContext {
     id: number;
     numero: string;
     montantTTC: number;
+    tvaApplicable?: boolean | null;
     factureId?: number | null;
     factureNumero?: string | null;
     noteDePrixId?: number | null;
@@ -64,11 +65,11 @@ export class BonDeLivraisonService {
   getContexteOrdre(ordreId: number): Observable<BonDeLivraisonOrdreContext> {
     return this.http.get<BonDeLivraisonOrdreContext>(`${this.api}/ordres-reparation/${ordreId}/contexte`);
   }
-  creerFactureDepuisOrdre(ordreId: number, data: { appliquerTVA?: boolean; remarque?: string }): Observable<{ id: number; numero: string }> {
+  creerFactureDepuisOrdre(ordreId: number, data: { modePaiement: string; remarque?: string }): Observable<{ id: number; numero: string }> {
     return this.http.post<{ id: number; numero: string }>(`${this.api}/ordres-reparation/${ordreId}/facture`, data);
   }
-  convertirFacture(id: number): Observable<any> {
-    return this.http.post(`${this.api}/${id}/convertir-en-facture`, {});
+  convertirFacture(id: number, modePaiement: string): Observable<any> {
+    return this.http.post(`${this.api}/${id}/convertir-en-facture`, { modePaiement });
   }
   convertirNote(id: number): Observable<any> {
     return this.http.post(`${this.api}/${id}/convertir-en-note-de-prix`, {});

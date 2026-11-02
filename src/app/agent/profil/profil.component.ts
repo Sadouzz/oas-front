@@ -1,10 +1,11 @@
-import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { UserModel } from '../../shared/models';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PhoneInputComponent } from '../../shared/components/phone-input/phone-input.component';
+import { AgentSignatureService } from '../fiches-atelier/agent-signature.service';
 import {
   LucideUser,
   LucideMail,
@@ -48,6 +49,7 @@ export class ProfilComponent implements OnInit {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
+  private agentSignatureService = inject(AgentSignatureService);
 
   user: UserModel | null = null;
   loading = true;
@@ -63,6 +65,25 @@ export class ProfilComponent implements OnInit {
   showOldPassword = false;
   showNewPassword = false;
   showConfirmPassword = false;
+  signatureConfigured = false;
+  signatureSaving = false;
+  signatureMessage = '';
+  signatureError = '';
+  private signatureContext: CanvasRenderingContext2D | null = null;
+  private signatureDrawing = false;
+  private signatureHasInk = false;
+  private agentSignatureCanvasEl?: HTMLCanvasElement;
+
+  @ViewChild('agentSignatureCanvas') set agentSignatureCanvas(element: ElementRef<HTMLCanvasElement> | undefined) {
+    if (!element) return;
+    this.agentSignatureCanvasEl = element.nativeElement;
+    this.signatureContext = element.nativeElement.getContext('2d');
+    if (this.signatureContext) {
+      this.signatureContext.lineWidth = 2;
+      this.signatureContext.lineCap = 'round';
+      this.signatureContext.strokeStyle = '#000000';
+    }
+  }
 
   profileForm = this.fb.group({
     firstName: ['', [Validators.required]],
@@ -88,6 +109,7 @@ export class ProfilComponent implements OnInit {
       next: (data) => {
         // Handle unwrapped or wrapped format
         this.user = data?.data ? data.data : data;
+        if (this.user?.type === 'AGENT') this.loadAgentSignature();
         if (this.user) {
           this.profileForm.patchValue({
             firstName: this.user.firstName || '',
@@ -105,6 +127,72 @@ export class ProfilComponent implements OnInit {
         this.loading = false;
         this.cdr.detectChanges();
       },
+    });
+  }
+
+  private loadAgentSignature(): void {
+    this.agentSignatureService.getMine().subscribe({
+      next: result => {
+        this.signatureConfigured = result.configured;
+        if (result.signatureBase64 && this.agentSignatureCanvasEl && this.signatureContext) {
+          const image = new Image();
+          image.onload = () => {
+            const canvas = this.agentSignatureCanvasEl;
+            if (canvas) this.signatureContext?.drawImage(image, 0, 0, canvas.width, canvas.height);
+            this.signatureHasInk = true;
+            this.cdr.markForCheck();
+          };
+          image.src = result.signatureBase64;
+        }
+        this.cdr.markForCheck();
+      },
+      error: () => { this.signatureError = 'Impossible de charger votre signature enregistrée.'; this.cdr.markForCheck(); }
+    });
+  }
+
+  startAgentSignature(event: PointerEvent): void {
+    const canvas = event.currentTarget as HTMLCanvasElement;
+    const rect = canvas.getBoundingClientRect();
+    this.signatureContext?.beginPath();
+    this.signatureContext?.moveTo((event.clientX - rect.left) * canvas.width / rect.width, (event.clientY - rect.top) * canvas.height / rect.height);
+    this.signatureDrawing = true;
+    canvas.setPointerCapture(event.pointerId);
+  }
+
+  drawAgentSignature(event: PointerEvent): void {
+    if (!this.signatureDrawing || !this.signatureContext) return;
+    const canvas = event.currentTarget as HTMLCanvasElement;
+    const rect = canvas.getBoundingClientRect();
+    this.signatureContext.lineTo((event.clientX - rect.left) * canvas.width / rect.width, (event.clientY - rect.top) * canvas.height / rect.height);
+    this.signatureContext.stroke();
+    this.signatureHasInk = true;
+  }
+
+  stopAgentSignature(): void { this.signatureDrawing = false; this.signatureContext?.beginPath(); }
+
+  clearAgentSignatureCanvas(): void {
+    const canvas = this.agentSignatureCanvasEl;
+    if (canvas) this.signatureContext?.clearRect(0, 0, canvas.width, canvas.height);
+    this.signatureHasInk = false;
+    this.signatureMessage = '';
+    this.signatureError = '';
+  }
+
+  saveAgentSignature(): void {
+    const canvas = this.agentSignatureCanvasEl;
+    if (!canvas || !this.signatureHasInk) { this.signatureError = 'Veuillez dessiner votre signature avant de l’enregistrer.'; return; }
+    this.signatureSaving = true; this.signatureError = ''; this.signatureMessage = '';
+    this.agentSignatureService.saveMine(canvas.toDataURL('image/png')).subscribe({
+      next: () => { this.signatureConfigured = true; this.signatureSaving = false; this.signatureMessage = 'Votre signature est enregistrée de manière chiffrée.'; this.cdr.markForCheck(); },
+      error: err => { this.signatureSaving = false; this.signatureError = err?.error?.message || 'Impossible d’enregistrer votre signature.'; this.cdr.markForCheck(); }
+    });
+  }
+
+  deleteAgentSignature(): void {
+    this.signatureSaving = true; this.signatureError = ''; this.signatureMessage = '';
+    this.agentSignatureService.deleteMine().subscribe({
+      next: () => { this.signatureConfigured = false; this.signatureSaving = false; this.clearAgentSignatureCanvas(); this.signatureMessage = 'Votre signature enregistrée a été supprimée.'; this.cdr.markForCheck(); },
+      error: err => { this.signatureSaving = false; this.signatureError = err?.error?.message || 'Impossible de supprimer votre signature.'; this.cdr.markForCheck(); }
     });
   }
 

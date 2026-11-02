@@ -1,5 +1,4 @@
 export * from './base-step.dto';
-export * from './step-reception.dto';
 export * from './step-diagnostic.dto';
 export * from './step-pieces-mo.dto';
 export * from './step-proforma.dto';

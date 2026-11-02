@@ -236,6 +236,9 @@
         <div class="bg-white rounded-lg border border-oas-line p-6 shadow-sm">
           <div class="flex items-center justify-between mb-3">
             <label class="block text-sm font-semibold text-oas-ink">Signature du réceptionnaire</label>
+            @if (signatureAgentConfiguree) {
+              <button type="button" (click)="appliquerMaSignature()" class="text-xs text-oas-accent hover:underline font-semibold">Appliquer ma signature</button>
+            }
             <button type="button" (click)="clearSignatureRec()" class="text-xs text-red-500 hover:text-red-600 font-medium px-2 py-1 bg-red-50 hover:bg-red-100 rounded transition cursor-pointer">
               Effacer
             </button>
@@ -261,29 +264,24 @@
               Effacer
             </button>
           </div>
-          <div class="border border-oas-line rounded-lg overflow-hidden bg-oas-bg/30 relative">
-            @if (!conditionsAcceptees) {
-              <div class="absolute inset-0 bg-white/70 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center p-4 text-center">
-                <p class="text-sm font-bold text-oas-ink mb-2">Veuillez lire et accepter les conditions générales</p>
-                <button type="button" (click)="showConditionsModal = true" class="text-xs bg-oas-accent text-white px-3 py-1.5 rounded-lg shadow-sm hover:bg-oas-accent-dark transition">Lire les conditions</button>
+          @if (!conditionsAcceptees) {
+            <div class="border border-oas-line rounded-lg bg-oas-bg/30 min-h-[200px] flex flex-col items-center justify-center p-4 text-center">
+              <p class="text-sm font-bold text-oas-ink mb-2">Le client signera après avoir lu les conditions générales.</p>
+              <button type="button" (click)="showConditionsModal = true" class="text-xs bg-oas-accent text-white px-3 py-1.5 rounded-lg shadow-sm hover:bg-oas-accent-dark transition">Lire les conditions</button>
+            </div>
+          } @else {
+            @if (signatureClientBase64) {
+              <div class="border border-oas-line rounded-lg bg-white p-3">
+                <img [src]="signatureClientBase64" alt="Signature du client" class="h-24 max-w-full object-contain mx-auto">
+              </div>
+              <button type="button" (click)="refaireSignatureClient()" class="mt-2 text-xs text-oas-accent hover:underline font-semibold">Refaire la signature depuis les conditions</button>
+            } @else {
+              <div class="border border-amber-200 bg-amber-50 rounded-lg p-4 text-center text-sm text-amber-800">
+                Acceptation enregistrée. Ouvrez les conditions pour que le client signe.
+                <button type="button" (click)="showConditionsModal = true" class="ml-1 font-bold underline">Ouvrir les conditions</button>
               </div>
             }
-            <canvas #signatureClientCanvas width="600" height="200" 
-                    class="w-full h-[200px] touch-none"
-                    [class.cursor-crosshair]="conditionsAcceptees"
-                    [class.cursor-not-allowed]="!conditionsAcceptees"
-                    (mousedown)="startDrawing($event, 'client')"
-                    (mousemove)="draw($event, 'client')"
-                    (mouseup)="stopDrawing('client')"
-                    (mouseleave)="stopDrawing('client')"
-                    (touchstart)="startDrawing($event, 'client')"
-                    (touchmove)="draw($event, 'client')"
-                    (touchend)="stopDrawing('client')"></canvas>
-          </div>
-          <p class="text-xs text-oas-muted mt-2 flex items-center gap-1">
-            En signant ci-dessus, vous acceptez les 
-            <button type="button" (click)="showConditionsModal = true" class="text-oas-accent hover:underline cursor-pointer font-semibold">Conditions générales de réparation</button>.
-          </p>
+          }
         </div>
 
       </div>
@@ -308,7 +306,7 @@
     <div class="bg-white rounded-lg shadow-2xl w-full max-w-3xl mx-4 max-h-[85vh] flex flex-col">
       <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line shrink-0">
         <h2 class="text-lg font-bold text-oas-ink">Conditions générales de réparation</h2>
-        <button (click)="showConditionsModal = false" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted cursor-pointer">
+            <button type="button" (click)="fermerModalConditions()" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted cursor-pointer">
           <svg lucideX class="w-5 h-5"></svg>
         </button>
       </div>
@@ -337,11 +335,43 @@
 
         <h3 class="font-bold text-oas-ink mt-6">Article 5 : Contestations</h3>
         <p>En cas de différend relatif à l'exécution de l'ordre de réparation, il est fait attribution de juridiction au Tribunal du lieu de la signature du présent contrat.</p>
+        <div class="mt-8 border-t border-oas-line pt-5">
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input type="checkbox" [checked]="conditionsAcceptees" (change)="onConditionsChoice($event)" class="mt-1 h-4 w-4 accent-oas-accent">
+            <span class="text-sm font-semibold text-oas-ink">Oui, j’ai lu et j’accepte les conditions générales de réparation.</span>
+          </label>
+        </div>
+        @if (conditionsAcceptees) {
+          <div class="mt-6 border-t border-oas-line pt-5">
+            <h3 class="font-bold text-oas-ink mb-2">Signature du client</h3>
+            <p class="text-xs text-oas-muted mb-3">Le client signe ici après avoir lu et accepté les conditions.</p>
+            <div class="border border-oas-line rounded-lg overflow-hidden bg-white">
+              <canvas #signatureClientCanvas width="600" height="200" class="w-full h-[200px] touch-none cursor-crosshair"
+                (mousedown)="startDrawing($event, 'client')" (mousemove)="draw($event, 'client')" (mouseup)="stopDrawing('client')" (mouseleave)="stopDrawing('client')"
+                (touchstart)="startDrawing($event, 'client')" (touchmove)="draw($event, 'client')" (touchend)="stopDrawing('client')"></canvas>
+            </div>
+            <button type="button" (click)="clearSignatureClient()" class="mt-2 text-xs text-rose-600 font-semibold">Effacer la signature</button>
+          </div>
+        }
+        </div>
+      <div class="flex justify-between items-center p-4 border-t border-oas-line shrink-0">
+        <button type="button" (click)="fermerModalConditions()" class="px-5 py-2.5 rounded-lg border border-oas-line text-oas-ink font-semibold text-sm">Fermer</button>
+        @if (conditionsAcceptees) {
+          <button type="button" (click)="validerSignatureClient()" [disabled]="!signatureClientDessinee" class="px-5 py-2.5 rounded-lg bg-oas-accent text-white font-bold text-sm disabled:opacity-50">Valider la signature</button>
+        }
       </div>
-      <div class="flex justify-end p-4 border-t border-oas-line shrink-0">
-        <button (click)="accepterConditions()" class="px-5 py-2.5 rounded-lg bg-oas-accent hover:bg-oas-accent-dark text-white font-bold transition cursor-pointer text-sm shadow-md">
-          J'ai compris et j'accepte
-        </button>
+    </div>
+  </div>
+}
+@if (showSaveAgentSignatureModal) {
+  <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50" role="dialog" aria-modal="true" aria-labelledby="save-signature-title">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 p-6 space-y-4">
+      <h2 id="save-signature-title" class="text-lg font-bold text-oas-ink">Enregistrer votre signature ?</h2>
+      <p class="text-sm text-oas-muted">Vous pourrez la réutiliser sur vos prochaines fiches atelier. Elle sera chiffrée et réservée à votre compte.</p>
+      @if (error) { <p role="alert" class="text-sm text-rose-600">{{ error }}</p> }
+      <div class="flex flex-col sm:flex-row justify-end gap-2">
+        <button type="button" (click)="continuerSansEnregistrerSignature()" [disabled]="saving" class="px-4 py-2 rounded-lg border border-oas-line text-sm font-semibold disabled:opacity-50">Continuer sans enregistrer</button>
+        <button type="button" (click)="enregistrerSignatureAgentEtContinuer()" [disabled]="saving" class="px-4 py-2 rounded-lg bg-oas-accent text-white text-sm font-bold disabled:opacity-50">Enregistrer et continuer</button>
       </div>
     </div>
   </div>

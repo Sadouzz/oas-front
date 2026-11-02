@@ -598,19 +598,32 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     const info = this.getPieceStatusInfo('PDS', null, designation, quantite);
     const remiseKey = this.clePds(designation, prix);
     const tauxRemise = this.remisesProforma.get(remiseKey) ?? 0;
-    this.lignesPieces.push({
-      type: 'PDS',
-      designation,
-      quantite,
-      prix,
-      dateHeureSaisie: new Date().toISOString(),
-      tauxRemise,
-      horsProforma: info.isHorsProforma,
-      dejaSortieProforma: info.isDejaSortiComplet,
-      depassementProforma: info.isDepassement,
-      qteProforma: info.qteProforma,
-      dejaSortie: info.dejaSorti
-    });
+    const designationKey = designation.replace(/\s+/g, ' ').toLocaleLowerCase();
+    const existing = this.lignesPieces.find(line => line.type === 'PDS'
+      && line.designation.replace(/\s+/g, ' ').toLocaleLowerCase() === designationKey
+      && Number(line.prix) === prix
+      && (Number(line.tauxRemise) || 0) === tauxRemise
+      && !line.proformaLineId);
+    if (existing) {
+      existing.quantite += quantite;
+      existing.horsProforma = existing.horsProforma || info.isHorsProforma;
+      existing.dejaSortieProforma = existing.dejaSortieProforma || info.isDejaSortiComplet;
+      existing.depassementProforma = existing.depassementProforma || info.isDepassement;
+    } else {
+      this.lignesPieces.push({
+        type: 'PDS',
+        designation,
+        quantite,
+        prix,
+        dateHeureSaisie: new Date().toISOString(),
+        tauxRemise,
+        horsProforma: info.isHorsProforma,
+        dejaSortieProforma: info.isDejaSortiComplet,
+        depassementProforma: info.isDepassement,
+        qteProforma: info.qteProforma,
+        dejaSortie: info.dejaSorti
+      });
+    }
     this.piecePdsDesignationAjouter = '';
     this.qteAjouterPds = 1;
     this.prixAjouterPds = null;

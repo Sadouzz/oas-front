@@ -11,7 +11,7 @@
 } @else {
   <div class="space-y-6">
     <div class="flex items-center justify-between border-b border-oas-line pb-3">
-      <h2 class="text-lg font-bold text-oas-ink">Étape 2 · Diagnostic technique</h2>
+      <h2 class="text-lg font-bold text-oas-ink">Étape 2 · Chef Atelier</h2>
       <button type="button" (click)="marquerValide()" [disabled]="saving"
         class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-xs transition cursor-pointer flex items-center gap-1.5">
         <span>Sauter le diagnostic</span>
@@ -474,32 +474,5 @@
       }
     </div>
 
-    <!-- Pièces jointes / Photos -->
-    <div class="border-t border-oas-line pt-4 space-y-3">
-      <label class="block text-sm font-bold text-oas-ink">Documents & Photos du diagnostic</label>
-      <app-media-uploader folder="oas/ordres-reparation/diagnostic" accept="image/*,application/pdf"
-        label="Déposez une photo ou un document PDF ici"
-        (uploaded)="onPieceJointeUploaded($event)"></app-media-uploader>
-
-      @if (piecesJointesDiagnostic.length > 0) {
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-          @for (pj of piecesJointesDiagnostic; track pj.id) {
-            <div class="relative border border-oas-line rounded-xl p-2 bg-oas-bg group flex flex-col">
-              <button type="button" (click)="deletePieceJointe(pj.id)"
-                class="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition cursor-pointer shadow-sm">
-                ✕
-              </button>
-              <a [href]="pj.url" target="_blank" rel="noopener" class="block">
-                @if (pj.type === 'PHOTO') {
-                  <img [src]="pj.url" class="w-full h-24 object-cover rounded-lg" alt="Document diagnostic" />
-                } @else {
-                  <div class="w-full h-24 rounded-lg bg-white border border-oas-line flex items-center justify-center text-xs font-bold text-oas-muted">PDF</div>
-                }
-              </a>
-            </div>
-          }
-        </div>
-      }
-    </div>
   </div>
 }

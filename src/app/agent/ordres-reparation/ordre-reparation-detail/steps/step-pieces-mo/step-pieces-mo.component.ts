@@ -9,11 +9,15 @@ import { ProformaService } from '../../../../proforma/proforma.service';
 import { PieceDetacheeService } from '../../../../pieces-detachees/piece-detachee.service';
 import { MainDoeuvreService } from '../../../../main-doeuvre/main-doeuvre.service';
 import { AlertComponent } from '../../../../../shared/components/alert/alert.component';
+import { MediaUploaderComponent } from '../../../../../shared/components/media-uploader/media-uploader.component';
 import { SearchableSelectComponent } from '../../../../../shared/components/searchable-select/searchable-select.component';
 import {
   OrdreReparation,
   PieceDetache,
   MainDoeuvreModel,
+  PieceJointeDiagnostic,
+  TypePieceJointeDiagnostic,
+  CloudinaryUploadResult,
   StatutOrdre,
   StepPiecesMoDto,
   extractContent
@@ -45,7 +49,7 @@ export interface LigneMO {
 @Component({
   selector: 'app-step-pieces-mo',
   standalone: true,
-  imports: [CommonModule, FormsModule, AlertComponent, SearchableSelectComponent],
+  imports: [CommonModule, FormsModule, AlertComponent, MediaUploaderComponent, SearchableSelectComponent],
   templateUrl: './step-pieces-mo.component.html'
 })
 export class StepPiecesMoComponent implements OnInit, OnDestroy {
@@ -79,6 +83,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
 
   lignesPieces: LignePiece[] = [];
   lignesMO: LigneMO[] = [];
+  piecesJointesDiagnostic: PieceJointeDiagnostic[] = [];
 
   piecePdpAjouter: number | null = null;
   qteAjouterPdp = 1;
@@ -177,12 +182,63 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
     this.ordreId = +idParam;
 
     this.initSearchStreams();
+    this.loadPiecesJointesDiagnostic();
     this.loadData();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  loadPiecesJointesDiagnostic(): void {
+    this.ordreService.getPiecesJointesDiagnostic(this.ordreId).subscribe({
+      next: pieces => {
+        this.piecesJointesDiagnostic = pieces ?? [];
+        this.cdr.markForCheck();
+      },
+      error: err => {
+        this.errorMessage = err.error?.message || 'Impossible de charger les documents du diagnostic.';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  onPieceJointeDiagnosticUploaded(upload: CloudinaryUploadResult): void {
+    const type: TypePieceJointeDiagnostic = upload.resourceType === 'raw' || upload.format?.toLowerCase() === 'pdf'
+      ? 'PDF'
+      : 'PHOTO';
+    this.ordreService.addPieceJointeDiagnostic(this.ordreId, {
+      url: upload.secureUrl,
+      type,
+      remarque: upload.publicId || null
+    }).subscribe({
+      next: piece => {
+        this.piecesJointesDiagnostic = [piece, ...this.piecesJointesDiagnostic];
+        this.errorMessage = '';
+        this.successMessage = 'Document ajouté au diagnostic.';
+        this.cdr.markForCheck();
+      },
+      error: err => {
+        this.errorMessage = err.error?.message || 'Impossible d’enregistrer le document du diagnostic.';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  deletePieceJointeDiagnostic(id: number): void {
+    this.ordreService.deletePieceJointeDiagnostic(this.ordreId, id).subscribe({
+      next: () => {
+        this.piecesJointesDiagnostic = this.piecesJointesDiagnostic.filter(piece => piece.id !== id);
+        this.errorMessage = '';
+        this.successMessage = 'Document supprimé du diagnostic.';
+        this.cdr.markForCheck();
+      },
+      error: err => {
+        this.errorMessage = err.error?.message || 'Impossible de supprimer le document du diagnostic.';
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   private initSearchStreams(): void {
@@ -652,6 +708,22 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
     const qte = Number(this.pieceCustomQuantite) || 1;
     const unitPrice = qte > 0 ? Math.round(total / qte) : 0;
     const des = this.pieceCustomDesignation.trim();
+    const normalizedDesignation = des.replace(/\s+/g, ' ').toLocaleLowerCase();
+    const existing = this.lignesPieces.find(line => line.isCustom
+      && (line.designationPds || '').replace(/\s+/g, ' ').trim().toLocaleLowerCase() === normalizedDesignation
+      && Math.round(Number(line.prixUnitaire) || 0) === unitPrice
+      && (Number(line.tauxRemise) || 0) === 0);
+
+    if (existing) {
+      existing.quantite += qte;
+      existing.prixUnitaire = unitPrice;
+      existing.prixTotal = unitPrice * existing.quantite;
+      this.pieceCustomDesignation = '';
+      this.pieceCustomPrixTotal = null;
+      this.pieceCustomQuantite = 1;
+      this.cdr.markForCheck();
+      return;
+    }
 
     this.lignesPieces.push({
         isCustom: true,
@@ -666,6 +738,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
     this.pieceCustomDesignation = '';
     this.pieceCustomPrixTotal = null;
     this.pieceCustomQuantite = 1;
+    this.cdr.markForCheck();
   }
 
   removePiece(index: number): void {

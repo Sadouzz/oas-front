@@ -3,6 +3,7 @@ import { DatePipe } from '@angular/common';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FicheAtelierService } from '../../fiches-atelier/fiche-atelier.service';
+import { AgentSignatureService } from '../../fiches-atelier/agent-signature.service';
 import { FicheAtelierConfigService } from '../../fiches-atelier/fiche-atelier-config.service';
 import { RendezVousService } from '../../rendezvous/rendezvous.service';
 import { ClientService } from '../../clients/client.service';
@@ -53,6 +54,7 @@ export class FichesAtelier implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private service = inject(FicheAtelierService);
+  private agentSignatureService = inject(AgentSignatureService);
   private configService = inject(FicheAtelierConfigService);
   private rdvService = inject(RendezVousService);
   private clientService = inject(ClientService);
@@ -70,6 +72,11 @@ export class FichesAtelier implements OnInit {
   success = '';
   showConditionsModal = false;
   conditionsAcceptees = false;
+  signatureClientBase64 = '';
+  signatureAgentConfiguree = false;
+  signatureAgentBase64 = '';
+  showSaveAgentSignatureModal = false;
+  private signatureSavePromptHandled = false;
 
   @ViewChild('signatureReceptionnaireCanvas') set sigRecCanvas(el: ElementRef<HTMLCanvasElement>) {
     if (el) {
@@ -103,12 +110,20 @@ export class FichesAtelier implements OnInit {
   private isDrawingRec = false;
   private isDrawingClient = false;
   private signatureRecDessinee = false;
-  private signatureClientDessinee = false;
+  signatureClientDessinee = false;
 
   defaultReception: string[] = [...DEFAULT_LIGNES_RECEPTION];
   defaultDefauts: string[] = preparerRubriquesFicheAtelier(DEFAULT_RUBRIQUES_DEFAUTS);
 
   ngOnInit(): void {
+    this.agentSignatureService.getMine().subscribe({
+      next: signature => {
+        this.signatureAgentConfiguree = signature.configured;
+        this.signatureAgentBase64 = signature.signatureBase64 || '';
+        this.cdr.markForCheck();
+      },
+      error: () => { /* Le dessin manuel reste disponible si aucune signature n'est accessible. */ }
+    });
     const rdvIdParam = this.route.snapshot.paramMap.get('rendezVousId');
     if (rdvIdParam) {
       this.rendezVousId = +rdvIdParam;
@@ -416,17 +431,18 @@ export class FichesAtelier implements OnInit {
     event.preventDefault();
 
     const rect = canvas.getBoundingClientRect();
-    
-    let x, y;
+    let clientX: number | undefined, clientY: number | undefined;
     if (event instanceof MouseEvent) {
-      x = event.clientX - rect.left;
-      y = event.clientY - rect.top;
+      clientX = event.clientX;
+      clientY = event.clientY;
     } else if (event instanceof TouchEvent) {
-      x = event.touches[0].clientX - rect.left;
-      y = event.touches[0].clientY - rect.top;
+      const touch = event.touches[0] || event.changedTouches[0];
+      if (touch) { clientX = touch.clientX; clientY = touch.clientY; }
     }
 
-    if (x !== undefined && y !== undefined) {
+    if (clientX !== undefined && clientY !== undefined && rect.width > 0 && rect.height > 0) {
+      const x = (clientX - rect.left) * canvas.width / rect.width;
+      const y = (clientY - rect.top) * canvas.height / rect.height;
       ctx.lineTo(x, y);
       ctx.stroke();
       if (type === 'rec') this.signatureRecDessinee = true;
@@ -458,13 +474,89 @@ export class FichesAtelier implements OnInit {
 
   accepterConditions() {
     this.conditionsAcceptees = true;
+  }
+
+  onConditionsChoice(event: Event): void {
+    const accepted = (event.target as HTMLInputElement).checked;
+    if (accepted) {
+      this.accepterConditions();
+      return;
+    }
+    this.conditionsAcceptees = false;
+    this.signatureClientDessinee = false;
+    this.signatureClientBase64 = '';
+    this.clearSignature('client');
+  }
+
+  validerSignatureClient(): void {
+    if (!this.conditionsAcceptees || !this.signatureClientDessinee || !this.sigClientEl?.nativeElement) return;
+    this.signatureClientBase64 = this.sigClientEl.nativeElement.toDataURL('image/png');
     this.showConditionsModal = false;
+    this.cdr.markForCheck();
+  }
+
+  fermerModalConditions(): void {
+    if (!this.signatureClientBase64) {
+      this.signatureClientDessinee = false;
+      this.clearSignature('client');
+    }
+    this.showConditionsModal = false;
+  }
+
+  refaireSignatureClient(): void {
+    this.signatureClientBase64 = '';
+    this.signatureClientDessinee = false;
+    this.showConditionsModal = true;
+    setTimeout(() => this.clearSignature('client'));
+  }
+
+  appliquerMaSignature(): void {
+    if (!this.signatureAgentBase64 || !this.sigRecEl?.nativeElement || !this.ctxRec) return;
+    const image = new Image();
+    image.onload = () => {
+      const canvas = this.sigRecEl.nativeElement;
+      this.ctxRec?.clearRect(0, 0, canvas.width, canvas.height);
+      this.ctxRec?.drawImage(image, 0, 0, canvas.width, canvas.height);
+      this.signatureRecDessinee = true;
+      this.cdr.markForCheck();
+    };
+    image.onerror = () => { this.error = 'La signature enregistrée ne peut pas être affichée.'; this.cdr.markForCheck(); };
+    image.src = this.signatureAgentBase64;
+  }
+
+  enregistrerSignatureAgentEtContinuer(): void {
+    if (!this.sigRecEl?.nativeElement || !this.signatureRecDessinee) {
+      this.error = 'Dessinez votre signature avant de proposer son enregistrement.';
+      return;
+    }
+    this.saving = true;
+    this.agentSignatureService.saveMine(this.sigRecEl.nativeElement.toDataURL('image/png')).subscribe({
+      next: () => {
+        this.signatureAgentConfiguree = true;
+        this.showSaveAgentSignatureModal = false;
+        this.saving = false;
+        this.creerFiche();
+      },
+      error: err => {
+        this.saving = false;
+        this.error = err?.error?.message || 'La signature n’a pas pu être enregistrée. Vous pouvez continuer sans la conserver.';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  continuerSansEnregistrerSignature(): void {
+    this.signatureSavePromptHandled = true;
+    this.showSaveAgentSignatureModal = false;
+    this.error = '';
+    this.creerFiche();
   }
 
   clearSignatureRec() {
     this.clearSignature('rec');
   }
   clearSignatureClient() {
+    this.signatureClientBase64 = '';
     this.clearSignature('client');
   }
 
@@ -487,13 +579,24 @@ export class FichesAtelier implements OnInit {
       return;
     }
 
-    if (!this.signatureRecDessinee || !this.signatureClientDessinee || !this.conditionsAcceptees) {
+    if (!this.signatureRecDessinee || !this.signatureClientBase64 || !this.conditionsAcceptees) {
       this.error = 'Les deux signatures et l’acceptation des conditions sont obligatoires.';
       return;
     }
 
+    if (!this.signatureAgentConfiguree && !this.signatureSavePromptHandled) {
+      this.showSaveAgentSignatureModal = true;
+      return;
+    }
+    this.creerFiche();
+  }
+
+  private creerFiche(): void {
     this.saving = true;
     this.error = '';
+
+    const clientId = this.rdvData ? this.rdvData.clientId : Number(this.form.value.clientId);
+    const vehiculeId = this.rdvData ? this.rdvData.vehiculeId : Number(this.form.value.vehiculeId);
 
     const { clientId: _c, vehiculeId: _v, lignesReception: _lr, lignesDefauts: _ld, ...formVals } = this.form.value;
 
@@ -534,7 +637,8 @@ export class FichesAtelier implements OnInit {
       defautsConstates: formattedDefauts,
       defauts: formattedDefauts,
       signatureReceptionnaireBase64: this.sigRecEl ? this.sigRecEl.nativeElement.toDataURL('image/png') : undefined,
-      signatureBase64: this.sigClientEl ? this.sigClientEl.nativeElement.toDataURL('image/png') : undefined
+      signatureBase64: this.signatureClientBase64 || undefined,
+      conditionsAcceptees: this.conditionsAcceptees
     };
 
     this.service.create(request).subscribe({

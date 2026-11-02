@@ -10,6 +10,7 @@ import { LucideEye, LucideLoader2, LucidePlus, LucidePrinter, LucideSearch, Luci
 import { AuthService } from '../../core/services/auth.service';
 import { OrdreReparationService } from '../ordres-reparation/ordre-reparation.service';
 import { BonDeLivraison, BonDeLivraisonOrdreContext, BonDeLivraisonService, BonDeSortieDisponible } from './bon-de-livraison.service';
+import { FACTURE_MODES_PAIEMENT, FactureModePaiement } from '../factures/models/facture-mode-paiement';
 
 @Component({
   selector: 'app-bons-livraison', standalone: true,
@@ -42,6 +43,11 @@ export class BonsLivraisonComponent extends BasePaginatedComponent implements On
   actionLoading = false;
   showCreateModal = false;
   showDetailModal = false;
+  showInvoiceModal = false;
+  invoiceModePaiement: FactureModePaiement = 'ESPECE_TTC';
+  invoiceBonId: number | null = null;
+  invoiceBonNumero = '';
+  readonly invoiceModesPaiement = FACTURE_MODES_PAIEMENT;
   successMessage = '';
   errorMessage = '';
   modalError = '';
@@ -169,20 +175,7 @@ export class BonsLivraisonComponent extends BasePaginatedComponent implements On
   convertirFactureDuContexte(): void {
     const bon = this.contexteOrdre?.bonDeLivraison;
     if (!bon || bon.factureId || this.actionLoading) return;
-    this.actionLoading = true;
-    this.modalError = '';
-    this.api.convertirFacture(bon.id).subscribe({
-      next: facture => {
-        this.actionLoading = false;
-        this.successMessage = `Facture ${facture?.numero || ''} créée depuis le bon ${bon.numero}.`.trim();
-        if (this.ordreId) this.onOrderChange(this.ordreId);
-        this.loadData();
-      },
-      error: err => {
-        this.actionLoading = false;
-        this.modalError = err?.error?.message || 'La conversion en facture a échoué.';
-      }
-    });
+    this.openInvoiceModal(bon.id, bon.numero, bon.tvaApplicable ?? this.contexteOrdre?.tvaApplicable);
   }
   openDetail(bon: BonDeLivraison): void {
     this.selectedBon = bon;
@@ -201,9 +194,45 @@ export class BonsLivraisonComponent extends BasePaginatedComponent implements On
     });
   }
   closeDetail(): void { this.showDetailModal = false; this.selectedBon = null; this.errorMessage = ''; this.loadingDetail = false; }
+  openInvoiceModal(id: number, numero: string, tvaApplicable?: boolean | null): void {
+    if (this.actionLoading) return;
+    this.invoiceBonId = id;
+    this.invoiceBonNumero = numero;
+    this.invoiceModePaiement = tvaApplicable === false ? 'ESPECE_HT' : 'ESPECE_TTC';
+    this.modalError = '';
+    this.showInvoiceModal = true;
+  }
+  closeInvoiceModal(): void {
+    if (this.actionLoading) return;
+    this.showInvoiceModal = false;
+    this.invoiceBonId = null;
+    this.invoiceBonNumero = '';
+    this.modalError = '';
+  }
+  createInvoiceFromBon(): void {
+    if (this.invoiceBonId == null || this.actionLoading) return;
+    this.actionLoading = true;
+    this.modalError = '';
+    this.api.convertirFacture(this.invoiceBonId, this.invoiceModePaiement).subscribe({
+      next: result => {
+        this.actionLoading = false;
+        this.showInvoiceModal = false;
+        this.successMessage = `Facture ${result?.numero || ''} créée depuis le bon ${this.invoiceBonNumero}.`.trim();
+        this.invoiceBonId = null;
+        this.invoiceBonNumero = '';
+        if (this.ordreId) this.onOrderChange(this.ordreId);
+        this.loadData();
+        if (this.selectedBon) this.selectedBon = { ...this.selectedBon, factureId: result?.id, factureNumero: result?.numero };
+      },
+      error: err => {
+        this.actionLoading = false;
+        this.modalError = err?.error?.message || 'La création de la facture a échoué.';
+      }
+    });
+  }
   convertFacture(bon: BonDeLivraison): void {
-    if (this.actionLoading) return; this.actionLoading = true; this.errorMessage = '';
-    this.api.convertirFacture(bon.id).subscribe({ next: result => this.afterAction('Facture créée depuis le bon de livraison.', { factureId: result?.id, factureNumero: result?.numero }), error: err => { this.actionLoading = false; this.errorMessage = err?.error?.message || 'La conversion en facture a échoué.'; } });
+    if (bon.factureId || bon.factureNumero) return;
+    this.openInvoiceModal(bon.id, bon.numero, bon.tvaApplicable);
   }
   convertNote(bon: BonDeLivraison): void {
     if (this.actionLoading) return; this.actionLoading = true; this.errorMessage = '';

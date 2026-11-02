@@ -40,7 +40,7 @@ export interface FactureModel {
 export type FactureListModel = Pick<FactureModel,
   'id' | 'numero' | 'dateCreation' | 'montantHT' | 'montantTVA' | 'tvaApplicable' | 'montantTTC'
   | 'montantTimbre' | 'timbreFiscalRate' | 'montantAutre' | 'montantTotal' | 'tauxRemiseClient'
-  | 'montantRemiseClient' | 'agentNom' | 'remarque' | 'kilometrage' | 'clientId' | 'clientNom'
+  | 'montantRemiseClient' | 'modePaiement' | 'agentNom' | 'remarque' | 'kilometrage' | 'clientId' | 'clientNom'
   | 'immatriculation' | 'marque' | 'modele' | 'annee' | 'montantPaye' | 'resteAPayer' | 'statutPaiement'>;
 
 export type FactureDetailsViewModel = FactureListModel & Pick<FactureModel,

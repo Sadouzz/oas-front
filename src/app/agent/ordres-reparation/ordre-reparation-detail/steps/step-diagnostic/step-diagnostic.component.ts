@@ -9,17 +9,13 @@ import { DiagnosticResponse, DiagnosticStepDto } from '../../../../diagnostics/m
 import { OrdreReparationService } from '../../../ordre-reparation.service';
 import { TechnicienService } from '../../../../techniciens/technicien.service';
 import { AlertComponent } from '../../../../../shared/components/alert/alert.component';
-import { MediaUploaderComponent } from '../../../../../shared/components/media-uploader/media-uploader.component';
 import {
   OrdreReparation,
   Technicien,
   Specialite,
   RemarqueDiagnostic,
-  PieceJointeDiagnostic,
-  TypePieceJointeDiagnostic,
   StatutDiagnostic,
   StatutOrdre,
-  CloudinaryUploadResult,
   extractContent
 } from '../../../../../shared/models';
 import { StepDiagnosticResponseDto } from '../../../models/responses/step-diagnostic-response.dto';
@@ -37,7 +33,7 @@ export const SPECIALITES_TECHNICIEN: { value: Specialite; label: string }[] = [
 @Component({
   selector: 'app-step-diagnostic',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgClass, AlertComponent, MediaUploaderComponent],
+  imports: [CommonModule, FormsModule, NgClass, AlertComponent],
   templateUrl: './step-diagnostic.component.html'
 })
 export class StepDiagnosticComponent implements OnInit {
@@ -308,7 +304,6 @@ export class StepDiagnosticComponent implements OnInit {
 
   remarquesDiagnostic: RemarqueDiagnostic[] = [];
   nouvelleRemarque = '';
-  piecesJointesDiagnostic: PieceJointeDiagnostic[] = [];
 
   ngOnInit(): void {
     const idParam = this.route.snapshot.paramMap.get('id') || this.route.parent?.snapshot.paramMap.get('id');
@@ -388,9 +383,6 @@ export class StepDiagnosticComponent implements OnInit {
           
           if (o.diagnostic.statut) {
             this.statutDiagnostic = o.diagnostic.statut;
-          }
-          if (o.diagnostic.piecesJointes && o.diagnostic.piecesJointes.length > 0) {
-            this.piecesJointesDiagnostic = o.diagnostic.piecesJointes;
           }
           if (o.diagnostic.remarques && o.diagnostic.remarques.length > 0) {
             this.remarquesDiagnostic = o.diagnostic.remarques;
@@ -496,65 +488,6 @@ export class StepDiagnosticComponent implements OnInit {
       error: (err) => {
         this.technicienToggling = null;
         this.notifyError(err.error?.message || 'Erreur retrait technicien.');
-      }
-    });
-  }
-
-  loadPiecesJointes(): void {
-    this.ordreService.getPiecesJointesDiagnostic(this.ordreId).subscribe({
-      next: (pj) => {
-        this.piecesJointesDiagnostic = pj || [];
-        this.cdr.markForCheck();
-      }
-    });
-  }
-
-  onPieceJointeUploaded(res: CloudinaryUploadResult): void {
-    const type: TypePieceJointeDiagnostic = res.resourceType === 'raw' || res.format === 'pdf' ? 'PDF' : 'PHOTO';
-    const payload = {
-      url: res.secureUrl,
-      type,
-      remarque: res.publicId || null
-    };
-
-    if (this.currentDiagnostic?.id) {
-      this.diagnosticService.addPieceJointe(this.currentDiagnostic.id, payload).subscribe({
-        next: () => {
-          this.loadPiecesJointes();
-          this.notify('Document de diagnostic ajouté.');
-        },
-        error: () => {
-          this.ordreService.addPieceJointeDiagnostic(this.ordreId, payload).subscribe({
-            next: () => {
-              this.loadPiecesJointes();
-              this.notify('Document de diagnostic ajouté.');
-            }
-          });
-        }
-      });
-    } else {
-      this.ordreService.addPieceJointeDiagnostic(this.ordreId, payload).subscribe({
-        next: () => {
-          this.loadPiecesJointes();
-          this.notify('Document de diagnostic ajouté.');
-        }
-      });
-    }
-  }
-
-  deletePieceJointe(id: number): void {
-    this.diagnosticService.deletePieceJointe(id).subscribe({
-      next: () => {
-        this.piecesJointesDiagnostic = this.piecesJointesDiagnostic.filter(p => p.id !== id);
-        this.notify('Document supprimé.');
-      },
-      error: () => {
-        this.ordreService.deletePieceJointeDiagnostic(this.ordreId, id).subscribe({
-          next: () => {
-            this.piecesJointesDiagnostic = this.piecesJointesDiagnostic.filter(p => p.id !== id);
-            this.notify('Document supprimé.');
-          }
-        });
       }
     });
   }

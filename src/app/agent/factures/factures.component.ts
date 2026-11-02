@@ -10,6 +10,7 @@ import { LucideSearch, LucidePlus, LucideTrash2, LucideX, LucideDownload, Lucide
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 import { FiscalConfigurationService } from '../gestion-tva/fiscal-configuration.service';
+import { modePaiementRecu } from './models/facture-mode-paiement';
 
 @Component({
   selector: 'app-factures',
@@ -52,7 +53,9 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
 
   get payTimbreEspeces(): number {
     const rate = Number(this.factureToPay?.timbreFiscalRate ?? this.timbreFiscalRate);
-    return this.payMethode === 'ESPECE'
+    const timbreDejaInclus = this.factureToPay?.tvaApplicable === false
+      && Number(this.factureToPay?.montantTimbre ?? 0) > 0;
+    return this.payMethode === 'ESPECE' && !timbreDejaInclus
       ? Math.round((Number(this.payMontant) || 0) * rate) / 100
       : 0;
   }
@@ -186,7 +189,7 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
   openPayModal(f: FactureListModel) {
     this.factureToPay = f;
     this.payMontant = f.resteAPayer;
-    this.payMethode = 'ESPECE';
+    this.payMethode = modePaiementRecu(f.modePaiement);
     this.walletBalance = null;
     this.showPayModal = true;
     this.clientService.getPortefeuille(f.clientId).subscribe({
@@ -248,7 +251,11 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
   }
 
   modePaiementLabel(mp: string | null | undefined): string {
-    const m: Record<string, string> = { CHEQUE: 'Chèque', ESPECE: 'Espèces', VIREMENT: 'Virement', SOLDE_PREPAYE: 'Solde prépayé', HORS_TAXE: 'Hors taxe' };
+    const m: Record<string, string> = {
+      CHEQUE: 'Chèque', ESPECE: 'Espèces', VIREMENT: 'Virement', SOLDE_PREPAYE: 'Solde prépayé',
+      ESPECE_TTC: 'Espèces TTC', CHEQUE_TTC: 'Chèque TTC', ESPECE_HT: 'Espèces HT', CHEQUE_HT: 'Chèque HT',
+      WAVE: 'Wave', ORANGE_MONEY: 'Orange Money', CARTE_BANCAIRE: 'Carte bancaire', CARTE: 'Carte', AUTRE: 'Autre',
+    };
     return m[mp ?? ''] ?? mp ?? '—';
   }
 

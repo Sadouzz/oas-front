@@ -312,6 +312,10 @@
               <span class="text-oas-muted">Total HT après remises</span>
               <span class="font-semibold text-oas-ink">{{ fmt(selectedFacture.montantHT) }} FCFA</span>
             </div>
+            <div class="flex justify-between">
+              <span class="text-oas-muted">Mode de paiement choisi</span>
+              <span class="font-semibold text-oas-ink">{{ modePaiementLabel(selectedFacture.modePaiement) }}</span>
+            </div>
             @if (selectedFacture.tvaApplicable ?? (selectedFacture.montantTVA > 0)) {
               <div class="flex justify-between">
                 <span class="text-oas-muted">TVA</span>
@@ -431,14 +435,22 @@
             <option value="CHEQUE">Chèque</option>
             <option value="VIREMENT">Virement</option>
             <option value="SOLDE_PREPAYE">Solde prépayé</option>
+            <option value="WAVE">Wave</option>
+            <option value="ORANGE_MONEY">Orange Money</option>
+            <option value="CARTE_BANCAIRE">Carte bancaire</option>
+            <option value="AUTRE">Autre</option>
           </select>
         </div>
         <div class="rounded-xl p-4 border border-amber-200 bg-amber-50 text-amber-950 space-y-1.5">
-          @if (payMethode === 'ESPECE') {
+          @if (payMethode === 'ESPECE' && !(factureToPay.tvaApplicable === false && (factureToPay.montantTimbre || 0) > 0)) {
             <div class="flex justify-between text-sm"><span>Timbre fiscal espèces ({{ timbreFiscalRate }} %)</span><strong>{{ fmt(payTimbreEspeces) }} FCFA</strong></div>
           }
           <div class="flex justify-between text-sm font-bold"><span>Total à remettre</span><strong>{{ fmt(payTotalEncaisse) }} FCFA</strong></div>
-          <p class="text-xs">Le timbre de {{ timbreFiscalRate }} % s’applique seulement au montant payé en espèces. Il ne réduit pas le reste dû sur la facture.</p>
+          @if (factureToPay.tvaApplicable === false && (factureToPay.montantTimbre || 0) > 0) {
+            <p class="text-xs">Le timbre est déjà inclus une seule fois dans le total de cette facture HT.</p>
+          } @else {
+            <p class="text-xs">Le timbre de {{ timbreFiscalRate }} % s’applique seulement au montant payé en espèces. Il ne réduit pas le reste dû sur la facture.</p>
+          }
         </div>
       </div>
 

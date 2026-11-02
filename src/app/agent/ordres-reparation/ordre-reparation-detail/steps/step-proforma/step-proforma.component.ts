@@ -319,9 +319,20 @@ export class StepProformaComponent implements OnInit {
   get isProformaValide(): boolean {
     if (!this.proformaChargee) return false;
     const s = (this.proformaChargee.statut || '').toUpperCase();
-    const isProformaStatusValide = ['ACCEPTE', 'ACCEPTEE', 'VALIDE', 'VALIDEE', 'VALIDEE_CLIENT', 'APPROUVE', 'APPROUVEE'].includes(s);
-    const isOrdrePastProforma = !!(this.loadedOrdre?.statut && !['RECEPTION', 'A_FAIRE', 'DIAGNOSTIC', 'EN_DIAGNOSTIC', 'PIECES_MO', 'EN_ATTENTE_PIECES_MO', 'PROFORMA', 'EN_ATTENTE_PROFORMA'].includes(this.loadedOrdre.statut));
-    return isProformaStatusValide || isOrdrePastProforma;
+    return ['ACCEPTE', 'ACCEPTEE', 'VALIDE', 'VALIDEE', 'VALIDEE_CLIENT', 'APPROUVE', 'APPROUVEE'].includes(s);
+  }
+
+  get proformaModifiable(): boolean {
+    const statut = (this.proformaChargee?.statut || '').toUpperCase();
+    return !!this.proformaChargee?.id && !['CONVERTIE', 'PAYEE', 'PARTIELLEMENT_PAYEE'].includes(statut);
+  }
+
+  modifierProforma(): void {
+    if (!this.proformaModifiable || !this.proformaChargee?.id) return;
+    const returnTo = `/app/ordres-reparation/${this.ordreId}/proforma`;
+    this.router.navigate(['/app/proformas'], {
+      queryParams: { openId: this.proformaChargee.id, returnTo }
+    });
   }
 
   get isProformaVisibleClient(): boolean {
@@ -452,9 +463,10 @@ export class StepProformaComponent implements OnInit {
         this.cdr.markForCheck();
         this.router.navigate(['/app/ordres-reparation', this.ordreId, 'ordre-travail']);
       },
-      error: () => {
+      error: (err) => {
         this.saving = false;
-        this.router.navigate(['/app/ordres-reparation', this.ordreId, 'ordre-travail']);
+        this.errorMessage = err.error?.message || 'Impossible de passer à l’Ordre de Travail. Vérifiez que le proforma est validé.';
+        this.cdr.markForCheck();
       }
     });
   }

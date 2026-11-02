@@ -11,7 +11,6 @@ import {
   TypePieceJointeDiagnostic,
   RemarqueDiagnostic, 
   PageParams,
-  StepReceptionDto,
   StepDiagnosticDto,
   StepPiecesMoDto,
   StepProformaDto,
@@ -109,10 +108,6 @@ export class OrdreReparationService {
   // 1. Réception
   getStepReception(id: number): Observable<StepReceptionResponseDto> {
     return this.http.get<StepReceptionResponseDto>(`${this.api}/${id}/step-reception`);
-  }
-
-  updateStepReception(id: number, data: StepReceptionDto): Observable<void> {
-    return this.http.put(`${this.api}/${id}/step-reception`, data, { responseType: 'text' }).pipe(map(() => void 0));
   }
 
   // 2. Diagnostic

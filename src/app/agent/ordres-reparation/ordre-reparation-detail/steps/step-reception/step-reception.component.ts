@@ -10,8 +10,7 @@ import { FicheAtelierService } from '../../../../fiches-atelier/fiche-atelier.se
 import { AlertComponent } from '../../../../../shared/components/alert/alert.component';
 import {
   OrdreReparation,
-  LigneReceptionOrdre,
-  StepReceptionDto
+  LigneReceptionOrdre
 } from '../../../../../shared/models';
 import { StepReceptionResponseDto } from '../../../models/responses/step-reception-response.dto';
 import {
@@ -41,6 +40,7 @@ export class StepReceptionComponent implements OnInit {
   fullOrdre: OrdreReparation | null = null;
   ficheAtelier: FicheAtelierDetailsResponse | null = null;
   selectedVehicule: any = null;
+  travauxDemandes = '';
 
   lignesDefauts: LigneDefaut[] = [];
 
@@ -52,7 +52,6 @@ export class StepReceptionComponent implements OnInit {
   step1Form: FormGroup = this.fb.group({
     numero: [''],
     lignesReception: this.fb.array([]),
-    descriptionTravaux: [''],
   });
 
   get lignesReception(): FormArray {
@@ -82,10 +81,10 @@ export class StepReceptionComponent implements OnInit {
 
         const ficheDirect = step.ficheAtelier || ordre?.ficheAtelier;
         const initialDesc = step.descriptionTravaux || ordre?.descriptionTravaux || ficheDirect?.designationTravaux || '';
+        this.travauxDemandes = initialDesc;
 
         this.step1Form.patchValue({
-          numero: step.numero || ordre?.numero || '',
-          descriptionTravaux: initialDesc,
+          numero: step.numero || ordre?.numero || ''
         });
 
         // 1. Lignes de réception
@@ -100,9 +99,7 @@ export class StepReceptionComponent implements OnInit {
 
         if (ficheDirect) {
           this.ficheAtelier = ficheDirect;
-          if (!this.step1Form.get('descriptionTravaux')?.value && ficheDirect.designationTravaux) {
-            this.step1Form.patchValue({ descriptionTravaux: ficheDirect.designationTravaux });
-          }
+          if (!this.travauxDemandes && ficheDirect.designationTravaux) this.travauxDemandes = ficheDirect.designationTravaux;
           this.initDefautsAndComplementaryData(ficheDirect, step, ordre);
           this.loading = false;
           this.cdr.markForCheck();
@@ -110,9 +107,7 @@ export class StepReceptionComponent implements OnInit {
           this.ficheAtelierService.getById(ficheId).pipe(catchError(() => of(null))).subscribe({
             next: (fiche) => {
               this.ficheAtelier = fiche;
-              if (fiche?.designationTravaux && !this.step1Form.get('descriptionTravaux')?.value) {
-                this.step1Form.patchValue({ descriptionTravaux: fiche.designationTravaux });
-              }
+              if (!this.travauxDemandes && fiche?.designationTravaux) this.travauxDemandes = fiche.designationTravaux;
               this.initDefautsAndComplementaryData(fiche, step, ordre);
               this.loading = false;
               this.cdr.markForCheck();
@@ -178,9 +173,7 @@ export class StepReceptionComponent implements OnInit {
 
     this.notesFicheAtelier = fiche?.nb || '';
 
-    if (fiche?.designationTravaux && !this.step1Form.get('descriptionTravaux')?.value) {
-      this.step1Form.patchValue({ descriptionTravaux: fiche.designationTravaux });
-    }
+    if (!this.travauxDemandes && fiche?.designationTravaux) this.travauxDemandes = fiche.designationTravaux;
 
     // Si on a des informations complémentaires de la fiche atelier (kilométrage, etc.)
     if (fiche && this.selectedVehicule) {
@@ -205,9 +198,7 @@ export class StepReceptionComponent implements OnInit {
   }
 
   private getCurrentSnapshot(): string {
-    const raw = this.step1Form.getRawValue();
     return JSON.stringify({
-      descriptionTravaux: (raw.descriptionTravaux || '').trim(),
       notesFicheAtelier: (this.notesFicheAtelier || '').trim()
     });
   }
@@ -230,90 +221,74 @@ export class StepReceptionComponent implements OnInit {
   }
 
   saveStep1(goToNext: boolean = false): void {
-    const raw = this.step1Form.getRawValue();
-    const descriptionTravaux = (raw.descriptionTravaux || '').trim();
-
-    const ordrePayload: StepReceptionDto = {
-      descriptionTravaux
-    };
+    const descriptionTravaux = this.travauxDemandes.trim();
 
     this.saving = true;
     this.errorMessage = '';
     this.successMessage = '';
 
-    // 1. Sauvegarde de l'étape 1 sur l'Ordre de Réparation
-    this.ordreService.updateStepReception(this.ordreId, ordrePayload).subscribe({
-      next: () => {
-        // 2. Synchronisation de la Fiche Atelier liée
-        const ficheId = this.ficheAtelier?.id || this.loadedOrdre?.ficheAtelierId || (this.fullOrdre as any)?.ficheAtelierId;
-        if (ficheId && this.ficheAtelier) {
-          const ficheReq: FicheAtelierRequest = {
-            rendezVousId: this.ficheAtelier.rendezVousId ?? null,
-            clientId: this.ficheAtelier.clientId || this.selectedVehicule?.clientId || 0,
-            vehiculeId: this.ficheAtelier.vehiculeId,
-            nomChauffeur: this.ficheAtelier.nomChauffeur,
-            telephoneChauffeur: this.ficheAtelier.telephoneChauffeur,
-            niveauEssence: this.ficheAtelier.niveauEssence,
-            kilometrage: this.selectedVehicule?.kilometrage || this.ficheAtelier.kilometrage,
-            designationTravaux: descriptionTravaux,
-            nb: (this.notesFicheAtelier || '').trim(),
-            signatureReceptionnaireBase64: this.ficheAtelier.signatureReceptionnaireBase64,
-            signatureBase64: this.ficheAtelier.signatureBase64,
-            signatureSortieBase64: this.ficheAtelier.signatureSortieBase64
-          };
-
-          this.ficheAtelierService.update(ficheId, ficheReq).pipe(
-            catchError((err) => {
-              console.warn('Erreur synchronisation Fiche Atelier:', err);
-              return of(null);
-            })
-          ).subscribe({
-            next: (updatedFiche) => {
-              if (updatedFiche) {
-                this.ficheAtelier = updatedFiche;
-              }
-            }
-          });
-        }
-
-        if (goToNext) {
-          this.ordreService.updateStatut(this.ordreId, 'DIAGNOSTIC').subscribe({
-            next: () => {},
-            error: () => {}
-          });
-
-          this.diagnosticService.create({
-            ordreReparationId: this.ordreId,
-            statut: 'EN_ATTENTE',
-            pannesDetectees: descriptionTravaux
-          }).subscribe({
-            next: () => {
-              this.saving = false;
-              this.router.navigate(['/app/ordres-reparation', this.ordreId, 'diagnostic']);
-            },
-            error: () => {
-              this.diagnosticService.saveStep({
-                ordreReparationId: this.ordreId,
-                statut: 'EN_ATTENTE',
-                listeDefauts: descriptionTravaux
-              }).subscribe({ next: () => {}, error: () => {} });
-              this.saving = false;
-              this.router.navigate(['/app/ordres-reparation', this.ordreId, 'diagnostic']);
-            }
-          });
-        } else {
-          this.saving = false;
-          this.takeSnapshot();
-          this.step1Form.markAsPristine();
-          this.successMessage = 'Étape 1 et Fiche Atelier mises à jour avec succès !';
-          this.cdr.markForCheck();
-        }
-      },
-      error: (err) => {
+    this.synchroniserNotesFicheAtelier(() => {
+      if (goToNext) {
+        this.ordreService.updateStatut(this.ordreId, 'DIAGNOSTIC').subscribe({ next: () => {}, error: () => {} });
+        this.diagnosticService.create({
+          ordreReparationId: this.ordreId,
+          statut: 'EN_ATTENTE',
+          pannesDetectees: descriptionTravaux
+        }).subscribe({
+          next: () => {
+            this.saving = false;
+            this.router.navigate(['/app/ordres-reparation', this.ordreId, 'diagnostic']);
+          },
+          error: () => {
+            this.diagnosticService.saveStep({
+              ordreReparationId: this.ordreId,
+              statut: 'EN_ATTENTE',
+              listeDefauts: descriptionTravaux
+            }).subscribe({ next: () => {}, error: () => {} });
+            this.saving = false;
+            this.router.navigate(['/app/ordres-reparation', this.ordreId, 'diagnostic']);
+          }
+        });
+      } else {
         this.saving = false;
-        this.errorMessage = err.error?.message || 'Erreur lors de la sauvegarde.';
+        this.takeSnapshot();
+        this.step1Form.markAsPristine();
+        this.successMessage = 'Remarques de la fiche atelier mises à jour.';
         this.cdr.markForCheck();
       }
+    });
+  }
+
+  private synchroniserNotesFicheAtelier(onSaved: () => void): void {
+    const ficheId = this.ficheAtelier?.id || this.loadedOrdre?.ficheAtelierId || (this.fullOrdre as any)?.ficheAtelierId;
+    if (!ficheId || !this.ficheAtelier) {
+      onSaved();
+      return;
+    }
+
+    const ficheReq: FicheAtelierRequest = {
+      rendezVousId: this.ficheAtelier.rendezVousId ?? null,
+      clientId: this.ficheAtelier.clientId || this.selectedVehicule?.clientId || 0,
+      vehiculeId: this.ficheAtelier.vehiculeId,
+      nomChauffeur: this.ficheAtelier.nomChauffeur,
+      telephoneChauffeur: this.ficheAtelier.telephoneChauffeur,
+      niveauEssence: this.ficheAtelier.niveauEssence,
+      kilometrage: this.selectedVehicule?.kilometrage || this.ficheAtelier.kilometrage,
+      designationTravaux: this.ficheAtelier.designationTravaux,
+      nb: (this.notesFicheAtelier || '').trim(),
+      signatureReceptionnaireBase64: this.ficheAtelier.signatureReceptionnaireBase64,
+      signatureBase64: this.ficheAtelier.signatureBase64,
+      signatureSortieBase64: this.ficheAtelier.signatureSortieBase64
+    };
+
+    this.ficheAtelierService.update(ficheId, ficheReq).pipe(
+      catchError(err => {
+        console.warn('Erreur synchronisation des remarques Fiche Atelier:', err);
+        return of(null);
+      })
+    ).subscribe(updatedFiche => {
+      if (updatedFiche) this.ficheAtelier = updatedFiche;
+      onSaved();
     });
   }
 }

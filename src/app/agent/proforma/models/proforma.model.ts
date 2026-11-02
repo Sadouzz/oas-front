@@ -10,6 +10,7 @@ export interface LignePiece {
   designationPds?: string;
   quantite: number;
   prix: number;
+  prixCatalogue?: number | null;
   prixUnitaire?: number;
   montantTotal?: number;
   tauxRemise?: number;

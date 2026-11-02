@@ -16,9 +16,21 @@
         <h2 class="text-lg font-bold text-oas-ink">Étape 4 · Facture Proforma client</h2>
         <p class="text-xs text-oas-muted mt-0.5">Consultez le détail des articles chiffrés (pièces et main-d'œuvre) et validez l'accord du client.</p>
       </div>
-      <span class="text-xs text-oas-muted font-mono bg-oas-bg px-2.5 py-1 rounded-lg border border-oas-line">
-        {{ loadedOrdre?.numero }}
-      </span>
+      <div class="flex items-center gap-3">
+        @if (proformaModifiable) {
+          <button type="button" (click)="modifierProforma()"
+             title="Modifier le proforma ; toute modification demandera une nouvelle validation"
+             class="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+            </svg>
+            <span>Modifier le proforma</span>
+          </button>
+        }
+        <span class="text-xs text-oas-muted font-mono bg-oas-bg px-2.5 py-1 rounded-lg border border-oas-line">
+          {{ loadedOrdre?.numero }}
+        </span>
+      </div>
     </div>
 
     @if (proformaChargee) {
@@ -465,14 +477,6 @@
             <select [value]="downloadLayoutKey" (change)="downloadLayoutKey = $any($event.target).value" class="px-3 py-2.5 border border-oas-line rounded-xl text-xs bg-white">
               <option value="AVEC_ENTETE">Avec en-tête</option><option value="SANS_ENTETE">Sans en-tête</option>
             </select>
-            <a [routerLink]="['/app/ordres-reparation', ordreId, 'pieces-mo']"
-               title="Modifier les pièces et la main-d'œuvre (Étape 3)"
-               class="px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-              </svg>
-              <span>Modifier les articles</span>
-            </a>
             <button type="button" (click)="telechargerPdf()" [disabled]="telechargementEnCours"
               class="px-4 py-2.5 border border-oas-line hover:bg-oas-bg text-oas-ink rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer">
               <svg class="w-4 h-4 text-oas-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -658,7 +662,7 @@
         } @else {
           <div class="p-8 text-center bg-white rounded-2xl border border-oas-line space-y-3">
             <p class="text-sm text-oas-muted">Aucun article ni prestation n'a été ajouté à l'ordre de réparation.</p>
-            <p class="text-xs text-oas-muted">Veuillez revenir à l'étape précédente (Pièces & MO) pour ajouter les fournitures et prestations nécessaires.</p>
+            <p class="text-xs text-oas-muted">Veuillez revenir à l'étape précédente (OR) pour ajouter les fournitures et prestations nécessaires.</p>
           </div>
         }
       </div>

@@ -8,6 +8,7 @@ import { FactureService } from '../../../../factures/facture.service';
 import { BonDeLivraisonService } from '../../../../bons-livraison/bon-de-livraison.service';
 import { AlertComponent } from '../../../../../shared/components/alert/alert.component';
 import { FiscalConfigurationService } from '../../../../gestion-tva/fiscal-configuration.service';
+import { FACTURE_MODES_PAIEMENT, FactureModePaiement, modePaiementRecu } from '../../../../factures/models/facture-mode-paiement';
 
 @Component({
   selector: 'app-step-paiement',
@@ -28,7 +29,11 @@ export class StepPaiementComponent implements OnInit {
 
   get payTimbreEspeces(): number {
     const rate = Number(this.data?.facture?.timbreFiscalRate ?? this.timbreFiscalRate);
-    return this.payMethode === 'ESPECE' ? Math.round((Number(this.payMontant) || 0) * rate) / 100 : 0;
+    const facture = this.data?.facture;
+    const timbreDejaInclus = facture?.modePaiement?.endsWith('_HT')
+      || (facture?.tvaApplicable === false && Number(facture?.montantTimbre ?? 0) > 0);
+    return this.payMethode === 'ESPECE' && !timbreDejaInclus
+      ? Math.round((Number(this.payMontant) || 0) * rate) / 100 : 0;
   }
 
   get tauxTimbrePaiement(): number {
@@ -47,7 +52,8 @@ export class StepPaiementComponent implements OnInit {
 
   showCreateFactureModal = false;
   remarqueFacture = '';
-  appliquerTVA = true;
+  modePaiementFacture: FactureModePaiement = 'ESPECE_TTC';
+  readonly modesPaiementFacture = FACTURE_MODES_PAIEMENT;
 
   showPayModal = false;
   payMontant = 0;
@@ -78,7 +84,6 @@ export class StepPaiementComponent implements OnInit {
       next: (res) => {
         this.ngZone.run(() => {
           this.data = res;
-          this.appliquerTVA = res.tvaApplicable ?? true;
           this.loading = false;
           this.cdr.detectChanges();
         });
@@ -108,7 +113,7 @@ export class StepPaiementComponent implements OnInit {
 
   ouvrirModalCreationFacture(): void {
     this.showCreateFactureModal = true;
-    this.appliquerTVA = this.data?.tvaApplicable ?? true;
+    this.modePaiementFacture = this.data?.tvaApplicable === false ? 'ESPECE_HT' : 'ESPECE_TTC';
     this.remarqueFacture = `Facture pour Ordre de Réparation ${this.data?.numero || ('#' + this.ordreId)}`;
     this.cdr.detectChanges();
   }
@@ -133,7 +138,7 @@ export class StepPaiementComponent implements OnInit {
     this.cdr.detectChanges();
 
     this.bonDeLivraisonService.creerFactureDepuisOrdre(this.ordreId, {
-      appliquerTVA: this.appliquerTVA,
+      modePaiement: this.modePaiementFacture,
       remarque: this.remarqueFacture.trim() || `Facture pour OR ${this.data.numero || ('#' + this.ordreId)}`
     }).subscribe({
       next: (res) => {
@@ -160,7 +165,7 @@ export class StepPaiementComponent implements OnInit {
 
   ouvrirModalPaiement(): void {
     this.payMontant = this.data?.facture?.montantRestant || 0;
-    this.payMethode = 'ESPECE';
+    this.payMethode = modePaiementRecu(this.data?.facture?.modePaiement);
     this.showPayModal = true;
     this.cdr.detectChanges();
   }

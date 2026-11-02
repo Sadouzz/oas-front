@@ -20,7 +20,7 @@ import { FiscalConfiguration } from './fiscal-configuration.model';
         <label class="block space-y-2"><span class="text-sm font-semibold text-oas-ink">Taux de TVA (%)</span>
           <input class="w-full rounded-lg border border-oas-line px-3 py-2" type="number" min="0" max="100" step="0.01" required [(ngModel)]="config.tvaRate" name="tvaRate" [disabled]="saving">
         </label>
-        <label class="block space-y-2"><span class="text-sm font-semibold text-oas-ink">Timbre fiscal sur paiements en espèces (%)</span>
+        <label class="block space-y-2"><span class="text-sm font-semibold text-oas-ink">Taux du timbre fiscal (%)</span>
           <input class="w-full rounded-lg border border-oas-line px-3 py-2" type="number" min="0" max="100" step="0.01" required [(ngModel)]="config.timbreFiscalRate" name="timbreFiscalRate" [disabled]="saving">
         </label>
         <div class="flex justify-end"><button class="rounded-lg bg-oas-accent px-5 py-2.5 font-semibold text-white disabled:opacity-50" type="submit" [disabled]="saving">{{ saving ? 'Enregistrement…' : 'Enregistrer les paramètres' }}</button></div>

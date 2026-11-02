@@ -13,6 +13,8 @@ export interface StepPaiementResponseDto extends BaseStepResponseDto {
     montantRestant?: number;
     montantTotal?: number;
     timbreFiscalRate?: number | null;
+    montantTimbre?: number | null;
+    tvaApplicable?: boolean | null;
     modePaiement?: string;
     client?: string;
     vehicule?: string;

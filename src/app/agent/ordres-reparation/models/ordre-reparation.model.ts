@@ -65,8 +65,8 @@ export const STATUT_ETAPES: Record<string, number> = {
 
 export const ETAPES_ORDRE_REPARATION: { etape: number; statut: StatutOrdre; label: string; path: string }[] = [
   { etape: 1,  statut: 'RECEPTION',         label: 'Réception',        path: 'reception' },
-  { etape: 2,  statut: 'DIAGNOSTIC',        label: 'Diagnostic',       path: 'diagnostic' },
-  { etape: 3,  statut: 'PIECES_MO',         label: 'Pièces & MO',      path: 'pieces-mo' },
+  { etape: 2,  statut: 'DIAGNOSTIC',        label: 'Chef Atelier',     path: 'diagnostic' },
+  { etape: 3,  statut: 'PIECES_MO',         label: 'OR',               path: 'pieces-mo' },
   { etape: 4,  statut: 'PROFORMA',          label: 'Proforma',         path: 'proforma' },
   { etape: 5,  statut: 'ORDRE_DE_TRAVAIL',  label: 'Ordre de Travail', path: 'ordre-travail' },
   { etape: 6,  statut: 'PAIEMENT',          label: 'Paiement',         path: 'paiement' },

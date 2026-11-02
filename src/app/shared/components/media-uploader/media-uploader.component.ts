@@ -22,6 +22,7 @@ export class MediaUploaderComponent {
   @Input() accept = 'image/*,video/*';
   @Input() label = 'Cliquez ou glissez un fichier ici';
   @Input() previewUrl: string | null = null;
+  @Input() multiple = false;
 
   @Output() uploaded = new EventEmitter<CloudinaryUploadResult>();
   @Output() removed = new EventEmitter<void>();
@@ -33,22 +34,28 @@ export class MediaUploaderComponent {
   errorMessage = '';
   dragOver = false;
 
+  private uploadQueue: File[] = [];
+  private uploadQueueIndex = 0;
+  private uploadErrors: string[] = [];
+
   get isVideo(): boolean {
     return /\.(mp4|mov|webm|avi)$/i.test(this.previewUrl ?? '');
   }
 
   onFileSelected(e: Event): void {
     const input = e.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (file) this.startUpload(file);
+    const files = Array.from(input.files ?? []);
+    if (this.multiple) this.startUploadQueue(files);
+    else if (files[0]) this.startUpload(files[0]);
     input.value = '';
   }
 
   onDrop(e: DragEvent): void {
     e.preventDefault();
     this.dragOver = false;
-    const file = e.dataTransfer?.files?.[0];
-    if (file) this.startUpload(file);
+    const files = Array.from(e.dataTransfer?.files ?? []);
+    if (this.multiple) this.startUploadQueue(files);
+    else if (files[0]) this.startUpload(files[0]);
   }
 
   onDragOver(e: DragEvent): void {
@@ -78,6 +85,47 @@ export class MediaUploaderComponent {
       error: () => {
         this.uploading = false;
         this.errorMessage = "Échec de l'upload. Réessayez.";
+      },
+    });
+  }
+
+  private startUploadQueue(files: File[]): void {
+    if (this.uploading || files.length === 0) return;
+    this.uploadQueue = files;
+    this.uploadQueueIndex = 0;
+    this.uploadErrors = [];
+    this.errorMessage = '';
+    this.uploading = true;
+    this.uploadNext();
+  }
+
+  private uploadNext(): void {
+    if (this.uploadQueueIndex >= this.uploadQueue.length) {
+      this.uploading = false;
+      this.progress = 0;
+      this.errorMessage = this.uploadErrors.length > 0
+        ? `Échec de l'upload pour : ${this.uploadErrors.join(', ')}`
+        : '';
+      this.uploadQueue = [];
+      return;
+    }
+
+    const file = this.uploadQueue[this.uploadQueueIndex];
+    this.progress = 0;
+    this.mediaUploadService.upload(file, this.folder).subscribe({
+      next: event => {
+        if (event.status === 'progress') {
+          this.progress = event.progress;
+        } else {
+          this.uploaded.emit(event.result);
+          this.uploadQueueIndex++;
+          this.uploadNext();
+        }
+      },
+      error: () => {
+        this.uploadErrors.push(file.name);
+        this.uploadQueueIndex++;
+        this.uploadNext();
       },
     });
   }

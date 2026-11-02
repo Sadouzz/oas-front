@@ -13,7 +13,7 @@
     <!-- En-tête -->
     <div class="flex items-center justify-between border-b border-oas-line pb-3">
       <div>
-        <h2 class="text-lg font-bold text-oas-ink">Étape 3 · Pièces détachées & Main-d'œuvre</h2>
+        <h2 class="text-lg font-bold text-oas-ink">Étape 3 · OR</h2>
         <p class="text-xs text-oas-muted mt-0.5">Ajustez et fixez les prix des pièces (y compris celles proposées par le technicien) et de la main-d'œuvre.</p>
       </div>
       <div class="text-right">
@@ -478,6 +478,43 @@
         </div>
       } @else {
         <p class="text-xs text-oas-muted italic py-1">Aucune prestation de main-d'œuvre ajoutée.</p>
+      }
+    </div>
+
+    <!-- Documents & photos du diagnostic, disponibles depuis l'étape OR -->
+    <div class="bg-white border border-oas-line rounded-2xl p-5 shadow-2xs space-y-4">
+      <div>
+        <h3 class="text-sm font-bold text-oas-ink">Documents & Photos du diagnostic</h3>
+        <p class="text-xs text-oas-muted mt-1">Vous pouvez sélectionner ou déposer plusieurs photos et documents PDF.</p>
+      </div>
+      <app-media-uploader
+        folder="oas/ordres-reparation/diagnostic"
+        accept="image/*,application/pdf"
+        [multiple]="true"
+        label="Déposez des photos ou documents PDF ici"
+        (uploaded)="onPieceJointeDiagnosticUploaded($event)" />
+
+      @if (piecesJointesDiagnostic.length > 0) {
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+          @for (piece of piecesJointesDiagnostic; track piece.id) {
+            <div class="relative border border-oas-line rounded-xl p-2 bg-oas-bg group flex flex-col">
+              <button type="button" (click)="deletePieceJointeDiagnostic(piece.id)"
+                [attr.aria-label]="'Supprimer le document du diagnostic'"
+                class="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-red-600 text-white flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition cursor-pointer shadow-sm">
+                ✕
+              </button>
+              <a [href]="piece.url" target="_blank" rel="noopener" class="block">
+                @if (piece.type === 'PHOTO') {
+                  <img [src]="piece.url" class="w-full h-24 object-cover rounded-lg" alt="Photo du diagnostic" />
+                } @else {
+                  <div class="w-full h-24 rounded-lg bg-white border border-oas-line flex items-center justify-center text-xs font-bold text-oas-muted">PDF</div>
+                }
+              </a>
+            </div>
+          }
+        </div>
+      } @else {
+        <p class="text-xs text-oas-muted italic">Aucun document ou photo associé au diagnostic.</p>
       }
     </div>
 

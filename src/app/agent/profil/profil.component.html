@@ -220,6 +220,35 @@
           </form>
         </div>
 
+        @if (user?.type === 'AGENT') {
+          <section class="bg-white rounded-2xl border border-oas-line shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-oas-line">
+              <h2 class="text-base font-extrabold text-oas-ink">Signature Fiche Atelier</h2>
+              <p class="text-xs text-oas-muted mt-1">Enregistrée sous forme chiffrée et accessible uniquement depuis votre session.</p>
+            </div>
+            <div class="p-6 space-y-3">
+              @if (signatureConfigured) {
+                <p class="text-sm text-emerald-700">Une signature est déjà enregistrée pour votre compte.</p>
+              } @else {
+                <p class="text-sm text-oas-muted">Aucune signature enregistrée. Vous pourrez aussi l’enregistrer lors de la création d’une fiche atelier.</p>
+              }
+              <div class="border border-oas-line rounded-xl overflow-hidden bg-white">
+                <canvas #agentSignatureCanvas id="agent-signature-canvas" width="600" height="200" class="w-full h-40 touch-none cursor-crosshair"
+                  (pointerdown)="startAgentSignature($event)" (pointermove)="drawAgentSignature($event)" (pointerup)="stopAgentSignature()" (pointercancel)="stopAgentSignature()"></canvas>
+              </div>
+              @if (signatureError) { <p role="alert" class="text-sm text-rose-600">{{ signatureError }}</p> }
+              @if (signatureMessage) { <p role="status" class="text-sm text-emerald-700">{{ signatureMessage }}</p> }
+              <div class="flex justify-end gap-2">
+                <button type="button" (click)="clearAgentSignatureCanvas()" class="px-4 py-2 rounded-lg border border-oas-line text-sm font-semibold">Effacer</button>
+                @if (signatureConfigured) {
+                  <button type="button" (click)="deleteAgentSignature()" [disabled]="signatureSaving" class="px-4 py-2 rounded-lg border border-rose-200 text-rose-700 text-sm font-semibold disabled:opacity-50">Supprimer ma signature</button>
+                }
+                <button type="button" (click)="saveAgentSignature()" [disabled]="signatureSaving" class="px-4 py-2 rounded-lg bg-oas-accent text-white text-sm font-semibold disabled:opacity-50">{{ signatureSaving ? 'Enregistrement…' : 'Enregistrer ma signature' }}</button>
+              </div>
+            </div>
+          </section>
+        }
+
         <!-- 2. Formulaire Sécurité & Mot de passe -->
         <div class="bg-white rounded-2xl border border-oas-line shadow-sm overflow-hidden">
           <div class="px-6 py-4 border-b border-oas-line flex items-center justify-between">

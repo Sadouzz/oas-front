@@ -27,8 +27,8 @@ import {
 
 export const STATUT_STEPS: { statut: StatutOrdre; label: string }[] = [
   { statut: 'RECEPTION', label: 'Réception' },
-  { statut: 'DIAGNOSTIC', label: 'Diagnostic' },
-  { statut: 'PIECES_MO', label: 'Pièces & MO' },
+  { statut: 'DIAGNOSTIC', label: 'Chef Atelier' },
+  { statut: 'PIECES_MO', label: 'OR' },
   { statut: 'PROFORMA', label: 'Proforma' },
   { statut: 'BON_DE_COMMANDE', label: 'Approv.' },
   { statut: 'BON_DE_SORTIE', label: 'Attente BS' },
@@ -516,8 +516,8 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
     const step = STATUT_STEPS.find(s => s.statut === o?.statut);
     if (step) return step.label;
     if (o?.statut === 'A_FAIRE') return 'Réception';
-    if (o?.statut === 'EN_DIAGNOSTIC') return 'Diagnostic';
-    if (o?.statut === 'EN_ATTENTE_PIECES_MO') return 'Pièces & MO';
+    if (o?.statut === 'EN_DIAGNOSTIC') return 'Chef Atelier';
+    if (o?.statut === 'EN_ATTENTE_PIECES_MO') return 'OR';
     if (o?.statut === 'EN_ATTENTE_PROFORMA') return 'Proforma';
     if (o?.statut === 'EN_ATTENTE_COMMANDE' || o?.statut === 'PROFORMA_VALIDE') return 'Approv.';
     if (o?.statut === 'EN_ATTENTE_SORTIE') return 'Attente BS';
