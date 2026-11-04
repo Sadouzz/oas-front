@@ -572,7 +572,7 @@ export class StepDiagnosticComponent implements OnInit {
         next: (d) => {
           if (d) this.currentDiagnostic = d;
           this.saveDiagnosticSeul();
-          this.notify('Diagnostic marqué comme Terminé. Vous pouvez maintenant le valider.');
+          this.notify('Chef atelier marqué comme Terminé. Vous pouvez maintenant le valider.');
           this.cdr.markForCheck();
         },
         error: () => {
@@ -604,7 +604,7 @@ export class StepDiagnosticComponent implements OnInit {
           error: () => { }
         });
         this.saving = false;
-        this.notify('Diagnostic validé avec succès ! Le bouton d’étape suivante est maintenant débloqué.');
+        this.notify('Chef atelier validé avec succès ! Le bouton d’étape suivante est maintenant débloqué.');
         this.cdr.markForCheck();
       },
       error: () => {
@@ -623,7 +623,7 @@ export class StepDiagnosticComponent implements OnInit {
               error: () => { }
             });
             this.saving = false;
-            this.notify('Diagnostic validé avec succès ! Le bouton d’étape suivante est maintenant débloqué.');
+            this.notify('Chef atelier validé avec succès ! Le bouton d’étape suivante est maintenant débloqué.');
             this.cdr.markForCheck();
           },
           error: (err) => {
@@ -712,18 +712,18 @@ export class StepDiagnosticComponent implements OnInit {
         next: (d) => {
           if (d) this.currentDiagnostic = d;
           this.saving = false;
-          this.notify('Diagnostic repassé « En attente ».');
+          this.notify('Chef atelier repassé « En attente ».');
           this.cdr.markForCheck();
         },
         error: () => {
           this.saving = false;
-          this.notify('Diagnostic repassé « En attente ».');
+          this.notify('Chef atelier repassé « En attente ».');
           this.cdr.markForCheck();
         }
       });
     } else {
       this.saving = false;
-      this.notify('Diagnostic repassé « En attente ».');
+      this.notify('Chef atelier repassé « En attente ».');
       this.cdr.markForCheck();
     }
   }
@@ -794,7 +794,7 @@ export class StepDiagnosticComponent implements OnInit {
         this.ordreService.updateStatut(this.ordreId, 'PIECES_MO').subscribe({
           next: () => {
             this.saving = false;
-            this.notify('Diagnostic validé et étapes Pièces & Devis débloquées.');
+            this.notify('Chef atelier validé et étapes Pièces & Devis débloquées.');
             this.router.navigate(['/app/ordres-reparation', this.ordreId, 'pieces-mo']);
           },
           error: () => {
@@ -814,7 +814,7 @@ export class StepDiagnosticComponent implements OnInit {
             this.ordreService.updateStatut(this.ordreId, 'PIECES_MO').subscribe({
               next: () => {
                 this.saving = false;
-                this.notify('Diagnostic validé et étapes Pièces & Devis débloquées.');
+                this.notify('Chef atelier validé et étapes Pièces & Devis débloquées.');
                 this.router.navigate(['/app/ordres-reparation', this.ordreId, 'pieces-mo']);
               },
               error: () => {

@@ -423,26 +423,64 @@ export class StepProformaComponent implements OnInit {
 
     this.proformaService.valider(this.proformaChargee.id).subscribe({
       next: (res: any) => {
-        this.validationEnCours = false;
         if (this.proformaChargee) {
           this.proformaChargee.statut = res?.statut || 'ACCEPTE';
         }
-        this.successMessage = 'Devis proforma validé avec succès.';
-        this.loadData();
+        this.successMessage = 'Devis proforma validé avec succès. Création de l\'ordre de travail...';
         this.cdr.detectChanges();
+        this.creerOTEtOuvrir();
       },
       error: (err) => {
-        this.validationEnCours = false;
         if (err.status === 200 || err.status === 201) {
           if (this.proformaChargee) {
             this.proformaChargee.statut = 'ACCEPTE';
           }
-          this.successMessage = 'Devis proforma validé avec succès.';
-          this.loadData();
+          this.successMessage = 'Devis proforma validé avec succès. Création de l\'ordre de travail...';
+          this.cdr.detectChanges();
+          this.creerOTEtOuvrir();
         } else {
+          this.validationEnCours = false;
           this.errorMessage = err.error?.message || err.message || 'Erreur lors de la validation du proforma.';
+          this.cdr.detectChanges();
         }
-        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  /**
+   * Après validation du proforma : crée l'Ordre de Travail (ou récupère celui qui existe déjà)
+   * puis l'ouvre directement.
+   */
+  private creerOTEtOuvrir(): void {
+    const ouvrir = (ot: OrdreTravail) => {
+      this.validationEnCours = false;
+      this.creationOTEnCours = false;
+      this.existingOT = ot;
+      this.successMessage = `Ordre de Travail ${ot.numero} prêt. Ouverture...`;
+      this.cdr.markForCheck();
+      this.router.navigate(['/app/ordres-travail', ot.id, this.getOtPath(ot)]);
+    };
+
+    if (this.existingOT) {
+      ouvrir(this.existingOT);
+      return;
+    }
+
+    this.creationOTEnCours = true;
+    this.otService.createFromOrdreReparation(this.ordreId).subscribe({
+      next: (ot) => ouvrir(ot),
+      error: (err) => {
+        // L'OT existe peut-être déjà : on tente de le récupérer avant d'afficher une erreur
+        this.otService.getByOrdreReparationId(this.ordreId).subscribe({
+          next: (ot) => ouvrir(ot),
+          error: () => {
+            this.validationEnCours = false;
+            this.creationOTEnCours = false;
+            this.errorMessage = err.error?.message || 'Proforma validé, mais la création de l\'ordre de travail a échoué.';
+            this.loadData();
+            this.cdr.markForCheck();
+          }
+        });
       }
     });
   }

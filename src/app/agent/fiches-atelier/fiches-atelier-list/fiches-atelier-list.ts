@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FicheAtelierService } from '../fiche-atelier.service';
@@ -17,7 +17,7 @@ import { PaginationComponent } from '../../../shared/components/pagination/pagin
   imports: [CommonModule, FormsModule, RouterLink, LucideEye, LucideWrench, LucidePlus, LucideX, LucideCalendar, LucideLock, PaginationComponent],
   templateUrl: './fiches-atelier-list.html'
 })
-export class FichesAtelierList extends BasePaginatedComponent implements OnInit {
+export class FichesAtelierList extends BasePaginatedComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private service = inject(FicheAtelierService);
   private rdvService = inject(RendezVousService);
@@ -167,36 +167,38 @@ export class FichesAtelierList extends BasePaginatedComponent implements OnInit 
     this.cdr.markForCheck();
 
     this.ordreService.createFromFicheAtelier(fiche.id).subscribe({
-      next: (ordre) => {
+      next: (res: any) => {
+        const ordre = res?.data || res;
         this.openingOrdreId = null;
         this.cdr.markForCheck();
-        const step = this.statutToStepPath(ordre.statut);
-        this.router.navigate(['/app/ordres-reparation', ordre.id, step]);
+        if (ordre?.id) {
+          const step = this.statutToStepPath(ordre.statut);
+          this.router.navigate(['/app/ordres-reparation', ordre.id, step]);
+        }
       },
-      error: () => {
-        // Fallback: chercher dans la liste des ordres
-        this.ordreService.getAll({ keyword: fiche.vehiculeImmatriculation || undefined, size: 50 }).subscribe({
+      error: (err) => {
+        // En cas d'erreur de création (ex: ordre déjà existant ou conflit), on recherche STRICTEMENT l'ordre lié à CETTE fiche
+        this.ordreService.getAll({ size: 100 }).subscribe({
           next: (res: any) => {
             this.openingOrdreId = null;
             this.cdr.markForCheck();
             const list: any[] = extractContent<any>(res);
             const match = list.find(o => 
-              o.ficheAtelierId === fiche.id || 
-              o.ficheAtelier?.id === fiche.id || 
-              (fiche.vehiculeId && o.vehicule?.id === fiche.vehiculeId) ||
-              (fiche.vehiculeImmatriculation && o.vehicule?.immatriculation === fiche.vehiculeImmatriculation)
+              Number(o.ficheAtelierId || o.ficheAtelier?.id) === Number(fiche.id)
             );
-            if (match) {
+            if (match?.id) {
               const step = this.statutToStepPath(match.statut);
               this.router.navigate(['/app/ordres-reparation', match.id, step]);
             } else {
-              this.router.navigate(['/app/ordres-reparation'], { queryParams: { ficheAtelierId: fiche.id } });
+              const msg = err?.error?.message || err?.message || "Impossible d'ouvrir l'ordre de réparation pour cette fiche atelier.";
+              alert(msg);
             }
           },
           error: () => {
             this.openingOrdreId = null;
             this.cdr.markForCheck();
-            this.router.navigate(['/app/ordres-reparation'], { queryParams: { ficheAtelierId: fiche.id } });
+            const msg = err?.error?.message || err?.message || "Impossible d'accéder à l'ordre de réparation.";
+            alert(msg);
           }
         });
       }
@@ -206,5 +208,11 @@ export class FichesAtelierList extends BasePaginatedComponent implements OnInit 
   createWithoutRdv() {
     this.showNewModal = false;
     this.router.navigate(['/app/admin/fiches-atelier/new']);
+  }
+
+  ngOnDestroy(): void {
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
   }
 }

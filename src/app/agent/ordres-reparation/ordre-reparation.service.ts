@@ -229,7 +229,9 @@ export class OrdreReparationService {
 
   // ─── Lien Fiche Atelier → Ordre de réparation ─────────
   createFromFicheAtelier(ficheAtelierId: number): Observable<OrdreReparation> {
-    return this.http.post<OrdreReparation>(`${this.api}/depuis-fiche-atelier/${ficheAtelierId}`, {});
+    return this.http.post<any>(`${this.api}/depuis-fiche-atelier/${ficheAtelierId}`, {}).pipe(
+      map((res: any) => res?.data || res)
+    );
   }
 
   existsForFicheAtelier(ficheAtelierId: number): Observable<{ exists: boolean }> {

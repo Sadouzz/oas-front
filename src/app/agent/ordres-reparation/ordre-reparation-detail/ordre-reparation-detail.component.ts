@@ -2,6 +2,7 @@ import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angula
 import { CommonModule, NgClass } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink, RouterOutlet, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 import { OrdreReparationService } from '../ordre-reparation.service';
 import { AlertComponent } from '../../../shared/components/alert/alert.component';
 import { OrdreReparation, StatutOrdre, VehiculeModel, STATUT_ETAPES, getEtapeFromStatut } from '../../../shared/models';
@@ -33,6 +34,7 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private service = inject(OrdreReparationService);
+  private routerSub?: Subscription;
 
   ordreId!: number;
   loadedOrdre: OrdreReparation | null = null;
@@ -80,7 +82,10 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
       if (diagStatut !== 'VALIDE') {
         return;
       }
-      this.goToStep(3);
+      if (this.loadedOrdre && this.statutToStep(this.loadedOrdre.statut) < 3) {
+        this.loadedOrdre.statut = 'PIECES_MO';
+      }
+      this.router.navigate(['/app/ordres-reparation', this.ordreId, 'pieces-mo']);
       return;
     }
     if (this.currentStep === 3) {
@@ -153,7 +158,7 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
     this.loadOrdre();
     this.updateCurrentStepFromUrl();
 
-    this.router.events.pipe(
+    this.routerSub = this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe(() => {
       this.updateCurrentStepFromUrl();
@@ -165,6 +170,7 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.routerSub?.unsubscribe();
     if (this.pollInterval) {
       clearInterval(this.pollInterval);
     }
@@ -178,6 +184,8 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
 
   loadOrdreSilently(): void {
     if (!this.ordreId) return;
+    const url = this.router.url;
+    if (!url.includes(`/ordres-reparation/${this.ordreId}`)) return;
     this.service.getSummary(this.ordreId).subscribe({
       next: (res: any) => {
         const o = res?.data || res;
@@ -284,7 +292,12 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
     if ((s === 'RECEPTION' || s === 'A_FAIRE') && (this.hasDiagnostic || this.loadedOrdre?.diagnostic)) {
       s = 'DIAGNOSTIC';
     }
-    return this.statutToStep(s);
+    const diagValide = this.activeChild?.statutDiagnostic === 'VALIDE' || this.loadedOrdre?.diagnostic?.statut === 'VALIDE';
+    const etapeFromStatut = this.statutToStep(s);
+    if (diagValide && etapeFromStatut < 3) {
+      return 3;
+    }
+    return etapeFromStatut;
   }
 
   goToStep(n: number): void {

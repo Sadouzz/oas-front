@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.oas-senegal.com',
+  apiUrl: 'https://oas-back.onrender.com',
 };

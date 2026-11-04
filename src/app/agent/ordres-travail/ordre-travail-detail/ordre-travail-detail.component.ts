@@ -80,7 +80,7 @@ export class OrdreTravailDetailComponent implements OnInit, OnDestroy {
   }
 
   loadOTSilently(): void {
-    if (!this.otId) return;
+    if (!this.otId || !this.router.url.includes('/ordres-travail/' + this.otId)) return;
     this.otService.getSummary(this.otId).subscribe({
       next: (ot) => {
         this.loadedOT = ot;

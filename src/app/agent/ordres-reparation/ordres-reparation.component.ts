@@ -118,9 +118,14 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
       if (qp['ficheAtelierId']) {
         const fId = +qp['ficheAtelierId'];
         this.service.createFromFicheAtelier(fId).subscribe({
-          next: (ordre) => {
-            const target = this.statutToStepPath(ordre.statut);
-            this.router.navigate(['/app/ordres-reparation', ordre.id, target], { replaceUrl: true });
+          next: (res: any) => {
+            const ordre = res?.data || res;
+            if (ordre?.id) {
+              const target = this.statutToStepPath(ordre.statut);
+              this.router.navigate(['/app/ordres-reparation', ordre.id, target], { replaceUrl: true });
+            } else {
+              this.loadData();
+            }
           },
           error: () => {
             this.loadData();
