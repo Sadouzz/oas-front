@@ -1,4 +1,5 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
+import { PdfLayoutDialogService } from '../../../../../shared/components/pdf-layout-dialog/pdf-layout-dialog.service';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -23,6 +24,7 @@ import { StepProformaResponseDto } from '../../../models/responses';
   templateUrl: './step-proforma.component.html'
 })
 export class StepProformaComponent implements OnInit {
+  private pdfLayoutDialog = inject(PdfLayoutDialogService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private ordreService = inject(OrdreReparationService);
@@ -115,7 +117,6 @@ export class StepProformaComponent implements OnInit {
   }
 
   telechargementEnCours = false;
-  downloadLayoutKey: 'AVEC_ENTETE' | 'SANS_ENTETE' = 'AVEC_ENTETE';
 
   get lignesPiecesAffichees(): any[] {
     if (this.proformaChargee?.lignesPieces && this.proformaChargee.lignesPieces.length > 0) {
@@ -513,9 +514,16 @@ export class StepProformaComponent implements OnInit {
     this.passerEtapeSuivante();
   }
 
-  telechargerPdf(layoutKey: 'AVEC_ENTETE' | 'SANS_ENTETE' = this.downloadLayoutKey): void {
+  async telechargerPdf(): Promise<void> {
     if (!this.proformaChargee?.id) return;
     this.telechargementEnCours = true;
+    this.cdr.markForCheck();
+    const layoutKey = await this.pdfLayoutDialog.chooseLayout();
+    if (!layoutKey) {
+      this.telechargementEnCours = false;
+      this.cdr.markForCheck();
+      return;
+    }
     this.proformaService.downloadPdf(this.proformaChargee.id, layoutKey).subscribe({
       next: (blob) => {
         this.telechargementEnCours = false;

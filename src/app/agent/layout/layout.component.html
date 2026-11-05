@@ -8,9 +8,10 @@
   <!-- ══════════════════════════════════════════════════════════════════ -->
   <!-- CAS 1 : MODE CLASSIQUE (Dernier commit, retractableMode = false) -->
   <!-- ══════════════════════════════════════════════════════════════════ -->
-  @if (!retractableMode) {
+  @if (!retractableMode || isSidebarOpen) {
     <aside 
       class="oas-sidebar w-64 text-white flex flex-col flex-shrink-0 fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 select-none"
+      [ngClass]="{ 'md:hidden': retractableMode }"
       [class.-translate-x-full]="!isSidebarOpen"
       [class.translate-x-0]="isSidebarOpen">
 
@@ -427,7 +428,7 @@
         }
 
         <!-- Gestion Stock -->
-        @if (isAgent() || isSuperAgent() || isMaster()) {
+        @if (isAgent() || isSuperAgent() || isMaster() || isMagasinier()) {
           <button type="button" (click)="toggleSection('stock')"
             class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
             <div class="flex items-center gap-3 min-w-0">
@@ -456,7 +457,7 @@
         }
 
         <!-- Réapprovisionnement -->
-        @if (isAgent() || isSuperAgent() || isMaster()) {
+        @if (isAgent() || isSuperAgent() || isMaster() || isMagasinier()) {
           <button type="button" (click)="toggleSection('reappro')"
             class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-sm font-medium">
             <div class="flex items-center gap-3 min-w-0">
@@ -600,20 +601,20 @@
   }
 
   <!-- ══════════════════════════════════════════════════════════════════ -->
-  <!-- CAS 2 : MODE RÉTRACTABLE À 3 RANGS (retractableMode = true)        -->
+  <!-- CAS 2 : MODE RÉTRACTABLE À NAVIGATION PAR NIVEAUX (largeur fixe)        -->
   <!-- ══════════════════════════════════════════════════════════════════ -->
   @if (retractableMode) {
-    <div class="flex h-full flex-shrink-0 relative z-40 select-none" (mouseleave)="onGlobalNavLeave()">
+    <div class="hidden md:flex h-full w-64 max-w-[90vw] flex-shrink-0 relative z-40 select-none overflow-hidden"
+         (mouseleave)="onGlobalNavLeave()" (focusout)="onGlobalNavFocusLeave($event)" (keydown)="onFlyoutKeydown($event)">
 
-      <!-- ── RANG 1 : Barre Principale (w-[72px] au repos, s'ouvre à w-64 au hover) ── -->
+      <!-- ── RANG 1 : Niveau principal (icônes visibles quand un sous-menu est ouvert) ── -->
       <aside 
-        (mouseenter)="onPrimaryEnter()"
         class="oas-sidebar text-white flex flex-col flex-shrink-0 z-50 h-full transition-all duration-300 shadow-2xl"
-        [class.w-64]="isPrimaryHovered"
-        [class.w-[72px]]="!isPrimaryHovered">
+        [class.w-full]="!showFlyout"
+        [class.w-[72px]]="showFlyout">
 
         <!-- En-tête RANG 1 -->
-        @if (isPrimaryHovered) {
+        @if (!showFlyout) {
           <div class="h-[72px] px-5 flex items-center border-b border-white/10 flex-shrink-0 bg-[#061424]">
             <div class="flex items-center gap-3 min-w-0">
               <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
@@ -636,13 +637,13 @@
 
         <!-- Checkbox Rétractable (MINI) -->
         <div class="border-b border-white/10 bg-white/[0.04] flex items-center justify-center flex-shrink-0"
-             [class.px-4]="isPrimaryHovered" [class.py-2.5]="isPrimaryHovered" [class.py-2]="!isPrimaryHovered">
+             [class.px-4]="!showFlyout" [class.py-2.5]="!showFlyout" [class.py-2]="showFlyout">
           <label class="flex items-center gap-2 cursor-pointer select-none" title="Désactiver le mode rétractable">
             <input type="checkbox"
               [checked]="retractableMode"
               (change)="toggleRetractableMode()"
               class="w-4 h-4 rounded border-white/30 bg-white/10 text-oas-accent focus:ring-oas-accent cursor-pointer accent-[#ef6c1a]">
-            @if (isPrimaryHovered) {
+            @if (!showFlyout) {
               <span class="text-xs font-semibold text-[#9fb2c8]">Mode rétractable (Actif)</span>
             } @else {
               <span class="text-[9px] font-extrabold text-oas-accent uppercase tracking-wider">MINI</span>
@@ -651,36 +652,36 @@
         </div>
 
         <!-- Navigation RANG 1 -->
-        <nav class="flex-1 py-3 overflow-y-auto overflow-x-hidden space-y-1.5"
-             [class.px-3]="isPrimaryHovered" [class.px-2]="!isPrimaryHovered">
+        <nav aria-label="Navigation principale" class="flex-1 py-3 overflow-y-auto overflow-x-hidden space-y-1.5"
+             [class.px-3]="!showFlyout" [class.px-2]="showFlyout">
 
           <!-- 1. Tableau de bord -->
-          <a routerLink="/app/dashboard" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20"
+          <a routerLink="/app/dashboard" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20" aria-label="Tableau de bord"
             class="flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer"
-            [class.px-3]="isPrimaryHovered" [class.py-2.5]="isPrimaryHovered" [class.gap-3]="isPrimaryHovered"
-            [class.w-11]="!isPrimaryHovered" [class.h-11]="!isPrimaryHovered" [class.mx-auto]="!isPrimaryHovered" [class.justify-center]="!isPrimaryHovered">
+            [class.px-3]="!showFlyout" [class.py-2.5]="!showFlyout" [class.gap-3]="!showFlyout"
+            [class.w-11]="showFlyout" [class.h-11]="showFlyout" [class.mx-auto]="showFlyout" [class.justify-center]="showFlyout">
             <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round"
                 d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
-            @if (isPrimaryHovered) {
+            @if (!showFlyout) {
               <span class="text-sm font-medium truncate">Tableau de bord</span>
             }
           </a>
 
           <!-- 2. Processus de réparation (Atelier) -->
           @if (isAgent() || isChefAtelier() || isSuperAgent() || isMaster()) {
-            <button type="button" (mouseenter)="onMenuHover('atelier')" (click)="handleSectionClick('atelier')"
-              [class.bg-white/15]="activeSection === 'atelier'" [class.text-white]="activeSection === 'atelier'"
+            <button type="button" data-nav-section="atelier" aria-label="Processus de réparation" [attr.aria-expanded]="showFlyout && activeSection === 'atelier'" (mouseenter)="onMenuHover('atelier')" (click)="handleSectionClick('atelier')"
+              [class.bg-white/15]="isSectionCurrent('atelier') || activeSection === 'atelier'" [class.text-white]="isSectionCurrent('atelier') || activeSection === 'atelier'"
               class="w-full flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer"
-              [class.px-3]="isPrimaryHovered" [class.py-2.5]="isPrimaryHovered" [class.gap-3]="isPrimaryHovered"
-              [class.w-11]="!isPrimaryHovered" [class.h-11]="!isPrimaryHovered" [class.mx-auto]="!isPrimaryHovered" [class.justify-center]="!isPrimaryHovered">
+              [class.px-3]="!showFlyout" [class.py-2.5]="!showFlyout" [class.gap-3]="!showFlyout"
+              [class.w-11]="showFlyout" [class.h-11]="showFlyout" [class.mx-auto]="showFlyout" [class.justify-center]="showFlyout">
               <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round"
                   d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              @if (isPrimaryHovered) {
+              @if (!showFlyout) {
                 <span class="text-sm font-medium flex-1 text-left truncate">Processus de réparation</span>
                 <span class="text-white/40 text-xs">›</span>
               }
@@ -688,57 +689,57 @@
           }
 
           <!-- 3. Rendez-vous -->
-          <a routerLink="/app/rendezvous" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20"
+            <a routerLink="/app/rendezvous" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20" aria-label="Rendez-vous"
             class="flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer"
-            [class.px-3]="isPrimaryHovered" [class.py-2.5]="isPrimaryHovered" [class.gap-3]="isPrimaryHovered"
-            [class.w-11]="!isPrimaryHovered" [class.h-11]="!isPrimaryHovered" [class.mx-auto]="!isPrimaryHovered" [class.justify-center]="!isPrimaryHovered">
+            [class.px-3]="!showFlyout" [class.py-2.5]="!showFlyout" [class.gap-3]="!showFlyout"
+            [class.w-11]="showFlyout" [class.h-11]="showFlyout" [class.mx-auto]="showFlyout" [class.justify-center]="showFlyout">
             <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            @if (isPrimaryHovered) {
+            @if (!showFlyout) {
               <span class="text-sm font-medium truncate">Rendez-vous</span>
             }
           </a>
 
           <!-- 4. Clients -->
-          <a routerLink="/app/clients" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20"
+          <a routerLink="/app/clients" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20" aria-label="Clients"
             class="flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer"
-            [class.px-3]="isPrimaryHovered" [class.py-2.5]="isPrimaryHovered" [class.gap-3]="isPrimaryHovered"
-            [class.w-11]="!isPrimaryHovered" [class.h-11]="!isPrimaryHovered" [class.mx-auto]="!isPrimaryHovered" [class.justify-center]="!isPrimaryHovered">
+            [class.px-3]="!showFlyout" [class.py-2.5]="!showFlyout" [class.gap-3]="!showFlyout"
+            [class.w-11]="showFlyout" [class.h-11]="showFlyout" [class.mx-auto]="showFlyout" [class.justify-center]="showFlyout">
             <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round"
                 d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
-            @if (isPrimaryHovered) {
+            @if (!showFlyout) {
               <span class="text-sm font-medium truncate">Clients</span>
             }
           </a>
 
           <!-- 5. Véhicules -->
-          <a routerLink="/app/vehicules" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20"
+          <a routerLink="/app/vehicules" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20" aria-label="Véhicules"
             class="flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer"
-            [class.px-3]="isPrimaryHovered" [class.py-2.5]="isPrimaryHovered" [class.gap-3]="isPrimaryHovered"
-            [class.w-11]="!isPrimaryHovered" [class.h-11]="!isPrimaryHovered" [class.mx-auto]="!isPrimaryHovered" [class.justify-center]="!isPrimaryHovered">
+            [class.px-3]="!showFlyout" [class.py-2.5]="!showFlyout" [class.gap-3]="!showFlyout"
+            [class.w-11]="showFlyout" [class.h-11]="showFlyout" [class.mx-auto]="showFlyout" [class.justify-center]="showFlyout">
             <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round"
                 d="M8 17a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4zM4 11h16m-2-5l3 5v6H3V6l3-3h8l4 3z" />
             </svg>
-            @if (isPrimaryHovered) {
+            @if (!showFlyout) {
               <span class="text-sm font-medium truncate">Véhicules</span>
             }
           </a>
 
           <!-- 6. Pièces détachées -->
-          <button type="button" (mouseenter)="onMenuHover('pieces')" (click)="handleSectionClick('pieces')"
-            [class.bg-white/15]="activeSection === 'pieces'" [class.text-white]="activeSection === 'pieces'"
+          <button type="button" data-nav-section="pieces" aria-label="Pièces détachées" [attr.aria-expanded]="showFlyout && activeSection === 'pieces'" (mouseenter)="onMenuHover('pieces')" (click)="handleSectionClick('pieces')"
+            [class.bg-white/15]="isSectionCurrent('pieces') || activeSection === 'pieces'" [class.text-white]="isSectionCurrent('pieces') || activeSection === 'pieces'"
             class="w-full flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer"
-            [class.px-3]="isPrimaryHovered" [class.py-2.5]="isPrimaryHovered" [class.gap-3]="isPrimaryHovered"
-            [class.w-11]="!isPrimaryHovered" [class.h-11]="!isPrimaryHovered" [class.mx-auto]="!isPrimaryHovered" [class.justify-center]="!isPrimaryHovered">
+            [class.px-3]="!showFlyout" [class.py-2.5]="!showFlyout" [class.gap-3]="!showFlyout"
+            [class.w-11]="showFlyout" [class.h-11]="showFlyout" [class.mx-auto]="showFlyout" [class.justify-center]="showFlyout">
             <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round"
                 d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
             </svg>
-            @if (isPrimaryHovered) {
+            @if (!showFlyout) {
               <span class="text-sm font-medium flex-1 text-left truncate">Pièces détachées</span>
               <span class="text-white/40 text-xs">›</span>
             }
@@ -746,16 +747,16 @@
 
           <!-- 7. Facture HT -->
           @if (isAgent() || isSuperAgent() || isMaster()) {
-            <button type="button" (mouseenter)="onMenuHover('facture-ht')" (click)="handleSectionClick('facture-ht')"
-              [class.bg-white/15]="activeSection === 'facture-ht'" [class.text-white]="activeSection === 'facture-ht'"
+            <button type="button" data-nav-section="facture-ht" aria-label="Facture HT" [attr.aria-expanded]="showFlyout && activeSection === 'facture-ht'" (mouseenter)="onMenuHover('facture-ht')" (click)="handleSectionClick('facture-ht')"
+              [class.bg-white/15]="isSectionCurrent('facture-ht') || activeSection === 'facture-ht'" [class.text-white]="isSectionCurrent('facture-ht') || activeSection === 'facture-ht'"
               class="w-full flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer"
-              [class.px-3]="isPrimaryHovered" [class.py-2.5]="isPrimaryHovered" [class.gap-3]="isPrimaryHovered"
-              [class.w-11]="!isPrimaryHovered" [class.h-11]="!isPrimaryHovered" [class.mx-auto]="!isPrimaryHovered" [class.justify-center]="!isPrimaryHovered">
+              [class.px-3]="!showFlyout" [class.py-2.5]="!showFlyout" [class.gap-3]="!showFlyout"
+              [class.w-11]="showFlyout" [class.h-11]="showFlyout" [class.mx-auto]="showFlyout" [class.justify-center]="showFlyout">
               <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round"
                   d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
               </svg>
-              @if (isPrimaryHovered) {
+              @if (!showFlyout) {
                 <span class="text-sm font-medium flex-1 text-left truncate">Facture HT</span>
                 <span class="text-white/40 text-xs">›</span>
               }
@@ -764,16 +765,16 @@
 
           <!-- 8. Facture TTC -->
           @if (isAgent() || isSuperAgent() || isMaster()) {
-            <button type="button" (mouseenter)="onMenuHover('facture-ttc')" (click)="handleSectionClick('facture-ttc')"
-              [class.bg-white/15]="activeSection === 'facture-ttc'" [class.text-white]="activeSection === 'facture-ttc'"
+            <button type="button" data-nav-section="facture-ttc" aria-label="Facture TTC" [attr.aria-expanded]="showFlyout && activeSection === 'facture-ttc'" (mouseenter)="onMenuHover('facture-ttc')" (click)="handleSectionClick('facture-ttc')"
+              [class.bg-white/15]="isSectionCurrent('facture-ttc') || activeSection === 'facture-ttc'" [class.text-white]="isSectionCurrent('facture-ttc') || activeSection === 'facture-ttc'"
               class="w-full flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer"
-              [class.px-3]="isPrimaryHovered" [class.py-2.5]="isPrimaryHovered" [class.gap-3]="isPrimaryHovered"
-              [class.w-11]="!isPrimaryHovered" [class.h-11]="!isPrimaryHovered" [class.mx-auto]="!isPrimaryHovered" [class.justify-center]="!isPrimaryHovered">
+              [class.px-3]="!showFlyout" [class.py-2.5]="!showFlyout" [class.gap-3]="!showFlyout"
+              [class.w-11]="showFlyout" [class.h-11]="showFlyout" [class.mx-auto]="showFlyout" [class.justify-center]="showFlyout">
               <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round"
                   d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
               </svg>
-              @if (isPrimaryHovered) {
+              @if (!showFlyout) {
                 <span class="text-sm font-medium flex-1 text-left truncate">Facture TTC</span>
                 <span class="text-white/40 text-xs">›</span>
               }
@@ -781,17 +782,17 @@
           }
 
           <!-- 9. Gestion Stock -->
-          @if (isAgent() || isSuperAgent() || isMaster()) {
-            <button type="button" (mouseenter)="onMenuHover('stock')" (click)="handleSectionClick('stock')"
-              [class.bg-white/15]="activeSection === 'stock'" [class.text-white]="activeSection === 'stock'"
+          @if (isAgent() || isSuperAgent() || isMaster() || isMagasinier()) {
+          <button type="button" data-nav-section="stock" aria-label="Gestion du stock" [attr.aria-expanded]="showFlyout && activeSection === 'stock'" (mouseenter)="onMenuHover('stock')" (click)="handleSectionClick('stock')"
+            [class.bg-white/15]="isSectionCurrent('stock') || activeSection === 'stock'" [class.text-white]="isSectionCurrent('stock') || activeSection === 'stock'"
               class="w-full flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer"
-              [class.px-3]="isPrimaryHovered" [class.py-2.5]="isPrimaryHovered" [class.gap-3]="isPrimaryHovered"
-              [class.w-11]="!isPrimaryHovered" [class.h-11]="!isPrimaryHovered" [class.mx-auto]="!isPrimaryHovered" [class.justify-center]="!isPrimaryHovered">
+              [class.px-3]="!showFlyout" [class.py-2.5]="!showFlyout" [class.gap-3]="!showFlyout"
+              [class.w-11]="showFlyout" [class.h-11]="showFlyout" [class.mx-auto]="showFlyout" [class.justify-center]="showFlyout">
               <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round"
                   d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
-              @if (isPrimaryHovered) {
+              @if (!showFlyout) {
                 <span class="text-sm font-medium flex-1 text-left truncate">Gestion Stock</span>
                 <span class="text-white/40 text-xs">›</span>
               }
@@ -799,17 +800,17 @@
           }
 
           <!-- 10. Réapprovisionnement -->
-          @if (isAgent() || isSuperAgent() || isMaster()) {
-            <button type="button" (mouseenter)="onMenuHover('reappro')" (click)="handleSectionClick('reappro')"
-              [class.bg-white/15]="activeSection === 'reappro'" [class.text-white]="activeSection === 'reappro'"
+          @if (isAgent() || isSuperAgent() || isMaster() || isMagasinier()) {
+          <button type="button" data-nav-section="reappro" aria-label="Réapprovisionnement" [attr.aria-expanded]="showFlyout && activeSection === 'reappro'" (mouseenter)="onMenuHover('reappro')" (click)="handleSectionClick('reappro')"
+            [class.bg-white/15]="isSectionCurrent('reappro') || activeSection === 'reappro'" [class.text-white]="isSectionCurrent('reappro') || activeSection === 'reappro'"
               class="w-full flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer"
-              [class.px-3]="isPrimaryHovered" [class.py-2.5]="isPrimaryHovered" [class.gap-3]="isPrimaryHovered"
-              [class.w-11]="!isPrimaryHovered" [class.h-11]="!isPrimaryHovered" [class.mx-auto]="!isPrimaryHovered" [class.justify-center]="!isPrimaryHovered">
+              [class.px-3]="!showFlyout" [class.py-2.5]="!showFlyout" [class.gap-3]="!showFlyout"
+              [class.w-11]="showFlyout" [class.h-11]="showFlyout" [class.mx-auto]="showFlyout" [class.justify-center]="showFlyout">
               <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round"
                   d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
               </svg>
-              @if (isPrimaryHovered) {
+              @if (!showFlyout) {
                 <span class="text-sm font-medium flex-1 text-left truncate">Réapprovisionnement</span>
                 <span class="text-white/40 text-xs">›</span>
               }
@@ -818,15 +819,15 @@
 
           <!-- 11. Gestion reçu -->
           @if (isAgent() || isSuperAgent() || isMaster()) {
-            <a routerLink="/app/gestion-recu" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20"
+            <a routerLink="/app/gestion-recu" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20" aria-label="Gestion reçu"
               class="flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer"
-              [class.px-3]="isPrimaryHovered" [class.py-2.5]="isPrimaryHovered" [class.gap-3]="isPrimaryHovered"
-              [class.w-11]="!isPrimaryHovered" [class.h-11]="!isPrimaryHovered" [class.mx-auto]="!isPrimaryHovered" [class.justify-center]="!isPrimaryHovered">
+              [class.px-3]="!showFlyout" [class.py-2.5]="!showFlyout" [class.gap-3]="!showFlyout"
+              [class.w-11]="showFlyout" [class.h-11]="showFlyout" [class.mx-auto]="showFlyout" [class.justify-center]="showFlyout">
               <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round"
                   d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              @if (isPrimaryHovered) {
+              @if (!showFlyout) {
                 <span class="text-sm font-medium truncate">Gestion reçu</span>
               }
             </a>
@@ -834,16 +835,16 @@
 
           <!-- 12. Main d'œuvre -->
           @if (isAgent() || isSuperAgent() || isMaster()) {
-            <a routerLink="/app/admin/main-doeuvre" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20"
+            <a routerLink="/app/admin/main-doeuvre" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20" aria-label="Main d'œuvre"
               class="flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer"
-              [class.px-3]="isPrimaryHovered" [class.py-2.5]="isPrimaryHovered" [class.gap-3]="isPrimaryHovered"
-              [class.w-11]="!isPrimaryHovered" [class.h-11]="!isPrimaryHovered" [class.mx-auto]="!isPrimaryHovered" [class.justify-center]="!isPrimaryHovered">
+              [class.px-3]="!showFlyout" [class.py-2.5]="!showFlyout" [class.gap-3]="!showFlyout"
+              [class.w-11]="showFlyout" [class.h-11]="showFlyout" [class.mx-auto]="showFlyout" [class.justify-center]="showFlyout">
               <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round"
                   d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              @if (isPrimaryHovered) {
+              @if (!showFlyout) {
                 <span class="text-sm font-medium truncate">Main d'œuvre</span>
               }
             </a>
@@ -851,17 +852,17 @@
 
           <!-- 13. Administration -->
           @if (isSuperAgent() || isMaster()) {
-            <button type="button" (mouseenter)="onMenuHover('admin')" (click)="handleSectionClick('admin')"
-              [class.bg-white/15]="activeSection === 'admin'" [class.text-white]="activeSection === 'admin'"
+          <button type="button" data-nav-section="admin" aria-label="Administration" [attr.aria-expanded]="showFlyout && activeSection === 'admin'" (mouseenter)="onMenuHover('admin')" (click)="handleSectionClick('admin')"
+            [class.bg-white/15]="isSectionCurrent('admin') || activeSection === 'admin'" [class.text-white]="isSectionCurrent('admin') || activeSection === 'admin'"
               class="w-full flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer"
-              [class.px-3]="isPrimaryHovered" [class.py-2.5]="isPrimaryHovered" [class.gap-3]="isPrimaryHovered"
-              [class.w-11]="!isPrimaryHovered" [class.h-11]="!isPrimaryHovered" [class.mx-auto]="!isPrimaryHovered" [class.justify-center]="!isPrimaryHovered">
+              [class.px-3]="!showFlyout" [class.py-2.5]="!showFlyout" [class.gap-3]="!showFlyout"
+              [class.w-11]="showFlyout" [class.h-11]="showFlyout" [class.mx-auto]="showFlyout" [class.justify-center]="showFlyout">
               <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round"
                   d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              @if (isPrimaryHovered) {
+              @if (!showFlyout) {
                 <span class="text-sm font-medium flex-1 text-left truncate">Administration</span>
                 <span class="text-white/40 text-xs">›</span>
               }
@@ -872,19 +873,19 @@
 
         <!-- Footer Profil RANG 1 -->
         <div class="border-t border-white/10 bg-[#061424] flex items-center justify-between"
-             [class.p-3]="isPrimaryHovered" [class.py-3]="!isPrimaryHovered" [class.justify-center]="!isPrimaryHovered">
+             [class.p-3]="!showFlyout" [class.py-3]="showFlyout" [class.justify-center]="showFlyout">
           <div class="flex items-center gap-2.5 min-w-0">
             <div class="w-9 h-9 rounded-full bg-oas-navy border-2 border-oas-accent flex items-center justify-center font-bold text-white text-xs shadow-sm flex-shrink-0">
               {{ initials }}
             </div>
-            @if (isPrimaryHovered) {
+            @if (!showFlyout) {
               <div class="min-w-0">
                 <p class="text-xs font-bold text-white truncate">{{ fullName }}</p>
                 <p class="text-[10px] text-white/50 truncate">{{ roleLabel }}</p>
               </div>
             }
           </div>
-          @if (isPrimaryHovered) {
+          @if (!showFlyout) {
             <button (click)="logout()" class="p-1.5 text-white/40 hover:text-red-400 hover:bg-white/5 rounded-lg transition cursor-pointer" title="Déconnexion">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -895,15 +896,13 @@
 
       </aside>
 
-      <!-- ── RANG 2 : Le Secondaire (Comme dans l'image ! Menus avec >) ── -->
-      @if (activeSection) {
-        <aside 
-          class="bg-[#081a2e] border-r border-white/10 flex flex-col flex-shrink-0 z-40 h-full transition-all duration-300 shadow-2xl"
-          [class.w-64]="hoverSection || isSubmenuExpanded"
-          [class.w-[72px]]="!hoverSection && !isSubmenuExpanded">
+      <!-- ── NIVEAU 2 : Sous-menus (dans le panneau fixe) ── -->
+      @if (showFlyout && activeSection && !activeSubSection) {
+        <aside data-nav-level="section"
+          class="min-w-0 flex-1 bg-[#081a2e] border-r border-white/10 flex flex-col z-40 h-full transition-all duration-200 shadow-2xl overflow-hidden">
 
           <!-- En-tête RANG 2 -->
-          @if (hoverSection || isSubmenuExpanded) {
+          @if (showFlyout) {
             <div class="h-[72px] px-4 flex items-center justify-between border-b border-white/10 flex-shrink-0 bg-[#061424]">
               <div class="flex items-center gap-2.5 min-w-0">
                 <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 flex-shrink-0 shadow-sm animate-pulse"></span>
@@ -911,28 +910,28 @@
                   {{ getSectionTitle(activeSection) }}
                 </h3>
               </div>
-              <button type="button" (click)="closeFlyout()" 
+              <button type="button" (click)="closeFlyout(true)"
                 class="w-7 h-7 rounded-lg flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition text-sm cursor-pointer" 
                 title="Fermer">✕</button>
             </div>
           } @else {
             <div class="h-[72px] flex flex-col items-center justify-center border-b border-white/10 flex-shrink-0 bg-[#061424]">
               <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 mb-1"></span>
-              <button type="button" (click)="closeFlyout()" 
+              <button type="button" (click)="closeFlyout(true)"
                 class="w-6 h-6 rounded-md flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition text-xs cursor-pointer" 
                 title="Fermer">✕</button>
             </div>
           }
 
           <!-- Corps RANG 2 : Menus secondaires comme dans la capture de l'utilisateur -->
-          <div class="flex-1 py-3 overflow-y-auto space-y-1" [class.px-3]="hoverSection || isSubmenuExpanded" [class.px-2]="!hoverSection && !isSubmenuExpanded">
+          <div class="flex-1 py-3 overflow-y-auto space-y-1" [class.px-3]="showFlyout" [class.px-2]="!showFlyout">
             
             <!-- CAS : FACTURE TTC (Exactement l'image fournie : Facture, Bon de livraison, Bon de commande, Proforma, Avoir TTC) -->
             @if (activeSection === 'facture-ttc') {
-              @if (hoverSection || isSubmenuExpanded) {
+              @if (showFlyout) {
                 <div class="space-y-1">
                   <!-- Facture -->
-                  <button type="button" (mouseenter)="onSubMenuHover('facture')"
+                  <button type="button" data-nav-first data-nav-subsection="facture" [attr.aria-expanded]="activeSubSection === 'facture'" (mouseenter)="onSubmenuHoverPreview('facture')" (click)="onSubMenuHover('facture', true)"
                     [class.bg-white/15]="activeSubSection === 'facture'" [class.text-white]="activeSubSection === 'facture'"
                     class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition text-sm font-semibold cursor-pointer">
                     <span>Facture</span>
@@ -940,7 +939,7 @@
                   </button>
 
                   <!-- Bon de livraison -->
-                  <button type="button" (mouseenter)="onSubMenuHover('bl')"
+                  <button type="button" data-nav-subsection="bl" [attr.aria-expanded]="activeSubSection === 'bl'" (mouseenter)="onSubmenuHoverPreview('bl')" (click)="onSubMenuHover('bl', true)"
                     [class.bg-white/15]="activeSubSection === 'bl'" [class.text-white]="activeSubSection === 'bl'"
                     class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition text-sm font-semibold cursor-pointer">
                     <span>Bon de livraison</span>
@@ -948,7 +947,7 @@
                   </button>
 
                   <!-- Bon de commande -->
-                  <button type="button" (mouseenter)="onSubMenuHover('bc')"
+                  <button type="button" data-nav-subsection="bc" [attr.aria-expanded]="activeSubSection === 'bc'" (mouseenter)="onSubmenuHoverPreview('bc')" (click)="onSubMenuHover('bc', true)"
                     [class.bg-white/15]="activeSubSection === 'bc'" [class.text-white]="activeSubSection === 'bc'"
                     class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition text-sm font-semibold cursor-pointer">
                     <span>Bon de commande</span>
@@ -956,7 +955,7 @@
                   </button>
 
                   <!-- Proforma -->
-                  <button type="button" (mouseenter)="onSubMenuHover('proforma')"
+                  <button type="button" data-nav-subsection="proforma" [attr.aria-expanded]="activeSubSection === 'proforma'" (mouseenter)="onSubmenuHoverPreview('proforma')" (click)="onSubMenuHover('proforma', true)"
                     [class.bg-white/15]="activeSubSection === 'proforma'" [class.text-white]="activeSubSection === 'proforma'"
                     class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition text-sm font-semibold cursor-pointer">
                     <span>Proforma</span>
@@ -964,7 +963,7 @@
                   </button>
 
                   <!-- Avoir TTC -->
-                  <button type="button" (mouseenter)="onSubMenuHover('avoir-ttc')"
+                  <button type="button" data-nav-subsection="avoir-ttc" [attr.aria-expanded]="activeSubSection === 'avoir-ttc'" (mouseenter)="onSubmenuHoverPreview('avoir-ttc')" (click)="onSubMenuHover('avoir-ttc', true)"
                     [class.bg-white/15]="activeSubSection === 'avoir-ttc'" [class.text-white]="activeSubSection === 'avoir-ttc'"
                     class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition text-sm font-semibold cursor-pointer">
                     <span>Avoir TTC</span>
@@ -1000,15 +999,15 @@
 
             <!-- CAS : PIÈCES DÉTACHÉES -->
             @if (activeSection === 'pieces') {
-              @if (hoverSection || isSubmenuExpanded) {
+              @if (showFlyout) {
                 <div class="space-y-1">
-                  <button type="button" (mouseenter)="onSubMenuHover('pdp')"
+                  <button type="button" data-nav-first data-nav-subsection="pdp" [attr.aria-expanded]="activeSubSection === 'pdp'" (mouseenter)="onSubmenuHoverPreview('pdp')" (click)="onSubMenuHover('pdp', true)"
                     [class.bg-white/15]="activeSubSection === 'pdp'" [class.text-white]="activeSubSection === 'pdp'"
                     class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition text-sm font-semibold cursor-pointer">
                     <span>PDP</span>
                     <span class="text-white/40 text-xs">›</span>
                   </button>
-                  <button type="button" (mouseenter)="onSubMenuHover('pdg')"
+                  <button type="button" data-nav-subsection="pdg" [attr.aria-expanded]="activeSubSection === 'pdg'" (mouseenter)="onSubmenuHoverPreview('pdg')" (click)="onSubMenuHover('pdg', true)"
                     [class.bg-white/15]="activeSubSection === 'pdg'" [class.text-white]="activeSubSection === 'pdg'"
                     class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition text-sm font-semibold cursor-pointer">
                     <span>PDG</span>
@@ -1035,21 +1034,21 @@
 
             <!-- CAS : FACTURE HT -->
             @if (activeSection === 'facture-ht') {
-              @if (hoverSection || isSubmenuExpanded) {
+              @if (showFlyout) {
                 <div class="space-y-1">
-                  <button type="button" (mouseenter)="onSubMenuHover('note-prix')"
+                  <button type="button" data-nav-first data-nav-subsection="note-prix" [attr.aria-expanded]="activeSubSection === 'note-prix'" (mouseenter)="onSubmenuHoverPreview('note-prix')" (click)="onSubMenuHover('note-prix', true)"
                     [class.bg-white/15]="activeSubSection === 'note-prix'" [class.text-white]="activeSubSection === 'note-prix'"
                     class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition text-sm font-semibold cursor-pointer">
                     <span>Note de prix</span>
                     <span class="text-white/40 text-xs">›</span>
                   </button>
-                  <button type="button" (mouseenter)="onSubMenuHover('devis')"
+                  <button type="button" data-nav-subsection="devis" [attr.aria-expanded]="activeSubSection === 'devis'" (mouseenter)="onSubmenuHoverPreview('devis')" (click)="onSubMenuHover('devis', true)"
                     [class.bg-white/15]="activeSubSection === 'devis'" [class.text-white]="activeSubSection === 'devis'"
                     class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition text-sm font-semibold cursor-pointer">
                     <span>Devis Prévisionnel</span>
                     <span class="text-white/40 text-xs">›</span>
                   </button>
-                  <button type="button" (mouseenter)="onSubMenuHover('avoir-ht')"
+                  <button type="button" data-nav-subsection="avoir-ht" [attr.aria-expanded]="activeSubSection === 'avoir-ht'" (mouseenter)="onSubmenuHoverPreview('avoir-ht')" (click)="onSubMenuHover('avoir-ht', true)"
                     [class.bg-white/15]="activeSubSection === 'avoir-ht'" [class.text-white]="activeSubSection === 'avoir-ht'"
                     class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition text-sm font-semibold cursor-pointer">
                     <span>Avoir note de prix</span>
@@ -1072,15 +1071,15 @@
 
             <!-- CAS : ADMINISTRATION -->
             @if (activeSection === 'admin') {
-              @if (hoverSection || isSubmenuExpanded) {
+              @if (showFlyout) {
                 <div class="space-y-1">
-                  <button type="button" (mouseenter)="onSubMenuHover('parametres')"
+                  <button type="button" data-nav-first data-nav-subsection="parametres" [attr.aria-expanded]="activeSubSection === 'parametres'" (mouseenter)="onSubmenuHoverPreview('parametres')" (click)="onSubMenuHover('parametres', true)"
                     [class.bg-white/15]="activeSubSection === 'parametres'" [class.text-white]="activeSubSection === 'parametres'"
                     class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition text-sm font-semibold cursor-pointer">
                     <span>Paramètres</span>
                     <span class="text-white/40 text-xs">›</span>
                   </button>
-                  <button type="button" (mouseenter)="onSubMenuHover('systeme')"
+                  <button type="button" data-nav-subsection="systeme" [attr.aria-expanded]="activeSubSection === 'systeme'" (mouseenter)="onSubmenuHoverPreview('systeme')" (click)="onSubMenuHover('systeme', true)"
                     [class.bg-white/15]="activeSubSection === 'systeme'" [class.text-white]="activeSubSection === 'systeme'"
                     class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition text-sm font-semibold cursor-pointer">
                     <span>Système & Utilisateurs</span>
@@ -1104,30 +1103,30 @@
             <!-- CAS SANS 3EME RANG : ATELIER (Liens directs) -->
             @if (activeSection === 'atelier') {
               <div class="space-y-1">
-                <a routerLink="/app/fiches-atelier" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20"
+                <a data-nav-first tabindex="-1" routerLink="/app/fiches-atelier" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20"
                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition text-sm">
                   <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                  @if (hoverSection || isSubmenuExpanded) { <span>Fiches atelier</span> }
+                  @if (showFlyout) { <span>Fiches atelier</span> }
                 </a>
                 <a routerLink="/app/ordres-reparation" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20"
                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition text-sm">
                   <span class="w-2 h-2 rounded-full bg-oas-accent"></span>
-                  @if (hoverSection || isSubmenuExpanded) { <span>Ordres de réparation</span> }
+                  @if (showFlyout) { <span>Ordres de réparation</span> }
                 </a>
                 <a routerLink="/app/ordres-travail" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20"
                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition text-sm">
                   <span class="w-2 h-2 rounded-full bg-blue-400"></span>
-                  @if (hoverSection || isSubmenuExpanded) { <span>Ordres de travail</span> }
+                  @if (showFlyout) { <span>Ordres de travail</span> }
                 </a>
                 <a routerLink="/app/diagnostics" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20"
                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition text-sm">
                   <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-                  @if (hoverSection || isSubmenuExpanded) { <span>Diagnostics</span> }
+                  @if (showFlyout) { <span>Diagnostics</span> }
                 </a>
                 <a routerLink="/app/techniciens" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20"
                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition text-sm">
                   <span class="w-2 h-2 rounded-full bg-purple-400"></span>
-                  @if (hoverSection || isSubmenuExpanded) { <span>Techniciens</span> }
+                  @if (showFlyout) { <span>Techniciens</span> }
                 </a>
               </div>
             }
@@ -1135,15 +1134,15 @@
             <!-- CAS SANS 3EME RANG : STOCK (Liens directs) -->
             @if (activeSection === 'stock') {
               <div class="space-y-1">
-                <a routerLink="/app/bons-de-sortie" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20"
+                <a data-nav-first tabindex="-1" routerLink="/app/bons-de-sortie" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20"
                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition text-sm">
                   <span class="w-2 h-2 rounded-full bg-oas-accent"></span>
-                  @if (hoverSection || isSubmenuExpanded) { <span>Nouveau bon de sortie</span> }
+                  @if (showFlyout) { <span>Nouveau bon de sortie</span> }
                 </a>
                 <a routerLink="/app/historique-bs" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20"
                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition text-sm">
                   <span class="w-2 h-2 rounded-full bg-blue-400"></span>
-                  @if (hoverSection || isSubmenuExpanded) { <span>Historique des sorties</span> }
+                  @if (showFlyout) { <span>Historique des sorties</span> }
                 </a>
               </div>
             }
@@ -1151,15 +1150,15 @@
             <!-- CAS SANS 3EME RANG : RÉAPPRO (Liens directs) -->
             @if (activeSection === 'reappro') {
               <div class="space-y-1">
-                <a routerLink="/app/bons-reception" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20"
+                <a data-nav-first tabindex="-1" routerLink="/app/bons-reception" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20"
                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition text-sm">
                   <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                  @if (hoverSection || isSubmenuExpanded) { <span>Bons de réception</span> }
+                  @if (showFlyout) { <span>Bons de réception</span> }
                 </a>
                 <a routerLink="/app/fournisseurs" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20"
                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition text-sm">
                   <span class="w-2 h-2 rounded-full bg-blue-400"></span>
-                  @if (hoverSection || isSubmenuExpanded) { <span>Fournisseurs</span> }
+                  @if (showFlyout) { <span>Fournisseurs</span> }
                 </a>
               </div>
             }
@@ -1168,23 +1167,26 @@
         </aside>
       }
 
-      <!-- ── RANG 3 : Troisième Rang (Actions / Feuilles du sous-menu) ── -->
-      @if (hoverSection && activeSubSection) {
-        <aside class="w-64 bg-[#051322] border-r border-white/10 flex flex-col flex-shrink-0 z-30 h-full shadow-2xl animate-in fade-in slide-in-from-left-2 duration-150">
+      <!-- ── NIVEAU 3 : Actions du sous-menu (même panneau) ── -->
+      @if (showFlyout && activeSection && activeSubSection) {
+        <aside data-nav-level="leaf" class="min-w-0 flex-1 bg-[#051322] border-r border-white/10 flex flex-col z-30 h-full shadow-2xl animate-in fade-in slide-in-from-left-2 duration-150 overflow-hidden">
           
           <!-- En-tête RANG 3 -->
-          <div class="h-[72px] px-4 flex items-center border-b border-white/10 flex-shrink-0 bg-[#040e1a]">
-            <span class="w-2 h-2 rounded-full bg-oas-accent mr-2"></span>
-            <h4 class="font-bold text-xs uppercase tracking-wider text-white truncate capitalize">
-              {{ activeSubSection }}
+          <div class="h-[72px] px-3 flex items-center gap-2 border-b border-white/10 flex-shrink-0 bg-[#040e1a]">
+            <button type="button" (click)="onSubmenuBack()" data-nav-back aria-label="Retour au sous-menu"
+              class="w-8 h-8 flex-shrink-0 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition" title="Retour">‹</button>
+            <h4 class="flex-1 min-w-0 font-bold text-xs uppercase tracking-wider text-white truncate">
+              {{ getSubSectionTitle(activeSubSection) }}
             </h4>
+            <button type="button" (click)="closeFlyout(true)" aria-label="Fermer le menu"
+              class="w-8 h-8 flex-shrink-0 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition" title="Fermer">×</button>
           </div>
 
           <!-- Liens d'actions du 3ème rang -->
           <div class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
             
             <!-- SOUS FACTURE TTC -->
-            @if (hoverSection === 'facture-ttc') {
+            @if (activeSection === 'facture-ttc') {
               @if (activeSubSection === 'facture') {
                 <a routerLink="/app/factures" [queryParams]="{ action: 'new' }" (click)="onSelectLink()" routerLinkActive="oas-sub-active"
                   class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition text-xs">
@@ -1254,7 +1256,7 @@
             }
 
             <!-- SOUS PIÈCES DÉTACHÉES -->
-            @if (hoverSection === 'pieces') {
+            @if (activeSection === 'pieces') {
               @if (activeSubSection === 'pdp') {
                 <a routerLink="/app/pieces-detachees" [queryParams]="{ type: 'PDP' }" (click)="onSelectLink()" routerLinkActive="oas-sub-active"
                   class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition text-xs">
@@ -1282,7 +1284,7 @@
             }
 
             <!-- SOUS FACTURE HT -->
-            @if (hoverSection === 'facture-ht') {
+            @if (activeSection === 'facture-ht') {
               @if (activeSubSection === 'note-prix') {
                 <a routerLink="/app/notes-prix" [queryParams]="{ action: 'new' }" (click)="onSelectLink()" routerLinkActive="oas-sub-active"
                   class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition text-xs">
@@ -1324,7 +1326,7 @@
             }
 
             <!-- SOUS ADMINISTRATION -->
-            @if (hoverSection === 'admin') {
+            @if (activeSection === 'admin') {
               @if (activeSubSection === 'parametres') {
                 <a routerLink="/app/admin/parametres/depots" (click)="onSelectLink()" routerLinkActive="oas-sub-active"
                   class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition text-xs">
@@ -1377,7 +1379,7 @@
     <header class="h-[72px] bg-white border-b border-oas-line flex items-center gap-2 sm:gap-4 px-4 sm:px-7 flex-shrink-0 shadow-sm relative z-30">
 
       <!-- Hamburger menu (mobile) -->
-      <button (click)="toggleSidebar()" class="md:hidden p-2 -ml-2 text-oas-ink hover:bg-oas-bg rounded-lg transition" title="Menu mobile">
+      <button type="button" (click)="toggleSidebar()" class="md:hidden p-2 -ml-2 text-oas-ink hover:bg-oas-bg rounded-lg transition" title="Menu mobile" aria-label="Ouvrir le menu" [attr.aria-expanded]="isSidebarOpen">
         <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
         </svg>

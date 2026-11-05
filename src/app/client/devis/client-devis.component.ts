@@ -6,6 +6,7 @@ import { DevisPrevisionnel, StatutDevis } from '../models';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { StatusBadgeComponent, BadgeTone } from '../ui/status-badge/status-badge.component';
 import { VehicleAvatarComponent } from '../ui/vehicle-avatar/vehicle-avatar.component';
+import { PdfLayoutDialogService } from '../../shared/components/pdf-layout-dialog/pdf-layout-dialog.service';
 
 type SortOrder = 'recent' | 'ancien';
 
@@ -38,6 +39,7 @@ export class ClientDevisComponent implements OnInit {
 
   private cdr = inject(ChangeDetectorRef);
   private service = inject(ClientDevisService);
+  private pdfLayoutDialog = inject(PdfLayoutDialogService);
 
   devis: DevisPrevisionnel[] = [];
   filtered: DevisPrevisionnel[] = [];
@@ -101,9 +103,11 @@ export class ClientDevisComponent implements OnInit {
     });
   }
 
-  downloadPdf(devis: DevisPrevisionnel): void {
-    this.service.downloadPdf(devis.id).subscribe({
-      next: blob => this.savePdf(blob, `Devis-${devis.numero || devis.id}.pdf`),
+  async downloadPdf(devis: DevisPrevisionnel): Promise<void> {
+    const layoutKey = await this.pdfLayoutDialog.chooseLayout();
+    if (!layoutKey) return;
+    this.service.downloadPdf(devis.id, layoutKey).subscribe({
+      next: blob => this.savePdf(blob, `Devis-${devis.numero || devis.id}-${layoutKey === 'AVEC_ENTETE' ? 'avec-entete' : 'sans-entete'}.pdf`),
       error: (err: any) => { this.errorMessage = err.error?.message || 'Impossible de télécharger ce devis.'; this.cdr.markForCheck(); },
     });
   }

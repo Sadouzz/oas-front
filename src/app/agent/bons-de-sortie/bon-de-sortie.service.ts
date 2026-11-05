@@ -39,7 +39,6 @@ export class BonDeSortieService {
       lignesPieces: data.lignesPieces,
       lignesMainDoeuvres: data.lignesMainDoeuvres,
       remarque: data.remarque,
-      appliquerTVA: data.appliquerTVA ?? false,
     });
   }
 

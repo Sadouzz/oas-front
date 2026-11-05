@@ -4,6 +4,7 @@ import { forkJoin } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ProformaService } from './proforma.service';
 import { ConfirmationService } from '../../shared/components/confirmation/confirmation.service';
+import { PdfLayoutDialogService } from '../../shared/components/pdf-layout-dialog/pdf-layout-dialog.service';
 import { BonDeCommandeService } from '../bons-commande/bon-de-commande.service';
 import { ClientService } from '../clients/client.service';
 import { VehiculeService } from '../vehicules/vehicule.service';
@@ -63,6 +64,7 @@ export interface LigneMOFormItem {
 })
 export class ProformaComponent extends BasePaginatedComponent implements OnInit {
   private confirmation = inject(ConfirmationService);
+  private pdfLayoutDialog = inject(PdfLayoutDialogService);
   private cdr = inject(ChangeDetectorRef);
   private service = inject(ProformaService);
   private bcService = inject(BonDeCommandeService);
@@ -103,7 +105,6 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
   editingId: number | null = null;
   selectedProforma: Proforma | null = null;
   selectedProformaForPrint: any = null;
-  downloadLayoutKey: 'AVEC_ENTETE' | 'SANS_ENTETE' = 'AVEC_ENTETE';
 
   clientOpen = false;
   vehiculeOpen = false;
@@ -1109,19 +1110,23 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
     });
   }
 
-  downloadPdf(id: number) {
-    this.service.downloadPdf(id, this.downloadLayoutKey).subscribe(blob => {
+  async downloadPdf(id: number) {
+    const layoutKey = await this.pdfLayoutDialog.chooseLayout();
+    if (!layoutKey) return;
+    this.service.downloadPdf(id, layoutKey).subscribe(blob => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `proforma-${id}-${this.downloadLayoutKey === 'AVEC_ENTETE' ? 'avec-entete' : 'sans-entete'}.pdf`;
+      a.download = `proforma-${id}-${layoutKey === 'AVEC_ENTETE' ? 'avec-entete' : 'sans-entete'}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     });
   }
 
-  ouvrirPdf(id: number) {
-    this.service.downloadPdf(id, this.downloadLayoutKey).subscribe({
+  async ouvrirPdf(id: number) {
+    const layoutKey = await this.pdfLayoutDialog.chooseLayout();
+    if (!layoutKey) return;
+    this.service.downloadPdf(id, layoutKey).subscribe({
       next: (blob) => {
         const file = new Blob([blob], { type: 'application/pdf' });
         const fileURL = URL.createObjectURL(file);

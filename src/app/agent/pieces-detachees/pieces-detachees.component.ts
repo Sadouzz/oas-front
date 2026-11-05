@@ -14,6 +14,7 @@ import { PaginationComponent } from '../../shared/components/pagination/paginati
 import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideArchive, LucideArchiveRestore } from '@lucide/angular';
+import { PdfLayoutDialogService } from '../../shared/components/pdf-layout-dialog/pdf-layout-dialog.service';
 
 @Component({
   selector: 'app-pieces-detachees',
@@ -32,6 +33,7 @@ export class PiecesDetacheesComponent extends BasePaginatedComponent implements 
   private authService = inject(AuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private pdfLayoutDialog = inject(PdfLayoutDialogService);
 
   pieces: PieceDetache[] = [];
   filtered: PieceDetache[] = [];
@@ -748,10 +750,12 @@ export class PiecesDetacheesComponent extends BasePaginatedComponent implements 
     });
   }
 
-  exportPdf(avecPrix: boolean = false) {
+  async exportPdf(avecPrix: boolean = false) {
     if (!this.isSuperAgentOrMaster) {
       avecPrix = false;
     }
+    const layoutKey = await this.pdfLayoutDialog.chooseLayout();
+    if (!layoutKey) return;
 
     const items = this.filtered;
     const isPdg = this.filterType === 'PDG';
@@ -796,6 +800,10 @@ export class PiecesDetacheesComponent extends BasePaginatedComponent implements 
       avecPrix ? 'Mode: <b>Avec prix</b>' : 'Mode: <b>Sans prix</b>'
     ].join(' &nbsp;|&nbsp; ');
 
+    const brandHeader = layoutKey === 'AVEC_ENTETE'
+      ? '<div class="brand-block"><strong>ORIENT AUTO SERVICE</strong><div>Spécialiste voitures allemandes et professionnel automobile toutes marques</div><small>Mécanique • Électricité • Vidange • Climatisation • Tôlerie • Peinture</small><small>Km 2,5 Bd du Centenaire, Rond Point CYRNOS — Dakar, Sénégal • +221 33 821 47 11</small></div>'
+      : '';
+
     const printContent = `
       <!DOCTYPE html>
       <html>
@@ -824,6 +832,9 @@ export class PiecesDetacheesComponent extends BasePaginatedComponent implements 
             padding-bottom: 10px;
             margin-bottom: 12px;
           }
+          .brand-block { display: grid; gap: 3px; font-size: 10px; color: #12304a; }
+          .brand-block strong { font-size: 16px; letter-spacing: .4px; }
+          .brand-block small { color: #475569; font-size: 8px; }
           .logo {
             font-size: 18px;
             font-weight: 900;
@@ -881,7 +892,7 @@ export class PiecesDetacheesComponent extends BasePaginatedComponent implements 
       </head>
       <body>
         <div class="header">
-          <div class="logo">OAS <span>• Orient Auto Service</span></div>
+          ${brandHeader}
           <div class="meta">Édité le : <b>${dateStr}</b></div>
         </div>
 

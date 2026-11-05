@@ -357,11 +357,6 @@
                           </span>
                         }
                         -->
-                        @if (ligne.tauxRemise && ligne.tauxRemise > 0) {
-                          <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                            Remise : {{ ligne.tauxRemise }}%
-                          </span>
-                        }
                       </div>
                     </td>
                     <td class="px-3 py-2 text-right font-medium">{{ ligne.quantite }}</td>
@@ -415,11 +410,6 @@
                     </td>
                     <td class="px-3 py-2">
                       <div class="font-medium text-oas-ink">{{ mo.nom || mo.designation || mo.description || 'Main d\'œuvre' }}</div>
-                      @if (mo.tauxRemise && mo.tauxRemise > 0) {
-                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 mt-0.5">
-                          Remise : {{ mo.tauxRemise }}%
-                        </span>
-                      }
                     </td>
                     <td class="px-3 py-2 text-right font-medium">{{ mo.nbreHeure ?? mo.quantite ?? 1 }}h</td>
                     <td class="px-3 py-2 text-right text-oas-muted">{{ (mo.tarifHoraire ?? mo.prix ?? 0) | number }} FCFA/h</td>

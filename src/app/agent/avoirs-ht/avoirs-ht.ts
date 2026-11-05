@@ -16,6 +16,7 @@ import { UserModel, VehiculeModel, PieceDetache, MainDoeuvreModel, extractConten
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { LucideSearch, LucidePlus, LucideTrash2, LucideX, LucideDownload, LucideEye, LucideLoader2 } from '@lucide/angular';
 import { AvoirHT, AvoirHTCreateRequest } from './models/avoir-ht.model';
+import { PdfLayoutDialogService } from '../../shared/components/pdf-layout-dialog/pdf-layout-dialog.service';
 
 @Component({
   selector: 'app-avoirs-ht',
@@ -36,13 +37,13 @@ export class AvoirsHt extends BasePaginatedComponent implements OnInit {
   private pieceService = inject(PieceDetacheeService);
   private moService = inject(MainDoeuvreService);
   private authService = inject(AuthService);
+  private pdfLayoutDialog = inject(PdfLayoutDialogService);
 
   avoirs: AvoirHT[] = [];
   filtered: AvoirHT[] = [];
   loading = true;
   saving = false;
   selectedAvoir: AvoirHT | null = null;
-  downloadLayoutKey: 'AVEC_ENTETE' | 'SANS_ENTETE' = 'AVEC_ENTETE';
   showCreateModal = false;
   showDetailModal = false;
 
@@ -333,13 +334,15 @@ export class AvoirsHt extends BasePaginatedComponent implements OnInit {
     this.selectedAvoir = null;
   }
 
-  downloadPdf(a: AvoirHT) {
-    this.service.downloadPdf(a.id, this.downloadLayoutKey).subscribe({
+  async downloadPdf(a: AvoirHT) {
+    const layoutKey = await this.pdfLayoutDialog.chooseLayout();
+    if (!layoutKey) return;
+    this.service.downloadPdf(a.id, layoutKey).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const anchor = document.createElement('a');
         anchor.href = url;
-        anchor.download = `AvoirHT_${a.numero || a.id}_${this.downloadLayoutKey === 'AVEC_ENTETE' ? 'avec-entete' : 'sans-entete'}.pdf`;
+        anchor.download = `AvoirHT_${a.numero || a.id}_${layoutKey === 'AVEC_ENTETE' ? 'avec-entete' : 'sans-entete'}.pdf`;
         anchor.click();
         window.URL.revokeObjectURL(url);
       },

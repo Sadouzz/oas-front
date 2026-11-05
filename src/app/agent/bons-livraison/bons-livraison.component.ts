@@ -6,16 +6,17 @@ import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select.component';
-import { LucideEye, LucideLoader2, LucidePlus, LucidePrinter, LucideSearch, LucideX } from '@lucide/angular';
+import { LucideEye, LucideLoader2, LucidePlus, LucideDownload, LucideSearch, LucideX } from '@lucide/angular';
 import { AuthService } from '../../core/services/auth.service';
 import { OrdreReparationService } from '../ordres-reparation/ordre-reparation.service';
 import { BonDeLivraison, BonDeLivraisonOrdreContext, BonDeLivraisonService, BonDeSortieDisponible } from './bon-de-livraison.service';
 import { FACTURE_MODES_PAIEMENT, FactureModePaiement } from '../factures/models/facture-mode-paiement';
+import { PdfLayoutDialogService } from '../../shared/components/pdf-layout-dialog/pdf-layout-dialog.service';
 
 @Component({
   selector: 'app-bons-livraison', standalone: true,
   imports: [CommonModule, FormsModule, AlertComponent, PaginationComponent, SearchableSelectComponent,
-    LucideEye, LucideLoader2, LucidePlus, LucidePrinter, LucideSearch, LucideX],
+    LucideEye, LucideLoader2, LucidePlus, LucideDownload, LucideSearch, LucideX],
   templateUrl: './bons-livraison.component.html',
 })
 export class BonsLivraisonComponent extends BasePaginatedComponent implements OnInit {
@@ -23,6 +24,7 @@ export class BonsLivraisonComponent extends BasePaginatedComponent implements On
   private orApi = inject(OrdreReparationService);
   private route = inject(ActivatedRoute);
   private authService = inject(AuthService);
+  private pdfLayoutDialog = inject(PdfLayoutDialogService);
   bons: BonDeLivraison[] = [];
   ordres: any[] = [];
   ordresPage = 0;
@@ -242,10 +244,12 @@ export class BonsLivraisonComponent extends BasePaginatedComponent implements On
     this.actionLoading = false; this.successMessage = message; this.loadData();
     if (this.selectedBon) this.selectedBon = { ...this.selectedBon, ...update };
   }
-  print(bon: BonDeLivraison): void {
-    this.api.pdf(bon.id).subscribe({ next: blob => {
+  async print(bon: BonDeLivraison): Promise<void> {
+    const layoutKey = await this.pdfLayoutDialog.chooseLayout();
+    if (!layoutKey) return;
+    this.api.pdf(bon.id, layoutKey).subscribe({ next: blob => {
       const url = URL.createObjectURL(blob); const link = document.createElement('a');
-      link.href = url; link.download = `${bon.numero}.pdf`; link.click(); URL.revokeObjectURL(url);
+      link.href = url; link.download = `${bon.numero}-${layoutKey === 'AVEC_ENTETE' ? 'avec-entete' : 'sans-entete'}.pdf`; link.click(); URL.revokeObjectURL(url);
     }, error: () => this.errorMessage = 'Le PDF du bon de livraison ne peut pas être généré.' });
   }
 }

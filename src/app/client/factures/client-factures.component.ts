@@ -5,6 +5,7 @@ import { FactureModel } from '../../shared/models';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { StatusBadgeComponent, BadgeTone } from '../ui/status-badge/status-badge.component';
 import { VehicleAvatarComponent } from '../ui/vehicle-avatar/vehicle-avatar.component';
+import { PdfLayoutDialogService } from '../../shared/components/pdf-layout-dialog/pdf-layout-dialog.service';
 
 type SortOrder = 'recent' | 'ancien';
 
@@ -29,6 +30,7 @@ const STATUT_TONES: Record<FactureModel['statutPaiement'], BadgeTone> = {
 export class ClientFacturesComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private service = inject(ClientFactureService);
+  private pdfLayoutDialog = inject(PdfLayoutDialogService);
 
   factures: FactureModel[] = [];
   filtered: FactureModel[] = [];
@@ -90,9 +92,11 @@ export class ClientFacturesComponent implements OnInit {
     });
   }
 
-  downloadPdf(facture: FactureModel): void {
-    this.service.downloadPdf(facture.id).subscribe({
-      next: blob => this.savePdf(blob, `Facture-${facture.numero || facture.id}.pdf`),
+  async downloadPdf(facture: FactureModel): Promise<void> {
+    const layoutKey = await this.pdfLayoutDialog.chooseLayout();
+    if (!layoutKey) return;
+    this.service.downloadPdf(facture.id, layoutKey).subscribe({
+      next: blob => this.savePdf(blob, `Facture-${facture.numero || facture.id}-${layoutKey === 'AVEC_ENTETE' ? 'avec-entete' : 'sans-entete'}.pdf`),
       error: () => { this.errorMessage = 'Impossible de télécharger cette facture.'; this.cdr.markForCheck(); },
     });
   }

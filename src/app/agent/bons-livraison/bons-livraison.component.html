@@ -67,8 +67,8 @@
                   <button type="button" (click)="openDetail(bon)" title="Voir le détail" class="p-1.5 rounded-lg hover:bg-oas-info-bg text-oas-muted hover:text-oas-info transition cursor-pointer">
                     <svg lucideEye class="w-4 h-4"></svg>
                   </button>
-                  <button type="button" (click)="print(bon)" title="Imprimer" class="p-1.5 rounded-lg hover:bg-oas-bg text-oas-muted hover:text-oas-ink transition cursor-pointer">
-                    <svg lucidePrinter class="w-4 h-4"></svg>
+                  <button type="button" (click)="print(bon)" title="Télécharger le PDF" class="p-1.5 rounded-lg hover:bg-oas-bg text-oas-muted hover:text-oas-ink transition cursor-pointer">
+                    <svg lucideDownload class="w-4 h-4"></svg>
                   </button>
                 </div></td>
               </tr>
@@ -243,7 +243,7 @@
       </div>
       <div class="px-6 py-4 border-t border-oas-line flex flex-wrap items-center justify-between gap-2 flex-shrink-0">
         <div class="flex gap-2"><button type="button" (click)="convertNote(selectedBon)" [disabled]="!!selectedBon.noteDePrixNumero || actionLoading" class="px-3 py-2 rounded-lg border border-oas-line text-oas-ink text-xs font-semibold hover:bg-oas-bg disabled:opacity-50 cursor-pointer">{{ selectedBon.noteDePrixNumero ? 'Note ' + selectedBon.noteDePrixNumero : 'Convertir en note de prix' }}</button><button type="button" (click)="convertFacture(selectedBon)" [disabled]="!!selectedBon.factureNumero || actionLoading" class="px-3 py-2 rounded-lg bg-oas-ok text-white text-xs font-bold hover:opacity-90 disabled:opacity-50 cursor-pointer">{{ selectedBon.factureNumero ? 'Facture ' + selectedBon.factureNumero : 'Créer la facture' }}</button></div>
-        <button type="button" (click)="print(selectedBon)" class="px-3 py-2 rounded-lg bg-oas-accent hover:bg-oas-accent-dark text-white text-xs font-bold cursor-pointer">Imprimer</button>
+        <button type="button" (click)="print(selectedBon)" class="px-3 py-2 rounded-lg bg-oas-accent hover:bg-oas-accent-dark text-white text-xs font-bold cursor-pointer">Télécharger le PDF</button>
       </div>
     </div>
   </div>

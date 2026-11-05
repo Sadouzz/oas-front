@@ -37,13 +37,6 @@
         <option value="EN_COURS">En cours (non soldées)</option>
         <option value="PAYE">Payées</option>
       </select>
-      <label class="block text-xs font-semibold text-oas-muted min-w-[160px]">Présentation du PDF
-        <select [(ngModel)]="downloadLayoutKey" [ngModelOptions]="{standalone: true}"
-          class="mt-1 w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm font-normal text-oas-ink focus:outline-none focus:ring-2 focus:ring-oas-accent/40">
-          <option value="AVEC_ENTETE">Avec en-tête</option>
-          <option value="SANS_ENTETE">Sans en-tête</option>
-        </select>
-      </label>
       <button type="button" (click)="showDateFilter = !showDateFilter"
         class="px-3 py-2 rounded-lg border text-sm font-medium transition flex items-center gap-1.5 cursor-pointer"
         [class.bg-oas-accent]="showDateFilter"

@@ -411,9 +411,6 @@
             </div>
           </div>
           <div class="flex items-center gap-3">
-            <select [value]="downloadLayoutKey" (change)="downloadLayoutKey = $any($event.target).value" class="px-3 py-2.5 border border-oas-line rounded-xl text-xs bg-white">
-              <option value="AVEC_ENTETE">Avec en-tête</option><option value="SANS_ENTETE">Sans en-tête</option>
-            </select>
             <button type="button" (click)="telechargerPdf()" [disabled]="telechargementEnCours"
               class="px-4 py-2.5 border border-oas-line hover:bg-oas-bg text-oas-ink rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer">
               <svg class="w-4 h-4 text-oas-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -474,9 +471,6 @@
             </div>
           </div>
           <div class="flex items-center gap-3">
-            <select [value]="downloadLayoutKey" (change)="downloadLayoutKey = $any($event.target).value" class="px-3 py-2.5 border border-oas-line rounded-xl text-xs bg-white">
-              <option value="AVEC_ENTETE">Avec en-tête</option><option value="SANS_ENTETE">Sans en-tête</option>
-            </select>
             <button type="button" (click)="telechargerPdf()" [disabled]="telechargementEnCours"
               class="px-4 py-2.5 border border-oas-line hover:bg-oas-bg text-oas-ink rounded-xl text-xs font-semibold flex items-center gap-2 transition cursor-pointer">
               <svg class="w-4 h-4 text-oas-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
