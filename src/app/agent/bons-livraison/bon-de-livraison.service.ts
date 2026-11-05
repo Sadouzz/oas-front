@@ -74,7 +74,7 @@ export class BonDeLivraisonService {
   convertirNote(id: number): Observable<any> {
     return this.http.post(`${this.api}/${id}/convertir-en-note-de-prix`, {});
   }
-  pdf(id: number): Observable<Blob> {
-    return this.http.get(`${this.api}/${id}/pdf`, { responseType: 'blob' });
+  pdf(id: number, layoutKey: 'AVEC_ENTETE' | 'SANS_ENTETE'): Observable<Blob> {
+    return this.http.get(`${this.api}/${id}/pdf`, { params: { layoutKey }, responseType: 'blob' });
   }
 }

@@ -6,6 +6,7 @@ import { NgClass } from '@angular/common';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideTruck } from '@lucide/angular';
+import { PdfLayoutDialogService } from '../../shared/components/pdf-layout-dialog/pdf-layout-dialog.service';
 
 @Component({
   selector: 'app-bons-reception',
@@ -17,6 +18,7 @@ export class BonsReceptionComponent extends BasePaginatedComponent implements On
 
   private cdr = inject(ChangeDetectorRef);
   private service = inject(BonDeReceptionService);
+  private pdfLayoutDialog = inject(PdfLayoutDialogService);
 
   bons: BonDeReception[] = [];
   filtered: BonDeReception[] = [];
@@ -83,7 +85,9 @@ export class BonsReceptionComponent extends BasePaginatedComponent implements On
     });
   }
 
-  downloadPdf(id: number, layoutKey: 'AVEC_ENTETE' | 'SANS_ENTETE') {
+  async downloadPdf(id: number) {
+    const layoutKey = await this.pdfLayoutDialog.chooseLayout();
+    if (!layoutKey) return;
     this.service.downloadPdf(id, layoutKey).subscribe({
       next: blob => {
       const url = URL.createObjectURL(blob);

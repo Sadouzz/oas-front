@@ -62,3 +62,8 @@ contxte.md
 *.swp
 *.tsbuildinfo
 *~
+*.patch
+hs_err_pid*
+replay_pid*
+*.hprof
+*.jfr

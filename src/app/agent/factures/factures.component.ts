@@ -11,6 +11,7 @@ import { PaginationComponent } from '../../shared/components/pagination/paginati
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 import { FiscalConfigurationService } from '../gestion-tva/fiscal-configuration.service';
 import { modePaiementRecu } from './models/facture-mode-paiement';
+import { PdfLayoutDialogService } from '../../shared/components/pdf-layout-dialog/pdf-layout-dialog.service';
 
 @Component({
   selector: 'app-factures',
@@ -27,6 +28,7 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
   private router = inject(Router);
   private clientService = inject(ClientService);
   private fiscalConfigurationService = inject(FiscalConfigurationService);
+  private pdfLayoutDialog = inject(PdfLayoutDialogService);
   timbreFiscalRate = 1;
 
   factures: FactureListModel[] = [];
@@ -42,7 +44,6 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
   paySaving = false;
   walletBalance: number | null = null;
 
-  downloadLayoutKey: 'AVEC_ENTETE' | 'SANS_ENTETE' = 'AVEC_ENTETE';
 
   get payMaxMontant(): number {
     if (!this.factureToPay) return 0;
@@ -239,12 +240,14 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
     });
   }
 
-  downloadPdf(id: number) {
-    this.service.downloadPdf(id, this.downloadLayoutKey).subscribe(blob => {
+  async downloadPdf(id: number) {
+    const layoutKey = await this.pdfLayoutDialog.chooseLayout();
+    if (!layoutKey) return;
+    this.service.downloadPdf(id, layoutKey).subscribe(blob => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `facture-${id}-${this.downloadLayoutKey === 'AVEC_ENTETE' ? 'avec-entete' : 'sans-entete'}.pdf`;
+      a.download = `facture-${id}-${layoutKey === 'AVEC_ENTETE' ? 'avec-entete' : 'sans-entete'}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     });

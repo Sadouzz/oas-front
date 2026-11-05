@@ -12,6 +12,7 @@ import { BasePaginatedComponent } from '../../shared/components/base-paginated.c
 import { DevisPrevisionnel, ClientModel, VehiculeModel, extractContent } from '../../shared/models';
 import { LucidePlus } from '@lucide/angular';
 import { DevisPrevisionnelPrintComponent } from '../../shared/document-print';
+import { PdfLayoutDialogService } from '../../shared/components/pdf-layout-dialog/pdf-layout-dialog.service';
 
 @Component({
   selector: 'app-devis-previsionnels',
@@ -28,6 +29,7 @@ export class DevisPrevisionnelsComponent extends BasePaginatedComponent implemen
   private vehiculeService = inject(VehiculeService);
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
+  private pdfLayoutDialog = inject(PdfLayoutDialogService);
 
   devis: DevisPrevisionnel[] = [];
   clients: ClientModel[] = [];
@@ -40,7 +42,6 @@ export class DevisPrevisionnelsComponent extends BasePaginatedComponent implemen
   successMessage = '';
   errorMessage = '';
   selectedDevisForPrint: any = null;
-  downloadLayoutKey: 'AVEC_ENTETE' | 'SANS_ENTETE' = 'AVEC_ENTETE';
 
   filterClientId = '';
   private searchTimeout: any;
@@ -199,8 +200,10 @@ export class DevisPrevisionnelsComponent extends BasePaginatedComponent implemen
     }, 50);
   }
 
-  ouvrirPdf(id: number) {
-    this.service.downloadPdf(id, this.downloadLayoutKey).subscribe({
+  async ouvrirPdf(id: number) {
+    const layoutKey = await this.pdfLayoutDialog.chooseLayout();
+    if (!layoutKey) return;
+    this.service.downloadPdf(id, layoutKey).subscribe({
       next: blob => {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');

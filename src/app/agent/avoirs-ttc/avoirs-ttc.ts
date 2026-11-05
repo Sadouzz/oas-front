@@ -18,6 +18,7 @@ import { LucideSearch, LucidePlus, LucideTrash2, LucideX, LucideDownload, Lucide
 
 import { AvoirTTC, AvoirTTCCreateRequest } from './models/avoit-ttc.model';
 import { FiscalConfigurationService } from '../gestion-tva/fiscal-configuration.service';
+import { PdfLayoutDialogService } from '../../shared/components/pdf-layout-dialog/pdf-layout-dialog.service';
 
 @Component({
   selector: 'app-avoirs-ttc',
@@ -39,6 +40,7 @@ export class AvoirsTtc extends BasePaginatedComponent implements OnInit {
   private moService = inject(MainDoeuvreService);
   private authService = inject(AuthService);
   private fiscalConfigurationService = inject(FiscalConfigurationService);
+  private pdfLayoutDialog = inject(PdfLayoutDialogService);
   tvaRate = 18;
 
   avoirs: AvoirTTC[] = [];
@@ -46,7 +48,6 @@ export class AvoirsTtc extends BasePaginatedComponent implements OnInit {
   loading = true;
   saving = false;
   selectedAvoir: AvoirTTC | null = null;
-  downloadLayoutKey: 'AVEC_ENTETE' | 'SANS_ENTETE' = 'AVEC_ENTETE';
   showCreateModal = false;
   showDetailModal = false;
 
@@ -355,13 +356,15 @@ export class AvoirsTtc extends BasePaginatedComponent implements OnInit {
     this.selectedAvoir = null;
   }
 
-  downloadPdf(a: AvoirTTC) {
-    this.service.downloadPdf(a.id, this.downloadLayoutKey).subscribe({
+  async downloadPdf(a: AvoirTTC) {
+    const layoutKey = await this.pdfLayoutDialog.chooseLayout();
+    if (!layoutKey) return;
+    this.service.downloadPdf(a.id, layoutKey).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const anchor = document.createElement('a');
         anchor.href = url;
-        anchor.download = `AvoirTTC_${a.numero || a.id}_${this.downloadLayoutKey === 'AVEC_ENTETE' ? 'avec-entete' : 'sans-entete'}.pdf`;
+        anchor.download = `AvoirTTC_${a.numero || a.id}_${layoutKey === 'AVEC_ENTETE' ? 'avec-entete' : 'sans-entete'}.pdf`;
         anchor.click();
         window.URL.revokeObjectURL(url);
       },

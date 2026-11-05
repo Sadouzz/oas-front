@@ -369,11 +369,6 @@
               <span>Proforma : <strong>{{ proformaContexte?.numero || selectedOrdreTravail?.proformaNumero }}</strong></span>
             }
           </div>
-          <button type="button" (click)="importerLignesProforma()"
-            class="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition cursor-pointer flex items-center gap-1.5 shadow-2xs">
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-            Importer pièces & MO du proforma
-          </button>
         </div>
       }
     </form>
@@ -943,32 +938,16 @@
       }
 
       <!-- Récapitulatif -->
-      <label class="mb-3 flex items-center gap-2 rounded-xl border border-oas-accent/30 bg-oas-accent/5 px-4 py-3 text-sm font-semibold text-oas-ink cursor-pointer">
-        <input type="checkbox" [(ngModel)]="appliquerTVA" [ngModelOptions]="{ standalone: true }" class="accent-oas-accent" />
-        Appliquer la TVA ({{ tvaRate }} %)
-      </label>
       <div class="bg-oas-bg rounded-2xl p-4 border border-oas-line flex flex-wrap items-center justify-between gap-4 text-sm">
         <div class="space-y-0.5">
           <p class="font-bold text-oas-ink text-xs uppercase tracking-wide">Récapitulatif</p>
           <p class="text-xs text-oas-muted">
             <span class="font-medium text-blue-700">{{ lignesPieces.length }} ligne(s) au total</span>
-            @if (totalRemise > 0) {
-              <span class="ml-2 text-emerald-700 font-semibold">(Remise totale : −{{ fmt(totalRemise) }} FCFA)</span>
-            }
           </p>
         </div>
         <div class="text-right">
-          @if (totalRemise > 0) {
-            <span class="text-[11px] text-oas-muted line-through block">{{ fmt(totalBrut) }} FCFA</span>
-          }
-          <span class="text-xs text-oas-muted font-semibold uppercase block">Total après remise</span>
+          <span class="text-xs text-oas-muted font-semibold uppercase block">Total du bon (hors TVA)</span>
           <strong class="text-lg font-black text-oas-accent">{{ fmt(totalGeneral) }} FCFA</strong>
-          @if (appliquerTVA) {
-            <span class="block text-xs text-oas-muted">TVA : {{ fmt(montantTVAForm) }} FCFA</span>
-            <span class="block text-xs font-bold text-oas-ink">Total TTC : {{ fmt(montantTTCForm) }} FCFA</span>
-          } @else {
-            <span class="block text-xs text-oas-muted">TVA désactivée</span>
-          }
         </div>
       </div>
 
@@ -991,14 +970,14 @@
     <div class="flex items-center gap-2 shrink-0">
       <button type="button" (click)="closeCreate()"
         class="bg-white hover:bg-oas-bg text-oas-ink font-semibold px-4 h-10 rounded-lg border border-oas-line transition cursor-pointer text-sm">Annuler</button>
-      <button type="button" (click)="save()" [disabled]="saving"
+      <button type="button" (click)="save()" [disabled]="saving || (bonDeSortieValidePourOt && (contextOrdreTravailId || contextOrdreReparationId))"
         class="bg-oas-accent hover:bg-oas-accent-dark text-white font-bold px-5 h-10 rounded-lg flex items-center gap-2 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm">
         @if (saving) {
           <svg lucideLoader2 class="w-4 h-4 animate-spin"></svg>
           Création...
         } @else {
           <svg lucideCheck class="w-4 h-4"></svg>
-          Créer le bon
+          {{ bonDeSortieExistantPourOt && contextOrdreTravailId ? 'Ajouter au bon existant' : contextOrdreReparationId ? 'Enregistrer le bon' : 'Créer le bon' }}
         }
       </button>
     </div>
@@ -1174,9 +1153,6 @@
                       @if ((l.type === 'PDS' || l.type === 'PDG') && l.dateHeureSaisie) {
                         <div class="text-[10px] text-oas-muted mt-0.5">Saisie le {{ formatDate(l.dateHeureSaisie) }}</div>
                       }
-                      @if (l.tauxRemise && l.tauxRemise > 0) {
-                        <div class="text-[10px] text-emerald-600 font-semibold mt-0.5">Remise : {{ l.tauxRemise }}%</div>
-                      }
                     </div>
                   </div>
                 </td>
@@ -1212,10 +1188,6 @@
                 <td class="px-4 py-3 text-right text-sm font-black text-blue-700 whitespace-nowrap">{{ totalSelectedBon | number }} FCFA</td>
                 @if (selectedBon.statut === 'EN_ATTENTE') { <td></td> }
               </tr>
-              @if (selectedBon.tvaApplicable ?? ((selectedBon.montantTVA || 0) > 0)) {
-                <tr class="bg-white border-t border-blue-100"><td colspan="3" class="px-4 py-2 text-right text-xs text-oas-muted">TVA</td><td class="px-4 py-2 text-right text-sm">{{ (selectedBon.montantTVA || 0) | number }} FCFA</td>@if (selectedBon.statut === 'EN_ATTENTE') { <td></td> }</tr>
-                <tr class="bg-blue-50 border-t border-blue-100 font-bold"><td colspan="3" class="px-4 py-2 text-right text-xs text-oas-ink">Total TTC</td><td class="px-4 py-2 text-right text-sm">{{ (selectedBon.montantTTC ?? selectedBon.montantTotal ?? totalSelectedBon) | number }} FCFA</td>@if (selectedBon.statut === 'EN_ATTENTE') { <td></td> }</tr>
-              }
             </tfoot>
             }
           </table>

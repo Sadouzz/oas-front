@@ -17,8 +17,8 @@ export class ClientDevisService {
     return this.http.get<DevisPrevisionnel>(`${this.api}/me/${id}`);
   }
 
-  downloadPdf(id: number): Observable<Blob> {
-    return this.http.get(`${this.api}/me/${id}/pdf`, { responseType: 'blob' });
+  downloadPdf(id: number, layoutKey: 'AVEC_ENTETE' | 'SANS_ENTETE'): Observable<Blob> {
+    return this.http.get(`${this.api}/me/${id}/pdf`, { params: { layoutKey }, responseType: 'blob' });
   }
 
   accepter(id: number): Observable<DevisPrevisionnel> {

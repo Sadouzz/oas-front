@@ -55,17 +55,23 @@ export class LayoutComponent implements OnInit, OnDestroy {
   retractableMode = false;
   get isCollapsed(): boolean { return this.retractableMode; }
   set isCollapsed(val: boolean) { this.retractableMode = val; }
-  isPrimaryHovered = false;
   hoverSection: string | null = null;
   hoverSubSection: string | null = null;
+  pinnedSection: string | null = null;
   isSubmenuExpanded = false;
+  private submenuPreviewTimer: number | undefined;
 
   get activeSection(): string | null {
-    return this.hoverSection || this.openSection;
+    return this.hoverSection || this.pinnedSection || this.openSection;
+  }
+
+  get showFlyout(): boolean {
+    return Boolean(this.hoverSection || this.pinnedSection);
   }
 
   get activeSubSection(): string | null {
-    return this.hoverSubSection || this.openSubSection;
+    if (this.hoverSection || this.pinnedSection) return this.hoverSubSection;
+    return this.openSubSection;
   }
   
   activeGarageName: string | null = null;
@@ -234,6 +240,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
     if (this.routerSub) this.routerSub.unsubscribe();
     if (this.wsSub) this.wsSub.unsubscribe();
     if (this.notificationInterval) clearInterval(this.notificationInterval);
+    window.clearTimeout(this.submenuPreviewTimer);
     this.notificationWsService.disconnect();
   }
 
@@ -327,7 +334,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
       this.openSubSection = 'bc';
     } else if (relUrl.startsWith('/proformas')) {
       this.openSection = 'facture-ttc';
-      this.openSubSection = 'proforma.component';
+      this.openSubSection = 'proforma';
     } else if (relUrl.startsWith('/avoirs-ttc')) {
       this.openSection = 'facture-ttc';
       this.openSubSection = 'avoir-ttc';
@@ -351,6 +358,9 @@ export class LayoutComponent implements OnInit, OnDestroy {
     } else {
       this.openSection = null;
     }
+    this.pinnedSection = null;
+    this.hoverSection = null;
+    this.hoverSubSection = null;
     this.isSubmenuExpanded = false;
     this.closeSidebar();
   }
@@ -371,48 +381,67 @@ export class LayoutComponent implements OnInit, OnDestroy {
     this.isSidebarOpen = false;
   }
 
-  onPrimaryEnter(): void {
-    if (this.retractableMode) {
-      this.isPrimaryHovered = true;
-      this.cdr.markForCheck();
-    }
-  }
-
   onMenuHover(section: string): void {
-    if (this.retractableMode) {
-      this.hoverSection = section;
-      if (section === 'facture-ttc') this.hoverSubSection = 'facture';
-      else if (section === 'pieces') this.hoverSubSection = 'pdp';
-      else if (section === 'facture-ht') this.hoverSubSection = 'note-prix';
-      else if (section === 'atelier') this.hoverSubSection = 'fiches';
-      else if (section === 'stock') this.hoverSubSection = 'bs';
-      else if (section === 'reappro') this.hoverSubSection = 'br';
-      else if (section === 'admin') this.hoverSubSection = 'parametres';
-      else this.hoverSubSection = null;
-      this.cdr.markForCheck();
-    }
+    if (!this.retractableMode) return;
+    this.hoverSection = section;
+    this.hoverSubSection = null;
+    this.cdr.markForCheck();
   }
 
-  onSubMenuHover(subSection: string): void {
-    if (this.retractableMode) {
+  onSubmenuHoverPreview(subSection: string): void {
+    if (!this.retractableMode) return;
+    window.clearTimeout(this.submenuPreviewTimer);
+    this.submenuPreviewTimer = window.setTimeout(() => {
       this.hoverSubSection = subSection;
       this.cdr.markForCheck();
+    }, 100);
+  }
+
+  onSubMenuHover(subSection: string, focusLeaf = false): void {
+    if (this.retractableMode) {
+      window.clearTimeout(this.submenuPreviewTimer);
+      this.hoverSubSection = subSection;
+      this.cdr.markForCheck();
+      if (focusLeaf) {
+        setTimeout(() => document.querySelector<HTMLElement>('[data-nav-level="leaf"] [data-nav-back]')?.focus());
+      }
     }
   }
 
   onGlobalNavLeave(): void {
-    if (this.retractableMode) {
-      this.isPrimaryHovered = false;
-      this.hoverSection = null;
-      this.hoverSubSection = null;
-      this.cdr.markForCheck();
+    this.hoverSection = null;
+    if (!this.pinnedSection) this.hoverSubSection = null;
+    window.clearTimeout(this.submenuPreviewTimer);
+    this.cdr.markForCheck();
+  }
+
+  onGlobalNavFocusLeave(event: FocusEvent): void {
+    const nextTarget = event.relatedTarget;
+    // Angular peut retirer le bouton focalisé lors du passage au niveau suivant.
+    if (!nextTarget) return;
+    if (nextTarget instanceof Node && event.currentTarget instanceof HTMLElement
+      && event.currentTarget.contains(nextTarget)) return;
+    this.pinnedSection = null;
+    this.hoverSection = null;
+    this.hoverSubSection = null;
+    this.isSubmenuExpanded = false;
+    this.cdr.markForCheck();
+  }
+
+  onFlyoutKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'Escape') return;
+    event.preventDefault();
+    if (this.activeSubSection) {
+      this.onSubmenuBack();
+      return;
     }
+    this.closeFlyout(true);
   }
 
   onSelectLink(): void {
-    this.isPrimaryHovered = false;
     this.hoverSection = null;
     this.hoverSubSection = null;
+    this.pinnedSection = null;
     this.isSubmenuExpanded = false;
     this.closeSidebar();
     this.cdr.markForCheck();
@@ -420,6 +449,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
   toggleRetractableMode(): void {
     this.retractableMode = !this.retractableMode;
+    this.closeSidebar();
     try {
       localStorage.setItem('oas_retractable_mode', String(this.retractableMode));
       localStorage.setItem('oas_sidebar_collapsed', String(this.retractableMode));
@@ -433,20 +463,34 @@ export class LayoutComponent implements OnInit, OnDestroy {
     this.toggleRetractableMode();
   }
 
-  closeFlyout(): void {
-    if (this.isCollapsed && this.openSection) {
-      this.openSection = null;
-      this.cdr.markForCheck();
+  closeFlyout(restoreFocus = false): void {
+    const section = this.hoverSection || this.pinnedSection;
+    this.pinnedSection = null;
+    this.hoverSection = null;
+    this.hoverSubSection = null;
+    this.isSubmenuExpanded = false;
+    this.cdr.markForCheck();
+    if (restoreFocus && section) {
+      const trigger = document.querySelector<HTMLElement>(`[data-nav-section="${section}"]`);
+      if (trigger && document.activeElement !== trigger) {
+        trigger.focus();
+      }
     }
   }
 
   handleSectionClick(section: string): void {
     if (this.isCollapsed) {
-      if (this.openSection === section && this.isSubmenuExpanded) {
+      if (this.pinnedSection === section) {
+        this.pinnedSection = null;
+        this.hoverSection = null;
+        this.hoverSubSection = null;
         this.isSubmenuExpanded = false;
       } else {
-        this.openSection = section;
+        this.pinnedSection = section;
+        this.hoverSection = null;
         this.isSubmenuExpanded = true;
+        this.hoverSubSection = null;
+        setTimeout(() => document.querySelector<HTMLElement>('[data-nav-level="section"] [data-nav-first]')?.focus());
       }
     } else {
       this.toggleSection(section);
@@ -454,10 +498,13 @@ export class LayoutComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  onSubmenuSelect(): void {
-    // Après le choix du 2ème volet, il se rétracte uniquement, il ne disparaît pas !
-    this.isSubmenuExpanded = false;
+  onSubmenuBack(): void {
+    const subSection = this.hoverSubSection;
+    this.hoverSubSection = null;
     this.cdr.markForCheck();
+    if (subSection) {
+      setTimeout(() => document.querySelector<HTMLElement>(`[data-nav-subsection="${subSection}"]`)?.focus());
+    }
   }
 
   getSectionTitle(section: string | null): string {

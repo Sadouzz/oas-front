@@ -17,6 +17,7 @@ import { PaginationComponent } from '../../shared/components/pagination/paginati
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideArrowRight } from '@lucide/angular';
 import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select.component';
 import { FiscalConfigurationService } from '../gestion-tva/fiscal-configuration.service';
+import { PdfLayoutDialogService } from '../../shared/components/pdf-layout-dialog/pdf-layout-dialog.service';
 
 @Component({
   selector: 'app-bons-commande',
@@ -36,6 +37,7 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
   private fiscalConfigurationService = inject(FiscalConfigurationService);
+  private pdfLayoutDialog = inject(PdfLayoutDialogService);
   tvaRate = 18;
 
   bons: BonDeCommande[] = [];
@@ -958,7 +960,9 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
     });
   }
 
-  downloadPdf(id: number, layoutKey: 'AVEC_ENTETE' | 'SANS_ENTETE') {
+  async downloadPdf(id: number) {
+    const layoutKey = await this.pdfLayoutDialog.chooseLayout();
+    if (!layoutKey) return;
     this.service.downloadPdf(id, layoutKey).subscribe(blob => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');

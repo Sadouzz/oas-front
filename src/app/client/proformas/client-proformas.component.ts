@@ -6,6 +6,7 @@ import { Proforma } from '../../shared/models';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { StatusBadgeComponent, BadgeTone } from '../ui/status-badge/status-badge.component';
 import { VehicleAvatarComponent } from '../ui/vehicle-avatar/vehicle-avatar.component';
+import { PdfLayoutDialogService } from '../../shared/components/pdf-layout-dialog/pdf-layout-dialog.service';
 
 type SortOrder = 'recent' | 'ancien';
 
@@ -34,6 +35,7 @@ export class ClientProformasComponent implements OnInit {
 
   private cdr = inject(ChangeDetectorRef);
   private service = inject(ClientProformaService);
+  private pdfLayoutDialog = inject(PdfLayoutDialogService);
 
   proformas: Proforma[] = [];
   filtered: Proforma[] = [];
@@ -95,9 +97,11 @@ export class ClientProformasComponent implements OnInit {
     });
   }
 
-  downloadPdf(proforma: Proforma): void {
-    this.service.downloadPdf(proforma.id).subscribe({
-      next: blob => this.savePdf(blob, `Proforma-${proforma.numero || proforma.id}.pdf`),
+  async downloadPdf(proforma: Proforma): Promise<void> {
+    const layoutKey = await this.pdfLayoutDialog.chooseLayout();
+    if (!layoutKey) return;
+    this.service.downloadPdf(proforma.id, layoutKey).subscribe({
+      next: blob => this.savePdf(blob, `Proforma-${proforma.numero || proforma.id}-${layoutKey === 'AVEC_ENTETE' ? 'avec-entete' : 'sans-entete'}.pdf`),
       error: (err: any) => { this.errorMessage = err.error?.message || 'Impossible de télécharger cette proforma.'; this.cdr.markForCheck(); },
     });
   }
