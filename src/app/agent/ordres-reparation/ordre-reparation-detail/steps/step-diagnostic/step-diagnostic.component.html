@@ -12,15 +12,26 @@
   <div class="space-y-6">
     <div class="flex items-center justify-between border-b border-oas-line pb-3">
       <h2 class="text-lg font-bold text-oas-ink">Étape 2 · Chef Atelier</h2>
-      <button type="button" (click)="marquerValide()" [disabled]="saving"
-        class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-xs transition cursor-pointer flex items-center gap-1.5">
-        <span>Sauter le chef atelier</span>
-        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-        </svg>
-      </button>
+      @if (!isReadOnly) {
+        <button type="button" (click)="marquerValide()" [disabled]="saving"
+          class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-xs transition cursor-pointer flex items-center gap-1.5">
+          <span>Sauter le chef atelier</span>
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </button>
+      }
       <span class="text-xs text-oas-muted font-mono">{{ loadedOrdre?.numero }}</span>
     </div>
+
+    @if (isReadOnly) {
+      <div class="p-3.5 rounded-xl bg-slate-100 border border-slate-300 text-slate-700 text-xs font-semibold flex items-center gap-2.5">
+        <svg class="w-4 h-4 text-slate-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+        <span>Mode consultation seule · Cet ordre de réparation est validé et transféré en Ordre de Travail.</span>
+      </div>
+    }
 
     <!-- Statut du chef atelier & Contrôle de passage à l'étape suivante -->
     <div class="p-5 rounded-2xl border transition-all"
@@ -80,59 +91,61 @@
         </div>
 
         <!-- Boutons d'action contextuels -->
-        <div class="flex items-center gap-2.5 flex-wrap">
-          <!-- Actions lorsque c'est EN_COURS -->
-          @if (statutDiagnostic === 'EN_COURS') {
-            <button type="button" (click)="revenirEnAttente()" [disabled]="saving"
-              title="Repasser le chef atelier En attente"
-              class="px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold shadow-xs transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50">
-              <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              <span>Remettre En attente</span>
-            </button>
+        @if (!isReadOnly) {
+          <div class="flex items-center gap-2.5 flex-wrap">
+            <!-- Actions lorsque c'est EN_COURS -->
+            @if (statutDiagnostic === 'EN_COURS') {
+              <button type="button" (click)="revenirEnAttente()" [disabled]="saving"
+                title="Repasser le chef atelier En attente"
+                class="px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold shadow-xs transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50">
+                <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                <span>Remettre En attente</span>
+              </button>
 
-            <button type="button" (click)="marquerTermine()" [disabled]="saving"
-              class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition cursor-pointer flex items-center gap-1.5">
-              <span>Terminer le chef atelier</span>
-              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            </button>
-          }
+              <button type="button" (click)="marquerTermine()" [disabled]="saving"
+                class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition cursor-pointer flex items-center gap-1.5">
+                <span>Terminer le chef atelier</span>
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </button>
+            }
 
-          <!-- Actions lorsque c'est TERMINE -->
-          @if (statutDiagnostic === 'TERMINE') {
-            <button type="button" (click)="revenirEnCours()" [disabled]="saving"
-              title="Revenir à l'état En cours pour continuer ou modifier les examens"
-              class="px-3.5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold shadow-xs transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50">
-              <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              <span>Revenir à En cours</span>
-            </button>
+            <!-- Actions lorsque c'est TERMINE -->
+            @if (statutDiagnostic === 'TERMINE') {
+              <button type="button" (click)="revenirEnCours()" [disabled]="saving"
+                title="Revenir à l'état En cours pour continuer ou modifier les examens"
+                class="px-3.5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold shadow-xs transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50">
+                <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                <span>Revenir à En cours</span>
+              </button>
 
-            <button type="button" (click)="marquerValide()" [disabled]="saving"
-              class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition cursor-pointer flex items-center gap-1.5 animate-pulse">
-              <span>Valider le chef atelier</span>
-              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            </button>
-          }
+              <button type="button" (click)="marquerValide()" [disabled]="saving"
+                class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition cursor-pointer flex items-center gap-1.5 animate-pulse">
+                <span>Valider le chef atelier</span>
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </button>
+            }
 
-          <!-- Actions lorsque c'est VALIDE -->
-          @if (statutDiagnostic === 'VALIDE') {
-            <button type="button" (click)="revenirEnCours()" [disabled]="saving"
-              title="Revenir à En cours pour modifier les techniciens, pannes ou documents"
-              class="px-4 py-2 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold shadow-xs transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50">
-              <svg class="w-3.5 h-3.5 text-amber-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              <span>Revenir à En cours</span>
-            </button>
-          }
-        </div>
+            <!-- Actions lorsque c'est VALIDE -->
+            @if (statutDiagnostic === 'VALIDE') {
+              <button type="button" (click)="revenirEnCours()" [disabled]="saving"
+                title="Revenir à En cours pour modifier les techniciens, pannes ou documents"
+                class="px-4 py-2 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold shadow-xs transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50">
+                <svg class="w-3.5 h-3.5 text-amber-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                <span>Revenir à En cours</span>
+              </button>
+            }
+          </div>
+        }
       </div>
     </div>
 
@@ -154,6 +167,7 @@
       }
 
       <!-- Sélecteurs : Spécialité & Techniciens -->
+      @if (!isReadOnly) {
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <!-- 1. Searchable Dropdown : Spécialité du mécanicien -->
         <div class="relative z-30">
@@ -364,6 +378,7 @@
           </div>
         </div>
       </div>
+      }
 
       <!-- 3. Petit bloc en bas : Liste de ceux déjà choisis, avec possibilité de les enlever -->
       <div class="rounded-2xl border border-oas-line bg-oas-bg/40 p-4 space-y-3">
@@ -420,20 +435,22 @@
                 </div>
 
                 <!-- Bouton pour enlever le technicien -->
-                <button type="button" (click)="removeTechnicien(t.id)" [disabled]="technicienToggling === t.id"
-                  title="Retirer ce technicien du chef atelier"
-                  class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200 transition cursor-pointer flex-shrink-0 disabled:opacity-50">
-                  @if (technicienToggling === t.id) {
-                    <svg class="animate-spin h-3.5 w-3.5 text-red-500" fill="none" viewBox="0 0 24 24">
-                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                    </svg>
-                  } @else {
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  }
-                </button>
+                @if (!isReadOnly) {
+                  <button type="button" (click)="removeTechnicien(t.id)" [disabled]="technicienToggling === t.id"
+                    title="Retirer ce technicien du chef atelier"
+                    class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200 transition cursor-pointer flex-shrink-0 disabled:opacity-50">
+                    @if (technicienToggling === t.id) {
+                      <svg class="animate-spin h-3.5 w-3.5 text-red-500" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                      </svg>
+                    } @else {
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    }
+                  </button>
+                }
               </div>
             }
           </div>
@@ -446,16 +463,18 @@
     <!-- Remarques de chef atelier -->
     <div class="border-t border-oas-line pt-4 space-y-3">
       <label class="block text-sm font-bold text-oas-ink">Remarques & Observations de chef atelier</label>
-      <div class="flex gap-2">
-        <input type="text" [(ngModel)]="nouvelleRemarque"
-          placeholder="Ajouter une remarque de chef atelier..."
-          (keyup.enter)="addRemarque()"
-          class="flex-1 px-3.5 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm text-oas-ink focus:outline-none focus:ring-2 focus:ring-oas-accent/40" />
-        <button type="button" (click)="addRemarque()"
-          class="px-4 py-2.5 bg-oas-accent hover:bg-oas-accent-dark text-white rounded-xl text-xs font-bold transition cursor-pointer">
-          Ajouter
-        </button>
-      </div>
+      @if (!isReadOnly) {
+        <div class="flex gap-2">
+          <input type="text" [(ngModel)]="nouvelleRemarque"
+            placeholder="Ajouter une remarque de chef atelier..."
+            (keyup.enter)="addRemarque()"
+            class="flex-1 px-3.5 py-2.5 rounded-xl border border-oas-line bg-oas-bg text-sm text-oas-ink focus:outline-none focus:ring-2 focus:ring-oas-accent/40" />
+          <button type="button" (click)="addRemarque()"
+            class="px-4 py-2.5 bg-oas-accent hover:bg-oas-accent-dark text-white rounded-xl text-xs font-bold transition cursor-pointer">
+            Ajouter
+          </button>
+        </div>
+      }
 
       @if (remarquesDiagnostic.length > 0) {
         <div class="space-y-2 pt-2">
@@ -465,12 +484,16 @@
                 <span class="font-bold text-amber-900 block">{{ r.technicienNom || 'Technicien' }}</span>
                 <p class="text-amber-800 text-sm mt-0.5">{{ r.contenu }}</p>
               </div>
-              <button type="button" (click)="deleteRemarque(r.id)" class="text-red-500 hover:text-red-700 p-1">
-                ✕
-              </button>
+              @if (!isReadOnly) {
+                <button type="button" (click)="deleteRemarque(r.id)" class="text-red-500 hover:text-red-700 p-1">
+                  ✕
+                </button>
+              }
             </div>
           }
         </div>
+      } @else if (isReadOnly) {
+        <p class="text-xs text-oas-muted italic">Aucune remarque enregistrée.</p>
       }
     </div>
 

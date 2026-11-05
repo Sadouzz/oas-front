@@ -16,7 +16,8 @@ import {
   RemarqueDiagnostic,
   StatutDiagnostic,
   StatutOrdre,
-  extractContent
+  extractContent,
+  getEtapeFromStatut
 } from '../../../../../shared/models';
 import { StepDiagnosticResponseDto } from '../../../models/responses/step-diagnostic-response.dto';
 
@@ -47,6 +48,10 @@ export class StepDiagnosticComponent implements OnInit {
   ordreId!: number;
   loadedOrdre: StepDiagnosticResponseDto | null = null;
   currentDiagnostic: any = null;
+
+  get isReadOnly(): boolean {
+    return getEtapeFromStatut(this.loadedOrdre?.statut) >= 5;
+  }
 
   loading = true;
   saving = false;
@@ -406,6 +411,7 @@ export class StepDiagnosticComponent implements OnInit {
   }
 
   toggleTechnicien(t: Technicien): void {
+    if (this.isReadOnly) return;
     if (this.isTechnicienAssigned(t.id)) {
       this.removeTechnicien(t.id);
     } else {
@@ -418,6 +424,7 @@ export class StepDiagnosticComponent implements OnInit {
   }
 
   assignTechnicien(techId: number): void {
+    if (this.isReadOnly) return;
     this.technicienToggling = techId;
     this.ordreService.assignTechnicien(this.ordreId, techId).subscribe({
       next: () => {
@@ -462,6 +469,7 @@ export class StepDiagnosticComponent implements OnInit {
   }
 
   removeTechnicien(techId: number): void {
+    if (this.isReadOnly) return;
     this.technicienToggling = techId;
     this.ordreService.removeTechnicien(this.ordreId, techId).subscribe({
       next: () => {
@@ -502,6 +510,7 @@ export class StepDiagnosticComponent implements OnInit {
   }
 
   addRemarque(): void {
+    if (this.isReadOnly) return;
     if (!this.nouvelleRemarque.trim()) return;
     const contenu = this.nouvelleRemarque.trim();
 
@@ -534,6 +543,7 @@ export class StepDiagnosticComponent implements OnInit {
   }
 
   deleteRemarque(id: number): void {
+    if (this.isReadOnly) return;
     this.diagnosticService.deleteRemarque(id).subscribe({
       next: () => {
         this.remarquesDiagnostic = this.remarquesDiagnostic.filter(r => r.id !== id);
@@ -566,6 +576,7 @@ export class StepDiagnosticComponent implements OnInit {
   }
 
   marquerTermine(): void {
+    if (this.isReadOnly) return;
     this.statutDiagnostic = 'TERMINE';
     if (this.currentDiagnostic?.id) {
       this.diagnosticService.updateStatut(this.currentDiagnostic.id, 'TERMINE').subscribe({
@@ -585,6 +596,7 @@ export class StepDiagnosticComponent implements OnInit {
   }
 
   marquerValide(): void {
+    if (this.isReadOnly) return;
     this.statutDiagnostic = 'VALIDE';
     this.saving = true;
 
@@ -636,6 +648,7 @@ export class StepDiagnosticComponent implements OnInit {
   }
 
   revenirEnCours(): void {
+    if (this.isReadOnly) return;
     this.saving = true;
     this.statutDiagnostic = 'EN_COURS';
 
@@ -674,6 +687,7 @@ export class StepDiagnosticComponent implements OnInit {
   }
 
   revenirTermine(): void {
+    if (this.isReadOnly) return;
     this.saving = true;
     this.statutDiagnostic = 'TERMINE';
     if (this.currentDiagnostic?.id) {
@@ -705,6 +719,7 @@ export class StepDiagnosticComponent implements OnInit {
   }
 
   revenirEnAttente(): void {
+    if (this.isReadOnly) return;
     this.saving = true;
     this.statutDiagnostic = 'EN_ATTENTE';
     if (this.currentDiagnostic?.id) {
@@ -769,7 +784,7 @@ export class StepDiagnosticComponent implements OnInit {
   }
 
   validateStep(): void {
-    if (this.statutDiagnostic === 'VALIDE') {
+    if (this.isReadOnly || this.statutDiagnostic === 'VALIDE') {
       this.router.navigate(['/app/ordres-reparation', this.ordreId, 'pieces-mo']);
     } else {
       this.marquerValide();

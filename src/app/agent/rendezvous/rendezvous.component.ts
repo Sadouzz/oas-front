@@ -393,9 +393,7 @@ export class RendezVousComponent implements OnInit {
   }
 
   private getDefaultDate(): string {
-    const d = new Date();
-    d.setDate(d.getDate() + 1);
-    d.setHours(9, 0, 0, 0);
+    const d = new Date(Date.now() + 30 * 60 * 1000);
     return this.toDatetimeLocal(d.toISOString());
   }
 

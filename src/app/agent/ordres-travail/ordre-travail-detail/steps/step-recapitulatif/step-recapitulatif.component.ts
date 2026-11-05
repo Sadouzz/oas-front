@@ -638,33 +638,6 @@ export class StepRecapitulatifComponent implements OnInit {
     });
   }
 
-  retirerTechnicien(techId: number): void {
-    if (!techId) return;
-    this.otService.removeTechnicien(this.otId, techId).subscribe({
-      next: () => {
-        this.techniciensAffectes = this.techniciensAffectes.filter(t => t.id !== techId);
-        this.selectedTechnicienIds = this.selectedTechnicienIds.filter(id => id !== techId);
-        this.successMessage = 'Technicien retiré avec succès.';
-        this.cdr.markForCheck();
-      },
-      error: () => {
-        const newIds = this.selectedTechnicienIds.filter(id => id !== techId);
-        this.otService.assignTechniciens(this.otId, newIds).subscribe({
-          next: () => {
-            this.techniciensAffectes = this.techniciensAffectes.filter(t => t.id !== techId);
-            this.selectedTechnicienIds = newIds;
-            this.successMessage = 'Technicien retiré avec succès.';
-            this.cdr.markForCheck();
-          },
-          error: (err) => {
-            this.errorMessage = err.error?.message || 'Erreur lors du retrait du technicien.';
-            this.cdr.markForCheck();
-          }
-        });
-      }
-    });
-  }
-
   // ─── Téléchargement & Impression de la Fiche de Travail (PDF) ─────
 
   imprimerFiche(): void {

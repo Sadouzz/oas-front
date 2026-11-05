@@ -148,6 +148,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
   errorMessage = '';
 
   private pieceSearchDebounces: Partial<Record<TypePieceBS, ReturnType<typeof setTimeout>>> = {};
+  private moSearchDebounce?: ReturnType<typeof setTimeout>;
 
   historique: BonDeSortieHistorique[] = [];
   loadingHistorique = false;
@@ -254,17 +255,43 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     });
   }
 
-  loadMainDoeuvres(): void {
-    this.mainDoeuvreService.getAll({ page: 0, size: 50, isArchived: false }).subscribe({
+  loadMainDoeuvres(keyword: string = ''): void {
+    const params: any = { page: 0, size: 50, isArchived: false };
+    if (keyword && keyword.trim()) {
+      params.keyword = keyword.trim();
+    }
+    this.mainDoeuvreService.getAll(params).subscribe({
       next: res => { this.mainDoeuvres = extractContent<MainDoeuvreModel>(res as any).filter(x => !x.isArchived); this.cdr.markForCheck(); },
       error: () => { this.mainDoeuvres = []; this.cdr.markForCheck(); }
     });
   }
 
-  onMainDoeuvreSelected(id: number | null): void {
-    const mo = this.mainDoeuvres.find(x => x.id === Number(id));
+  onMoSearch(term: string): void {
+    clearTimeout(this.moSearchDebounce);
+    this.moSearchDebounce = setTimeout(() => {
+      this.loadMainDoeuvres(term);
+    }, 300);
+  }
+
+  formatMO = (mo: MainDoeuvreModel) => {
+    if (!mo) return '';
+    const prix = mo.prix != null ? ` — ${mo.prix} FCFA/h` : '';
+    return `${mo.description || ''}${prix}`.trim();
+  };
+
+  onMainDoeuvreSelected(id: any): void {
+    const moId = id == null ? null : Number(id);
+    this.mainDoeuvreAjouter = moId;
+    if (!moId) {
+      this.prixAjouterMO = null;
+      this.qteAjouterMO = 1;
+      this.cdr.markForCheck();
+      return;
+    }
+    const mo = this.mainDoeuvres.find(x => x.id === moId);
     this.prixAjouterMO = mo?.prix ?? null;
     this.qteAjouterMO = mo ? this.quantiteRestantePlanifiee(`mo:${mo.id}`, mo.nbreHeure ?? 0) : 1;
+    this.cdr.markForCheck();
   }
 
   private quantiteRestantePlanifiee(key: string, prevue: number): number {

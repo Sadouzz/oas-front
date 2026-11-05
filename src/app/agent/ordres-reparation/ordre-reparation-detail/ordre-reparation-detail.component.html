@@ -54,7 +54,7 @@
     <div class="flex items-center min-w-[700px]">
       @for (step of statutSteps; track step.path; let i = $index) {
         @let stepNumber = step.step;
-        @let isAllowed = stepNumber <= maxAllowedStep && !(maxAllowedStep >= 5 && stepNumber < 4);
+        @let isAllowed = stepNumber <= maxAllowedStep;
         @let done = stepNumber < maxAllowedStep;
         @let active = stepNumber === currentStep;
 
@@ -98,7 +98,7 @@
 
   <!-- Barre d'actions du bas (Navigation dans le workflow) -->
   <div class="flex items-center justify-between pt-2">
-    <button type="button" (click)="prevStep()" [disabled]="currentStep === 1 || (maxAllowedStep >= 5 && currentStep <= 4)"
+    <button type="button" (click)="prevStep()" [disabled]="currentStep === 1"
       class="px-5 py-2.5 rounded-xl border border-oas-line text-sm font-semibold text-oas-ink hover:bg-oas-bg transition cursor-pointer disabled:opacity-40">
       ← Étape précédente
     </button>

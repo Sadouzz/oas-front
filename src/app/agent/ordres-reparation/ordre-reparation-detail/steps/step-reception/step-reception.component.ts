@@ -10,7 +10,8 @@ import { FicheAtelierService } from '../../../../fiches-atelier/fiche-atelier.se
 import { AlertComponent } from '../../../../../shared/components/alert/alert.component';
 import {
   OrdreReparation,
-  LigneReceptionOrdre
+  LigneReceptionOrdre,
+  getEtapeFromStatut
 } from '../../../../../shared/models';
 import { StepReceptionResponseDto } from '../../../models/responses/step-reception-response.dto';
 import {
@@ -41,6 +42,11 @@ export class StepReceptionComponent implements OnInit {
   ficheAtelier: FicheAtelierDetailsResponse | null = null;
   selectedVehicule: any = null;
   travauxDemandes = '';
+
+  get isReadOnly(): boolean {
+    const s = this.loadedOrdre?.statut || this.fullOrdre?.statut;
+    return getEtapeFromStatut(s) >= 5;
+  }
 
   lignesDefauts: LigneDefaut[] = [];
 
@@ -221,6 +227,12 @@ export class StepReceptionComponent implements OnInit {
   }
 
   saveStep1(goToNext: boolean = false): void {
+    if (this.isReadOnly) {
+      if (goToNext) {
+        this.router.navigate(['/app/ordres-reparation', this.ordreId, 'diagnostic']);
+      }
+      return;
+    }
     const descriptionTravaux = this.travauxDemandes.trim();
 
     this.saving = true;

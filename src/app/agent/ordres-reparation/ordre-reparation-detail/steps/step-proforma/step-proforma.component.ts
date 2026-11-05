@@ -13,7 +13,8 @@ import { AlertComponent } from '../../../../../shared/components/alert/alert.com
 import {
   OrdreReparation,
   ProformaRequest,
-  extractContent
+  extractContent,
+  getEtapeFromStatut
 } from '../../../../../shared/models';
 import { StepProformaResponseDto } from '../../../models/responses';
 
@@ -72,7 +73,6 @@ export class StepProformaComponent implements OnInit {
         this.loadedOrdre = res;
         this.proformaChargee = res.proforma || null;
         this.loading = false;
-        this.checkExistingOT();
         this.cdr.markForCheck();
       },
       error: (err) => {
@@ -83,17 +83,8 @@ export class StepProformaComponent implements OnInit {
     });
   }
 
-  checkExistingOT(): void {
-    this.otService.getByOrdreReparationId(this.ordreId).subscribe({
-      next: (ot) => {
-        this.existingOT = ot;
-        this.cdr.markForCheck();
-      },
-      error: () => {
-        this.existingOT = null;
-        this.cdr.markForCheck();
-      }
-    });
+  get isPassedToOT(): boolean {
+    return getEtapeFromStatut(this.loadedOrdre?.statut) >= 5 || !!this.existingOT;
   }
 
   genererProforma(): void {
@@ -565,6 +556,7 @@ Orient Auto Service`;
       this.validationEnCours = false;
       this.creationOTEnCours = false;
       this.existingOT = ot;
+      this.ordreService.updateStatut(this.ordreId, 'ORDRE_DE_TRAVAIL').subscribe({ next: () => {}, error: () => {} });
       this.successMessage = `Ordre de Travail ${ot.numero} prêt. Ouverture...`;
       this.cdr.markForCheck();
       this.router.navigate(['/app/ordres-travail', ot.id, this.getOtPath(ot)]);
@@ -579,9 +571,23 @@ Orient Auto Service`;
     this.otService.createFromOrdreReparation(this.ordreId).subscribe({
       next: (ot) => ouvrir(ot),
       error: (err) => {
-        // L'OT existe peut-être déjà : on tente de le récupérer avant d'afficher une erreur
-        this.otService.getByOrdreReparationId(this.ordreId).subscribe({
-          next: (ot) => ouvrir(ot),
+        // L'OT existe peut-être déjà : on redirige vers l'étape Ordre de Travail de l'OR
+        this.ordreService.getStepOrdreTravail(this.ordreId).subscribe({
+          next: (stepOt) => {
+            const otId = stepOt?.ordreTravailId || stepOt?.ordreTravail?.id;
+            if (otId) {
+              this.validationEnCours = false;
+              this.creationOTEnCours = false;
+              this.ordreService.updateStatut(this.ordreId, 'ORDRE_DE_TRAVAIL').subscribe({ next: () => {}, error: () => {} });
+              this.router.navigate(['/app/ordres-travail', otId, 'recapitulatif']);
+            } else {
+              this.validationEnCours = false;
+              this.creationOTEnCours = false;
+              this.errorMessage = err.error?.message || 'Proforma validé, mais la création de l\'ordre de travail a échoué.';
+              this.loadData();
+              this.cdr.markForCheck();
+            }
+          },
           error: () => {
             this.validationEnCours = false;
             this.creationOTEnCours = false;
@@ -676,6 +682,7 @@ Orient Auto Service`;
       next: (ot) => {
         this.creationOTEnCours = false;
         this.existingOT = ot;
+        this.ordreService.updateStatut(this.ordreId, 'ORDRE_DE_TRAVAIL').subscribe({ next: () => {}, error: () => {} });
         this.successMessage = `Ordre de Travail ${ot.numero} créé avec succès. Redirection vers l'atelier...`;
         this.cdr.markForCheck();
         setTimeout(() => {

@@ -47,6 +47,10 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
   statutSteps = STEP_ROUTES;
   activeChild: any = null;
 
+  get isLockedByOt(): boolean {
+    return this.maxAllowedStep >= 5 || !!this.activeChild?.isReadOnly;
+  }
+
   onActivate(componentRef: any): void {
     this.activeChild = componentRef;
     this.cdr.markForCheck();
@@ -54,6 +58,9 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
 
   isNextStepDisabled(): boolean {
     if (this.activeChild?.saving || this.activeChild?.loading) return true;
+    if (this.isLockedByOt && this.currentStep <= 3) {
+      return false;
+    }
     if (this.currentStep === 2) {
       const diagStatut = this.activeChild?.statutDiagnostic || this.loadedOrdre?.diagnostic?.statut;
       return diagStatut !== 'VALIDE';
@@ -77,6 +84,10 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
   }
 
   validerEtapeCourante(): void {
+    if (this.isLockedByOt && this.currentStep <= 3) {
+      this.nextStep();
+      return;
+    }
     if (this.currentStep === 2) {
       const diagStatut = this.activeChild?.statutDiagnostic || this.loadedOrdre?.diagnostic?.statut;
       if (diagStatut !== 'VALIDE') {
@@ -126,6 +137,16 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
   }
 
   getActionLabel(): string {
+    if (this.isLockedByOt && this.currentStep <= 3) {
+      switch (this.currentStep) {
+        case 1:
+          return 'Étape suivante (Chef Atelier)';
+        case 2:
+          return 'Étape suivante (OR)';
+        case 3:
+          return 'Étape suivante (Proforma)';
+      }
+    }
     switch (this.currentStep) {
       case 1:
         return 'Valider la réception';
@@ -193,10 +214,6 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
         this.selectedVehicule = o?.vehicule as any;
         this.hasDiagnostic = !!o?.hasDiagnostic;
         this.cdr.markForCheck();
-        const lastSegment = this.router.url.split('?')[0].split('/').pop() || '';
-        if (this.statutToStep(o?.statut) >= 5 && ['reception', 'diagnostic', 'pieces-mo'].includes(lastSegment)) {
-          this.router.navigate(['/app/ordres-reparation', this.ordreId, 'proforma'], { replaceUrl: true });
-        }
       }
     });
   }
@@ -218,20 +235,17 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
         const segments = urlClean.split('/');
         const lastSegment = segments[segments.length - 1];
 
-        if (this.statutToStep(o?.statut) >= 5 && ['reception', 'diagnostic', 'pieces-mo'].includes(lastSegment)) {
-          this.router.navigate(['/app/ordres-reparation', this.ordreId, 'proforma'], { replaceUrl: true });
-          return;
-        }
-
-        if (!this.hasAutoRedirected && (lastSegment === this.ordreId.toString() || lastSegment === 'reception')) {
+        if (!this.hasAutoRedirected) {
           this.hasAutoRedirected = true;
-          if (o?.statut && o.statut !== 'RECEPTION' && o.statut !== 'A_FAIRE') {
-            const targetPath = this.statutToPath(o.statut);
-            if (targetPath !== lastSegment) {
-              this.router.navigate(['/app/ordres-reparation', this.ordreId, targetPath], { replaceUrl: true });
+          if (lastSegment === this.ordreId.toString() || lastSegment === 'reception') {
+            if (o?.statut && o.statut !== 'RECEPTION' && o.statut !== 'A_FAIRE') {
+              const targetPath = this.statutToPath(o.statut);
+              if (targetPath !== lastSegment) {
+                this.router.navigate(['/app/ordres-reparation', this.ordreId, targetPath], { replaceUrl: true });
+              }
+            } else if (o?.hasDiagnostic) {
+              this.router.navigate(['/app/ordres-reparation', this.ordreId, 'diagnostic'], { replaceUrl: true });
             }
-          } else if (o?.hasDiagnostic) {
-            this.router.navigate(['/app/ordres-reparation', this.ordreId, 'diagnostic'], { replaceUrl: true });
           }
         }
       },
@@ -301,12 +315,6 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
   }
 
   goToStep(n: number): void {
-    const statutEtape = this.statutToStep(this.loadedOrdre?.statut);
-    // Dès le passage à l'Ordre de Travail, seules les étapes Proforma et suivantes restent accessibles.
-    if (statutEtape >= 5 && n < 4) {
-      this.router.navigate(['/app/ordres-reparation', this.ordreId, 'proforma']);
-      return;
-    }
     if (n > this.maxAllowedStep) return;
     const target = STEP_ROUTES.find(s => s.step === n);
     if (target) {
@@ -315,7 +323,7 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
   }
 
   prevStep(): void {
-    if (this.currentStep > 1 && !(this.maxAllowedStep >= 5 && this.currentStep <= 4)) {
+    if (this.currentStep > 1) {
       this.goToStep(this.currentStep - 1);
     }
   }

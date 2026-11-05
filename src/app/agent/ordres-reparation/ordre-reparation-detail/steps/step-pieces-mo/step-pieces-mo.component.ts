@@ -20,7 +20,8 @@ import {
   CloudinaryUploadResult,
   StatutOrdre,
   StepPiecesMoDto,
-  extractContent
+  extractContent,
+  getEtapeFromStatut
 } from '../../../../../shared/models';
 import { StepPiecesMoResponseDto } from '../../../models/responses';
 
@@ -68,6 +69,11 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
 
   ordreId!: number;
   loadedOrdre: StepPiecesMoResponseDto | null = null;
+  proformaStatut: string | null = null;
+
+  get isReadOnly(): boolean {
+    return getEtapeFromStatut(this.loadedOrdre?.statut) >= 5;
+  }
 
   loading = true;
   saving = false;
@@ -209,6 +215,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
   }
 
   onPieceJointeDiagnosticUploaded(upload: CloudinaryUploadResult): void {
+    if (this.isReadOnly) return;
     const type: TypePieceJointeDiagnostic = upload.resourceType === 'raw' || upload.format?.toLowerCase() === 'pdf'
       ? 'PDF'
       : 'PHOTO';
@@ -231,6 +238,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
   }
 
   deletePieceJointeDiagnostic(id: number): void {
+    if (this.isReadOnly) return;
     this.ordreService.deletePieceJointeDiagnostic(this.ordreId, id).subscribe({
       next: () => {
         this.piecesJointesDiagnostic = this.piecesJointesDiagnostic.filter(piece => piece.id !== id);
@@ -344,6 +352,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
         this.piecesPdgList = this.allPieces.filter(p => p.type === 'PDG');
         this.moList = this.allMO;
         this.loadedOrdre = ordre;
+        this.proformaStatut = proforma?.statut || null;
 
         const hasProformaLines = proforma && (
           (proforma.lignesPieces && proforma.lignesPieces.length > 0) ||
@@ -645,6 +654,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
   }
 
   addPiecePdp(): void {
+    if (this.isReadOnly) return;
     if (!this.piecePdpAjouter || this.qteAjouterPdp <= 0) return;
     const p = this.piecesPdpList.find(item => item.id === Number(this.piecePdpAjouter)) || this.allPieces.find(item => item.id === Number(this.piecePdpAjouter));
     if (!p) return;
@@ -674,6 +684,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
   }
 
   addPiecePdg(): void {
+    if (this.isReadOnly) return;
     if (!this.piecePdgAjouter || this.qteAjouterPdg <= 0) return;
     const p = this.piecesPdgList.find(item => item.id === Number(this.piecePdgAjouter)) || this.allPieces.find(item => item.id === Number(this.piecePdgAjouter));
     if (!p) return;
@@ -706,6 +717,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
   }
 
   addPieceCustom(): void {
+    if (this.isReadOnly) return;
     if (!this.pieceCustomDesignation.trim() || this.pieceCustomQuantite <= 0) return;
 
     const total = this.pieceCustomPrixTotal != null && this.pieceCustomPrixTotal >= 0 ? Number(this.pieceCustomPrixTotal) : 0;
@@ -746,10 +758,12 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
   }
 
   removePiece(index: number): void {
+    if (this.isReadOnly) return;
     this.lignesPieces.splice(index, 1);
   }
 
   removePieceItem(item: LignePiece): void {
+    if (this.isReadOnly) return;
     const idx = this.lignesPieces.indexOf(item);
     if (idx !== -1) {
       this.lignesPieces.splice(idx, 1);
@@ -791,6 +805,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
   }
 
   addMO(): void {
+    if (this.isReadOnly) return;
     if (!this.moAjouter || this.qteAjouterMO <= 0) return;
     const m = this.allMO.find(item => item.id === Number(this.moAjouter));
     if (!m) return;
@@ -802,10 +817,12 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
   }
 
   removeMO(index: number): void {
+    if (this.isReadOnly) return;
     this.lignesMO.splice(index, 1);
   }
 
   removeMoItem(item: LigneMO): void {
+    if (this.isReadOnly) return;
     const idx = this.lignesMO.indexOf(item);
     if (idx !== -1) {
       this.lignesMO.splice(idx, 1);
@@ -822,6 +839,10 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
   }
 
   saveStep3(): void {
+    if (this.isReadOnly) {
+      this.router.navigate(['/app/ordres-reparation', this.ordreId, 'proforma']);
+      return;
+    }
     if (!this.hasAtLeastOneItem) {
       this.errorMessage = "Veuillez ajouter au moins une pièce détachée ou une prestation de main-d'œuvre pour continuer.";
       this.cdr.markForCheck();
