@@ -105,6 +105,10 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
   }
 
   moAjouter: number | null = null;
+  get selectedMO(): MainDoeuvreModel | undefined {
+    const id = Number(this.moAjouter);
+    return this.moList.find(mo => mo.id === id) ?? this.allMO.find(mo => mo.id === id);
+  }
   qteAjouterMO = 1;
   prixAjouterMO: number | null = null;
 

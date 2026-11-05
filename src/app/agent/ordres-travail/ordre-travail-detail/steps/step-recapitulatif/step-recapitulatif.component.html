@@ -3,35 +3,50 @@
   <!-- ========================================== -->
   <!-- EN-TETE SPECIFIQUE A L'IMPRESSION PAPIER   -->
   <!-- ========================================== -->
-  <div class="hidden print:block border-b-2 border-slate-900 pb-4 mb-6">
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-black text-slate-950 uppercase tracking-tight">OAS ATELIER AUTOMOBILE</h1>
-        <p class="text-xs text-slate-600 font-semibold">Service Après-Vente & Maintenance Technique</p>
+  @if (downloadLayoutKey === 'AVEC_ENTETE') {
+    <div class="hidden print:block border-b-2 border-slate-900 pb-4 mb-6">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <img src="/oas-logo.png" alt="OAS" class="w-12 h-12 object-contain" />
+          <div>
+            <h1 class="text-2xl font-black text-slate-950 uppercase tracking-tight">ORIENT AUTO SERVICE</h1>
+            <p class="text-xs text-slate-600 font-semibold">Service Après-Vente & Maintenance Automobile Atelier</p>
+          </div>
+        </div>
+        <div class="text-right">
+          <span class="inline-block px-3 py-1 bg-slate-900 text-white text-xs font-black rounded uppercase tracking-wider">
+            FICHE D'ORDRE DE TRAVAIL
+          </span>
+          <div class="text-lg font-black text-slate-950 mt-1">{{ data?.numero || ('OT #' + otId) }}</div>
+        </div>
       </div>
-      <div class="text-right">
-        <span class="inline-block px-3 py-1 bg-slate-900 text-white text-xs font-black rounded uppercase tracking-wider">
-          ORDRE DE TRAVAIL
-        </span>
-        <div class="text-lg font-black text-slate-950 mt-1">{{ data?.numero || ('OT #' + otId) }}</div>
-      </div>
-    </div>
 
-    <div class="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-200 text-xs">
-      <div>
-        <span class="text-slate-500 font-bold block">Ordre de Réparation lié :</span>
-        <strong class="text-slate-900 font-black">{{ orNumeroDisplay }}</strong>
-      </div>
-      <div>
-        <span class="text-slate-500 font-bold block">Proforma validé :</span>
-        <strong class="text-slate-900 font-black">{{ data?.proforma?.numero || '—' }}</strong>
-      </div>
-      <div class="text-right">
-        <span class="text-slate-500 font-bold block">Date & Heure d'émission :</span>
-        <strong class="text-slate-900 font-black">{{ dateImpression | date:'dd/MM/yyyy HH:mm' }}</strong>
+      <div class="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-200 text-xs">
+        <div>
+          <span class="text-slate-500 font-bold block">Ordre de Réparation lié :</span>
+          <strong class="text-slate-900 font-black">{{ orNumeroDisplay }}</strong>
+        </div>
+        <div>
+          <span class="text-slate-500 font-bold block">Proforma validé :</span>
+          <strong class="text-slate-900 font-black">{{ data?.proforma?.numero || '—' }}</strong>
+        </div>
+        <div class="text-right">
+          <span class="text-slate-500 font-bold block">Date & Heure d'émission :</span>
+          <strong class="text-slate-900 font-black">{{ dateImpression | date:'dd/MM/yyyy HH:mm' }}</strong>
+        </div>
       </div>
     </div>
-  </div>
+  } @else {
+    <div class="hidden print:flex items-center justify-between border-b-2 border-slate-700 pb-2 mb-4 text-xs font-bold text-slate-800">
+      <div>
+        <span class="uppercase font-black">FICHE ORDRE DE TRAVAIL {{ data?.numero || ('#' + otId) }}</span>
+        <span class="text-slate-500 ml-2">· OR : {{ orNumeroDisplay }} · Proforma : {{ data?.proforma?.numero || '—' }}</span>
+      </div>
+      <div class="text-right text-slate-600">
+        {{ dateImpression | date:'dd/MM/yyyy HH:mm' }}
+      </div>
+    </div>
+  }
 
   <!-- ========================================== -->
   <!-- EN-TETE A L'ECRAN (Masqué à l'impression)  -->
@@ -72,14 +87,26 @@
         </div>
       }
 
-      <!-- Bouton d'impression principal -->
-      <button type="button" (click)="imprimer()"
-        title="Imprimer l'Ordre de Travail complet (format A4)"
+      <!-- Sélecteur En-tête Fiche -->
+      <select [(ngModel)]="downloadLayoutKey" class="px-3 py-1.5 border border-oas-line rounded-xl text-xs bg-white font-semibold text-oas-ink cursor-pointer focus:outline-none focus:ring-2 focus:ring-oas-accent">
+        <option value="AVEC_ENTETE">Avec en-tête</option>
+        <option value="SANS_ENTETE">Sans en-tête</option>
+      </select>
+
+      <!-- Sélecteur Prix Fiche -->
+      <select [(ngModel)]="downloadPrixMode" class="px-3 py-1.5 border border-oas-line rounded-xl text-xs bg-white font-semibold text-oas-ink cursor-pointer focus:outline-none focus:ring-2 focus:ring-oas-accent">
+        <option value="SANS_PRIX">Sans prix (Atelier)</option>
+        <option value="AVEC_PRIX">Avec prix (Chiffrée)</option>
+      </select>
+
+      <!-- Bouton Télécharger la fiche -->
+      <button type="button" (click)="imprimerFiche()"
+        title="Télécharger / Imprimer la fiche Ordre de Travail (PDF)"
         class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition shadow-xs cursor-pointer">
         <svg class="w-4 h-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
-        <span>Imprimer</span>
+        <span>Télécharger la fiche</span>
       </button>
     </div>
   </div>
@@ -158,6 +185,74 @@
           }
         </div>
       </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 1.bis TECHNICIENS AFFECTÉS (OT Step 1)                                    -->
+    <!-- ========================================================================= -->
+    <div class="p-4 rounded-xl border border-purple-200/80 bg-gradient-to-br from-white via-purple-50/20 to-slate-50 shadow-xs document-print-card space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-purple-100 pb-2.5">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs shadow-2xs">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-purple-950 flex items-center gap-1.5">
+              <span>Techniciens affectés</span>
+              <span class="text-[10px] text-purple-700 font-semibold">(Intervenants atelier)</span>
+            </h3>
+            <p class="text-[11px] text-purple-700/80 print:hidden">Équipe technique affectée à la prise en charge et aux réparations</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 print:hidden">
+          <button type="button" (click)="ouvrirModalAssignation()"
+            class="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            <span>{{ techniciensAffectes.length > 0 ? 'Modifier les techniciens' : 'Affecter des techniciens' }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Liste des techniciens affectés -->
+      @if (techniciensAffectes.length > 0) {
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+          @for (tech of techniciensAffectes; track tech.id) {
+            <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl border border-purple-200 bg-white shadow-2xs">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-700 font-bold text-xs flex items-center justify-center flex-shrink-0 border border-purple-200">
+                  {{ (tech.nom || tech.firstName || 'T').substring(0, 2).toUpperCase() }}
+                </div>
+                <div class="min-w-0">
+                  <p class="font-bold text-xs text-slate-900 truncate">{{ tech.nom || (tech.firstName + ' ' + tech.lastName) }}</p>
+                  <div class="flex items-center gap-1 text-[10px] text-purple-800">
+                    @if ($any(tech).matricule) {
+                      <span class="font-mono bg-purple-50 px-1 py-0.2 rounded border border-purple-100">{{ $any(tech).matricule }}</span>
+                    }
+                    <span class="font-medium truncate">{{ tech.specialite || 'Technicien' }}</span>
+                  </div>
+                </div>
+              </div>
+              <button type="button" (click)="retirerTechnicien(tech.id)" title="Retirer ce technicien"
+                class="w-6 h-6 rounded-md hover:bg-red-50 text-slate-400 hover:text-red-600 flex items-center justify-center text-xs transition cursor-pointer print:hidden">
+                ✕
+              </button>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="p-4 rounded-xl border border-dashed border-purple-200 bg-white/70 text-center text-xs text-purple-900/80 flex flex-col items-center justify-center gap-2">
+          <p class="font-semibold text-slate-700">Aucun technicien affecté pour le moment.</p>
+          <button type="button" (click)="ouvrirModalAssignation()"
+            class="px-3.5 py-1.5 rounded-lg bg-purple-100 hover:bg-purple-200 text-purple-800 font-bold text-xs transition cursor-pointer print:hidden">
+            + Affecter un ou plusieurs techniciens
+          </button>
+        </div>
+      }
     </div>
 
     <!-- ========================================================================= -->
@@ -523,9 +618,9 @@
               <th class="px-4 py-2.5">Désignation</th>
               <th class="px-4 py-2.5">Type</th>
               <th class="px-4 py-2.5 text-center">Quantité</th>
-              <th class="px-4 py-2.5 text-right">Prix unitaire HT</th>
-              <th class="px-4 py-2.5 text-right">Remise</th>
-              <th class="px-4 py-2.5 text-right">Total HT</th>
+              <th class="px-4 py-2.5 text-right" [class.print:hidden]="downloadPrixMode === 'SANS_PRIX'">Prix unitaire HT</th>
+              <th class="px-4 py-2.5 text-right" [class.print:hidden]="downloadPrixMode === 'SANS_PRIX'">Remise</th>
+              <th class="px-4 py-2.5 text-right" [class.print:hidden]="downloadPrixMode === 'SANS_PRIX'">Total HT</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-oas-line">
@@ -553,11 +648,11 @@
                   </span>
                 </td>
                 <td class="px-4 py-2.5 text-center font-mono font-bold">{{ p.quantite }}</td>
-                <td class="px-4 py-2.5 text-right font-mono text-oas-muted">{{ p.prix | number:'1.0-0' }} FCFA</td>
-                <td class="px-4 py-2.5 text-right whitespace-nowrap">
+                <td class="px-4 py-2.5 text-right font-mono text-oas-muted" [class.print:hidden]="downloadPrixMode === 'SANS_PRIX'">{{ p.prix | number:'1.0-0' }} FCFA</td>
+                <td class="px-4 py-2.5 text-right whitespace-nowrap" [class.print:hidden]="downloadPrixMode === 'SANS_PRIX'">
                   <span class="font-semibold">{{ p.tauxRemise || 0 }} %</span>
                 </td>
-                <td class="px-4 py-2.5 text-right font-mono font-bold text-oas-ink">{{ p.montantTotal | number:'1.0-0' }} FCFA</td>
+                <td class="px-4 py-2.5 text-right font-mono font-bold text-oas-ink" [class.print:hidden]="downloadPrixMode === 'SANS_PRIX'">{{ p.montantTotal | number:'1.0-0' }} FCFA</td>
               </tr>
             } @empty {
               <tr>
@@ -589,9 +684,9 @@
             <tr>
               <th class="px-4 py-2.5">Prestation / Tâche</th>
               <th class="px-4 py-2.5 text-center">Nbre Heures</th>
-              <th class="px-4 py-2.5 text-right">Tarif horaire HT</th>
-              <th class="px-4 py-2.5 text-right">Remise</th>
-              <th class="px-4 py-2.5 text-right">Total HT</th>
+              <th class="px-4 py-2.5 text-right" [class.print:hidden]="downloadPrixMode === 'SANS_PRIX'">Tarif horaire HT</th>
+              <th class="px-4 py-2.5 text-right" [class.print:hidden]="downloadPrixMode === 'SANS_PRIX'">Remise</th>
+              <th class="px-4 py-2.5 text-right" [class.print:hidden]="downloadPrixMode === 'SANS_PRIX'">Total HT</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-oas-line">
@@ -599,11 +694,11 @@
               <tr class="hover:bg-slate-50/60 transition">
                 <td class="px-4 py-2.5 font-medium text-oas-ink">{{ mo.nom || mo.designation || mo.description || mo.mainDoeuvre?.nom || mo.mainDoeuvre?.description || 'Main-d\'œuvre' }}</td>
                 <td class="px-4 py-2.5 text-center font-mono font-bold">{{ mo.nbreHeure }} h</td>
-                <td class="px-4 py-2.5 text-right font-mono text-oas-muted">{{ mo.tarifHoraire | number:'1.0-0' }} FCFA/h</td>
-                <td class="px-4 py-2.5 text-right whitespace-nowrap">
+                <td class="px-4 py-2.5 text-right font-mono text-oas-muted" [class.print:hidden]="downloadPrixMode === 'SANS_PRIX'">{{ mo.tarifHoraire | number:'1.0-0' }} FCFA/h</td>
+                <td class="px-4 py-2.5 text-right whitespace-nowrap" [class.print:hidden]="downloadPrixMode === 'SANS_PRIX'">
                   <span class="font-semibold">{{ mo.tauxRemise || 0 }} %</span>
                 </td>
-                <td class="px-4 py-2.5 text-right font-mono font-bold text-oas-ink">{{ mo.montantTotal | number:'1.0-0' }} FCFA</td>
+                <td class="px-4 py-2.5 text-right font-mono font-bold text-oas-ink" [class.print:hidden]="downloadPrixMode === 'SANS_PRIX'">{{ mo.montantTotal | number:'1.0-0' }} FCFA</td>
               </tr>
             } @empty {
               <tr>
@@ -696,7 +791,14 @@
         <span class="text-[10px] text-slate-400">Date & Signature</span>
       </div>
       <div class="border border-slate-300 rounded-lg p-3 h-28 flex flex-col justify-between">
-        <strong class="text-slate-900 block font-bold">Visa Mécanicien Responsable</strong>
+        <div>
+          <strong class="text-slate-900 block font-bold">Visa Technicien(s) affecté(s)</strong>
+          @if (techniciensAffectes.length > 0) {
+            <p class="text-[10px] text-slate-600 font-medium truncate mt-0.5">
+              {{ techniciensNomsDisplay }}
+            </p>
+          }
+        </div>
         <span class="text-[10px] text-slate-400">Date & Signature</span>
       </div>
       <div class="border border-slate-300 rounded-lg p-3 h-28 flex flex-col justify-between">
@@ -899,6 +1001,124 @@
             </svg>
           }
         </button>
+      </div>
+
+    </div>
+  </div>
+}
+
+<!-- ========================================================================= -->
+<!-- MODAL AFFECTATION DES TECHNICIENS (OT STEP 1)                            -->
+<!-- ========================================================================= -->
+@if (showAssignModal) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-150 print:hidden"
+    (click)="fermerModalAssignation()">
+    
+    <div class="relative max-w-2xl w-full bg-white rounded-2xl shadow-2xl border border-oas-line overflow-hidden flex flex-col max-h-[85vh]"
+      (click)="$event.stopPropagation()">
+      
+      <!-- En-tête modal -->
+      <div class="px-6 py-4 bg-purple-50 border-b border-purple-100 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center flex-shrink-0 shadow-2xs">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-base font-extrabold text-purple-950">Affecter des Techniciens d'Atelier</h3>
+            <p class="text-xs text-purple-700 mt-0.5">Désignez les techniciens responsables des interventions sur ce véhicule</p>
+          </div>
+        </div>
+        <button type="button" (click)="fermerModalAssignation()"
+          class="w-8 h-8 rounded-lg hover:bg-purple-100 flex items-center justify-center text-purple-600 transition cursor-pointer">
+          ✕
+        </button>
+      </div>
+
+      <!-- Filtres et recherche -->
+      <div class="p-4 border-b border-oas-line bg-slate-50/60 flex flex-wrap items-center gap-3">
+        <div class="flex-1 min-w-[200px] relative">
+          <input type="text" [(ngModel)]="technicienSearchTerm"
+            placeholder="Rechercher par nom, matricule..."
+            class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-oas-line bg-white focus:outline-none focus:ring-2 focus:ring-purple-400 text-oas-ink" />
+          <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+        <select [(ngModel)]="technicienFiltreSpecialite"
+          class="px-3 py-2 text-xs rounded-xl border border-oas-line bg-white focus:outline-none focus:ring-2 focus:ring-purple-400 text-oas-ink cursor-pointer">
+          <option value="">Toutes les spécialités</option>
+          @for (s of specialitesTechnicien; track s.value) {
+            <option [value]="s.value">{{ s.label }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Liste scrollable des techniciens -->
+      <div class="p-4 overflow-y-auto flex-1 space-y-2 max-h-[50vh]">
+        @for (tech of filteredTechniciens; track tech.id) {
+          @let isSelected = isTechnicienSelected(tech.id);
+          <div (click)="toggleTechnicienSelection(tech.id)"
+            [class.border-purple-400]="isSelected"
+            [class.bg-purple-50/50]="isSelected"
+            class="flex items-center justify-between p-3 rounded-xl border border-oas-line hover:border-purple-300 hover:bg-slate-50 transition cursor-pointer select-none">
+            
+            <div class="flex items-center gap-3 min-w-0">
+              <input type="checkbox" [checked]="isSelected" (click)="$event.stopPropagation()" (change)="toggleTechnicienSelection(tech.id)"
+                class="w-4 h-4 rounded border-purple-300 text-purple-600 focus:ring-purple-500 cursor-pointer" />
+              <div class="w-9 h-9 rounded-full bg-purple-100 text-purple-700 font-bold text-xs flex items-center justify-center flex-shrink-0 border border-purple-200">
+                {{ (tech.firstName || tech.username || 'T').substring(0, 2).toUpperCase() }}
+              </div>
+              <div class="min-w-0">
+                <p class="font-bold text-xs text-slate-900 truncate">
+                  {{ tech.firstName }} {{ tech.lastName }}
+                </p>
+                <div class="flex items-center gap-1.5 text-[11px] text-slate-500">
+                  <span class="font-mono bg-slate-100 px-1 py-0.2 rounded text-[10px]">{{ tech.matricule }}</span>
+                  <span>· {{ tech.specialite || (tech.specialiteCode ? getSpecialiteLabel(tech.specialiteCode) : 'Général') }}</span>
+                  @if (tech.phone) {
+                    <span>· {{ tech.phone }}</span>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+              [class]="isSelected ? 'bg-purple-600 text-white' : 'bg-slate-100 text-slate-600'">
+              {{ isSelected ? 'Sélectionné' : 'Disponible' }}
+            </span>
+          </div>
+        } @empty {
+          <div class="py-8 text-center text-xs text-slate-500">
+            Aucun technicien ne correspond aux critères de recherche.
+          </div>
+        }
+      </div>
+
+      <!-- Pied modal -->
+      <div class="px-6 py-4 bg-slate-50 border-t border-oas-line flex items-center justify-between">
+        <span class="text-xs font-bold text-purple-900">
+          {{ selectedTechnicienIds.length }} technicien{{ selectedTechnicienIds.length > 1 ? 's' : '' }} sélectionné{{ selectedTechnicienIds.length > 1 ? 's' : '' }}
+        </span>
+        <div class="flex items-center gap-2">
+          <button type="button" (click)="fermerModalAssignation()"
+            class="px-4 py-2 rounded-xl border border-oas-line bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold transition cursor-pointer">
+            Annuler
+          </button>
+          <button type="button" (click)="sauvegarderAffectationTechniciens()" [disabled]="savingTechniciens"
+            class="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-xs transition flex items-center gap-2 cursor-pointer disabled:opacity-50">
+            @if (savingTechniciens) {
+              <div class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <span>Enregistrement...</span>
+            } @else {
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Enregistrer l'affectation</span>
+            }
+          </button>
+        </div>
       </div>
 
     </div>

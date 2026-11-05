@@ -384,6 +384,9 @@ export class LayoutComponent implements OnInit, OnDestroy {
       if (section === 'facture-ttc') this.hoverSubSection = 'facture';
       else if (section === 'pieces') this.hoverSubSection = 'pdp';
       else if (section === 'facture-ht') this.hoverSubSection = 'note-prix';
+      else if (section === 'atelier') this.hoverSubSection = 'fiches';
+      else if (section === 'stock') this.hoverSubSection = 'bs';
+      else if (section === 'reappro') this.hoverSubSection = 'br';
       else if (section === 'admin') this.hoverSubSection = 'parametres';
       else this.hoverSubSection = null;
       this.cdr.markForCheck();
@@ -466,6 +469,36 @@ export class LayoutComponent implements OnInit, OnDestroy {
       case 'stock': return 'Gestion Stock';
       case 'reappro': return 'Réapprovisionnement';
       case 'admin': return 'Administration';
+      default: return '';
+    }
+  }
+
+  getSubSectionTitle(subSection: string | null): string {
+    switch (subSection) {
+      case 'facture': return 'Facture';
+      case 'bl': return 'Bon de livraison';
+      case 'bc': return 'Bon de commande';
+      case 'proforma': return 'Proforma';
+      case 'avoir-ttc': return 'Avoir TTC';
+      case 'pdp': return 'PDP';
+      case 'pdg': return 'PDG';
+      case 'stock': return 'Mouvements stock';
+      case 'seuil': return "Seuil d'alertes";
+      case 'inventaire': return 'Inventaire';
+      case 'fiches': return 'Fiches atelier';
+      case 'or': return 'Ordres de réparation';
+      case 'ot': return 'Ordres de travail';
+      case 'diag': return 'Diagnostics';
+      case 'tech': return 'Techniciens';
+      case 'note-prix': return 'Notes de prix';
+      case 'devis': return 'Devis Prévisionnel';
+      case 'avoir-ht': return 'Avoir note de prix';
+      case 'bs': return 'Bons de sortie';
+      case 'bs-hist': return 'Historique des sorties';
+      case 'br': return 'Bons de réception';
+      case 'fournisseurs': return 'Fournisseurs';
+      case 'parametres': return 'Paramètres';
+      case 'systeme': return 'Système & Utilisateurs';
       default: return '';
     }
   }

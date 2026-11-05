@@ -1,5 +1,6 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { OrdreReparationService } from '../../../ordre-reparation.service';
@@ -19,7 +20,7 @@ import { StepProformaResponseDto } from '../../../models/responses';
 @Component({
   selector: 'app-step-proforma',
   standalone: true,
-  imports: [CommonModule, AlertComponent, RouterLink],
+  imports: [CommonModule, FormsModule, AlertComponent, RouterLink],
   templateUrl: './step-proforma.component.html'
 })
 export class StepProformaComponent implements OnInit {
@@ -47,6 +48,8 @@ export class StepProformaComponent implements OnInit {
   showModalValider = false;
   envoiEnCours = false;
   validationEnCours = false;
+  destinataireWhatsapp = '';
+  destinataireEmail = '';
 
   ngOnInit(): void {
     this.fiscalConfigurationService.getCurrent().subscribe({
@@ -339,12 +342,47 @@ export class StepProformaComponent implements OnInit {
     return this.proformaChargee?.visibleClient === true;
   }
 
+  get clientNom(): string {
+    if (this.proformaChargee?.clientNom) return this.proformaChargee.clientNom;
+    const c = this.loadedOrdre?.vehicule?.client;
+    if (c) return `${c.firstName || ''} ${c.lastName || ''}`.trim() || 'Client';
+    return 'Client';
+  }
+
   envoyerAuClient(): void {
     this.openModalEnvoi();
   }
 
+  clicBoutonWhatsapp(): void {
+    if (!this.destinataireWhatsapp) {
+      this.destinataireWhatsapp = this.loadedOrdre?.vehicule?.client?.phone || (this.proformaChargee as any)?.clientTelephone || '';
+    }
+    if (!this.destinataireWhatsapp) {
+      this.openModalEnvoi();
+      this.errorMessage = "Veuillez renseigner le numéro WhatsApp du client.";
+      this.cdr.detectChanges();
+      return;
+    }
+    this.envoyerParWhatsapp();
+  }
+
+  clicBoutonEmail(): void {
+    if (!this.destinataireEmail) {
+      this.destinataireEmail = (this.loadedOrdre?.vehicule?.client as any)?.email || (this.proformaChargee as any)?.clientEmail || '';
+    }
+    if (!this.destinataireEmail) {
+      this.openModalEnvoi();
+      this.errorMessage = "Veuillez renseigner l'adresse email du client.";
+      this.cdr.detectChanges();
+      return;
+    }
+    this.envoyerParEmail();
+  }
+
   openModalEnvoi(): void {
-    if (!this.proformaChargee?.id || this.isProformaVisibleClient) return;
+    if (!this.proformaChargee?.id) return;
+    this.destinataireWhatsapp = this.loadedOrdre?.vehicule?.client?.phone || (this.proformaChargee as any)?.clientTelephone || '';
+    this.destinataireEmail = (this.loadedOrdre?.vehicule?.client as any)?.email || (this.proformaChargee as any)?.clientEmail || '';
     this.showModalEnvoi = true;
     this.cdr.detectChanges();
   }
@@ -355,7 +393,78 @@ export class StepProformaComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  confirmerEnvoiAuClient(): void {
+  envoyerParWhatsapp(): void {
+    if (!this.proformaChargee?.id) return;
+    const rawPhone = (this.destinataireWhatsapp || '').trim();
+    if (!rawPhone) {
+      this.errorMessage = "Veuillez renseigner un numéro de téléphone pour l'envoi WhatsApp.";
+      this.cdr.detectChanges();
+      return;
+    }
+
+    let cleanPhone = rawPhone.replace(/[\s\+\-\(\)]/g, '');
+    if (cleanPhone.length === 9 && /^[7][05678]/.test(cleanPhone)) {
+      cleanPhone = '221' + cleanPhone;
+    }
+
+    const vehiculeInfo = [
+      this.loadedOrdre?.vehicule?.marque,
+      this.loadedOrdre?.vehicule?.modele,
+      this.loadedOrdre?.vehicule?.immatriculation ? `(${this.loadedOrdre?.vehicule?.immatriculation})` : ''
+    ].filter(Boolean).join(' ');
+
+    const montantTtcStr = new Intl.NumberFormat('fr-FR').format(this.totalTTCCalcule);
+
+    const message = `Bonjour ${this.clientNom},\n\nVotre devis proforma N° *${this.proformaChargee.numero || 'N/A'}* pour le véhicule *${vehiculeInfo || 'votre véhicule'}* est prêt chez *Orient Auto Service*.\n\n💰 *Montant Total TTC :* ${montantTtcStr} FCFA\n\nMerci de bien vouloir nous confirmer votre accord pour engager les travaux.\n\nCordialement,\n*Orient Auto Service*`;
+
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+
+    this.confirmerEnvoiAuClient('WhatsApp');
+  }
+
+  envoyerParEmail(): void {
+    if (!this.proformaChargee?.id) return;
+    const email = (this.destinataireEmail || '').trim();
+    if (!email) {
+      this.errorMessage = "Veuillez renseigner une adresse email pour l'envoi.";
+      this.cdr.detectChanges();
+      return;
+    }
+
+    const vehiculeInfo = [
+      this.loadedOrdre?.vehicule?.marque,
+      this.loadedOrdre?.vehicule?.modele,
+      this.loadedOrdre?.vehicule?.immatriculation ? `(${this.loadedOrdre?.vehicule?.immatriculation})` : ''
+    ].filter(Boolean).join(' ');
+
+    const montantHtStr = new Intl.NumberFormat('fr-FR').format(this.proformaChargee.montantHT || this.totalHTCalcule);
+    const montantTvaStr = new Intl.NumberFormat('fr-FR').format(this.proformaChargee.montantTVA || this.totalTVACalcule);
+    const montantTtcStr = new Intl.NumberFormat('fr-FR').format(this.totalTTCCalcule);
+
+    const subject = `Orient Auto Service - Devis Proforma ${this.proformaChargee.numero || ''} - ${this.loadedOrdre?.vehicule?.immatriculation || ''}`;
+
+    const body = `Bonjour ${this.clientNom},
+
+Veuillez trouver ci-dessous le récapitulatif de votre devis proforma N° ${this.proformaChargee.numero || 'N/A'} concernant votre véhicule ${vehiculeInfo} :
+
+- Montant Total Net HT : ${montantHtStr} FCFA
+- TVA : ${montantTvaStr} FCFA
+- Net à Payer (TTC) : ${montantTtcStr} FCFA
+
+Vous pouvez également consulter votre devis directement depuis votre espace client.
+Merci de bien vouloir nous donner votre accord pour le démarrage des travaux.
+
+Cordialement,
+Orient Auto Service`;
+
+    const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.open(mailtoUrl, '_self');
+
+    this.confirmerEnvoiAuClient('Email');
+  }
+
+  confirmerEnvoiAuClient(canal: string = 'Portail'): void {
     if (!this.proformaChargee?.id || this.envoiEnCours) return;
 
     // Fermer le modal immédiatement
@@ -371,7 +480,7 @@ export class StepProformaComponent implements OnInit {
         if (this.proformaChargee) {
           this.proformaChargee.visibleClient = true;
         }
-        this.successMessage = 'Proforma envoyée avec succès : elle est maintenant visible dans l’espace client.';
+        this.successMessage = `Proforma transmise avec succès au client (Canal : ${canal}).`;
         this.loadData();
         this.cdr.detectChanges();
       },
@@ -381,7 +490,7 @@ export class StepProformaComponent implements OnInit {
           if (this.proformaChargee) {
             this.proformaChargee.visibleClient = true;
           }
-          this.successMessage = 'Proforma envoyée avec succès : elle est maintenant visible dans l’espace client.';
+          this.successMessage = `Proforma transmise avec succès au client (Canal : ${canal}).`;
           this.loadData();
         } else {
           this.errorMessage = err.error?.message || err.message || 'Impossible d’envoyer la proforma au client.';

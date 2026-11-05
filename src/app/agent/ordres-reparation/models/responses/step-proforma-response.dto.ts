@@ -39,9 +39,11 @@ export interface StepProformaResponseDto extends BaseStepResponseDto {
     modele?: string;
     kilometrage?: number;
     client?: {
+      id?: number;
       firstName?: string;
       lastName?: string;
       phone?: string;
+      email?: string;
     }
   };
   diagnostic?: {

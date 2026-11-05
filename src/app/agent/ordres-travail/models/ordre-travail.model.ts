@@ -249,6 +249,7 @@ export type StepBonSortieResponseDto = StepBonSortieResponse;
 // Étape 4 : Assignation Techniciens
 export interface TechnicienSummary {
   id: number;
+  matricule?: string;
   nom?: string;
   prenom?: string;
   firstName?: string;
@@ -394,6 +395,7 @@ export interface OrdreTravailSummaryDto {
     email?: string;
   };
   nombreTechniciens?: number;
+  techniciens?: TechnicienSummary[];
   nombreBonsCommande?: number;
   nombreBonsSortie?: number;
   bonsDeCommande?: DocumentDto[];

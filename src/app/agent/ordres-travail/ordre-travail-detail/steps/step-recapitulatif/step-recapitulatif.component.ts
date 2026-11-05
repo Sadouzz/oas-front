@@ -5,8 +5,21 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { OrdreTravailService } from '../../../ordre-travail.service';
-import { StepRecapitulatifResponseDto, StatutOrdreTravail, PieceApprovisionnementDto } from '../../../models/ordre-travail.model';
+import { FormsModule } from '@angular/forms';
+import { StepRecapitulatifResponseDto, StatutOrdreTravail, PieceApprovisionnementDto, TechnicienSummary } from '../../../models/ordre-travail.model';
+import { TechnicienService } from '../../../../techniciens/technicien.service';
+import { Technicien, Specialite, extractContent } from '../../../../../shared/models';
 import { AlertComponent } from '../../../../../shared/components/alert/alert.component';
+
+export const SPECIALITES_TECHNICIEN: { value: Specialite; label: string }[] = [
+  { value: 'MECANIQUE_GENERALE', label: 'Mécanique générale' },
+  { value: 'ELECTRICITE_AUTO', label: 'Électricité auto' },
+  { value: 'CARROSSERIE_PEINTURE', label: 'Carrosserie / Peinture' },
+  { value: 'TOLERIE', label: 'Tôlerie' },
+  { value: 'CLIMATISATION', label: 'Climatisation' },
+  { value: 'DIAGNOSTIC_ELECTRONIQUE', label: 'Diagnostic électronique' },
+  { value: 'PNEUMATIQUE', label: 'Pneumatique' },
+];
 import { OrdreReparationService } from '../../../../ordres-reparation/ordre-reparation.service';
 import { DiagnosticService } from '../../../../diagnostics/diagnostic.service';
 import { FicheAtelierService } from '../../../../fiches-atelier/fiche-atelier.service';
@@ -19,7 +32,7 @@ import { DiagnosticResponse, PieceJointeDiagnostic, RemarqueDiagnostic } from '.
 @Component({
   selector: 'app-step-recapitulatif',
   standalone: true,
-  imports: [CommonModule, AlertComponent, DatePipe],
+  imports: [CommonModule, AlertComponent, DatePipe, FormsModule],
   templateUrl: './step-recapitulatif.component.html',
   styleUrls: ['./step-recapitulatif.component.css']
 })
@@ -30,8 +43,23 @@ export class StepRecapitulatifComponent implements OnInit {
   private ordreReparationService = inject(OrdreReparationService);
   private diagnosticService = inject(DiagnosticService);
   private ficheAtelierService = inject(FicheAtelierService);
+  private technicienService = inject(TechnicienService);
   private sanitizer = inject(DomSanitizer);
   private cdr = inject(ChangeDetectorRef);
+
+  // Options d'export / téléchargement / impression de la fiche
+  downloadLayoutKey: 'AVEC_ENTETE' | 'SANS_ENTETE' = 'AVEC_ENTETE';
+  downloadPrixMode: 'SANS_PRIX' | 'AVEC_PRIX' = 'SANS_PRIX';
+
+  // Techniciens affectés & gestion de l'équipe
+  techniciensAffectes: TechnicienSummary[] = [];
+  allTechniciens: Technicien[] = [];
+  selectedTechnicienIds: number[] = [];
+  showAssignModal = false;
+  savingTechniciens = false;
+  technicienSearchTerm = '';
+  technicienFiltreSpecialite: Specialite | '' = '';
+  readonly specialitesTechnicien = SPECIALITES_TECHNICIEN;
 
   otId!: number;
   data: StepRecapitulatifResponseDto | null = null;
@@ -68,6 +96,8 @@ export class StepRecapitulatifComponent implements OnInit {
     }
 
     this.loadData();
+    this.chargerTechniciensAffectes();
+    this.chargerTousLesTechniciens();
   }
 
   loadData(): void {
@@ -496,5 +526,156 @@ export class StepRecapitulatifComponent implements OnInit {
 
   get lignesMainDoeuvreList(): any[] {
     return this.data?.proforma?.lignesMainDoeuvre || (this.data?.proforma as any)?.lignesMainDoeuvres || [];
+  }
+
+  // ─── Gestion des Techniciens Affectés (OT Step 1) ─────────────────
+
+  chargerTechniciensAffectes(): void {
+    this.otService.getStepAssignation(this.otId).subscribe({
+      next: (res) => {
+        this.techniciensAffectes = res.techniciens || [];
+        this.selectedTechnicienIds = this.techniciensAffectes.map(t => t.id);
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.otService.getSummary(this.otId).subscribe({
+          next: (summary) => {
+            this.techniciensAffectes = (summary as any).techniciens || [];
+            this.selectedTechnicienIds = this.techniciensAffectes.map(t => t.id);
+            this.cdr.markForCheck();
+          }
+        });
+      }
+    });
+  }
+
+  chargerTousLesTechniciens(): void {
+    this.technicienService.getAll({ size: 100 }).subscribe({
+      next: (res) => {
+        this.allTechniciens = extractContent<Technicien>(res as any);
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  ouvrirModalAssignation(): void {
+    this.selectedTechnicienIds = (this.techniciensAffectes || []).map(t => t.id);
+    this.technicienSearchTerm = '';
+    this.technicienFiltreSpecialite = '';
+    this.showAssignModal = true;
+    this.cdr.markForCheck();
+  }
+
+  fermerModalAssignation(): void {
+    this.showAssignModal = false;
+    this.cdr.markForCheck();
+  }
+
+  toggleTechnicienSelection(id: number): void {
+    if (this.selectedTechnicienIds.includes(id)) {
+      this.selectedTechnicienIds = this.selectedTechnicienIds.filter(x => x !== id);
+    } else {
+      this.selectedTechnicienIds = [...this.selectedTechnicienIds, id];
+    }
+    this.cdr.markForCheck();
+  }
+
+  isTechnicienSelected(id: number): boolean {
+    return this.selectedTechnicienIds.includes(id);
+  }
+
+  get filteredTechniciens(): Technicien[] {
+    return this.allTechniciens.filter(t => {
+      const matchSpecialite = !this.technicienFiltreSpecialite || t.specialiteCode === this.technicienFiltreSpecialite || t.specialite === this.technicienFiltreSpecialite;
+      const term = (this.technicienSearchTerm || '').trim().toLowerCase();
+      if (!term) return matchSpecialite;
+      const fullName = `${t.firstName || ''} ${t.lastName || ''} ${t.username || ''} ${t.matricule || ''}`.toLowerCase();
+      return matchSpecialite && fullName.includes(term);
+    });
+  }
+
+  getSpecialiteLabel(code?: string | null): string {
+    if (!code) return 'Général';
+    const found = SPECIALITES_TECHNICIEN.find(s => s.value === code);
+    return found ? found.label : code;
+  }
+
+  get techniciensNomsDisplay(): string {
+    if (!this.techniciensAffectes || this.techniciensAffectes.length === 0) {
+      return 'Non assigné';
+    }
+    return this.techniciensAffectes
+      .map(t => t.nom || `${t.firstName || ''} ${t.lastName || ''}`.trim() || 'Technicien')
+      .filter(Boolean)
+      .join(', ');
+  }
+
+  sauvegarderAffectationTechniciens(): void {
+    this.savingTechniciens = true;
+    this.otService.assignTechniciens(this.otId, this.selectedTechnicienIds).subscribe({
+      next: () => {
+        this.savingTechniciens = false;
+        this.techniciensAffectes = this.allTechniciens
+          .filter(t => this.selectedTechnicienIds.includes(t.id))
+          .map(t => ({
+            id: t.id,
+            matricule: t.matricule,
+            nom: `${t.firstName || ''} ${t.lastName || ''}`.trim() || t.username,
+            firstName: t.firstName,
+            lastName: t.lastName,
+            telephone: t.phone,
+            specialite: t.specialite || (t.specialiteCode ? this.getSpecialiteLabel(t.specialiteCode) : undefined)
+          }));
+        this.showAssignModal = false;
+        this.successMessage = 'Affectation des techniciens enregistrée avec succès !';
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.savingTechniciens = false;
+        this.errorMessage = err.error?.message || 'Erreur lors de l\'affectation des techniciens.';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  retirerTechnicien(techId: number): void {
+    if (!techId) return;
+    this.otService.removeTechnicien(this.otId, techId).subscribe({
+      next: () => {
+        this.techniciensAffectes = this.techniciensAffectes.filter(t => t.id !== techId);
+        this.selectedTechnicienIds = this.selectedTechnicienIds.filter(id => id !== techId);
+        this.successMessage = 'Technicien retiré avec succès.';
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        const newIds = this.selectedTechnicienIds.filter(id => id !== techId);
+        this.otService.assignTechniciens(this.otId, newIds).subscribe({
+          next: () => {
+            this.techniciensAffectes = this.techniciensAffectes.filter(t => t.id !== techId);
+            this.selectedTechnicienIds = newIds;
+            this.successMessage = 'Technicien retiré avec succès.';
+            this.cdr.markForCheck();
+          },
+          error: (err) => {
+            this.errorMessage = err.error?.message || 'Erreur lors du retrait du technicien.';
+            this.cdr.markForCheck();
+          }
+        });
+      }
+    });
+  }
+
+  // ─── Téléchargement & Impression de la Fiche de Travail (PDF) ─────
+
+  imprimerFiche(): void {
+    const originalTitle = document.title;
+    const otNumero = this.data?.numero || `OT-${this.otId}`;
+    const enteteSuffix = this.downloadLayoutKey === 'AVEC_ENTETE' ? 'avec-entete' : 'sans-entete';
+    const prixSuffix = this.downloadPrixMode === 'AVEC_PRIX' ? 'avec-prix' : 'sans-prix';
+    document.title = `Fiche_OT_${otNumero}_${enteteSuffix}_${prixSuffix}`;
+    window.print();
+    setTimeout(() => {
+      document.title = originalTitle;
+    }, 1000);
   }
 }
