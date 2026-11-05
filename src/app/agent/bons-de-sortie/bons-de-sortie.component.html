@@ -390,7 +390,7 @@
         <div class="flex items-center justify-between">
           <label class="block text-sm font-bold text-oas-ink flex items-center gap-2">
             <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-            1. Pièces de Rechange (PDP)
+            1. PDP
           </label>
           <span class="text-xs font-bold text-blue-700">
             {{ lignesPdp.length }} pièce{{ lignesPdp.length > 1 ? 's' : '' }}
@@ -401,7 +401,7 @@
         <div class="flex flex-wrap sm:flex-nowrap gap-3 items-end">
           <div class="flex-1 min-w-[200px]">
             <label class="block text-xs font-bold text-oas-muted mb-1">Pièce</label>
-            <app-searchable-select [(ngModel)]="piecePdpAjouter" (ngModelChange)="onPiecePdpSelected($event, 'PDP')" (search)="onPdpSearch($event, 'PDP')" [serverSearch]="true" [options]="piecesPdp" bindValue="id" placeholder="Rechercher une pièce de rechange par référence ou désignation..." [bindLabel]="formatPiece"></app-searchable-select>
+            <app-searchable-select [(ngModel)]="piecePdpAjouter" (ngModelChange)="onPiecePdpSelected($event, 'PDP')" (search)="onPdpSearch($event, 'PDP')" [serverSearch]="true" [options]="piecesPdp" bindValue="id" placeholder="Rechercher une PDP par référence ou désignation..." [bindLabel]="formatPiece"></app-searchable-select>
           </div>
           <div class="w-20">
             <label class="block text-xs font-bold text-oas-muted mb-1">Qté.</label>
@@ -525,7 +525,7 @@
             </table>
           </div>
         } @else {
-          <p class="text-xs text-oas-muted italic py-1">Aucune pièce de rechange (PDP) ajoutée.</p>
+          <p class="text-xs text-oas-muted italic py-1">Aucune PDP ajoutée.</p>
         }
       </div>
 
@@ -536,7 +536,7 @@
         <div class="flex items-center justify-between">
           <label class="block text-sm font-bold text-oas-ink flex items-center gap-2">
             <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-            2. Pièces sous Garantie (PDG)
+            2. PDG
           </label>
           <span class="text-xs font-bold text-emerald-700">
             {{ lignesPdg.length }} pièce{{ lignesPdg.length > 1 ? 's' : '' }}
@@ -547,7 +547,7 @@
         <div class="flex flex-wrap sm:flex-nowrap gap-3 items-end">
           <div class="flex-1 min-w-[200px]">
             <label class="block text-xs font-bold text-oas-muted mb-1">Pièce</label>
-            <app-searchable-select [(ngModel)]="piecePdgAjouter" (ngModelChange)="onPiecePdpSelected($event, 'PDG')" (search)="onPdpSearch($event, 'PDG')" [serverSearch]="true" [options]="piecesPdg" bindValue="id" placeholder="Rechercher une pièce sous garantie par référence ou désignation..." [bindLabel]="formatPiece"></app-searchable-select>
+            <app-searchable-select [(ngModel)]="piecePdgAjouter" (ngModelChange)="onPiecePdpSelected($event, 'PDG')" (search)="onPdpSearch($event, 'PDG')" [serverSearch]="true" [options]="piecesPdg" bindValue="id" placeholder="Rechercher une PDG par référence ou désignation..." [bindLabel]="formatPiece"></app-searchable-select>
           </div>
           <div class="w-20">
             <label class="block text-xs font-bold text-oas-muted mb-1">Qté.</label>
@@ -670,7 +670,7 @@
             </table>
           </div>
         } @else {
-          <p class="text-xs text-oas-muted italic py-1">Aucune pièce sous garantie (PDG) ajoutée.</p>
+          <p class="text-xs text-oas-muted italic py-1">Aucune PDG ajoutée.</p>
         }
       </div>
 

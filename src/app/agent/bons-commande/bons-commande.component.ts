@@ -300,7 +300,7 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
       },
       error: () => {
         this.piecesLoading = false;
-        this.notifyError('Impossible de charger les pièces de rechange.');
+        this.notifyError('Impossible de charger les PDP.');
         this.cdr.markForCheck();
       },
     });
@@ -552,7 +552,7 @@ export class BonsCommandeComponent extends BasePaginatedComponent implements OnI
 
   private prefillReplenishmentPiece(piece: PieceDetache) {
     if (piece.type !== 'PDP') {
-      this.notifyError('Seules les pièces de rechange (PDP) peuvent être commandées.');
+      this.notifyError('Seules les PDP peuvent être commandées.');
       return;
     }
     const addedQty = piece.seuilMinimum ? Math.max(1, piece.seuilMinimum - (piece.qteReelle ?? 0)) : 10;

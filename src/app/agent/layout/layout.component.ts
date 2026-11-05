@@ -52,6 +52,21 @@ export class LayoutComponent implements OnInit, OnDestroy {
   openSubSection: string | null = 'pieces';
   
   isSidebarOpen = false;
+  retractableMode = false;
+  get isCollapsed(): boolean { return this.retractableMode; }
+  set isCollapsed(val: boolean) { this.retractableMode = val; }
+  isPrimaryHovered = false;
+  hoverSection: string | null = null;
+  hoverSubSection: string | null = null;
+  isSubmenuExpanded = false;
+
+  get activeSection(): string | null {
+    return this.hoverSection || this.openSection;
+  }
+
+  get activeSubSection(): string | null {
+    return this.hoverSubSection || this.openSubSection;
+  }
   
   activeGarageName: string | null = null;
   
@@ -69,13 +84,13 @@ export class LayoutComponent implements OnInit, OnDestroy {
     '/vehicules': { label: 'Véhicules' },
     '/bons-de-sortie': { label: 'Bon de sortie', section: 'Gestion Stock' },
     '/historique-bs': { label: 'Historique', section: 'Gestion Stock' },
-    '/inventaire': { label: 'Inventaire', section: 'Pièces détachées (PDP)' },
-    '/seuil-alertes': { label: 'Seuil alertes', section: 'Pièces détachées (PDP)' },
-    '/pdp': { label: 'Pièces détachées (PDP)', section: 'Catalogue' },
-    '/pdg': { label: 'Pièces générées (PDG)', section: 'Catalogue' },
-    '/pieces-detachees': { label: 'Pièces détachées (PDP)', section: 'Catalogue' },
-    '/pieces-generees': { label: 'Pièces générées (PDG)', section: 'Catalogue' },
-    '/stock': { label: 'Historique', section: 'Pièces détachées (PDP)' },
+    '/inventaire': { label: 'Inventaire', section: 'PDP' },
+    '/seuil-alertes': { label: 'Seuil alertes', section: 'PDP' },
+    '/pdp': { label: 'PDP', section: 'Catalogue' },
+    '/pdg': { label: 'PDG', section: 'Catalogue' },
+    '/pieces-detachees': { label: 'PDP', section: 'Catalogue' },
+    '/pieces-generees': { label: 'PDG', section: 'Catalogue' },
+    '/stock': { label: 'Historique', section: 'PDP' },
     '/bons-reception': { label: 'Bon de réception', section: 'Réapprovisionnement' },
     '/fournisseurs': { label: 'Fournisseurs', section: 'Réapprovisionnement' },
     '/factures': { label: 'Facture', section: 'Facture TTC' },
@@ -162,6 +177,12 @@ export class LayoutComponent implements OnInit, OnDestroy {
   isMagasinier(): boolean  { return this.authService.hasRole('ROLE_AGENT_MAGASIN'); }
 
   ngOnInit() {
+    try {
+      const saved = localStorage.getItem('oas_sidebar_collapsed');
+      if (saved !== null) {
+        this.isCollapsed = saved === 'true';
+      }
+    } catch (_) {}
     this.syncSection(this.router.url);
     this.routerSub = this.router.events
       .pipe(filter(e => e instanceof NavigationEnd))
@@ -330,6 +351,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
     } else {
       this.openSection = null;
     }
+    this.isSubmenuExpanded = false;
     this.closeSidebar();
   }
 
@@ -347,6 +369,127 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
   closeSidebar() {
     this.isSidebarOpen = false;
+  }
+
+  onPrimaryEnter(): void {
+    if (this.retractableMode) {
+      this.isPrimaryHovered = true;
+      this.cdr.markForCheck();
+    }
+  }
+
+  onMenuHover(section: string): void {
+    if (this.retractableMode) {
+      this.hoverSection = section;
+      if (section === 'facture-ttc') this.hoverSubSection = 'facture';
+      else if (section === 'pieces') this.hoverSubSection = 'pdp';
+      else if (section === 'facture-ht') this.hoverSubSection = 'note-prix';
+      else if (section === 'admin') this.hoverSubSection = 'parametres';
+      else this.hoverSubSection = null;
+      this.cdr.markForCheck();
+    }
+  }
+
+  onSubMenuHover(subSection: string): void {
+    if (this.retractableMode) {
+      this.hoverSubSection = subSection;
+      this.cdr.markForCheck();
+    }
+  }
+
+  onGlobalNavLeave(): void {
+    if (this.retractableMode) {
+      this.isPrimaryHovered = false;
+      this.hoverSection = null;
+      this.hoverSubSection = null;
+      this.cdr.markForCheck();
+    }
+  }
+
+  onSelectLink(): void {
+    this.isPrimaryHovered = false;
+    this.hoverSection = null;
+    this.hoverSubSection = null;
+    this.isSubmenuExpanded = false;
+    this.closeSidebar();
+    this.cdr.markForCheck();
+  }
+
+  toggleRetractableMode(): void {
+    this.retractableMode = !this.retractableMode;
+    try {
+      localStorage.setItem('oas_retractable_mode', String(this.retractableMode));
+      localStorage.setItem('oas_sidebar_collapsed', String(this.retractableMode));
+    } catch (_) {}
+    this.isSubmenuExpanded = false;
+    this.syncSection(this.router.url);
+    this.cdr.markForCheck();
+  }
+
+  toggleCollapse(): void {
+    this.toggleRetractableMode();
+  }
+
+  closeFlyout(): void {
+    if (this.isCollapsed && this.openSection) {
+      this.openSection = null;
+      this.cdr.markForCheck();
+    }
+  }
+
+  handleSectionClick(section: string): void {
+    if (this.isCollapsed) {
+      if (this.openSection === section && this.isSubmenuExpanded) {
+        this.isSubmenuExpanded = false;
+      } else {
+        this.openSection = section;
+        this.isSubmenuExpanded = true;
+      }
+    } else {
+      this.toggleSection(section);
+    }
+    this.cdr.markForCheck();
+  }
+
+  onSubmenuSelect(): void {
+    // Après le choix du 2ème volet, il se rétracte uniquement, il ne disparaît pas !
+    this.isSubmenuExpanded = false;
+    this.cdr.markForCheck();
+  }
+
+  getSectionTitle(section: string | null): string {
+    switch (section) {
+      case 'atelier': return 'Processus de réparation';
+      case 'pieces': return 'Pièces détachées';
+      case 'facture-ht': return 'Facture HT';
+      case 'facture-ttc': return 'Facture TTC';
+      case 'stock': return 'Gestion Stock';
+      case 'reappro': return 'Réapprovisionnement';
+      case 'admin': return 'Administration';
+      default: return '';
+    }
+  }
+
+  isSectionCurrent(section: string): boolean {
+    const relUrl = this.getRelativeUrl(this.router.url);
+    switch (section) {
+      case 'atelier':
+        return ['/fiches-atelier', '/ordres-reparation', '/ordres-travail', '/diagnostics', '/diagnostic', '/techniciens'].some(p => relUrl.startsWith(p));
+      case 'pieces':
+        return ['/pieces-detachees', '/pieces-generees', '/pdp', '/pdg', '/stock', '/seuil-alertes', '/inventaire'].some(p => relUrl.startsWith(p)) && !relUrl.startsWith('/historique-bs');
+      case 'facture-ht':
+        return ['/notes-prix', '/notes-de-prix', '/devis', '/devis-previsionnels', '/avoirs-ht'].some(p => relUrl.startsWith(p));
+      case 'facture-ttc':
+        return ['/factures', '/bons-livraison', '/bons-commande', '/proformas', '/avoirs-ttc'].some(p => relUrl.startsWith(p));
+      case 'stock':
+        return ['/bons-de-sortie', '/historique-bs'].some(p => relUrl.startsWith(p));
+      case 'reappro':
+        return ['/bons-reception', '/fournisseurs'].some(p => relUrl.startsWith(p));
+      case 'admin':
+        return (relUrl.startsWith('/admin') && !relUrl.startsWith('/admin/main-doeuvre')) || relUrl.startsWith('/gestion-tva');
+      default:
+        return false;
+    }
   }
 
   logout(): void {

@@ -557,7 +557,7 @@
             <div class="flex items-center justify-between">
               <h3 class="text-sm font-bold text-oas-ink flex items-center gap-2">
                 <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-                1. Pièces de Rechange (PDP)
+                1. PDP
               </h3>
               <span class="text-xs font-bold text-oas-muted">{{ getLignesPdp().length }} pièce{{ getLignesPdp().length === 1 ? '' : 's' }}</span>
             </div>
@@ -566,7 +566,7 @@
             <div class="bg-blue-50/40 border border-blue-100 rounded-xl p-3">
               <div class="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_5.5rem_7.5rem_auto] gap-2 items-end">
                 <div class="min-w-0">
-                  <label class="block text-xs font-bold text-oas-muted mb-1">Pièce (PDP)</label>
+                  <label class="block text-xs font-bold text-oas-muted mb-1">PDP</label>
                   <app-searchable-select [(ngModel)]="piecePdpAjouter" [ngModelOptions]="{standalone: true}"
                     [options]="piecesPdp" bindValue="id" [bindLabel]="formatPiece"
                     (search)="onPieceSearch($event)"
@@ -668,7 +668,7 @@
               }
             </div>
             } @else {
-            <p class="text-xs text-oas-muted italic">Aucune pièce de rechange (PDP) ajoutée.</p>
+            <p class="text-xs text-oas-muted italic">Aucune PDP ajoutée.</p>
             }
           </section>
 

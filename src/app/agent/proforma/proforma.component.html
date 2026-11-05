@@ -656,7 +656,7 @@
             <div class="flex items-center justify-between">
               <label class="block text-sm font-bold text-oas-ink flex items-center gap-2">
                 <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-                1. Pièces de Rechange (PDP)
+                1. PDP
               </label>
               <span class="text-xs font-bold text-blue-700">
                 {{ lignesPiecesPdp.length }} pièce{{ lignesPiecesPdp.length > 1 ? 's' : '' }}
@@ -673,7 +673,7 @@
                   (change)="onPiecePdpSelected($event)"
                   [options]="piecesPdpFiltrees"
                   bindValue="id"
-                  placeholder="Rechercher une pièce de rechange par référence ou désignation..."
+                  placeholder="Rechercher une PDP par référence ou désignation..."
                   [bindLabel]="formatPiece">
                 </app-searchable-select>
               </div>
@@ -769,7 +769,7 @@
                 </table>
               </div>
             } @else {
-              <p class="text-xs text-oas-muted italic py-1">Aucune pièce de rechange (PDP) ajoutée.</p>
+              <p class="text-xs text-oas-muted italic py-1">Aucune PDP ajoutée.</p>
             }
           </div>
 
@@ -780,7 +780,7 @@
             <div class="flex items-center justify-between">
               <label class="block text-sm font-bold text-oas-ink flex items-center gap-2">
                 <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                2. Pièces sous Garantie (PDG)
+                2. PDG
               </label>
               <span class="text-xs font-bold text-emerald-700">
                 {{ lignesPiecesPdg.length }} pièce{{ lignesPiecesPdg.length > 1 ? 's' : '' }}
@@ -797,7 +797,7 @@
                   (change)="onPiecePdgSelected($event)"
                   [options]="piecesPdgFiltrees"
                   bindValue="id"
-                  placeholder="Rechercher une pièce sous garantie par référence ou désignation..."
+                  placeholder="Rechercher une PDG par référence ou désignation..."
                   [bindLabel]="formatPiece">
                 </app-searchable-select>
               </div>
@@ -888,7 +888,7 @@
                 </table>
               </div>
             } @else {
-              <p class="text-xs text-oas-muted italic py-1">Aucune pièce sous garantie (PDG) ajoutée.</p>
+              <p class="text-xs text-oas-muted italic py-1">Aucune PDG ajoutée.</p>
             }
           </div>
 
