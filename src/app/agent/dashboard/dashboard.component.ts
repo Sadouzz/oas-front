@@ -52,15 +52,13 @@ export class DashboardComponent implements OnInit {
   recentFiches: any[] = [];
 
   ficheStats = {
-    aFaire: 0,
+    reception: 0,
     diagnostic: 0,
-    attenteProforma: 0,
-    proformaValide: 0,
-    attentePieces: 0,
-    attenteSortie: 0,
-    enCours: 0,
-    attentePaiement: 0,
-    termine: 0,
+    piecesMo: 0,
+    proforma: 0,
+    ordreDeTravail: 0,
+    paiement: 0,
+    pretALivrer: 0,
     livre: 0,
     totalActives: 0
   };
@@ -125,17 +123,7 @@ export class DashboardComponent implements OnInit {
           this.superAgentData = d;
           this.totalClients = d.totalClients ?? 0;
           this.totalVehicules = d.totalVehicules ?? 0;
-          if (d.etatOrdresReparation) {
-            this.ficheStats.diagnostic = d.etatOrdresReparation.diagnostic ?? 0;
-            this.ficheStats.attenteProforma = d.etatOrdresReparation.attenteProforma ?? 0;
-            this.ficheStats.proformaValide = d.etatOrdresReparation.proformaValide ?? 0;
-            this.ficheStats.attentePieces = d.etatOrdresReparation.attentePieces ?? 0;
-            this.ficheStats.attenteSortie = d.etatOrdresReparation.attenteSortie ?? 0;
-            this.ficheStats.enCours = d.etatOrdresReparation.enReparation ?? 0;
-            this.ficheStats.attentePaiement = d.etatOrdresReparation.attentePaiement ?? 0;
-            this.ficheStats.termine = d.etatOrdresReparation.termine ?? 0;
-            this.ficheStats.totalActives = d.etatOrdresReparation.totalActifs ?? 0;
-          }
+          this.applyEtatOrdresReparation(d.etatOrdresReparation);
           this.recentFiches = d.ordresRecents ?? [];
           this.recentClients = (d.clientsRecents ?? []).map((c: any) => ({ id: c.id, firstName: c.nom, lastName: '', phone: c.telephone, role: 'CLIENT' }));
           this.alertes = (d.alertesStock ?? []).map((a: any) => ({ id: a.id, pieceId: a.id, reference: a.reference, designation: a.designation, stockMagasin: a.stockMagasin, typeAlerte: a.statut }));
@@ -160,17 +148,7 @@ export class DashboardComponent implements OnInit {
           this.totalClients = d.totalClients ?? 0;
           this.totalVehicules = d.totalVehicules ?? 0;
           this.bonsEnAttente = d.bonsDeSortieEnAttente ?? [];
-          if (d.etatOrdresReparation) {
-            this.ficheStats.diagnostic = d.etatOrdresReparation.diagnostic ?? 0;
-            this.ficheStats.attenteProforma = d.etatOrdresReparation.attenteProforma ?? 0;
-            this.ficheStats.proformaValide = d.etatOrdresReparation.proformaValide ?? 0;
-            this.ficheStats.attentePieces = d.etatOrdresReparation.attentePieces ?? 0;
-            this.ficheStats.attenteSortie = d.etatOrdresReparation.attenteSortie ?? 0;
-            this.ficheStats.enCours = d.etatOrdresReparation.enReparation ?? 0;
-            this.ficheStats.attentePaiement = d.etatOrdresReparation.attentePaiement ?? 0;
-            this.ficheStats.termine = d.etatOrdresReparation.termine ?? 0;
-            this.ficheStats.totalActives = d.etatOrdresReparation.totalActifs ?? 0;
-          }
+          this.applyEtatOrdresReparation(d.etatOrdresReparation);
           this.recentClients = (d.clientsRecents ?? []).map((c: any) => ({ id: c.id, firstName: c.nom, lastName: '', phone: c.telephone, role: 'CLIENT' }));
           this.loading = false;
           this.loadingFiches = false;
@@ -191,17 +169,7 @@ export class DashboardComponent implements OnInit {
           const d: DashboardChefAtelierResponse = res?.data || res;
           this.totalVehicules = d.totalVehicules ?? 0;
           this.bonsEnAttente = d.bonsDeSortieEnAttenteValidation ?? [];
-          if (d.etatOrdresReparation) {
-            this.ficheStats.diagnostic = d.etatOrdresReparation.diagnostic ?? 0;
-            this.ficheStats.attenteProforma = d.etatOrdresReparation.attenteProforma ?? 0;
-            this.ficheStats.proformaValide = d.etatOrdresReparation.proformaValide ?? 0;
-            this.ficheStats.attentePieces = d.etatOrdresReparation.attentePieces ?? 0;
-            this.ficheStats.attenteSortie = d.etatOrdresReparation.attenteSortie ?? 0;
-            this.ficheStats.enCours = d.etatOrdresReparation.enReparation ?? 0;
-            this.ficheStats.attentePaiement = d.etatOrdresReparation.attentePaiement ?? 0;
-            this.ficheStats.termine = d.etatOrdresReparation.termine ?? 0;
-            this.ficheStats.totalActives = d.etatOrdresReparation.totalActifs ?? 0;
-          }
+          this.applyEtatOrdresReparation(d.etatOrdresReparation);
           this.loading = false;
           this.loadingFiches = false;
           this.cdr.markForCheck();
@@ -261,6 +229,60 @@ export class DashboardComponent implements OnInit {
 
   get stocksFaibles(): AlerteStock[] {
     return (Array.isArray(this.alertes) ? this.alertes : []).filter(a => a.typeAlerte === 'STOCK_FAIBLE');
+  }
+
+  private applyEtatOrdresReparation(etat?: any): void {
+    if (!etat) return;
+    this.ficheStats.reception = etat.reception ?? etat.RECEPTION ?? 0;
+    this.ficheStats.diagnostic = etat.diagnostic ?? etat.DIAGNOSTIC ?? 0;
+    this.ficheStats.piecesMo = etat.piecesMo ?? etat.piecesMO ?? etat.PIECES_MO ?? etat.attentePieces ?? 0;
+    this.ficheStats.proforma = etat.proforma ?? etat.PROFORMA ?? etat.attenteProforma ?? 0;
+    this.ficheStats.ordreDeTravail =
+      etat.ordreDeTravail ??
+      etat.ordreTravail ??
+      etat.ORDRE_DE_TRAVAIL ??
+      ((etat.proformaValide ?? 0) + (etat.attenteSortie ?? 0) + (etat.enReparation ?? 0));
+    this.ficheStats.paiement = etat.paiement ?? etat.PAIEMENT ?? etat.attentePaiement ?? 0;
+    this.ficheStats.pretALivrer = etat.pretALivrer ?? etat.PRET_A_LIVRER ?? etat.termine ?? 0;
+    this.ficheStats.livre = etat.livre ?? etat.LIVRE ?? 0;
+    this.ficheStats.totalActives = etat.totalActifs ?? (
+      this.ficheStats.reception +
+      this.ficheStats.diagnostic +
+      this.ficheStats.piecesMo +
+      this.ficheStats.proforma +
+      this.ficheStats.ordreDeTravail +
+      this.ficheStats.paiement +
+      this.ficheStats.pretALivrer
+    );
+  }
+
+  statutLabel(statut?: string | null): string {
+    switch (statut) {
+      case 'RECEPTION':
+      case 'A_FAIRE': return 'Réception';
+      case 'DIAGNOSTIC':
+      case 'EN_DIAGNOSTIC': return 'Diagnostic';
+      case 'PIECES_MO':
+      case 'EN_ATTENTE_PIECES_MO': return 'Pièces & MO';
+      case 'PROFORMA':
+      case 'EN_ATTENTE_PROFORMA': return 'Proforma';
+      case 'ORDRE_DE_TRAVAIL':
+      case 'BON_DE_COMMANDE':
+      case 'BON_DE_SORTIE':
+      case 'ASSIGN_TECHNICIEN':
+      case 'REPARATION':
+      case 'PROFORMA_VALIDE':
+      case 'EN_ATTENTE_COMMANDE':
+      case 'EN_ATTENTE_SORTIE':
+      case 'EN_ATTENTE_MECANICIEN':
+      case 'EN_COURS': return 'Ordre de Travail';
+      case 'PAIEMENT':
+      case 'EN_ATTENTE_PAIEMENT': return 'Paiement';
+      case 'PRET_A_LIVRER':
+      case 'TERMINE': return 'Prêt';
+      case 'LIVRE': return 'Livré';
+      default: return statut || '—';
+    }
   }
 
   formatDate(d: string): string { return new Date(d).toLocaleString('fr-FR'); }

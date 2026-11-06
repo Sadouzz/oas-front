@@ -604,294 +604,203 @@
   <!-- CAS 2 : MODE RÉTRACTABLE À NAVIGATION PAR NIVEAUX (largeur fixe)        -->
   <!-- ══════════════════════════════════════════════════════════════════ -->
   @if (retractableMode) {
-    <div class="hidden md:flex h-full w-64 max-w-[90vw] flex-shrink-0 relative z-40 select-none overflow-hidden"
+    <div class="hidden md:flex h-full max-w-[90vw] flex-shrink-0 relative z-40 select-none overflow-hidden transition-[width] duration-200" [class.w-[72px]]="!showFlyout" [class.w-64]="showFlyout"
          (mouseleave)="onGlobalNavLeave()" (focusout)="onGlobalNavFocusLeave($event)" (keydown)="onFlyoutKeydown($event)">
 
-      <!-- ── RANG 1 : Niveau principal (icônes visibles quand un sous-menu est ouvert) ── -->
-      <aside 
-        class="oas-sidebar text-white flex flex-col flex-shrink-0 z-50 h-full transition-all duration-300 shadow-2xl"
-        [class.w-full]="!showFlyout"
-        [class.w-[72px]]="showFlyout">
+      <!-- ── Rail d'icônes persistant ── -->
+      <aside
+        class="oas-sidebar text-white flex flex-col flex-shrink-0 z-50 h-full w-[72px] shadow-2xl">
 
         <!-- En-tête RANG 1 -->
-        @if (!showFlyout) {
-          <div class="h-[72px] px-5 flex items-center border-b border-white/10 flex-shrink-0 bg-[#061424]">
-            <div class="flex items-center gap-3 min-w-0">
-              <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
-                <img src="/oas-logo.png" alt="OAS" class="w-7 h-7 object-contain">
-              </div>
-              <div class="min-w-0">
-                <p class="font-extrabold text-base leading-tight tracking-wide">OAS</p>
-                <p class="text-[10px] font-medium tracking-widest uppercase truncate" style="color:#ef6c1a;">Orient Auto Service</p>
-              </div>
+
+          <div class="h-[72px] flex items-center justify-center border-b border-white/10 flex-shrink-0 bg-[#061424]">
+            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center flex-shrink-0 shadow-lg cursor-pointer"
+                 (click)="toggleRetractableMode()" title="Désactiver le mode rétractable">
+              <img src="/oas-logo.png" alt="OAS" class="w-7 h-7 object-contain">
             </div>
           </div>
-        }
+
 
         <!-- Checkbox Rétractable (MINI) -->
-        <div class="border-b border-white/10 bg-white/[0.04] flex items-center justify-center flex-shrink-0"
-             [class.px-4]="!showFlyout" [class.py-2.5]="!showFlyout" [class.py-2]="showFlyout">
+        <div class="border-b border-white/10 bg-white/[0.04] flex items-center justify-center flex-shrink-0 px-1 py-2">
           <label class="flex items-center gap-2 cursor-pointer select-none" title="Désactiver le mode rétractable">
             <input type="checkbox"
               [checked]="retractableMode"
               (change)="toggleRetractableMode()"
               class="w-4 h-4 rounded border-white/30 bg-white/10 text-oas-accent focus:ring-oas-accent cursor-pointer accent-[#ef6c1a]">
-            @if (!showFlyout) {
-              <span class="text-xs font-semibold text-[#9fb2c8]">Mode rétractable (Actif)</span>
-            } @else {
+
               <span class="text-[9px] font-extrabold text-oas-accent uppercase tracking-wider">MINI</span>
-            }
+
           </label>
         </div>
 
         <!-- Navigation RANG 1 -->
-        <nav aria-label="Navigation principale" class="flex-1 py-3 overflow-y-auto overflow-x-hidden space-y-1.5"
-             [class.px-3]="!showFlyout" [class.px-2]="showFlyout">
+        <nav aria-label="Navigation principale" title="Navigation principale" class="flex-1 py-3 overflow-y-auto overflow-x-hidden space-y-1.5 px-2">
 
           <!-- 1. Tableau de bord -->
-          <a routerLink="/app/dashboard" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20" aria-label="Tableau de bord"
-            class="flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer"
-            [class.px-3]="!showFlyout" [class.py-2.5]="!showFlyout" [class.gap-3]="!showFlyout"
-            [class.w-11]="showFlyout" [class.h-11]="showFlyout" [class.mx-auto]="showFlyout" [class.justify-center]="showFlyout">
+          <a routerLink="/app/dashboard" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20" aria-label="Tableau de bord" title="Tableau de bord"
+            class="flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer w-11 h-11 mx-auto justify-center">
             <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round"
                 d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
-            @if (!showFlyout) {
-              <span class="text-sm font-medium truncate">Tableau de bord</span>
-            }
-          </a>
+            </a>
 
           <!-- 2. Processus de réparation (Atelier) -->
           @if (isAgent() || isChefAtelier() || isSuperAgent() || isMaster()) {
-            <button type="button" data-nav-section="atelier" aria-label="Processus de réparation" [attr.aria-expanded]="showFlyout && activeSection === 'atelier'" (mouseenter)="onMenuHover('atelier')" (click)="handleSectionClick('atelier')"
+            <button type="button" data-nav-section="atelier" aria-label="Processus de réparation" title="Processus de réparation" [attr.aria-expanded]="showFlyout && activeSection === 'atelier'" (mouseenter)="onMenuHover('atelier')" (click)="handleSectionClick('atelier')"
               [class.bg-white/15]="isSectionCurrent('atelier') || activeSection === 'atelier'" [class.text-white]="isSectionCurrent('atelier') || activeSection === 'atelier'"
-              class="w-full flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer"
-              [class.px-3]="!showFlyout" [class.py-2.5]="!showFlyout" [class.gap-3]="!showFlyout"
-              [class.w-11]="showFlyout" [class.h-11]="showFlyout" [class.mx-auto]="showFlyout" [class.justify-center]="showFlyout">
+              class="flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer w-11 h-11 mx-auto justify-center">
               <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round"
                   d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              @if (!showFlyout) {
-                <span class="text-sm font-medium flex-1 text-left truncate">Processus de réparation</span>
-                <span class="text-white/40 text-xs">›</span>
-              }
-            </button>
+              </button>
           }
 
           <!-- 3. Rendez-vous -->
-            <a routerLink="/app/rendezvous" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20" aria-label="Rendez-vous"
-            class="flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer"
-            [class.px-3]="!showFlyout" [class.py-2.5]="!showFlyout" [class.gap-3]="!showFlyout"
-            [class.w-11]="showFlyout" [class.h-11]="showFlyout" [class.mx-auto]="showFlyout" [class.justify-center]="showFlyout">
+            <a routerLink="/app/rendezvous" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20" aria-label="Rendez-vous" title="Rendez-vous"
+            class="flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer w-11 h-11 mx-auto justify-center">
             <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            @if (!showFlyout) {
-              <span class="text-sm font-medium truncate">Rendez-vous</span>
-            }
-          </a>
+            </a>
 
           <!-- 4. Clients -->
-          <a routerLink="/app/clients" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20" aria-label="Clients"
-            class="flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer"
-            [class.px-3]="!showFlyout" [class.py-2.5]="!showFlyout" [class.gap-3]="!showFlyout"
-            [class.w-11]="showFlyout" [class.h-11]="showFlyout" [class.mx-auto]="showFlyout" [class.justify-center]="showFlyout">
+          <a routerLink="/app/clients" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20" aria-label="Clients" title="Clients"
+            class="flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer w-11 h-11 mx-auto justify-center">
             <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round"
                 d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
-            @if (!showFlyout) {
-              <span class="text-sm font-medium truncate">Clients</span>
-            }
-          </a>
+            </a>
 
           <!-- 5. Véhicules -->
-          <a routerLink="/app/vehicules" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20" aria-label="Véhicules"
-            class="flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer"
-            [class.px-3]="!showFlyout" [class.py-2.5]="!showFlyout" [class.gap-3]="!showFlyout"
-            [class.w-11]="showFlyout" [class.h-11]="showFlyout" [class.mx-auto]="showFlyout" [class.justify-center]="showFlyout">
+          <a routerLink="/app/vehicules" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20" aria-label="Véhicules" title="Véhicules"
+            class="flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer w-11 h-11 mx-auto justify-center">
             <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round"
                 d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
               <path stroke-linecap="round" stroke-linejoin="round"
                 d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
             </svg>
-            @if (!showFlyout) {
-              <span class="text-sm font-medium truncate">Véhicules</span>
-            }
-          </a>
+            </a>
 
           <!-- 6. Pièces détachées -->
-          <button type="button" data-nav-section="pieces" aria-label="Pièces détachées" [attr.aria-expanded]="showFlyout && activeSection === 'pieces'" (mouseenter)="onMenuHover('pieces')" (click)="handleSectionClick('pieces')"
+          <button type="button" data-nav-section="pieces" aria-label="Pièces détachées" title="Pièces détachées" [attr.aria-expanded]="showFlyout && activeSection === 'pieces'" (mouseenter)="onMenuHover('pieces')" (click)="handleSectionClick('pieces')"
             [class.bg-white/15]="isSectionCurrent('pieces') || activeSection === 'pieces'" [class.text-white]="isSectionCurrent('pieces') || activeSection === 'pieces'"
-            class="w-full flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer"
-            [class.px-3]="!showFlyout" [class.py-2.5]="!showFlyout" [class.gap-3]="!showFlyout"
-            [class.w-11]="showFlyout" [class.h-11]="showFlyout" [class.mx-auto]="showFlyout" [class.justify-center]="showFlyout">
+            class="flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer w-11 h-11 mx-auto justify-center">
             <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round"
                 d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
             </svg>
-            @if (!showFlyout) {
-              <span class="text-sm font-medium flex-1 text-left truncate">Pièces détachées</span>
-              <span class="text-white/40 text-xs">›</span>
-            }
-          </button>
+            </button>
 
           <!-- 7. Facture HT -->
           @if (isAgent() || isSuperAgent() || isMaster()) {
-            <button type="button" data-nav-section="facture-ht" aria-label="Facture HT" [attr.aria-expanded]="showFlyout && activeSection === 'facture-ht'" (mouseenter)="onMenuHover('facture-ht')" (click)="handleSectionClick('facture-ht')"
+            <button type="button" data-nav-section="facture-ht" aria-label="Facture HT" title="Facture HT" [attr.aria-expanded]="showFlyout && activeSection === 'facture-ht'" (mouseenter)="onMenuHover('facture-ht')" (click)="handleSectionClick('facture-ht')"
               [class.bg-white/15]="isSectionCurrent('facture-ht') || activeSection === 'facture-ht'" [class.text-white]="isSectionCurrent('facture-ht') || activeSection === 'facture-ht'"
-              class="w-full flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer"
-              [class.px-3]="!showFlyout" [class.py-2.5]="!showFlyout" [class.gap-3]="!showFlyout"
-              [class.w-11]="showFlyout" [class.h-11]="showFlyout" [class.mx-auto]="showFlyout" [class.justify-center]="showFlyout">
+              class="flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer w-11 h-11 mx-auto justify-center">
               <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round"
                   d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
               </svg>
-              @if (!showFlyout) {
-                <span class="text-sm font-medium flex-1 text-left truncate">Facture HT</span>
-                <span class="text-white/40 text-xs">›</span>
-              }
-            </button>
+              </button>
           }
 
           <!-- 8. Facture TTC -->
           @if (isAgent() || isSuperAgent() || isMaster()) {
-            <button type="button" data-nav-section="facture-ttc" aria-label="Facture TTC" [attr.aria-expanded]="showFlyout && activeSection === 'facture-ttc'" (mouseenter)="onMenuHover('facture-ttc')" (click)="handleSectionClick('facture-ttc')"
+            <button type="button" data-nav-section="facture-ttc" aria-label="Facture TTC" title="Facture TTC" [attr.aria-expanded]="showFlyout && activeSection === 'facture-ttc'" (mouseenter)="onMenuHover('facture-ttc')" (click)="handleSectionClick('facture-ttc')"
               [class.bg-white/15]="isSectionCurrent('facture-ttc') || activeSection === 'facture-ttc'" [class.text-white]="isSectionCurrent('facture-ttc') || activeSection === 'facture-ttc'"
-              class="w-full flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer"
-              [class.px-3]="!showFlyout" [class.py-2.5]="!showFlyout" [class.gap-3]="!showFlyout"
-              [class.w-11]="showFlyout" [class.h-11]="showFlyout" [class.mx-auto]="showFlyout" [class.justify-center]="showFlyout">
+              class="flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer w-11 h-11 mx-auto justify-center">
               <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round"
                   d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
               </svg>
-              @if (!showFlyout) {
-                <span class="text-sm font-medium flex-1 text-left truncate">Facture TTC</span>
-                <span class="text-white/40 text-xs">›</span>
-              }
-            </button>
+              </button>
           }
 
           <!-- 9. Gestion Stock -->
           @if (isAgent() || isSuperAgent() || isMaster() || isMagasinier()) {
-          <button type="button" data-nav-section="stock" aria-label="Gestion du stock" [attr.aria-expanded]="showFlyout && activeSection === 'stock'" (mouseenter)="onMenuHover('stock')" (click)="handleSectionClick('stock')"
+          <button type="button" data-nav-section="stock" aria-label="Gestion du stock" title="Gestion du stock" [attr.aria-expanded]="showFlyout && activeSection === 'stock'" (mouseenter)="onMenuHover('stock')" (click)="handleSectionClick('stock')"
             [class.bg-white/15]="isSectionCurrent('stock') || activeSection === 'stock'" [class.text-white]="isSectionCurrent('stock') || activeSection === 'stock'"
-              class="w-full flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer"
-              [class.px-3]="!showFlyout" [class.py-2.5]="!showFlyout" [class.gap-3]="!showFlyout"
-              [class.w-11]="showFlyout" [class.h-11]="showFlyout" [class.mx-auto]="showFlyout" [class.justify-center]="showFlyout">
+              class="flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer w-11 h-11 mx-auto justify-center">
               <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round"
                   d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
               </svg>
-              @if (!showFlyout) {
-                <span class="text-sm font-medium flex-1 text-left truncate">Gestion Stock</span>
-                <span class="text-white/40 text-xs">›</span>
-              }
-            </button>
+              </button>
           }
 
           <!-- 10. Réapprovisionnement -->
           @if (isAgent() || isSuperAgent() || isMaster() || isMagasinier()) {
-          <button type="button" data-nav-section="reappro" aria-label="Réapprovisionnement" [attr.aria-expanded]="showFlyout && activeSection === 'reappro'" (mouseenter)="onMenuHover('reappro')" (click)="handleSectionClick('reappro')"
+          <button type="button" data-nav-section="reappro" aria-label="Réapprovisionnement" title="Réapprovisionnement" [attr.aria-expanded]="showFlyout && activeSection === 'reappro'" (mouseenter)="onMenuHover('reappro')" (click)="handleSectionClick('reappro')"
             [class.bg-white/15]="isSectionCurrent('reappro') || activeSection === 'reappro'" [class.text-white]="isSectionCurrent('reappro') || activeSection === 'reappro'"
-              class="w-full flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer"
-              [class.px-3]="!showFlyout" [class.py-2.5]="!showFlyout" [class.gap-3]="!showFlyout"
-              [class.w-11]="showFlyout" [class.h-11]="showFlyout" [class.mx-auto]="showFlyout" [class.justify-center]="showFlyout">
+              class="flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer w-11 h-11 mx-auto justify-center">
               <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round"
                   d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
               </svg>
-              @if (!showFlyout) {
-                <span class="text-sm font-medium flex-1 text-left truncate">Réapprovisionnement</span>
-                <span class="text-white/40 text-xs">›</span>
-              }
-            </button>
+              </button>
           }
 
           <!-- 11. Gestion reçu -->
           @if (isAgent() || isSuperAgent() || isMaster()) {
-            <a routerLink="/app/gestion-recu" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20" aria-label="Gestion reçu"
-              class="flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer"
-              [class.px-3]="!showFlyout" [class.py-2.5]="!showFlyout" [class.gap-3]="!showFlyout"
-              [class.w-11]="showFlyout" [class.h-11]="showFlyout" [class.mx-auto]="showFlyout" [class.justify-center]="showFlyout">
+            <a routerLink="/app/gestion-recu" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20" aria-label="Gestion reçu" title="Gestion reçu"
+              class="flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer w-11 h-11 mx-auto justify-center">
               <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round"
                   d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              @if (!showFlyout) {
-                <span class="text-sm font-medium truncate">Gestion reçu</span>
-              }
-            </a>
+              </a>
           }
 
           <!-- 12. Main d'œuvre -->
           @if (isAgent() || isSuperAgent() || isMaster()) {
-            <a routerLink="/app/admin/main-doeuvre" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20" aria-label="Main d'œuvre"
-              class="flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer"
-              [class.px-3]="!showFlyout" [class.py-2.5]="!showFlyout" [class.gap-3]="!showFlyout"
-              [class.w-11]="showFlyout" [class.h-11]="showFlyout" [class.mx-auto]="showFlyout" [class.justify-center]="showFlyout">
+            <a routerLink="/app/admin/main-doeuvre" (click)="onSelectLink()" routerLinkActive="bg-white/15 text-white ring-1 ring-white/20" aria-label="Main d'œuvre" title="Main d'œuvre"
+              class="flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer w-11 h-11 mx-auto justify-center">
               <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round"
                   d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              @if (!showFlyout) {
-                <span class="text-sm font-medium truncate">Main d'œuvre</span>
-              }
-            </a>
+              </a>
           }
 
           <!-- 13. Administration -->
           @if (isSuperAgent() || isMaster()) {
-          <button type="button" data-nav-section="admin" aria-label="Administration" [attr.aria-expanded]="showFlyout && activeSection === 'admin'" (mouseenter)="onMenuHover('admin')" (click)="handleSectionClick('admin')"
+          <button type="button" data-nav-section="admin" aria-label="Administration" title="Administration" [attr.aria-expanded]="showFlyout && activeSection === 'admin'" (mouseenter)="onMenuHover('admin')" (click)="handleSectionClick('admin')"
             [class.bg-white/15]="isSectionCurrent('admin') || activeSection === 'admin'" [class.text-white]="isSectionCurrent('admin') || activeSection === 'admin'"
-              class="w-full flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer"
-              [class.px-3]="!showFlyout" [class.py-2.5]="!showFlyout" [class.gap-3]="!showFlyout"
-              [class.w-11]="showFlyout" [class.h-11]="showFlyout" [class.mx-auto]="showFlyout" [class.justify-center]="showFlyout">
+              class="flex items-center rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition relative group cursor-pointer w-11 h-11 mx-auto justify-center">
               <svg class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round"
                   d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              @if (!showFlyout) {
-                <span class="text-sm font-medium flex-1 text-left truncate">Administration</span>
-                <span class="text-white/40 text-xs">›</span>
-              }
-            </button>
+              </button>
           }
 
         </nav>
 
         <!-- Footer Profil RANG 1 -->
-        <div class="border-t border-white/10 bg-[#061424] flex items-center justify-between"
-             [class.p-3]="!showFlyout" [class.py-3]="showFlyout" [class.justify-center]="showFlyout">
-          <div class="flex items-center gap-2.5 min-w-0">
+        <div class="border-t border-white/10 bg-[#061424] flex flex-col items-center gap-1 py-2">
+          <div class="flex items-center justify-center">
             <div class="w-9 h-9 rounded-full bg-oas-navy border-2 border-oas-accent flex items-center justify-center font-bold text-white text-xs shadow-sm flex-shrink-0">
               {{ initials }}
             </div>
-            @if (!showFlyout) {
-              <div class="min-w-0">
-                <p class="text-xs font-bold text-white truncate">{{ fullName }}</p>
-                <p class="text-[10px] text-white/50 truncate">{{ roleLabel }}</p>
-              </div>
-            }
           </div>
-          @if (!showFlyout) {
-            <button (click)="logout()" class="p-1.5 text-white/40 hover:text-red-400 hover:bg-white/5 rounded-lg transition cursor-pointer" title="Déconnexion">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-            </button>
-          }
+          <button type="button" (click)="logout()" aria-label="Déconnexion" title="Déconnexion"
+            class="w-7 h-7 flex items-center justify-center text-white/50 hover:text-red-400 hover:bg-white/5 rounded-lg transition cursor-pointer">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </button>
         </div>
 
       </aside>
 
-      <!-- ── NIVEAU 2 : Sous-menus (dans le panneau fixe) ── -->
+  <!-- ── NIVEAU 2 : Sous-menus (dans le panneau fixe) ── -->
       @if (showFlyout && activeSection && !activeSubSection) {
         <aside data-nav-level="section"
           class="min-w-0 flex-1 bg-[#081a2e] border-r border-white/10 flex flex-col z-40 h-full transition-all duration-200 shadow-2xl overflow-hidden">

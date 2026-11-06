@@ -1,12 +1,20 @@
 export interface EtatOrdreReparationDTO {
-  diagnostic: number;
-  attenteProforma: number;
-  proformaValide: number;
-  attentePieces: number;
-  attenteSortie: number;
-  enReparation: number;
-  attentePaiement: number;
-  termine: number;
+  reception?: number;
+  diagnostic?: number;
+  piecesMo?: number;
+  proforma?: number;
+  ordreDeTravail?: number;
+  ordreTravail?: number;
+  paiement?: number;
+  pretALivrer?: number;
+  livre?: number;
+  attenteProforma?: number;
+  proformaValide?: number;
+  attentePieces?: number;
+  attenteSortie?: number;
+  enReparation?: number;
+  attentePaiement?: number;
+  termine?: number;
   totalActifs: number;
 }
 

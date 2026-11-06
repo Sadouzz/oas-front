@@ -27,13 +27,10 @@ import {
 
 export const STATUT_STEPS: { statut: StatutOrdre; label: string }[] = [
   { statut: 'RECEPTION', label: 'Réception' },
-  { statut: 'DIAGNOSTIC', label: 'Chef Atelier' },
-  { statut: 'PIECES_MO', label: 'OR' },
+  { statut: 'DIAGNOSTIC', label: 'Diagnostic' },
+  { statut: 'PIECES_MO', label: 'Pièces & MO' },
   { statut: 'PROFORMA', label: 'Proforma' },
-  { statut: 'BON_DE_COMMANDE', label: 'Approv.' },
-  { statut: 'BON_DE_SORTIE', label: 'Attente BS' },
-  { statut: 'ASSIGN_TECHNICIEN', label: 'Assign. Tech.' },
-  { statut: 'REPARATION', label: 'Réparation' },
+  { statut: 'ORDRE_DE_TRAVAIL', label: 'Ordre de Travail' },
   { statut: 'PAIEMENT', label: 'Paiement' },
   { statut: 'PRET_A_LIVRER', label: 'Prêt' },
   { statut: 'LIVRE', label: 'Livré' },
@@ -247,20 +244,21 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
       case 'EN_ATTENTE_PIECES_MO': return 'pieces-mo';
       case 'PROFORMA':
       case 'EN_ATTENTE_PROFORMA': return 'proforma';
+      case 'ORDRE_DE_TRAVAIL':
       case 'BON_DE_COMMANDE':
       case 'PROFORMA_VALIDE':
-      case 'EN_ATTENTE_COMMANDE': return 'approvisionnement';
+      case 'EN_ATTENTE_COMMANDE':
       case 'BON_DE_SORTIE':
-      case 'EN_ATTENTE_SORTIE': return 'bon-sortie';
+      case 'EN_ATTENTE_SORTIE':
       case 'ASSIGN_TECHNICIEN':
-      case 'EN_ATTENTE_MECANICIEN': return 'assignation';
+      case 'EN_ATTENTE_MECANICIEN':
       case 'REPARATION':
-      case 'EN_COURS': return 'reparation';
+      case 'EN_COURS': return 'ordre-travail';
       case 'PAIEMENT':
       case 'EN_ATTENTE_PAIEMENT': return 'paiement';
       case 'PRET_A_LIVRER':
-      case 'TERMINE': return 'livraison';
-      case 'LIVRE': return 'cloture';
+      case 'TERMINE': return 'pret-a-livrer';
+      case 'LIVRE': return 'livraison';
       default: return 'reception';
     }
   }
@@ -429,6 +427,18 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
       DIAGNOSTIC: ['DIAGNOSTIC', 'EN_DIAGNOSTIC'],
       PIECES_MO: ['PIECES_MO', 'EN_ATTENTE_PIECES_MO'],
       PROFORMA: ['PROFORMA', 'EN_ATTENTE_PROFORMA'],
+      ORDRE_DE_TRAVAIL: [
+        'ORDRE_DE_TRAVAIL',
+        'BON_DE_COMMANDE',
+        'PROFORMA_VALIDE',
+        'EN_ATTENTE_COMMANDE',
+        'BON_DE_SORTIE',
+        'EN_ATTENTE_SORTIE',
+        'ASSIGN_TECHNICIEN',
+        'EN_ATTENTE_MECANICIEN',
+        'REPARATION',
+        'EN_COURS'
+      ],
       BON_DE_COMMANDE: ['BON_DE_COMMANDE', 'PROFORMA_VALIDE', 'EN_ATTENTE_COMMANDE'],
       BON_DE_SORTIE: ['BON_DE_SORTIE', 'EN_ATTENTE_SORTIE'],
       ASSIGN_TECHNICIEN: ['ASSIGN_TECHNICIEN', 'EN_ATTENTE_MECANICIEN'],
@@ -499,19 +509,20 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
       case 'EN_ATTENTE_PIECES_MO': return '#8b5cf6';
       case 'PROFORMA':
       case 'EN_ATTENTE_PROFORMA': return '#6366f1';
+      case 'ORDRE_DE_TRAVAIL':
       case 'BON_DE_COMMANDE':
       case 'PROFORMA_VALIDE':
-      case 'EN_ATTENTE_COMMANDE': return '#ec4899';
+      case 'EN_ATTENTE_COMMANDE':
       case 'BON_DE_SORTIE':
-      case 'EN_ATTENTE_SORTIE': return '#6366f1';
+      case 'EN_ATTENTE_SORTIE':
       case 'ASSIGN_TECHNICIEN':
-      case 'EN_ATTENTE_MECANICIEN': return '#06b6d4';
+      case 'EN_ATTENTE_MECANICIEN':
       case 'REPARATION':
       case 'EN_COURS': return '#3b82f6';
       case 'PAIEMENT':
       case 'EN_ATTENTE_PAIEMENT': return '#f97316';
       case 'PRET_A_LIVRER':
-      case 'TERMINE': return '#10b981';
+      case 'TERMINE': return '#06b6d4';
       case 'LIVRE': return '#059669';
       default: return '#6b7280';
     }
@@ -521,13 +532,22 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
     const step = STATUT_STEPS.find(s => s.statut === o?.statut);
     if (step) return step.label;
     if (o?.statut === 'A_FAIRE') return 'Réception';
-    if (o?.statut === 'EN_DIAGNOSTIC') return 'Chef Atelier';
-    if (o?.statut === 'EN_ATTENTE_PIECES_MO') return 'OR';
+    if (o?.statut === 'EN_DIAGNOSTIC') return 'Diagnostic';
+    if (o?.statut === 'EN_ATTENTE_PIECES_MO') return 'Pièces & MO';
     if (o?.statut === 'EN_ATTENTE_PROFORMA') return 'Proforma';
-    if (o?.statut === 'EN_ATTENTE_COMMANDE' || o?.statut === 'PROFORMA_VALIDE') return 'Approv.';
-    if (o?.statut === 'EN_ATTENTE_SORTIE') return 'Attente BS';
-    if (o?.statut === 'EN_ATTENTE_MECANICIEN') return 'Assign. Tech.';
-    if (o?.statut === 'EN_COURS') return 'Réparation';
+    if (
+      o?.statut === 'BON_DE_COMMANDE' ||
+      o?.statut === 'BON_DE_SORTIE' ||
+      o?.statut === 'ASSIGN_TECHNICIEN' ||
+      o?.statut === 'REPARATION' ||
+      o?.statut === 'EN_ATTENTE_COMMANDE' ||
+      o?.statut === 'PROFORMA_VALIDE' ||
+      o?.statut === 'EN_ATTENTE_SORTIE' ||
+      o?.statut === 'EN_ATTENTE_MECANICIEN' ||
+      o?.statut === 'EN_COURS'
+    ) {
+      return 'Ordre de Travail';
+    }
     if (o?.statut === 'EN_ATTENTE_PAIEMENT') return 'Paiement';
     if (o?.statut === 'TERMINE') return 'Prêt';
     return o?.statut ?? '—';
