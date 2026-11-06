@@ -360,9 +360,14 @@
                       </div>
                     </td>
                     <td class="px-3 py-2 text-right font-medium">{{ ligne.quantite }}</td>
-                    <td class="px-3 py-2 text-right text-oas-muted">{{ (ligne.prix || 0) | number }} FCFA</td>
+                    <td class="px-3 py-2 text-right text-oas-muted">
+                      {{ (ligne.prix || 0) | number }} FCFA
+                      @if (ligne.tauxRemise && ligne.tauxRemise > 0) {
+                        <span class="block text-[10px] text-emerald-600 font-semibold">Remise: {{ ligne.tauxRemise }}%</span>
+                      }
+                    </td>
                     <td class="px-3 py-2 text-right font-bold text-oas-ink">
-                      {{ (ligne.montantTotal != null ? ligne.montantTotal : ((ligne.prix || 0) * (ligne.quantite || 1))) | number }} FCFA
+                      {{ montantLigneNet(ligne) | number }} FCFA
                     </td>
                   </tr>
                 }
@@ -412,9 +417,14 @@
                       <div class="font-medium text-oas-ink">{{ mo.nom || mo.designation || mo.description || 'Main d\'œuvre' }}</div>
                     </td>
                     <td class="px-3 py-2 text-right font-medium">{{ mo.nbreHeure ?? mo.quantite ?? 1 }}h</td>
-                    <td class="px-3 py-2 text-right text-oas-muted">{{ (mo.tarifHoraire ?? mo.prix ?? 0) | number }} FCFA/h</td>
+                    <td class="px-3 py-2 text-right text-oas-muted">
+                      {{ (mo.tarifHoraire ?? mo.prix ?? 0) | number }} FCFA/h
+                      @if (mo.tauxRemise && mo.tauxRemise > 0) {
+                        <span class="block text-[10px] text-emerald-600 font-semibold">Remise: {{ mo.tauxRemise }}%</span>
+                      }
+                    </td>
                     <td class="px-3 py-2 text-right font-bold text-oas-ink">
-                      {{ (mo.montantTotal != null ? mo.montantTotal : (((mo.tarifHoraire ?? mo.prix ?? 0) * (mo.nbreHeure ?? mo.quantite ?? 1)))) | number }} FCFA
+                      {{ montantLigneNet(mo) | number }} FCFA
                     </td>
                   </tr>
                 }

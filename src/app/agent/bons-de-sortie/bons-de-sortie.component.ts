@@ -96,6 +96,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
   bonDeSortieValidePourOt = false;
 
   proformaContexte: Proforma | null = null;
+  mainDoeuvresProformaContexte: any[] = [];
   piecesProformaSet = new Set<string>();
   quantitesProforma = new Map<string, number>();
 
@@ -272,9 +273,31 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
 
   formatMO = (mo: MainDoeuvreModel) => {
     if (!mo) return '';
-    const prix = mo.prix != null ? ` — ${mo.prix} FCFA/h` : '';
-    return `${mo.description || ''}${prix}`.trim();
+    const source = this.lignesProformaPourMainDoeuvre(mo)[0];
+    const tarif = source?.tarifHoraire ?? source?.prix ?? mo.prix;
+    const prix = tarif != null ? ` — ${tarif} FCFA/h` : '';
+    const remise = Number(source?.tauxRemise) > 0 ? ` (Remise: ${Number(source.tauxRemise)}%)` : '';
+    return `${mo.description || ''}${prix}${remise}`.trim();
   };
+
+  private lignesProformaPourMainDoeuvre(mo: MainDoeuvreModel | null | undefined): any[] {
+    if (!mo) return [];
+    const fromProforma = [
+      ...(this.proformaContexte?.lignesMainDoeuvres ?? []),
+      ...((this.proformaContexte as any)?.lignesMainDoeuvre ?? []),
+      ...this.mainDoeuvresProformaContexte
+    ];
+    const moId = Number(mo.id);
+    const moDesc = String(mo.description ?? '').replace(/\s+/g, ' ').trim().toLocaleLowerCase();
+    return fromProforma.filter((ligne: any) => {
+      const id = Number(ligne.mainDoeuvreId ?? ligne.mainDoeuvre?.id ?? 0);
+      if (id && moId && id === moId) return true;
+      const desc = String(
+        ligne.descriptionMainDoeuvre ?? ligne.designation ?? ligne.mainDoeuvre?.description ?? ''
+      ).replace(/\s+/g, ' ').trim().toLocaleLowerCase();
+      return !!moDesc && desc === moDesc;
+    });
+  }
 
   onMainDoeuvreSelected(id: any): void {
     const moId = id == null ? null : Number(id);
@@ -286,8 +309,13 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
       return;
     }
     const mo = this.mainDoeuvres.find(x => x.id === moId);
-    this.prixAjouterMO = mo?.prix ?? null;
-    this.qteAjouterMO = mo ? this.quantiteRestantePlanifiee(`mo:${mo.id}`, mo.nbreHeure ?? 0) : 1;
+    const source = this.lignesProformaPourMainDoeuvre(mo)[0];
+    const prixSource = source ? (source.tarifHoraire ?? source.prix) : null;
+    this.prixAjouterMO = prixSource != null ? Number(prixSource) : (mo?.prix ?? null);
+    const prevue = mo
+      ? (this.quantitesPrevues.get(`mo:${mo.id}`) ?? Number(source?.nbreHeure ?? mo.nbreHeure ?? 0))
+      : 0;
+    this.qteAjouterMO = mo ? this.quantiteRestantePlanifiee(`mo:${mo.id}`, prevue) : 1;
     this.cdr.markForCheck();
   }
 
@@ -743,15 +771,20 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     const mo = this.mainDoeuvres.find(item => item.id === Number(this.mainDoeuvreAjouter));
     if (!mo) { this.errorMessage = 'Sélectionnez une main-d’œuvre.'; return; }
     if (qte <= 0) { this.errorMessage = 'Le nombre d’heures doit être supérieur à zéro.'; return; }
+    const sources = this.lignesProformaPourMainDoeuvre(mo);
+    const source = sources[0];
     const info = this.getPieceStatusInfo('MAIN_DOEUVRE', mo as any, mo.description, qte);
-    const tauxRemise = 0;
+    const tauxRemise = source ? (Number(source.tauxRemise) || 0) : 0;
+    const proformaLineId = source ? (Number(source.id ?? source.ligneId) || undefined) : undefined;
+    const prixSource = this.prixAjouterMO ?? source?.tarifHoraire ?? source?.prix ?? mo.prix;
     this.lignesPieces.push({
       type: 'MAIN_DOEUVRE',
       mainDoeuvre: mo,
-      designation: mo.description,
+      designation: source?.descriptionMainDoeuvre || source?.designation || mo.description,
       quantite: qte,
-      prix: Number(this.prixAjouterMO ?? mo.prix),
+      prix: Number(prixSource) || 0,
       tauxRemise,
+      proformaLineId,
       horsProforma: info.isHorsProforma,
       dejaSortieProforma: info.isDejaSortiComplet,
       depassementProforma: info.isDepassement,
@@ -970,6 +1003,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
       this.contextOrdreReparationId = null;
       this.contextOrdreReparationNumero = null;
       this.proformaContexte = null;
+      this.mainDoeuvresProformaContexte = [];
       this.piecesProformaSet.clear();
       this.quantitesProforma.clear();
       this.quantitesPrevues.clear();
@@ -1089,12 +1123,13 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     if (otId) {
       this.otService.getStepRecapitulatif(Number(otId)).subscribe({
         next: (recap: any) => {
+          const pfId = recap?.proformaId || recap?.proforma?.id;
           if (recap?.proforma && !this.proformaContexte) {
             this.proformaContexte = recap.proforma;
             this.remplirQuantitesDepuisProforma(recap.proforma);
           }
-          if (recap?.proformaId && !this.proformaContexte) {
-            this.proformaService.getById(Number(recap.proformaId)).subscribe({
+          if (pfId && (!this.proformaContexte || !Array.isArray(this.proformaContexte.lignesMainDoeuvres))) {
+            this.proformaService.getById(Number(pfId)).subscribe({
               next: pf => {
                 this.proformaContexte = pf;
                 this.remplirQuantitesDepuisProforma(pf);
@@ -1113,7 +1148,22 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
           this.bonDeSortieExistantPourOt = Boolean(step.bonsDeSortie?.length || step.bonDeSortie?.id);
           this.bonDeSortieValidePourOt = Boolean(step.bonsDeSortie?.some(b => b.statut === 'VALIDE')
             || step.bonDeSortie?.statut === 'VALIDE');
-          if (step.proformaId && !this.proformaContexte) {
+          if (step.mainDoeuvresProforma?.length) {
+            this.mainDoeuvresProformaContexte = step.mainDoeuvresProforma;
+            for (const mo of step.mainDoeuvresProforma) {
+              if (mo.mainDoeuvreId) {
+                const key = `mo:${mo.mainDoeuvreId}`;
+                this.piecesProformaSet.add(key);
+                if (!this.quantitesProforma.has(key)) {
+                  this.quantitesProforma.set(key, mo.nbreHeure || 0);
+                }
+                if (!this.quantitesPrevues.has(key)) {
+                  this.quantitesPrevues.set(key, mo.nbreHeure || 0);
+                }
+              }
+            }
+          }
+          if (step.proformaId && (!this.proformaContexte || !Array.isArray(this.proformaContexte.lignesMainDoeuvres))) {
             this.proformaService.getById(Number(step.proformaId)).subscribe({
               next: pf => {
                 this.proformaContexte = pf;
@@ -1290,6 +1340,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     this.piecesProformaSet.clear();
     this.quantitesProforma.clear();
     this.proformaContexte = null;
+    this.mainDoeuvresProformaContexte = [];
     this.chargementsContexteEnCours = 0;
     this.chargementQuantitesOR = false;
     this.qteAjouterPdp = 1;
@@ -1379,6 +1430,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     this.piecesProformaSet.clear();
     this.quantitesProforma.clear();
     this.proformaContexte = null;
+    this.mainDoeuvresProformaContexte = [];
     this.cdr.markForCheck();
     this.cdr.detectChanges();
   }
@@ -1458,6 +1510,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
       quantite: Number(l.quantite) || 1,
       prix: Number(l.prix) || 0,
       prixUnitaire: Number(l.prix) || 0,
+      tauxRemise: this.tauxRemiseLigne(l.tauxRemise),
       proformaLineId: l.proformaLineId ?? undefined
     }));
 
@@ -1468,6 +1521,8 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
       quantite: Number(l.quantite) || 1,
       tarifHoraire: Number(l.prix) || 0,
       prix: Number(l.prix) || 0,
+      tauxRemise: this.tauxRemiseLigne(l.tauxRemise),
+      proformaLineId: l.proformaLineId ?? undefined
     }));
 
     this.bonService.creer({
@@ -1760,8 +1815,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     if (this.selectedBon?.montantTotal != null) return this.selectedBon.montantTotal;
     if (!this.selectedBon?.lignesBonDeSortiePieces) return 0;
     return this.selectedBon.lignesBonDeSortiePieces.reduce((sum, l) => {
-      const price = this.getLignePrix(l);
-      return sum + price * (Number(l.quantite) || 0);
+      return sum + this.getLigneTotal(l);
     }, 0);
   }
 

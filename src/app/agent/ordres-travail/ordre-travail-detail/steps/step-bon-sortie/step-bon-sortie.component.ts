@@ -330,18 +330,27 @@ export class StepBonSortieComponent implements OnInit {
     return (this.selectedBonDetail.lignesBonDeSortiePieces || []).filter((l: any) => l.type === 'MAIN_DOEUVRE');
   }
 
+  montantLigneNet(ligne: any): number {
+    if (ligne?.montantTotal != null) return Number(ligne.montantTotal);
+    const pu = Number(ligne?.tarifHoraire ?? ligne?.prix ?? 0);
+    const qte = Number(ligne?.nbreHeure ?? ligne?.quantite ?? 1);
+    const remise = Math.max(0, Math.min(100, Number(ligne?.tauxRemise) || 0));
+    const brut = pu * qte;
+    return Math.round((brut * (1 - remise / 100) + Number.EPSILON) * 100) / 100;
+  }
+
   get sousTotalPieces(): number {
     if (this.selectedBonDetail?.montantTotalPieces != null) {
       return this.selectedBonDetail.montantTotalPieces;
     }
-    return this.modalPieces.reduce((acc, p) => acc + (p.montantTotal != null ? Number(p.montantTotal) : ((Number(p.prix) || 0) * (Number(p.quantite) || 0))), 0);
+    return this.modalPieces.reduce((acc, p) => acc + this.montantLigneNet(p), 0);
   }
 
   get sousTotalMainDoeuvre(): number {
     if (this.selectedBonDetail?.montantTotalMainDoeuvre != null) {
       return this.selectedBonDetail.montantTotalMainDoeuvre;
     }
-    return this.modalMainDoeuvres.reduce((acc, m) => acc + (m.montantTotal != null ? Number(m.montantTotal) : ((Number(m.tarifHoraire ?? m.prix) || 0) * (Number(m.nbreHeure ?? m.quantite) || 0))), 0);
+    return this.modalMainDoeuvres.reduce((acc, m) => acc + this.montantLigneNet(m), 0);
   }
 
   // --- Création du Bon de Sortie ---
