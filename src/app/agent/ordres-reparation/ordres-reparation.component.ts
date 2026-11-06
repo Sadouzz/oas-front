@@ -27,9 +27,13 @@ import {
 
 export const STATUT_STEPS: { statut: StatutOrdre; label: string }[] = [
   { statut: 'RECEPTION', label: 'Réception' },
-  { statut: 'DIAGNOSTIC', label: 'Diagnostic' },
-  { statut: 'PIECES_MO', label: 'Pièces & MO' },
+  { statut: 'DIAGNOSTIC', label: 'Chef Atelier' },
+  { statut: 'PIECES_MO', label: 'OR' },
   { statut: 'PROFORMA', label: 'Proforma' },
+  // { statut: 'BON_DE_COMMANDE', label: 'Approv.' },
+  // { statut: 'BON_DE_SORTIE', label: 'Attente BS' },
+  // { statut: 'ASSIGN_TECHNICIEN', label: 'Assign. Tech.' },
+  // { statut: 'REPARATION', label: 'Réparation' },
   { statut: 'ORDRE_DE_TRAVAIL', label: 'Ordre de Travail' },
   { statut: 'PAIEMENT', label: 'Paiement' },
   { statut: 'PRET_A_LIVRER', label: 'Prêt' },
@@ -103,11 +107,11 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
   ngOnInit(): void {
     this.pieceService.getAll().subscribe({
       next: res => { this.allPieces = extractContent<PieceDetache>(res as any); this.cdr.markForCheck(); },
-      error: () => {}
+      error: () => { }
     });
     this.moService.getAll().subscribe({
       next: res => { this.allMO = extractContent<MainDoeuvreModel>(res as any); this.cdr.markForCheck(); },
-      error: () => {}
+      error: () => { }
     });
 
     const qp = this.route.snapshot.queryParams;
@@ -247,18 +251,18 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
       case 'ORDRE_DE_TRAVAIL':
       case 'BON_DE_COMMANDE':
       case 'PROFORMA_VALIDE':
-      case 'EN_ATTENTE_COMMANDE':
+      case 'EN_ATTENTE_COMMANDE': return 'approvisionnement';
       case 'BON_DE_SORTIE':
-      case 'EN_ATTENTE_SORTIE':
+      case 'EN_ATTENTE_SORTIE': return 'bon-sortie';
       case 'ASSIGN_TECHNICIEN':
-      case 'EN_ATTENTE_MECANICIEN':
+      case 'EN_ATTENTE_MECANICIEN': return 'assignation';
       case 'REPARATION':
-      case 'EN_COURS': return 'ordre-travail';
+      case 'EN_COURS': return 'reparation';
       case 'PAIEMENT':
       case 'EN_ATTENTE_PAIEMENT': return 'paiement';
       case 'PRET_A_LIVRER':
-      case 'TERMINE': return 'pret-a-livrer';
-      case 'LIVRE': return 'livraison';
+      case 'TERMINE': return 'livraison';
+      case 'LIVRE': return 'cloture';
       default: return 'reception';
     }
   }
@@ -300,7 +304,7 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
         next: (p) => { this.selectedOrdreProforma = p; this.cdr.markForCheck(); },
         error: () => { this.selectedOrdreProforma = null; this.cdr.markForCheck(); }
       });
-    } catch (e) {}
+    } catch (e) { }
 
     try {
       this.factureService.getAll({ page: 0, size: 1, ordreReparationId: o.id }).subscribe({
@@ -315,9 +319,9 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
             }
           }
         },
-        error: () => {}
+        error: () => { }
       });
-    } catch (e) {}
+    } catch (e) { }
   }
 
   closeDetail(): void {
@@ -427,18 +431,6 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
       DIAGNOSTIC: ['DIAGNOSTIC', 'EN_DIAGNOSTIC'],
       PIECES_MO: ['PIECES_MO', 'EN_ATTENTE_PIECES_MO'],
       PROFORMA: ['PROFORMA', 'EN_ATTENTE_PROFORMA'],
-      ORDRE_DE_TRAVAIL: [
-        'ORDRE_DE_TRAVAIL',
-        'BON_DE_COMMANDE',
-        'PROFORMA_VALIDE',
-        'EN_ATTENTE_COMMANDE',
-        'BON_DE_SORTIE',
-        'EN_ATTENTE_SORTIE',
-        'ASSIGN_TECHNICIEN',
-        'EN_ATTENTE_MECANICIEN',
-        'REPARATION',
-        'EN_COURS'
-      ],
       BON_DE_COMMANDE: ['BON_DE_COMMANDE', 'PROFORMA_VALIDE', 'EN_ATTENTE_COMMANDE'],
       BON_DE_SORTIE: ['BON_DE_SORTIE', 'EN_ATTENTE_SORTIE'],
       ASSIGN_TECHNICIEN: ['ASSIGN_TECHNICIEN', 'EN_ATTENTE_MECANICIEN'],
@@ -509,20 +501,19 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
       case 'EN_ATTENTE_PIECES_MO': return '#8b5cf6';
       case 'PROFORMA':
       case 'EN_ATTENTE_PROFORMA': return '#6366f1';
-      case 'ORDRE_DE_TRAVAIL':
       case 'BON_DE_COMMANDE':
       case 'PROFORMA_VALIDE':
-      case 'EN_ATTENTE_COMMANDE':
+      case 'EN_ATTENTE_COMMANDE': return '#ec4899';
       case 'BON_DE_SORTIE':
-      case 'EN_ATTENTE_SORTIE':
+      case 'EN_ATTENTE_SORTIE': return '#6366f1';
       case 'ASSIGN_TECHNICIEN':
-      case 'EN_ATTENTE_MECANICIEN':
+      case 'EN_ATTENTE_MECANICIEN': return '#06b6d4';
       case 'REPARATION':
       case 'EN_COURS': return '#3b82f6';
       case 'PAIEMENT':
       case 'EN_ATTENTE_PAIEMENT': return '#f97316';
       case 'PRET_A_LIVRER':
-      case 'TERMINE': return '#06b6d4';
+      case 'TERMINE': return '#10b981';
       case 'LIVRE': return '#059669';
       default: return '#6b7280';
     }
@@ -532,22 +523,13 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
     const step = STATUT_STEPS.find(s => s.statut === o?.statut);
     if (step) return step.label;
     if (o?.statut === 'A_FAIRE') return 'Réception';
-    if (o?.statut === 'EN_DIAGNOSTIC') return 'Diagnostic';
-    if (o?.statut === 'EN_ATTENTE_PIECES_MO') return 'Pièces & MO';
+    if (o?.statut === 'EN_DIAGNOSTIC') return 'Chef Atelier';
+    if (o?.statut === 'EN_ATTENTE_PIECES_MO') return 'OR';
     if (o?.statut === 'EN_ATTENTE_PROFORMA') return 'Proforma';
-    if (
-      o?.statut === 'BON_DE_COMMANDE' ||
-      o?.statut === 'BON_DE_SORTIE' ||
-      o?.statut === 'ASSIGN_TECHNICIEN' ||
-      o?.statut === 'REPARATION' ||
-      o?.statut === 'EN_ATTENTE_COMMANDE' ||
-      o?.statut === 'PROFORMA_VALIDE' ||
-      o?.statut === 'EN_ATTENTE_SORTIE' ||
-      o?.statut === 'EN_ATTENTE_MECANICIEN' ||
-      o?.statut === 'EN_COURS'
-    ) {
-      return 'Ordre de Travail';
-    }
+    if (o?.statut === 'EN_ATTENTE_COMMANDE' || o?.statut === 'PROFORMA_VALIDE') return 'Approv.';
+    if (o?.statut === 'EN_ATTENTE_SORTIE') return 'Attente BS';
+    if (o?.statut === 'EN_ATTENTE_MECANICIEN') return 'Assign. Tech.';
+    if (o?.statut === 'EN_COURS') return 'Réparation';
     if (o?.statut === 'EN_ATTENTE_PAIEMENT') return 'Paiement';
     if (o?.statut === 'TERMINE') return 'Prêt';
     return o?.statut ?? '—';
@@ -665,7 +647,7 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
           this.cdr.markForCheck();
         }
       },
-      error: () => {}
+      error: () => { }
     });
   }
 

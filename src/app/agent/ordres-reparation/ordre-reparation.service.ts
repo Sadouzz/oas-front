@@ -3,13 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, shareReplay, of } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { 
-  OrdreReparation, 
+import {
+  OrdreReparation,
   OrdreReparationRequest,
-  StatutOrdre, 
-  PieceJointeDiagnostic, 
+  StatutOrdre,
+  PieceJointeDiagnostic,
   TypePieceJointeDiagnostic,
-  RemarqueDiagnostic, 
+  RemarqueDiagnostic,
   PageParams,
   StepDiagnosticDto,
   StepPiecesMoDto,
@@ -104,7 +104,7 @@ export class OrdreReparationService {
   }
 
   // ─── Mises à jour par étape ─────────────────────────────
-  
+
   // 1. Réception
   getStepReception(id: number): Observable<StepReceptionResponseDto> {
     return this.http.get<StepReceptionResponseDto>(`${this.api}/${id}/step-reception`);
