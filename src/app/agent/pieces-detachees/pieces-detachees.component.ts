@@ -151,7 +151,11 @@ export class PiecesDetacheesComponent extends BasePaginatedComponent implements 
       this.loading = false;
       if (data) {
         try {
-          const arr = this.applyPageResponse<PieceDetache>(data) || [];
+          const rawArr = this.applyPageResponse<PieceDetache>(data) || [];
+          const arr = rawArr.map(p => ({
+            ...p,
+            type: (p.type || (p as any).typePiece || (p as any).type_piece || this.filterType || 'PDP') as 'PDP' | 'PDG' | 'PDS',
+          }));
           this.pieces = arr;
           this.filtered = arr;
           if (this.depotsFilters.length === 0) {
@@ -179,22 +183,19 @@ export class PiecesDetacheesComponent extends BasePaginatedComponent implements 
     });
 
     this.route.data.subscribe(data => {
-      if (data && (data['type'] === 'PDP' || data['type'] === 'PDG')) {
-        this.filterType = data['type'];
+      this.route.queryParams.subscribe(params => {
+        const typeParam = params['type'];
+        const dataType = data?.['type'];
+        if (typeParam === 'PDP' || typeParam === 'PDG') {
+          this.filterType = typeParam;
+        } else if (dataType === 'PDP' || dataType === 'PDG') {
+          this.filterType = dataType;
+        } else {
+          this.filterType = 'PDP';
+        }
         this.page = 1;
         this.loadData();
-      } else {
-        this.route.queryParams.subscribe(params => {
-          const typeParam = params['type'];
-          if (typeParam === 'PDP' || typeParam === 'PDG') {
-            this.filterType = typeParam;
-          } else if (!typeParam) {
-            this.filterType = 'PDP';
-          }
-          this.page = 1;
-          this.loadData();
-        });
-      }
+      });
     });
     this.loadReferences();
     this.loadStats();
