@@ -239,7 +239,7 @@
                   <tbody class="divide-y divide-oas-line">
                     @for (l of selectedFacture.lignesPieces; track l.id) {
                       <tr>
-                        <td class="px-3 py-2 text-oas-ink">{{ l.designationPiece }}</td>
+                        <td class="px-3 py-2 text-oas-ink">{{ l.designationPiece }} @if (l.dateHeureSaisie) { <small class="block text-[10px] text-oas-muted">Saisie le {{ l.dateHeureSaisie | date:'short' }}</small> }</td>
                         <td class="px-3 py-2 text-center">{{ l.quantite }}</td>
                         <td class="px-3 py-2 text-right whitespace-nowrap">{{ fmt(l.prix) }} FCFA</td>
                         <td class="px-3 py-2 text-right whitespace-nowrap">{{ l.tauxRemise || 0 }} %<span class="block text-[10px] text-oas-muted">−{{ fmt((l.quantite * l.prix) - l.montantTotal) }}</span></td>
@@ -270,7 +270,7 @@
                   <tbody class="divide-y divide-oas-line">
                     @for (l of selectedFacture.lignesMainDoeuvres; track l.id) {
                       <tr>
-                        <td class="px-3 py-2 text-oas-ink">{{ l.descriptionMainDoeuvre }}</td>
+                        <td class="px-3 py-2 text-oas-ink">{{ l.descriptionMainDoeuvre }} @if (l.dateHeureSaisie) { <small class="block text-[10px] text-oas-muted">Saisie le {{ l.dateHeureSaisie | date:'short' }}</small> }</td>
                         <td class="px-3 py-2 text-center">{{ l.nbreHeure }}</td>
                         <td class="px-3 py-2 text-right whitespace-nowrap">{{ fmt(l.tarifHoraire) }} FCFA/h</td>
                         <td class="px-3 py-2 text-right whitespace-nowrap">{{ l.tauxRemise || 0 }} %<span class="block text-[10px] text-oas-muted">−{{ fmt((l.nbreHeure * l.tarifHoraire) - l.montantTotal) }}</span></td>

@@ -14,6 +14,7 @@ export interface LignePiece {
   prixUnitaire?: number;
   montantTotal?: number;
   tauxRemise?: number;
+  dateHeureSaisie?: string | null;
 }
 
 export interface LigneMD {
@@ -25,6 +26,7 @@ export interface LigneMD {
   tarifHoraire: number;
   montantTotal?: number;
   tauxRemise?: number;
+  dateHeureSaisie?: string | null;
 }
 
 export interface Proforma {

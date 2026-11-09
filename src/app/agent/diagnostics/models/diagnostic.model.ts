@@ -27,7 +27,10 @@ export interface RemarqueDiagnostic {
 
 export interface DiagnosticModel {
   id?: number;
+  technicienId?: number | null;
+  technicienNom?: string | null;
   technicien?: { id: number; firstName: string; lastName: string; specialite?: string | null } | null;
+  technicienIds?: number[];
   observations?: string | null;
   pannesDetectees?: string | null;
   recommandations?: string | null;

@@ -1150,7 +1150,7 @@
                       @if (l.piece?.numeroDeSerie) {
                         <div class="text-[10px] text-oas-muted font-mono mt-0.5">N° Série: {{ l.piece?.numeroDeSerie }}</div>
                       }
-                      @if ((l.type === 'PDS' || l.type === 'PDG') && l.dateHeureSaisie) {
+                      @if (l.dateHeureSaisie) {
                         <div class="text-[10px] text-oas-muted mt-0.5">Saisie le {{ formatDate(l.dateHeureSaisie) }}</div>
                       }
                     </div>

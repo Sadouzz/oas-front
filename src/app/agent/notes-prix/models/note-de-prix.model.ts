@@ -30,8 +30,8 @@ export interface NoteDePrixModel {
   montantAutre?: number;
   ordreReparationId?: number | null;
   numeroOrdreReparation?: string | null;
-  lignesPieces: { id: number; pieceId: number; designationPiece: string; quantite: number; prix: number; montantTotal: number }[];
-  lignesMainDoeuvres: { id: number; mainDoeuvreId: number; descriptionMainDoeuvre: string; nbreHeure: number; tarifHoraire: number; montantTotal: number }[];
+  lignesPieces: { id: number; pieceId: number; designationPiece: string; quantite: number; prix: number; montantTotal: number; dateHeureSaisie?: string | null }[];
+  lignesMainDoeuvres: { id: number; mainDoeuvreId: number; descriptionMainDoeuvre: string; nbreHeure: number; tarifHoraire: number; montantTotal: number; dateHeureSaisie?: string | null }[];
 }
 
 export interface NoteDePrixCreateRequest {

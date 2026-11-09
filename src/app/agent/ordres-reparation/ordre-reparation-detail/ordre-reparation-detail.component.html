@@ -98,7 +98,7 @@
 
   <!-- Barre d'actions du bas (Navigation dans le workflow) -->
   <div class="flex items-center justify-between pt-2">
-    <button type="button" (click)="prevStep()" [disabled]="currentStep === 1"
+    <button type="button" (click)="prevStep()" [disabled]="currentStep === 1 || currentStep === 3 || (maxAllowedStep >= 5 && currentStep <= 4)"
       class="px-5 py-2.5 rounded-xl border border-oas-line text-sm font-semibold text-oas-ink hover:bg-oas-bg transition cursor-pointer disabled:opacity-40">
       ← Étape précédente
     </button>

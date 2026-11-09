@@ -53,17 +53,22 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
 
   onActivate(componentRef: any): void {
     this.activeChild = componentRef;
+    if (typeof componentRef?.saveStep2ThenGoNext === 'function') {
+      componentRef.onStepCompleted = () => {
+        if (this.loadedOrdre) this.loadedOrdre.statut = 'PIECES_MO';
+        this.cdr.markForCheck();
+      };
+    }
     this.cdr.markForCheck();
   }
 
   isNextStepDisabled(): boolean {
-    if (this.activeChild?.saving || this.activeChild?.loading) return true;
-    if (this.isLockedByOt && this.currentStep <= 3) {
-      return false;
-    }
+    if (this.activeChild?.saving || this.activeChild?.loading || this.activeChild?.technicienToggling != null) return true;
     if (this.currentStep === 2) {
-      const diagStatut = this.activeChild?.statutDiagnostic || this.loadedOrdre?.diagnostic?.statut;
-      return diagStatut !== 'VALIDE';
+      const techniciens = this.activeChild?.selectedTechniciens
+        ?? this.loadedOrdre?.diagnostic?.technicienIds
+        ?? (this.loadedOrdre?.diagnostic?.technicienId ? [this.loadedOrdre.diagnostic.technicienId] : []);
+      return !techniciens.length;
     }
     if (this.currentStep === 3) {
       if (this.activeChild) {
@@ -89,14 +94,15 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
       return;
     }
     if (this.currentStep === 2) {
-      const diagStatut = this.activeChild?.statutDiagnostic || this.loadedOrdre?.diagnostic?.statut;
-      if (diagStatut !== 'VALIDE') {
+      const techniciens = this.activeChild?.selectedTechniciens
+        ?? this.loadedOrdre?.diagnostic?.technicienIds
+        ?? (this.loadedOrdre?.diagnostic?.technicienId ? [this.loadedOrdre.diagnostic.technicienId] : []);
+      if (!techniciens.length) {
         return;
       }
-      if (this.loadedOrdre && this.statutToStep(this.loadedOrdre.statut) < 3) {
-        this.loadedOrdre.statut = 'PIECES_MO';
+      if (this.activeChild && typeof this.activeChild.saveStep2ThenGoNext === 'function') {
+        this.activeChild.saveStep2ThenGoNext();
       }
-      this.router.navigate(['/app/ordres-reparation', this.ordreId, 'pieces-mo']);
       return;
     }
     if (this.currentStep === 3) {
@@ -214,6 +220,12 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
         this.selectedVehicule = o?.vehicule as any;
         this.hasDiagnostic = !!o?.hasDiagnostic;
         this.cdr.markForCheck();
+        const lastSegment = this.router.url.split('?')[0].split('/').pop() || '';
+        if (this.statutToStep(o?.statut) >= 5 && ['reception', 'diagnostic', 'pieces-mo'].includes(lastSegment)) {
+          this.router.navigate(['/app/ordres-reparation', this.ordreId, 'proforma'], { replaceUrl: true });
+        } else if (this.statutToStep(o?.statut) >= 3 && lastSegment === 'diagnostic') {
+          this.router.navigate(['/app/ordres-reparation', this.ordreId, this.statutToPath(o?.statut)], { replaceUrl: true });
+        }
       }
     });
   }
@@ -235,7 +247,16 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
         const segments = urlClean.split('/');
         const lastSegment = segments[segments.length - 1];
 
-        if (!this.hasAutoRedirected) {
+        if (this.statutToStep(o?.statut) >= 5 && ['reception', 'diagnostic', 'pieces-mo'].includes(lastSegment)) {
+          this.router.navigate(['/app/ordres-reparation', this.ordreId, 'proforma'], { replaceUrl: true });
+          return;
+        }
+        if (this.statutToStep(o?.statut) >= 3 && lastSegment === 'diagnostic') {
+          this.router.navigate(['/app/ordres-reparation', this.ordreId, this.statutToPath(o?.statut)], { replaceUrl: true });
+          return;
+        }
+
+        if (!this.hasAutoRedirected && (lastSegment === this.ordreId.toString() || lastSegment === 'reception')) {
           this.hasAutoRedirected = true;
           if (lastSegment === this.ordreId.toString() || lastSegment === 'reception') {
             if (o?.statut && o.statut !== 'RECEPTION' && o.statut !== 'A_FAIRE') {
@@ -306,15 +327,20 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
     if ((s === 'RECEPTION' || s === 'A_FAIRE') && (this.hasDiagnostic || this.loadedOrdre?.diagnostic)) {
       s = 'DIAGNOSTIC';
     }
-    const diagValide = this.activeChild?.statutDiagnostic === 'VALIDE' || this.loadedOrdre?.diagnostic?.statut === 'VALIDE';
-    const etapeFromStatut = this.statutToStep(s);
-    if (diagValide && etapeFromStatut < 3) {
-      return 3;
-    }
-    return etapeFromStatut;
+    return this.statutToStep(s);
   }
 
   goToStep(n: number): void {
+    const statutEtape = this.statutToStep(this.loadedOrdre?.statut);
+    // Dès le passage à l'Ordre de Travail, seules les étapes Proforma et suivantes restent accessibles.
+    if (statutEtape >= 5 && n < 4) {
+      this.router.navigate(['/app/ordres-reparation', this.ordreId, 'proforma']);
+      return;
+    }
+    if (statutEtape >= 3 && n <= 2) {
+      this.router.navigate(['/app/ordres-reparation', this.ordreId, this.statutToPath(this.loadedOrdre?.statut)]);
+      return;
+    }
     if (n > this.maxAllowedStep) return;
     const target = STEP_ROUTES.find(s => s.step === n);
     if (target) {

@@ -229,7 +229,7 @@
                   <tbody class="divide-y divide-oas-line">
                     @for (l of selectedNote.lignesPieces; track l.id) {
                       <tr>
-                        <td class="px-3 py-2 text-oas-ink">{{ l.designationPiece }}</td>
+                        <td class="px-3 py-2 text-oas-ink">{{ l.designationPiece }} @if (l.dateHeureSaisie) { <small class="block text-[10px] text-oas-muted">Saisie le {{ l.dateHeureSaisie | date:'short' }}</small> }</td>
                         <td class="px-3 py-2 text-center">{{ l.quantite }}</td>
                         <td class="px-3 py-2 text-right font-semibold">{{ fmt(l.montantTotal) }}</td>
                       </tr>
@@ -256,7 +256,7 @@
                   <tbody class="divide-y divide-oas-line">
                     @for (l of selectedNote.lignesMainDoeuvres; track l.id) {
                       <tr>
-                        <td class="px-3 py-2 text-oas-ink">{{ l.descriptionMainDoeuvre }}</td>
+                        <td class="px-3 py-2 text-oas-ink">{{ l.descriptionMainDoeuvre }} @if (l.dateHeureSaisie) { <small class="block text-[10px] text-oas-muted">Saisie le {{ l.dateHeureSaisie | date:'short' }}</small> }</td>
                         <td class="px-3 py-2 text-center">{{ l.nbreHeure }}</td>
                         <td class="px-3 py-2 text-right font-semibold">{{ fmt(l.montantTotal) }}</td>
                       </tr>

@@ -15,8 +15,8 @@ export interface AvoirHT {
     modele: string | null;
     annee: number | null;
     numeroBonDeCommande: string | null;
-    lignesPieces: { id: number; designationPiece: string; quantite: number; prix: number; montantTotal: number }[];
-    lignesMainDoeuvres: { id: number; descriptionMainDoeuvre: string; nbreHeure: number; tarifHoraire: number; montantTotal: number }[];
+    lignesPieces: { id: number; designationPiece: string; quantite: number; prix: number; montantTotal: number; dateHeureSaisie?: string | null }[];
+    lignesMainDoeuvres: { id: number; descriptionMainDoeuvre: string; nbreHeure: number; tarifHoraire: number; montantTotal: number; dateHeureSaisie?: string | null }[];
 }
 
 export interface AvoirHTCreateRequest {

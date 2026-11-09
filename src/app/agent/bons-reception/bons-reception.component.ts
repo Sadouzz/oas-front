@@ -2,7 +2,7 @@ import { ConfirmationService } from '../../shared/components/confirmation/confir
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { BonDeReceptionService } from './bon-de-reception.service';
 import { BonDeReception } from './models/bon-de-reception.model';
-import { NgClass } from '@angular/common';
+import { DatePipe, NgClass } from '@angular/common';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideX, LucideDownload, LucideTruck } from '@lucide/angular';
@@ -10,7 +10,7 @@ import { PdfLayoutDialogService } from '../../shared/components/pdf-layout-dialo
 
 @Component({
   selector: 'app-bons-reception',
-  imports: [NgClass, PaginationComponent],
+  imports: [DatePipe, NgClass, PaginationComponent],
   templateUrl: './bons-reception.component.html',
 })
 export class BonsReceptionComponent extends BasePaginatedComponent implements OnInit {

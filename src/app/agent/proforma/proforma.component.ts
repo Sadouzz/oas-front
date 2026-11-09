@@ -32,6 +32,7 @@ export interface LignePieceFormItem {
   manquant?: number;
   stockDisponible?: number;
   tauxRemise?: number;
+  dateHeureSaisie?: string | null;
 }
 
 export interface LigneMOFormItem {
@@ -42,6 +43,7 @@ export interface LigneMOFormItem {
   nbreHeure: number;
   tarifHoraire: number;
   tauxRemise?: number;
+  dateHeureSaisie?: string | null;
 }
 
 @Component({
@@ -376,6 +378,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
       this.onPieceQuantiteChange(existing);
     } else {
       const item: LignePieceFormItem = {
+        dateHeureSaisie: new Date().toISOString(),
         isCustom: false,
         pieceId: p.id,
         piece: p,
@@ -407,6 +410,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
     }
     const unitPrice = cataloguePrice != null ? Number(cataloguePrice) : Number(this.prixAjouterPdg);
     const item: LignePieceFormItem = {
+      dateHeureSaisie: new Date().toISOString(),
       isCustom: false,
       pieceId: p.id,
       piece: p,
@@ -440,6 +444,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
       existing.quantite += this.pieceCustomQuantite;
     } else {
       const item: LignePieceFormItem = {
+        dateHeureSaisie: new Date().toISOString(),
         isCustom: true,
         type: 'PDS',
         designationPds: des,
@@ -471,6 +476,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
       if (unitPrice > 0) existing.tarifHoraire = unitPrice;
     } else {
       const item: LigneMOFormItem = {
+        dateHeureSaisie: new Date().toISOString(),
         mainDoeuvreId: m.id,
         mo: m,
         descriptionMainDoeuvre: m.description || m.categorie?.nom,
@@ -815,6 +821,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
 
         this.lignesPieces.push({
           id: l.id,
+          dateHeureSaisie: l.dateHeureSaisie ?? null,
           pieceId: isCustom ? null : (pieceId ? Number(pieceId) : null),
           piece: catPiece ? { ...catPiece, reference: ref || catPiece.reference, designation: des || catPiece.designation } : null,
           isCustom,
@@ -856,6 +863,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
 
         this.lignesMO.push({
           id: l.id,
+          dateHeureSaisie: l.dateHeureSaisie ?? null,
           mainDoeuvreId: moId ? Number(moId) : 0,
           mo: catMO,
           descriptionMainDoeuvre: desc,
@@ -997,6 +1005,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
       montantTimbre: 0,
       montantAutre: Number(raw.montantAutre) || 0,
       lignesPieces: this.lignesPieces.map(l => ({
+        id: l.id,
         pieceId: l.isCustom ? null : l.pieceId,
         isCustom: l.isCustom,
         custom: l.isCustom,
@@ -1006,6 +1015,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
         tauxRemise: Number(l.tauxRemise) || 0,
       })),
       lignesMainDoeuvres: this.lignesMO.map(l => ({
+        id: l.id,
         mainDoeuvreId: Number(l.mainDoeuvreId),
         nbreHeure: Number(l.nbreHeure),
         tarifHoraire: Number(l.tarifHoraire),

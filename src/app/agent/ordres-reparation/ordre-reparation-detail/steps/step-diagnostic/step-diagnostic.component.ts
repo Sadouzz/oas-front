@@ -15,9 +15,7 @@ import {
   Specialite,
   RemarqueDiagnostic,
   StatutDiagnostic,
-  StatutOrdre,
-  extractContent,
-  getEtapeFromStatut
+  extractContent
 } from '../../../../../shared/models';
 import { StepDiagnosticResponseDto } from '../../../models/responses/step-diagnostic-response.dto';
 
@@ -72,6 +70,7 @@ export class StepDiagnosticComponent implements OnInit {
 
   selectedTechniciens: number[] = [];
   technicienToggling: number | null = null;
+  onStepCompleted?: () => void;
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
@@ -270,6 +269,10 @@ export class StepDiagnosticComponent implements OnInit {
       });
   }
 
+  get diagnosticCloture(): boolean {
+    return this.statutDiagnostic === 'TERMINE' || this.statutDiagnostic === 'VALIDE';
+  }
+
   getSpecialiteLabel(spec?: string | null): string {
     if (!spec) return 'Générale';
     const found = this.specialitesTechnicien.find(s => s.value === spec);
@@ -361,16 +364,18 @@ export class StepDiagnosticComponent implements OnInit {
         this.selectedTechniciens = (o.techniciensAssocies || []).map(t => t.id);
 
         // Fallback si la liste associée est vide mais que diagnostic.technicienId est présent
-        if (this.selectedTechniciens.length === 0 && o.diagnostic?.technicienId) {
-          const techId = o.diagnostic.technicienId;
-          this.selectedTechniciens = [techId];
-          if (!this.knownTechniciensMap.has(techId)) {
+        if (this.selectedTechniciens.length === 0 && (o.diagnostic?.technicienIds?.length || o.diagnostic?.technicienId)) {
+          this.selectedTechniciens = o.diagnostic?.technicienIds?.length
+            ? [...o.diagnostic.technicienIds]
+            : [o.diagnostic!.technicienId!];
+          this.selectedTechniciens.forEach(techId => {
+            if (this.knownTechniciensMap.has(techId)) return;
             const norm = this.normalizeTechnicien({
               id: techId,
-              technicienNom: o.diagnostic.technicienNom
+              technicienNom: o.diagnostic?.technicienNom
             });
             this.knownTechniciensMap.set(techId, norm);
-          }
+          });
         }
 
         // Détermine le statut initial du diagnostic
@@ -411,7 +416,7 @@ export class StepDiagnosticComponent implements OnInit {
   }
 
   toggleTechnicien(t: Technicien): void {
-    if (this.isReadOnly) return;
+    if (this.diagnosticCloture || this.saving) return;
     if (this.isTechnicienAssigned(t.id)) {
       this.removeTechnicien(t.id);
     } else {
@@ -424,7 +429,7 @@ export class StepDiagnosticComponent implements OnInit {
   }
 
   assignTechnicien(techId: number): void {
-    if (this.isReadOnly) return;
+    if (this.diagnosticCloture || this.saving) return;
     this.technicienToggling = techId;
     this.ordreService.assignTechnicien(this.ordreId, techId).subscribe({
       next: () => {
@@ -436,25 +441,7 @@ export class StepDiagnosticComponent implements OnInit {
         // L'assignation d'un technicien fait passer le diagnostic de 'EN_ATTENTE' à 'EN_COURS'
         if (this.statutDiagnostic === 'EN_ATTENTE') {
           this.statutDiagnostic = 'EN_COURS';
-          if (this.currentDiagnostic?.id) {
-            this.diagnosticService.updateStatut(this.currentDiagnostic.id, 'EN_COURS').subscribe({
-              next: (d) => {
-                if (d) this.currentDiagnostic = d;
-                this.cdr.markForCheck();
-              }
-            });
-          } else {
-            this.diagnosticService.saveStep({
-              ordreReparationId: this.ordreId,
-              technicienIds: this.selectedTechniciens,
-              statut: 'EN_COURS'
-            }).subscribe({
-              next: (d) => {
-                if (d) this.currentDiagnostic = d;
-                this.cdr.markForCheck();
-              }
-            });
-          }
+          if (this.currentDiagnostic) this.currentDiagnostic.statut = 'EN_COURS';
           this.notify('Technicien assigné · Le diagnostic passe En cours.');
         } else {
           this.notify('Technicien assigné au diagnostic.');
@@ -469,7 +456,7 @@ export class StepDiagnosticComponent implements OnInit {
   }
 
   removeTechnicien(techId: number): void {
-    if (this.isReadOnly) return;
+    if (this.diagnosticCloture || this.saving) return;
     this.technicienToggling = techId;
     this.ordreService.removeTechnicien(this.ordreId, techId).subscribe({
       next: () => {
@@ -479,14 +466,7 @@ export class StepDiagnosticComponent implements OnInit {
         // Si plus aucun technicien n'est assigné et que le diagnostic était En cours, il repasse En attente
         if (this.selectedTechniciens.length === 0 && this.statutDiagnostic === 'EN_COURS') {
           this.statutDiagnostic = 'EN_ATTENTE';
-          if (this.currentDiagnostic?.id) {
-            this.diagnosticService.updateStatut(this.currentDiagnostic.id, 'EN_ATTENTE').subscribe({
-              next: (d) => {
-                if (d) this.currentDiagnostic = d;
-                this.cdr.markForCheck();
-              }
-            });
-          }
+          if (this.currentDiagnostic) this.currentDiagnostic.statut = 'EN_ATTENTE';
           this.notify('Technicien retiré · Diagnostic repassé En attente.');
         } else {
           this.notify('Technicien retiré du diagnostic.');
@@ -575,223 +555,15 @@ export class StepDiagnosticComponent implements OnInit {
     });
   }
 
-  marquerTermine(): void {
-    if (this.isReadOnly) return;
-    this.statutDiagnostic = 'TERMINE';
-    if (this.currentDiagnostic?.id) {
-      this.diagnosticService.updateStatut(this.currentDiagnostic.id, 'TERMINE').subscribe({
-        next: (d) => {
-          if (d) this.currentDiagnostic = d;
-          this.saveDiagnosticSeul();
-          this.notify('Chef atelier marqué comme Terminé. Vous pouvez maintenant le valider.');
-          this.cdr.markForCheck();
-        },
-        error: () => {
-          this.saveDiagnosticSeul();
-        }
-      });
-    } else {
-      this.saveDiagnosticSeul();
-    }
-  }
-
-  marquerValide(): void {
-    if (this.isReadOnly) return;
-    this.statutDiagnostic = 'VALIDE';
-    this.saving = true;
-
-    const listeDefauts = this.loadedOrdre?.listeDefauts || this.currentDiagnostic?.pannesDetectees || '';
-    const stepDto: DiagnosticStepDto = {
-      ordreReparationId: this.ordreId,
-      listeDefauts: listeDefauts,
-      technicienIds: this.selectedTechniciens,
-      statut: 'VALIDE'
-    };
-
-    this.diagnosticService.saveStep(stepDto).subscribe({
-      next: (diag) => {
-        this.currentDiagnostic = diag;
-        this.ordreService.updateStatut(this.ordreId, 'PIECES_MO').subscribe({
-          next: () => { },
-          error: () => { }
-        });
-        this.saving = false;
-        this.notify('Chef atelier validé avec succès ! Le bouton d’étape suivante est maintenant débloqué.');
-        this.cdr.markForCheck();
-      },
-      error: () => {
-        // En cas d'erreur avec le endpoint diagnostic, on tente la mise à jour via l'ordre
-        const payload: any = {
-          numero: this.loadedOrdre?.numero || '',
-          listeDefauts: listeDefauts,
-          vehiculeId: this.loadedOrdre?.vehiculeId || 0,
-          statut: 'PIECES_MO'
-        };
-        
-        this.ordreService.update(this.ordreId, payload).subscribe({
-          next: () => {
-            this.ordreService.updateStatut(this.ordreId, 'PIECES_MO').subscribe({
-              next: () => { },
-              error: () => { }
-            });
-            this.saving = false;
-            this.notify('Chef atelier validé avec succès ! Le bouton d’étape suivante est maintenant débloqué.');
-            this.cdr.markForCheck();
-          },
-          error: (err) => {
-            this.saving = false;
-            this.notifyError(err.error?.message || 'Erreur lors de la validation.');
-          }
-        });
-      }
-    });
-  }
-
-  revenirEnCours(): void {
-    if (this.isReadOnly) return;
-    this.saving = true;
-    this.statutDiagnostic = 'EN_COURS';
-
-    const stepDto: DiagnosticStepDto = {
-      ordreReparationId: this.ordreId,
-      listeDefauts: this.loadedOrdre?.listeDefauts || this.currentDiagnostic?.pannesDetectees || '',
-      technicienIds: this.selectedTechniciens,
-      statut: 'EN_COURS'
-    };
-
-    if (this.currentDiagnostic?.id) {
-      this.diagnosticService.updateStatut(this.currentDiagnostic.id, 'EN_COURS').subscribe({
-        next: (d) => {
-          if (d) this.currentDiagnostic = d;
-          this.syncOrdreStatutDiagnostic();
-        },
-        error: () => {
-          this.diagnosticService.saveStep(stepDto).subscribe({
-            next: (d) => {
-              if (d) this.currentDiagnostic = d;
-              this.syncOrdreStatutDiagnostic();
-            },
-            error: () => this.syncOrdreStatutDiagnostic()
-          });
-        }
-      });
-    } else {
-      this.diagnosticService.saveStep(stepDto).subscribe({
-        next: (d) => {
-          if (d) this.currentDiagnostic = d;
-          this.syncOrdreStatutDiagnostic();
-        },
-        error: () => this.syncOrdreStatutDiagnostic()
-      });
-    }
-  }
-
-  revenirTermine(): void {
-    if (this.isReadOnly) return;
-    this.saving = true;
-    this.statutDiagnostic = 'TERMINE';
-    if (this.currentDiagnostic?.id) {
-      this.diagnosticService.updateStatut(this.currentDiagnostic.id, 'TERMINE').subscribe({
-        next: (d) => {
-          if (d) this.currentDiagnostic = d;
-          this.syncOrdreStatutDiagnostic();
-        },
-        error: () => this.syncOrdreStatutDiagnostic()
-      });
-    } else {
-      this.syncOrdreStatutDiagnostic();
-    }
-  }
-
-  private syncOrdreStatutDiagnostic(): void {
-    this.ordreService.updateStatut(this.ordreId, 'DIAGNOSTIC').subscribe({
-      next: () => {
-        this.saving = false;
-        this.notify('Statut mis à jour. Vous pouvez modifier le diagnostic.');
-        this.cdr.markForCheck();
-      },
-      error: () => {
-        this.saving = false;
-        this.notify('Statut mis à jour.');
-        this.cdr.markForCheck();
-      }
-    });
-  }
-
-  revenirEnAttente(): void {
-    if (this.isReadOnly) return;
-    this.saving = true;
-    this.statutDiagnostic = 'EN_ATTENTE';
-    if (this.currentDiagnostic?.id) {
-      this.diagnosticService.updateStatut(this.currentDiagnostic.id, 'EN_ATTENTE').subscribe({
-        next: (d) => {
-          if (d) this.currentDiagnostic = d;
-          this.saving = false;
-          this.notify('Chef atelier repassé « En attente ».');
-          this.cdr.markForCheck();
-        },
-        error: () => {
-          this.saving = false;
-          this.notify('Chef atelier repassé « En attente ».');
-          this.cdr.markForCheck();
-        }
-      });
-    } else {
-      this.saving = false;
-      this.notify('Chef atelier repassé « En attente ».');
-      this.cdr.markForCheck();
-    }
-  }
-
-  saveDiagnosticSeul(): void {
-    const listeDefauts = this.loadedOrdre?.listeDefauts || this.currentDiagnostic?.pannesDetectees || '';
-    this.saving = true;
-
-    const stepDto: DiagnosticStepDto = {
-      ordreReparationId: this.ordreId,
-      listeDefauts: listeDefauts,
-      technicienIds: this.selectedTechniciens,
-      statut: this.statutDiagnostic
-    };
-
-    // Utilisation de POST /api/diagnostics/step
-    this.diagnosticService.saveStep(stepDto).subscribe({
-      next: (diag) => {
-        this.currentDiagnostic = diag;
-        this.saving = false;
-        const libelle = this.statutDiagnostic === 'VALIDE' ? 'Validé' : this.statutDiagnostic === 'TERMINE' ? 'Terminé' : this.statutDiagnostic === 'EN_COURS' ? 'En cours' : 'En attente';
-        this.notify(`Diagnostic synchronisé et enregistré (Statut : ${libelle}).`);
-      },
-      error: () => {
-        const payload: any = {
-          numero: this.loadedOrdre?.numero || '',
-          listeDefauts: listeDefauts,
-          vehiculeId: this.loadedOrdre?.vehiculeId || 0
-        };
-        this.ordreService.update(this.ordreId, payload).subscribe({
-          next: () => {
-            this.saving = false;
-            const libelle = this.statutDiagnostic === 'VALIDE' ? 'Validé' : this.statutDiagnostic === 'TERMINE' ? 'Terminé' : this.statutDiagnostic === 'EN_COURS' ? 'En cours' : 'En attente';
-            this.notify(`Données de diagnostic enregistrées (Statut : ${libelle}).`);
-          },
-          error: (err) => {
-            this.saving = false;
-            this.notifyError(err.error?.message || 'Erreur lors de l\'enregistrement.');
-          }
-        });
-      }
-    });
-  }
-
   validateStep(): void {
-    if (this.isReadOnly || this.statutDiagnostic === 'VALIDE') {
-      this.router.navigate(['/app/ordres-reparation', this.ordreId, 'pieces-mo']);
-    } else {
-      this.marquerValide();
-    }
+    this.saveStep2ThenGoNext();
   }
 
   saveStep2ThenGoNext(): void {
+    if (this.selectedTechniciens.length === 0) {
+      this.notifyError('Affectez au moins un technicien avant de terminer le diagnostic.');
+      return;
+    }
     const listeDefauts = this.loadedOrdre?.listeDefauts || this.currentDiagnostic?.pannesDetectees || '';
     this.saving = true;
 
@@ -799,50 +571,21 @@ export class StepDiagnosticComponent implements OnInit {
       ordreReparationId: this.ordreId,
       listeDefauts: listeDefauts,
       technicienIds: this.selectedTechniciens,
-      statut: 'VALIDE'
     };
 
-    // Synchronisation via POST /api/diagnostics/step puis avancement du workflow
-    this.diagnosticService.saveStep(stepDto).subscribe({
+    // La clôture du diagnostic et le passage de l'OR à PIECES_MO sont atomiques côté serveur.
+    this.diagnosticService.completeStep(stepDto).subscribe({
       next: (diag) => {
         this.currentDiagnostic = diag;
-        this.ordreService.updateStatut(this.ordreId, 'PIECES_MO').subscribe({
-          next: () => {
-            this.saving = false;
-            this.notify('Chef atelier validé et étapes Pièces & Devis débloquées.');
-            this.router.navigate(['/app/ordres-reparation', this.ordreId, 'pieces-mo']);
-          },
-          error: () => {
-            this.saving = false;
-            this.router.navigate(['/app/ordres-reparation', this.ordreId, 'pieces-mo']);
-          }
-        });
+        this.statutDiagnostic = 'TERMINE';
+        this.saving = false;
+        this.onStepCompleted?.();
+        this.notify('Diagnostic terminé. Passage à l’étape suivante enregistré.');
+        this.router.navigate(['/app/ordres-reparation', this.ordreId, 'pieces-mo']);
       },
-      error: () => {
-        const payload: any = {
-          numero: this.loadedOrdre?.numero || '',
-          listeDefauts: listeDefauts,
-          vehiculeId: this.loadedOrdre?.vehiculeId || 0
-        };
-        this.ordreService.update(this.ordreId, payload).subscribe({
-          next: () => {
-            this.ordreService.updateStatut(this.ordreId, 'PIECES_MO').subscribe({
-              next: () => {
-                this.saving = false;
-                this.notify('Chef atelier validé et étapes Pièces & Devis débloquées.');
-                this.router.navigate(['/app/ordres-reparation', this.ordreId, 'pieces-mo']);
-              },
-              error: () => {
-                this.saving = false;
-                this.router.navigate(['/app/ordres-reparation', this.ordreId, 'pieces-mo']);
-              }
-            });
-          },
-          error: (err) => {
-            this.saving = false;
-            this.notifyError(err.error?.message || 'Erreur lors de la validation du diagnostic.');
-          }
-        });
+      error: (err) => {
+        this.saving = false;
+        this.notifyError(err.error?.message || 'Erreur lors de la clôture du diagnostic.');
       }
     });
   }

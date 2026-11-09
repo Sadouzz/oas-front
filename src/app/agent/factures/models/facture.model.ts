@@ -27,8 +27,8 @@ export interface FactureModel {
   annee: number | null;
   numeroBonDeCommande: string | null;
   modePaiement?: string | null;
-  lignesPieces: { id: number; pieceId: number; designationPiece: string; quantite: number; prix: number; montantTotal: number; tauxRemise?: number }[];
-  lignesMainDoeuvres: { id: number; mainDoeuvreId: number; descriptionMainDoeuvre: string; nbreHeure: number; tarifHoraire: number; montantTotal: number; tauxRemise?: number }[];
+  lignesPieces: { id: number; pieceId: number; designationPiece: string; quantite: number; prix: number; montantTotal: number; tauxRemise?: number; dateHeureSaisie?: string | null }[];
+  lignesMainDoeuvres: { id: number; mainDoeuvreId: number; descriptionMainDoeuvre: string; nbreHeure: number; tarifHoraire: number; montantTotal: number; tauxRemise?: number; dateHeureSaisie?: string | null }[];
   montantPaye: number;
   resteAPayer: number;
   statutPaiement: 'NON_PAYE' | 'PARTIEL' | 'PAYE';

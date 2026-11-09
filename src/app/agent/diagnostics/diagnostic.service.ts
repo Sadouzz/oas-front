@@ -65,6 +65,10 @@ export class DiagnosticService {
     return this.http.post<DiagnosticResponse>(`${this.api}/step`, data);
   }
 
+  completeStep(data: DiagnosticStepDto): Observable<DiagnosticResponse> {
+    return this.http.put<DiagnosticResponse>(`${this.api}/step/complete`, data);
+  }
+
   /**
    * 3. Pièces jointes & Remarques
    */
