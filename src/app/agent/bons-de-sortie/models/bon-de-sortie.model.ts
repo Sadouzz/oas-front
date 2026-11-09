@@ -61,7 +61,7 @@ export interface BonDeSortie {
   ordreTravail?: { id: number; numero: string } | null;
   lignesBonDeSortiePieces?: LigneBonDeSortie[] | null;
   lignesPieces?: LigneBonDeSortie[] | null;
-  lignesMainDoeuvres?: any[] | null;
+  lignesMainDoeuvres?: Array<{ id: number; mainDoeuvreId?: number | null; code?: string; designation?: string; nbreHeure: number; tarifHoraire: number; tauxRemise?: number; montantTotal?: number; dateHeureSaisie?: string | null }> | null;
   ordreReparationStatut?: string;
   ordreTravailStatut?: string;
   montantTotalPieces?: number;

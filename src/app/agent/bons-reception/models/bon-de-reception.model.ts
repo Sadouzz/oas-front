@@ -7,6 +7,7 @@ export interface LigneFacturationPiece {
   quantite: number;
   prix: number;
   montantTotal: number;
+  dateHeureSaisie?: string | null;
   quantiteCommandee?: number;
   quantiteRecueTotale?: number;
   quantiteRestante?: number;
@@ -19,6 +20,7 @@ export interface LigneFacturationMainDoeuvre {
   nbreHeure: number;
   tarifHoraire: number;
   montantTotal: number;
+  dateHeureSaisie?: string | null;
 }
 
 export interface BonDeReception {

@@ -25,6 +25,8 @@ import {
 import { StepPiecesMoResponseDto } from '../../../models/responses';
 
 export interface LignePiece {
+  id?: number;
+  dateHeureSaisie?: string | null;
   isCustom?: boolean;
   piece?: PieceDetache;
   pieceIdTemp?: number;
@@ -40,6 +42,8 @@ export interface LignePiece {
 }
 
 export interface LigneMO {
+  id?: number;
+  dateHeureSaisie?: string | null;
   mo: MainDoeuvreModel;
   quantite: number;
   prixUnitaire?: number;
@@ -463,6 +467,8 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
               }
             } else {
               moMap.set(mapKey, {
+                id: l.id,
+                dateHeureSaisie: l.dateHeureSaisie ?? null,
                 mo: resolvedMO,
                 quantite: qte,
                 prixUnitaire: unitPrice,
@@ -515,6 +521,8 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
               }
             } else {
               piecesMap.set(key, {
+                id: l.id,
+                dateHeureSaisie: l.dateHeureSaisie ?? null,
                 piece: resolvedPiece,
                 pieceIdTemp: pieceId,
                 quantite: qte,
@@ -573,6 +581,8 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
               }
             } else {
               moMap.set(moKey, {
+                id: l.id,
+                dateHeureSaisie: l.dateHeureSaisie ?? null,
                 mo: resolvedMO,
                 quantite: l.nbreHeure ?? l.heures ?? 1,
                 prixUnitaire: unitPrice,
@@ -654,6 +664,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
 
     const qteDejaDemandee = this.lignesPieces.filter(l => !l.isCustom && l.piece?.id === p.id).reduce((sum, l) => sum + l.quantite, 0);
     this.lignesPieces.push({
+        dateHeureSaisie: new Date().toISOString(),
         isCustom: false,
         piece: p,
         quantite: this.qteAjouterPdp,
@@ -684,6 +695,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
     const unitPrice = qte > 0 ? Math.round(total / qte) : 0;
 
     this.lignesPieces.push({
+        dateHeureSaisie: new Date().toISOString(),
         isCustom: false,
         piece: p,
         quantite: qte,
@@ -726,6 +738,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
     }
 
     this.lignesPieces.push({
+        dateHeureSaisie: new Date().toISOString(),
         isCustom: true,
         designationPds: des,
         prixTotal: total,
@@ -791,7 +804,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
     const m = this.allMO.find(item => item.id === Number(this.moAjouter));
     if (!m) return;
     const unitPrice = this.prixAjouterMO != null && this.prixAjouterMO >= 0 ? this.prixAjouterMO : (m.prix ?? 0);
-    this.lignesMO.push({ mo: m, quantite: this.qteAjouterMO, prixUnitaire: unitPrice, tauxRemise: 0 });
+    this.lignesMO.push({ id: undefined, dateHeureSaisie: new Date().toISOString(), mo: m, quantite: this.qteAjouterMO, prixUnitaire: unitPrice, tauxRemise: 0 });
     this.moAjouter = null;
     this.qteAjouterMO = 1;
     this.prixAjouterMO = null;
@@ -849,6 +862,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
       }
 
       return {
+        id: l.id,
         pieceId,
         quantite: l.quantite,
         prix: finalPrice,
@@ -871,6 +885,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
       }
 
       return {
+        id: l.id,
         mainDoeuvreId: moId,
         nbreHeure: l.quantite,
         prix: finalPrice,

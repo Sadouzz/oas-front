@@ -378,7 +378,7 @@
             <tbody class="divide-y divide-oas-line">
               @for (lp of selectedAvoir.lignesPieces; track lp.id) {
               <tr>
-                <td class="px-3 py-2 font-medium text-oas-ink">{{ lp.designationPiece }}</td>
+                <td class="px-3 py-2 font-medium text-oas-ink">{{ lp.designationPiece }} @if (lp.dateHeureSaisie) { <small class="block text-[10px] text-oas-muted font-normal">Saisie le {{ lp.dateHeureSaisie | date:'short' }}</small> }</td>
                 <td class="px-3 py-2 text-center">{{ lp.quantite }}</td>
                 <td class="px-3 py-2 text-right">{{ lp.prix | number:'1.0-0' }} F</td>
                 <td class="px-3 py-2 text-right font-mono">{{ lp.montantTotal | number:'1.0-0' }} F</td>
@@ -407,7 +407,7 @@
             <tbody class="divide-y divide-oas-line">
               @for (lm of selectedAvoir.lignesMainDoeuvres; track lm.id) {
               <tr>
-                <td class="px-3 py-2 font-medium text-oas-ink">{{ lm.descriptionMainDoeuvre }}</td>
+                <td class="px-3 py-2 font-medium text-oas-ink">{{ lm.descriptionMainDoeuvre }} @if (lm.dateHeureSaisie) { <small class="block text-[10px] text-oas-muted font-normal">Saisie le {{ lm.dateHeureSaisie | date:'short' }}</small> }</td>
                 <td class="px-3 py-2 text-center">{{ lm.nbreHeure }}</td>
                 <td class="px-3 py-2 text-right">{{ lm.tarifHoraire | number:'1.0-0' }} F</td>
                 <td class="px-3 py-2 text-right font-mono">{{ lm.montantTotal | number:'1.0-0' }} F</td>

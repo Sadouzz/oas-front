@@ -247,6 +247,7 @@
                       <tr class="hover:bg-slate-50/50">
                         <td class="px-3 py-2 text-oas-ink">
                           <div class="font-bold truncate max-w-[180px]">{{ l.designationPiece || l.designationPds }}</div>
+                          @if (l.dateHeureSaisie) { <div class="text-[10px] text-oas-muted font-normal">Saisie le {{ l.dateHeureSaisie | date:'short' }}</div> }
                           @if (l.referencePiece) {
                             <div class="text-[10px] text-oas-muted font-mono">{{ l.referencePiece }}</div>
                           }
@@ -282,7 +283,7 @@
                   <tbody class="divide-y divide-oas-line">
                     @for (l of selectedProforma.lignesMainDoeuvres; track l.id) {
                       <tr class="hover:bg-slate-50/50">
-                        <td class="px-3 py-2 text-oas-ink font-bold truncate max-w-[180px]">{{ l.descriptionMainDoeuvre }}</td>
+                        <td class="px-3 py-2 text-oas-ink font-bold truncate max-w-[180px]">{{ l.descriptionMainDoeuvre }} @if (l.dateHeureSaisie) { <span class="block text-[10px] text-oas-muted font-normal">Saisie le {{ l.dateHeureSaisie | date:'short' }}</span> }</td>
                         <td class="px-2 py-2 text-center font-bold">{{ l.nbreHeure }}</td>
                         <td class="px-2 py-2 text-right whitespace-nowrap">{{ l.tauxRemise || 0 }} %<span class="block text-[10px] text-oas-muted">−{{ fmt((l.nbreHeure * l.tarifHoraire) - (l.montantTotal ?? (l.nbreHeure * l.tarifHoraire * (1 - (l.tauxRemise || 0) / 100)))) }}</span></td>
                         <td class="px-3 py-2 text-right font-extrabold text-oas-ink whitespace-nowrap">{{ fmt(l.montantTotal ?? (l.nbreHeure * l.tarifHoraire * (1 - (l.tauxRemise || 0) / 100))) }}</td>
@@ -712,7 +713,7 @@
                             <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold flex-shrink-0 bg-blue-100 text-blue-800 border border-blue-300">
                               PDP
                             </span>
-                            <span>{{ l.piece?.reference ? (l.piece?.reference + ' — ') : '' }}{{ l.piece?.designation || l.designationPds }}</span>
+                            <span>{{ l.piece?.reference ? (l.piece?.reference + ' — ') : '' }}{{ l.piece?.designation || l.designationPds }} @if (l.dateHeureSaisie) { <small class="block text-[10px] text-oas-muted font-normal">Saisie le {{ l.dateHeureSaisie | date:'short' }}</small> }</span>
                           </div>
                         </td>
                         <td class="px-3 py-3 text-center">
@@ -839,7 +840,7 @@
                             <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold flex-shrink-0 bg-emerald-100 text-emerald-800 border border-emerald-300">
                               PDG
                             </span>
-                            <span>{{ l.piece?.reference ? (l.piece?.reference + ' — ') : '' }}{{ l.piece?.designation || l.designationPds }}</span>
+                            <span>{{ l.piece?.reference ? (l.piece?.reference + ' — ') : '' }}{{ l.piece?.designation || l.designationPds }} @if (l.dateHeureSaisie) { <small class="block text-[10px] text-oas-muted font-normal">Saisie le {{ l.dateHeureSaisie | date:'short' }}</small> }</span>
                           </div>
                         </td>
                         <td class="px-3 py-3 text-center">
@@ -950,7 +951,7 @@
                         <td class="px-4 py-3 font-semibold text-oas-ink">
                           <div class="flex items-center gap-2">
                             <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300 flex-shrink-0">PDS</span>
-                            <span>{{ l.designationPds }}</span>
+                            <span>{{ l.designationPds }} @if (l.dateHeureSaisie) { <small class="block text-[10px] text-oas-muted font-normal">Saisie le {{ l.dateHeureSaisie | date:'short' }}</small> }</span>
                           </div>
                         </td>
                         <td class="px-3 py-3 text-center">
@@ -1065,6 +1066,7 @@
                       <tr class="hover:bg-purple-50/40 transition">
                         <td class="px-4 py-3 font-semibold text-oas-ink">
                           <p class="font-bold text-oas-ink">{{ m.descriptionMainDoeuvre }}</p>
+                          @if (m.dateHeureSaisie) { <p class="text-[10px] text-oas-muted font-normal">Saisie le {{ m.dateHeureSaisie | date:'short' }}</p> }
                           @if (m.mo?.categorie?.nom && m.mo?.categorie?.nom !== m.descriptionMainDoeuvre) {
                             <p class="text-[10px] text-purple-700 font-medium">{{ m.mo?.categorie?.nom }}</p>
                           }

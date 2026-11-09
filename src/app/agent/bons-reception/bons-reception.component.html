@@ -192,6 +192,7 @@
                 <tr>
                   <td class="px-3 py-2 text-oas-ink">
                     <div>{{ l.designationPiece }}</div>
+                    @if (l.dateHeureSaisie) { <div class="text-[10px] text-oas-muted">Saisie le {{ l.dateHeureSaisie | date:'short' }}</div> }
                     @if (l.referencePiece) { <div class="text-[11px] text-oas-muted">Réf. {{ l.referencePiece }}</div> }
                     @if (l.depotNom) { <div class="text-[11px] text-oas-muted">Dépôt : {{ l.depotNom }}</div> }
                   </td>
@@ -224,7 +225,7 @@
               <tbody class="divide-y divide-oas-line">
                 @for (l of selectedBon.lignesMainDoeuvres; track l.id) {
                 <tr>
-                  <td class="px-3 py-2 text-oas-ink">{{ l.descriptionMainDoeuvre }}</td>
+                  <td class="px-3 py-2 text-oas-ink">{{ l.descriptionMainDoeuvre }} @if (l.dateHeureSaisie) { <small class="block text-[10px] text-oas-muted">Saisie le {{ l.dateHeureSaisie | date:'short' }}</small> }</td>
                   <td class="px-3 py-2 text-center">{{ l.nbreHeure }}</td>
                   <td class="px-3 py-2 text-right font-semibold">{{ fmt(l.montantTotal) }}</td>
                 </tr>

@@ -14,6 +14,7 @@ export interface StepDiagnosticResponseDto extends BaseStepResponseDto {
     recommandations?: string;
     kilometrage?: number;
     technicienId?: number;
+    technicienIds?: number[];
     technicienNom?: string;
     dateDebut?: string;
     dateFin?: string;

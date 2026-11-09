@@ -590,7 +590,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
           tauxRemise: Number(source.tauxRemise) || 0,
           proformaLineId: Number(source.id),
           sourceProformaLineKey: `proforma-line:${source.id}`,
-          ...(type === 'PDG' ? { dateHeureSaisie: new Date().toISOString() } : {}),
+          dateHeureSaisie: new Date().toISOString(),
           horsProforma: false,
           dejaSortieProforma: false,
           depassementProforma: false,
@@ -629,7 +629,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
       designation: piece.designation,
       quantite: qteDemandee,
       prix,
-      ...(type === 'PDG' ? { dateHeureSaisie: new Date().toISOString() } : {}),
+      dateHeureSaisie: new Date().toISOString(),
       tauxRemise,
       horsProforma: info.isHorsProforma,
       dejaSortieProforma: info.isDejaSortiComplet,
@@ -667,7 +667,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
       for (const { source, quantite: qteSource } of ajouts) {
         const prixSource = Number(source.prix ?? source.prixUnitaire ?? 0);
         this.lignesPieces.push({ type: 'PDS', designation: source.designationPds || source.designationPiece || designation,
-          quantite: qteSource, prix: prixSource, tauxRemise: Number(source.tauxRemise) || 0,
+          quantite: qteSource, prix: prixSource, dateHeureSaisie: new Date().toISOString(), tauxRemise: Number(source.tauxRemise) || 0,
           proformaLineId: Number(source.id), sourceProformaLineKey: `proforma-line:${source.id}`, horsProforma: false });
       }
       this.piecePdsDesignationAjouter = '';
@@ -724,6 +724,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
       designation: mo.description,
       quantite: qte,
       prix: Number(this.prixAjouterMO ?? mo.prix),
+      dateHeureSaisie: new Date().toISOString(),
       tauxRemise,
       horsProforma: info.isHorsProforma,
       dejaSortieProforma: info.isDejaSortiComplet,
@@ -1191,7 +1192,8 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
           quantite: m.nbreHeure ?? m.quantite ?? 1,
           prix: m.tarifHoraire ?? m.prix ?? 0,
           tauxRemise: m.tauxRemise ?? 0,
-          montantTotal: m.montantTotal
+          montantTotal: m.montantTotal,
+          dateHeureSaisie: m.dateHeureSaisie ?? null
         }))
       ];
     }
