@@ -15,7 +15,8 @@ import {
   Specialite,
   RemarqueDiagnostic,
   StatutDiagnostic,
-  extractContent
+  extractContent,
+  getEtapeFromStatut
 } from '../../../../../shared/models';
 import { StepDiagnosticResponseDto } from '../../../models/responses/step-diagnostic-response.dto';
 
