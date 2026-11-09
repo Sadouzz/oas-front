@@ -386,6 +386,14 @@
           </div>
         </div>
 
+        <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 mt-3">
+          @if ((proformaChargee.montantTimbre || 0) > 0) {
+            Ce proforma conserve le timbre fiscal enregistré à son émission. Pour les règlements, un timbre de {{ tauxTimbreEspeces }} % s’applique uniquement à la part payée en espèces.
+          } @else {
+            Si le règlement est effectué en espèces, un timbre fiscal de {{ tauxTimbreEspeces }} % s’applique uniquement à la part payée en espèces. Il n’est pas inclus dans le total de ce proforma.
+          }
+        </div>
+
         <!-- Remarque éventuelle -->
         @if (proformaChargee.remarque) {
           <div class="p-3 bg-amber-50/60 rounded-xl border border-amber-200 text-xs text-amber-900 mt-2">

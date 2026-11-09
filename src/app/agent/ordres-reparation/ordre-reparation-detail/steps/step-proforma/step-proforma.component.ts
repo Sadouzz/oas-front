@@ -37,6 +37,7 @@ export class StepProformaComponent implements OnInit {
   loadedOrdre: StepProformaResponseDto | null = null;
   proformaChargee: any = null;
   private defaultTvaRate = 18;
+  private defaultTimbreFiscalRate = 1;
   existingOT: OrdreTravail | null = null;
 
   loading = true;
@@ -52,7 +53,7 @@ export class StepProformaComponent implements OnInit {
 
   ngOnInit(): void {
     this.fiscalConfigurationService.getCurrent().subscribe({
-      next: config => { this.defaultTvaRate = config.tvaRate; this.cdr.markForCheck(); },
+      next: config => { this.defaultTvaRate = config.tvaRate; this.defaultTimbreFiscalRate = config.timbreFiscalRate; this.cdr.markForCheck(); },
       error: () => undefined,
     });
     const idParam = this.route.snapshot.paramMap.get('id') || this.route.parent?.snapshot.paramMap.get('id');
@@ -296,6 +297,10 @@ export class StepProformaComponent implements OnInit {
 
   get tvaTaux(): number {
     return this.proformaChargee?.tva ?? 18;
+  }
+
+  get tauxTimbreEspeces(): number {
+    return Number(this.proformaChargee?.timbreFiscalRate ?? this.defaultTimbreFiscalRate);
   }
 
   get totalTVACalcule(): number {

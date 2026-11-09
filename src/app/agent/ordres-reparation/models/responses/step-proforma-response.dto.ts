@@ -9,6 +9,7 @@ export interface StepProformaResponseDto extends BaseStepResponseDto {
     tvaApplicable?: boolean | null;
     montantTTC?: number;
     montantTimbre?: number;
+    timbreFiscalRate?: number | null;
     montantTotal?: number;
     tauxRemiseClient?: number;
     montantRemiseClient?: number;
