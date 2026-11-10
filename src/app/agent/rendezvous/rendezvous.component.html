@@ -1,13 +1,13 @@
 <div class="space-y-6">
 
   <!-- Header -->
-  <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4 flex items-center justify-between">
+  <div class="bg-white border border-oas-line rounded-lg shadow-sm px-4 sm:px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
     <div>
       <h1 class="text-2xl font-bold text-oas-ink">Rendez-vous</h1>
       <p class="text-sm text-oas-muted mt-1">{{ totalElements }} rendez-vous</p>
     </div>
     <button (click)="openCreate()"
-            class="flex items-center gap-2 bg-oas-accent hover:bg-oas-accent-dark text-white font-semibold px-4 h-10 rounded-lg transition cursor-pointer text-sm shadow-sm">
+            class="w-full sm:w-auto flex items-center justify-center gap-2 bg-oas-accent hover:bg-oas-accent-dark text-white font-semibold px-4 h-10 rounded-lg transition cursor-pointer text-sm shadow-sm">
       <svg lucidePlus class="w-4 h-4"></svg>
       Nouveau rendez-vous
     </button>
@@ -42,7 +42,7 @@
     } @else if (paged.length === 0) {
       <div class="text-center py-16 text-oas-muted text-sm">Aucun rendez-vous trouvé.</div>
     } @else {
-      <table class="w-full text-sm">
+      <div class="max-w-full overflow-x-auto overscroll-x-contain"><table class="w-full min-w-[760px] text-sm">
         <thead>
           <tr class="border-b border-oas-line">
             <th class="text-left text-xs text-oas-muted px-5 py-3">N°</th>
@@ -214,7 +214,7 @@
             }
           }
         </tbody>
-      </table>
+      </table></div>
 
       <app-pagination [page]="page" [totalPages]="totalPages" [total]="totalElements"
                       [pageSize]="pageSize" (prev)="prevPage()" (next)="nextPage()" (pageChange)="onPageChange($event)" />
@@ -323,7 +323,7 @@
               } @else {
                 <div [formGroup]="quickClientForm" class="mt-3 rounded-xl border border-oas-line bg-oas-bg/50 p-3 space-y-3">
                   <p class="text-xs font-bold text-oas-ink">Nouveau client</p>
-                  <div class="grid grid-cols-2 gap-2">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <input formControlName="firstName" placeholder="Prénom *" class="rounded-lg border border-oas-line px-3 py-2 text-sm" />
                     <input formControlName="lastName" placeholder="Nom *" class="rounded-lg border border-oas-line px-3 py-2 text-sm" />
                     <app-phone-input formControlName="phone" placeholder="Téléphone *" [invalid]="quickClientForm.get('phone')?.invalid && quickClientForm.get('phone')?.touched || false"></app-phone-input>
@@ -375,7 +375,7 @@
                 } @else {
                   <div [formGroup]="quickVehicleForm" class="mt-3 rounded-xl border border-oas-line bg-oas-bg/50 p-3 space-y-2">
                     <p class="text-xs font-bold text-oas-ink">Nouveau véhicule</p>
-                    <div class="grid grid-cols-2 gap-2">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <input formControlName="immatriculation" placeholder="Immatriculation *" class="rounded-lg border border-oas-line px-3 py-2 text-sm" />
                       <input formControlName="marque" placeholder="Marque *" class="rounded-lg border border-oas-line px-3 py-2 text-sm" />
                       <input formControlName="modele" placeholder="Modèle *" class="rounded-lg border border-oas-line px-3 py-2 text-sm" />

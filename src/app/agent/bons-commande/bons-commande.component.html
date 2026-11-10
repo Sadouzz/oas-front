@@ -82,7 +82,7 @@
   </div>
 
   <!-- Table + Detail side-by-side -->
-  <div class="flex gap-5" [class.flex-col]="!selectedBon">
+  <div class="flex flex-col lg:flex-row gap-5">
 
     <!-- Table -->
     <div class="bg-white rounded-lg border border-oas-line shadow-card overflow-hidden" [class.flex-1]="selectedBon"
@@ -184,7 +184,7 @@
     <!-- Detail panel -->
     @if (selectedBon) {
     <div
-      class="w-96 flex-shrink-0 bg-white rounded-lg border border-oas-line shadow-card flex flex-col overflow-hidden">
+      class="w-full lg:w-96 lg:flex-shrink-0 bg-white rounded-lg border border-oas-line shadow-card flex flex-col overflow-hidden max-h-[70vh] lg:max-h-none">
       <!-- Header -->
       <div class="flex items-center justify-between px-5 py-4 border-b border-oas-line">
         <div>
@@ -241,7 +241,7 @@
         <div>
           <p class="text-xs font-bold text-oas-muted uppercase tracking-wide mb-2">Lignes ({{ selectedBon.lignes.length }})</p>
           <div class="border border-oas-line rounded-lg overflow-hidden">
-            <table class="w-full text-xs">
+            <div class="max-w-full overflow-x-auto overscroll-x-contain"><table class="w-full text-xs">
               <thead class="bg-oas-bg">
                 <tr>
                   <th class="text-left px-3 py-2 font-bold text-oas-muted">Pièce</th>
@@ -253,7 +253,7 @@
               <tbody class="divide-y divide-oas-line">
                 @for (l of selectedBon.lignes; track l.id) {
                 <tr>
-                  <td class="px-3 py-2 text-oas-ink">{{ l.designationPiece || l.reference || 'Pièce' }}</td>
+                  <td class="px-3 py-2 text-oas-ink">{{ l.designationPiece || l.reference || 'Pièce' }} @if (l.dateHeureSaisie) { <small class="block text-[10px] text-oas-muted">Saisie le {{ l.dateHeureSaisie | date:'short' }}</small> }</td>
                   <td class="px-3 py-2 text-center text-oas-ink2">{{ l.quantite }}</td>
                   <td class="px-3 py-2 text-center text-oas-ink2 font-semibold"
                     [ngClass]="(l.quantiteRecue || 0) < l.quantite ? 'text-amber-600' : 'text-green-600'">
@@ -263,7 +263,7 @@
                 </tr>
                 }
               </tbody>
-            </table>
+            </table></div>
           </div>
         </div>
         }
@@ -845,7 +845,7 @@
       }
 
       <div class="border border-oas-line rounded-xl overflow-hidden">
-        <table class="w-full text-sm">
+        <div class="max-w-full overflow-x-auto overscroll-x-contain"><table class="w-full text-sm">
           <thead class="bg-oas-bg">
             <tr>
               <th class="text-left px-4 py-3 font-bold text-oas-muted text-xs uppercase">Pièce / Référence</th>
@@ -908,7 +908,7 @@
             </tr>
             }
           </tbody>
-        </table>
+        </table></div>
       </div>
     </div>
 

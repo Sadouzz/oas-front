@@ -196,7 +196,12 @@
                   <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold border bg-blue-100 text-blue-800 border-blue-300">
                     PDP
                   </span>
-                  <span>{{ lp.piece?.reference ? (lp.piece?.reference + ' — ' + (lp.piece?.designation || '')) : (lp.piece?.designation || 'Pièce') }}</span>
+                  <span>
+                    {{ lp.piece?.reference ? (lp.piece?.reference + ' — ' + (lp.piece?.designation || '')) : (lp.piece?.designation || 'Pièce') }}
+                    @for (date of lp.datesHeuresSaisie; track $index) {
+                      <small class="block text-[10px] text-oas-muted">Saisie le {{ date | date:'short' }}</small>
+                    }
+                  </span>
                 </div>
                 <div class="flex items-center gap-3">
                   @if (getPiecePrice(lp) > 0) {
@@ -248,7 +253,12 @@
               <li class="text-sm text-oas-ink2 flex justify-between items-center px-3 py-2 rounded-lg bg-amber-50/50 border border-amber-100">
                 <div class="flex items-center gap-2">
                   <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300">PDS</span>
-                  <span class="font-medium text-amber-950">{{ lp.designationPds || 'Pièce personnalisée' }}</span>
+                  <span class="font-medium text-amber-950">
+                    {{ lp.designationPds || 'Pièce personnalisée' }}
+                    @for (date of lp.datesHeuresSaisie; track $index) {
+                      <small class="block text-[10px] text-oas-muted">Saisie le {{ date | date:'short' }}</small>
+                    }
+                  </span>
                 </div>
                 <div class="flex items-center gap-3">
                   <span class="text-amber-800 font-bold text-xs">x{{ lp.quantite }}</span>
@@ -292,7 +302,12 @@
         <ul class="mt-3 space-y-1">
           @for (lmd of lignesMOGroupes; track lmd.mainDoeuvre?.id) {
             <li class="text-sm text-oas-ink2 flex justify-between items-center px-3 py-2 rounded-lg bg-oas-bg">
-              <span>{{ lmd.mainDoeuvre?.description || lmd.mainDoeuvre?.categorie?.nom || 'Prestation' }}</span>
+              <span>
+                {{ lmd.mainDoeuvre?.description || lmd.mainDoeuvre?.categorie?.nom || 'Prestation' }}
+                @for (date of lmd.datesHeuresSaisie; track $index) {
+                  <small class="block text-[10px] text-oas-muted">Saisie le {{ date | date:'short' }}</small>
+                }
+              </span>
               <div class="flex items-center gap-3">
                 @if (getMOPrice(lmd) > 0) {
                   <span class="text-xs font-semibold text-oas-ink">{{ getMOPrice(lmd) | number }} FCFA/h</span>

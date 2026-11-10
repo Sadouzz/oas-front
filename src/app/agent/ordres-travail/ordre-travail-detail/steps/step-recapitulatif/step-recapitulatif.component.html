@@ -838,7 +838,7 @@
 
         <!-- Mini-tableau récapitulatif des pièces manquantes -->
         <div class="rounded-xl border border-red-200 overflow-hidden bg-red-50/20 max-h-48 overflow-y-auto">
-          <table class="w-full text-left text-xs">
+          <div class="max-w-full overflow-x-auto overscroll-x-contain"><table class="w-full text-left text-xs">
             <thead class="bg-red-50 text-red-900 font-bold border-b border-red-100">
               <tr>
                 <th class="px-3 py-2">Pièce</th>
@@ -862,7 +862,7 @@
                 </tr>
               }
             </tbody>
-          </table>
+          </table></div>
         </div>
 
         <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-xs flex items-start gap-2">

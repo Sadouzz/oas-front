@@ -128,12 +128,14 @@ export interface OrdreReparation {
     designationPds?: string;
     quantite: number;
     prix: number;
+    dateHeureSaisie?: string | null;
   }[];
   lignesOrdreReparationMainDoeuvres?: {
     id: number;
     mainDoeuvre?: { id: number; prix?: number; nbreHeure?: number; description?: string; categorie?: { nom: string } };
     nbreHeure: number;
     prix: number;
+    dateHeureSaisie?: string | null;
   }[];
   hasDiagnostic?: boolean;
   hasPiecesMo?: boolean;

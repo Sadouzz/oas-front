@@ -326,7 +326,7 @@
 
         @if (modalPieces.length > 0) {
           <div class="border border-oas-line rounded-xl overflow-hidden">
-            <table class="w-full text-xs text-left">
+            <div class="max-w-full overflow-x-auto overscroll-x-contain"><table class="w-full text-xs text-left">
               <thead class="bg-slate-50 uppercase tracking-wider font-semibold text-oas-muted border-b border-oas-line">
                 <tr>
                   <th class="px-3 py-2">Type</th>
@@ -367,7 +367,7 @@
                   </tr>
                 }
               </tbody>
-            </table>
+            </table></div>
           </div>
         } @else {
           <div class="p-3 text-center text-xs text-oas-muted italic bg-slate-50 rounded-xl border border-oas-line">
@@ -390,7 +390,7 @@
 
         @if (modalMainDoeuvres.length > 0) {
           <div class="border border-oas-line rounded-xl overflow-hidden">
-            <table class="w-full text-xs text-left">
+            <div class="max-w-full overflow-x-auto overscroll-x-contain"><table class="w-full text-xs text-left">
               <thead class="bg-slate-50 uppercase tracking-wider font-semibold text-oas-muted border-b border-oas-line">
                 <tr>
                   <th class="px-3 py-2">Code</th>
@@ -419,7 +419,7 @@
                   </tr>
                 }
               </tbody>
-            </table>
+            </table></div>
           </div>
         } @else {
           <div class="p-3 text-center text-xs text-oas-muted italic bg-slate-50 rounded-xl border border-oas-line">
