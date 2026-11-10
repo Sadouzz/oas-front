@@ -53,9 +53,16 @@
           </svg>
           <span>Mode consultation seule · Ce Bon de Sortie est validé ({{ fullBonDeSortie?.reference || data?.bonDeSortie?.reference }}).</span>
         </div>
-        <a routerLink="/app/bons-de-sortie" class="text-emerald-800 hover:underline font-bold">
-          Voir dans Bons de Sortie →
-        </a>
+        <div class="flex items-center gap-3">
+          @if (data?.ordreReparationId) {
+            <a [routerLink]="['/app/ordres-reparation', data.ordreReparationId, 'bl']" class="text-emerald-800 hover:underline font-bold">
+              Aller à l'Étape 6 (BL) de l'OR →
+            </a>
+          }
+          <a routerLink="/app/bons-de-sortie" class="text-emerald-800 hover:underline font-bold">
+            Voir dans Bons de Sortie →
+          </a>
+        </div>
       </div>
     } @else if (!hasAtLeastOneItem) {
       <div class="p-3.5 rounded-xl bg-amber-50/80 border border-amber-200 text-amber-900 text-xs font-semibold flex items-center gap-2.5">
@@ -643,10 +650,16 @@
       </a>
 
       <div class="flex flex-wrap items-center gap-3">
+        @if (isReadOnly && data?.ordreReparationId) {
+          <a [routerLink]="['/app/ordres-reparation', data.ordreReparationId, 'bl']"
+             class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm shadow-sm transition">
+            Poursuivre vers l'Étape 6 (BL) de l'OR →
+          </a>
+        }
         @if (hasBonDeSortie() && !isBonValide() && canValidateBonDeSortie && !hasUnsavedItems) {
           <button type="button" (click)="openValidateModal()" [disabled]="validating || saving"
             class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm shadow-sm transition cursor-pointer disabled:opacity-50">
-            ✓ Valider le Bon de Sortie
+            ✓ Valider le Bon de Sortie & Aller au BL
           </button>
         }
 
@@ -839,7 +852,7 @@
           <button type="button" (click)="confirmerValidation()" [disabled]="validating"
             class="px-5 py-2.5 text-white font-bold rounded-xl text-xs shadow-xs transition cursor-pointer disabled:opacity-50"
             [ngClass]="hasPiecesManquantesBS ? 'bg-amber-600 hover:bg-amber-700' : 'bg-emerald-600 hover:bg-emerald-700'">
-            {{ validating ? 'Validation en cours...' : (hasPiecesManquantesBS ? 'Valider malgré les manquants & Terminer l\'OT' : 'Confirmer la validation & Terminer l\'OT') }}
+            {{ validating ? 'Validation en cours...' : (hasPiecesManquantesBS ? 'Valider malgré les manquants & Passer au BL (Étape 6 OR)' : 'Confirmer la validation & Passer au BL (Étape 6 OR)') }}
           </button>
         </div>
       </div>

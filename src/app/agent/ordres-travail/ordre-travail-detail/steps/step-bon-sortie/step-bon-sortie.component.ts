@@ -1719,7 +1719,7 @@ export class StepBonSortieComponent implements OnInit, OnDestroy {
             this.validating = false;
             this.showValidateModal = false;
             const ref = validated?.reference || this.fullBonDeSortie?.reference || ('#' + bonId);
-            this.successMessage = `Bon de Sortie ${ref} validé avec succès ! L'Ordre de Travail est maintenant terminé.`;
+            this.successMessage = `Bon de Sortie ${ref} validé avec succès ! Redirection vers l'étape BL de l'Ordre de Réparation...`;
 
             if (validated) {
               this.fullBonDeSortie = this.normaliserBon(validated);
@@ -1732,8 +1732,24 @@ export class StepBonSortieComponent implements OnInit, OnDestroy {
               this.data.statut = StatutOrdreTravail.TERMINE;
             }
 
-            this.loadData();
-            this.cdr.detectChanges();
+            const orId = this.data?.ordreReparationId
+              || (this.data as any)?.ordreReparation?.id
+              || (this.fullBonDeSortie as any)?.ordreReparationId
+              || this.fullBonDeSortie?.ordreReparation?.id;
+
+            if (orId) {
+              this.redirigerVersOrStep6(Number(orId));
+            } else {
+              this.otService.getById(this.otId).pipe(catchError(() => of(null))).subscribe(otRes => {
+                const fetchedOrId = otRes?.ordreReparationId || (otRes as any)?.ordreReparation?.id;
+                if (fetchedOrId) {
+                  this.redirigerVersOrStep6(Number(fetchedOrId));
+                } else {
+                  this.loadData();
+                  this.cdr.detectChanges();
+                }
+              });
+            }
           });
         });
       },
@@ -1745,6 +1761,19 @@ export class StepBonSortieComponent implements OnInit, OnDestroy {
           this.cdr.detectChanges();
         });
       }
+    });
+  }
+
+  private redirigerVersOrStep6(orId: number): void {
+    this.ordreReparationService.updateStatut(orId, 'BL' as any).pipe(
+      catchError(err => {
+        console.warn('Mise à jour du statut OR vers BL :', err);
+        return of(null);
+      })
+    ).subscribe(() => {
+      this.ngZone.run(() => {
+        this.router.navigate(['/app/ordres-reparation', orId, 'bl']);
+      });
     });
   }
 
