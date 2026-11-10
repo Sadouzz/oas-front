@@ -12,6 +12,7 @@ import { PieceDetacheeService } from '../../../../pieces-detachees/piece-detache
 import { MainDoeuvreService } from '../../../../main-doeuvre/main-doeuvre.service';
 import { ProformaService } from '../../../../proforma/proforma.service';
 import { Proforma } from '../../../../proforma/models/proforma.model';
+import { OrdreReparationService } from '../../../../ordres-reparation/ordre-reparation.service';
 import { AlertComponent } from '../../../../../shared/components/alert/alert.component';
 import { SearchableSelectComponent } from '../../../../../shared/components/searchable-select/searchable-select.component';
 import { AuthService } from '../../../../../core/services/auth.service';
@@ -30,6 +31,7 @@ export interface LignePieceBSItem {
   tauxRemise?: number;
   quantite: number;
   proformaLineId?: number;
+  dateHeureSaisie?: string | null;
 }
 
 export interface LigneMOBSItem {
@@ -51,6 +53,7 @@ export interface LigneComparaisonProformaBS {
   qteBS: number;
   ecart: number;
   statut: 'CONFORME' | 'MANQUANT' | 'PARTIEL' | 'SURPLUS' | 'HORS_PROFORMA';
+  dateHeureSaisie?: string | null;
 }
 
 @Component({
@@ -67,9 +70,12 @@ export class StepBonSortieComponent implements OnInit, OnDestroy {
   private pieceService = inject(PieceDetacheeService);
   private moService = inject(MainDoeuvreService);
   private proformaService = inject(ProformaService);
+  private ordreReparationService = inject(OrdreReparationService);
   private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
   private ngZone = inject(NgZone);
+
+  ordrePiecesMoLines: any[] = [];
 
   private destroy$ = new Subject<void>();
   private searchPdp$ = new Subject<string>();
@@ -371,6 +377,17 @@ export class StepBonSortieComponent implements OnInit, OnDestroy {
           this.data = stepBs;
           this.bonsDeSortie = (stepBs.bonsDeSortie || []).map(b => this.normaliserBon(b));
 
+          const orId = stepBs.ordreReparationId || (stepBs as any)?.ordreReparation?.id;
+          if (orId) {
+            this.ordreReparationService.getStepPiecesMo(orId).pipe(catchError(() => of(null))).subscribe(stepPieces => {
+              if (stepPieces) {
+                this.ordrePiecesMoLines = stepPieces.lignesOrdreReparationPieces || (stepPieces as any)?.lignesPieces || [];
+                this.associerDatesSaisieAuxPieces();
+                this.cdr.markForCheck();
+              }
+            });
+          }
+
           // Identifier le bon de sortie existant uniquement s'il y en a un dans stepBs
           const existingBonId = this.bonsDeSortie[0]?.id || stepBs.bonDeSortie?.id;
           if (existingBonId) {
@@ -384,6 +401,7 @@ export class StepBonSortieComponent implements OnInit, OnDestroy {
                 if (this.lignesPieces.length === 0 && this.lignesMO.length === 0) {
                   this.populateLinesFromStepData(stepBs, !!stepBs.hasBonDeSortie);
                 }
+                this.associerDatesSaisieAuxPieces();
                 this.loading = false;
                 this.cdr.detectChanges();
               });
@@ -391,6 +409,7 @@ export class StepBonSortieComponent implements OnInit, OnDestroy {
           } else {
             this.fullBonDeSortie = null;
             this.populateLinesFromStepData(stepBs, false);
+            this.associerDatesSaisieAuxPieces();
             this.loading = false;
             this.cdr.detectChanges();
           }
@@ -465,7 +484,8 @@ export class StepBonSortieComponent implements OnInit, OnDestroy {
         prixUnitaire: unitPrice,
         prixTotal: total,
         tauxRemise: finalRemise,
-        proformaLineId: pfLine?.id ?? l.proformaLineId ?? undefined
+        proformaLineId: pfLine?.id ?? l.proformaLineId ?? undefined,
+        dateHeureSaisie: l.dateHeureSaisie || lAny.dateHeureSaisie || pfLine?.dateHeureSaisie || undefined
       });
     }
 
@@ -736,6 +756,141 @@ export class StepBonSortieComponent implements OnInit, OnDestroy {
     return matching[0] || null;
   }
 
+  associerDatesSaisieAuxPieces(): void {
+    const proformaPieces: any[] = (this.data?.lignesPiecesProforma && this.data.lignesPiecesProforma.length > 0)
+      ? this.data.lignesPiecesProforma
+      : (this.data?.lignesPieces || []);
+    const usedOrdrePieceIds = new Set<number>();
+    const fallbackDate = (this.data as any)?.createdAt || (this.data as any)?.bonDeSortie?.dateSortiePrevue || this.fullBonDeSortie?.date || new Date().toISOString();
+
+    for (const pf of proformaPieces) {
+      if (pf.dateHeureSaisie) {
+        continue;
+      }
+      const isCustom = !!(pf.isCustom || pf.type === 'PDS' || (!pf.pieceId && !pf.piece?.id));
+      const des = (pf.designationPds || pf.designationPiece || pf.designation || '').trim().toLowerCase();
+      const qte = Number(pf.quantite || 0);
+      const prix = Number(pf.prix ?? pf.prixUnitaire ?? 0);
+
+      let matchedOrdreLine: any = null;
+      if (this.ordrePiecesMoLines && this.ordrePiecesMoLines.length > 0) {
+        if (isCustom) {
+          matchedOrdreLine = this.ordrePiecesMoLines.find((ol: any) =>
+            !usedOrdrePieceIds.has(ol.id) &&
+            ol.isCustom &&
+            (ol.designationPds || '').trim().toLowerCase() === des &&
+            Math.round(Number(ol.prix || 0)) === Math.round(prix) &&
+            Number(ol.quantite || 0) === qte &&
+            ol.dateHeureSaisie
+          );
+          if (!matchedOrdreLine) {
+            matchedOrdreLine = this.ordrePiecesMoLines.find((ol: any) =>
+              !usedOrdrePieceIds.has(ol.id) &&
+              ol.isCustom &&
+              (ol.designationPds || '').trim().toLowerCase() === des &&
+              Number(ol.quantite || 0) === qte &&
+              ol.dateHeureSaisie
+            );
+          }
+          if (!matchedOrdreLine) {
+            matchedOrdreLine = this.ordrePiecesMoLines.find((ol: any) =>
+              !usedOrdrePieceIds.has(ol.id) &&
+              ol.isCustom &&
+              (ol.designationPds || '').trim().toLowerCase() === des &&
+              ol.dateHeureSaisie
+            );
+          }
+        } else {
+          const pieceId = pf.pieceId ?? pf.piece?.id;
+          if (pieceId) {
+            matchedOrdreLine = this.ordrePiecesMoLines.find((ol: any) =>
+              !usedOrdrePieceIds.has(ol.id) &&
+              !ol.isCustom &&
+              (ol.pieceId ?? ol.piece?.id) === pieceId &&
+              ol.dateHeureSaisie
+            );
+          }
+        }
+      }
+
+      if (matchedOrdreLine && matchedOrdreLine.id != null) {
+        usedOrdrePieceIds.add(matchedOrdreLine.id);
+      }
+      pf.dateHeureSaisie = matchedOrdreLine?.dateHeureSaisie || fallbackDate;
+    }
+
+    // Synchroniser avec les lignes actuellement dans le Bon de Sortie (lignesPieces)
+    for (const l of this.lignesPieces) {
+      if (l.dateHeureSaisie) continue;
+
+      if (l.proformaLineId != null) {
+        const pf = proformaPieces.find((p: any) => Number(p.id) === Number(l.proformaLineId));
+        if (pf?.dateHeureSaisie) {
+          l.dateHeureSaisie = pf.dateHeureSaisie;
+          continue;
+        }
+      }
+
+      if (l.isCustom || l.type === 'PDS') {
+        const pf = this.findProformaLineForPds(l.designationPds || '', l);
+        if (pf?.dateHeureSaisie) {
+          l.dateHeureSaisie = pf.dateHeureSaisie;
+          continue;
+        }
+      }
+
+      l.dateHeureSaisie = this.getPieceDateHeureSaisie(l);
+    }
+  }
+
+  getPieceDateHeureSaisie(ligne: any): string {
+    if (ligne?.dateHeureSaisie) return ligne.dateHeureSaisie;
+
+    if (ligne?.proformaLineId != null) {
+      const pfList = [
+        ...(this.data?.lignesPiecesProforma ?? []),
+        ...(this.proformaContexte?.lignesPieces ?? []),
+        ...((this.data?.lignesPiecesProforma == null && this.data?.lignesPiecesBS == null) ? (this.data?.lignesPieces ?? []) : [])
+      ];
+      const pf = pfList.find((p: any) => Number(p.id) === Number(ligne.proformaLineId));
+      if (pf?.dateHeureSaisie) return pf.dateHeureSaisie;
+    }
+
+    const isCustom = !!(ligne?.isCustom || ligne?.type === 'PDS' || (!ligne?.pieceId && !ligne?.piece?.id));
+    const des = (ligne?.designationPds || ligne?.designationPiece || ligne?.designation || ligne?.nom || '').trim().toLowerCase();
+    const qte = Number(ligne?.quantite || 0);
+    const prix = Number(ligne?.prixTotal != null && qte > 0 ? (ligne.prixTotal / qte) : (ligne?.prixUnitaire ?? ligne?.prix ?? 0));
+
+    if (this.ordrePiecesMoLines && this.ordrePiecesMoLines.length > 0) {
+      if (isCustom) {
+        const found = this.ordrePiecesMoLines.find((ol: any) =>
+          ol.isCustom &&
+          (ol.designationPds || '').trim().toLowerCase() === des &&
+          Math.round(Number(ol.prix || 0)) === Math.round(prix) &&
+          Number(ol.quantite || 0) === qte &&
+          ol.dateHeureSaisie
+        ) || this.ordrePiecesMoLines.find((ol: any) =>
+          ol.isCustom &&
+          (ol.designationPds || '').trim().toLowerCase() === des &&
+          Number(ol.quantite || 0) === qte &&
+          ol.dateHeureSaisie
+        ) || this.ordrePiecesMoLines.find((ol: any) =>
+          ol.isCustom &&
+          (ol.designationPds || '').trim().toLowerCase() === des &&
+          ol.dateHeureSaisie
+        );
+        if (found?.dateHeureSaisie) return found.dateHeureSaisie;
+      }
+    }
+
+    const pfMatches = this.findAllProformaLinesForPds(des);
+    const pfWithDate = pfMatches.find((p: any) => p.dateHeureSaisie);
+    if (pfWithDate?.dateHeureSaisie) return pfWithDate.dateHeureSaisie;
+
+    const fallback = (this.data as any)?.createdAt || (this.data as any)?.bonDeSortie?.dateSortiePrevue || this.fullBonDeSortie?.date || new Date().toISOString();
+    return fallback;
+  }
+
   private findProformaLineForMO(mo: MainDoeuvreModel | undefined, rawM?: any): any | null {
     const fromProforma = [
       ...(this.data?.lignesMainDoeuvresProforma ?? []),
@@ -960,7 +1115,8 @@ export class StepBonSortieComponent implements OnInit, OnDestroy {
       prixUnitaire: unitPrice,
       prixTotal: total,
       tauxRemise: remise,
-      proformaLineId: Number(pfLine.id)
+      proformaLineId: Number(pfLine.id),
+      dateHeureSaisie: pfLine.dateHeureSaisie || this.getPieceDateHeureSaisie(pfLine)
     });
     this.cdr.markForCheck();
   }
@@ -1027,7 +1183,8 @@ export class StepBonSortieComponent implements OnInit, OnDestroy {
         prixTotal: total,
         prixUnitaire: unitPrice,
         tauxRemise: 0,
-        quantite: qte
+        quantite: qte,
+        dateHeureSaisie: new Date().toISOString()
       });
     }
 
@@ -1289,6 +1446,7 @@ export class StepBonSortieComponent implements OnInit, OnDestroy {
         prixUnitaire: finalPrice,
         tauxRemise: remiseVal,
         remise: remiseVal,
+        dateHeureSaisie: l.dateHeureSaisie || pfLine?.dateHeureSaisie || undefined,
         proformaLineId: l.proformaLineId ?? pfLine?.id ?? undefined
       };
     });
@@ -1476,7 +1634,8 @@ export class StepBonSortieComponent implements OnInit, OnDestroy {
         qteProforma,
         qteBS,
         ecart,
-        statut
+        statut,
+        dateHeureSaisie: pfType === 'PDS' ? (pf.dateHeureSaisie || this.getPieceDateHeureSaisie(pf)) : null
       });
     });
 
@@ -1497,7 +1656,8 @@ export class StepBonSortieComponent implements OnInit, OnDestroy {
         qteProforma: 0,
         qteBS: entry.remaining,
         ecart: entry.remaining,
-        statut: 'HORS_PROFORMA'
+        statut: 'HORS_PROFORMA',
+        dateHeureSaisie: bsType === 'PDS' ? (entry.line.dateHeureSaisie || this.getPieceDateHeureSaisie(entry.line)) : null
       });
     }
 
