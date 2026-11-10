@@ -7,7 +7,8 @@ export enum StatutOrdreReparation {
   PIECES_MO = 'PIECES_MO',                 // Étape 3
   PROFORMA = 'PROFORMA',                   // Étape 4
   ORDRE_DE_TRAVAIL = 'ORDRE_DE_TRAVAIL',   // Étape 5 (nouveau : suivi de l'OT)
-  PAIEMENT = 'PAIEMENT',                   // Étape 6 (remis dans l'OR)
+  BL = 'BL',                               // Étape 6
+  PAIEMENT = 'PAIEMENT',                   // Étape 6 (rétro-compatibilité)
   PRET_A_LIVRER = 'PRET_A_LIVRER',         // Étape 7
   LIVRE = 'LIVRE'                          // Étape 8
 }
@@ -31,6 +32,8 @@ export type StatutOrdre =
   | 'EN_ATTENTE_MECANICIEN'
   | 'REPARATION'
   | 'EN_COURS'
+  | 'BL'
+  | 'EN_ATTENTE_BL'
   | 'PAIEMENT'
   | 'EN_ATTENTE_PAIEMENT'
   | 'PRET_A_LIVRER'
@@ -56,6 +59,8 @@ export const STATUT_ETAPES: Record<string, number> = {
   EN_ATTENTE_MECANICIEN: 5,
   REPARATION: 5,
   EN_COURS: 5,
+  BL: 6,
+  EN_ATTENTE_BL: 6,
   PAIEMENT: 6,
   EN_ATTENTE_PAIEMENT: 6,
   PRET_A_LIVRER: 7,
@@ -69,7 +74,7 @@ export const ETAPES_ORDRE_REPARATION: { etape: number; statut: StatutOrdre; labe
   { etape: 3,  statut: 'PIECES_MO',         label: 'OR',               path: 'pieces-mo' },
   { etape: 4,  statut: 'PROFORMA',          label: 'Proforma',         path: 'proforma' },
   { etape: 5,  statut: 'ORDRE_DE_TRAVAIL',  label: 'Ordre de Travail', path: 'ordre-travail' },
-  { etape: 6,  statut: 'PAIEMENT',          label: 'Paiement',         path: 'paiement' },
+  { etape: 6,  statut: 'BL',                label: 'BL',               path: 'bl' },
   { etape: 7,  statut: 'PRET_A_LIVRER',     label: 'Prêt',             path: 'pret-a-livrer' },
   { etape: 8,  statut: 'LIVRE',             label: 'Livré',            path: 'livraison' }
 ];

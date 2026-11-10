@@ -192,7 +192,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
     // Le statut OR reste le repli historique pour les anciens BS sans OT.
     const reparationTerminee = bon.ordreTravailId
       ? bon.ordreTravailStatut === 'TERMINE'
-      : ['PAIEMENT', 'PRET_A_LIVRER', 'LIVRE'].includes(bon.ordreReparationStatut ?? '');
+      : ['BL', 'PAIEMENT', 'PRET_A_LIVRER', 'LIVRE'].includes(bon.ordreReparationStatut ?? '');
     return this.canValidate && reparationTerminee;
   }
 
@@ -1258,10 +1258,11 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
 
   normaliserBon(bon: any): BonDeSortie {
     if (!bon) return bon;
-    if (bon.lignesPieces && (!bon.lignesBonDeSortiePieces || bon.lignesBonDeSortiePieces.length === 0)) {
-      bon.lignesBonDeSortiePieces = [
-        ...bon.lignesPieces,
-        ...(bon.lignesMainDoeuvres || []).map((m: any) => ({
+    const b = (bon && bon.data !== undefined) ? bon.data : bon;
+    if (b.lignesPieces && (!b.lignesBonDeSortiePieces || b.lignesBonDeSortiePieces.length === 0)) {
+      b.lignesBonDeSortiePieces = [
+        ...b.lignesPieces,
+        ...(b.lignesMainDoeuvres || []).map((m: any) => ({
           id: m.id,
           mainDoeuvreId: m.mainDoeuvreId,
           type: 'MAIN_DOEUVRE',
@@ -1274,7 +1275,7 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
         }))
       ];
     }
-    return bon;
+    return b;
   }
 
   applyFilter() {

@@ -276,8 +276,10 @@ export class DashboardComponent implements OnInit {
       case 'EN_ATTENTE_SORTIE':
       case 'EN_ATTENTE_MECANICIEN':
       case 'EN_COURS': return 'Ordre de Travail';
+      case 'BL':
+      case 'EN_ATTENTE_BL':
       case 'PAIEMENT':
-      case 'EN_ATTENTE_PAIEMENT': return 'Paiement';
+      case 'EN_ATTENTE_PAIEMENT': return 'BL';
       case 'PRET_A_LIVRER':
       case 'TERMINE': return 'Prêt';
       case 'LIVRE': return 'Livré';

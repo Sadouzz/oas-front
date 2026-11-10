@@ -62,9 +62,9 @@
 
   <app-alert [error]="errorMessage"></app-alert>
 
-  <!-- Stepper de progression (4 étapes) -->
+  <!-- Stepper de progression (2 étapes) -->
   <div class="bg-white rounded-2xl border border-oas-line p-5 shadow-xs overflow-x-auto print:hidden">
-    <div class="flex items-center min-w-[500px]">
+    <div class="flex items-center min-w-[320px]">
       @for (step of statutSteps; track step.path; let i = $index) {
         @let stepNumber = step.etape;
         @let isAllowed = stepNumber <= maxAllowedStep;

@@ -161,11 +161,16 @@ export const AGENT_PORTAL_ROUTES: Routes = [
                 ),
             },
             {
-              path: 'paiement',
+              path: 'bl',
               loadComponent: () =>
                 import('./ordres-reparation/ordre-reparation-detail/steps/step-paiement/step-paiement.component').then(
                   m => m.StepPaiementComponent
                 ),
+            },
+            {
+              path: 'paiement',
+              redirectTo: 'bl',
+              pathMatch: 'full',
             },
             {
               path: 'pret-a-livrer',
@@ -223,24 +228,12 @@ export const AGENT_PORTAL_ROUTES: Routes = [
                   m => m.StepBonSortieComponent
                 ),
             },
-            {
-              path: 'assignation',
-              loadComponent: () =>
-                import('./ordres-travail/ordre-travail-detail/steps/step-assignation/step-assignation.component').then(
-                  m => m.StepAssignationComponent
-                ),
-            },
-            {
-              path: 'reparation',
-              loadComponent: () =>
-                import('./ordres-travail/ordre-travail-detail/steps/step-reparation/step-reparation.component').then(
-                  m => m.StepReparationComponent
-                ),
-            },
             // Redirections pour les étapes retirées de l'OT
-            { path: 'paiement', redirectTo: 'reparation', pathMatch: 'full' },
-            { path: 'pret-a-livrer', redirectTo: 'reparation', pathMatch: 'full' },
-            { path: 'livraison', redirectTo: 'reparation', pathMatch: 'full' },
+            { path: 'assignation', redirectTo: 'bon-sortie', pathMatch: 'full' },
+            { path: 'reparation', redirectTo: 'bon-sortie', pathMatch: 'full' },
+            { path: 'paiement', redirectTo: 'bon-sortie', pathMatch: 'full' },
+            { path: 'pret-a-livrer', redirectTo: 'bon-sortie', pathMatch: 'full' },
+            { path: 'livraison', redirectTo: 'bon-sortie', pathMatch: 'full' },
           ],
         },
         {

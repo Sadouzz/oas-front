@@ -9,9 +9,9 @@ export enum StatutOrdreTravail {
 export const STATUT_OT_ETAPES: Record<string, number> = {
   RECAPITULATIF: 1,
   BON_DE_SORTIE: 2,
-  ASSIGN_TECHNICIEN: 3,
-  REPARATION: 4,
-  TERMINE: 5
+  ASSIGN_TECHNICIEN: 2,
+  REPARATION: 2,
+  TERMINE: 2
 };
 
 export interface EtapeOrdreTravailConfig {
@@ -24,10 +24,7 @@ export interface EtapeOrdreTravailConfig {
 
 export const ETAPES_ORDRE_TRAVAIL: EtapeOrdreTravailConfig[] = [
   { etape: 1, statut: StatutOrdreTravail.RECAPITULATIF,     label: 'Récapitulatif', path: 'recapitulatif',     description: 'Proforma, client et véhicule chiffrés' },
-  { etape: 2, statut: StatutOrdreTravail.BON_DE_SORTIE,     label: 'Attente BS',    path: 'bon-sortie',        description: 'Sortie pièces du magasin' },
-  { etape: 3, statut: StatutOrdreTravail.ASSIGN_TECHNICIEN, label: 'Assignation',   path: 'assignation',       description: 'Affectation des techniciens' },
-  { etape: 4, statut: StatutOrdreTravail.REPARATION,        label: 'Réparation',    path: 'reparation',        description: 'Exécution technique et rapport' },
-  { etape: 5, statut: StatutOrdreTravail.TERMINE,           label: 'Terminé',       path: 'reparation',        description: 'Intervention terminée' }
+  { etape: 2, statut: StatutOrdreTravail.BON_DE_SORTIE,     label: 'Attente BS',    path: 'bon-sortie',        description: 'Sortie pièces du magasin' }
 ];
 
 export function getEtapeFromStatutOT(statut: string | StatutOrdreTravail | null | undefined): number {
@@ -37,7 +34,8 @@ export function getEtapeFromStatutOT(statut: string | StatutOrdreTravail | null 
 
 export function getPathFromEtapeOT(etape: number): string {
   const cfg = ETAPES_ORDRE_TRAVAIL.find(e => e.etape === etape);
-  return cfg ? cfg.path : 'recapitulatif';
+  if (cfg) return cfg.path;
+  return etape >= 2 ? 'bon-sortie' : 'recapitulatif';
 }
 
 export function getStatutColorOT(statut: StatutOrdreTravail | string | undefined): { bg: string; text: string; border: string } {
@@ -233,6 +231,78 @@ export interface StepBonSortieResponse extends StepBaseDto {
   bonsDeSortie?: import('../../bons-de-sortie/models/bon-de-sortie.model').BonDeSortie[];
   bonDeSortie?: BonDeSortieSummaryDto | null; // Rétro-compatibilité
   piecesManquantesProforma?: PieceBonSortieDto[];
+  lignesPieces?: {
+    id?: number;
+    pieceId?: number | null;
+    type?: 'PDP' | 'PDG' | 'PDS' | string;
+    referencePiece?: string | null;
+    designationPiece?: string | null;
+    designationPds?: string | null;
+    isCustom?: boolean;
+    quantite: number;
+    prix: number;
+    prixCatalogue?: number | null;
+    montantTotal?: number;
+    tauxRemise?: number;
+  }[];
+  lignesPiecesProforma?: {
+    id?: number;
+    pieceId?: number | null;
+    type?: 'PDP' | 'PDG' | 'PDS' | string;
+    referencePiece?: string | null;
+    designationPiece?: string | null;
+    designationPds?: string | null;
+    isCustom?: boolean;
+    quantite: number;
+    prix: number;
+    prixCatalogue?: number | null;
+    montantTotal?: number;
+    tauxRemise?: number;
+  }[];
+  lignesPiecesBS?: {
+    id?: number;
+    pieceId?: number | null;
+    type?: 'PDP' | 'PDG' | 'PDS' | string;
+    referencePiece?: string | null;
+    designationPiece?: string | null;
+    designationPds?: string | null;
+    isCustom?: boolean;
+    quantite: number;
+    prix: number;
+    prixCatalogue?: number | null;
+    montantTotal?: number;
+    tauxRemise?: number;
+  }[];
+  lignesMainDoeuvres?: {
+    id?: number;
+    mainDoeuvreId?: number | null;
+    descriptionMainDoeuvre?: string;
+    designation?: string;
+    nbreHeure: number;
+    tarifHoraire: number;
+    montantTotal?: number;
+    tauxRemise?: number;
+  }[];
+  lignesMainDoeuvresProforma?: {
+    id?: number;
+    mainDoeuvreId?: number | null;
+    descriptionMainDoeuvre?: string;
+    designation?: string;
+    nbreHeure: number;
+    tarifHoraire: number;
+    montantTotal?: number;
+    tauxRemise?: number;
+  }[];
+  lignesMainDoeuvresBS?: {
+    id?: number;
+    mainDoeuvreId?: number | null;
+    descriptionMainDoeuvre?: string;
+    designation?: string;
+    nbreHeure: number;
+    tarifHoraire: number;
+    montantTotal?: number;
+    tauxRemise?: number;
+  }[];
   mainDoeuvresProforma?: {
     ligneId?: number;
     mainDoeuvreId?: number;

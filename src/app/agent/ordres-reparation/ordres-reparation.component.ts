@@ -35,7 +35,7 @@ export const STATUT_STEPS: { statut: StatutOrdre; label: string }[] = [
   // { statut: 'ASSIGN_TECHNICIEN', label: 'Assign. Tech.' },
   // { statut: 'REPARATION', label: 'Réparation' },
   { statut: 'ORDRE_DE_TRAVAIL', label: 'Ordre de Travail' },
-  { statut: 'PAIEMENT', label: 'Paiement' },
+  { statut: 'BL', label: 'BL' },
   { statut: 'PRET_A_LIVRER', label: 'Prêt' },
   { statut: 'LIVRE', label: 'Livré' },
 ];
@@ -435,7 +435,8 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
       BON_DE_SORTIE: ['BON_DE_SORTIE', 'EN_ATTENTE_SORTIE'],
       ASSIGN_TECHNICIEN: ['ASSIGN_TECHNICIEN', 'EN_ATTENTE_MECANICIEN'],
       REPARATION: ['REPARATION', 'EN_COURS'],
-      PAIEMENT: ['PAIEMENT', 'EN_ATTENTE_PAIEMENT'],
+      BL: ['BL', 'EN_ATTENTE_BL', 'PAIEMENT', 'EN_ATTENTE_PAIEMENT'],
+      PAIEMENT: ['BL', 'EN_ATTENTE_BL', 'PAIEMENT', 'EN_ATTENTE_PAIEMENT'],
       PRET_A_LIVRER: ['PRET_A_LIVRER', 'TERMINE'],
       LIVRE: ['LIVRE']
     };
@@ -510,6 +511,8 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
       case 'EN_ATTENTE_MECANICIEN': return '#06b6d4';
       case 'REPARATION':
       case 'EN_COURS': return '#3b82f6';
+      case 'BL':
+      case 'EN_ATTENTE_BL':
       case 'PAIEMENT':
       case 'EN_ATTENTE_PAIEMENT': return '#f97316';
       case 'PRET_A_LIVRER':
@@ -530,7 +533,8 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
     if (o?.statut === 'EN_ATTENTE_SORTIE') return 'Attente BS';
     if (o?.statut === 'EN_ATTENTE_MECANICIEN') return 'Assign. Tech.';
     if (o?.statut === 'EN_COURS') return 'Réparation';
-    if (o?.statut === 'EN_ATTENTE_PAIEMENT') return 'Paiement';
+    if (o?.statut === 'BL' || o?.statut === 'EN_ATTENTE_BL') return 'BL';
+    if (o?.statut === 'EN_ATTENTE_PAIEMENT' || o?.statut === 'PAIEMENT') return 'BL';
     if (o?.statut === 'TERMINE') return 'Prêt';
     return o?.statut ?? '—';
   }

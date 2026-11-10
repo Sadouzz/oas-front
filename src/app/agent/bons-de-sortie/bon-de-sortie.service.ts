@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { BonDeSortie, BonDeSortieRequest, LigneBonDeSortie, PageParams } from '../../shared/models';
 import { BonDeSortieHistorique } from './models/bon-de-sortie.model';
@@ -27,11 +28,13 @@ export class BonDeSortieService {
   }
 
   getById(id: number): Observable<BonDeSortie> {
-    return this.http.get<BonDeSortie>(`${this.api}/${id}`);
+    return this.http.get<any>(`${this.api}/${id}`).pipe(
+      map((res: any) => (res && res.data !== undefined ? res.data : res))
+    );
   }
 
   creer(data: BonDeSortieRequest): Observable<BonDeSortie> {
-    return this.http.post<BonDeSortie>(`${this.api}/creer`, {
+    return this.http.post<any>(`${this.api}/creer`, {
       clientId: data.clientId,
       vehiculeId: data.vehiculeId,
       ordreReparationId: data.ordreReparationId,
@@ -39,15 +42,35 @@ export class BonDeSortieService {
       lignesPieces: data.lignesPieces,
       lignesMainDoeuvres: data.lignesMainDoeuvres,
       remarque: data.remarque,
-    });
+    }).pipe(
+      map((res: any) => (res && res.data !== undefined ? res.data : res))
+    );
+  }
+
+  update(id: number, data: BonDeSortieRequest): Observable<BonDeSortie> {
+    return this.http.put<any>(`${this.api}/${id}`, {
+      clientId: data.clientId,
+      vehiculeId: data.vehiculeId,
+      ordreReparationId: data.ordreReparationId,
+      ordreTravailId: data.ordreTravailId,
+      lignesPieces: data.lignesPieces,
+      lignesMainDoeuvres: data.lignesMainDoeuvres,
+      remarque: data.remarque,
+    }).pipe(
+      map((res: any) => (res && res.data !== undefined ? res.data : res))
+    );
   }
 
   valider(id: number): Observable<BonDeSortie> {
-    return this.http.put<BonDeSortie>(`${this.api}/${id}/valider`, {});
+    return this.http.put<any>(`${this.api}/${id}/valider`, {}).pipe(
+      map((res: any) => (res && res.data !== undefined ? res.data : res))
+    );
   }
 
   retournerPiece(bonId: number, pieceId: number): Observable<BonDeSortie> {
-    return this.http.put<BonDeSortie>(`${this.api}/${bonId}/retour-piece/${pieceId}`, {});
+    return this.http.put<any>(`${this.api}/${bonId}/retour-piece/${pieceId}`, {}).pipe(
+      map((res: any) => (res && res.data !== undefined ? res.data : res))
+    );
   }
 
   getHistorique(bonId: number, params?: import('../../shared/models').PageParams): Observable<any> {

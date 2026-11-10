@@ -162,10 +162,10 @@
                     <div class="flex items-center gap-1.5">
                       <div class="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
                         <div class="h-full rounded-full transition-all"
-                          [style.width.%]="(etapeNum / 4) * 100"
-                          [ngClass]="etapeNum === 4 ? 'bg-emerald-500' : 'bg-oas-accent'"></div>
+                          [style.width.%]="(etapeNum / 2) * 100"
+                          [ngClass]="etapeNum >= 2 ? 'bg-emerald-500' : 'bg-oas-accent'"></div>
                       </div>
-                      <span class="text-[10px] font-mono font-bold text-oas-muted">{{ etapeNum }}/4</span>
+                      <span class="text-[10px] font-mono font-bold text-oas-muted">{{ etapeNum }}/2</span>
                     </div>
                   </div>
                 </td>

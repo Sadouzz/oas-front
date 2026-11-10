@@ -263,7 +263,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
       distinctUntilChanged(),
       switchMap(term => {
         const kw = (term || '').trim();
-        return this.pieceService.getAll({ keyword: kw, size: 50 }).pipe(
+        return this.pieceService.getAll({ keyword: kw, size: 10, type: 'PDP' } as any).pipe(
           catchError(() => of([]))
         );
       }),
@@ -280,7 +280,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
       distinctUntilChanged(),
       switchMap(term => {
         const kw = (term || '').trim();
-        return this.pieceService.getAll({ keyword: kw, size: 50 }).pipe(
+        return this.pieceService.getAll({ keyword: kw, size: 10, type: 'PDG' } as any).pipe(
           catchError(() => of([]))
         );
       }),
@@ -297,7 +297,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
       distinctUntilChanged(),
       switchMap(term => {
         const kw = (term || '').trim();
-        return this.moService.getAll({ keyword: kw, size: 50 }).pipe(
+        return this.moService.getAll({ keyword: kw, size: 10 }).pipe(
           catchError(() => of([]))
         );
       }),
@@ -341,8 +341,8 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
   loadData(): void {
     this.loading = true;
     forkJoin({
-      pieces: this.pieceService.getAll(),
-      mo: this.moService.getAll(),
+      pieces: this.pieceService.getAll({ size: 10 }),
+      mo: this.moService.getAll({ size: 10 }),
       ordre: this.ordreService.getStepPiecesMo(this.ordreId),
       proforma: this.proformaService.getByOrdreReparationId(this.ordreId).pipe(
         catchError(() => of(null))

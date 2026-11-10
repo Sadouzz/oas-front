@@ -13,7 +13,7 @@ export const STEP_ROUTES: { step: number; path: string; statut: StatutOrdre; lab
   { step: 3, path: 'pieces-mo', statut: 'PIECES_MO', label: 'OR' },
   { step: 4, path: 'proforma', statut: 'PROFORMA', label: 'Proforma' },
   { step: 5, path: 'ordre-travail', statut: 'ORDRE_DE_TRAVAIL', label: 'Ordre de Travail' },
-  { step: 6, path: 'paiement', statut: 'PAIEMENT', label: 'Paiement' },
+  { step: 6, path: 'bl', statut: 'BL', label: 'BL' },
   { step: 7, path: 'pret-a-livrer', statut: 'PRET_A_LIVRER', label: 'Prêt' },
   { step: 8, path: 'livraison', statut: 'LIVRE', label: 'Livré' },
 ];
@@ -126,7 +126,7 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
     }
     if (this.currentStep === 5) {
       if (this.activeChild && !this.activeChild.isOtTermine) {
-        this.activeChild.errorMessage = "L'Ordre de Travail doit être au statut TERMINE pour pouvoir passer au paiement.";
+        this.activeChild.errorMessage = "L'Ordre de Travail doit être au statut TERMINE pour pouvoir passer au BL.";
         this.activeChild.cdr?.markForCheck();
         return;
       }
@@ -163,9 +163,9 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
       case 4:
         return 'Passer à l\'Ordre de Travail';
       case 5:
-        return 'Passer au paiement';
+        return 'Passer au BL';
       case 6:
-        return 'Valider le paiement';
+        return 'Valider le BL';
       case 7:
         return 'Marquer prêt pour livraison';
       case 8:
@@ -309,8 +309,10 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
       case 'EN_ATTENTE_MECANICIEN':
       case 'REPARATION':
       case 'EN_COURS': return 'ordre-travail';
+      case 'BL':
+      case 'EN_ATTENTE_BL':
       case 'PAIEMENT':
-      case 'EN_ATTENTE_PAIEMENT': return 'paiement';
+      case 'EN_ATTENTE_PAIEMENT': return 'bl';
       case 'PRET_A_LIVRER': return 'pret-a-livrer';
       case 'LIVRE':
       case 'TERMINE': return 'livraison';

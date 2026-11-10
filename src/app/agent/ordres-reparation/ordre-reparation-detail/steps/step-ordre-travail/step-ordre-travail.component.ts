@@ -82,28 +82,37 @@ export class StepOrdreTravailComponent implements OnInit {
 
   passerAuPaiement(): void {
     if (!this.isOtTermine) {
-      this.errorMessage = "L'Ordre de Travail doit être au statut TERMINE pour pouvoir passer au paiement.";
+      this.errorMessage = "L'Ordre de Travail doit être au statut TERMINE pour pouvoir passer au BL.";
       this.cdr.markForCheck();
       return;
     }
 
-    if (['PAIEMENT', 'PRET_A_LIVRER', 'LIVRE'].includes(this.data?.statut ?? '')) {
-      this.router.navigate(['/app/ordres-reparation', this.ordreId, 'paiement']);
+    if (['BL', 'PAIEMENT', 'PRET_A_LIVRER', 'LIVRE'].includes(this.data?.statut ?? '')) {
+      this.router.navigate(['/app/ordres-reparation', this.ordreId, 'bl']);
       return;
     }
 
     this.advancing = true;
     this.errorMessage = '';
 
-    this.ordreService.updateStatut(this.ordreId, 'PAIEMENT').subscribe({
+    this.ordreService.updateStatut(this.ordreId, 'BL').subscribe({
       next: () => {
         this.advancing = false;
-        this.router.navigate(['/app/ordres-reparation', this.ordreId, 'paiement']);
+        this.router.navigate(['/app/ordres-reparation', this.ordreId, 'bl']);
       },
       error: (err) => {
-        this.advancing = false;
-        this.errorMessage = err.error?.message || "Impossible de passer l'ordre de réparation à l'étape paiement.";
-        this.cdr.markForCheck();
+        // Repli rétro-compatible si le backend attend 'PAIEMENT'
+        this.ordreService.updateStatut(this.ordreId, 'PAIEMENT').subscribe({
+          next: () => {
+            this.advancing = false;
+            this.router.navigate(['/app/ordres-reparation', this.ordreId, 'bl']);
+          },
+          error: (err2) => {
+            this.advancing = false;
+            this.errorMessage = err2.error?.message || err.error?.message || "Impossible de passer l'ordre de réparation à l'étape BL.";
+            this.cdr.markForCheck();
+          }
+        });
       }
     });
   }
@@ -137,15 +146,11 @@ export class StepOrdreTravailComponent implements OnInit {
   get otEtapeLabel(): string {
     switch (this.otStatut) {
       case 'RECAPITULATIF':
-        return 'Étape 1/5 · Récapitulatif Proforma';
+        return 'Étape 1/2 · Récapitulatif Proforma';
       case 'BON_DE_SORTIE':
-        return 'Étape 2/5 · Attente Bon de Sortie Magasin';
-      case 'ASSIGN_TECHNICIEN':
-        return 'Étape 3/5 · Affectation des Techniciens';
-      case 'REPARATION':
-        return 'Étape 4/5 · Exécution des Réparations en Atelier';
+        return 'Étape 2/2 · Attente Bon de Sortie Magasin';
       case 'TERMINE':
-        return 'Étape 5/5 · Travaux d\'Atelier Terminés';
+        return 'Travaux d\'Atelier Terminés';
       default:
         return 'En attente d\'exécution atelier';
     }

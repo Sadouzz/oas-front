@@ -257,7 +257,7 @@ export class OrdresTravailComponent implements OnInit, OnDestroy {
   }
 
   getEtapeNumero(ot: OrdreTravail): number {
-    return ot.etape || getEtapeFromStatutOT(ot.statut);
+    return Math.min(2, ot.etape || getEtapeFromStatutOT(ot.statut));
   }
 
   getClientNom(ot: OrdreTravail): string {

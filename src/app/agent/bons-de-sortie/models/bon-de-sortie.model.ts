@@ -87,6 +87,7 @@ export interface BonDeSortieRequest {
     prix?: number | null;
     prixUnitaire?: number | null;
     tauxRemise?: number;
+    remise?: number;
     isCustom?: boolean;
     designationPds?: string;
     proformaLineId?: number;
@@ -101,6 +102,7 @@ export interface BonDeSortieRequest {
     tarifHoraire?: number | null;
     prix?: number | null;
     tauxRemise?: number;
+    remise?: number;
     proformaLineId?: number;
     designation?: string;
   }[];
