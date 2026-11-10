@@ -102,6 +102,7 @@ export interface StepRecapitulatifResponseDto extends StepBaseDto {
       tauxRemise?: number;
       isCustom?: boolean;
       type?: string;
+      dateHeureSaisie?: string | null;
     }[];
     lignesMainDoeuvre?: {
       id: number;
@@ -110,6 +111,7 @@ export interface StepRecapitulatifResponseDto extends StepBaseDto {
       tarifHoraire: number;
       montantTotal: number;
       tauxRemise?: number;
+      dateHeureSaisie?: string | null;
     }[];
     lignesMainDoeuvres?: {
       id: number;
@@ -117,6 +119,7 @@ export interface StepRecapitulatifResponseDto extends StepBaseDto {
       nbreHeure: number;
       tarifHoraire: number;
       montantTotal: number;
+      dateHeureSaisie?: string | null;
     }[];
   };
   piecesManquantesProforma?: PieceApprovisionnementDto[];
@@ -244,6 +247,7 @@ export interface StepBonSortieResponse extends StepBaseDto {
     prixCatalogue?: number | null;
     montantTotal?: number;
     tauxRemise?: number;
+    dateHeureSaisie?: string;
   }[];
   lignesPiecesProforma?: {
     id?: number;
@@ -258,6 +262,7 @@ export interface StepBonSortieResponse extends StepBaseDto {
     prixCatalogue?: number | null;
     montantTotal?: number;
     tauxRemise?: number;
+    dateHeureSaisie?: string;
   }[];
   lignesPiecesBS?: {
     id?: number;
@@ -272,6 +277,7 @@ export interface StepBonSortieResponse extends StepBaseDto {
     prixCatalogue?: number | null;
     montantTotal?: number;
     tauxRemise?: number;
+    dateHeureSaisie?: string;
   }[];
   lignesMainDoeuvres?: {
     id?: number;
@@ -282,6 +288,7 @@ export interface StepBonSortieResponse extends StepBaseDto {
     tarifHoraire: number;
     montantTotal?: number;
     tauxRemise?: number;
+    dateHeureSaisie?: string;
   }[];
   lignesMainDoeuvresProforma?: {
     id?: number;
@@ -292,6 +299,7 @@ export interface StepBonSortieResponse extends StepBaseDto {
     tarifHoraire: number;
     montantTotal?: number;
     tauxRemise?: number;
+    dateHeureSaisie?: string;
   }[];
   lignesMainDoeuvresBS?: {
     id?: number;
@@ -302,6 +310,7 @@ export interface StepBonSortieResponse extends StepBaseDto {
     tarifHoraire: number;
     montantTotal?: number;
     tauxRemise?: number;
+    dateHeureSaisie?: string;
   }[];
   mainDoeuvresProforma?: {
     ligneId?: number;
@@ -311,6 +320,7 @@ export interface StepBonSortieResponse extends StepBaseDto {
     nbreHeure: number;
     tarifHoraire: number;
     tauxRemise?: number;
+    dateHeureSaisie?: string;
   }[];
 }
 

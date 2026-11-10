@@ -3,7 +3,8 @@ import { PdfLayoutDialogService } from '../../../../../shared/components/pdf-lay
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { OrdreReparationService } from '../../../ordre-reparation.service';
 import { ProformaService } from '../../../../proforma/proforma.service';
 import { FiscalConfigurationService } from '../../../../gestion-tva/fiscal-configuration.service';
@@ -69,12 +70,21 @@ export class StepProformaComponent implements OnInit {
     this.loadData();
   }
 
+  ordrePiecesMoLines: any[] = [];
+
   loadData(): void {
     this.loading = true;
-    this.ordreService.getStepProforma(this.ordreId).subscribe({
-      next: (res) => {
-        this.loadedOrdre = res;
-        this.proformaChargee = res.proforma || null;
+    forkJoin({
+      stepProforma: this.ordreService.getStepProforma(this.ordreId),
+      stepPiecesMo: this.ordreService.getStepPiecesMo(this.ordreId).pipe(catchError(() => of(null)))
+    }).subscribe({
+      next: ({ stepProforma, stepPiecesMo }) => {
+        this.loadedOrdre = stepProforma;
+        this.proformaChargee = stepProforma.proforma || null;
+        this.ordrePiecesMoLines = stepPiecesMo?.lignesOrdreReparationPieces || (stepPiecesMo as any)?.lignesPieces || [];
+
+        this.associerDatesSaisieAuxPieces();
+
         this.loading = false;
         this.cdr.markForCheck();
       },
@@ -84,6 +94,110 @@ export class StepProformaComponent implements OnInit {
         this.cdr.markForCheck();
       }
     });
+  }
+
+  private associerDatesSaisieAuxPieces(): void {
+    const pieces = this.lignesPiecesAffichees;
+    if (!pieces || pieces.length === 0) return;
+
+    const usedOrdrePieceIds = new Set<number>();
+    const fallbackDate = this.proformaChargee?.dateCreation || (this.loadedOrdre as any)?.createdAt || (this.loadedOrdre as any)?.dateCreation || new Date().toISOString();
+
+    for (const ligne of pieces) {
+      if (ligne.dateHeureSaisie) {
+        continue;
+      }
+
+      const isCustom = this.getPieceType(ligne) === 'PDS';
+      const des = this.getPieceDesignation(ligne).trim().toLowerCase();
+      const qte = this.getPieceQuantite(ligne);
+      const prix = this.getPiecePrixUnitaire(ligne);
+
+      let matchedOrdreLine: any = null;
+      if (this.ordrePiecesMoLines && this.ordrePiecesMoLines.length > 0) {
+        if (isCustom) {
+          matchedOrdreLine = this.ordrePiecesMoLines.find((ol: any) =>
+            !usedOrdrePieceIds.has(ol.id) &&
+            ol.isCustom &&
+            (ol.designationPds || '').trim().toLowerCase() === des &&
+            Math.round(Number(ol.prix || 0)) === Math.round(prix) &&
+            Number(ol.quantite || 0) === qte
+          );
+          if (!matchedOrdreLine) {
+            matchedOrdreLine = this.ordrePiecesMoLines.find((ol: any) =>
+              !usedOrdrePieceIds.has(ol.id) &&
+              ol.isCustom &&
+              (ol.designationPds || '').trim().toLowerCase() === des &&
+              Number(ol.quantite || 0) === qte
+            );
+          }
+          if (!matchedOrdreLine) {
+            matchedOrdreLine = this.ordrePiecesMoLines.find((ol: any) =>
+              !usedOrdrePieceIds.has(ol.id) &&
+              ol.isCustom &&
+              (ol.designationPds || '').trim().toLowerCase() === des
+            );
+          }
+        } else {
+          const pieceId = ligne?.pieceId ?? ligne?.piece?.id;
+          if (pieceId) {
+            matchedOrdreLine = this.ordrePiecesMoLines.find((ol: any) =>
+              !usedOrdrePieceIds.has(ol.id) && (ol.pieceId ?? ol.piece?.id) === pieceId
+            );
+          }
+        }
+      }
+
+      if (matchedOrdreLine && matchedOrdreLine.id != null) {
+        usedOrdrePieceIds.add(matchedOrdreLine.id);
+      }
+
+      ligne.dateHeureSaisie = matchedOrdreLine?.dateHeureSaisie || fallbackDate;
+    }
+  }
+
+  getPieceDateHeureSaisie(ligne: any): string {
+    if (ligne?.dateHeureSaisie) return ligne.dateHeureSaisie;
+
+    const isCustom = this.getPieceType(ligne) === 'PDS';
+    const des = this.getPieceDesignation(ligne).trim().toLowerCase();
+    const qte = this.getPieceQuantite(ligne);
+    const prix = this.getPiecePrixUnitaire(ligne);
+
+    if (this.ordrePiecesMoLines && this.ordrePiecesMoLines.length > 0) {
+      if (isCustom) {
+        const found = this.ordrePiecesMoLines.find((ol: any) =>
+          ol.isCustom &&
+          (ol.designationPds || '').trim().toLowerCase() === des &&
+          Math.round(Number(ol.prix || 0)) === Math.round(prix) &&
+          Number(ol.quantite || 0) === qte &&
+          ol.dateHeureSaisie
+        ) || this.ordrePiecesMoLines.find((ol: any) =>
+          ol.isCustom &&
+          (ol.designationPds || '').trim().toLowerCase() === des &&
+          ol.dateHeureSaisie
+        );
+        if (found?.dateHeureSaisie) {
+          ligne.dateHeureSaisie = found.dateHeureSaisie;
+          return found.dateHeureSaisie;
+        }
+      } else {
+        const pieceId = ligne?.pieceId ?? ligne?.piece?.id;
+        if (pieceId) {
+          const found = this.ordrePiecesMoLines.find((ol: any) =>
+            !ol.isCustom && (ol.pieceId ?? ol.piece?.id) === pieceId && ol.dateHeureSaisie
+          );
+          if (found?.dateHeureSaisie) {
+            ligne.dateHeureSaisie = found.dateHeureSaisie;
+            return found.dateHeureSaisie;
+          }
+        }
+      }
+    }
+
+    const fallback = this.proformaChargee?.dateCreation || (this.loadedOrdre as any)?.createdAt || (this.loadedOrdre as any)?.dateCreation || new Date().toISOString();
+    ligne.dateHeureSaisie = fallback;
+    return fallback;
   }
 
   get isPassedToOT(): boolean {

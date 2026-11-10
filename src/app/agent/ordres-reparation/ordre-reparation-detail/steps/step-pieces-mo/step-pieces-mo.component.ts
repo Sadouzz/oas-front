@@ -371,12 +371,16 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
           // ══════════════════════════════════════════════════════════════════════
           const piecesMap = new Map<string, any>();
           const proformaPieces: any[] = proforma.lignesPieces || (proforma as any).pieces || [];
+          const ordrePieces: any[] = ordre?.lignesOrdreReparationPieces || (ordre as any)?.lignesPieces || [];
+          const usedOrdrePieceIds = new Set<number>();
+
           for (const [index, l] of proformaPieces.entries()) {
             const pieceId = l.pieceId ?? l.piece?.id ?? null;
             const isCustom = !!(l.isCustom || l.custom || !pieceId || l.designationPds);
             const isPdgKey = !isCustom && (l.type === 'PDG' || l.piece?.type === 'PDG');
+            const des = l.designationPds || l.designationPiece || l.piece?.designation || (isCustom ? 'Pièce à saisir' : 'Pièce détachée');
             const key = l.id != null ? `line_${l.id}` : isPdgKey ? `pdg_${index}` : isCustom
-              ? `custom_${(l.designationPds || l.designationPiece || '').trim().toLowerCase()}`
+              ? `custom_${index}_${des.trim().toLowerCase()}`
               : `cat_${pieceId}`;
 
             const catalogPiece = !isCustom && pieceId
@@ -396,11 +400,47 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
             }
 
             const qte = Number(l.quantite ?? l.qte ?? 1) || 1;
-            const des = l.designationPds || l.designationPiece || resolvedPiece?.designation || (isCustom ? 'Pièce à saisir' : 'Pièce détachée');
             const isPdg = !isCustom && resolvedPiece?.type === 'PDG';
             const totalItem = (isCustom || isPdg)
               ? (isPdg && resolvedPiece?.prixUnitaire != null ? unitPrice * qte : (l.montantTotal != null ? Number(l.montantTotal) : unitPrice * qte))
               : undefined;
+
+            let matchingOrdreLine = ordrePieces.find((ol: any) =>
+              ol.id != null && l.ordreReparationPieceId != null && Number(ol.id) === Number(l.ordreReparationPieceId)
+            );
+            if (!matchingOrdreLine && isCustom) {
+              matchingOrdreLine = ordrePieces.find((ol: any) =>
+                !usedOrdrePieceIds.has(ol.id) &&
+                ol.isCustom &&
+                (ol.designationPds || '').trim().toLowerCase() === des.trim().toLowerCase() &&
+                Math.round(Number(ol.prix || 0)) === Math.round(unitPrice) &&
+                Number(ol.quantite || 0) === qte
+              );
+              if (!matchingOrdreLine) {
+                matchingOrdreLine = ordrePieces.find((ol: any) =>
+                  !usedOrdrePieceIds.has(ol.id) &&
+                  ol.isCustom &&
+                  (ol.designationPds || '').trim().toLowerCase() === des.trim().toLowerCase() &&
+                  Number(ol.quantite || 0) === qte
+                );
+              }
+              if (!matchingOrdreLine) {
+                matchingOrdreLine = ordrePieces.find((ol: any) =>
+                  !usedOrdrePieceIds.has(ol.id) &&
+                  ol.isCustom &&
+                  (ol.designationPds || '').trim().toLowerCase() === des.trim().toLowerCase()
+                );
+              }
+            } else if (!matchingOrdreLine && pieceId != null) {
+              matchingOrdreLine = ordrePieces.find((ol: any) =>
+                !usedOrdrePieceIds.has(ol.id) && (ol.pieceId ?? ol.piece?.id) === pieceId
+              );
+            }
+            if (matchingOrdreLine && matchingOrdreLine.id != null) {
+              usedOrdrePieceIds.add(matchingOrdreLine.id);
+            }
+
+            const dateSaisie = l.dateHeureSaisie || matchingOrdreLine?.dateHeureSaisie || (ordre as any)?.createdAt || (ordre as any)?.dateCreation || new Date().toISOString();
 
             if (piecesMap.has(key)) {
               const item = piecesMap.get(key);
@@ -414,6 +454,8 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
               }
             } else {
               piecesMap.set(key, {
+                id: l.id ?? matchingOrdreLine?.id,
+                dateHeureSaisie: dateSaisie,
                 piece: resolvedPiece,
                 pieceIdTemp: isCustom ? null : (pieceId ? Number(pieceId) : null),
                 quantite: qte,
@@ -440,7 +482,10 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
           // MO depuis le Proforma
           const moMap = new Map<number | string, any>();
           const proformaMo: any[] = proforma.lignesMainDoeuvres || (proforma as any).lignesMainDoeuvre || (proforma as any).mainsDoeuvre || [];
-          for (const l of proformaMo) {
+          const ordreMoList: any[] = ordre?.lignesOrdreReparationMainDoeuvres || (ordre as any)?.lignesMainDoeuvres || [];
+          const usedOrdreMoIds = new Set<number>();
+
+          for (const [index, l] of proformaMo.entries()) {
             const moId = l.mainDoeuvreId ?? l.mainDoeuvre?.id ?? null;
             let catalogMO = null;
             if (moId) {
@@ -455,7 +500,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
               description: l.descriptionMainDoeuvre || l.description || 'Prestation main-d’œuvre',
               prix: l.tarifHoraire ?? l.prix
             };
-            const mapKey = l.id != null ? `line_${l.id}` : resolvedMO.id || (l.descriptionMainDoeuvre || l.description || 'mo');
+            const mapKey = l.id != null ? `line_${l.id}` : resolvedMO.id || (l.descriptionMainDoeuvre || l.description || `mo_${index}`);
 
             let unitPrice = 0;
             if (l.tarifHoraire != null && Number(l.tarifHoraire) >= 0) {
@@ -472,6 +517,19 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
 
             const qte = Number(l.nbreHeure ?? l.heures ?? l.quantite ?? 1) || 1;
 
+            let matchingOrdreMo = ordreMoList.find((om: any) =>
+              om.id != null && l.id != null && Number(om.id) === Number(l.id)
+            );
+            if (!matchingOrdreMo && moId != null) {
+              matchingOrdreMo = ordreMoList.find((om: any) =>
+                !usedOrdreMoIds.has(om.id) && om.mainDoeuvreId && Number(om.mainDoeuvreId) === Number(moId)
+              );
+            }
+            if (matchingOrdreMo && matchingOrdreMo.id != null) {
+              usedOrdreMoIds.add(matchingOrdreMo.id);
+            }
+            const dateSaisie = l.dateHeureSaisie || matchingOrdreMo?.dateHeureSaisie || (ordre as any)?.createdAt || (ordre as any)?.dateCreation || new Date().toISOString();
+
             if (moMap.has(mapKey)) {
               const item = moMap.get(mapKey);
               item.quantite += qte;
@@ -481,7 +539,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
             } else {
               moMap.set(mapKey, {
                 id: l.id,
-                dateHeureSaisie: l.dateHeureSaisie ?? null,
+                dateHeureSaisie: dateSaisie,
                 mo: resolvedMO,
                 quantite: qte,
                 prixUnitaire: unitPrice,
@@ -500,8 +558,9 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
           for (const [index, l] of fetchedPieces.entries()) {
             const pieceId = l.piece?.id ?? (l as any).pieceId;
             const isPdgKey = !l.isCustom && (l.piece?.type === 'PDG' || l.type === 'PDG');
+            const des = l.designationPds || l.designationPiece || l.piece?.designation || (l.isCustom ? 'Pièce à saisir' : 'Pièce détachée');
             const key = l.id != null ? `line_${l.id}` : isPdgKey ? `pdg_${index}` : l.isCustom
-              ? `custom_${(l.designationPds || '').trim().toLowerCase()}`
+              ? `custom_${index}_${des.trim().toLowerCase()}`
               : `cat_${pieceId}`;
 
             const catalogPiece = !l.isCustom && pieceId
@@ -521,6 +580,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
             const qte = l.quantite || 1;
             const isPdg = !l.isCustom && resolvedPiece?.type === 'PDG';
             const totalItem = (l.isCustom || isPdg) ? (unitPrice * qte) : undefined;
+            const dateSaisie = l.dateHeureSaisie || ordre?.createdAt || new Date().toISOString();
 
             if (piecesMap.has(key)) {
               const item = piecesMap.get(key);
@@ -535,12 +595,12 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
             } else {
               piecesMap.set(key, {
                 id: l.id,
-                dateHeureSaisie: l.dateHeureSaisie ?? null,
+                dateHeureSaisie: dateSaisie,
                 piece: resolvedPiece,
                 pieceIdTemp: pieceId,
                 quantite: qte,
                 isCustom: !!l.isCustom,
-                designationPds: l.designationPds,
+                designationPds: des,
                 prixUnitaire: unitPrice,
                 tauxRemise: Number(l.tauxRemise) || 0,
                 prixTotal: totalItem,
@@ -894,6 +954,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
         tauxRemise: Math.max(0, Math.min(100, Number(l.tauxRemise) || 0)),
         isCustom: l.isCustom ?? false,
         designationPds: l.isCustom ? l.designationPds : undefined,
+        dateHeureSaisie: l.dateHeureSaisie || new Date().toISOString(),
       };
     });
 
@@ -915,6 +976,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
         nbreHeure: l.quantite,
         prix: finalPrice,
         tauxRemise: Math.max(0, Math.min(100, Number(l.tauxRemise) || 0)),
+        dateHeureSaisie: l.dateHeureSaisie || new Date().toISOString(),
       };
     });
 

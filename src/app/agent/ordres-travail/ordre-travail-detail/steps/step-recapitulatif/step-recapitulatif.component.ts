@@ -106,6 +106,7 @@ export class StepRecapitulatifComponent implements OnInit {
       next: (res) => {
         this.data = res;
         this.loading = false;
+        this.associerDatesSaisieAuxPieces();
         this.loadOrdreReparationData(res);
         this.cdr.markForCheck();
 
@@ -208,6 +209,17 @@ export class StepRecapitulatifComponent implements OnInit {
             }
           }
         });
+      }
+    });
+
+    // 4. Récupération des lignes Step 3 (Pièces & MO) de l'OR pour les horodatages précis
+    this.ordreReparationService.getStepPiecesMo(orId).pipe(catchError(() => of(null))).subscribe({
+      next: (stepPieces) => {
+        if (stepPieces) {
+          this.ordrePiecesMoLines = stepPieces.lignesOrdreReparationPieces || (stepPieces as any)?.lignesPieces || [];
+          this.associerDatesSaisieAuxPieces();
+          this.cdr.markForCheck();
+        }
       }
     });
 
@@ -526,6 +538,112 @@ export class StepRecapitulatifComponent implements OnInit {
 
   get lignesMainDoeuvreList(): any[] {
     return this.data?.proforma?.lignesMainDoeuvre || (this.data?.proforma as any)?.lignesMainDoeuvres || [];
+  }
+
+  ordrePiecesMoLines: any[] = [];
+
+  getPieceDateHeureSaisie(ligne: any): string {
+    if (ligne?.dateHeureSaisie) return ligne.dateHeureSaisie;
+
+    const des = (ligne?.nom || ligne?.designationPiece || ligne?.designationPds || '').trim().toLowerCase();
+    const qte = Number(ligne?.quantite || 0);
+    const prix = Number(ligne?.prix || 0);
+
+    if (this.ordrePiecesMoLines && this.ordrePiecesMoLines.length > 0) {
+      const isCustom = !!(ligne?.isCustom || ligne?.type === 'PDS');
+      if (isCustom) {
+        const found = this.ordrePiecesMoLines.find((ol: any) =>
+          ol.isCustom &&
+          (ol.designationPds || '').trim().toLowerCase() === des &&
+          Math.round(Number(ol.prix || 0)) === Math.round(prix) &&
+          Number(ol.quantite || 0) === qte &&
+          ol.dateHeureSaisie
+        ) || this.ordrePiecesMoLines.find((ol: any) =>
+          ol.isCustom &&
+          (ol.designationPds || '').trim().toLowerCase() === des &&
+          ol.dateHeureSaisie
+        );
+        if (found?.dateHeureSaisie) {
+          ligne.dateHeureSaisie = found.dateHeureSaisie;
+          return found.dateHeureSaisie;
+        }
+      } else {
+        const pieceId = ligne?.pieceId ?? ligne?.piece?.id;
+        if (pieceId) {
+          const found = this.ordrePiecesMoLines.find((ol: any) =>
+            !ol.isCustom && (ol.pieceId ?? ol.piece?.id) === pieceId && ol.dateHeureSaisie
+          );
+          if (found?.dateHeureSaisie) {
+            ligne.dateHeureSaisie = found.dateHeureSaisie;
+            return found.dateHeureSaisie;
+          }
+        }
+      }
+    }
+
+    const fallback = (this.data as any)?.createdAt || (this.data as any)?.proforma?.dateCreation || (this.ordreReparation as any)?.createdAt || new Date().toISOString();
+    ligne.dateHeureSaisie = fallback;
+    return fallback;
+  }
+
+  associerDatesSaisieAuxPieces(): void {
+    const pieces = this.data?.proforma?.lignesPieces;
+    if (!pieces || pieces.length === 0) return;
+
+    const usedOrdrePieceIds = new Set<number>();
+    const fallbackDate = (this.data as any)?.createdAt || (this.data as any)?.proforma?.dateCreation || (this.ordreReparation as any)?.createdAt || new Date().toISOString();
+
+    for (const ligne of pieces) {
+      if (ligne.dateHeureSaisie) {
+        continue;
+      }
+
+      const isCustom = !!(ligne.isCustom || ligne.type === 'PDS');
+      const des = (ligne.nom || (ligne as any).designationPiece || (ligne as any).designationPds || '').trim().toLowerCase();
+      const qte = Number(ligne.quantite || 0);
+      const prix = Number(ligne.prix || 0);
+
+      let matchedOrdreLine: any = null;
+      if (this.ordrePiecesMoLines && this.ordrePiecesMoLines.length > 0) {
+        if (isCustom) {
+          matchedOrdreLine = this.ordrePiecesMoLines.find((ol: any) =>
+            !usedOrdrePieceIds.has(ol.id) &&
+            ol.isCustom &&
+            (ol.designationPds || '').trim().toLowerCase() === des &&
+            Math.round(Number(ol.prix || 0)) === Math.round(prix) &&
+            Number(ol.quantite || 0) === qte
+          );
+          if (!matchedOrdreLine) {
+            matchedOrdreLine = this.ordrePiecesMoLines.find((ol: any) =>
+              !usedOrdrePieceIds.has(ol.id) &&
+              ol.isCustom &&
+              (ol.designationPds || '').trim().toLowerCase() === des &&
+              Number(ol.quantite || 0) === qte
+            );
+          }
+          if (!matchedOrdreLine) {
+            matchedOrdreLine = this.ordrePiecesMoLines.find((ol: any) =>
+              !usedOrdrePieceIds.has(ol.id) &&
+              ol.isCustom &&
+              (ol.designationPds || '').trim().toLowerCase() === des
+            );
+          }
+        } else {
+          const pieceId = (ligne as any).pieceId ?? (ligne as any).piece?.id;
+          if (pieceId) {
+            matchedOrdreLine = this.ordrePiecesMoLines.find((ol: any) =>
+              !usedOrdrePieceIds.has(ol.id) && (ol.pieceId ?? ol.piece?.id) === pieceId
+            );
+          }
+        }
+      }
+
+      if (matchedOrdreLine && matchedOrdreLine.id != null) {
+        usedOrdrePieceIds.add(matchedOrdreLine.id);
+      }
+
+      ligne.dateHeureSaisie = matchedOrdreLine?.dateHeureSaisie || fallbackDate;
+    }
   }
 
   // ─── Gestion des Techniciens Affectés (OT Step 1) ─────────────────

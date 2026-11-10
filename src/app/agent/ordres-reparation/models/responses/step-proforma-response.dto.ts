@@ -24,6 +24,8 @@ export interface StepProformaResponseDto extends BaseStepResponseDto {
       montantTotal?: number;
       tauxRemise?: number;
       isCustom?: boolean;
+      type?: string;
+      dateHeureSaisie?: string | null;
     }[];
     lignesMainDoeuvres?: {
       id?: number;
@@ -32,6 +34,7 @@ export interface StepProformaResponseDto extends BaseStepResponseDto {
       tarifHoraire?: number;
       montantTotal?: number;
       tauxRemise?: number;
+      dateHeureSaisie?: string | null;
     }[];
   };
   vehicule?: {

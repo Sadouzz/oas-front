@@ -5,4 +5,6 @@ export interface BaseStepResponseDto {
   numero: string;
   statut: StatutOrdre;
   vehiculeId?: number;
+  createdAt?: string;
+  dateCreation?: string;
 }
