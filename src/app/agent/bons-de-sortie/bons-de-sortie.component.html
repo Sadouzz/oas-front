@@ -1119,7 +1119,7 @@
 
         @if ((selectedBon.lignesBonDeSortiePieces?.length ?? 0) > 0) {
         <div class="border border-oas-line rounded-xl overflow-hidden shadow-2xs bg-white">
-          <table class="w-full text-xs text-left">
+          <div class="max-w-full overflow-x-auto overscroll-x-contain"><table class="w-full text-xs text-left">
             <thead>
               <tr class="border-b border-oas-line bg-oas-bg/80 text-oas-ink2">
                 <th class="px-4 py-3 text-[11px] font-bold uppercase">Type / Désignation</th>
@@ -1190,7 +1190,7 @@
               </tr>
             </tfoot>
             }
-          </table>
+          </table></div>
         </div>
         } @else {
         <p class="text-center text-oas-muted text-xs py-5 italic bg-oas-bg rounded-xl border border-oas-line">

@@ -33,7 +33,7 @@
 <app-alert [success]="successMessage" [error]="errorMessage" />
 
 <!-- ── Cartes stats par catégorie (dynamiques) ────────── -->
-<div class="grid grid-cols-4 gap-4">
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
   @for (cat of categories; track cat.id) {
     @let count = items | categorieCount: cat.id;
     <div class="bg-white rounded-lg border border-oas-line p-4 shadow-sm flex items-center gap-3 cursor-pointer transition hover:shadow-md hover:-translate-y-0.5"

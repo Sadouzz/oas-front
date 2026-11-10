@@ -10,6 +10,7 @@ export interface LigneBonDeCommande {
     quantiteRecue?: number;
     prixUnitaire: number;
     montant: number;
+    dateHeureSaisie?: string | null;
     isCustom: boolean;
 }
 

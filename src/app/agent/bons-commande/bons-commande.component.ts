@@ -9,7 +9,7 @@ import { FournisseurService } from '../fournisseurs/fournisseur.service';
 import { VehiculeService } from '../vehicules/vehicule.service';
 import { PieceDetacheeService } from '../pieces-detachees/piece-detachee.service';
 import { ClientService } from '../clients/client.service';
-import { NgClass } from '@angular/common';
+import { DatePipe, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FournisseurModel, VehiculeModel, PieceDetache, UserModel, ClientModel, extractContent, extractPage } from '../../shared/models/index';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
@@ -22,7 +22,7 @@ import { PdfLayoutDialogService } from '../../shared/components/pdf-layout-dialo
 @Component({
   selector: 'app-bons-commande',
   standalone: true,
-  imports: [ReactiveFormsModule, FormsModule, NgClass, PaginationComponent, SearchableSelectComponent],
+  imports: [ReactiveFormsModule, FormsModule, DatePipe, NgClass, PaginationComponent, SearchableSelectComponent],
   templateUrl: './bons-commande.component.html',
 })
 export class BonsCommandeComponent extends BasePaginatedComponent implements OnInit, OnDestroy {

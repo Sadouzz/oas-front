@@ -250,10 +250,16 @@ export class TechnicienOrdreDetailComponent implements OnInit {
       if (map.has(key)) {
         const item = map.get(key);
         item.quantite = (item.quantite || 0) + (p.quantite || 1);
+        if (p.dateHeureSaisie) item.datesHeuresSaisie.push(p.dateHeureSaisie);
         if (!item.ids) item.ids = [item.id];
         item.ids.push(p.id);
       } else {
-        map.set(key, { ...p, quantite: p.quantite || 1, ids: [p.id] });
+        map.set(key, {
+          ...p,
+          quantite: p.quantite || 1,
+          ids: [p.id],
+          datesHeuresSaisie: p.dateHeureSaisie ? [p.dateHeureSaisie] : [],
+        });
       }
     }
 
@@ -279,10 +285,16 @@ export class TechnicienOrdreDetailComponent implements OnInit {
       if (map.has(key)) {
         const item = map.get(key);
         item.nbreHeure = (item.nbreHeure || 0) + (m.nbreHeure || 1);
+        if (m.dateHeureSaisie) item.datesHeuresSaisie.push(m.dateHeureSaisie);
         if (!item.ids) item.ids = [item.id];
         item.ids.push(m.id);
       } else {
-        map.set(key, { ...m, nbreHeure: m.nbreHeure || 1, ids: [m.id] });
+        map.set(key, {
+          ...m,
+          nbreHeure: m.nbreHeure || 1,
+          ids: [m.id],
+          datesHeuresSaisie: m.dateHeureSaisie ? [m.dateHeureSaisie] : [],
+        });
       }
     }
 

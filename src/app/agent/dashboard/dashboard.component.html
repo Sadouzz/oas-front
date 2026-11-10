@@ -260,7 +260,7 @@
         } @else if (recentFiches.length === 0) {
           <div class="py-12 text-center text-oas-muted text-sm">Aucun ordre enregistré</div>
         } @else {
-          <table class="w-full text-sm">
+          <div class="max-w-full overflow-x-auto overscroll-x-contain"><table class="w-full text-sm">
             <thead>
               <tr class="border-b border-oas-line">
                 <th class="text-left text-xs text-oas-muted px-5 py-3">N°</th>
@@ -279,7 +279,7 @@
                 </tr>
               }
             </tbody>
-          </table>
+          </table></div>
         }
       </div>
 
@@ -293,7 +293,7 @@
           @if (recentClients.length === 0) {
             <div class="py-12 text-center text-oas-muted text-sm">Aucun client enregistré</div>
           } @else {
-            <table class="w-full text-sm">
+            <div class="max-w-full overflow-x-auto overscroll-x-contain"><table class="w-full text-sm">
               <thead>
                 <tr class="border-b border-oas-line">
                   <th class="text-left text-xs text-oas-muted px-5 py-3">Client</th>
@@ -315,7 +315,7 @@
                   </tr>
                 }
               </tbody>
-            </table>
+            </table></div>
           }
         </div>
 
