@@ -50,10 +50,21 @@ export interface BonDeLivraisonOrdreContext {
 export class BonDeLivraisonService {
   private http = inject(HttpClient);
   private api = `${environment.apiUrl}/api/bons-de-livraison`;
-  list(params: { page: number; size: number; keyword?: string }): Observable<any> {
-    const query: Record<string, string> = { page: String(params.page), size: String(params.size) };
-    if (params.keyword) query['keyword'] = params.keyword;
+  list(params?: { page?: number; size?: number; keyword?: string; search?: string }): Observable<any> {
+    const query: Record<string, string> = {};
+    const page = params?.page !== undefined ? params.page : 0;
+    const size = params?.size !== undefined ? params.size : 10;
+    query['page'] = String(page);
+    query['size'] = String(size);
+    const searchVal = params?.keyword || params?.search;
+    if (searchVal) {
+      query['keyword'] = searchVal;
+      query['search'] = searchVal;
+    }
     return this.http.get<any>(this.api, { params: query });
+  }
+  getAll(params?: { page?: number; size?: number; keyword?: string; search?: string }): Observable<any> {
+    return this.list(params);
   }
   create(data: { ordreReparationId: number; appliquerTVA?: boolean; remarque?: string }): Observable<BonDeLivraison> {
     return this.http.post<BonDeLivraison>(this.api, data);
@@ -68,8 +79,9 @@ export class BonDeLivraisonService {
   creerFactureDepuisOrdre(ordreId: number, data: { modePaiement: string; remarque?: string }): Observable<{ id: number; numero: string }> {
     return this.http.post<{ id: number; numero: string }>(`${this.api}/ordres-reparation/${ordreId}/facture`, data);
   }
-  convertirFacture(id: number, modePaiement: string): Observable<any> {
-    return this.http.post(`${this.api}/${id}/convertir-en-facture`, { modePaiement });
+  convertirFacture(id: number, data: { modePaiement: string; remarque?: string } | string): Observable<any> {
+    const payload = typeof data === 'string' ? { modePaiement: data } : data;
+    return this.http.post(`${this.api}/${id}/convertir-en-facture`, payload);
   }
   convertirNote(id: number): Observable<any> {
     return this.http.post(`${this.api}/${id}/convertir-en-note-de-prix`, {});

@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, NgZone } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
+import { extractContent } from '../../shared/models/api-response.model';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { SearchableSelectComponent } from '../../shared/components/searchable-select/searchable-select.component';
 import { LucideEye, LucideLoader2, LucidePlus, LucideDownload, LucideSearch, LucideX } from '@lucide/angular';
@@ -25,6 +26,8 @@ export class BonsLivraisonComponent extends BasePaginatedComponent implements On
   private route = inject(ActivatedRoute);
   private authService = inject(AuthService);
   private pdfLayoutDialog = inject(PdfLayoutDialogService);
+  private cdr = inject(ChangeDetectorRef);
+  private ngZone = inject(NgZone);
   bons: BonDeLivraison[] = [];
   ordres: any[] = [];
   ordresPage = 0;
@@ -71,9 +74,34 @@ export class BonsLivraisonComponent extends BasePaginatedComponent implements On
 
   loadData(): void {
     this.loading = true;
-    this.api.list({ page: this.page - 1, size: this.pageSize, keyword: this.searchTerm || undefined }).subscribe({
-      next: response => { this.bons = this.applyPageResponse<BonDeLivraison>(response); this.loading = false; },
-      error: err => { this.errorMessage = err?.error?.message || 'Impossible de charger les bons de livraison.'; this.loading = false; }
+    this.errorMessage = '';
+    this.cdr.markForCheck();
+    this.api.list(this.getPageParams()).subscribe({
+      next: (response: any) => {
+        this.ngZone.run(() => {
+          try {
+            const list = this.applyPageResponse<BonDeLivraison>(response);
+            this.bons = Array.isArray(list) ? list : [];
+          } catch (e) {
+            console.error('Erreur extraction bons de livraison:', e);
+            this.bons = extractContent<BonDeLivraison>(response);
+            this.totalElements = this.bons.length;
+            this.serverTotalPages = Math.ceil(this.totalElements / this.pageSize) || 1;
+          }
+          this.loading = false;
+          this.cdr.detectChanges();
+        });
+      },
+      error: (err: any) => {
+        this.ngZone.run(() => {
+          this.bons = [];
+          this.totalElements = 0;
+          this.serverTotalPages = 1;
+          this.errorMessage = err?.error?.message || 'Impossible de charger les bons de livraison.';
+          this.loading = false;
+          this.cdr.detectChanges();
+        });
+      }
     });
   }
 
@@ -87,23 +115,30 @@ export class BonsLivraisonComponent extends BasePaginatedComponent implements On
     const requestVersion = ++this.ordresLoadVersion;
     this.loadingOrdres = true;
     this.ordresError = '';
+    this.cdr.markForCheck();
     this.orApi.getAll({ page, size: 20, search: keyword || undefined }).subscribe({
       next: response => {
         if (requestVersion !== this.ordresLoadVersion) return;
-        const data = response?.content ?? response?.data?.content ?? [];
-        this.ordres = append ? [...this.ordres, ...data] : data;
-        if (this.ordreId && this.ordreParContexte && Number(this.ordreParContexte.id) === Number(this.ordreId)
-            && !this.ordres.some(o => Number(o.id) === Number(this.ordreId))) {
-          this.ordres.unshift(this.ordreParContexte);
-        }
-        this.ordresPage = page;
-        this.ordresTotal = response?.totalElements ?? response?.data?.totalElements ?? this.ordres.length;
-        this.loadingOrdres = false;
+        this.ngZone.run(() => {
+          const data = response?.content ?? response?.data?.content ?? [];
+          this.ordres = append ? [...this.ordres, ...data] : data;
+          if (this.ordreId && this.ordreParContexte && Number(this.ordreParContexte.id) === Number(this.ordreId)
+              && !this.ordres.some(o => Number(o.id) === Number(this.ordreId))) {
+            this.ordres.unshift(this.ordreParContexte);
+          }
+          this.ordresPage = page;
+          this.ordresTotal = response?.totalElements ?? response?.data?.totalElements ?? this.ordres.length;
+          this.loadingOrdres = false;
+          this.cdr.detectChanges();
+        });
       },
       error: err => {
         if (requestVersion !== this.ordresLoadVersion) return;
-        this.ordresError = err?.error?.message || 'Impossible de charger les ordres de réparation.';
-        this.loadingOrdres = false;
+        this.ngZone.run(() => {
+          this.ordresError = err?.error?.message || 'Impossible de charger les ordres de réparation.';
+          this.loadingOrdres = false;
+          this.cdr.detectChanges();
+        });
       }
     });
   }
@@ -149,29 +184,55 @@ export class BonsLivraisonComponent extends BasePaginatedComponent implements On
   onOrderChange(id: number | null): void {
     this.ordreId = id; this.contexteOrdre = null; this.bonsSortie = []; this.modalError = '';
     const loadVersion = ++this.contexteLoadVersion;
-    if (!id) return;
+    if (!id) {
+      this.cdr.markForCheck();
+      return;
+    }
     this.loadingBs = true;
+    this.cdr.markForCheck();
     this.api.getContexteOrdre(id).subscribe({
       next: contexte => {
         if (loadVersion !== this.contexteLoadVersion) return;
-        this.contexteOrdre = contexte;
-        this.bonsSortie = contexte.bonsDeSortieValides ?? [];
-        this.appliquerTVA = contexte.tvaApplicable ?? true;
-        this.loadingBs = false;
+        this.ngZone.run(() => {
+          this.contexteOrdre = contexte;
+          this.bonsSortie = contexte?.bonsDeSortieValides ?? [];
+          this.appliquerTVA = contexte?.tvaApplicable ?? true;
+          this.loadingBs = false;
+          this.cdr.detectChanges();
+        });
       },
       error: err => {
         if (loadVersion !== this.contexteLoadVersion) return;
-        this.modalError = err?.error?.message || 'Impossible de charger le contexte de livraison de cet ordre.';
-        this.loadingBs = false;
+        this.ngZone.run(() => {
+          this.modalError = err?.error?.message || 'Impossible de charger le contexte de livraison de cet ordre.';
+          this.loadingBs = false;
+          this.cdr.detectChanges();
+        });
       }
     });
   }
   create(): void {
     if (!this.ordreId || !this.bonsSortie.length || this.contexteOrdre?.bonDeLivraison || this.saving) return;
     this.saving = true; this.modalError = '';
+    this.cdr.markForCheck();
     this.api.create({ ordreReparationId: this.ordreId, appliquerTVA: this.appliquerTVA, remarque: this.remarque || undefined }).subscribe({
-      next: () => { this.saving = false; this.showCreateModal = false; this.successMessage = 'Bon de livraison créé.'; this.page = 1; this.loadData(); },
-      error: err => { this.saving = false; this.modalError = err?.error?.message || 'La création du bon de livraison a échoué.'; }
+      next: () => {
+        this.ngZone.run(() => {
+          this.saving = false;
+          this.showCreateModal = false;
+          this.successMessage = 'Bon de livraison créé.';
+          this.page = 1;
+          this.loadData();
+          this.cdr.detectChanges();
+        });
+      },
+      error: err => {
+        this.ngZone.run(() => {
+          this.saving = false;
+          this.modalError = err?.error?.message || 'La création du bon de livraison a échoué.';
+          this.cdr.detectChanges();
+        });
+      }
     });
   }
   convertirFactureDuContexte(): void {
@@ -184,14 +245,21 @@ export class BonsLivraisonComponent extends BasePaginatedComponent implements On
     this.errorMessage = '';
     this.loadingDetail = true;
     this.showDetailModal = true;
+    this.cdr.markForCheck();
     this.api.getById(bon.id).subscribe({
       next: detail => {
-        if (this.selectedBon?.id === bon.id) this.selectedBon = detail;
-        this.loadingDetail = false;
+        this.ngZone.run(() => {
+          if (this.selectedBon?.id === bon.id) this.selectedBon = detail;
+          this.loadingDetail = false;
+          this.cdr.detectChanges();
+        });
       },
       error: err => {
-        this.loadingDetail = false;
-        this.errorMessage = err?.error?.message || 'Impossible de charger le détail du bon de livraison.';
+        this.ngZone.run(() => {
+          this.loadingDetail = false;
+          this.errorMessage = err?.error?.message || 'Impossible de charger le détail du bon de livraison.';
+          this.cdr.detectChanges();
+        });
       }
     });
   }
@@ -215,20 +283,27 @@ export class BonsLivraisonComponent extends BasePaginatedComponent implements On
     if (this.invoiceBonId == null || this.actionLoading) return;
     this.actionLoading = true;
     this.modalError = '';
+    this.cdr.markForCheck();
     this.api.convertirFacture(this.invoiceBonId, this.invoiceModePaiement).subscribe({
       next: result => {
-        this.actionLoading = false;
-        this.showInvoiceModal = false;
-        this.successMessage = `Facture ${result?.numero || ''} créée depuis le bon ${this.invoiceBonNumero}.`.trim();
-        this.invoiceBonId = null;
-        this.invoiceBonNumero = '';
-        if (this.ordreId) this.onOrderChange(this.ordreId);
-        this.loadData();
-        if (this.selectedBon) this.selectedBon = { ...this.selectedBon, factureId: result?.id, factureNumero: result?.numero };
+        this.ngZone.run(() => {
+          this.actionLoading = false;
+          this.showInvoiceModal = false;
+          this.successMessage = `Facture ${result?.numero || ''} créée depuis le bon ${this.invoiceBonNumero}.`.trim();
+          this.invoiceBonId = null;
+          this.invoiceBonNumero = '';
+          if (this.ordreId) this.onOrderChange(this.ordreId);
+          this.loadData();
+          if (this.selectedBon) this.selectedBon = { ...this.selectedBon, factureId: result?.id, factureNumero: result?.numero };
+          this.cdr.detectChanges();
+        });
       },
       error: err => {
-        this.actionLoading = false;
-        this.modalError = err?.error?.message || 'La création de la facture a échoué.';
+        this.ngZone.run(() => {
+          this.actionLoading = false;
+          this.modalError = err?.error?.message || 'La création de la facture a échoué.';
+          this.cdr.detectChanges();
+        });
       }
     });
   }
@@ -241,8 +316,13 @@ export class BonsLivraisonComponent extends BasePaginatedComponent implements On
     this.api.convertirNote(bon.id).subscribe({ next: result => this.afterAction('Note de prix créée depuis le bon de livraison.', { noteDePrixId: result?.id, noteDePrixNumero: result?.numero }), error: err => { this.actionLoading = false; this.errorMessage = err?.error?.message || 'La conversion en note de prix a échoué.'; } });
   }
   private afterAction(message: string, update: Partial<BonDeLivraison>): void {
-    this.actionLoading = false; this.successMessage = message; this.loadData();
-    if (this.selectedBon) this.selectedBon = { ...this.selectedBon, ...update };
+    this.ngZone.run(() => {
+      this.actionLoading = false;
+      this.successMessage = message;
+      this.loadData();
+      if (this.selectedBon) this.selectedBon = { ...this.selectedBon, ...update };
+      this.cdr.detectChanges();
+    });
   }
   async print(bon: BonDeLivraison): Promise<void> {
     const layoutKey = await this.pdfLayoutDialog.chooseLayout();

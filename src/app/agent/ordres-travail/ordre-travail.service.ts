@@ -17,6 +17,7 @@ import {
   StepReparationDto,
   DocumentOrdreTravailDto,
   TypeDocumentOt,
+  StepBLResponseDto,
   StepPaiementResponseDto,
   StepPretALivrerResponseDto,
   StepPretALivrerDto,
@@ -257,13 +258,18 @@ export class OrdreTravailService {
     );
   }
 
-  // Étape 6 : Paiement
-  getStepPaiement(id: number): Observable<StepPaiementResponseDto> {
+  // Étape : Bon de Livraison (BL)
+  getStepBL(id: number): Observable<StepBLResponseDto> {
     return this.http.get<any>(
-      `${this.api}/${id}/step-paiement`
+      `${this.api}/${id}/step-bl`
     ).pipe(
       map((res: any) => (res && res.data !== undefined ? res.data : res))
     );
+  }
+
+  // Étape : Paiement (alias rétrocompatible)
+  getStepPaiement(id: number): Observable<StepPaiementResponseDto> {
+    return this.getStepBL(id);
   }
 
   updateStepPaiement(id: number, data?: any): Observable<void> {

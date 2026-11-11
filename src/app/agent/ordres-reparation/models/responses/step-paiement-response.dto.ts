@@ -1,22 +1,6 @@
-import { BaseStepResponseDto } from './base-response.dto';
+import { StepBLResponseDto } from './step-bl-response.dto';
 
-export interface StepPaiementResponseDto extends BaseStepResponseDto {
-  etape?: number;
-  clientId?: number;
-  tvaApplicable?: boolean;
-  facture?: {
-    id: number;
-    numero?: string;
-    statut: string;
-    montantAPayer?: number;
-    montantPaye?: number;
-    montantRestant?: number;
-    montantTotal?: number;
-    timbreFiscalRate?: number | null;
-    montantTimbre?: number | null;
-    tvaApplicable?: boolean | null;
-    modePaiement?: string;
-    client?: string;
-    vehicule?: string;
-  };
-}
+/**
+ * @deprecated Utiliser StepBLResponseDto
+ */
+export type StepPaiementResponseDto = StepBLResponseDto;

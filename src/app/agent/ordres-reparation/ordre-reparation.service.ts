@@ -30,6 +30,7 @@ import {
   StepProformaResponseDto,
   StepApprovisionnementResponseDto,
   StepOrdreTravailResponseDto,
+  StepBLResponseDto,
   StepPaiementResponseDto,
   StepPretALivrerResponseDto,
   StepLivraisonResponseDto
@@ -144,9 +145,15 @@ export class OrdreReparationService {
     );
   }
 
-  // 6. Paiement
+  // 6. BL / Paiement
+  getStepBL(id: number): Observable<StepBLResponseDto> {
+    return this.http.get<any>(`${this.api}/${id}/step-bl`).pipe(
+      map((res: any) => (res && res.data !== undefined ? res.data : res))
+    );
+  }
+
   getStepPaiement(id: number): Observable<StepPaiementResponseDto> {
-    return this.http.get<any>(`${this.api}/${id}/step-paiement`).pipe(
+    return this.http.get<any>(`${this.api}/${id}/step-bl`).pipe(
       map((res: any) => (res && res.data !== undefined ? res.data : res))
     );
   }

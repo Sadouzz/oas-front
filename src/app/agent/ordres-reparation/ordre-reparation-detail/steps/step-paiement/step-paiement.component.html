@@ -18,6 +18,13 @@
         </svg>
         Module Factures
       </a>
+      <a routerLink="/app/notes-prix"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-oas-line bg-white hover:bg-oas-bg text-xs font-semibold text-oas-ink transition shadow-2xs">
+        <svg class="w-3.5 h-3.5 text-oas-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+        </svg>
+        Module Notes de Prix
+      </a>
     </div>
   </div>
 
@@ -31,7 +38,8 @@
   } @else if (data) {
 
     <!-- CAS 1 : UNE FACTURE EXISTE -->
-    @if (hasFacture() && data.facture) {
+    @if (hasFacture() && factureCourante) {
+      @let facture = factureCourante;
       @let isPayee = isFacturePayee();
       <div class="p-6 rounded-2xl border shadow-xs space-y-5"
         [class]="isPayee ? 'bg-gradient-to-br from-white to-emerald-50/30 border-emerald-200' : 'bg-gradient-to-br from-white to-amber-50/30 border-amber-200'">
@@ -51,11 +59,11 @@
                   [class]="isPayee ? 'text-emerald-800' : 'text-amber-800'">Facture Client</span>
                 <span class="px-2.5 py-0.5 rounded-full text-xs font-bold border"
                   [class]="isPayee ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-amber-100 text-amber-800 border-amber-300'">
-                  {{ isPayee ? 'RÈGLEMENT CONFIRMÉ' : ('STATUT : ' + (data.facture.statut || 'EN ATTENTE')) }}
+                  {{ isPayee ? 'RÈGLEMENT CONFIRMÉ' : ('STATUT : ' + (facture.statut || 'EN ATTENTE')) }}
                 </span>
               </div>
               <h3 class="text-lg font-black text-oas-ink mt-0.5">
-                {{ data.facture.numero || ('Facture #' + data.facture.id) }}
+                {{ facture.numero || ('Facture #' + facture.id) }}
               </h3>
             </div>
           </div>
@@ -71,7 +79,7 @@
               </button>
             }
 
-            <a routerLink="/app/factures" [queryParams]="{ keyword: data.facture.numero }"
+            <a routerLink="/app/factures" [queryParams]="{ keyword: facture.numero }"
               class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-oas-line bg-white hover:bg-oas-bg text-xs font-semibold text-oas-ink transition cursor-pointer">
               <svg class="w-3.5 h-3.5 text-oas-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -87,14 +95,14 @@
           <div class="p-3 rounded-xl bg-white/70 border border-oas-line/80">
             <span class="text-oas-muted block mb-0.5">Montant Total à Payer :</span>
             <span class="font-mono text-base font-bold text-oas-ink">
-              {{ (data.facture.montantAPayer || data.facture.montantTotal || 0) | number:'1.0-0' }} F CFA
+              {{ (facture.montantAPayer || facture.montantTotal || 0) | number:'1.0-0' }} F CFA
             </span>
           </div>
 
           <div class="p-3 rounded-xl bg-white/70 border border-oas-line/80">
             <span class="text-oas-muted block mb-0.5">Montant Déjà Réglé :</span>
             <span class="font-mono text-base font-bold text-emerald-700">
-              {{ (data.facture.montantPaye || 0) | number:'1.0-0' }} F CFA
+              {{ (facture.montantPaye || 0) | number:'1.0-0' }} F CFA
             </span>
           </div>
 
@@ -102,17 +110,17 @@
             <span class="text-oas-muted block mb-0.5">Reste à Régler :</span>
             <span class="font-mono text-base font-black"
               [class]="isPayee ? 'text-emerald-700' : 'text-red-600'">
-              {{ (data.facture.montantRestant || 0) | number:'1.0-0' }} F CFA
+              {{ (facture.montantRestant || 0) | number:'1.0-0' }} F CFA
             </span>
           </div>
 
           <div class="p-3 rounded-xl bg-white/70 border border-oas-line/80">
             <span class="text-oas-muted block mb-0.5">Client & Véhicule :</span>
-            <span class="font-semibold text-oas-ink text-xs truncate block" [title]="data.facture.client || ''">
-              {{ data.facture.client || 'Client' }}
+            <span class="font-semibold text-oas-ink text-xs truncate block" [title]="facture.client || data.clientNom || ''">
+              {{ facture.client || data.clientNom || 'Client' }}
             </span>
             <span class="text-oas-muted text-[11px]">
-              {{ data.facture.vehicule || '' }}
+              {{ facture.vehicule || data.immatriculation || '' }}
             </span>
           </div>
         </div>
@@ -133,15 +141,95 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
             <span>
-              <strong>Paiement en attente :</strong> Un solde de <strong>{{ (data.facture.montantRestant || 0) | number:'1.0-0' }} F CFA</strong> reste à percevoir.
+              <strong>Paiement en attente :</strong> Un solde de <strong>{{ (facture.montantRestant || 0) | number:'1.0-0' }} F CFA</strong> reste à percevoir.
             </span>
           </div>
         }
 
       </div>
+    } @else if (hasNoteDePrix() && noteDePrixInfo) {
+
+      <!-- CAS 2 : UNE NOTE DE PRIX EXISTE -->
+      @let note = noteDePrixInfo;
+      <div class="p-6 rounded-2xl border shadow-xs space-y-5 bg-gradient-to-br from-white to-blue-50/30 border-blue-200">
+
+        <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-blue-100">
+          <div class="flex items-center gap-3.5">
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center font-bold shadow-2xs bg-blue-100 text-blue-800">
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs uppercase font-bold tracking-wider text-blue-800">Note de Prix</span>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold border bg-blue-100 text-blue-800 border-blue-300">
+                  {{ 'GÉNÉRÉE' }}
+                </span>
+              </div>
+              <h3 class="text-lg font-black text-oas-ink mt-0.5">
+                {{ note.numero || ('Note de prix #' + note.id) }}
+              </h3>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2.5">
+            <a routerLink="/app/notes-prix" [queryParams]="{ keyword: note.numero }"
+              class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-oas-line bg-white hover:bg-oas-bg text-xs font-semibold text-oas-ink transition cursor-pointer">
+              <svg class="w-3.5 h-3.5 text-oas-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              <span>Consulter</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Montants & Détails -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs pt-1">
+          <div class="p-3 rounded-xl bg-white/70 border border-oas-line/80">
+            <span class="text-oas-muted block mb-0.5">Montant Total :</span>
+            <span class="font-mono text-base font-bold text-oas-ink">
+              {{ (note.montantTotal || note.montantTTC || note.montantHT || totalCalculatedHT) | number:'1.0-0' }} F CFA
+            </span>
+          </div>
+
+          <div class="p-3 rounded-xl bg-white/70 border border-oas-line/80">
+            <span class="text-oas-muted block mb-0.5">Client & Véhicule :</span>
+            <span class="font-semibold text-oas-ink text-xs truncate block" [title]="data.clientNom || note.client || ''">
+              {{ data.clientNom || note.client || 'Client' }}
+            </span>
+            <span class="text-oas-muted text-[11px]">
+              {{ data.immatriculation || note.vehicule || '' }}
+            </span>
+          </div>
+
+          <div class="p-3 rounded-xl bg-white/70 border border-oas-line/80">
+            <span class="text-oas-muted block mb-0.5">Type de Facturation :</span>
+            <span class="font-semibold text-blue-700 text-xs block">
+              Note de prix (Bon de livraison converti)
+            </span>
+            <span class="text-oas-muted text-[11px]">
+              {{ data.tvaApplicable ? 'TVA Applicable' : 'Sans TVA' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Alerte état Note de Prix -->
+        <div class="p-3.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 text-xs flex items-center gap-2.5">
+          <svg class="w-5 h-5 text-blue-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>
+            <strong>Note de prix enregistrée :</strong> La facturation de ce dossier est prise en compte sous forme de Note de prix. Vous pouvez poursuivre vers la livraison du véhicule.
+          </span>
+        </div>
+
+      </div>
+
     } @else {
 
-      <!-- CAS 2 : AUCUNE FACTURE N'EXISTE ENCORE -->
+      <!-- CAS 3 : AUCUNE FACTURE OU NOTE DE PRIX N'EXISTE ENCORE -->
       <div class="p-8 rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50/30 text-center space-y-4">
         <div class="w-14 h-14 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto shadow-2xs">
           <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -150,22 +238,308 @@
         </div>
 
         <div class="max-w-md mx-auto space-y-1">
-          <h3 class="text-base font-bold text-oas-ink">Aucune Facture Associée</h3>
+          <h3 class="text-base font-bold text-oas-ink">Facturation du Bon de Livraison</h3>
           <p class="text-xs text-oas-muted">
-            La facture finale n'a pas encore été générée pour cet Ordre de Réparation.
+            Le bon de livraison n'a pas encore été converti. Choisissez le document à émettre pour clôturer cet Ordre de Réparation :
           </p>
         </div>
 
-        <button (click)="ouvrirModalCreationFacture()"
-          class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-sm transition cursor-pointer">
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          <span>Générer la Facture Client</span>
-        </button>
+        <div class="flex flex-wrap items-center justify-center gap-3 pt-2">
+          <!-- Bouton 1 : Convertir en Facture -->
+          <button type="button" (click)="ouvrirModalCreationFacture()"
+            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition cursor-pointer">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span>Convertir en Facture</span>
+          </button>
+
+          <!-- Bouton 2 : Convertir en Note de prix -->
+          <button type="button" (click)="ouvrirModalConfirmationNote()"
+            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition cursor-pointer">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+            </svg>
+            <span>Convertir en Note de prix</span>
+          </button>
+        </div>
       </div>
 
     }
+
+    <!-- ══════════════════════════════════════════════════════════════════════ -->
+    <!-- SECTION : ARTICLES CHIFfRÉS & PRESTATIONS (BL / FACTURATION)          -->
+    <!-- ══════════════════════════════════════════════════════════════════════ -->
+    <div class="bg-white border border-oas-line rounded-2xl p-5 shadow-2xs space-y-4">
+
+      <!-- En-tête de la section -->
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-oas-line pb-3">
+        <div>
+          <h3 class="text-base font-bold text-oas-ink flex items-center gap-2">
+            <svg class="w-5 h-5 text-oas-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            </svg>
+            Articles & Prestations de l’Ordre (BL)
+          </h3>
+          <p class="text-xs text-oas-muted mt-0.5">
+            Détail des pièces au catalogue (PDP), pièces commandées (PDG), pièces sur mesure (PDS) et de la main-d’œuvre.
+          </p>
+        </div>
+
+        @if (bonDeLivraisonNumero) {
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-oas-muted">Bon de Livraison :</span>
+            <span class="px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 font-mono font-bold text-xs">
+              {{ bonDeLivraisonNumero }}
+            </span>
+          </div>
+        }
+      </div>
+
+      <!-- Filtres / Onglets -->
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex flex-wrap items-center gap-1.5 p-1 bg-oas-bg rounded-xl border border-oas-line text-xs font-semibold">
+          <button type="button" (click)="setFilter('TOUS')"
+            [class]="selectedFilter === 'TOUS' ? 'bg-white text-oas-ink shadow-xs font-bold' : 'text-oas-muted hover:text-oas-ink'"
+            class="px-3 py-1.5 rounded-lg transition cursor-pointer">
+            Tous ({{ totalArticlesCount }})
+          </button>
+          <button type="button" (click)="setFilter('PDP')"
+            [class]="selectedFilter === 'PDP' ? 'bg-white text-blue-700 shadow-xs font-bold' : 'text-oas-muted hover:text-oas-ink'"
+            class="px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+            <span>PDP ({{ lignesPDP.length }})</span>
+          </button>
+          <button type="button" (click)="setFilter('PDG')"
+            [class]="selectedFilter === 'PDG' ? 'bg-white text-emerald-700 shadow-xs font-bold' : 'text-oas-muted hover:text-oas-ink'"
+            class="px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span>PDG ({{ lignesPDG.length }})</span>
+          </button>
+          <button type="button" (click)="setFilter('PDS')"
+            [class]="selectedFilter === 'PDS' ? 'bg-white text-amber-700 shadow-xs font-bold' : 'text-oas-muted hover:text-oas-ink'"
+            class="px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+            <span>PDS ({{ lignesPDS.length }})</span>
+          </button>
+          <button type="button" (click)="setFilter('MO')"
+            [class]="selectedFilter === 'MO' ? 'bg-white text-purple-700 shadow-xs font-bold' : 'text-oas-muted hover:text-oas-ink'"
+            class="px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+            <span>Main-d’œuvre ({{ lignesMainDoeuvres.length }})</span>
+          </button>
+        </div>
+
+        <div class="text-xs text-oas-muted">
+          Total net HT : <strong class="text-oas-ink font-mono text-sm">{{ totalCalculatedHT | number:'1.0-2' }} FCFA</strong>
+        </div>
+      </div>
+
+      <!-- 1. TABLEAU DES PIÈCES (PDP, PDG, PDS) -->
+      @if (selectedFilter !== 'MO') {
+        <div class="space-y-2">
+          <div class="flex items-center justify-between text-xs font-bold text-oas-muted px-1">
+            <span class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-oas-accent"></span>
+              Pièces Détachées ({{ piecesFiltrees.length }})
+            </span>
+            <span>Sous-total HT : {{ totalPiecesHT | number:'1.0-2' }} FCFA</span>
+          </div>
+
+          <div class="overflow-x-auto rounded-xl border border-oas-line">
+            <table class="w-full text-xs text-left">
+              <thead class="bg-oas-bg/70 text-oas-muted uppercase font-bold text-[11px] border-b border-oas-line">
+                <tr>
+                  <th class="px-4 py-3 w-16 text-center">Type</th>
+                  <th class="px-4 py-3">Désignation & Détails</th>
+                  <th class="px-3 py-3 text-center w-24">Quantité</th>
+                  <th class="px-4 py-3 text-right w-36">Prix unitaire HT</th>
+                  <th class="px-4 py-3 text-right w-28">Remise</th>
+                  <th class="px-4 py-3 text-right w-36">Total Net HT</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-oas-line">
+                @for (ligne of piecesFiltrees; track ligne.id || $index) {
+                  @let pType = getPieceType(ligne);
+                  @let pDesig = getPieceDesignation(ligne);
+                  <tr class="hover:bg-slate-50/70 transition">
+                    <!-- Type Badge -->
+                    <td class="px-4 py-3 text-center align-top">
+                      <span class="inline-flex px-2 py-0.5 rounded text-[10px] font-extrabold border"
+                        [class.bg-blue-100]="pType === 'PDP'"
+                        [class.text-blue-800]="pType === 'PDP'"
+                        [class.border-blue-300]="pType === 'PDP'"
+                        [class.bg-emerald-100]="pType === 'PDG'"
+                        [class.text-emerald-800]="pType === 'PDG'"
+                        [class.border-emerald-300]="pType === 'PDG'"
+                        [class.bg-amber-100]="pType === 'PDS'"
+                        [class.text-amber-800]="pType === 'PDS'"
+                        [class.border-amber-300]="pType === 'PDS'">
+                        {{ pType }}
+                      </span>
+                    </td>
+
+                    <!-- Désignation & Date Heure -->
+                    <td class="px-4 py-3 align-top">
+                      <div class="font-bold text-oas-ink text-sm">{{ pDesig }}</div>
+                      @if (ligne.referencePiece && ligne.referencePiece !== pDesig) {
+                        <div class="text-[11px] text-oas-muted font-mono mt-0.5">Réf: {{ ligne.referencePiece }}</div>
+                      }
+                      @if (ligne.dateHeureSaisie && pType === 'PDS') {
+                        <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium mt-1.5 border"
+                          [class]="pType === 'PDS' ? 'bg-amber-50 text-amber-900 border-amber-200 shadow-2xs' : 'bg-slate-50 text-slate-700 border-slate-200'"
+                          [title]="'Date et heure de saisie : ' + (ligne.dateHeureSaisie | date:'dd/MM/yyyy HH:mm:ss')">
+                          <svg class="w-3.5 h-3.5 shrink-0" [class]="pType === 'PDS' ? 'text-amber-600' : 'text-slate-500'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span>Saisie le <strong>{{ ligne.dateHeureSaisie | date:'dd/MM/yyyy' }}</strong> à <strong>{{ ligne.dateHeureSaisie | date:'HH:mm:ss' }}</strong></span>
+                        </div>
+                      }
+                    </td>
+
+                    <!-- Quantité -->
+                    <td class="px-3 py-3 text-center font-bold text-oas-ink text-sm align-top">
+                      {{ ligne.quantite }}
+                    </td>
+
+                    <!-- Prix unitaire -->
+                    <td class="px-4 py-3 text-right font-medium whitespace-nowrap align-top">
+                      <span class="text-oas-ink font-mono">{{ (ligne.prix || 0) | number:'1.0-0' }} FCFA</span>
+                    </td>
+
+                    <!-- Remise -->
+                    <td class="px-4 py-3 text-right whitespace-nowrap align-top">
+                      @if ((ligne.tauxRemise || 0) > 0) {
+                        <span class="inline-flex px-1.5 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          −{{ ligne.tauxRemise }}%
+                        </span>
+                      } @else {
+                        <span class="text-oas-muted text-[11px]">—</span>
+                      }
+                    </td>
+
+                    <!-- Total Net HT -->
+                    <td class="px-4 py-3 text-right font-black text-oas-ink text-sm whitespace-nowrap align-top font-mono">
+                      {{ (ligne.montantTotal ?? ((ligne.prix || 0) * (ligne.quantite || 0) * (1 - (ligne.tauxRemise || 0) / 100))) | number:'1.0-2' }} FCFA
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="6" class="px-4 py-6 text-center text-oas-muted italic">
+                      Aucune pièce détachée {{ selectedFilter !== 'TOUS' ? '(' + selectedFilter + ')' : '' }} trouvée.
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+      <!-- 2. TABLEAU DE LA MAIN-D'ŒUVRE -->
+      @if (selectedFilter === 'TOUS' || selectedFilter === 'MO') {
+        <div class="space-y-2 pt-2">
+          <div class="flex items-center justify-between text-xs font-bold text-oas-muted px-1">
+            <span class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+              Prestations de Main-d’œuvre ({{ moFiltrees.length }})
+            </span>
+            <span>Sous-total HT : {{ totalMOHT | number:'1.0-2' }} FCFA</span>
+          </div>
+
+          <div class="overflow-x-auto rounded-xl border border-oas-line">
+            <table class="w-full text-xs text-left">
+              <thead class="bg-oas-bg/70 text-oas-muted uppercase font-bold text-[11px] border-b border-oas-line">
+                <tr>
+                  <th class="px-4 py-3 w-16 text-center">Type</th>
+                  <th class="px-4 py-3">Description de la prestation</th>
+                  <th class="px-3 py-3 text-center w-24">Heures</th>
+                  <th class="px-4 py-3 text-right w-36">Tarif horaire HT</th>
+                  <th class="px-4 py-3 text-right w-28">Remise</th>
+                  <th class="px-4 py-3 text-right w-36">Total Net HT</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-oas-line">
+                @for (ligne of moFiltrees; track ligne.id || $index) {
+                  <tr class="hover:bg-slate-50/70 transition">
+                    <!-- Type Badge -->
+                    <td class="px-4 py-3 text-center align-top">
+                      <span class="inline-flex px-2 py-0.5 rounded text-[10px] font-extrabold bg-purple-100 text-purple-800 border border-purple-300">
+                        MO
+                      </span>
+                    </td>
+
+                    <!-- Description & Date Heure -->
+                    <td class="px-4 py-3 align-top">
+                      <div class="font-bold text-oas-ink text-sm">{{ ligne.descriptionMainDoeuvre || 'Prestation main-d\'œuvre' }}</div>
+
+                    </td>
+
+                    <!-- Nombre d'heures -->
+                    <td class="px-3 py-3 text-center font-bold text-oas-ink text-sm align-top">
+                      {{ ligne.nbreHeure }} h
+                    </td>
+
+                    <!-- Tarif horaire -->
+                    <td class="px-4 py-3 text-right font-medium whitespace-nowrap align-top">
+                      <span class="text-oas-ink font-mono">{{ (ligne.tarifHoraire || 0) | number:'1.0-0' }} FCFA</span>
+                    </td>
+
+                    <!-- Remise -->
+                    <td class="px-4 py-3 text-right whitespace-nowrap align-top">
+                      @if ((ligne.tauxRemise || 0) > 0) {
+                        <span class="inline-flex px-1.5 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          −{{ ligne.tauxRemise }}%
+                        </span>
+                      } @else {
+                        <span class="text-oas-muted text-[11px]">—</span>
+                      }
+                    </td>
+
+                    <!-- Total Net HT -->
+                    <td class="px-4 py-3 text-right font-black text-oas-ink text-sm whitespace-nowrap align-top font-mono">
+                      {{ (ligne.montantTotal ?? ((ligne.tarifHoraire || 0) * (ligne.nbreHeure || 0) * (1 - (ligne.tauxRemise || 0) / 100))) | number:'1.0-2' }} FCFA
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="6" class="px-4 py-6 text-center text-oas-muted italic">
+                      Aucune prestation de main-d’œuvre trouvée.
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+      <!-- Synthèse Financière du BL / Facture -->
+      <div class="mt-4 pt-4 border-t border-oas-line bg-oas-bg/50 rounded-xl p-4 flex flex-wrap items-center justify-between gap-4 text-xs">
+        <div class="flex items-center gap-4 text-oas-muted">
+          <span>Pièces : <strong class="text-oas-ink font-mono">{{ totalPiecesHT | number:'1.0-2' }} FCFA</strong></span>
+          <span>·</span>
+          <span>Main-d’œuvre : <strong class="text-oas-ink font-mono">{{ totalMOHT | number:'1.0-2' }} FCFA</strong></span>
+        </div>
+        <div class="flex items-center gap-6 text-sm">
+          <div>
+            <span class="text-oas-muted block text-xs">Total HT Net :</span>
+            <strong class="text-oas-ink font-mono font-bold">{{ totalCalculatedHT | number:'1.0-2' }} FCFA</strong>
+          </div>
+          @if (data.tvaApplicable && (data.montantTVA || 0) > 0) {
+            <div>
+              <span class="text-oas-muted block text-xs">TVA :</span>
+              <strong class="text-oas-ink font-mono font-bold">{{ data.montantTVA | number:'1.0-2' }} FCFA</strong>
+            </div>
+            <div>
+              <span class="text-oas-muted block text-xs">Total TTC :</span>
+              <strong class="text-emerald-700 font-mono font-black text-base">{{ (data.montantTTC || (totalCalculatedHT + (data.montantTVA || 0))) | number:'1.0-2' }} FCFA</strong>
+            </div>
+          }
+        </div>
+      </div>
+
+    </div>
 
     <!-- Navigation / Actions -->
     <div class="flex items-center justify-between pt-4 border-t border-oas-line">
@@ -195,17 +569,17 @@
   }
 </div>
 
-<!-- MODAL CRÉATION DE FACTURE -->
+<!-- MODAL CONVERTIR EN FACTURE -->
 @if (showCreateFactureModal) {
   <div class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-lg w-full border border-oas-line shadow-2xl p-6 space-y-5 animate-in fade-in zoom-in-95 duration-150">
 
       <div class="flex items-center justify-between pb-3 border-b border-oas-line">
         <h3 class="text-base font-bold text-oas-ink flex items-center gap-2">
-          <svg class="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg class="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          Générer la Facture Client
+          Convertir en Facture
         </h3>
         <button (click)="fermerModalCreationFacture()" [disabled]="creatingFacture"
           class="text-oas-muted hover:text-oas-ink p-1 rounded-lg transition cursor-pointer">
@@ -214,9 +588,8 @@
       </div>
 
       <div class="space-y-4 text-xs">
-        <p class="rounded-xl border border-blue-200 bg-blue-50 p-3 text-blue-900 leading-relaxed">
-          Le système crée le bon de livraison à partir de tous les bons de sortie validés de cet OR, puis génère la facture.
-          Le règlement se fera ensuite dans l’étape Paiement.
+        <p class="rounded-xl border border-emerald-200 bg-emerald-50/50 p-3 text-emerald-950 leading-relaxed">
+          Le bon de livraison sera converti en une <strong>facture client officielle</strong> avec le mode de paiement sélectionné.
         </p>
         <div>
           <label class="block text-xs font-semibold text-oas-ink mb-1">Mode de paiement de la facture</label>
@@ -237,7 +610,7 @@
             Remarques / Mentions sur la facture
           </label>
           <textarea rows="3" [(ngModel)]="remarqueFacture"
-            class="w-full px-3.5 py-2 rounded-xl border border-oas-line bg-white text-sm text-oas-ink focus:outline-hidden focus:ring-2 focus:ring-oas-accent shadow-2xs leading-relaxed"></textarea>
+            class="w-full px-3.5 py-2 rounded-xl border border-oas-line bg-white text-sm text-oas-ink focus:outline-hidden focus:ring-2 focus:ring-emerald-500 shadow-2xs leading-relaxed"></textarea>
         </div>
       </div>
 
@@ -247,12 +620,75 @@
           Annuler
         </button>
         <button (click)="creerFacture()" [disabled]="creatingFacture"
-          class="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-sm transition disabled:opacity-50 cursor-pointer inline-flex items-center gap-2">
+          class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition disabled:opacity-50 cursor-pointer inline-flex items-center gap-2">
           @if (creatingFacture) {
             <div class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            <span>Génération...</span>
+            <span>Conversion en cours...</span>
           } @else {
-            <span>Confirmer la Création</span>
+            <span>Confirmer la conversion en facture</span>
+          }
+        </button>
+      </div>
+
+    </div>
+  </div>
+}
+
+<!-- MODAL CONVERTIR EN NOTE DE PRIX -->
+@if (showConfirmNoteModal) {
+  <div class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full border border-oas-line shadow-2xl p-6 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+
+      <div class="flex items-center justify-between pb-3 border-b border-oas-line">
+        <h3 class="text-base font-bold text-oas-ink flex items-center gap-2">
+          <svg class="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+          </svg>
+          Convertir en Note de prix
+        </h3>
+        <button (click)="fermerModalConfirmationNote()" [disabled]="convertingNote"
+          class="text-oas-muted hover:text-oas-ink p-1 rounded-lg transition cursor-pointer">
+          ✕
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div class="p-3.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-950 space-y-2">
+          <p class="font-semibold text-sm text-blue-900">Confirmez-vous la conversion en Note de prix ?</p>
+          <p class="text-xs text-blue-800 leading-relaxed">
+            Le système va convertir le bon de livraison en une <strong>Note de prix</strong> pour cet Ordre de Réparation.
+            Toutes les pièces et prestations de main-d'œuvre y seront intégrées.
+          </p>
+        </div>
+
+        <div class="p-3 rounded-xl bg-oas-bg/60 border border-oas-line space-y-1">
+          <div class="flex justify-between text-xs">
+            <span class="text-oas-muted">OR :</span>
+            <span class="font-bold text-oas-ink">{{ data?.numero || ('#' + ordreId) }}</span>
+          </div>
+          <div class="flex justify-between text-xs">
+            <span class="text-oas-muted">Client :</span>
+            <span class="font-semibold text-oas-ink">{{ data?.clientNom || 'N/A' }}</span>
+          </div>
+          <div class="flex justify-between text-xs">
+            <span class="text-oas-muted">Montant net HT :</span>
+            <strong class="font-mono text-oas-ink">{{ totalCalculatedHT | number:'1.0-0' }} F CFA</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-oas-line">
+        <button (click)="fermerModalConfirmationNote()" [disabled]="convertingNote"
+          class="px-4 py-2 rounded-xl border border-oas-line text-xs font-semibold text-oas-ink hover:bg-oas-bg transition cursor-pointer">
+          Annuler
+        </button>
+        <button (click)="convertirEnNoteDePrix()" [disabled]="convertingNote"
+          class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition disabled:opacity-50 cursor-pointer inline-flex items-center gap-2">
+          @if (convertingNote) {
+            <div class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <span>Conversion en cours...</span>
+          } @else {
+            <span>Confirmer la conversion</span>
           }
         </button>
       </div>

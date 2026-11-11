@@ -51,7 +51,13 @@
                 <td class="px-5 py-4 text-xs text-oas-muted whitespace-nowrap">{{ bon.dateCreation | date:'dd/MM/yyyy HH:mm' }}</td>
                 <td class="px-5 py-4"><span class="font-semibold text-oas-ink text-xs">{{ bon.clientNom }}</span></td>
                 <td class="px-5 py-4 text-xs font-mono font-semibold text-oas-ink2">{{ bon.immatriculation }}</td>
-                <td class="px-5 py-4"><span class="inline-flex px-2 py-0.5 rounded text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200">{{ bon.ordreReparationNumero }}</span></td>
+                <td class="px-5 py-4">
+                  @if (bon.ordreReparationNumero) {
+                    <span class="inline-flex px-2 py-0.5 rounded text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200">{{ bon.ordreReparationNumero }}</span>
+                  } @else {
+                    <span class="text-xs text-oas-muted">—</span>
+                  }
+                </td>
                 <td class="px-5 py-4 text-xs text-oas-ink2">{{ (bon.bonsDeSortieReferences || []).join(', ') || '—' }}</td>
                 <td class="px-5 py-4 text-xs">
                   @if (bon.factureNumero) {
@@ -62,7 +68,7 @@
                     <span class="inline-flex px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">À convertir</span>
                   }
                 </td>
-                <td class="px-5 py-4 text-right font-bold text-xs whitespace-nowrap">{{ bon.montantTTC | number:'1.0-0' }} FCFA</td>
+                <td class="px-5 py-4 text-right font-bold text-xs whitespace-nowrap">{{ (bon.montantTTC || 0) | number:'1.0-0' }} FCFA</td>
                 <td class="px-5 py-4"><div class="flex items-center justify-end gap-1">
                   <button type="button" (click)="openDetail(bon)" title="Voir le détail" class="p-1.5 rounded-lg hover:bg-oas-info-bg text-oas-muted hover:text-oas-info transition cursor-pointer">
                     <svg lucideEye class="w-4 h-4"></svg>
@@ -192,12 +198,12 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div class="bg-oas-bg/60 border border-oas-line/80 rounded-xl p-4 space-y-1.5"><p class="text-[11px] font-bold uppercase tracking-wider text-oas-muted">Client</p><p class="font-bold text-oas-ink text-sm">{{ selectedBon.clientNom }}</p></div>
           <div class="bg-oas-bg/60 border border-oas-line/80 rounded-xl p-4 space-y-1.5"><p class="text-[11px] font-bold uppercase tracking-wider text-oas-muted">Véhicule</p><p class="font-mono font-bold text-xs text-oas-ink">{{ selectedBon.immatriculation }}</p></div>
-          <div class="bg-oas-bg/60 border border-oas-line/80 rounded-xl p-4 space-y-1.5"><p class="text-[11px] font-bold uppercase tracking-wider text-oas-muted">Ordre de réparation</p><p class="font-bold text-purple-700 text-sm">{{ selectedBon.ordreReparationNumero }}</p></div>
+          <div class="bg-oas-bg/60 border border-oas-line/80 rounded-xl p-4 space-y-1.5"><p class="text-[11px] font-bold uppercase tracking-wider text-oas-muted">Ordre de réparation</p><p class="font-bold text-purple-700 text-sm">{{ selectedBon.ordreReparationNumero || '—' }}</p></div>
           <div class="bg-oas-bg/60 border border-oas-line/80 rounded-xl p-4 space-y-1.5"><p class="text-[11px] font-bold uppercase tracking-wider text-oas-muted">TVA</p><p class="font-semibold text-sm">{{ selectedBon.tvaApplicable ? 'Activée' : 'Désactivée' }}</p></div>
         </div>
         @if (selectedBon.remarque) { <div class="bg-blue-50/70 border border-blue-200/80 rounded-xl p-3.5 text-xs text-blue-950"><span class="font-bold uppercase tracking-wide text-[10px] block">Remarque</span><p class="mt-1">{{ selectedBon.remarque }}</p></div> }
-        <div class="space-y-2.5"><div class="flex items-center justify-between"><h4 class="text-sm font-bold text-oas-ink">Bons de sortie liés</h4><span class="text-xs font-black text-oas-accent bg-oas-bg px-3 py-1 rounded-lg border border-oas-line">{{ selectedBon.bonsDeSortieReferences.length }} bon(s)</span></div>
-          <div class="border border-oas-line rounded-xl divide-y divide-oas-line">@for (ref of selectedBon.bonsDeSortieReferences; track ref) { <div class="px-4 py-3 font-mono text-xs font-bold text-oas-accent">{{ ref }}</div> }</div>
+        <div class="space-y-2.5"><div class="flex items-center justify-between"><h4 class="text-sm font-bold text-oas-ink">Bons de sortie liés</h4><span class="text-xs font-black text-oas-accent bg-oas-bg px-3 py-1 rounded-lg border border-oas-line">{{ (selectedBon.bonsDeSortieReferences || []).length }} bon(s)</span></div>
+          <div class="border border-oas-line rounded-xl divide-y divide-oas-line">@for (ref of selectedBon.bonsDeSortieReferences || []; track ref) { <div class="px-4 py-3 font-mono text-xs font-bold text-oas-accent">{{ ref }}</div> }</div>
         </div>
         @if (loadingDetail) {
           <p class="text-sm text-oas-muted text-center py-4">Chargement des lignes du bon…</p>

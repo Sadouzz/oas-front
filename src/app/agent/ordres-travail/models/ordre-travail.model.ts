@@ -403,12 +403,71 @@ export interface FactureSummaryDto {
   modePaiement?: string;
 }
 
-export interface StepPaiementResponseDto extends StepBaseDto {
+export interface BonDeLivraisonSummaryDto {
+  id: number;
+  numero: string;
+  dateCreation?: string;
+  statut?: string;
+  remarque?: string;
+  montantHT?: number;
+  montantTVA?: number;
+  montantTTC?: number;
+  tvaApplicable?: boolean;
+  factureId?: number;
+  factureNumero?: string;
+}
+
+export interface StepBLResponseDto extends StepBaseDto {
   vehiculeId?: number;
   proformaId?: number;
   ordreReparationId?: number;
-  hasFacture: boolean;
+  clientId?: number;
+  clientNom?: string;
+  clientTelephone?: string;
+  immatriculation?: string;
+  marque?: string;
+  modele?: string;
+  hasBonDeLivraison: boolean;
+  bonDeLivraison?: BonDeLivraisonSummaryDto | null;
+  montantHT?: number;
+  montantTVA?: number;
+  montantTTC?: number;
+  montantTotal?: number;
+  tvaApplicable?: boolean;
+  tvaRate?: number;
+  lignesPieces: {
+    id?: number;
+    pieceId?: number | null;
+    type?: 'PDP' | 'PDG' | 'PDS' | string;
+    referencePiece?: string | null;
+    designationPiece?: string | null;
+    designationPds?: string | null;
+    isCustom?: boolean;
+    quantite: number;
+    prix: number;
+    prixCatalogue?: number | null;
+    montantTotal?: number;
+    tauxRemise?: number;
+    dateHeureSaisie?: string;
+  }[];
+  lignesMainDoeuvres: {
+    id?: number;
+    mainDoeuvreId?: number | null;
+    descriptionMainDoeuvre?: string;
+    designation?: string;
+    nbreHeure: number;
+    tarifHoraire: number;
+    montantTotal?: number;
+    tauxRemise?: number;
+    dateHeureSaisie?: string;
+  }[];
+  hasFacture?: boolean;
   facture?: FactureSummaryDto | null;
+}
+
+export type StepBLResponse = StepBLResponseDto;
+
+export interface StepPaiementResponseDto extends StepBLResponseDto {
 }
 
 // Étape 7 : Prêt à Livrer
