@@ -13,6 +13,7 @@ import { MainDoeuvreService } from '../../../../main-doeuvre/main-doeuvre.servic
 import { ProformaService } from '../../../../proforma/proforma.service';
 import { Proforma } from '../../../../proforma/models/proforma.model';
 import { OrdreReparationService } from '../../../../ordres-reparation/ordre-reparation.service';
+import { BonDeLivraisonService } from '../../../../bons-livraison/bon-de-livraison.service';
 import { AlertComponent } from '../../../../../shared/components/alert/alert.component';
 import { SearchableSelectComponent } from '../../../../../shared/components/searchable-select/searchable-select.component';
 import { AuthService } from '../../../../../core/services/auth.service';
@@ -71,6 +72,7 @@ export class StepBonSortieComponent implements OnInit, OnDestroy {
   private moService = inject(MainDoeuvreService);
   private proformaService = inject(ProformaService);
   private ordreReparationService = inject(OrdreReparationService);
+  private bonDeLivraisonService = inject(BonDeLivraisonService);
   private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
   private ngZone = inject(NgZone);
@@ -1732,18 +1734,21 @@ export class StepBonSortieComponent implements OnInit, OnDestroy {
               this.data.statut = StatutOrdreTravail.TERMINE;
             }
 
+            const validatedBlId = Number(validated?.bonDeLivraisonId ?? validated?.bonDeLivraison?.id) || null;
             const orId = this.data?.ordreReparationId
               || (this.data as any)?.ordreReparation?.id
               || (this.fullBonDeSortie as any)?.ordreReparationId
               || this.fullBonDeSortie?.ordreReparation?.id;
 
             if (orId) {
-              this.redirigerVersOrStep6(Number(orId));
+              this.redirigerApresValidation(Number(orId), validatedBlId);
             } else {
               this.otService.getById(this.otId).pipe(catchError(() => of(null))).subscribe(otRes => {
                 const fetchedOrId = otRes?.ordreReparationId || (otRes as any)?.ordreReparation?.id;
                 if (fetchedOrId) {
-                  this.redirigerVersOrStep6(Number(fetchedOrId));
+                  this.redirigerApresValidation(Number(fetchedOrId), validatedBlId);
+                } else if (validatedBlId) {
+                  this.router.navigate(['/app/bons-livraison'], { queryParams: { detailId: validatedBlId } });
                 } else {
                   this.loadData();
                   this.cdr.detectChanges();
@@ -1764,15 +1769,46 @@ export class StepBonSortieComponent implements OnInit, OnDestroy {
     });
   }
 
-  private redirigerVersOrStep6(orId: number): void {
+  private redirigerApresValidation(orId: number, validatedBlId?: number | null): void {
     this.ordreReparationService.updateStatut(orId, 'BL' as any).pipe(
       catchError(err => {
         console.warn('Mise à jour du statut OR vers BL :', err);
         return of(null);
       })
     ).subscribe(() => {
-      this.ngZone.run(() => {
-        this.router.navigate(['/app/ordres-reparation', orId, 'bl']);
+      if (validatedBlId && validatedBlId > 0) {
+        this.ngZone.run(() => {
+          this.successMessage = 'Bon de Sortie validé et Bon de Livraison créé ! Redirection vers le détail du BL...';
+          this.router.navigate(['/app/bons-livraison'], { queryParams: { detailId: validatedBlId } });
+        });
+        return;
+      }
+
+      this.bonDeLivraisonService.getContexteOrdre(orId).pipe(
+        catchError(() => of(null))
+      ).subscribe(contexte => {
+        const blId = Number(contexte?.bonDeLivraison?.id) || 0;
+        if (blId > 0) {
+          this.ngZone.run(() => {
+            this.successMessage = 'Bon de Sortie validé et Bon de Livraison créé ! Redirection vers le détail du BL...';
+            this.router.navigate(['/app/bons-livraison'], { queryParams: { detailId: blId } });
+          });
+          return;
+        }
+
+        this.ordreReparationService.getById(orId).pipe(
+          catchError(() => of(null))
+        ).subscribe((orData: any) => {
+          const fallbackBlId = Number(orData?.bonDeLivraisonId ?? orData?.bonDeLivraison?.id) || 0;
+          this.ngZone.run(() => {
+            if (fallbackBlId > 0) {
+              this.successMessage = 'Bon de Sortie validé et Bon de Livraison créé ! Redirection vers le détail du BL...';
+              this.router.navigate(['/app/bons-livraison'], { queryParams: { detailId: fallbackBlId } });
+            } else {
+              this.router.navigate(['/app/ordres-reparation', orId, 'bl']);
+            }
+          });
+        });
       });
     });
   }

@@ -68,8 +68,16 @@ export class BonsLivraisonComponent extends BasePaginatedComponent implements On
 
   ngOnInit(): void {
     this.loadData();
-    const ordreId = Number(this.route.snapshot.queryParamMap.get('ordreId'));
-    if (ordreId > 0) this.openCreate(ordreId);
+    this.route.queryParams.subscribe(params => {
+      const ordreId = Number(params['ordreId']);
+      if (ordreId > 0) {
+        this.openCreate(ordreId);
+      }
+      const detailId = Number(params['detailId'] ?? params['blId']);
+      if (detailId > 0 && this.selectedBon?.id !== detailId) {
+        this.openDetailById(detailId);
+      }
+    });
   }
 
   loadData(): void {
@@ -240,6 +248,27 @@ export class BonsLivraisonComponent extends BasePaginatedComponent implements On
     if (!bon || bon.factureId || this.actionLoading) return;
     this.openInvoiceModal(bon.id, bon.numero, bon.tvaApplicable ?? this.contexteOrdre?.tvaApplicable);
   }
+  openDetailById(id: number): void {
+    const placeholder: BonDeLivraison = {
+      id,
+      numero: 'Chargement…',
+      dateCreation: '',
+      ordreReparationId: 0,
+      ordreReparationNumero: '',
+      clientId: 0,
+      clientNom: '',
+      vehiculeId: 0,
+      immatriculation: '',
+      tvaApplicable: true,
+      montantHT: 0,
+      montantTVA: 0,
+      montantTTC: 0,
+      bonsDeSortieIds: [],
+      bonsDeSortieReferences: []
+    };
+    this.openDetail(placeholder);
+  }
+
   openDetail(bon: BonDeLivraison): void {
     this.selectedBon = bon;
     this.errorMessage = '';

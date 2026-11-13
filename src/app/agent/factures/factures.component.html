@@ -437,10 +437,6 @@
 
       <!-- Actions Footer -->
       <div class="px-6 py-4 border-t border-oas-line bg-oas-bg/50 flex flex-wrap items-center justify-end gap-2.5">
-        <button (click)="delete(selectedFacture.id)"
-                class="mr-auto px-4 py-2 rounded-xl bg-white hover:bg-red-50 border border-oas-line hover:border-red-200 text-oas-muted hover:text-red-600 font-semibold transition text-xs cursor-pointer">
-          Supprimer
-        </button>
         <button (click)="downloadPdf(selectedFacture.id)"
                 class="px-4 py-2 rounded-xl bg-white hover:bg-oas-bg border border-oas-line text-oas-ink font-semibold transition text-xs cursor-pointer flex items-center gap-1.5">
           <svg lucideDownload class="w-4 h-4"></svg>
