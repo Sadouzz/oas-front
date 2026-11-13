@@ -1,19 +1,20 @@
 import { ConfirmationService } from '../../shared/components/confirmation/confirmation.service';
-import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { forkJoin } from 'rxjs';
-import { CommonModule, DecimalPipe, DatePipe, NgClass } from '@angular/common';
+import { catchError, finalize, of, Subscription } from 'rxjs';
+import { CommonModule, NgClass } from '@angular/common';
 import { NoteDePrixService } from './note-de-prix.service';
 import { NoteDePrixModel, NoteDePrixCreateRequest } from './models/note-de-prix.model';
 import { ClientService } from '../clients/client.service';
 import { VehiculeService } from '../vehicules/vehicule.service';
 import { OrdreReparationService } from '../ordres-reparation/ordre-reparation.service';
-import { LucideSearch, LucidePlus, LucideTrash2, LucideX, LucideDownload, LucideReceipt } from '@lucide/angular';
+import { LucideSearch, LucidePlus, LucideX, LucideDownload, LucideReceipt, LucideEye } from '@lucide/angular';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 import { UserModel, VehiculeModel, OrdreReparation, extractContent } from '../../shared/models';
 import { FiscalConfigurationService } from '../gestion-tva/fiscal-configuration.service';
+import { PdfLayoutDialogService } from '../../shared/components/pdf-layout-dialog/pdf-layout-dialog.service';
 import {
   EnrichableLignePiece,
   PieceLigneType,
@@ -25,10 +26,10 @@ import {
 @Component({
   selector: 'app-notes-prix',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, NgClass, PaginationComponent, LucideSearch, LucidePlus, LucideTrash2, LucideX, LucideReceipt],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, NgClass, PaginationComponent, LucideSearch, LucidePlus, LucideX, LucideDownload, LucideReceipt, LucideEye],
   templateUrl: './notes-prix.component.html',
 })
-export class NotesPrixComponent extends BasePaginatedComponent implements OnInit {
+export class NotesPrixComponent extends BasePaginatedComponent implements OnInit, OnDestroy {
   private confirmation = inject(ConfirmationService);
 
   private cdr = inject(ChangeDetectorRef);
@@ -39,6 +40,7 @@ export class NotesPrixComponent extends BasePaginatedComponent implements OnInit
   private vehiculeService = inject(VehiculeService);
   private ordreReparationService = inject(OrdreReparationService);
   private fiscalConfigurationService = inject(FiscalConfigurationService);
+  private pdfLayoutDialog = inject(PdfLayoutDialogService);
   timbreFiscalRate = 1;
 
   notes: NoteDePrixModel[] = [];
@@ -74,6 +76,14 @@ export class NotesPrixComponent extends BasePaginatedComponent implements OnInit
   vehiculeFilter = '';
   ficheFilter = '';
 
+  searchNumero = '';
+  searchImmatriculation = '';
+  searchClientNumero = '';
+  clientMatriculeById: Record<number, string> = {};
+  private searchDebounce: any = null;
+  private loadSub?: Subscription;
+  private destroyed = false;
+
   filterStatut = '';
   dateDebut = '';
   dateFin = '';
@@ -97,27 +107,31 @@ export class NotesPrixComponent extends BasePaginatedComponent implements OnInit
       next: config => { this.timbreFiscalRate = Number(config.timbreFiscalRate) || 0; this.cdr.markForCheck(); },
       error: () => undefined,
     });
-    this.loadData();
-    forkJoin({
-      //clients: this.clientService.getAll(),
-      //ordresReparation: this.ordreReparationService.getAll(),
-    }).subscribe({
-      next: ({  }) => {
-        //this.ordresReparation = extractContent<OrdreReparation>(ordresReparation as any);
+    this.clientService.getAll({ size: 500 }).pipe(catchError(() => of([]))).subscribe({
+      next: res => {
+        const map: Record<number, string> = {};
+        for (const client of extractContent<any>(res as any)) {
+          if (client?.id != null && client?.matricule) {
+            map[Number(client.id)] = String(client.matricule);
+          }
+        }
+        this.clientMatriculeById = map;
+        if (this.searchClientNumero.trim()) {
+          this.applyFilter();
+        }
+        this.cdr.markForCheck();
       },
-      error: () => {},
     });
-
     this.route.queryParams.subscribe(params => {
       if (params['action'] === 'new') {
         this.openCreate();
       }
       if (params['statut']) {
         this.filterStatut = params['statut'];
-      } else if (!params['action'] && !params['search']) {
+      } else {
         this.filterStatut = '';
       }
-      if (params['search'] === 'client-date') {
+      if (params['search'] === 'client-date' || params['search'] === 'filtre') {
         this.showDateFilter = true;
       }
       if (params['detailId']) {
@@ -126,8 +140,40 @@ export class NotesPrixComponent extends BasePaginatedComponent implements OnInit
           this.openDetailById(detailId);
         }
       }
-      this.applyFilter(); this.cdr.markForCheck();
+      this.page = 1;
+      this.loadData();
     });
+  }
+
+  ngOnDestroy() {
+    this.destroyed = true;
+    this.loadSub?.unsubscribe();
+    if (this.searchDebounce) {
+      clearTimeout(this.searchDebounce);
+    }
+  }
+
+  get hasActiveFilters(): boolean {
+    return Boolean(
+      this.searchTerm ||
+      this.searchNumero.trim() ||
+      this.searchImmatriculation.trim() ||
+      this.searchClientNumero.trim() ||
+      this.filterClient.trim() ||
+      this.filterStatut ||
+      this.dateDebut ||
+      this.dateFin
+    );
+  }
+
+  override get totalPages(): number {
+    return this.hasActiveFilters
+      ? (Math.ceil(this.filtered.length / this.pageSize) || 1)
+      : super.totalPages;
+  }
+
+  get displayTotalElements(): number {
+    return this.hasActiveFilters ? this.filtered.length : this.totalElements;
   }
 
   loadData() {
@@ -135,20 +181,105 @@ export class NotesPrixComponent extends BasePaginatedComponent implements OnInit
   }
 
   load() {
+    this.loadSub?.unsubscribe();
     this.loading = true;
-    this.service.getAll(this.getPageParams()).subscribe({
+    this.errorMessage = '';
+    this.cdr.markForCheck();
+    const numero = this.searchNumero.trim();
+    const immatriculation = this.searchImmatriculation.trim();
+    const clientNumero = this.searchClientNumero.trim();
+    const clientExtra = this.filterClient.trim();
+    const effectiveKeyword = this.searchTerm || numero || immatriculation || undefined;
+    const isFiltering = this.hasActiveFilters;
+
+    const params: Record<string, any> = {
+      ...this.getPageParams({
+        page: isFiltering ? 0 : this.page - 1,
+        size: isFiltering ? 1000 : this.pageSize,
+      }),
+      ...(effectiveKeyword ? { keyword: effectiveKeyword } : {}),
+      ...(numero ? { numero } : {}),
+      ...(immatriculation ? { immatriculation } : {}),
+      ...(clientNumero ? { clientNumero, client: clientNumero } : {}),
+      ...(/^\d+$/.test(clientNumero) ? { clientId: Number(clientNumero) } : {}),
+      ...(clientExtra && !clientNumero ? { client: clientExtra } : {}),
+      ...(this.filterStatut ? { statut: this.filterStatut } : {}),
+      ...(this.dateDebut ? { dateDebut: this.dateDebut } : {}),
+      ...(this.dateFin ? { dateFin: this.dateFin } : {}),
+    };
+
+    this.loadSub = this.service.getAll(params).pipe(
+      finalize(() => {
+        this.loading = false;
+        if (!this.destroyed) this.cdr.detectChanges();
+      })
+    ).subscribe({
       next: data => {
-        const arr = this.applyPageResponse<NoteDePrixModel>(data);
-        this.notes = arr.sort((a: any, b: any) => (b.id ?? 0) - (a.id ?? 0));
-        this.applyFilter(); this.cdr.markForCheck();
-        this.loading = false; this.cdr.markForCheck();
+        try {
+          const arr = this.applyPageResponse<NoteDePrixModel>(data);
+          this.notes = (Array.isArray(arr) ? [...arr] : []).sort((a: any, b: any) => (b?.id ?? 0) - (a?.id ?? 0));
+          this.applyFilter();
+        } catch {
+          this.notes = [];
+          this.filtered = [];
+        } finally {
+          this.loading = false;
+          if (!this.destroyed) this.cdr.detectChanges();
+        }
       },
-      error: () => {
+      error: (err: any) => {
         this.notes = [];
         this.filtered = [];
-        this.loading = false; this.cdr.markForCheck();
+        this.totalElements = 0;
+        this.serverTotalPages = 1;
+        this.errorMessage = err?.error?.message || 'Impossible de charger les notes de prix.';
+        this.loading = false;
+        if (!this.destroyed) this.cdr.detectChanges();
       },
     });
+  }
+
+  triggerSearch(immediate = false) {
+    if (this.searchDebounce) {
+      clearTimeout(this.searchDebounce);
+      this.searchDebounce = null;
+    }
+    this.page = 1;
+    if (immediate) {
+      this.loadData();
+      return;
+    }
+    this.searchDebounce = setTimeout(() => {
+      this.searchDebounce = null;
+      this.loadData();
+    }, 300);
+  }
+
+  resetFilters() {
+    this.searchNumero = '';
+    this.searchImmatriculation = '';
+    this.searchClientNumero = '';
+    this.searchTerm = '';
+    this.filterStatut = '';
+    this.dateDebut = '';
+    this.dateFin = '';
+    this.filterClient = '';
+    this.page = 1;
+    this.loadData();
+  }
+
+  clientNumeroLabel(f: NoteDePrixModel): string {
+    const anyNote = f as any;
+    const matricule = f.clientNumero ?? f.numeroClient ?? f.clientMatricule ?? anyNote?.client?.matricule ?? (f.clientId != null ? this.clientMatriculeById[f.clientId] : undefined);
+    if (matricule != null && String(matricule).trim()) return String(matricule).trim();
+    const cid = f.clientId ?? anyNote?.client?.id;
+    if (cid != null) return String(cid);
+    return '—';
+  }
+
+  immatriculationLabel(f: NoteDePrixModel): string {
+    const anyNote = f as any;
+    return String(f.vehiculeImmatriculation ?? f.immatriculation ?? anyNote?.vehicule?.immatriculation ?? '').trim() || '—';
   }
 
   applyFilter() {
@@ -158,13 +289,46 @@ export class NotesPrixComponent extends BasePaginatedComponent implements OnInit
     } else if (this.filterStatut === 'PAYE') {
       data = data.filter(f => f.statutPaiement === 'PAYE');
     }
+    if (this.searchNumero.trim()) {
+      const q = this.searchNumero.trim().toLowerCase();
+      data = data.filter(f => String(f.numero ?? '').toLowerCase().includes(q));
+    }
+    if (this.searchImmatriculation.trim()) {
+      const q = this.searchImmatriculation.trim().toLowerCase();
+      data = data.filter(f => {
+        const anyNote = f as any;
+        const immat = String(f.vehiculeImmatriculation ?? f.immatriculation ?? anyNote?.vehicule?.immatriculation ?? '').toLowerCase();
+        return immat.includes(q);
+      });
+    }
+    if (this.searchClientNumero.trim()) {
+      const q = this.searchClientNumero.trim().toLowerCase();
+      data = data.filter(f => {
+        const anyNote = f as any;
+        const cid = f.clientId ?? anyNote?.client?.id;
+        return (
+          String(f.clientNumero ?? '').toLowerCase().includes(q) ||
+          String(f.numeroClient ?? '').toLowerCase().includes(q) ||
+          String(f.clientMatricule ?? anyNote?.client?.matricule ?? '').toLowerCase().includes(q) ||
+          (cid != null ? String(this.clientMatriculeById[cid] ?? '').toLowerCase().includes(q) : false) ||
+          String(cid ?? '').toLowerCase().includes(q) ||
+          String(f.clientNom ?? '').toLowerCase().includes(q)
+        );
+      });
+    }
     if (this.searchTerm) {
-      const kw = this.searchTerm.toLowerCase();
-      data = data.filter(f =>
-        (f.numero ?? '').toLowerCase().includes(kw) ||
-        (f.clientNom ?? '').toLowerCase().includes(kw) ||
-        (f.vehiculeImmatriculation ?? f.immatriculation ?? '').toLowerCase().includes(kw)
-      );
+      const kw = String(this.searchTerm).toLowerCase();
+      data = data.filter(f => {
+        const anyNote = f as any;
+        const immat = String(f.vehiculeImmatriculation ?? f.immatriculation ?? anyNote?.vehicule?.immatriculation ?? '').toLowerCase();
+        return (
+          String(f.numero ?? '').toLowerCase().includes(kw) ||
+          String(f.clientNom ?? '').toLowerCase().includes(kw) ||
+          immat.includes(kw) ||
+          this.clientNumeroLabel(f).toLowerCase().includes(kw) ||
+          String(f.clientId ?? '').includes(kw)
+        );
+      });
     }
     if (this.dateDebut) {
       data = data.filter(f => {
@@ -181,11 +345,16 @@ export class NotesPrixComponent extends BasePaginatedComponent implements OnInit
     if (this.filterClient) {
       const cKw = this.filterClient.toLowerCase();
       data = data.filter(f =>
-        (f.clientNom ?? '').toLowerCase().includes(cKw) ||
+        String(f.clientNom ?? '').toLowerCase().includes(cKw) ||
+        this.clientNumeroLabel(f).toLowerCase().includes(cKw) ||
         String(f.clientId ?? '').includes(cKw)
       );
     }
     this.filtered = data;
+    const maxPages = Math.ceil(this.filtered.length / this.pageSize) || 1;
+    if (this.hasActiveFilters && this.page > maxPages) {
+      this.page = 1;
+    }
   }
 
   private getDateString(d: any): string {
@@ -201,7 +370,7 @@ export class NotesPrixComponent extends BasePaginatedComponent implements OnInit
   onStatutFilter(e: Event) {
     this.filterStatut = (e.target as HTMLSelectElement).value;
     this.page = 1;
-    this.applyFilter(); this.cdr.markForCheck();
+    this.loadData();
   }
 
   // onSearch is inherited from BasePaginatedComponent
@@ -478,6 +647,24 @@ export class NotesPrixComponent extends BasePaginatedComponent implements OnInit
     });
   }
 
+  async downloadPdf(id: number) {
+    const layoutKey = await this.pdfLayoutDialog.chooseLayout();
+    if (!layoutKey) return;
+    this.service.downloadPdf(id, layoutKey).subscribe({
+      next: blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `note-de-prix-${id}-${layoutKey === 'AVEC_ENTETE' ? 'avec-entete' : 'sans-entete'}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+      error: (err: any) => {
+        this.notifyError(err?.error?.message || 'Erreur lors du téléchargement du PDF.');
+      },
+    });
+  }
+
   modePaiementLabel(mp: string | null | undefined): string {
     const m: Record<string, string> = {
       CHEQUE: 'Chèque',
@@ -495,11 +682,28 @@ export class NotesPrixComponent extends BasePaginatedComponent implements OnInit
     if (!d) return '—';
     try {
       if (Array.isArray(d)) {
-        const [year, month, day] = d;
-        return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
+        const [year, month, day, hour, minute, second] = d;
+        const datePart = `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
+        if (hour !== undefined && minute !== undefined) {
+          const secPart = second !== undefined ? `:${String(second).padStart(2, '0')}` : '';
+          return `${datePart} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}${secPart}`;
+        }
+        return datePart;
       }
+      const raw = String(d);
       const parsed = new Date(d);
-      return isNaN(parsed.getTime()) ? String(d) : parsed.toLocaleDateString('fr-FR');
+      if (isNaN(parsed.getTime())) return raw;
+      if (raw.includes('T') || /\d{2}:\d{2}/.test(raw)) {
+        return parsed.toLocaleString('fr-FR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+        });
+      }
+      return parsed.toLocaleDateString('fr-FR');
     } catch {
       return String(d);
     }
@@ -508,7 +712,9 @@ export class NotesPrixComponent extends BasePaginatedComponent implements OnInit
   fmt(n: number | null | undefined): string { return new Intl.NumberFormat('fr-FR').format(n ?? 0); }
 
   get paged(): NoteDePrixModel[] {
-    return this.filtered;
+    if (!this.hasActiveFilters) return this.filtered;
+    const start = (this.page - 1) * this.pageSize;
+    return this.filtered.slice(start, start + this.pageSize);
   }
 
   private notify(msg: string) {

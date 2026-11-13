@@ -224,9 +224,13 @@
                       class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
                       Nouvelle note de prix
                     </a>
-                    <a routerLink="/app/notes-prix" routerLinkActive="oas-sub-active"
+                    <a routerLink="/app/notes-prix" [queryParams]="{ statut: 'EN_COURS' }" routerLinkActive="oas-sub-active"
                       class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
-                      Liste des notes de prix
+                      Liste des notes de prix en cours
+                    </a>
+                    <a routerLink="/app/notes-prix" [queryParams]="{ statut: 'PAYE' }" routerLinkActive="oas-sub-active"
+                      class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
+                      Liste des notes de prix payées
                     </a>
                     <a routerLink="/app/notes-prix" [queryParams]="{ search: 'filtre' }" routerLinkActive="oas-sub-active"
                       class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[#9fb2c8] hover:text-white hover:bg-white/5 transition text-xs">
@@ -1258,9 +1262,13 @@
                   class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition text-xs font-medium">
                   <span class="w-1.5 h-1.5 rounded-full bg-oas-accent"></span> Nouvelle note de prix
                 </a>
-                <a routerLink="/app/notes-prix" (click)="onSelectLink()" routerLinkActive="oas-sub-active"
+                <a routerLink="/app/notes-prix" [queryParams]="{ statut: 'EN_COURS' }" (click)="onSelectLink()" routerLinkActive="oas-sub-active"
                   class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition text-xs font-medium">
-                  <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span> Liste des notes de prix
+                  <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Liste des notes de prix en cours
+                </a>
+                <a routerLink="/app/notes-prix" [queryParams]="{ statut: 'PAYE' }" (click)="onSelectLink()" routerLinkActive="oas-sub-active"
+                  class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition text-xs font-medium">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Liste des notes de prix payées
                 </a>
                 <a routerLink="/app/notes-prix" [queryParams]="{ search: 'filtre' }" (click)="onSelectLink()" routerLinkActive="oas-sub-active"
                   class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[#9fb2c8] hover:text-white hover:bg-white/10 transition text-xs font-medium">

@@ -19,6 +19,9 @@ export interface NoteDePrixModel {
   kilometrage?: number;
   clientId?: number | null;
   clientNom?: string | null;
+  clientNumero?: string | null;
+  numeroClient?: string | null;
+  clientMatricule?: string | null;
   vehiculeId?: number | null;
   vehiculeImmatriculation?: string | null;
   immatriculation?: string | null;

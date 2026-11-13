@@ -19,8 +19,12 @@ export interface FactureModel {
   kilometrage: number;
   clientId: number;
   clientNom: string;
+  clientNumero?: string | null;
+  numeroClient?: string | null;
+  clientMatricule?: string | null;
   vehiculeId: number | null;
   immatriculation: string | null;
+  vehiculeImmatriculation?: string | null;
   numeroChassis: string | null;
   marque: string | null;
   modele: string | null;
@@ -55,7 +59,8 @@ export type FactureListModel = Pick<FactureModel,
   'id' | 'numero' | 'dateCreation' | 'montantHT' | 'montantTVA' | 'tvaApplicable' | 'montantTTC'
   | 'montantTimbre' | 'timbreFiscalRate' | 'montantAutre' | 'montantTotal' | 'tauxRemiseClient'
   | 'montantRemiseClient' | 'modePaiement' | 'agentNom' | 'remarque' | 'kilometrage' | 'clientId' | 'clientNom'
-  | 'immatriculation' | 'marque' | 'modele' | 'annee' | 'montantPaye' | 'resteAPayer' | 'statutPaiement'>;
+  | 'clientNumero' | 'numeroClient' | 'clientMatricule' | 'immatriculation' | 'vehiculeImmatriculation'
+  | 'marque' | 'modele' | 'annee' | 'montantPaye' | 'resteAPayer' | 'statutPaiement'>;
 
 export type FactureDetailsViewModel = FactureListModel & Pick<FactureModel,
   'lignesPieces' | 'lignesMainDoeuvres' | 'recus'> & Partial<Pick<FactureModel,
