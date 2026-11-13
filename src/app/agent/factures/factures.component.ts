@@ -12,6 +12,13 @@ import { BasePaginatedComponent } from '../../shared/components/base-paginated.c
 import { FiscalConfigurationService } from '../gestion-tva/fiscal-configuration.service';
 import { modePaiementRecu } from './models/facture-mode-paiement';
 import { PdfLayoutDialogService } from '../../shared/components/pdf-layout-dialog/pdf-layout-dialog.service';
+import {
+  EnrichableLignePiece,
+  PieceLigneType,
+  pieceTypeBadgeClass,
+  resolvePieceDesignation,
+  resolvePieceType,
+} from '../../shared/utils/piece-ligne.util';
 
 @Component({
   selector: 'app-factures',
@@ -91,6 +98,13 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
       this.showDateFilter = params['search'] === 'client-date';
       this.page = 1;
       this.loadData();
+
+      if (params['detailId']) {
+        const detailId = Number(params['detailId']);
+        if (Number.isFinite(detailId) && detailId > 0) {
+          this.openDetailById(detailId);
+        }
+      }
     });
   }
 
@@ -154,26 +168,78 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
       lignesMainDoeuvres: [],
       recus: [],
     };
+    this.fetchDetail(f.id);
+  }
+
+  openDetailById(id: number) {
+    this.selectedFacture = {
+      id,
+      numero: 'Chargement…',
+      dateCreation: '',
+      montantHT: 0,
+      montantTVA: 0,
+      montantTTC: 0,
+      montantTimbre: 0,
+      montantAutre: 0,
+      montantTotal: 0,
+      montantPaye: 0,
+      resteAPayer: 0,
+      statutPaiement: 'NON_PAYE',
+      agentNom: '',
+      remarque: null,
+      kilometrage: 0,
+      clientId: 0,
+      clientNom: '',
+      immatriculation: null,
+      marque: null,
+      modele: null,
+      annee: null,
+      lignesPieces: [],
+      lignesMainDoeuvres: [],
+      recus: [],
+    };
+    this.fetchDetail(id);
+  }
+
+  private fetchDetail(id: number) {
     this.selectedFactureLoading = true;
-    this.service.getById(f.id).subscribe({
+    this.cdr.markForCheck();
+    this.service.getById(id).subscribe({
       next: detail => {
-        if (this.selectedFacture?.id !== f.id) return;
-        this.selectedFacture = {
-          ...detail,
-          lignesPieces: detail.lignesPieces ?? [],
-          lignesMainDoeuvres: detail.lignesMainDoeuvres ?? [],
-          recus: detail.recus ?? [],
-        };
-        this.selectedFactureLoading = false;
-        this.cdr.markForCheck();
+        if (this.selectedFacture?.id !== id) return;
+        this.applyFactureDetail(detail);
       },
       error: err => {
-        if (this.selectedFacture?.id !== f.id) return;
+        if (this.selectedFacture?.id !== id) return;
+        this.selectedFacture = null;
         this.selectedFactureLoading = false;
         this.errorMessage = err?.error?.message || 'Impossible de charger le détail de cette facture.';
         this.cdr.markForCheck();
       },
     });
+  }
+
+  private applyFactureDetail(detail: FactureModel) {
+    this.selectedFacture = {
+      ...detail,
+      lignesPieces: detail.lignesPieces ?? [],
+      lignesMainDoeuvres: detail.lignesMainDoeuvres ?? [],
+      recus: detail.recus ?? [],
+    };
+    this.selectedFactureLoading = false;
+    this.cdr.markForCheck();
+  }
+
+  pieceDesignation(l: EnrichableLignePiece): string {
+    return resolvePieceDesignation(l);
+  }
+
+  pieceType(l: EnrichableLignePiece): PieceLigneType {
+    return resolvePieceType(l);
+  }
+
+  pieceTypeClass(l: EnrichableLignePiece): string {
+    return pieceTypeBadgeClass(this.pieceType(l));
   }
   closeDetail() { this.selectedFacture = null; this.selectedFactureLoading = false; }
 
@@ -227,8 +293,8 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
         this.notify('Paiement enregistré avec succès !');
         if (this.selectedFacture?.id === factureId) {
           this.service.getById(factureId).subscribe(updated => {
-            this.selectedFacture = updated;
-            this.cdr.markForCheck();
+            if (this.selectedFacture?.id !== factureId) return;
+            this.applyFactureDetail(updated);
           });
         }
       },

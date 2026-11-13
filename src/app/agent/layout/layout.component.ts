@@ -96,7 +96,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
     '/pdg': { label: 'PDG', section: 'Catalogue' },
     '/pieces-detachees': { label: 'PDP', section: 'Catalogue' },
     '/pieces-generees': { label: 'PDG', section: 'Catalogue' },
-    '/stock': { label: 'Historique', section: 'PDP' },
+    '/historique-pieces': { label: 'Historique', section: 'PDP' },
     '/bons-reception': { label: 'Bon de réception', section: 'Réapprovisionnement' },
     '/fournisseurs': { label: 'Fournisseurs', section: 'Réapprovisionnement' },
     '/factures': { label: 'Facture', section: 'Facture TTC' },
@@ -318,7 +318,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
       } else {
         this.openSubSection = 'pdp';
       }
-    } else if (['/stock', '/seuil-alertes', '/inventaire'].some(p => relUrl.startsWith(p)) && !relUrl.startsWith('/historique-bs')) {
+    } else if (['/historique-pieces', '/stock', '/seuil-alertes', '/inventaire'].some(p => relUrl.startsWith(p)) && !relUrl.startsWith('/historique-bs')) {
       this.openSection = 'pieces';
       this.openSubSection = 'pdp';
     } else if (['/bons-de-sortie', '/historique-bs'].some(p => relUrl.startsWith(p))) {
@@ -556,7 +556,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
       case 'atelier':
         return ['/fiches-atelier', '/ordres-reparation', '/ordres-travail', '/diagnostics', '/diagnostic', '/techniciens'].some(p => relUrl.startsWith(p));
       case 'pieces':
-        return ['/pieces-detachees', '/pieces-generees', '/pdp', '/pdg', '/stock', '/seuil-alertes', '/inventaire'].some(p => relUrl.startsWith(p)) && !relUrl.startsWith('/historique-bs');
+        return ['/pieces-detachees', '/pieces-generees', '/pdp', '/pdg', '/historique-pieces', '/stock', '/seuil-alertes', '/inventaire'].some(p => relUrl.startsWith(p)) && !relUrl.startsWith('/historique-bs');
       case 'facture-ht':
         return ['/notes-prix', '/notes-de-prix', '/devis', '/devis-previsionnels', '/avoirs-ht'].some(p => relUrl.startsWith(p));
       case 'facture-ttc':

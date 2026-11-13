@@ -73,22 +73,17 @@
     }
   </div>
 
-  <!-- Table + Detail -->
-  <div class="flex flex-col lg:flex-row gap-5">
-
-    <!-- Table -->
-    <div class="bg-white rounded-lg border border-oas-line shadow-card overflow-hidden" [class.flex-1]="selectedNote" [class.w-full]="!selectedNote">
+  <!-- Table -->
+  <div class="bg-white rounded-lg border border-oas-line shadow-card overflow-hidden w-full">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b border-oas-line">
               <th class="text-left text-xs text-oas-muted px-5 py-3">N°</th>
-              @if (!selectedNote) {
-                <th class="text-left text-xs text-oas-muted px-5 py-3">Client</th>
-                <th class="text-left text-xs text-oas-muted px-5 py-3">Immat.</th>
-                <th class="text-right text-xs text-oas-muted px-5 py-3">Total HT</th>
-                <th class="text-left text-xs text-oas-muted px-5 py-3">Statut</th>
-              }
+              <th class="text-left text-xs text-oas-muted px-5 py-3">Client</th>
+              <th class="text-left text-xs text-oas-muted px-5 py-3">Immat.</th>
+              <th class="text-right text-xs text-oas-muted px-5 py-3">Total HT</th>
+              <th class="text-left text-xs text-oas-muted px-5 py-3">Statut</th>
               <th class="text-left text-xs text-oas-muted px-5 py-3">Date</th>
               <th class="px-5 py-3"></th>
             </tr>
@@ -114,20 +109,18 @@
                     [ngClass]="{'bg-orange-50': selectedNote?.id === f.id}"
                     (click)="openDetail(f)">
                   <td class="px-5 py-4 font-mono font-bold text-oas-accent text-xs">{{ f.numero }}</td>
-                  @if (!selectedNote) {
-                    <td class="px-5 py-4 text-oas-ink text-sm">{{ f.clientNom }}</td>
-                    <td class="px-5 py-4 text-oas-muted text-xs">{{ f.vehiculeImmatriculation ?? f.immatriculation ?? '&mdash;' }}</td>
-                    <td class="px-5 py-4 text-right font-semibold text-oas-ink">{{ fmt(f.montantTotal) }} FCFA</td>
-                    <td class="px-5 py-4">
-                      @if (f.statutPaiement === 'PAYE') {
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">Payé</span>
-                      } @else if (f.statutPaiement === 'PARTIEL') {
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-800">Partiel</span>
-                      } @else {
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-800">Non payé</span>
-                      }
-                    </td>
-                  }
+                  <td class="px-5 py-4 text-oas-ink text-sm">{{ f.clientNom }}</td>
+                  <td class="px-5 py-4 text-oas-muted text-xs">{{ f.vehiculeImmatriculation ?? f.immatriculation ?? '&mdash;' }}</td>
+                  <td class="px-5 py-4 text-right font-semibold text-oas-ink">{{ fmt(f.montantTotal) }} FCFA</td>
+                  <td class="px-5 py-4">
+                    @if (f.statutPaiement === 'PAYE') {
+                      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">Payé</span>
+                    } @else if (f.statutPaiement === 'PARTIEL') {
+                      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-800">Partiel</span>
+                    } @else {
+                      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-800">Non payé</span>
+                    }
+                  </td>
                   <td class="px-5 py-4 text-xs text-oas-muted">{{ formatDate(f.dateCreation) }}</td>
                   <td class="px-5 py-4" (click)="$event.stopPropagation()">
                     <div class="flex items-center gap-1 justify-end">
@@ -153,21 +146,30 @@
         <app-pagination [page]="page" [totalPages]="totalPages" [total]="totalElements" [pageSize]="pageSize" (prev)="prevPage()" (next)="nextPage()" />
       }
     </div>
+</div>
 
-    <!-- Detail panel -->
-    @if (selectedNote) {
-      <div class="w-full lg:w-96 lg:flex-shrink-0 bg-white rounded-lg border border-oas-line shadow-card flex flex-col overflow-hidden max-h-[70vh] lg:max-h-none">
-        <div class="flex items-center justify-between px-5 py-4 border-b border-oas-line">
-          <div>
-            <p class="font-mono font-bold text-oas-accent text-sm">{{ selectedNote.numero }}</p>
-            <p class="text-xs text-oas-muted mt-0.5">{{ formatDate(selectedNote.dateCreation) }}</p>
-          </div>
-          <button (click)="closeDetail()" class="p-1 rounded-lg hover:bg-oas-bg text-oas-muted cursor-pointer">
-            <svg lucideX class="w-5 h-5"></svg>
-          </button>
+<!-- Detail Modal Popup -->
+@if (selectedNote) {
+  <div class="fixed inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" (click)="closeDetail()">
+    <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-oas-line flex flex-col overflow-hidden max-h-[90vh] animate-in fade-in zoom-in-95 duration-200" (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-oas-line bg-oas-bg/50">
+        <div>
+          <p class="font-mono font-bold text-oas-accent text-base">{{ selectedNote.numero }}</p>
+          <p class="text-xs text-oas-muted mt-0.5">{{ formatDate(selectedNote.dateCreation) }}</p>
         </div>
+        <button (click)="closeDetail()" class="p-1.5 rounded-lg hover:bg-oas-line/50 text-oas-muted hover:text-oas-ink transition cursor-pointer">
+          <svg lucideX class="w-5 h-5"></svg>
+        </button>
+      </div>
 
-        <div class="flex-1 overflow-y-auto p-5 space-y-5">
+      <div class="flex-1 overflow-y-auto p-6 space-y-5">
+
+        @if (selectedNoteLoading) {
+          <div class="flex items-center gap-2 text-sm text-oas-muted">
+            <span class="w-4 h-4 rounded-full border-2 border-oas-accent border-t-transparent animate-spin"></span>
+            Chargement des détails de la note de prix…
+          </div>
+        }
 
           <!-- Infos -->
           <div class="space-y-2 text-sm">
@@ -205,6 +207,12 @@
                 <span class="font-semibold text-oas-ink">{{ modePaiementLabel(selectedNote.modePaiement) }}</span>
               </div>
             }
+            @if (selectedNote.numeroOrdreReparation) {
+              <div class="flex justify-between">
+                <span class="text-oas-muted">Ordre de réparation</span>
+                <span class="font-semibold text-oas-ink">{{ selectedNote.numeroOrdreReparation }}</span>
+              </div>
+            }
             @if (selectedNote.remarque) {
               <div class="flex justify-between gap-4">
                 <span class="text-oas-muted flex-shrink-0">Remarque</span>
@@ -221,6 +229,7 @@
                 <div class="max-w-full overflow-x-auto overscroll-x-contain"><table class="w-full text-xs">
                   <thead class="bg-oas-bg">
                     <tr>
+                      <th class="text-center px-3 py-2 font-bold text-oas-muted w-16">Type</th>
                       <th class="text-left px-3 py-2 font-bold text-oas-muted">Piece</th>
                       <th class="text-center px-3 py-2 font-bold text-oas-muted">Qte</th>
                       <th class="text-right px-3 py-2 font-bold text-oas-muted">Total</th>
@@ -228,10 +237,25 @@
                   </thead>
                   <tbody class="divide-y divide-oas-line">
                     @for (l of selectedNote.lignesPieces; track l.id) {
+                      @let desig = pieceDesignation(l);
+                      @let pType = pieceType(l);
                       <tr>
-                        <td class="px-3 py-2 text-oas-ink">{{ l.designationPiece }} @if (l.dateHeureSaisie) { <small class="block text-[10px] text-oas-muted">Saisie le {{ l.dateHeureSaisie | date:'short' }}</small> }</td>
-                        <td class="px-3 py-2 text-center">{{ l.quantite }}</td>
-                        <td class="px-3 py-2 text-right font-semibold">{{ fmt(l.montantTotal) }}</td>
+                        <td class="px-3 py-2 text-center align-top">
+                          <span class="inline-flex px-1.5 py-0.5 rounded text-[10px] font-extrabold border" [ngClass]="pieceTypeClass(l)">
+                            {{ pType }}
+                          </span>
+                        </td>
+                        <td class="px-3 py-2 text-oas-ink align-top">
+                          <span class="font-medium">{{ desig }}</span>
+                          @if (l.referencePiece && l.referencePiece !== desig) {
+                            <small class="block text-[10px] text-oas-muted font-mono">Réf: {{ l.referencePiece }}</small>
+                          }
+                          @if (l.dateHeureSaisie) {
+                            <small class="block text-[10px] text-oas-muted">Saisie le {{ l.dateHeureSaisie | date:'short' }}</small>
+                          }
+                        </td>
+                        <td class="px-3 py-2 text-center align-top">{{ l.quantite }}</td>
+                        <td class="px-3 py-2 text-right font-semibold align-top">{{ fmt(l.montantTotal) }}</td>
                       </tr>
                     }
                   </tbody>
@@ -294,26 +318,30 @@
             }
           </div>
 
-          <!-- Actions -->
-          <div class="space-y-2">
-            @if (selectedNote.resteAPayer > 0) {
-              <button (click)="openPayModal(selectedNote)"
-                      class="w-full bg-emerald-500 hover:bg-emerald-600 border border-transparent text-white font-semibold py-2.5 rounded-lg transition text-sm cursor-pointer flex items-center justify-center gap-2">
-                <svg lucideReceipt class="w-4 h-4"></svg>
-                Encaisser Paiement
-              </button>
-            }
-            <button (click)="delete(selectedNote.id)"
-                    class="w-full bg-white hover:bg-red-50 border border-oas-line hover:border-red-200 text-oas-muted hover:text-red-600 font-semibold py-2.5 rounded-lg transition text-sm cursor-pointer">
-              Supprimer
-            </button>
-          </div>
-
-        </div>
       </div>
-    }
+
+      <!-- Actions Footer -->
+      <div class="px-6 py-4 border-t border-oas-line bg-oas-bg/50 flex flex-wrap items-center justify-end gap-2.5">
+        <button (click)="delete(selectedNote.id)"
+                class="mr-auto px-4 py-2 rounded-xl bg-white hover:bg-red-50 border border-oas-line hover:border-red-200 text-oas-muted hover:text-red-600 font-semibold transition text-xs cursor-pointer">
+          Supprimer
+        </button>
+        @if (selectedNote.resteAPayer > 0) {
+          <button (click)="openPayModal(selectedNote)"
+                  class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold transition text-xs cursor-pointer flex items-center gap-1.5 shadow-sm">
+            <svg lucideReceipt class="w-4 h-4"></svg>
+            Encaisser Paiement
+          </button>
+        }
+        <button (click)="closeDetail()"
+                class="px-4 py-2 rounded-xl border border-oas-line bg-white hover:bg-oas-bg text-oas-ink font-semibold transition text-xs cursor-pointer">
+          Fermer
+        </button>
+      </div>
+
+    </div>
   </div>
-</div>
+}
 
 <!-- Create Wizard Modal (Exact Facture Design) -->
 @if (showCreateModal) {
@@ -506,18 +534,27 @@
               <input type="checkbox" formControlName="appliquerTVA" class="accent-oas-accent" />
               Appliquer la TVA selon la configuration fiscale du garage
             </label>
-            <p class="text-xs text-oas-muted mt-1">Aucun droit de timbre n’est appliqué sur une note de prix.</p>
-
             <!-- Mode de paiement -->
             <div class="mt-4">
               <label class="block text-sm font-semibold text-oas-ink mb-1">Mode de paiement *</label>
               <select formControlName="modePaiement"
                       class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink"
                       [class.border-oas-bad]="form.get('modePaiement')?.invalid && form.get('modePaiement')?.touched">
-                <option value="ESPECE">Especes</option>
-                <option value="CHEQUE">Cheque</option>
-                <option value="HORS_TAXE">Hors taxe</option>
+                <option value="ESPECE_TTC">Espèce</option>
+                <option value="CHEQUE_TTC">Chèque</option>
+                <option value="ESPECE_HT">Espèce HT</option>
+                <option value="CHEQUE_HT">Chèque HT</option>
               </select>
+
+              @if (form.get('modePaiement')?.value === 'ESPECE_TTC' || form.get('modePaiement')?.value === 'ESPECE_HT' || form.get('modePaiement')?.value === 'ESPECE') {
+                <div class="mt-2 rounded-lg bg-amber-50 border border-amber-200 p-2.5 text-xs text-amber-900 flex items-start gap-2">
+                  <span class="text-sm font-bold">⚠️</span>
+                  <span>Si le client veut payer en espèce, il doit ajouter le timbre de 1 %.</span>
+                </div>
+              }
+              @if (form.get('modePaiement')?.value === 'ESPECE_HT' || form.get('modePaiement')?.value === 'CHEQUE_HT') {
+                <p class="text-xs text-amber-800 mt-1">Note de prix Hors Taxe : le timbre fiscal de 1 % est appliqué sur le montant HT sans TVA.</p>
+              }
             </div>
           </div>
         }
@@ -602,6 +639,10 @@
         </div>
         <div class="rounded-xl p-4 border border-amber-200 bg-amber-50 text-amber-950 space-y-1.5">
           @if (payMethode === 'ESPECE') {
+            <div class="p-2 rounded-lg bg-amber-100/70 border border-amber-300 text-amber-950 text-xs font-semibold flex items-center gap-2">
+              <span class="text-sm">⚠️</span>
+              <span>Si le client veut payer en espèce, il doit ajouter le timbre de 1 %.</span>
+            </div>
             <div class="flex justify-between text-sm"><span>Timbre fiscal espèces ({{ timbreFiscalRate }} %)</span><strong>{{ fmt(payTimbreEspeces) }} FCFA</strong></div>
           }
           <div class="flex justify-between text-sm font-bold"><span>Total à remettre</span><strong>{{ fmt(payTotalEncaisse) }} FCFA</strong></div>

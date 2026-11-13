@@ -14,6 +14,13 @@ import { PaginationComponent } from '../../shared/components/pagination/paginati
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 import { UserModel, VehiculeModel, OrdreReparation, extractContent } from '../../shared/models';
 import { FiscalConfigurationService } from '../gestion-tva/fiscal-configuration.service';
+import {
+  EnrichableLignePiece,
+  PieceLigneType,
+  pieceTypeBadgeClass,
+  resolvePieceDesignation,
+  resolvePieceType,
+} from '../../shared/utils/piece-ligne.util';
 
 @Component({
   selector: 'app-notes-prix',
@@ -39,6 +46,7 @@ export class NotesPrixComponent extends BasePaginatedComponent implements OnInit
   loading = true;
   saving = false;
   selectedNote: NoteDePrixModel | null = null;
+  selectedNoteLoading = false;
   showCreateModal = false;
   createStep = 1;
 
@@ -80,7 +88,7 @@ export class NotesPrixComponent extends BasePaginatedComponent implements OnInit
     ordreReparationId: [null as number | null, Validators.required],
     kilometrage: [null as number | null],
     remarque: [''],
-    modePaiement: ['ESPECE', Validators.required],
+    modePaiement: ['ESPECE_TTC', Validators.required],
     appliquerTVA: [false],
   });
 
@@ -111,6 +119,12 @@ export class NotesPrixComponent extends BasePaginatedComponent implements OnInit
       }
       if (params['search'] === 'client-date') {
         this.showDateFilter = true;
+      }
+      if (params['detailId']) {
+        const detailId = Number(params['detailId']);
+        if (Number.isFinite(detailId) && detailId > 0) {
+          this.openDetailById(detailId);
+        }
       }
       this.applyFilter(); this.cdr.markForCheck();
     });
@@ -196,7 +210,7 @@ export class NotesPrixComponent extends BasePaginatedComponent implements OnInit
 
   openCreate() {
     if (!this.form.get('clientId')?.value) {
-      this.form.reset({ remarque: '', modePaiement: 'ESPECE', appliquerTVA: false });
+      this.form.reset({ remarque: '', modePaiement: 'ESPECE_TTC', appliquerTVA: false });
       this.vehiculesFiltres = [];
       this.clientFilter = '';
       this.vehiculeFilter = '';
@@ -333,7 +347,7 @@ export class NotesPrixComponent extends BasePaginatedComponent implements OnInit
       next: (res: any) => {
         this.saving = false;
         this.closeCreate();
-        this.form.reset({ remarque: '', modePaiement: 'ESPECE', appliquerTVA: false });
+        this.form.reset({ remarque: '', modePaiement: 'ESPECE_TTC', appliquerTVA: false });
         this.createStep = 1;
         this.load();
         this.notify('Note de prix ' + (res.numero || '') + ' créée avec succès !');
@@ -348,8 +362,68 @@ export class NotesPrixComponent extends BasePaginatedComponent implements OnInit
 
   // ── Detail ──────────────────────────────────────────────────────
 
-  openDetail(f: NoteDePrixModel) { this.selectedNote = f; }
-  closeDetail() { this.selectedNote = null; }
+  openDetail(f: NoteDePrixModel) {
+    this.selectedNote = f;
+    this.fetchDetail(f.id, false);
+  }
+
+  openDetailById(id: number) {
+    this.selectedNote = {
+      id,
+      numero: 'Chargement…',
+      dateCreation: '',
+      montantHT: 0,
+      montantTotal: 0,
+      montantPaye: 0,
+      resteAPayer: 0,
+      lignesPieces: [],
+      lignesMainDoeuvres: [],
+    };
+    this.fetchDetail(id, true);
+  }
+
+  private fetchDetail(id: number, clearOnError: boolean) {
+    this.selectedNoteLoading = true;
+    this.cdr.markForCheck();
+    this.service.getById(id).subscribe({
+      next: detail => {
+        if (this.selectedNote?.id !== id) return;
+        this.selectedNote = {
+          ...detail,
+          lignesPieces: detail.lignesPieces ?? [],
+          lignesMainDoeuvres: detail.lignesMainDoeuvres ?? [],
+        };
+        this.selectedNoteLoading = false;
+        this.cdr.markForCheck();
+      },
+      error: err => {
+        if (this.selectedNote?.id !== id) return;
+        if (clearOnError) {
+          this.selectedNote = null;
+          this.errorMessage = err?.error?.message || 'Impossible de charger le détail de cette note de prix.';
+        }
+        this.selectedNoteLoading = false;
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  pieceDesignation(l: EnrichableLignePiece): string {
+    return resolvePieceDesignation(l);
+  }
+
+  pieceType(l: EnrichableLignePiece): PieceLigneType {
+    return resolvePieceType(l);
+  }
+
+  pieceTypeClass(l: EnrichableLignePiece): string {
+    return pieceTypeBadgeClass(this.pieceType(l));
+  }
+
+  closeDetail() {
+    this.selectedNote = null;
+    this.selectedNoteLoading = false;
+  }
 
   async delete(id: number) {
     if (!await this.confirmation.confirm('Supprimer cette note de prix ?')) return;
@@ -405,7 +479,15 @@ export class NotesPrixComponent extends BasePaginatedComponent implements OnInit
   }
 
   modePaiementLabel(mp: string | null | undefined): string {
-    const m: Record<string, string> = { CHEQUE: 'Chèque', ESPECE: 'Espèces', HORS_TAXE: 'Hors taxe' };
+    const m: Record<string, string> = {
+      CHEQUE: 'Chèque',
+      ESPECE: 'Espèce',
+      ESPECE_TTC: 'Espèce',
+      CHEQUE_TTC: 'Chèque',
+      ESPECE_HT: 'Espèce HT',
+      CHEQUE_HT: 'Chèque HT',
+      HORS_TAXE: 'Hors taxe'
+    };
     return m[mp ?? ''] ?? mp ?? '—';
   }
 

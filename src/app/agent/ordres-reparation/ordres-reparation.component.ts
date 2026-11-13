@@ -20,6 +20,7 @@ import {
   OrdreReparation,
   StatutOrdre,
   getEtapeFromStatut,
+  getStepPathFromStatut,
   PieceDetache,
   MainDoeuvreModel,
   extractContent
@@ -36,7 +37,7 @@ export const STATUT_STEPS: { statut: StatutOrdre; label: string }[] = [
   // { statut: 'REPARATION', label: 'Réparation' },
   { statut: 'ORDRE_DE_TRAVAIL', label: 'Ordre de Travail' },
   { statut: 'BL', label: 'BL' },
-  { statut: 'PRET_A_LIVRER', label: 'Prêt' },
+  { statut: 'PRET_A_LIVRER', label: 'Facturation' },
   { statut: 'LIVRE', label: 'Livré' },
 ];
 
@@ -239,32 +240,7 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
   }
 
   statutToStepPath(statut?: string | null): string {
-    switch (statut) {
-      case 'RECEPTION':
-      case 'A_FAIRE': return 'reception';
-      case 'DIAGNOSTIC':
-      case 'EN_DIAGNOSTIC': return 'diagnostic';
-      case 'PIECES_MO':
-      case 'EN_ATTENTE_PIECES_MO': return 'pieces-mo';
-      case 'PROFORMA':
-      case 'EN_ATTENTE_PROFORMA': return 'proforma';
-      case 'ORDRE_DE_TRAVAIL':
-      case 'BON_DE_COMMANDE':
-      case 'PROFORMA_VALIDE':
-      case 'EN_ATTENTE_COMMANDE': return 'approvisionnement';
-      case 'BON_DE_SORTIE':
-      case 'EN_ATTENTE_SORTIE': return 'bon-sortie';
-      case 'ASSIGN_TECHNICIEN':
-      case 'EN_ATTENTE_MECANICIEN': return 'assignation';
-      case 'REPARATION':
-      case 'EN_COURS': return 'reparation';
-      case 'PAIEMENT':
-      case 'EN_ATTENTE_PAIEMENT': return 'paiement';
-      case 'PRET_A_LIVRER':
-      case 'TERMINE': return 'livraison';
-      case 'LIVRE': return 'cloture';
-      default: return 'reception';
-    }
+    return getStepPathFromStatut(statut);
   }
 
   openEdit(o: OrdreReparation): void {
@@ -437,7 +413,8 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
       REPARATION: ['REPARATION', 'EN_COURS'],
       BL: ['BL', 'EN_ATTENTE_BL', 'PAIEMENT', 'EN_ATTENTE_PAIEMENT'],
       PAIEMENT: ['BL', 'EN_ATTENTE_BL', 'PAIEMENT', 'EN_ATTENTE_PAIEMENT'],
-      PRET_A_LIVRER: ['PRET_A_LIVRER', 'TERMINE'],
+      PRET_A_LIVRER: ['FACTURATION', 'PRET_A_LIVRER', 'TERMINE'],
+      FACTURATION: ['FACTURATION', 'PRET_A_LIVRER', 'TERMINE'],
       LIVRE: ['LIVRE']
     };
 
@@ -515,6 +492,7 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
       case 'EN_ATTENTE_BL':
       case 'PAIEMENT':
       case 'EN_ATTENTE_PAIEMENT': return '#f97316';
+      case 'FACTURATION':
       case 'PRET_A_LIVRER':
       case 'TERMINE': return '#10b981';
       case 'LIVRE': return '#059669';
@@ -535,7 +513,7 @@ export class OrdresReparationComponent extends BasePaginatedComponent implements
     if (o?.statut === 'EN_COURS') return 'Réparation';
     if (o?.statut === 'BL' || o?.statut === 'EN_ATTENTE_BL') return 'BL';
     if (o?.statut === 'EN_ATTENTE_PAIEMENT' || o?.statut === 'PAIEMENT') return 'BL';
-    if (o?.statut === 'TERMINE') return 'Prêt';
+    if (o?.statut === 'TERMINE' || o?.statut === 'FACTURATION') return 'Facturation';
     return o?.statut ?? '—';
   }
 

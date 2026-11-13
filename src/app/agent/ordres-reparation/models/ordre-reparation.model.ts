@@ -9,7 +9,8 @@ export enum StatutOrdreReparation {
   ORDRE_DE_TRAVAIL = 'ORDRE_DE_TRAVAIL',   // Étape 5 (nouveau : suivi de l'OT)
   BL = 'BL',                               // Étape 6
   PAIEMENT = 'PAIEMENT',                   // Étape 6 (rétro-compatibilité)
-  PRET_A_LIVRER = 'PRET_A_LIVRER',         // Étape 7
+  FACTURATION = 'FACTURATION',             // Étape 7
+  PRET_A_LIVRER = 'PRET_A_LIVRER',         // Étape 7 (rétro-compatibilité)
   LIVRE = 'LIVRE'                          // Étape 8
 }
 
@@ -36,6 +37,7 @@ export type StatutOrdre =
   | 'EN_ATTENTE_BL'
   | 'PAIEMENT'
   | 'EN_ATTENTE_PAIEMENT'
+  | 'FACTURATION'
   | 'PRET_A_LIVRER'
   | 'TERMINE'
   | 'LIVRE';
@@ -63,6 +65,7 @@ export const STATUT_ETAPES: Record<string, number> = {
   EN_ATTENTE_BL: 6,
   PAIEMENT: 6,
   EN_ATTENTE_PAIEMENT: 6,
+  FACTURATION: 7,
   PRET_A_LIVRER: 7,
   TERMINE: 7,
   LIVRE: 8
@@ -75,13 +78,19 @@ export const ETAPES_ORDRE_REPARATION: { etape: number; statut: StatutOrdre; labe
   { etape: 4,  statut: 'PROFORMA',          label: 'Proforma',         path: 'proforma' },
   { etape: 5,  statut: 'ORDRE_DE_TRAVAIL',  label: 'Ordre de Travail', path: 'ordre-travail' },
   { etape: 6,  statut: 'BL',                label: 'BL',               path: 'bl' },
-  { etape: 7,  statut: 'PRET_A_LIVRER',     label: 'Prêt',             path: 'pret-a-livrer' },
+  { etape: 7,  statut: 'FACTURATION',       label: 'Facturation',      path: 'facturation' },
   { etape: 8,  statut: 'LIVRE',             label: 'Livré',            path: 'livraison' }
 ];
 
 export function getEtapeFromStatut(statut: string | StatutOrdreReparation | null | undefined): number {
   if (!statut) return 1;
   return STATUT_ETAPES[statut] || 1;
+}
+
+/** Retourne le segment de route correspondant au statut de l'OR. */
+export function getStepPathFromStatut(statut: string | StatutOrdreReparation | null | undefined): string {
+  const etape = getEtapeFromStatut(statut);
+  return ETAPES_ORDRE_REPARATION.find(e => e.etape === etape)?.path ?? 'reception';
 }
 
 

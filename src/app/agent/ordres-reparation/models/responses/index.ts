@@ -9,6 +9,7 @@ export * from './step-assignation-response.dto';
 export * from './step-reparation-response.dto';
 export * from './step-bl-response.dto';
 export * from './step-paiement-response.dto';
+export * from './step-facturation-response.dto';
 export * from './step-pret-a-livrer-response.dto';
 export * from './step-livraison-response.dto';
 export * from './step-ordre-travail-response.dto';

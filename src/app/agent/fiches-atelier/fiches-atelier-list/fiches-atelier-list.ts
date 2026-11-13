@@ -157,6 +157,7 @@ export class FichesAtelierList extends BasePaginatedComponent implements OnInit,
       case 'EN_ATTENTE_BL':
       case 'PAIEMENT':
       case 'EN_ATTENTE_PAIEMENT': return 'bl';
+      case 'FACTURATION':
       case 'PRET_A_LIVRER':
       case 'TERMINE': return 'livraison';
       case 'LIVRE': return 'cloture';

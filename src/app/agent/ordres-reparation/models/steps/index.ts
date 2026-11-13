@@ -7,5 +7,6 @@ export * from './step-bon-sortie.dto';
 export * from './step-assignation.dto';
 export * from './step-reparation.dto';
 export * from './step-paiement.dto';
+export * from './step-facturation.dto';
 export * from './step-pret-a-livrer.dto';
 export * from './step-livraison.dto';
