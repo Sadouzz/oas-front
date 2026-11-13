@@ -5,7 +5,7 @@ import { filter } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 import { OrdreReparationService } from '../ordre-reparation.service';
 import { AlertComponent } from '../../../shared/components/alert/alert.component';
-import { OrdreReparation, StatutOrdre, VehiculeModel, STATUT_ETAPES, getEtapeFromStatut } from '../../../shared/models';
+import { OrdreReparation, StatutOrdre, VehiculeModel, STATUT_ETAPES, getEtapeFromStatut, getStepPathFromStatut } from '../../../shared/models';
 
 export const STEP_ROUTES: { step: number; path: string; statut: StatutOrdre; label: string }[] = [
   { step: 1, path: 'reception', statut: 'RECEPTION', label: 'Réception' },
@@ -14,7 +14,7 @@ export const STEP_ROUTES: { step: number; path: string; statut: StatutOrdre; lab
   { step: 4, path: 'proforma', statut: 'PROFORMA', label: 'Proforma' },
   { step: 5, path: 'ordre-travail', statut: 'ORDRE_DE_TRAVAIL', label: 'Ordre de Travail' },
   { step: 6, path: 'bl', statut: 'BL', label: 'BL' },
-  { step: 7, path: 'pret-a-livrer', statut: 'PRET_A_LIVRER', label: 'Prêt' },
+  { step: 7, path: 'facturation', statut: 'FACTURATION', label: 'Facturation' },
   { step: 8, path: 'livraison', statut: 'LIVRE', label: 'Livré' },
 ];
 
@@ -167,7 +167,7 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
       case 6:
         return 'Valider le BL';
       case 7:
-        return 'Marquer prêt pour livraison';
+        return 'Valider la facturation';
       case 8:
         return 'Clôturer la livraison';
       default:
@@ -223,6 +223,10 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
         const lastSegment = this.router.url.split('?')[0].split('/').pop() || '';
         if (o?.hasOrdreTravail && ['reception', 'diagnostic', 'pieces-mo'].includes(lastSegment)) {
           this.router.navigate(['/app/ordres-reparation', this.ordreId, 'proforma'], { replaceUrl: true });
+          return;
+        }
+        if (!this.hasAutoRedirected && (lastSegment === this.ordreId.toString() || lastSegment === 'reception')) {
+          return;
         }
       }
     });
@@ -286,34 +290,7 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
   }
 
   statutToPath(s?: string | null): string {
-    switch (s) {
-      case 'RECEPTION':
-      case 'A_FAIRE': return 'reception';
-      case 'DIAGNOSTIC':
-      case 'EN_DIAGNOSTIC': return 'diagnostic';
-      case 'PIECES_MO':
-      case 'EN_ATTENTE_PIECES_MO': return 'pieces-mo';
-      case 'PROFORMA':
-      case 'EN_ATTENTE_PROFORMA': return 'proforma';
-      case 'ORDRE_DE_TRAVAIL':
-      case 'BON_DE_COMMANDE':
-      case 'PROFORMA_VALIDE':
-      case 'EN_ATTENTE_COMMANDE':
-      case 'BON_DE_SORTIE':
-      case 'EN_ATTENTE_SORTIE':
-      case 'ASSIGN_TECHNICIEN':
-      case 'EN_ATTENTE_MECANICIEN':
-      case 'REPARATION':
-      case 'EN_COURS': return 'ordre-travail';
-      case 'BL':
-      case 'EN_ATTENTE_BL':
-      case 'PAIEMENT':
-      case 'EN_ATTENTE_PAIEMENT': return 'bl';
-      case 'PRET_A_LIVRER': return 'pret-a-livrer';
-      case 'LIVRE':
-      case 'TERMINE': return 'livraison';
-      default: return 'reception';
-    }
+    return getStepPathFromStatut(s);
   }
 
   statutToStep(s?: string | null): number {

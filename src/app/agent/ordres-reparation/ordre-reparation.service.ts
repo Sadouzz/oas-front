@@ -32,9 +32,11 @@ import {
   StepOrdreTravailResponseDto,
   StepBLResponseDto,
   StepPaiementResponseDto,
+  StepFacturationResponseDto,
   StepPretALivrerResponseDto,
   StepLivraisonResponseDto
 } from './models/responses';
+import { StepFacturationDto } from './models/steps';
 
 @Injectable({ providedIn: 'root' })
 export class OrdreReparationService {
@@ -162,15 +164,24 @@ export class OrdreReparationService {
     return this.http.put(`${this.api}/${id}/step-paiement`, data, { responseType: 'text' }).pipe(map(() => void 0));
   }
 
-  // 7. Prêt à livrer
-  getStepPretALivrer(id: number): Observable<StepPretALivrerResponseDto> {
-    return this.http.get<any>(`${this.api}/${id}/step-pret-a-livrer`).pipe(
+  // 7. Facturation (remplace Prêt à livrer)
+  getStepFacturation(id: number): Observable<StepFacturationResponseDto> {
+    return this.http.get<any>(`${this.api}/${id}/step-facturation`).pipe(
       map((res: any) => (res && res.data !== undefined ? res.data : res))
     );
   }
 
+  updateStepFacturation(id: number, data: StepFacturationDto): Observable<void> {
+    return this.http.put(`${this.api}/${id}/step-facturation`, data, { responseType: 'text' }).pipe(map(() => void 0));
+  }
+
+  // Rétrocompatibilité
+  getStepPretALivrer(id: number): Observable<StepPretALivrerResponseDto> {
+    return this.getStepFacturation(id);
+  }
+
   updateStepPretALivrer(id: number, data: StepPretALivrerDto): Observable<void> {
-    return this.http.put(`${this.api}/${id}/step-pret-a-livrer`, data, { responseType: 'text' }).pipe(map(() => void 0));
+    return this.updateStepFacturation(id, data);
   }
 
   // 8. Livré

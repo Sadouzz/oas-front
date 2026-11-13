@@ -1,5 +1,3 @@
-import { BaseStepResponseDto } from './base-response.dto';
+import { StepFacturationResponseDto } from './step-facturation-response.dto';
 
-export interface StepPretALivrerResponseDto extends BaseStepResponseDto {
-  remarquesPreparation?: string;
-}
+export type StepPretALivrerResponseDto = StepFacturationResponseDto;

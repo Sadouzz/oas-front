@@ -261,9 +261,9 @@ export class DashboardComponent implements OnInit {
       case 'RECEPTION':
       case 'A_FAIRE': return 'Réception';
       case 'DIAGNOSTIC':
-      case 'EN_DIAGNOSTIC': return 'Diagnostic';
+      case 'EN_DIAGNOSTIC': return 'Chef Atelier';
       case 'PIECES_MO':
-      case 'EN_ATTENTE_PIECES_MO': return 'Pièces & MO';
+      case 'EN_ATTENTE_PIECES_MO': return 'OR';
       case 'PROFORMA':
       case 'EN_ATTENTE_PROFORMA': return 'Proforma';
       case 'ORDRE_DE_TRAVAIL':
@@ -281,7 +281,7 @@ export class DashboardComponent implements OnInit {
       case 'PAIEMENT':
       case 'EN_ATTENTE_PAIEMENT': return 'BL';
       case 'PRET_A_LIVRER':
-      case 'TERMINE': return 'Prêt';
+      case 'TERMINE': return 'Facturation';
       case 'LIVRE': return 'Livré';
       default: return statut || '—';
     }

@@ -32,6 +32,10 @@ export class FactureService {
     return this.http.get<FactureModel[]>(`${this.api}/recent`);
   }
 
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.api}/${id}`);
+  }
+
   create(data: FactureCreateRequest): Observable<FactureModel> {
     return this.http.post<FactureModel>(`${this.api}/creer`, data);
   }

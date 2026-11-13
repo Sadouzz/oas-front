@@ -4,10 +4,10 @@
     <div>
       <h2 class="text-lg font-bold text-oas-ink flex items-center gap-2">
         <span class="w-7 h-7 rounded-lg bg-cyan-100 text-cyan-800 flex items-center justify-center text-sm font-black">7</span>
-        Préparation Finale du Véhicule & Contrôle Qualité
+        Facturation
       </h2>
       <p class="text-xs text-oas-muted mt-0.5">
-        Vérification esthétique, propreté intérieure/extérieure, pression des pneus et stationnement en zone de livraison.
+        Consultation de la facture ou de la note de prix associée et vérification finale avant livraison.
       </p>
     </div>
   </div>
@@ -17,51 +17,399 @@
   @if (loading) {
     <div class="flex flex-col items-center justify-center py-12 text-oas-muted">
       <div class="w-8 h-8 border-3 border-cyan-600 border-t-transparent rounded-full animate-spin mb-3"></div>
-      <p class="text-sm font-medium">Chargement des détails de préparation...</p>
+      <p class="text-sm font-medium">Chargement des informations de facturation...</p>
     </div>
   } @else if (data) {
 
-    <!-- Liste des points de contrôle -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-      <div class="p-3.5 rounded-xl border border-oas-line bg-gradient-to-br from-white to-cyan-50/20 text-xs">
-        <div class="flex items-center gap-2 font-bold text-cyan-900 mb-1">
-          <svg class="w-4 h-4 text-cyan-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-          </svg>
-          Nettoyage & Propreté
+    <!-- Document associé (Facture ou Note de prix) -->
+    <div class="rounded-2xl border border-oas-line bg-white shadow-2xs overflow-hidden">
+      @if (docLoading) {
+        <div class="flex items-center gap-2.5 p-5 text-xs text-oas-muted">
+          <div class="w-4 h-4 border-2 border-cyan-600 border-t-transparent rounded-full animate-spin"></div>
+          <span>Récupération de la facture ou note de prix associée...</span>
         </div>
-        <p class="text-oas-muted">Lavage carrosserie et dépoussiérage habitacle effectués.</p>
-      </div>
-
-      <div class="p-3.5 rounded-xl border border-oas-line bg-gradient-to-br from-white to-cyan-50/20 text-xs">
-        <div class="flex items-center gap-2 font-bold text-cyan-900 mb-1">
-          <svg class="w-4 h-4 text-cyan-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-          </svg>
-          Contrôle des Niveaux
+      } @else if (facture) {
+        <!-- En-tête Facture -->
+        <div class="px-5 py-4 bg-emerald-50/50 border-b border-oas-line flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-2.5">
+            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">
+              Facture
+            </span>
+            <span class="font-mono font-bold text-oas-accent text-base">{{ facture.numero }}</span>
+            <span class="text-xs text-oas-muted">· {{ formatDate(facture.dateCreation) }}</span>
+            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold border" [ngClass]="statutPaiementClass(facture.statutPaiement)">
+              {{ statutPaiementLabel(facture.statutPaiement) }}
+            </span>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="button" (click)="downloadFacturePdf(facture.id)"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-oas-line hover:bg-oas-bg text-xs font-semibold text-oas-ink transition cursor-pointer">
+              Télécharger PDF
+            </button>
+            <a [routerLink]="['/app/factures']" [queryParams]="{ detailId: facture.id }"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition">
+              Ouvrir dans Factures →
+            </a>
+          </div>
         </div>
-        <p class="text-oas-muted">Liquides frein/refroidissement et pression vérifiés.</p>
-      </div>
 
-      <div class="p-3.5 rounded-xl border border-oas-line bg-gradient-to-br from-white to-cyan-50/20 text-xs">
-        <div class="flex items-center gap-2 font-bold text-cyan-900 mb-1">
-          <svg class="w-4 h-4 text-cyan-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-          </svg>
-          Zone Remise Client
+        <div class="p-5 space-y-5">
+          <!-- Métadonnées Facture -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs bg-oas-bg/60 rounded-xl p-3.5 border border-oas-line">
+            <div>
+              <span class="text-oas-muted block">Client</span>
+              <strong class="text-oas-ink">{{ facture.clientNom || '—' }}</strong>
+            </div>
+            <div>
+              <span class="text-oas-muted block">Véhicule</span>
+              <strong class="text-oas-ink">{{ facture.immatriculation || '—' }}</strong>
+              @if (facture.marque || facture.modele) {
+                <span class="text-oas-muted block text-[11px]">{{ facture.marque }} {{ facture.modele }}</span>
+              }
+            </div>
+            <div>
+              <span class="text-oas-muted block">Mode de paiement</span>
+              <strong class="text-oas-ink">{{ modePaiementLabel(facture.modePaiement) }}</strong>
+            </div>
+            <div>
+              <span class="text-oas-muted block">Agent</span>
+              <strong class="text-oas-ink">{{ facture.agentNom || '—' }}</strong>
+            </div>
+            @if (facture.remarque) {
+              <div class="sm:col-span-2 lg:col-span-4 border-t border-oas-line/70 pt-2">
+                <span class="text-oas-muted">Remarque : </span>
+                <span class="text-oas-ink">{{ facture.remarque }}</span>
+              </div>
+            }
+          </div>
+
+          <!-- Pièces Facture -->
+          @if (facture.lignesPieces && facture.lignesPieces.length > 0) {
+            <div>
+              <p class="text-xs font-bold text-oas-muted uppercase tracking-wide mb-2">Pièces ({{ facture.lignesPieces.length }})</p>
+              <div class="border border-oas-line rounded-xl overflow-x-auto">
+                <table class="w-full min-w-[620px] text-xs">
+                  <thead class="bg-oas-bg">
+                    <tr>
+                      <th class="text-center px-3 py-2 font-bold text-oas-muted w-16">Type</th>
+                      <th class="text-left px-3 py-2 font-bold text-oas-muted">Pièce</th>
+                      <th class="text-center px-3 py-2 font-bold text-oas-muted">Qté</th>
+                      <th class="text-right px-3 py-2 font-bold text-oas-muted">Prix unit. HT</th>
+                      <th class="text-right px-3 py-2 font-bold text-oas-muted">Remise</th>
+                      <th class="text-right px-3 py-2 font-bold text-oas-muted">Total HT</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-oas-line">
+                    @for (l of facture.lignesPieces; track l.id) {
+                      @let desig = pieceDesignation(l);
+                      @let pType = pieceType(l);
+                      <tr>
+                        <td class="px-3 py-2 text-center align-top">
+                          <span class="inline-flex px-1.5 py-0.5 rounded text-[10px] font-extrabold border" [ngClass]="pieceTypeClass(l)">
+                            {{ pType }}
+                          </span>
+                        </td>
+                        <td class="px-3 py-2 text-oas-ink align-top">
+                          <span class="font-medium">{{ desig }}</span>
+                          @if (l.referencePiece && l.referencePiece !== desig) {
+                            <small class="block text-[10px] text-oas-muted font-mono">Réf: {{ l.referencePiece }}</small>
+                          }
+                          @if (l.dateHeureSaisie) {
+                            <small class="block text-[10px] text-oas-muted">Saisie le {{ l.dateHeureSaisie | date:'short' }}</small>
+                          }
+                        </td>
+                        <td class="px-3 py-2 text-center align-top">{{ l.quantite }}</td>
+                        <td class="px-3 py-2 text-right whitespace-nowrap align-top">{{ fmt(l.prix) }} FCFA</td>
+                        <td class="px-3 py-2 text-right whitespace-nowrap align-top">{{ l.tauxRemise || 0 }} %</td>
+                        <td class="px-3 py-2 text-right font-semibold whitespace-nowrap align-top">{{ fmt(l.montantTotal) }} FCFA</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+
+          <!-- Main d'oeuvre Facture -->
+          @if (facture.lignesMainDoeuvres && facture.lignesMainDoeuvres.length > 0) {
+            <div>
+              <p class="text-xs font-bold text-oas-muted uppercase tracking-wide mb-2">Main-d'œuvre ({{ facture.lignesMainDoeuvres.length }})</p>
+              <div class="border border-oas-line rounded-xl overflow-x-auto">
+                <table class="w-full min-w-[560px] text-xs">
+                  <thead class="bg-oas-bg">
+                    <tr>
+                      <th class="text-left px-3 py-2 font-bold text-oas-muted">Description</th>
+                      <th class="text-center px-3 py-2 font-bold text-oas-muted">Heures</th>
+                      <th class="text-right px-3 py-2 font-bold text-oas-muted">Tarif horaire HT</th>
+                      <th class="text-right px-3 py-2 font-bold text-oas-muted">Remise</th>
+                      <th class="text-right px-3 py-2 font-bold text-oas-muted">Total HT</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-oas-line">
+                    @for (l of facture.lignesMainDoeuvres; track l.id) {
+                      <tr>
+                        <td class="px-3 py-2 text-oas-ink align-top">
+                          <span class="font-medium">{{ l.descriptionMainDoeuvre }}</span>
+                          @if (l.dateHeureSaisie) {
+                            <small class="block text-[10px] text-oas-muted">Saisie le {{ l.dateHeureSaisie | date:'short' }}</small>
+                          }
+                        </td>
+                        <td class="px-3 py-2 text-center align-top">{{ l.nbreHeure }} h</td>
+                        <td class="px-3 py-2 text-right whitespace-nowrap align-top">{{ fmt(l.tarifHoraire) }} FCFA/h</td>
+                        <td class="px-3 py-2 text-right whitespace-nowrap align-top">{{ l.tauxRemise || 0 }} %</td>
+                        <td class="px-3 py-2 text-right font-semibold whitespace-nowrap align-top">{{ fmt(l.montantTotal) }} FCFA</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+
+          <!-- Totaux & Règlements Facture -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div class="bg-oas-bg rounded-xl p-4 space-y-1.5 text-xs border border-oas-line">
+              @if (remiseGeneraleFacture(facture) > 0) {
+                <div class="flex justify-between">
+                  <span class="text-oas-muted">Remises générales par ligne</span>
+                  <span class="font-semibold text-oas-ink">−{{ fmt(remiseGeneraleFacture(facture)) }} FCFA</span>
+                </div>
+              }
+              @if ((facture.montantRemiseClient || 0) > 0) {
+                <div class="flex justify-between">
+                  <span class="text-oas-muted">Remise compte client ({{ facture.tauxRemiseClient || 0 }} %)</span>
+                  <span class="font-semibold text-oas-ink">−{{ fmt(facture.montantRemiseClient) }} FCFA</span>
+                </div>
+              }
+              <div class="flex justify-between">
+                <span class="text-oas-muted">Total HT après remises</span>
+                <span class="font-semibold text-oas-ink">{{ fmt(facture.montantHT) }} FCFA</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-oas-muted">TVA</span>
+                <span class="font-semibold text-oas-ink">
+                  {{ (facture.tvaApplicable ?? (facture.montantTVA > 0)) ? (fmt(facture.montantTVA) + ' FCFA') : 'Désactivée' }}
+                </span>
+              </div>
+              @if (facture.montantTimbre > 0) {
+                <div class="flex justify-between">
+                  <span class="text-oas-muted">Timbre</span>
+                  <span class="font-semibold text-oas-ink">{{ fmt(facture.montantTimbre) }} FCFA</span>
+                </div>
+              }
+              @if (facture.montantAutre > 0) {
+                <div class="flex justify-between">
+                  <span class="text-oas-muted">Autre</span>
+                  <span class="font-semibold text-oas-ink">{{ fmt(facture.montantAutre) }} FCFA</span>
+                </div>
+              }
+              <div class="flex justify-between pt-2 border-t border-oas-line text-sm">
+                <span class="font-bold text-oas-ink">Total à régler</span>
+                <span class="font-extrabold text-oas-accent">{{ fmt(facture.montantTotal) }} FCFA</span>
+              </div>
+              <div class="flex justify-between text-emerald-700 font-semibold">
+                <span>Déjà payé</span>
+                <span>{{ fmt(facture.montantPaye) }} FCFA</span>
+              </div>
+              <div class="flex justify-between font-bold" [ngClass]="facture.resteAPayer > 0 ? 'text-rose-700' : 'text-emerald-700'">
+                <span>Reste à payer</span>
+                <span>{{ fmt(facture.resteAPayer) }} FCFA</span>
+              </div>
+            </div>
+
+            @if (facture.recus && facture.recus.length > 0) {
+              <div class="border border-oas-line rounded-xl p-4 space-y-2 bg-white">
+                <p class="text-xs font-bold text-oas-muted uppercase tracking-wide">Règlements ({{ facture.recus.length }})</p>
+                <div class="divide-y divide-oas-line">
+                  @for (recu of facture.recus; track recu.id) {
+                    <div class="py-2 first:pt-0 last:pb-0 text-xs space-y-0.5">
+                      <div class="flex justify-between gap-2">
+                        <strong class="font-mono text-oas-ink">{{ recu.numero }}</strong>
+                        <span class="text-oas-muted">{{ formatDate(recu.datePaiement) }}</span>
+                      </div>
+                      <div class="flex justify-between text-oas-muted">
+                        <span>{{ modePaiementLabel(recu.modePaiement) }}</span>
+                        <span class="font-bold text-oas-ink">{{ fmt(recu.montantEncaisse ?? recu.montant) }} FCFA</span>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
         </div>
-        <p class="text-oas-muted">Véhicule stationné au parking dédié à la remise.</p>
-      </div>
-    </div>
+      } @else if (noteDePrix) {
+        <!-- En-tête Note de Prix -->
+        <div class="px-5 py-4 bg-blue-50/50 border-b border-oas-line flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-2.5">
+            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-blue-100 text-blue-800 border border-blue-200">
+              Note de prix
+            </span>
+            <span class="font-mono font-bold text-oas-accent text-base">{{ noteDePrix.numero }}</span>
+            <span class="text-xs text-oas-muted">· {{ formatDate(noteDePrix.dateCreation) }}</span>
+            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold border" [ngClass]="statutPaiementClass(noteDePrix.statutPaiement)">
+              {{ statutPaiementLabel(noteDePrix.statutPaiement) }}
+            </span>
+          </div>
+          <a [routerLink]="['/app/notes-prix']" [queryParams]="{ detailId: noteDePrix.id }"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition">
+            Ouvrir dans Notes de prix →
+          </a>
+        </div>
 
-    <!-- Remarques de préparation -->
-    <div>
-      <label class="block text-xs font-semibold text-oas-muted uppercase tracking-wider mb-1.5">
-        Remarques sur la préparation / Emplacement du véhicule
-      </label>
-      <textarea rows="4" [(ngModel)]="remarquesPreparation"
-        placeholder="Ex: Véhicule lavé, pression vérifiée, clés remises à la réception, garé à l'emplacement Remise A-01..."
-        class="w-full px-3.5 py-2.5 rounded-xl border border-oas-line bg-white text-sm text-oas-ink focus:outline-hidden focus:ring-2 focus:ring-cyan-500 shadow-2xs leading-relaxed"></textarea>
+        <div class="p-5 space-y-5">
+          <!-- Métadonnées Note de Prix -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs bg-oas-bg/60 rounded-xl p-3.5 border border-oas-line">
+            <div>
+              <span class="text-oas-muted block">Client</span>
+              <strong class="text-oas-ink">{{ noteDePrix.clientNom || '—' }}</strong>
+            </div>
+            <div>
+              <span class="text-oas-muted block">Véhicule</span>
+              <strong class="text-oas-ink">{{ noteDePrix.vehiculeImmatriculation || noteDePrix.immatriculation || '—' }}</strong>
+              @if (noteDePrix.marque || noteDePrix.modele) {
+                <span class="text-oas-muted block text-[11px]">{{ noteDePrix.marque }} {{ noteDePrix.modele }}</span>
+              }
+            </div>
+            <div>
+              <span class="text-oas-muted block">Mode de paiement</span>
+              <strong class="text-oas-ink">{{ modePaiementLabel(noteDePrix.modePaiement) }}</strong>
+            </div>
+            <div>
+              <span class="text-oas-muted block">Agent</span>
+              <strong class="text-oas-ink">{{ noteDePrix.agentNom || '—' }}</strong>
+            </div>
+            @if (noteDePrix.remarque) {
+              <div class="sm:col-span-2 lg:col-span-4 border-t border-oas-line/70 pt-2">
+                <span class="text-oas-muted">Remarque : </span>
+                <span class="text-oas-ink">{{ noteDePrix.remarque }}</span>
+              </div>
+            }
+          </div>
+
+          <!-- Pièces Note de Prix -->
+          @if (noteDePrix.lignesPieces && noteDePrix.lignesPieces.length > 0) {
+            <div>
+              <p class="text-xs font-bold text-oas-muted uppercase tracking-wide mb-2">Pièces ({{ noteDePrix.lignesPieces.length }})</p>
+              <div class="border border-oas-line rounded-xl overflow-x-auto">
+                <table class="w-full min-w-[560px] text-xs">
+                  <thead class="bg-oas-bg">
+                    <tr>
+                      <th class="text-center px-3 py-2 font-bold text-oas-muted w-16">Type</th>
+                      <th class="text-left px-3 py-2 font-bold text-oas-muted">Pièce</th>
+                      <th class="text-center px-3 py-2 font-bold text-oas-muted">Qté</th>
+                      <th class="text-right px-3 py-2 font-bold text-oas-muted">Prix unit. HT</th>
+                      <th class="text-right px-3 py-2 font-bold text-oas-muted">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-oas-line">
+                    @for (l of noteDePrix.lignesPieces; track l.id) {
+                      @let desig = pieceDesignation(l);
+                      @let pType = pieceType(l);
+                      <tr>
+                        <td class="px-3 py-2 text-center align-top">
+                          <span class="inline-flex px-1.5 py-0.5 rounded text-[10px] font-extrabold border" [ngClass]="pieceTypeClass(l)">
+                            {{ pType }}
+                          </span>
+                        </td>
+                        <td class="px-3 py-2 text-oas-ink align-top">
+                          <span class="font-medium">{{ desig }}</span>
+                          @if (l.referencePiece && l.referencePiece !== desig) {
+                            <small class="block text-[10px] text-oas-muted font-mono">Réf: {{ l.referencePiece }}</small>
+                          }
+                          @if (l.dateHeureSaisie) {
+                            <small class="block text-[10px] text-oas-muted">Saisie le {{ l.dateHeureSaisie | date:'short' }}</small>
+                          }
+                        </td>
+                        <td class="px-3 py-2 text-center align-top">{{ l.quantite }}</td>
+                        <td class="px-3 py-2 text-right whitespace-nowrap align-top">{{ fmt(l.prix) }} FCFA</td>
+                        <td class="px-3 py-2 text-right font-semibold whitespace-nowrap align-top">{{ fmt(l.montantTotal) }} FCFA</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+
+          <!-- Main d'oeuvre Note de Prix -->
+          @if (noteDePrix.lignesMainDoeuvres && noteDePrix.lignesMainDoeuvres.length > 0) {
+            <div>
+              <p class="text-xs font-bold text-oas-muted uppercase tracking-wide mb-2">Main-d'œuvre ({{ noteDePrix.lignesMainDoeuvres.length }})</p>
+              <div class="border border-oas-line rounded-xl overflow-x-auto">
+                <table class="w-full min-w-[520px] text-xs">
+                  <thead class="bg-oas-bg">
+                    <tr>
+                      <th class="text-left px-3 py-2 font-bold text-oas-muted">Description</th>
+                      <th class="text-center px-3 py-2 font-bold text-oas-muted">Heures</th>
+                      <th class="text-right px-3 py-2 font-bold text-oas-muted">Tarif horaire HT</th>
+                      <th class="text-right px-3 py-2 font-bold text-oas-muted">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-oas-line">
+                    @for (l of noteDePrix.lignesMainDoeuvres; track l.id) {
+                      <tr>
+                        <td class="px-3 py-2 text-oas-ink align-top">
+                          <span class="font-medium">{{ l.descriptionMainDoeuvre }}</span>
+                          @if (l.dateHeureSaisie) {
+                            <small class="block text-[10px] text-oas-muted">Saisie le {{ l.dateHeureSaisie | date:'short' }}</small>
+                          }
+                        </td>
+                        <td class="px-3 py-2 text-center align-top">{{ l.nbreHeure }} h</td>
+                        <td class="px-3 py-2 text-right whitespace-nowrap align-top">{{ fmt(l.tarifHoraire) }} FCFA/h</td>
+                        <td class="px-3 py-2 text-right font-semibold whitespace-nowrap align-top">{{ fmt(l.montantTotal) }} FCFA</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+
+          <!-- Totaux Note de Prix -->
+          <div class="bg-oas-bg rounded-xl p-4 space-y-1.5 text-xs border border-oas-line max-w-md ml-auto">
+            <div class="flex justify-between">
+              <span class="text-oas-muted">Montant HT</span>
+              <span class="font-semibold text-oas-ink">{{ fmt(noteDePrix.montantHT) }} FCFA</span>
+            </div>
+            @if (noteDePrix.montantAutre && noteDePrix.montantAutre > 0) {
+              <div class="flex justify-between">
+                <span class="text-oas-muted">Autre</span>
+                <span class="font-semibold text-oas-ink">{{ fmt(noteDePrix.montantAutre) }} FCFA</span>
+              </div>
+            }
+            <div class="flex justify-between">
+              <span class="text-oas-muted">TVA</span>
+              <span class="font-semibold text-oas-ink">
+                {{ (noteDePrix.tvaApplicable ?? ((noteDePrix.montantTVA || 0) > 0)) ? (fmt(noteDePrix.montantTVA || 0) + ' FCFA') : 'Désactivée' }}
+              </span>
+            </div>
+            <div class="flex justify-between pt-2 border-t border-oas-line text-sm">
+              <span class="font-bold text-oas-ink">{{ (noteDePrix.tvaApplicable ?? ((noteDePrix.montantTVA || 0) > 0)) ? 'Total TTC' : 'Total HT net' }}</span>
+              <span class="font-extrabold text-oas-accent">{{ fmt(noteDePrix.montantTotal) }} FCFA</span>
+            </div>
+            <div class="flex justify-between text-emerald-700 font-semibold">
+              <span>Déjà payé</span>
+              <span>{{ fmt(noteDePrix.montantPaye) }} FCFA</span>
+            </div>
+            <div class="flex justify-between font-bold" [ngClass]="noteDePrix.resteAPayer > 0 ? 'text-rose-700' : 'text-emerald-700'">
+              <span>Reste à payer</span>
+              <span>{{ fmt(noteDePrix.resteAPayer) }} FCFA</span>
+            </div>
+          </div>
+        </div>
+      } @else {
+        <div class="p-5 flex flex-wrap items-center justify-between gap-3 bg-amber-50/40">
+          <div class="text-xs text-amber-900">
+            <strong class="block text-sm mb-0.5">Aucune facture ni note de prix associée</strong>
+            Convertissez d'abord le bon de livraison à l'étape 6 (BL) pour afficher ses détails ici.
+          </div>
+          <a [routerLink]="['/app/ordres-reparation', ordreId, 'bl']"
+            class="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition">
+            Aller à l'étape BL
+          </a>
+        </div>
+      }
     </div>
 
     <!-- Actions -->
@@ -81,7 +429,7 @@
           <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
           <span>Validation...</span>
         } @else {
-          <span>Véhicule Prêt · Passer à la Livraison</span>
+          <span>Valider la Facturation · Passer à la Livraison</span>
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
           </svg>

@@ -10,7 +10,7 @@ import { FactureService } from '../../../../factures/facture.service';
 import { BonDeLivraisonService, BonDeLivraisonOrdreContext } from '../../../../bons-livraison/bon-de-livraison.service';
 import { AlertComponent } from '../../../../../shared/components/alert/alert.component';
 import { FiscalConfigurationService } from '../../../../gestion-tva/fiscal-configuration.service';
-import { FACTURE_MODES_PAIEMENT, FactureModePaiement, modePaiementRecu } from '../../../../factures/models/facture-mode-paiement';
+import { FACTURE_MODES_PAIEMENT, FactureModePaiement, modePaiementRecu, MESSAGE_TIMBRE_ESPECES, isModeEspeces, isModeHt } from '../../../../factures/models/facture-mode-paiement';
 
 @Component({
   selector: 'app-step-paiement',
@@ -126,6 +126,12 @@ export class StepPaiementComponent implements OnInit {
   remarqueFacture = '';
   modePaiementFacture: FactureModePaiement = 'ESPECE_TTC';
   readonly modesPaiementFacture = FACTURE_MODES_PAIEMENT;
+
+  modePaiementNote: FactureModePaiement = 'ESPECE_TTC';
+  remarqueNote = '';
+  readonly messageTimbreEspeces = MESSAGE_TIMBRE_ESPECES;
+  readonly isModeEspeces = isModeEspeces;
+  readonly isModeHt = isModeHt;
 
   showPayModal = false;
   payMontant = 0;
@@ -301,10 +307,10 @@ export class StepPaiementComponent implements OnInit {
             this.creatingFacture = false;
             this.showCreateFactureModal = false;
             this.createdFacture = res;
-            const ref = res?.numero || ('#' + res?.id);
-            this.successMessage = `La facture ${ref} a été créée avec succès depuis le bon de livraison.`;
-            this.loadData();
-            this.cdr.detectChanges();
+            const id = res?.id ?? res?.data?.id;
+            this.router.navigate(['/app/factures'], {
+              queryParams: id ? { detailId: id } : undefined
+            });
           });
         },
         error: (err) => {
@@ -327,6 +333,8 @@ export class StepPaiementComponent implements OnInit {
   // --- Modal Conversion Note de Prix ---
 
   ouvrirModalConfirmationNote(): void {
+    this.modePaiementNote = this.data?.tvaApplicable === false ? 'ESPECE_HT' : 'ESPECE_TTC';
+    this.remarqueNote = '';
     this.showConfirmNoteModal = true;
     this.cdr.detectChanges();
   }
@@ -346,16 +354,19 @@ export class StepPaiementComponent implements OnInit {
 
     try {
       const blId = await this.getOrCreateBonDeLivraisonId();
-      this.bonDeLivraisonService.convertirNote(blId).subscribe({
+      this.bonDeLivraisonService.convertirNote(blId, {
+        modePaiement: this.modePaiementNote,
+        remarque: this.remarqueNote
+      }).subscribe({
         next: (res) => {
           this.ngZone.run(() => {
             this.convertingNote = false;
             this.showConfirmNoteModal = false;
             this.createdNoteDePrix = res;
-            const ref = res?.numero || ('#' + (res?.id || blId));
-            this.successMessage = `La Note de prix ${ref} a été générée avec succès depuis le bon de livraison.`;
-            this.loadData();
-            this.cdr.detectChanges();
+            const id = res?.id ?? res?.data?.id;
+            this.router.navigate(['/app/notes-prix'], {
+              queryParams: id ? { detailId: id } : undefined
+            });
           });
         },
         error: (err) => {
@@ -429,11 +440,11 @@ export class StepPaiementComponent implements OnInit {
     this.errorMessage = '';
     this.cdr.detectChanges();
 
-    this.ordreService.updateStatut(this.ordreId, 'PRET_A_LIVRER').subscribe({
+    this.ordreService.updateStatut(this.ordreId, 'FACTURATION').subscribe({
       next: () => {
         this.ngZone.run(() => {
           this.advancing = false;
-          this.router.navigate(['/app/ordres-reparation', this.ordreId, 'pret-a-livrer']);
+          this.router.navigate(['/app/ordres-reparation', this.ordreId, 'facturation']);
         });
       },
       error: (err: any) => {

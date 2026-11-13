@@ -11,9 +11,9 @@ export class NoteDePrixService {
 
   getAll(params?: PageParams): Observable<NoteDePrixModel[]> {
     const p: Record<string, string> = {};
-    if (params?.page !== undefined) p['page'] = params.page.toString();
-    if (params?.size !== undefined) p['size'] = params.size.toString();
-    if (params?.keyword) p['keyword'] = params.keyword;
+    for (const [key, value] of Object.entries(params ?? {})) {
+      if (value !== undefined && value !== null && value !== '') p[key] = String(value);
+    }
     return this.http.get<any>(this.api, { params: p });
   }
 
@@ -31,5 +31,9 @@ export class NoteDePrixService {
 
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.api}/${id}`);
+  }
+
+  downloadPdf(id: number, layoutKey: 'AVEC_ENTETE' | 'SANS_ENTETE' = 'AVEC_ENTETE'): Observable<Blob> {
+    return this.http.get(`${this.api}/${id}/pdf`, { params: { layoutKey }, responseType: 'blob' });
   }
 }

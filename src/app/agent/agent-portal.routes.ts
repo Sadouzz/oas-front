@@ -74,10 +74,20 @@ export const AGENT_PORTAL_ROUTES: Routes = [
             import('./bons-de-sortie/historique-bs/historique-bs.component').then(m => m.HistoriqueBsComponent),
         },
         {
-          path: 'stock',
+          path: 'historique-pieces',
           canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_AGENT_MAGASIN'])],
           loadComponent: () =>
             import('./pieces-detachees/historique/historique.component').then(m => m.HistoriqueComponent),
+        },
+        {
+          path: 'stock',
+          redirectTo: 'historique-pieces',
+          pathMatch: 'full',
+        },
+        {
+          path: 'stock/historique',
+          redirectTo: 'historique-pieces',
+          pathMatch: 'full',
         },
         {
           path: 'inventaire',
@@ -173,11 +183,16 @@ export const AGENT_PORTAL_ROUTES: Routes = [
               pathMatch: 'full',
             },
             {
-              path: 'pret-a-livrer',
+              path: 'facturation',
               loadComponent: () =>
                 import('./ordres-reparation/ordre-reparation-detail/steps/step-pret-a-livrer/step-pret-a-livrer.component').then(
                   m => m.StepPretALivrerComponent
                 ),
+            },
+            {
+              path: 'pret-a-livrer',
+              redirectTo: 'facturation',
+              pathMatch: 'full',
             },
             {
               path: 'livraison',

@@ -83,8 +83,9 @@ export class BonDeLivraisonService {
     const payload = typeof data === 'string' ? { modePaiement: data } : data;
     return this.http.post(`${this.api}/${id}/convertir-en-facture`, payload);
   }
-  convertirNote(id: number): Observable<any> {
-    return this.http.post(`${this.api}/${id}/convertir-en-note-de-prix`, {});
+  convertirNote(id: number, data?: { modePaiement?: string; remarque?: string } | string): Observable<any> {
+    const payload = typeof data === 'string' ? { modePaiement: data } : (data ?? {});
+    return this.http.post(`${this.api}/${id}/convertir-en-note-de-prix`, payload);
   }
   pdf(id: number, layoutKey: 'AVEC_ENTETE' | 'SANS_ENTETE'): Observable<Blob> {
     return this.http.get(`${this.api}/${id}/pdf`, { params: { layoutKey }, responseType: 'blob' });

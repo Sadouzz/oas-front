@@ -1,5 +1,3 @@
-import { BaseStepDto } from './base-step.dto';
+import { StepFacturationDto } from './step-facturation.dto';
 
-export interface StepPretALivrerDto extends BaseStepDto {
-  remarquesPreparation?: string;
-}
+export type StepPretALivrerDto = StepFacturationDto;
