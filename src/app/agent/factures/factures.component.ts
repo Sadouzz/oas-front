@@ -452,14 +452,6 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit,
   }
   closeDetail() { this.selectedFacture = null; this.selectedFactureLoading = false; }
 
-  async delete(id: number) {
-    if (!await this.confirmation.confirm('Supprimer cette facture ?')) return;
-    this.service.delete(id).subscribe({
-      next: () => { this.load(); this.closeDetail(); this.notify('Facture supprimée.'); },
-      error: () => this.notifyError('Erreur lors de la suppression.'),
-    });
-  }
-
   // ── Payment ─────────────────────────────────────────────────────
 
   openPayModal(f: FactureListModel) {

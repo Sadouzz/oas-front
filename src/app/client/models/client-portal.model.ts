@@ -138,4 +138,15 @@ export interface ClientBookingContextGarage {
 export interface ClientBookingContext {
   vehicules: ClientBookingContextVehicule[];
   garages: ClientBookingContextGarage[];
+  reservation: ClientReservationBookingStatus;
+}
+
+export interface ClientReservationBookingStatus {
+  workflowAutorise: boolean;
+  plafondAtteint: boolean;
+  factureEchueImpayee: boolean;
+  demandeDerogationPossible: boolean;
+  demandeEnAttente: boolean;
+  motifBlocage: string | null;
+  dateDemandeEnAttente: string | null;
 }

@@ -201,7 +201,7 @@ export class StepProformaComponent implements OnInit {
   }
 
   get isPassedToOT(): boolean {
-    return getEtapeFromStatut(this.loadedOrdre?.statut) >= 5 || !!this.existingOT;
+    return this.loadedOrdre?.hasOrdreTravail === true || !!this.loadedOrdre?.ordreTravailId || !!this.existingOT;
   }
 
   genererProforma(): void {
@@ -726,22 +726,11 @@ Orient Auto Service`;
       this.cdr.markForCheck();
       return;
     }
-
-    this.saving = true;
-    this.errorMessage = '';
-
-    this.ordreService.updateStatut(this.ordreId, 'ORDRE_DE_TRAVAIL').subscribe({
-      next: () => {
-        this.saving = false;
-        this.cdr.markForCheck();
-        this.router.navigate(['/app/ordres-reparation', this.ordreId, 'ordre-travail']);
-      },
-      error: (err) => {
-        this.saving = false;
-        this.errorMessage = err.error?.message || 'Impossible de passer à l’Ordre de Travail. Vérifiez que le proforma est validé.';
-        this.cdr.markForCheck();
-      }
-    });
+    if (this.isPassedToOT) {
+      this.router.navigate(['/app/ordres-reparation', this.ordreId, 'ordre-travail']);
+      return;
+    }
+    this.ouvrirConfirmationOT();
   }
 
   validateStep(): void {

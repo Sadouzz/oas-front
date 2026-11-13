@@ -93,6 +93,18 @@
               Sélectionnez une facture pour voir le détail.
             </div>
           } @else {
+            @if (selectedLoading) {
+              <div class="flex flex-col items-center justify-center gap-3 py-14 text-sm text-oas-muted" role="status" aria-live="polite">
+                <button (click)="closeDetail()" class="lg:hidden px-3 py-2 rounded-lg bg-oas-accent-bg text-oas-accent font-semibold" aria-label="Retour à la liste des factures">Retour aux factures</button>
+                <div class="flex items-center">
+                  <svg class="animate-spin h-5 w-5 mr-2 text-oas-accent" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" d="M4 12a8 8 0 018-8v8H4z"></path>
+                  </svg>
+                  Chargement du détail…
+                </div>
+              </div>
+            } @else {
             <div class="sticky top-0 z-10 bg-white/95 backdrop-blur-md">
               <div class="px-4 sm:px-5 py-3.5 border-b border-oas-line">
                 <button (click)="closeDetail()" class="lg:hidden inline-flex items-center gap-1.5 text-xs font-bold text-oas-accent hover:text-oas-accent-dark mb-2.5 cursor-pointer py-1 px-2.5 rounded-lg bg-oas-accent-bg active:scale-95 transition">
@@ -116,7 +128,7 @@
                   <p class="font-semibold text-oas-ink">{{ selected.marque }} {{ selected.modele }} — {{ selected.immatriculation }}</p>
                 </div>
 
-                @if (selected.lignesPieces.length) {
+                @if (selected.lignesPieces?.length) {
                   <p class="text-xs font-bold uppercase text-oas-muted mb-2 mt-4">Pièces</p>
                   <div class="border border-oas-line rounded-xl divide-y divide-oas-line mb-4 overflow-hidden">
                     @for (ligne of selected.lignesPieces; track ligne.id) {
@@ -131,7 +143,7 @@
                   </div>
                 }
 
-                @if (selected.lignesMainDoeuvres.length) {
+                @if (selected.lignesMainDoeuvres?.length) {
                   <p class="text-xs font-bold uppercase text-oas-muted mb-2">Main d'œuvre</p>
                   <div class="border border-oas-line rounded-xl divide-y divide-oas-line mb-4 overflow-hidden">
                     @for (ligne of selected.lignesMainDoeuvres; track ligne.id) {
@@ -172,6 +184,7 @@
                 </p>
               </div>
             </div>
+            }
           }
         </div>
 

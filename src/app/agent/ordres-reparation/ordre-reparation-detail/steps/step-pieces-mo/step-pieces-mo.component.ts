@@ -76,7 +76,7 @@ export class StepPiecesMoComponent implements OnInit, OnDestroy {
   proformaStatut: string | null = null;
 
   get isReadOnly(): boolean {
-    return getEtapeFromStatut(this.loadedOrdre?.statut) >= 5;
+    return this.loadedOrdre?.hasOrdreTravail === true;
   }
 
   loading = true;

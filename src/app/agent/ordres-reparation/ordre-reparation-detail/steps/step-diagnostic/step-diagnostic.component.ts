@@ -49,7 +49,7 @@ export class StepDiagnosticComponent implements OnInit {
   currentDiagnostic: any = null;
 
   get isReadOnly(): boolean {
-    return getEtapeFromStatut(this.loadedOrdre?.statut) >= 5;
+    return this.loadedOrdre?.hasOrdreTravail === true;
   }
 
   loading = true;
