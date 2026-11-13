@@ -1,6 +1,8 @@
 import { BaseStepResponseDto } from './base-response.dto';
 
 export interface StepProformaResponseDto extends BaseStepResponseDto {
+  ordreTravailId?: number;
+  ordreTravailNumero?: string;
   proforma?: {
     id: number;
     statut: string;

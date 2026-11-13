@@ -5,7 +5,9 @@ import { ClientRendezVousService } from './client-rendezvous.service';
 import { ClientPortalService } from '../layout/client-portal.service';
 import { ClientVehiculeService } from '../vehicules/client-vehicule.service';
 import { RendezVous, RendezVousStatus, extractContent } from '../../shared/models';
-import { ClientBookingContextVehicule, ClientBookingContextGarage } from '../models';
+import {
+  ClientBookingContextVehicule, ClientBookingContextGarage, ClientReservationBookingStatus
+} from '../models';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { StatusBadgeComponent, BadgeTone } from '../ui/status-badge/status-badge.component';
 import { ModalComponent } from '../ui/modal/modal.component';
@@ -47,6 +49,9 @@ export class ClientRendezVousComponent implements OnInit {
   selected: RendezVous | null = null;
   vehicules: ClientBookingContextVehicule[] = [];
   garages: ClientBookingContextGarage[] = [];
+  reservationStatus: ClientReservationBookingStatus | null = null;
+  loadingBookingContext = false;
+  bookingContextError = '';
   loading = false;
   showCreateModal = false;
   showCancelModal = false;
@@ -97,10 +102,19 @@ export class ClientRendezVousComponent implements OnInit {
   }
 
   loadBookingContext(): void {
+    this.loadingBookingContext = true;
+    this.bookingContextError = '';
     this.portalService.getBookingContext().subscribe({
       next: ctx => {
         this.vehicules = ctx.vehicules ?? [];
         this.garages = ctx.garages ?? [];
+        this.reservationStatus = ctx.reservation ?? null;
+        this.loadingBookingContext = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.loadingBookingContext = false;
+        this.bookingContextError = 'Impossible de vérifier les conditions de prise de rendez-vous. Réessayez.';
         this.cdr.markForCheck();
       }
     });
@@ -311,6 +325,8 @@ export class ClientRendezVousComponent implements OnInit {
     this.vehiculeTransferMessage = '';
     this.duplicateVehicleData = null;
     this.modalErrorMessage = '';
+    this.reservationStatus = null;
+    this.bookingContextError = '';
     this.showCreateModal = true;
     this.loadBookingContext();
   }
@@ -328,16 +344,40 @@ export class ClientRendezVousComponent implements OnInit {
       return;
     }
 
+    if (this.loadingBookingContext || !this.reservationStatus) {
+      this.modalErrorMessage = this.bookingContextError || 'Vérification des conditions de prise de rendez-vous en cours.';
+      return;
+    }
+    if (this.reservationStatus.factureEchueImpayee || this.reservationStatus.demandeEnAttente) {
+      this.modalErrorMessage = this.reservationStatus.motifBlocage
+        || 'Une demande de rendez-vous est déjà en attente de décision.';
+      return;
+    }
+
     this.saving = true;
     this.modalErrorMessage = '';
 
     this.service.create(this.form.value).subscribe({
-      next: () => {
+      next: result => {
         this.saving = false;
         this.showCreateModal = false;
-        this.successMessage = 'Demande de rendez-vous envoyée.';
+        if (result.type === 'DEROGATION_EN_ATTENTE') {
+          this.reservationStatus = {
+            workflowAutorise: false,
+            plafondAtteint: true,
+            factureEchueImpayee: false,
+            demandeDerogationPossible: false,
+            demandeEnAttente: true,
+            motifBlocage: result.message,
+            dateDemandeEnAttente: new Date().toISOString(),
+          };
+          this.successMessage = result.message;
+        } else {
+          this.successMessage = 'Votre demande de rendez-vous a bien été envoyée.';
+          this.load();
+        }
         setTimeout(() => this.successMessage = '', 4000);
-        this.load();
+        this.cdr.markForCheck();
       },
       error: (err: any) => {
         this.saving = false;

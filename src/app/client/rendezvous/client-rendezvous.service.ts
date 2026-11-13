@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { RendezVous, ClientRendezVousRequest } from '../../shared/models';
+import { RendezVous, ClientRendezVousRequest, RendezVousCreationResult } from '../../shared/models';
 
 @Injectable({ providedIn: 'root' })
 export class ClientRendezVousService {
@@ -13,8 +13,8 @@ export class ClientRendezVousService {
     return this.http.get<RendezVous[]>(this.api + '/me');
   }
 
-  create(payload: ClientRendezVousRequest): Observable<RendezVous> {
-    return this.http.post<RendezVous>(this.api, payload);
+  create(payload: ClientRendezVousRequest): Observable<RendezVousCreationResult> {
+    return this.http.post<RendezVousCreationResult>(this.api, payload);
   }
 
   annuler(id: number, motifAnnulation: string): Observable<void> {

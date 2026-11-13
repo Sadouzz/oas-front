@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ClientFactureService } from './client-facture.service';
-import { FactureModel } from '../../shared/models';
+import { FactureDetailsViewModel, FactureListModel, FactureModel } from '../../agent/factures/models/facture.model';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { StatusBadgeComponent, BadgeTone } from '../ui/status-badge/status-badge.component';
 import { VehicleAvatarComponent } from '../ui/vehicle-avatar/vehicle-avatar.component';
@@ -9,13 +9,13 @@ import { PdfLayoutDialogService } from '../../shared/components/pdf-layout-dialo
 
 type SortOrder = 'recent' | 'ancien';
 
-const STATUT_LABELS: Record<FactureModel['statutPaiement'], string> = {
+const STATUT_LABELS: Record<FactureListModel['statutPaiement'], string> = {
   NON_PAYE: 'Non payée',
   PARTIEL: 'Partiellement payée',
   PAYE: 'Payée',
 };
 
-const STATUT_TONES: Record<FactureModel['statutPaiement'], BadgeTone> = {
+const STATUT_TONES: Record<FactureListModel['statutPaiement'], BadgeTone> = {
   NON_PAYE: 'danger',
   PARTIEL: 'pending',
   PAYE: 'success',
@@ -32,9 +32,11 @@ export class ClientFacturesComponent implements OnInit {
   private service = inject(ClientFactureService);
   private pdfLayoutDialog = inject(PdfLayoutDialogService);
 
-  factures: FactureModel[] = [];
-  filtered: FactureModel[] = [];
-  selected: FactureModel | null = null;
+  factures: FactureListModel[] = [];
+  filtered: FactureListModel[] = [];
+  selected: FactureDetailsViewModel | null = null;
+  selectedLoading = false;
+  private detailRequest = 0;
   loading = false;
   errorMessage = '';
 
@@ -44,7 +46,7 @@ export class ClientFacturesComponent implements OnInit {
 
   readonly statutLabels = STATUT_LABELS;
   readonly statutTones = STATUT_TONES;
-  readonly statutOptions = Object.keys(STATUT_LABELS) as FactureModel['statutPaiement'][];
+  readonly statutOptions = Object.keys(STATUT_LABELS) as FactureListModel['statutPaiement'][];
 
   ngOnInit(): void {
     this.load();
@@ -52,9 +54,10 @@ export class ClientFacturesComponent implements OnInit {
 
   load(): void {
     this.loading = true;
+    this.errorMessage = '';
     this.service.getAll().subscribe({
       next: factures => { this.factures = factures; this.loading = false; this.cdr.markForCheck(); this.applyFilter(); this.cdr.markForCheck(); },
-      error: () => { this.loading = false; this.cdr.markForCheck(); this.errorMessage = 'Impossible de charger vos factures.'; },
+      error: () => { this.loading = false; this.errorMessage = 'Impossible de charger vos factures.'; this.cdr.markForCheck(); },
     });
   }
 
@@ -84,15 +87,18 @@ export class ClientFacturesComponent implements OnInit {
     this.applyFilter(); this.cdr.markForCheck();
   }
 
-  select(facture: FactureModel): void {
-    this.selected = facture;
+  select(facture: FactureListModel): void {
+    const request = ++this.detailRequest;
+    this.selected = { ...facture, lignesPieces: [], lignesMainDoeuvres: [], recus: [] };
+    this.selectedLoading = true;
+    this.errorMessage = '';
     this.service.getById(facture.id).subscribe({
-      next: details => { if (this.selected?.id === facture.id) this.selected = details; this.cdr.markForCheck(); },
-      error: () => { this.errorMessage = 'Impossible de charger le détail de cette facture.'; this.cdr.markForCheck(); },
+      next: details => { if (request === this.detailRequest) { this.selected = details; this.selectedLoading = false; } this.cdr.markForCheck(); },
+      error: () => { if (request === this.detailRequest) { this.selected = null; this.selectedLoading = false; this.errorMessage = 'Impossible de charger le détail de cette facture.'; } this.cdr.markForCheck(); },
     });
   }
 
-  async downloadPdf(facture: FactureModel): Promise<void> {
+  async downloadPdf(facture: Pick<FactureModel, 'id' | 'numero'>): Promise<void> {
     const layoutKey = await this.pdfLayoutDialog.chooseLayout();
     if (!layoutKey) return;
     this.service.downloadPdf(facture.id, layoutKey).subscribe({
@@ -107,14 +113,16 @@ export class ClientFacturesComponent implements OnInit {
     link.href = url;
     link.download = filename;
     link.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   closeDetail(): void {
+    this.detailRequest++;
     this.selected = null;
+    this.selectedLoading = false;
   }
 
-  remiseGenerale(facture: FactureModel): number {
+  remiseGenerale(facture: Pick<FactureModel, 'lignesPieces' | 'lignesMainDoeuvres'>): number {
     const remisePieces = (facture.lignesPieces ?? []).reduce((s, ligne) => {
       const brut = (Number(ligne.quantite) || 0) * (Number(ligne.prix) || 0);
       const net = Number(ligne.montantTotal ?? Math.round(brut * (1 - (Number(ligne.tauxRemise) || 0) / 100)));

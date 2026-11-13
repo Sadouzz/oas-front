@@ -44,8 +44,7 @@ export class StepReceptionComponent implements OnInit {
   travauxDemandes = '';
 
   get isReadOnly(): boolean {
-    const s = this.loadedOrdre?.statut || this.fullOrdre?.statut;
-    return getEtapeFromStatut(s) >= 5;
+    return this.loadedOrdre?.hasOrdreTravail === true;
   }
 
   lignesDefauts: LigneDefaut[] = [];

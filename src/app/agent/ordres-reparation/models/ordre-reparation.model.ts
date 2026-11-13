@@ -144,6 +144,7 @@ export interface OrdreReparation {
   }[];
   hasDiagnostic?: boolean;
   hasPiecesMo?: boolean;
+  hasOrdreTravail?: boolean;
 }
 
 export interface OrdreReparationRequest {

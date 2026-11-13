@@ -1,4 +1,3 @@
-import { ConfirmationService } from '../../shared/components/confirmation/confirmation.service';
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -6,7 +5,7 @@ import { CommonModule, NgClass } from '@angular/common';
 import { FactureService } from './facture.service';
 import { FactureDetailsViewModel, FactureListModel, FactureModel } from './models/facture.model';
 import { ClientService } from '../clients/client.service';
-import { LucideSearch, LucidePlus, LucideTrash2, LucideX, LucideDownload, LucideReceipt } from '@lucide/angular';
+import { LucideSearch, LucidePlus, LucideX, LucideDownload, LucideReceipt } from '@lucide/angular';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 import { FiscalConfigurationService } from '../gestion-tva/fiscal-configuration.service';
@@ -16,12 +15,10 @@ import { PdfLayoutDialogService } from '../../shared/components/pdf-layout-dialo
 @Component({
   selector: 'app-factures',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgClass, PaginationComponent, LucideSearch, LucidePlus, LucideTrash2, LucideX, LucideDownload, LucideReceipt],
+  imports: [CommonModule, FormsModule, NgClass, PaginationComponent, LucideSearch, LucidePlus, LucideX, LucideDownload, LucideReceipt],
   templateUrl: './factures.component.html',
 })
 export class FacturesComponent extends BasePaginatedComponent implements OnInit {
-  private confirmation = inject(ConfirmationService);
-
   private cdr = inject(ChangeDetectorRef);
   private service = inject(FactureService);
   private route = inject(ActivatedRoute);
@@ -177,14 +174,6 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
   }
   closeDetail() { this.selectedFacture = null; this.selectedFactureLoading = false; }
 
-  async delete(id: number) {
-    if (!await this.confirmation.confirm('Supprimer cette facture ?')) return;
-    this.service.delete(id).subscribe({
-      next: () => { this.load(); this.closeDetail(); this.notify('Facture supprimée.'); },
-      error: () => this.notifyError('Erreur lors de la suppression.'),
-    });
-  }
-
   // ── Payment ─────────────────────────────────────────────────────
 
   openPayModal(f: FactureListModel) {
@@ -243,13 +232,16 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit 
   async downloadPdf(id: number) {
     const layoutKey = await this.pdfLayoutDialog.chooseLayout();
     if (!layoutKey) return;
-    this.service.downloadPdf(id, layoutKey).subscribe(blob => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `facture-${id}-${layoutKey === 'AVEC_ENTETE' ? 'avec-entete' : 'sans-entete'}.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
+    this.service.downloadPdf(id, layoutKey).subscribe({
+      next: blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `facture-${id}-${layoutKey === 'AVEC_ENTETE' ? 'avec-entete' : 'sans-entete'}.pdf`;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      },
+      error: err => this.notifyError(err?.error?.message || 'Impossible de télécharger la facture.'),
     });
   }
 

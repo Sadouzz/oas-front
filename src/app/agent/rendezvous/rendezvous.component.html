@@ -15,6 +15,104 @@
 
   <app-alert [success]="successMessage" [error]="errorMessage" />
 
+  @if (isSuperAgent) {
+    <section class="overflow-hidden rounded-xl border border-amber-200 bg-white shadow-sm">
+      <div class="flex flex-col gap-3 border-b border-amber-100 bg-amber-50/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 class="font-bold text-oas-ink">Dérogations de plafond</h2>
+          <p class="mt-0.5 text-xs text-oas-muted">Chaque approbation autorise uniquement le rendez-vous demandé.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-900">{{ quotaTotalElements }} en attente</span>
+          <button type="button" (click)="toggleQuotaDerogations()"
+            class="rounded-lg border border-amber-200 bg-white px-3 py-2 text-xs font-semibold text-oas-ink hover:bg-amber-50">
+            {{ showQuotaDerogations ? 'Masquer' : 'Examiner' }}
+          </button>
+        </div>
+      </div>
+
+      @if (showQuotaDerogations) {
+        <div class="space-y-3 p-4">
+          @if (quotaDerogationError) {
+            <p role="alert" class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{{ quotaDerogationError }}</p>
+          }
+          @if (loadingQuotaDerogations) {
+            <div class="py-6 text-center text-sm text-oas-muted">Chargement des demandes…</div>
+          } @else if (quotaDerogations.length === 0) {
+            <div class="rounded-lg border border-dashed border-oas-line px-4 py-6 text-center text-sm text-oas-muted">
+              Aucune demande de dérogation en attente.
+            </div>
+          } @else {
+            @for (request of quotaDerogations; track request.id) {
+              <article class="rounded-xl border border-oas-line p-4">
+                <div class="grid gap-4 lg:grid-cols-[1fr_auto]">
+                  <div class="space-y-2">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <h3 class="font-bold text-oas-ink">{{ request.clientNom }}</h3>
+                      <span class="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-900">Plafond atteint</span>
+                      <span class="text-xs text-oas-muted">Demande #{{ request.id }} · {{ request.origine === 'CLIENT' ? 'Portail client' : 'Backoffice' }}{{ request.origine !== 'CLIENT' ? ' · ' + request.origine : '' }}</span>
+                    </div>
+                    <div class="grid gap-2 text-sm text-oas-ink2 sm:grid-cols-2">
+                      <p><span class="text-oas-muted">Téléphone :</span> {{ request.clientTelephone }}</p>
+                      <p><span class="text-oas-muted">Véhicule :</span> {{ request.vehiculeImmatriculation }}</p>
+                      <p><span class="text-oas-muted">Rendez-vous souhaité :</span> {{ request.dateRendezVous | date:'dd/MM/yyyy HH:mm' }}</p>
+                      <p><span class="text-oas-muted">Garage :</span> {{ request.garageNom || 'Non précisé' }}</p>
+                      <p class="sm:col-span-2"><span class="text-oas-muted">Plafond à la demande :</span>
+                        {{ formatQuotaAmount(request.montantConsommeSnapshot) }} / {{ formatQuotaAmount(request.plafondSnapshot) }} F CFA
+                        @if (request.echeanceJoursSnapshot) { <span class="text-oas-muted">sur {{ request.echeanceJoursSnapshot }} jours</span> }
+                      </p>
+                      <p class="sm:col-span-2"><span class="text-oas-muted">Motif :</span> {{ request.motif || 'Non renseigné' }}</p>
+                      @if (request.commentaire) {
+                        <p class="sm:col-span-2"><span class="text-oas-muted">Commentaire :</span> {{ request.commentaire }}</p>
+                      }
+                    </div>
+                  </div>
+                  <div class="text-xs text-oas-muted lg:text-right">
+                    Demandé par {{ request.demandeur }}<br />
+                    {{ request.dateDemande | date:'dd/MM/yyyy HH:mm' }}
+                  </div>
+                </div>
+                <div class="mt-4 grid gap-2 sm:grid-cols-[1fr_auto_auto]">
+                  <textarea rows="2" maxlength="1000" [value]="decisionReasons[request.id] || ''"
+                    (input)="setDecisionReason(request.id, $event)"
+                    placeholder="Motif obligatoire de la décision…"
+                    class="w-full rounded-lg border border-oas-line px-3 py-2 text-sm focus:border-oas-accent focus:outline-none focus:ring-2 focus:ring-oas-accent/20"></textarea>
+                  <button type="button" (click)="approveQuotaDerogation(request)"
+                    [disabled]="processingQuotaId !== null || loadingQuotaDerogations"
+                    class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:opacity-50">
+                    {{ processingQuotaId === request.id ? 'Traitement…' : 'Approuver' }}
+                  </button>
+                  <button type="button" (click)="rejectQuotaDerogation(request)"
+                    [disabled]="processingQuotaId !== null || loadingQuotaDerogations"
+                    class="rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-bold text-red-700 transition hover:bg-red-50 disabled:opacity-50">
+                    Refuser
+                  </button>
+                </div>
+              </article>
+            }
+          }
+          @if (!loadingQuotaDerogations && quotaTotalPages > 1) {
+            <div class="flex items-center justify-between border-t border-oas-line pt-3 text-xs text-oas-muted">
+              <span>Page {{ quotaPage + 1 }} sur {{ quotaTotalPages }}</span>
+              <div class="flex gap-2">
+                <button type="button" (click)="loadQuotaDerogations(quotaPage - 1)"
+                  [disabled]="quotaPage === 0"
+                  class="rounded-lg border border-oas-line px-3 py-1.5 font-semibold text-oas-ink disabled:opacity-40">
+                  Précédent
+                </button>
+                <button type="button" (click)="loadQuotaDerogations(quotaPage + 1)"
+                  [disabled]="quotaPage + 1 >= quotaTotalPages"
+                  class="rounded-lg border border-oas-line px-3 py-1.5 font-semibold text-oas-ink disabled:opacity-40">
+                  Suivant
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </section>
+  }
+
   <!-- Filtres -->
   <div class="bg-white rounded-lg border border-oas-line p-3 shadow-sm flex flex-col sm:flex-row gap-3">
     <div class="relative flex-1">

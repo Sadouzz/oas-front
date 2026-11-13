@@ -2,7 +2,10 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { RendezVous, RendezVousStatus, PageResponse, PageParams, CreateRendezVousRequest } from '../../shared/models';
+import {
+  RendezVous, RendezVousStatus, PageResponse, PageParams, CreateRendezVousRequest,
+  RendezVousCreationResult, QuotaDerogationRequest
+} from '../../shared/models';
 
 export type { RendezVous, RendezVousStatus, CreateRendezVousRequest };
 
@@ -24,8 +27,22 @@ export class RendezVousService {
     return this.http.get<RendezVous>(`${this.api}/${id}`);
   }
 
-  create(payload: CreateRendezVousRequest): Observable<RendezVous> {
-    return this.http.post<RendezVous>(this.api, payload);
+  create(payload: CreateRendezVousRequest): Observable<RendezVousCreationResult> {
+    return this.http.post<RendezVousCreationResult>(this.api, payload);
+  }
+
+  getPendingQuotaDerogations(page = 0, size = 20): Observable<PageResponse<QuotaDerogationRequest>> {
+    const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
+    return this.http.get<PageResponse<QuotaDerogationRequest>>(
+      `${this.api}/derogations-plafond/en-attente`, { params });
+  }
+
+  approveQuotaDerogation(id: number, motif: string): Observable<RendezVous> {
+    return this.http.post<RendezVous>(`${this.api}/derogations-plafond/${id}/approuver`, { motif });
+  }
+
+  rejectQuotaDerogation(id: number, motif: string): Observable<QuotaDerogationRequest> {
+    return this.http.post<QuotaDerogationRequest>(`${this.api}/derogations-plafond/${id}/refuser`, { motif });
   }
 
   updateStatut(id: number, statut: RendezVousStatus, commentaire?: string, motifAnnulation?: string): Observable<RendezVous> {

@@ -57,3 +57,37 @@ export interface CreateRendezVousRequest {
   commentaire?: string | null;
   garageId?: number | null;
 }
+
+export interface QuotaDerogationRequest {
+  id: number;
+  clientId: number;
+  clientNom: string;
+  clientTelephone: string;
+  vehiculeId: number;
+  vehiculeImmatriculation: string;
+  garageId: number | null;
+  garageNom: string | null;
+  dateRendezVous: string;
+  motif: string | null;
+  commentaire: string | null;
+  statut: 'EN_ATTENTE' | 'APPROUVEE' | 'REFUSEE';
+  statutRendezVousDemande: RendezVousStatus;
+  origine: string;
+  demandeur: string;
+  plafondSnapshot: number | null;
+  montantConsommeSnapshot: number | null;
+  echeanceJoursSnapshot: number | null;
+  dateDemande: string;
+  decisionnaire: string | null;
+  dateDecision: string | null;
+  motifDecision: string | null;
+  rendezVousId: number | null;
+  rendezVousNumero: string | null;
+}
+
+export interface RendezVousCreationResult {
+  type: 'RENDEZ_VOUS_CREE' | 'DEROGATION_EN_ATTENTE';
+  rendezVous: RendezVous | null;
+  demandeDerogation: QuotaDerogationRequest | null;
+  message: string;
+}

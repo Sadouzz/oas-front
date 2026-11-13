@@ -4,7 +4,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { RendezVousService } from './rendezvous.service';
 import { ClientService } from '../clients/client.service';
 import { VehiculeService } from '../vehicules/vehicule.service';
-import { RendezVous, RendezVousStatus, ClientModel, VehiculeModel, CreateRendezVousRequest, extractContent, extractPage } from '../../shared/models/index';
+import {
+  RendezVous, RendezVousStatus, ClientModel, VehiculeModel, CreateRendezVousRequest,
+  QuotaDerogationRequest, extractContent, extractPage
+} from '../../shared/models/index';
+import { AuthService } from '../../core/services/auth.service';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { DatePipe } from '@angular/common';
@@ -33,6 +37,7 @@ export class RendezVousComponent implements OnInit {
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private authService = inject(AuthService);
 
   rdvs: RendezVous[] = [];
   filtered: RendezVous[] = [];
@@ -92,6 +97,16 @@ export class RendezVousComponent implements OnInit {
   errorMessage = '';
   modalErrorMessage = '';
   modalSuccessMessage = '';
+  showQuotaDerogations = false;
+  loadingQuotaDerogations = false;
+  processingQuotaId: number | null = null;
+  quotaDerogations: QuotaDerogationRequest[] = [];
+  quotaDerogationError = '';
+  decisionReasons: Record<number, string> = {};
+  quotaPage = 0;
+  quotaPageSize = 20;
+  quotaTotalPages = 1;
+  quotaTotalElements = 0;
   clientPhone = '';
   whatsappFallbackUrl = '';
   whatsappNotice = '';
@@ -147,12 +162,106 @@ export class RendezVousComponent implements OnInit {
   ngOnInit() {
     this.load();
     this.loadClientsAndVehicles();
+    if (this.isSuperAgent) this.loadQuotaDerogations();
 
     this.route.queryParams.subscribe(params => {
       if (params['action'] === 'new') {
         this.openCreate();
       }
     });
+  }
+
+  get isSuperAgent(): boolean {
+    return this.authService.hasRole('ROLE_SUPER_AGENT');
+  }
+
+  toggleQuotaDerogations(): void {
+    this.showQuotaDerogations = !this.showQuotaDerogations;
+    if (this.showQuotaDerogations) this.loadQuotaDerogations();
+  }
+
+  loadQuotaDerogations(page = this.quotaPage): void {
+    if (!this.isSuperAgent) return;
+    this.quotaPage = Math.max(0, page);
+    this.loadingQuotaDerogations = true;
+    this.quotaDerogationError = '';
+    this.service.getPendingQuotaDerogations(this.quotaPage, this.quotaPageSize).subscribe({
+      next: response => {
+        if (response.totalPages > 0 && this.quotaPage >= response.totalPages) {
+          this.loadQuotaDerogations(response.totalPages - 1);
+          return;
+        }
+        this.quotaDerogations = extractContent<QuotaDerogationRequest>(response);
+        this.quotaTotalPages = Math.max(1, response.totalPages || 1);
+        this.quotaTotalElements = response.totalElements ?? this.quotaDerogations.length;
+        this.quotaPage = response.currentPage ?? this.quotaPage;
+        this.loadingQuotaDerogations = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.quotaDerogationError = 'Impossible de charger les demandes de dérogation.';
+        this.loadingQuotaDerogations = false;
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  setDecisionReason(id: number, event: Event): void {
+    this.decisionReasons[id] = (event.target as HTMLTextAreaElement).value;
+  }
+
+  private validDecisionReason(id: number): boolean {
+    if ((this.decisionReasons[id] ?? '').trim().length < 3) {
+      this.quotaDerogationError = 'Saisissez un motif d’au moins 3 caractères avant de décider.';
+      return false;
+    }
+    this.quotaDerogationError = '';
+    return true;
+  }
+
+  approveQuotaDerogation(request: QuotaDerogationRequest): void {
+    if (!this.isSuperAgent || this.processingQuotaId !== null || !this.validDecisionReason(request.id)) return;
+    this.processingQuotaId = request.id;
+    const reason = this.decisionReasons[request.id].trim();
+    this.service.approveQuotaDerogation(request.id, reason).subscribe({
+      next: appointment => {
+        this.processingQuotaId = null;
+        delete this.decisionReasons[request.id];
+        this.successMessage = `Dérogation approuvée. Le rendez-vous ${appointment.numero || '#' + appointment.id} est créé.`;
+        this.loadQuotaDerogations();
+        this.load();
+        this.cdr.markForCheck();
+      },
+      error: (err: any) => {
+        this.processingQuotaId = null;
+        this.quotaDerogationError = err.error?.message || 'Impossible d’approuver cette demande.';
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  rejectQuotaDerogation(request: QuotaDerogationRequest): void {
+    if (!this.isSuperAgent || this.processingQuotaId !== null || !this.validDecisionReason(request.id)) return;
+    this.processingQuotaId = request.id;
+    const reason = this.decisionReasons[request.id].trim();
+    this.service.rejectQuotaDerogation(request.id, reason).subscribe({
+      next: () => {
+        this.processingQuotaId = null;
+        delete this.decisionReasons[request.id];
+        this.successMessage = 'La demande de dérogation a été refusée et le client en a été informé.';
+        this.loadQuotaDerogations();
+        this.cdr.markForCheck();
+      },
+      error: (err: any) => {
+        this.processingQuotaId = null;
+        this.quotaDerogationError = err.error?.message || 'Impossible de refuser cette demande.';
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  formatQuotaAmount(amount: number | null): string {
+    return amount === null ? '—' : new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(amount);
   }
 
   loadClients(keyword: string = '') {
@@ -424,12 +533,21 @@ export class RendezVousComponent implements OnInit {
     };
 
     this.service.create(payload).subscribe({
-      next: (created) => {
+      next: (result) => {
         this.saving = false;
         this.closeCreate();
-        this.load();
-        this.openWhatsApp(whatsappWindow, created);
-        this.notify('Rendez-vous créé avec succès.');
+        if (result.type === 'DEROGATION_EN_ATTENTE') {
+          whatsappWindow?.close();
+          this.notify(result.message);
+          if (this.isSuperAgent) this.loadQuotaDerogations();
+        } else if (result.rendezVous) {
+          this.load();
+          this.openWhatsApp(whatsappWindow, result.rendezVous);
+          this.notify('Rendez-vous créé avec succès.');
+        } else {
+          whatsappWindow?.close();
+          this.notify('La réponse du serveur ne contient pas le rendez-vous attendu.');
+        }
       },
       error: (err: any) => {
         whatsappWindow?.close();
