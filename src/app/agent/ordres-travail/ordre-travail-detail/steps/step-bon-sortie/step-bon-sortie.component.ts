@@ -763,10 +763,11 @@ export class StepBonSortieComponent implements OnInit, OnDestroy {
       ? this.data.lignesPiecesProforma
       : (this.data?.lignesPieces || []);
     const usedOrdrePieceIds = new Set<number>();
-    const fallbackDate = (this.data as any)?.createdAt || (this.data as any)?.bonDeSortie?.dateSortiePrevue || this.fullBonDeSortie?.date || new Date().toISOString();
+    const fallbackDate = this.toLocalDateTime((this.data as any)?.createdAt)
+      || this.toLocalDateTime(this.fullBonDeSortie?.date);
 
     for (const pf of proformaPieces) {
-      if (pf.dateHeureSaisie) {
+      if (this.toLocalDateTime(pf.dateHeureSaisie)) {
         continue;
       }
       const isCustom = !!(pf.isCustom || pf.type === 'PDS' || (!pf.pieceId && !pf.piece?.id));
@@ -783,7 +784,7 @@ export class StepBonSortieComponent implements OnInit, OnDestroy {
             (ol.designationPds || '').trim().toLowerCase() === des &&
             Math.round(Number(ol.prix || 0)) === Math.round(prix) &&
             Number(ol.quantite || 0) === qte &&
-            ol.dateHeureSaisie
+            this.toLocalDateTime(ol.dateHeureSaisie)
           );
           if (!matchedOrdreLine) {
             matchedOrdreLine = this.ordrePiecesMoLines.find((ol: any) =>
@@ -791,7 +792,7 @@ export class StepBonSortieComponent implements OnInit, OnDestroy {
               ol.isCustom &&
               (ol.designationPds || '').trim().toLowerCase() === des &&
               Number(ol.quantite || 0) === qte &&
-              ol.dateHeureSaisie
+              this.toLocalDateTime(ol.dateHeureSaisie)
             );
           }
           if (!matchedOrdreLine) {
@@ -799,7 +800,7 @@ export class StepBonSortieComponent implements OnInit, OnDestroy {
               !usedOrdrePieceIds.has(ol.id) &&
               ol.isCustom &&
               (ol.designationPds || '').trim().toLowerCase() === des &&
-              ol.dateHeureSaisie
+              this.toLocalDateTime(ol.dateHeureSaisie)
             );
           }
         } else {
@@ -809,7 +810,7 @@ export class StepBonSortieComponent implements OnInit, OnDestroy {
               !usedOrdrePieceIds.has(ol.id) &&
               !ol.isCustom &&
               (ol.pieceId ?? ol.piece?.id) === pieceId &&
-              ol.dateHeureSaisie
+              this.toLocalDateTime(ol.dateHeureSaisie)
             );
           }
         }
@@ -818,25 +819,28 @@ export class StepBonSortieComponent implements OnInit, OnDestroy {
       if (matchedOrdreLine && matchedOrdreLine.id != null) {
         usedOrdrePieceIds.add(matchedOrdreLine.id);
       }
-      pf.dateHeureSaisie = matchedOrdreLine?.dateHeureSaisie || fallbackDate;
+      pf.dateHeureSaisie = this.toLocalDateTime(matchedOrdreLine?.dateHeureSaisie) || fallbackDate;
     }
 
     // Synchroniser avec les lignes actuellement dans le Bon de Sortie (lignesPieces)
     for (const l of this.lignesPieces) {
-      if (l.dateHeureSaisie) continue;
+      if (this.toLocalDateTime(l.dateHeureSaisie)) continue;
+      l.dateHeureSaisie = undefined;
 
       if (l.proformaLineId != null) {
         const pf = proformaPieces.find((p: any) => Number(p.id) === Number(l.proformaLineId));
-        if (pf?.dateHeureSaisie) {
-          l.dateHeureSaisie = pf.dateHeureSaisie;
+        const dateHeureSaisie = this.toLocalDateTime(pf?.dateHeureSaisie);
+        if (dateHeureSaisie) {
+          l.dateHeureSaisie = dateHeureSaisie;
           continue;
         }
       }
 
       if (l.isCustom || l.type === 'PDS') {
         const pf = this.findProformaLineForPds(l.designationPds || '', l);
-        if (pf?.dateHeureSaisie) {
-          l.dateHeureSaisie = pf.dateHeureSaisie;
+        const dateHeureSaisie = this.toLocalDateTime(pf?.dateHeureSaisie);
+        if (dateHeureSaisie) {
+          l.dateHeureSaisie = dateHeureSaisie;
           continue;
         }
       }
@@ -845,8 +849,15 @@ export class StepBonSortieComponent implements OnInit, OnDestroy {
     }
   }
 
-  getPieceDateHeureSaisie(ligne: any): string {
-    if (ligne?.dateHeureSaisie) return ligne.dateHeureSaisie;
+  private toLocalDateTime(value: unknown): string | undefined {
+    if (typeof value !== 'string') return undefined;
+    const dateTime = value.trim();
+    return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(dateTime) ? dateTime : undefined;
+  }
+
+  getPieceDateHeureSaisie(ligne: any): string | undefined {
+    const dateHeureSaisie = this.toLocalDateTime(ligne?.dateHeureSaisie);
+    if (dateHeureSaisie) return dateHeureSaisie;
 
     if (ligne?.proformaLineId != null) {
       const pfList = [
@@ -855,7 +866,8 @@ export class StepBonSortieComponent implements OnInit, OnDestroy {
         ...((this.data?.lignesPiecesProforma == null && this.data?.lignesPiecesBS == null) ? (this.data?.lignesPieces ?? []) : [])
       ];
       const pf = pfList.find((p: any) => Number(p.id) === Number(ligne.proformaLineId));
-      if (pf?.dateHeureSaisie) return pf.dateHeureSaisie;
+      const pfDateHeureSaisie = this.toLocalDateTime(pf?.dateHeureSaisie);
+      if (pfDateHeureSaisie) return pfDateHeureSaisie;
     }
 
     const isCustom = !!(ligne?.isCustom || ligne?.type === 'PDS' || (!ligne?.pieceId && !ligne?.piece?.id));
@@ -870,27 +882,29 @@ export class StepBonSortieComponent implements OnInit, OnDestroy {
           (ol.designationPds || '').trim().toLowerCase() === des &&
           Math.round(Number(ol.prix || 0)) === Math.round(prix) &&
           Number(ol.quantite || 0) === qte &&
-          ol.dateHeureSaisie
+          this.toLocalDateTime(ol.dateHeureSaisie)
         ) || this.ordrePiecesMoLines.find((ol: any) =>
           ol.isCustom &&
           (ol.designationPds || '').trim().toLowerCase() === des &&
           Number(ol.quantite || 0) === qte &&
-          ol.dateHeureSaisie
+          this.toLocalDateTime(ol.dateHeureSaisie)
         ) || this.ordrePiecesMoLines.find((ol: any) =>
           ol.isCustom &&
           (ol.designationPds || '').trim().toLowerCase() === des &&
-          ol.dateHeureSaisie
+          this.toLocalDateTime(ol.dateHeureSaisie)
         );
-        if (found?.dateHeureSaisie) return found.dateHeureSaisie;
+        const dateHeureSaisie = this.toLocalDateTime(found?.dateHeureSaisie);
+        if (dateHeureSaisie) return dateHeureSaisie;
       }
     }
 
     const pfMatches = this.findAllProformaLinesForPds(des);
-    const pfWithDate = pfMatches.find((p: any) => p.dateHeureSaisie);
-    if (pfWithDate?.dateHeureSaisie) return pfWithDate.dateHeureSaisie;
+    const pfWithDate = pfMatches.find((p: any) => this.toLocalDateTime(p.dateHeureSaisie));
+    const pfDateHeureSaisie = this.toLocalDateTime(pfWithDate?.dateHeureSaisie);
+    if (pfDateHeureSaisie) return pfDateHeureSaisie;
 
-    const fallback = (this.data as any)?.createdAt || (this.data as any)?.bonDeSortie?.dateSortiePrevue || this.fullBonDeSortie?.date || new Date().toISOString();
-    return fallback;
+    return this.toLocalDateTime((this.data as any)?.createdAt)
+      || this.toLocalDateTime(this.fullBonDeSortie?.date);
   }
 
   private findProformaLineForMO(mo: MainDoeuvreModel | undefined, rawM?: any): any | null {
@@ -1118,7 +1132,7 @@ export class StepBonSortieComponent implements OnInit, OnDestroy {
       prixTotal: total,
       tauxRemise: remise,
       proformaLineId: Number(pfLine.id),
-      dateHeureSaisie: pfLine.dateHeureSaisie || this.getPieceDateHeureSaisie(pfLine)
+      dateHeureSaisie: this.toLocalDateTime(pfLine.dateHeureSaisie) || this.getPieceDateHeureSaisie(pfLine)
     });
     this.cdr.markForCheck();
   }
@@ -1448,7 +1462,9 @@ export class StepBonSortieComponent implements OnInit, OnDestroy {
         prixUnitaire: finalPrice,
         tauxRemise: remiseVal,
         remise: remiseVal,
-        dateHeureSaisie: l.dateHeureSaisie || pfLine?.dateHeureSaisie || undefined,
+        dateHeureSaisie: this.toLocalDateTime(l.dateHeureSaisie)
+          || this.toLocalDateTime(pfLine?.dateHeureSaisie)
+          || this.getPieceDateHeureSaisie(l),
         proformaLineId: l.proformaLineId ?? pfLine?.id ?? undefined
       };
     });

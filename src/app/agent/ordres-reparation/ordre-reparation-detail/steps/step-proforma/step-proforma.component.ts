@@ -407,7 +407,7 @@ export class StepProformaComponent implements OnInit {
     return this.proformaChargee?.tva ?? 18;
   }
 
-  get tauxTimbreEspeces(): number {
+  get tauxTimbreFiscal(): number {
     return Number(this.proformaChargee?.timbreFiscalRate ?? this.defaultTimbreFiscalRate);
   }
 

@@ -9,6 +9,8 @@ import { StepPretALivrerResponseDto } from '../../../models/responses/step-pret-
 import { BonDeLivraisonService } from '../../../../bons-livraison/bon-de-livraison.service';
 import { FactureService } from '../../../../factures/facture.service';
 import { FactureModel } from '../../../../factures/models/facture.model';
+import { modePaiementRecu } from '../../../../factures/models/facture-mode-paiement';
+import { ClientService } from '../../../../clients/client.service';
 import { NoteDePrixService } from '../../../../notes-prix/note-de-prix.service';
 import { NoteDePrixModel } from '../../../../notes-prix/models/note-de-prix.model';
 import { AlertComponent } from '../../../../../shared/components/alert/alert.component';
@@ -34,6 +36,7 @@ export class StepPretALivrerComponent implements OnInit {
   private ordreService = inject(OrdreReparationService);
   private bonDeLivraisonService = inject(BonDeLivraisonService);
   private factureService = inject(FactureService);
+  private clientService = inject(ClientService);
   private noteDePrixService = inject(NoteDePrixService);
   private pdfLayoutDialog = inject(PdfLayoutDialogService);
   private cdr = inject(ChangeDetectorRef);
@@ -50,6 +53,43 @@ export class StepPretALivrerComponent implements OnInit {
   saving = false;
   errorMessage = '';
   successMessage = '';
+  showFullPaymentModal = false;
+  fullPaymentSaving = false;
+  fullPaymentMethod = 'ESPECE';
+  fullPaymentWalletBalance: number | null = null;
+  loadingFullPaymentWallet = false;
+  fullPaymentWalletLoadFailed = false;
+  fullPaymentErrorMessage = '';
+
+  get factureResteAPayer(): number {
+    if (!this.facture) return 0;
+    const montantTotal = Number(this.facture.montantTotal);
+    if (Number.isFinite(montantTotal)) {
+      return Math.max(0, montantTotal - Number(this.facture.montantPaye || 0));
+    }
+    const resteBrut = this.facture.resteAPayer;
+    const reste = Number(resteBrut);
+    if (resteBrut != null && Number.isFinite(reste)) return Math.max(0, reste);
+    return Math.max(0, Number(this.facture.montantTotal || 0) - Number(this.facture.montantPaye || 0));
+  }
+
+  get factureNecessitePaiementIntegral(): boolean {
+    return !!this.facture && this.facture.statutPaiement !== 'PAYE' && this.factureResteAPayer > 0;
+  }
+
+  get fullPaymentWalletInsufficient(): boolean {
+    return this.fullPaymentMethod === 'SOLDE_PREPAYE'
+      && this.fullPaymentWalletBalance !== null
+      && this.fullPaymentWalletBalance < this.factureResteAPayer;
+  }
+
+  get canConfirmFullPayment(): boolean {
+    return !this.fullPaymentSaving
+      && !this.loadingFullPaymentWallet
+      && this.factureResteAPayer > 0
+      && (this.fullPaymentMethod !== 'SOLDE_PREPAYE'
+        || (this.fullPaymentWalletBalance !== null && this.fullPaymentWalletBalance >= this.factureResteAPayer));
+  }
 
   ngOnInit(): void {
     const idParam = this.route.snapshot.paramMap.get('id') || this.route.parent?.snapshot.paramMap.get('id');
@@ -237,40 +277,89 @@ export class StepPretALivrerComponent implements OnInit {
   }
 
   validateStep(): void {
-    this.validerPreparation();
+    this.continuerVersLivraisonSansPaiement();
   }
 
-  validerPreparation(): void {
+  ouvrirConfirmationPaiementIntegral(): void {
+    if (!this.facture || this.factureResteAPayer <= 0 || this.facture.statutPaiement === 'PAYE') return;
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.fullPaymentErrorMessage = '';
+    this.fullPaymentMethod = modePaiementRecu(this.facture.modePaiement);
+    this.fullPaymentWalletBalance = null;
+    this.fullPaymentWalletLoadFailed = false;
+    this.showFullPaymentModal = true;
+    if (this.fullPaymentMethod === 'SOLDE_PREPAYE') this.chargerSoldePrepaye();
+  }
+
+  fermerConfirmationPaiementIntegral(): void {
+    if (this.fullPaymentSaving) return;
+    this.showFullPaymentModal = false;
+    this.fullPaymentErrorMessage = '';
+  }
+
+  changerModePaiementIntegral(): void {
+    this.fullPaymentWalletBalance = null;
+    this.fullPaymentWalletLoadFailed = false;
+    if (this.fullPaymentMethod === 'SOLDE_PREPAYE') this.chargerSoldePrepaye();
+  }
+
+  private chargerSoldePrepaye(): void {
+    const clientId = this.facture?.clientId;
+    if (!clientId) {
+      this.fullPaymentWalletBalance = 0;
+      return;
+    }
+    this.loadingFullPaymentWallet = true;
+    this.clientService.getPortefeuille(clientId).subscribe({
+      next: wallet => {
+        this.fullPaymentWalletBalance = Number(wallet.solde) || 0;
+        this.loadingFullPaymentWallet = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.fullPaymentWalletBalance = 0;
+        this.loadingFullPaymentWallet = false;
+        this.fullPaymentWalletLoadFailed = true;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  confirmerPaiementIntegral(): void {
+    if (!this.facture?.id || !this.canConfirmFullPayment) return;
+    this.fullPaymentSaving = true;
+    this.fullPaymentErrorMessage = '';
+    this.factureService.payFactureTotal(this.facture.id, this.fullPaymentMethod).subscribe({
+      next: (recu: any) => {
+        this.fullPaymentSaving = false;
+        this.showFullPaymentModal = false;
+        this.successMessage = `Paiement intégral enregistré${recu?.numero ? ` · reçu ${recu.numero}` : ''}.`;
+        this.cdr.markForCheck();
+        this.router.navigate(['/app/ordres-reparation', this.ordreId, 'livraison']);
+      },
+      error: (err: any) => {
+        this.fullPaymentSaving = false;
+        this.fullPaymentErrorMessage = err?.error?.message || 'Impossible d’enregistrer le paiement intégral.';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  continuerVersLivraisonSansPaiement(): void {
+    if (this.saving) return;
     this.saving = true;
     this.errorMessage = '';
     this.successMessage = '';
-
-    const payload = {
-      remarquesPreparation: this.remarquesPreparation,
-      statut: 'LIVRE' as any
-    };
-
-    this.ordreService.updateStepPretALivrer(this.ordreId, payload).subscribe({
+    this.ordreService.updateStatut(this.ordreId, 'FACTURATION').subscribe({
       next: () => {
         this.saving = false;
-        this.successMessage = 'Facturation validée pour la livraison.';
-        this.cdr.markForCheck();
-        setTimeout(() => {
-          this.router.navigate(['/app/ordres-reparation', this.ordreId, 'livraison']);
-        }, 500);
+        this.router.navigate(['/app/ordres-reparation', this.ordreId, 'livraison']);
       },
-      error: () => {
-        this.ordreService.updateStatut(this.ordreId, 'PRET_A_LIVRER').subscribe({
-          next: () => {
-            this.saving = false;
-            this.router.navigate(['/app/ordres-reparation', this.ordreId, 'livraison']);
-          },
-          error: (err) => {
-            this.saving = false;
-            this.errorMessage = err.error?.message || 'Erreur lors de la validation.';
-            this.cdr.markForCheck();
-          }
-        });
+      error: (err: any) => {
+        this.saving = false;
+        this.errorMessage = err?.error?.message || 'Impossible de poursuivre vers la livraison.';
+        this.cdr.markForCheck();
       }
     });
   }

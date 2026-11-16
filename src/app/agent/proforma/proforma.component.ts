@@ -1194,6 +1194,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
       montantRemiseGenerale: (target.lignesPieces || []).reduce((sum: number, line: any) => sum + Math.max(0, (line.quantite || 0) * (line.prix || 0) - (line.montantTotal ?? (line.quantite || 0) * (line.prix || 0) * (1 - (Number(line.tauxRemise) || 0) / 100))), 0)
         + (target.lignesMainDoeuvres || []).reduce((sum: number, line: any) => sum + Math.max(0, (line.nbreHeure || 0) * (line.tarifHoraire || 0) - (line.montantTotal ?? (line.nbreHeure || 0) * (line.tarifHoraire || 0) * (1 - (Number(line.tauxRemise) || 0) / 100))), 0),
       tva: target.montantTVA || target.montantTva || 0,
+      tvaApplicable: target.tvaApplicable ?? ((target.montantTVA || target.montantTva || 0) > 0),
       timbreFiscalRate: target.timbreFiscalRate ?? this.currentTimbreFiscalRate,
       timbre: 0,
       tauxRemiseClient: target.tauxRemiseClient || 0,
@@ -1283,7 +1284,7 @@ export class ProformaComponent extends BasePaginatedComponent implements OnInit 
     return Number(this.form.get('montantAutre')?.value) || 0;
   }
 
-  get tauxTimbreEspeces(): number {
+  get tauxTimbreFiscal(): number {
     return Number(this.selectedProforma?.timbreFiscalRate ?? this.currentTimbreFiscalRate) || 0;
   }
 

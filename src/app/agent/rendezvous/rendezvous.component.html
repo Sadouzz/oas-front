@@ -19,7 +19,7 @@
     <section class="overflow-hidden rounded-xl border border-amber-200 bg-white shadow-sm">
       <div class="flex flex-col gap-3 border-b border-amber-100 bg-amber-50/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 class="font-bold text-oas-ink">Dérogations de plafond</h2>
+          <h2 class="font-bold text-oas-ink">Demandes exceptionnelles de rendez-vous</h2>
           <p class="mt-0.5 text-xs text-oas-muted">Chaque approbation autorise uniquement le rendez-vous demandé.</p>
         </div>
         <div class="flex items-center gap-2">
@@ -49,7 +49,7 @@
                   <div class="space-y-2">
                     <div class="flex flex-wrap items-center gap-2">
                       <h3 class="font-bold text-oas-ink">{{ request.clientNom }}</h3>
-                      <span class="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-900">Plafond atteint</span>
+                      <span class="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-900">Validation financière requise</span>
                       <span class="text-xs text-oas-muted">Demande #{{ request.id }} · {{ request.origine === 'CLIENT' ? 'Portail client' : 'Backoffice' }}{{ request.origine !== 'CLIENT' ? ' · ' + request.origine : '' }}</span>
                     </div>
                     <div class="grid gap-2 text-sm text-oas-ink2 sm:grid-cols-2">
@@ -57,10 +57,15 @@
                       <p><span class="text-oas-muted">Véhicule :</span> {{ request.vehiculeImmatriculation }}</p>
                       <p><span class="text-oas-muted">Rendez-vous souhaité :</span> {{ request.dateRendezVous | date:'dd/MM/yyyy HH:mm' }}</p>
                       <p><span class="text-oas-muted">Garage :</span> {{ request.garageNom || 'Non précisé' }}</p>
-                      <p class="sm:col-span-2"><span class="text-oas-muted">Plafond à la demande :</span>
-                        {{ formatQuotaAmount(request.montantConsommeSnapshot) }} / {{ formatQuotaAmount(request.plafondSnapshot) }} F CFA
-                        @if (request.echeanceJoursSnapshot) { <span class="text-oas-muted">sur {{ request.echeanceJoursSnapshot }} jours</span> }
+                      <p class="sm:col-span-2"><span class="text-oas-muted">Encours impayé à la demande :</span>
+                        {{ formatQuotaAmount(request.encoursImpayesSnapshot) }} / {{ formatQuotaAmount(request.plafondSnapshot) }} F CFA
+                        @if (request.plafondSnapshot === null) { <span class="text-oas-muted">(aucun plafond configuré)</span> }
                       </p>
+                      @if (request.detailsBlocageSnapshot) {
+                        <p class="sm:col-span-2 whitespace-pre-line rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-amber-950">
+                          <span class="font-semibold">Motif financier :</span><br />{{ request.detailsBlocageSnapshot }}
+                        </p>
+                      }
                       <p class="sm:col-span-2"><span class="text-oas-muted">Motif :</span> {{ request.motif || 'Non renseigné' }}</p>
                       @if (request.commentaire) {
                         <p class="sm:col-span-2"><span class="text-oas-muted">Commentaire :</span> {{ request.commentaire }}</p>

@@ -163,8 +163,8 @@
             <div>
               <div class="flex items-center gap-2">
                 <span class="text-xs uppercase font-bold tracking-wider text-blue-800">Note de Prix</span>
-                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold border bg-blue-100 text-blue-800 border-blue-300">
-                  {{ 'GÉNÉRÉE' }}
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold border" [ngClass]="statutPaiementClass(note.statutPaiement)">
+                  {{ statutPaiementLabel(note.statutPaiement) }}
                 </span>
               </div>
               <h3 class="text-lg font-black text-oas-ink mt-0.5">
@@ -174,6 +174,12 @@
           </div>
 
           <div class="flex items-center gap-2.5">
+            @if ((note.resteAPayer || 0) > 0) {
+              <button type="button" (click)="ouvrirModalPaiementNote()"
+                class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition cursor-pointer">
+                Enregistrer un règlement
+              </button>
+            }
             <a routerLink="/app/notes-prix" [queryParams]="{ detailId: note.id }"
               class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-oas-line bg-white hover:bg-oas-bg text-xs font-semibold text-oas-ink transition cursor-pointer">
               <svg class="w-3.5 h-3.5 text-oas-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -213,6 +219,20 @@
               {{ data.tvaApplicable ? 'TVA Applicable' : 'Sans TVA' }}
             </span>
           </div>
+
+          <div class="p-3 rounded-xl bg-white/70 border border-oas-line/80">
+            <span class="text-oas-muted block mb-0.5">Déjà réglé :</span>
+            <span class="font-mono text-base font-bold text-emerald-700">
+              {{ (note.montantPaye || 0) | number:'1.0-0' }} F CFA
+            </span>
+          </div>
+
+          <div class="p-3 rounded-xl bg-white/70 border border-oas-line/80">
+            <span class="text-oas-muted block mb-0.5">Reste à régler :</span>
+            <span class="font-mono text-base font-bold" [class.text-rose-700]="(note.resteAPayer || 0) > 0" [class.text-emerald-700]="(note.resteAPayer || 0) <= 0">
+              {{ (note.resteAPayer || 0) | number:'1.0-0' }} F CFA
+            </span>
+          </div>
         </div>
 
         <!-- Alerte état Note de Prix -->
@@ -221,7 +241,11 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <span>
-            <strong>Note de prix enregistrée :</strong> La facturation de ce dossier est prise en compte sous forme de Note de prix. Vous pouvez poursuivre vers la livraison du véhicule.
+            @if ((note.resteAPayer || 0) > 0) {
+              <strong>Paiement en attente :</strong> un solde de <strong>{{ (note.resteAPayer || 0) | number:'1.0-0' }} F CFA</strong> reste à percevoir.
+            } @else {
+              <strong>Règlement complet :</strong> cette note de prix est intégralement soldée. Vous pouvez poursuivre vers la livraison du véhicule.
+            }
           </span>
         </div>
 
@@ -581,18 +605,10 @@
           <select [(ngModel)]="modePaiementFacture" class="w-full rounded-xl border border-oas-line bg-white px-3 py-2.5 text-sm text-oas-ink">
             @for (mode of modesPaiementFacture; track mode.value) { <option [value]="mode.value">{{ mode.label }}</option> }
           </select>
-          @if (isModeEspeces(modePaiementFacture)) {
-            <div class="mt-2 p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-2">
-              <span class="text-sm font-bold">⚠️</span>
-              <span>Si le client veut payer en espèce, il doit ajouter le timbre de 1 %.</span>
-            </div>
-          }
           @if (isModeHt(modePaiementFacture)) {
-            <p class="mt-1 text-[11px] text-oas-muted">En HT, le timbre fiscal (1 %) est appliqué sur le montant HT sans TVA.</p>
-          } @else if (modePaiementFacture === 'CHEQUE_TTC') {
-            <p class="mt-1 text-[11px] text-oas-muted">La TVA (18 %) est appliquée. Aucun droit de timbre espèces par chèque.</p>
+            <p class="mt-1 text-[11px] text-oas-muted">Régime HT : la TVA n’est pas appliquée et le timbre fiscal au taux configuré est inclus une seule fois au total de la facture.</p>
           } @else {
-            <p class="mt-1 text-[11px] text-oas-muted">La TVA est appliquée. Le moyen de règlement choisi est conservé sur la facture.</p>
+            <p class="mt-1 text-[11px] text-oas-muted">Régime avec TVA : aucun timbre fiscal n’est appliqué, y compris si le règlement est effectué en espèces.</p>
           }
         </div>
 
@@ -672,16 +688,12 @@
           <select [(ngModel)]="modePaiementNote" class="w-full rounded-xl border border-oas-line bg-white px-3 py-2.5 text-sm text-oas-ink">
             @for (mode of modesPaiementFacture; track mode.value) { <option [value]="mode.value">{{ mode.label }}</option> }
           </select>
-          @if (isModeEspeces(modePaiementNote)) {
-            <div class="mt-2 p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-2">
-              <span class="text-sm font-bold">⚠️</span>
-              <span>Si le client veut payer en espèce, il doit ajouter le timbre de 1 %.</span>
-            </div>
-          }
           @if (isModeHt(modePaiementNote)) {
-            <p class="mt-1 text-[11px] text-oas-muted">En HT, le timbre fiscal (1 %) est appliqué sur le montant HT sans TVA.</p>
+            <p class="mt-1 text-[11px] text-oas-muted">Le régime HT désactive la TVA. Aucun timbre fiscal ne sera appliqué à la note de prix.</p>
           } @else if (modePaiementNote === 'CHEQUE_TTC') {
-            <p class="mt-1 text-[11px] text-oas-muted">La TVA (18 %) est appliquée. Aucun droit de timbre espèces par chèque.</p>
+            <p class="mt-1 text-[11px] text-oas-muted">La TVA suit la configuration fiscale. Aucun timbre fiscal ne sera appliqué à la note de prix.</p>
+          } @else {
+            <p class="mt-1 text-[11px] text-oas-muted">Aucun timbre fiscal ne sera appliqué à la note de prix.</p>
           }
         </div>
 
@@ -754,27 +766,19 @@
             <option value="WAVE">Wave</option>
             <option value="ORANGE_MONEY">Orange Money</option>
             <option value="VIREMENT">Virement bancaire</option>
-            <option value="SOLDE_PREPAYE">Solde prépayé</option>
             <option value="CHEQUE">Chèque</option>
             <option value="CARTE_BANCAIRE">Carte bancaire</option>
             <option value="AUTRE">Autre</option>
           </select>
         </div>
-        <div class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-amber-950 space-y-1">
-          @if (payMethode === 'ESPECE') {
-            <div class="p-2 rounded-lg bg-amber-100/70 border border-amber-300 text-amber-950 text-xs font-semibold flex items-center gap-2">
-              <span class="text-sm">⚠️</span>
-              <span>Si le client veut payer en espèce, il doit ajouter le timbre de 1 %.</span>
-            </div>
-          }
-          @if (payMethode === 'ESPECE' && !(data?.facture?.modePaiement?.endsWith('_HT') || (data?.facture?.tvaApplicable === false && (data?.facture?.montantTimbre || 0) > 0))) {
-            <div class="flex justify-between"><span>Timbre fiscal espèces ({{ tauxTimbrePaiement }} %)</span><strong>{{ payTimbreEspeces | number:'1.0-2' }} F CFA</strong></div>
-          }
+        <div class="rounded-xl border border-oas-line bg-oas-bg p-3 text-oas-ink space-y-1">
           <div class="flex justify-between font-bold"><span>Total à remettre</span><strong>{{ payTotalEncaisse | number:'1.0-2' }} F CFA</strong></div>
-          @if (data?.facture?.modePaiement?.endsWith('_HT') || (data?.facture?.tvaApplicable === false && (data?.facture?.montantTimbre || 0) > 0)) {
-            <p class="text-[11px]">Le timbre est déjà inclus une seule fois dans le total de cette facture HT.</p>
+          @if (data?.facture?.tvaApplicable === false) {
+            <p class="text-[11px] text-oas-muted">Facture HT : le timbre est calculé à l’émission. Aucun timbre supplémentaire n’est ajouté au règlement.</p>
+          } @else if (data?.facture?.tvaApplicable === true) {
+            <p class="text-[11px] text-oas-muted">La TVA s’applique à cette facture. Aucun timbre fiscal n’est ajouté au règlement, même en espèces.</p>
           } @else {
-            <p class="text-[11px]">Le timbre s’applique uniquement à la part réglée en espèces. Il ne réduit pas le reste dû sur la facture.</p>
+            <p class="text-[11px] text-oas-muted">Le total fixé à l’émission reste dû. Aucun timbre supplémentaire n’est ajouté à ce règlement.</p>
           }
         </div>
       </div>
@@ -795,6 +799,80 @@
         </button>
       </div>
 
+    </div>
+  </div>
+}
+
+<!-- MODAL RÈGLEMENT DE LA NOTE DE PRIX -->
+@if (showPayNoteModal) {
+  <div class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full border border-oas-line shadow-2xl p-6 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+      <div class="flex items-center justify-between pb-3 border-b border-oas-line">
+        <div>
+          <h3 class="text-base font-bold text-oas-ink">Enregistrer un règlement</h3>
+          <p class="text-xs text-oas-muted mt-0.5">{{ noteDePrixInfo?.numero || 'Note de prix' }}</p>
+        </div>
+        <button type="button" (click)="fermerModalPaiementNote()" [disabled]="payingNote"
+          aria-label="Fermer" class="text-oas-muted hover:text-oas-ink p-1 rounded-lg transition cursor-pointer disabled:opacity-50">
+          ✕
+        </button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="block font-semibold text-oas-muted uppercase tracking-wider mb-1" for="montant-paiement-note">
+            Montant imputé à la note (F CFA) *
+          </label>
+          <input id="montant-paiement-note" type="number" [(ngModel)]="payNoteMontant" min="1"
+            [max]="noteDePrixInfo?.resteAPayer || 0" step="1"
+            class="w-full px-3.5 py-2.5 rounded-xl border border-oas-line bg-white text-base font-mono font-bold text-oas-ink focus:outline-hidden focus:ring-2 focus:ring-emerald-500 shadow-2xs" />
+          <span class="text-[11px] text-oas-muted mt-1 block">
+            Solde restant : <strong>{{ (noteDePrixInfo?.resteAPayer || 0) | number:'1.0-0' }} F CFA</strong>
+          </span>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-oas-muted uppercase tracking-wider mb-1" for="mode-paiement-note">
+            Moyen de paiement *
+          </label>
+          <select id="mode-paiement-note" [(ngModel)]="payNoteMethode"
+            class="w-full px-3 py-2 rounded-xl border border-oas-line bg-white text-sm text-oas-ink focus:outline-hidden focus:ring-2 focus:ring-emerald-500 shadow-2xs">
+            <option value="ESPECE">Espèces</option>
+            <option value="WAVE">Wave</option>
+            <option value="ORANGE_MONEY">Orange Money</option>
+            <option value="VIREMENT">Virement bancaire</option>
+            <option value="SOLDE_PREPAYE">Solde prépayé</option>
+            <option value="CHEQUE">Chèque</option>
+            <option value="CARTE_BANCAIRE">Carte bancaire</option>
+            <option value="AUTRE">Autre</option>
+          </select>
+        </div>
+
+        <div class="rounded-xl border border-oas-line bg-oas-bg p-3 text-oas-ink space-y-1">
+          <div class="flex justify-between font-bold">
+            <span>Total à remettre</span>
+            <strong>{{ payNoteMontant | number:'1.0-2' }} F CFA</strong>
+          </div>
+          <p class="text-[11px] text-oas-muted">Aucun timbre fiscal n’est appliqué à une note de prix, à l’émission comme au règlement.</p>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-oas-line">
+        <button type="button" (click)="fermerModalPaiementNote()" [disabled]="payingNote"
+          class="px-4 py-2 rounded-xl border border-oas-line text-xs font-semibold text-oas-ink hover:bg-oas-bg transition cursor-pointer disabled:opacity-50">
+          Annuler
+        </button>
+        <button type="button" (click)="enregistrerPaiementNote()"
+          [disabled]="payingNote || payNoteMontant <= 0 || payNoteMontant > (noteDePrixInfo?.resteAPayer || 0)"
+          class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition disabled:opacity-50 cursor-pointer inline-flex items-center gap-2">
+          @if (payingNote) {
+            <span class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            <span>Enregistrement...</span>
+          } @else {
+            <span>Valider le règlement</span>
+          }
+        </button>
+      </div>
     </div>
   </div>
 }

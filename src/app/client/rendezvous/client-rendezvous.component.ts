@@ -348,9 +348,14 @@ export class ClientRendezVousComponent implements OnInit {
       this.modalErrorMessage = this.bookingContextError || 'Vérification des conditions de prise de rendez-vous en cours.';
       return;
     }
-    if (this.reservationStatus.factureEchueImpayee || this.reservationStatus.demandeEnAttente) {
+    if (this.reservationStatus.demandeEnAttente) {
       this.modalErrorMessage = this.reservationStatus.motifBlocage
         || 'Une demande de rendez-vous est déjà en attente de décision.';
+      return;
+    }
+    if (!this.reservationStatus.workflowAutorise && !this.reservationStatus.demandeDerogationPossible) {
+      this.modalErrorMessage = this.reservationStatus.motifBlocage
+        || 'La réservation n’est pas disponible pour le moment.';
       return;
     }
 
@@ -364,8 +369,8 @@ export class ClientRendezVousComponent implements OnInit {
         if (result.type === 'DEROGATION_EN_ATTENTE') {
           this.reservationStatus = {
             workflowAutorise: false,
-            plafondAtteint: true,
-            factureEchueImpayee: false,
+            plafondAtteint: this.reservationStatus?.plafondAtteint ?? false,
+            factureEchueImpayee: this.reservationStatus?.factureEchueImpayee ?? false,
             demandeDerogationPossible: false,
             demandeEnAttente: true,
             motifBlocage: result.message,

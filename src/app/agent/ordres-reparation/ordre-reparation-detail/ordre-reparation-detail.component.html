@@ -110,7 +110,7 @@
       }
     </div>
 
-    @if (currentStep < 8) {
+    @if (currentStep < 8 && currentStep !== 7) {
       <button type="button" (click)="validerEtapeCourante()" [disabled]="isNextStepDisabled()"
         class="bg-oas-accent hover:bg-oas-accent-dark text-white text-sm font-bold px-6 py-2.5 rounded-xl flex items-center gap-2 transition shadow-lg shadow-oas-accent/25 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:bg-slate-300 disabled:text-slate-500 cursor-pointer">
         @if (activeChild?.saving) {

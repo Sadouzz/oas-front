@@ -46,14 +46,20 @@ export interface BonDeLivraisonSummaryDto {
 export interface NoteDePrixSummaryDto {
   id: number;
   numero?: string;
+  dateCreation?: string;
   statut?: string;
+  statutPaiement?: string;
+  modePaiement?: string | null;
   montantHT?: number;
   montantTVA?: number;
   montantTTC?: number;
   montantTotal?: number;
+  montantPaye?: number;
+  montantTimbrePaye?: number;
+  resteAPayer?: number;
+  tvaApplicable?: boolean | null;
   client?: string;
   vehicule?: string;
-  dateCreation?: string;
 }
 
 export interface StepBLResponseDto extends BaseStepResponseDto {

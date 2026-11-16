@@ -13,7 +13,7 @@ export const STEP_ROUTES: { step: number; path: string; statut: StatutOrdre; lab
   { step: 3, path: 'pieces-mo', statut: 'PIECES_MO', label: 'OR' },
   { step: 4, path: 'proforma', statut: 'PROFORMA', label: 'Proforma' },
   { step: 5, path: 'ordre-travail', statut: 'ORDRE_DE_TRAVAIL', label: 'Ordre de Travail' },
-  { step: 6, path: 'bl', statut: 'BL', label: 'BL' },
+  { step: 6, path: 'bl', statut: 'BL', label: 'Paiement' },
   { step: 7, path: 'facturation', statut: 'FACTURATION', label: 'Facturation' },
   { step: 8, path: 'livraison', statut: 'LIVRE', label: 'Livré' },
 ];
@@ -167,7 +167,7 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
       case 6:
         return 'Valider le BL';
       case 7:
-        return 'Valider la facturation';
+        return 'Choisir le parcours de facturation';
       case 8:
         return 'Clôturer la livraison';
       default:

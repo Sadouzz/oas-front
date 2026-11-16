@@ -375,7 +375,7 @@
 
           @if (proformaChargee.montantTimbre && proformaChargee.montantTimbre > 0) {
             <div class="flex items-center justify-between text-oas-muted">
-              <span>Timbre fiscal :</span>
+              <span>Timbre historique conservé :</span>
               <span class="font-bold text-oas-ink">{{ proformaChargee.montantTimbre | number }} FCFA</span>
             </div>
           }
@@ -386,11 +386,13 @@
           </div>
         </div>
 
-        <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 mt-3">
+        <div class="p-3 bg-blue-50 rounded-xl border border-blue-200 text-xs text-blue-900 mt-3">
           @if ((proformaChargee.montantTimbre || 0) > 0) {
-            Ce proforma conserve le timbre fiscal enregistré à son émission. Pour les règlements, un timbre de {{ tauxTimbreEspeces }} % s’applique uniquement à la part payée en espèces.
+            Le timbre historique déjà enregistré est conservé dans le total de ce proforma. La facture issue suivra son régime TVA : le timbre sera inclus à l’émission si elle est en HT; aucun timbre ne sera appliqué si elle comporte la TVA.
+          } @else if ((proformaChargee.tvaApplicable ?? ((proformaChargee.montantTVA || 0) > 0)) === false) {
+            Ce proforma est en HT et n’inclut pas de timbre. Si une facture HT en est émise, le timbre au taux configuré ({{ tauxTimbreFiscal }} %) sera ajouté une seule fois à l’émission.
           } @else {
-            Si le règlement est effectué en espèces, un timbre fiscal de {{ tauxTimbreEspeces }} % s’applique uniquement à la part payée en espèces. Il n’est pas inclus dans le total de ce proforma.
+            Ce proforma prévoit la TVA. Aucun timbre fiscal ne sera appliqué à la facture avec TVA qui en sera issue, quel que soit le mode de règlement.
           }
         </div>
 
@@ -1034,7 +1036,7 @@
 
         @if (proformaChargee.montantTimbre && proformaChargee.montantTimbre > 0) {
           <div class="flex justify-between items-center text-xs">
-            <span class="text-oas-muted font-medium">Timbre fiscal :</span>
+            <span class="text-oas-muted font-medium">Timbre historique conservé :</span>
             <span class="font-bold text-oas-ink">{{ proformaChargee.montantTimbre | number }} FCFA</span>
           </div>
         }
@@ -1330,7 +1332,7 @@
 
         @if (proformaChargee.montantTimbre && proformaChargee.montantTimbre > 0) {
           <div class="flex justify-between items-center text-xs">
-            <span class="text-oas-muted font-medium">Timbre fiscal :</span>
+            <span class="text-oas-muted font-medium">Timbre historique conservé :</span>
             <span class="font-bold text-oas-ink">{{ proformaChargee.montantTimbre | number }} FCFA</span>
           </div>
         }

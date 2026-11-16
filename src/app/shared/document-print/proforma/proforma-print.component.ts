@@ -87,11 +87,16 @@ export class ProformaPrintComponent {
     return this.data.tva ?? this.data.montantTva ?? 0;
   }
 
+  getTvaApplicable(): boolean {
+    if (typeof this.data?.tvaApplicable === 'boolean') return this.data.tvaApplicable;
+    return this.getTVA() > 0;
+  }
+
   getTimbre(): number {
     return Number(this.data?.timbre) || 0;
   }
 
-  getTauxTimbreEspeces(): number {
+  getTauxTimbreFiscal(): number {
     return Number(this.data?.timbreFiscalRate ?? 1) || 0;
   }
 

@@ -24,8 +24,6 @@ export const TOUS_MODES_PAIEMENT: ReadonlyArray<{ value: FactureModePaiement; la
   { value: 'AUTRE', label: 'Autre' },
 ];
 
-export const MESSAGE_TIMBRE_ESPECES = 'Si le client veut payer en espèce, il doit ajouter le timbre de 1 %.';
-
 export function modePaiementRecu(mode?: string | null): string {
   if (!mode) return 'ESPECE';
   if (mode === 'ESPECE_TTC' || mode === 'ESPECE_HT' || mode === 'ESPECE') return 'ESPECE';
@@ -35,10 +33,6 @@ export function modePaiementRecu(mode?: string | null): string {
 
 export function isModeHt(mode?: string | null): boolean {
   return mode === 'ESPECE_HT' || mode === 'CHEQUE_HT';
-}
-
-export function isModeEspeces(mode?: string | null): boolean {
-  return mode === 'ESPECE' || mode === 'ESPECE_TTC' || mode === 'ESPECE_HT';
 }
 
 export function modePaiementLabel(mode?: string | null): string {

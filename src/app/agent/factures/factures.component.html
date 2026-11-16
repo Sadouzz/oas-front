@@ -424,7 +424,7 @@
                     <div class="flex justify-between"><span class="text-oas-muted">Mode</span><span>{{ modePaiementLabel(recu.modePaiement) }}</span></div>
                     <div class="flex justify-between"><span class="text-oas-muted">Imputé sur facture</span><span>{{ fmt(recu.montant) }} FCFA</span></div>
                     @if ((recu.montantTimbre || 0) > 0) {
-                      <div class="flex justify-between"><span class="text-oas-muted">Timbre espèces</span><span>{{ fmt(recu.montantTimbre || 0) }} FCFA</span></div>
+                      <div class="flex justify-between"><span class="text-oas-muted">Timbre historique du reçu</span><span>{{ fmt(recu.montantTimbre || 0) }} FCFA</span></div>
                     }
                     <div class="flex justify-between font-bold"><span>Total encaissé</span><span>{{ fmt(recu.montantEncaisse ?? recu.montant) }} FCFA</span></div>
                   </div>
@@ -513,21 +513,14 @@
             <option value="AUTRE">Autre</option>
           </select>
         </div>
-        <div class="rounded-xl p-4 border border-amber-200 bg-amber-50 text-amber-950 space-y-1.5">
-          @if (payMethode === 'ESPECE') {
-            <div class="p-2 rounded-lg bg-amber-100/70 border border-amber-300 text-amber-950 text-xs font-semibold flex items-center gap-2">
-              <span class="text-sm">⚠️</span>
-              <span>Si le client veut payer en espèce, il doit ajouter le timbre de 1 %.</span>
-            </div>
-          }
-          @if (payMethode === 'ESPECE' && !(factureToPay.tvaApplicable === false && (factureToPay.montantTimbre || 0) > 0)) {
-            <div class="flex justify-between text-sm"><span>Timbre fiscal espèces ({{ timbreFiscalRate }} %)</span><strong>{{ fmt(payTimbreEspeces) }} FCFA</strong></div>
-          }
+        <div class="rounded-xl p-4 border border-oas-line bg-oas-bg text-oas-ink space-y-1.5">
           <div class="flex justify-between text-sm font-bold"><span>Total à remettre</span><strong>{{ fmt(payTotalEncaisse) }} FCFA</strong></div>
-          @if (factureToPay.tvaApplicable === false && (factureToPay.montantTimbre || 0) > 0) {
-            <p class="text-xs">Le timbre est déjà inclus une seule fois dans le total de cette facture HT.</p>
+          @if (factureToPay.tvaApplicable === false) {
+            <p class="text-xs text-oas-muted">Facture HT : le timbre est calculé à l’émission. Aucun timbre supplémentaire n’est ajouté au règlement.</p>
+          } @else if (factureToPay.tvaApplicable === true) {
+            <p class="text-xs text-oas-muted">La TVA s’applique à cette facture. Aucun timbre fiscal n’est ajouté au règlement, même en espèces.</p>
           } @else {
-            <p class="text-xs">Le timbre de {{ timbreFiscalRate }} % s’applique seulement au montant payé en espèces. Il ne réduit pas le reste dû sur la facture.</p>
+            <p class="text-xs text-oas-muted">Le total fixé à l’émission reste dû. Aucun timbre supplémentaire n’est ajouté à ce règlement.</p>
           }
         </div>
       </div>

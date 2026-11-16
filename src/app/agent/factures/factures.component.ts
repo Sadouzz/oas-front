@@ -11,7 +11,6 @@ import { LucideSearch, LucidePlus, LucideX, LucideDownload, LucideReceipt, Lucid
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 import { extractContent } from '../../shared/models';
-import { FiscalConfigurationService } from '../gestion-tva/fiscal-configuration.service';
 import { modePaiementRecu } from './models/facture-mode-paiement';
 import { PdfLayoutDialogService } from '../../shared/components/pdf-layout-dialog/pdf-layout-dialog.service';
 import {
@@ -36,9 +35,7 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit,
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private clientService = inject(ClientService);
-  private fiscalConfigurationService = inject(FiscalConfigurationService);
   private pdfLayoutDialog = inject(PdfLayoutDialogService);
-  timbreFiscalRate = 1;
 
   factures: FactureListModel[] = [];
   filtered: FactureListModel[] = [];
@@ -61,17 +58,8 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit,
       : this.factureToPay.resteAPayer;
   }
 
-  get payTimbreEspeces(): number {
-    const rate = Number(this.factureToPay?.timbreFiscalRate ?? this.timbreFiscalRate);
-    const timbreDejaInclus = this.factureToPay?.tvaApplicable === false
-      && Number(this.factureToPay?.montantTimbre ?? 0) > 0;
-    return this.payMethode === 'ESPECE' && !timbreDejaInclus
-      ? Math.round((Number(this.payMontant) || 0) * rate) / 100
-      : 0;
-  }
-
   get payTotalEncaisse(): number {
-    return (Number(this.payMontant) || 0) + this.payTimbreEspeces;
+    return Number(this.payMontant) || 0;
   }
 
   searchNumero = '';
@@ -91,10 +79,6 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit,
   errorMessage = '';
 
   ngOnInit() {
-    this.fiscalConfigurationService.getCurrent().subscribe({
-      next: config => { this.timbreFiscalRate = Number(config.timbreFiscalRate) || 0; },
-      error: () => undefined,
-    });
     this.clientService.getAll({ size: 500 }).pipe(catchError(() => of([]))).subscribe({
       next: res => {
         const map: Record<number, string> = {};

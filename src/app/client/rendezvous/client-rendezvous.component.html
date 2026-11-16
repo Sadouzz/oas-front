@@ -207,10 +207,6 @@
           <p>{{ bookingContextError }}</p>
           <button type="button" (click)="loadBookingContext()" class="mt-2 font-semibold underline">Réessayer</button>
         </div>
-      } @else if (reservationStatus?.factureEchueImpayee) {
-        <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
-          {{ reservationStatus?.motifBlocage }}
-        </div>
       } @else if (reservationStatus?.demandeEnAttente) {
         <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
           {{ reservationStatus?.motifBlocage || 'Votre demande exceptionnelle attend la décision d’un Super Agent.' }}
@@ -218,8 +214,13 @@
         </div>
       } @else if (reservationStatus?.demandeDerogationPossible) {
         <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
-          <p class="font-semibold">Le plafond de votre compte est atteint.</p>
-          <p class="mt-1">Vous pouvez soumettre une demande exceptionnelle. Aucun rendez-vous ni nouvelle réparation ne sera créé avant son approbation par un Super Agent.</p>
+          <p class="font-semibold">Une validation financière est nécessaire avant une nouvelle réparation.</p>
+          <p class="mt-1 whitespace-pre-line">{{ reservationStatus?.motifBlocage }}</p>
+          <p class="mt-2">Vous pouvez transmettre cette demande au Super Agent. Le rendez-vous ne sera créé qu’après son approbation.</p>
+        </div>
+      } @else if (reservationStatus && !reservationStatus.workflowAutorise) {
+        <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+          {{ reservationStatus.motifBlocage || 'La réservation n’est pas disponible pour le moment.' }}
         </div>
       }
 
@@ -371,7 +372,7 @@
           class="flex-1 border border-oas-line text-oas-ink2 font-semibold py-2.5 rounded-xl text-sm hover:bg-oas-bg transition cursor-pointer active:scale-98">
           Annuler
         </button>
-        <button type="submit" [disabled]="saving || loadingBookingContext || !reservationStatus || !!bookingContextError || !!reservationStatus?.factureEchueImpayee || !!reservationStatus?.demandeEnAttente"
+        <button type="submit" [disabled]="saving || loadingBookingContext || !reservationStatus || !!bookingContextError || !!reservationStatus?.demandeEnAttente || (!reservationStatus?.workflowAutorise && !reservationStatus?.demandeDerogationPossible)"
           class="flex-1 bg-oas-accent hover:bg-oas-accent-dark disabled:opacity-60 text-white font-bold py-2.5 rounded-xl text-sm transition cursor-pointer active:scale-98 shadow-xs">
           {{ saving ? 'Envoi...' : reservationStatus?.demandeDerogationPossible ? 'Envoyer au Super Agent' : 'Envoyer la demande' }}
         </button>

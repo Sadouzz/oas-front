@@ -121,11 +121,13 @@
         </tr>
       </tbody>
     </table>
-    <div style="margin:8px 0; padding:8px; border:1px solid #f5d58a; background:#fff8e6; font-size:10px;">
+    <div style="margin:8px 0; padding:8px; border:1px solid #cbd5e1; background:#f8fafc; font-size:10px;">
       @if (getTimbre() > 0) {
-        Ce document conserve le timbre fiscal enregistré à son émission. Pour les règlements, le timbre fiscal de {{ getTauxTimbreEspeces() }} % s’applique uniquement à la part payée en espèces.
+        Ce proforma conserve le montant de timbre historique déjà enregistré dans son total. La facture qui en sera issue suivra son régime TVA : un timbre sera inclus à l’émission si elle est en HT; aucun timbre ne sera appliqué si elle comporte la TVA.
+      } @else if (!getTvaApplicable()) {
+        Ce proforma HT n’inclut pas de timbre. Si une facture HT en est émise, le timbre au taux configuré ({{ getTauxTimbreFiscal() }} %) sera ajouté une seule fois à l’émission.
       } @else {
-        Si le règlement est effectué en espèces, un timbre fiscal de {{ getTauxTimbreEspeces() }} % s’applique uniquement à la part payée en espèces. Il n’est pas inclus dans le total de ce proforma.
+        La TVA est appliquée à ce proforma. La facture avec TVA qui en sera issue ne portera pas de timbre fiscal, quel que soit le mode de règlement.
       }
     </div>
     <div style="text-align:right; margin:8px 0; font-size:11px;" *ngIf="data?.montantRemiseGenerale > 0 || data?.montantRemiseClient > 0">

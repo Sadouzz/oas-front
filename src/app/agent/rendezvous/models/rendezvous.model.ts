@@ -75,8 +75,9 @@ export interface QuotaDerogationRequest {
   origine: string;
   demandeur: string;
   plafondSnapshot: number | null;
-  montantConsommeSnapshot: number | null;
+  encoursImpayesSnapshot: number | null;
   echeanceJoursSnapshot: number | null;
+  detailsBlocageSnapshot: string | null;
   dateDemande: string;
   decisionnaire: string | null;
   dateDecision: string | null;

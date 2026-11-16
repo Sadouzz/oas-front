@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, ChangeDetectorRef, NgZone } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 import { extractContent } from '../../shared/models/api-response.model';
@@ -24,6 +24,7 @@ export class BonsLivraisonComponent extends BasePaginatedComponent implements On
   private api = inject(BonDeLivraisonService);
   private orApi = inject(OrdreReparationService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private authService = inject(AuthService);
   private pdfLayoutDialog = inject(PdfLayoutDialogService);
   private cdr = inject(ChangeDetectorRef);
@@ -245,7 +246,7 @@ export class BonsLivraisonComponent extends BasePaginatedComponent implements On
   }
   convertirFactureDuContexte(): void {
     const bon = this.contexteOrdre?.bonDeLivraison;
-    if (!bon || bon.factureId || this.actionLoading) return;
+    if (!bon || bon.factureId || bon.noteDePrixId || this.actionLoading) return;
     this.openInvoiceModal(bon.id, bon.numero, bon.tvaApplicable ?? this.contexteOrdre?.tvaApplicable);
   }
   openDetailById(id: number): void {
@@ -310,6 +311,7 @@ export class BonsLivraisonComponent extends BasePaginatedComponent implements On
   }
   createInvoiceFromBon(): void {
     if (this.invoiceBonId == null || this.actionLoading) return;
+    const ordreId = Number(this.selectedBon?.ordreReparationId || this.ordreId) || null;
     this.actionLoading = true;
     this.modalError = '';
     this.cdr.markForCheck();
@@ -318,9 +320,11 @@ export class BonsLivraisonComponent extends BasePaginatedComponent implements On
         this.ngZone.run(() => {
           this.actionLoading = false;
           this.showInvoiceModal = false;
-          this.successMessage = `Facture ${result?.numero || ''} créée depuis le bon ${this.invoiceBonNumero}.`.trim();
+          const message = `Facture ${result?.numero || ''} créée depuis le bon ${this.invoiceBonNumero}.`.trim();
           this.invoiceBonId = null;
           this.invoiceBonNumero = '';
+          if (ordreId && this.naviguerVersPaiementOr(ordreId, message)) return;
+          this.successMessage = message;
           if (this.ordreId) this.onOrderChange(this.ordreId);
           this.loadData();
           if (this.selectedBon) this.selectedBon = { ...this.selectedBon, factureId: result?.id, factureNumero: result?.numero };
@@ -337,12 +341,28 @@ export class BonsLivraisonComponent extends BasePaginatedComponent implements On
     });
   }
   convertFacture(bon: BonDeLivraison): void {
-    if (bon.factureId || bon.factureNumero) return;
+    if (bon.factureId || bon.factureNumero || bon.noteDePrixId || bon.noteDePrixNumero) return;
     this.openInvoiceModal(bon.id, bon.numero, bon.tvaApplicable);
   }
   convertNote(bon: BonDeLivraison): void {
+    if (bon.factureId || bon.factureNumero || bon.noteDePrixId || bon.noteDePrixNumero) return;
     if (this.actionLoading) return; this.actionLoading = true; this.errorMessage = '';
-    this.api.convertirNote(bon.id).subscribe({ next: result => this.afterAction('Note de prix créée depuis le bon de livraison.', { noteDePrixId: result?.id, noteDePrixNumero: result?.numero }), error: err => { this.actionLoading = false; this.errorMessage = err?.error?.message || 'La conversion en note de prix a échoué.'; } });
+    const ordreId = Number(bon.ordreReparationId || this.ordreId) || null;
+    this.api.convertirNote(bon.id).subscribe({
+      next: result => {
+        const message = `Note de prix ${result?.numero || ''} créée depuis le bon de livraison.`.trim();
+        if (ordreId && this.naviguerVersPaiementOr(ordreId, message)) return;
+        this.afterAction(message, { noteDePrixId: result?.id, noteDePrixNumero: result?.numero });
+      },
+      error: err => { this.actionLoading = false; this.errorMessage = err?.error?.message || 'La conversion en note de prix a échoué.'; }
+    });
+  }
+  private naviguerVersPaiementOr(ordreId: number, conversionMessage: string): boolean {
+    if (!Number.isInteger(ordreId) || ordreId <= 0) return false;
+    void this.router.navigate(['/app/ordres-reparation', ordreId, 'bl'], {
+      state: { conversionMessage }
+    });
+    return true;
   }
   private afterAction(message: string, update: Partial<BonDeLivraison>): void {
     this.ngZone.run(() => {

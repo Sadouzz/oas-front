@@ -1162,8 +1162,12 @@
                 <span class="text-oas-muted block font-medium">Autres frais</span>
                 <strong class="text-sm font-bold text-oas-ink">{{ fmt(montantTimbreEtAutres) }} FCFA</strong>
               </div>
-              <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900">
-                Si le règlement est effectué en espèces, un timbre fiscal de {{ tauxTimbreEspeces }} % s’applique uniquement à la part payée en espèces. Il n’est pas inclus dans le total de ce proforma.
+              <div class="p-3 bg-blue-50 rounded-xl border border-blue-200 text-xs text-blue-900">
+                @if (form.get('appliquerTVA')?.value === false) {
+                  Ce proforma HT n’inclut pas de timbre. Si une facture HT en est émise, le timbre au taux configuré ({{ tauxTimbreFiscal }} %) sera ajouté une seule fois à l’émission.
+                } @else {
+                  La TVA est appliquée à ce proforma. La facture avec TVA qui en sera issue ne portera pas de timbre fiscal, quel que soit le mode de règlement.
+                }
               </div>
             </div>
 

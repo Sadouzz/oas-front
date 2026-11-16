@@ -8,9 +8,9 @@ import { StepPaiementResponseDto } from '../../../models/responses/step-paiement
 import { LignePieceBLDto, LigneMainDoeuvreBLDto, NoteDePrixSummaryDto } from '../../../models/responses/step-bl-response.dto';
 import { FactureService } from '../../../../factures/facture.service';
 import { BonDeLivraisonService, BonDeLivraisonOrdreContext } from '../../../../bons-livraison/bon-de-livraison.service';
+import { NoteDePrixService } from '../../../../notes-prix/note-de-prix.service';
 import { AlertComponent } from '../../../../../shared/components/alert/alert.component';
-import { FiscalConfigurationService } from '../../../../gestion-tva/fiscal-configuration.service';
-import { FACTURE_MODES_PAIEMENT, FactureModePaiement, modePaiementRecu, MESSAGE_TIMBRE_ESPECES, isModeEspeces, isModeHt } from '../../../../factures/models/facture-mode-paiement';
+import { FACTURE_MODES_PAIEMENT, FactureModePaiement, modePaiementRecu, isModeHt } from '../../../../factures/models/facture-mode-paiement';
 
 @Component({
   selector: 'app-step-paiement',
@@ -24,10 +24,9 @@ export class StepPaiementComponent implements OnInit {
   private ordreService = inject(OrdreReparationService);
   private factureService = inject(FactureService);
   private bonDeLivraisonService = inject(BonDeLivraisonService);
+  private noteDePrixService = inject(NoteDePrixService);
   private cdr = inject(ChangeDetectorRef);
   private ngZone = inject(NgZone);
-  private fiscalConfigurationService = inject(FiscalConfigurationService);
-  timbreFiscalRate = 1;
   selectedFilter: 'TOUS' | 'PDP' | 'PDG' | 'PDS' | 'MO' = 'TOUS';
 
   get lignesPieces(): LignePieceBLDto[] {
@@ -94,20 +93,7 @@ export class StepPaiementComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  get payTimbreEspeces(): number {
-    const rate = Number(this.data?.facture?.timbreFiscalRate ?? this.timbreFiscalRate);
-    const facture = this.data?.facture;
-    const timbreDejaInclus = facture?.modePaiement?.endsWith('_HT')
-      || (facture?.tvaApplicable === false && Number(facture?.montantTimbre ?? 0) > 0);
-    return this.payMethode === 'ESPECE' && !timbreDejaInclus
-      ? Math.round((Number(this.payMontant) || 0) * rate) / 100 : 0;
-  }
-
-  get tauxTimbrePaiement(): number {
-    return Number(this.data?.facture?.timbreFiscalRate ?? this.timbreFiscalRate);
-  }
-
-  get payTotalEncaisse(): number { return (Number(this.payMontant) || 0) + this.payTimbreEspeces; }
+  get payTotalEncaisse(): number { return Number(this.payMontant) || 0; }
 
   ordreId!: number;
   data: StepPaiementResponseDto | null = null;
@@ -129,13 +115,15 @@ export class StepPaiementComponent implements OnInit {
 
   modePaiementNote: FactureModePaiement = 'ESPECE_TTC';
   remarqueNote = '';
-  readonly messageTimbreEspeces = MESSAGE_TIMBRE_ESPECES;
-  readonly isModeEspeces = isModeEspeces;
   readonly isModeHt = isModeHt;
 
   showPayModal = false;
   payMontant = 0;
   payMethode = 'ESPECE';
+  showPayNoteModal = false;
+  payingNote = false;
+  payNoteMontant = 0;
+  payNoteMethode = 'ESPECE';
 
   errorMessage = '';
   successMessage = '';
@@ -147,10 +135,8 @@ export class StepPaiementComponent implements OnInit {
       return;
     }
     this.ordreId = +idParam;
-    this.fiscalConfigurationService.getCurrent().subscribe({
-      next: config => { this.timbreFiscalRate = Number(config.timbreFiscalRate) || 0; this.cdr.markForCheck(); },
-      error: () => undefined,
-    });
+    const navigationState = this.router.getCurrentNavigation()?.extras.state as { conversionMessage?: string } | undefined;
+    this.successMessage = navigationState?.conversionMessage || '';
     this.loadData();
   }
 
@@ -206,6 +192,22 @@ export class StepPaiementComponent implements OnInit {
     return s === 'PAYE' && restant != null && Number.isFinite(restant) && restant <= 0;
   }
 
+  statutPaiementLabel(statut?: string | null): string {
+    switch ((statut || '').toUpperCase()) {
+      case 'PAYE': return 'RÈGLEMENT CONFIRMÉ';
+      case 'PARTIEL': return 'PAIEMENT PARTIEL';
+      default: return 'NON PAYÉ';
+    }
+  }
+
+  statutPaiementClass(statut?: string | null): string {
+    switch ((statut || '').toUpperCase()) {
+      case 'PAYE': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'PARTIEL': return 'bg-amber-50 text-amber-700 border-amber-200';
+      default: return 'bg-rose-50 text-rose-700 border-rose-200';
+    }
+  }
+
   hasNoteDePrix(): boolean {
     return !this.hasFacture() && !!(
       this.data?.noteDePrix?.id ||
@@ -224,7 +226,11 @@ export class StepPaiementComponent implements OnInit {
         id: bl.noteDePrixId,
         numero: bl.noteDePrixNumero || ('NP-' + bl.noteDePrixId),
         montantTotal: this.data?.montantTotal || this.totalCalculatedHT,
+        montantPaye: 0,
+        resteAPayer: this.data?.montantTotal || this.totalCalculatedHT,
         statut: 'GENEREE',
+        statutPaiement: 'NON_PAYE',
+        tvaApplicable: this.data?.tvaApplicable,
         client: this.data?.clientNom,
         vehicule: this.data?.immatriculation
       };
@@ -307,10 +313,8 @@ export class StepPaiementComponent implements OnInit {
             this.creatingFacture = false;
             this.showCreateFactureModal = false;
             this.createdFacture = res;
-            const id = res?.id ?? res?.data?.id;
-            this.router.navigate(['/app/factures'], {
-              queryParams: id ? { detailId: id } : undefined
-            });
+            this.successMessage = `Facture ${res?.numero || ''} créée. Vous pouvez enregistrer le règlement sur cet ordre.`.trim();
+            this.loadData();
           });
         },
         error: (err) => {
@@ -363,10 +367,8 @@ export class StepPaiementComponent implements OnInit {
             this.convertingNote = false;
             this.showConfirmNoteModal = false;
             this.createdNoteDePrix = res;
-            const id = res?.id ?? res?.data?.id;
-            this.router.navigate(['/app/notes-prix'], {
-              queryParams: id ? { detailId: id } : undefined
-            });
+            this.successMessage = `Note de prix ${res?.numero || ''} créée. Vous pouvez suivre son règlement sur cet ordre.`.trim();
+            this.loadData();
           });
         },
         error: (err) => {
@@ -425,6 +427,57 @@ export class StepPaiementComponent implements OnInit {
         this.ngZone.run(() => {
           this.paying = false;
           this.errorMessage = err.error?.message || 'Erreur lors de l\'enregistrement du paiement.';
+          this.cdr.detectChanges();
+        });
+      }
+    });
+  }
+
+  ouvrirModalPaiementNote(): void {
+    const note = this.noteDePrixInfo;
+    if (!note?.id || Number(note.resteAPayer || 0) <= 0) return;
+    this.payNoteMontant = Number(note.resteAPayer) || 0;
+    this.payNoteMethode = 'ESPECE';
+    this.showPayNoteModal = true;
+    this.cdr.detectChanges();
+  }
+
+  fermerModalPaiementNote(): void {
+    if (this.payingNote) return;
+    this.showPayNoteModal = false;
+    this.cdr.detectChanges();
+  }
+
+  enregistrerPaiementNote(): void {
+    const note = this.noteDePrixInfo;
+    const montant = Number(this.payNoteMontant) || 0;
+    const reste = Number(note?.resteAPayer) || 0;
+    if (!note?.id || montant <= 0 || montant > reste || this.payingNote) return;
+
+    this.payingNote = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.cdr.detectChanges();
+    this.noteDePrixService.update(note.id, {
+      clientId: this.data?.clientId ?? null,
+      vehiculeId: this.data?.vehiculeId ?? null,
+      ordreReparationId: this.ordreId,
+      montantPaye: (Number(note.montantPaye) || 0) + montant,
+      modePaiement: this.payNoteMethode,
+    } as any).subscribe({
+      next: () => {
+        this.ngZone.run(() => {
+          this.payingNote = false;
+          this.showPayNoteModal = false;
+          this.successMessage = 'Règlement de la note de prix enregistré.';
+          this.loadData();
+          this.cdr.detectChanges();
+        });
+      },
+      error: (err: any) => {
+        this.ngZone.run(() => {
+          this.payingNote = false;
+          this.errorMessage = err.error?.message || 'Erreur lors de l’enregistrement du règlement de la note de prix.';
           this.cdr.detectChanges();
         });
       }

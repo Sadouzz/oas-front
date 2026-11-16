@@ -46,6 +46,12 @@ export class FactureService {
     });
   }
 
+  payFactureTotal(id: number, methodePaiement: string): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/api/recus/payer-integral`, null, {
+      params: { factureId: id.toString(), methodePaiement }
+    });
+  }
+
   downloadPdf(id: number, layoutKey: 'AVEC_ENTETE' | 'SANS_ENTETE' = 'AVEC_ENTETE'): Observable<Blob> {
     return this.http.get(`${this.api}/${id}/pdf`, { params: { layoutKey }, responseType: 'blob' });
   }

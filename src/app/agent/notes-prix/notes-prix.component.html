@@ -378,7 +378,7 @@
               <span class="font-bold text-oas-accent text-base">{{ fmt(selectedNote.montantTotal) }} FCFA</span>
             </div>
             @if ((selectedNote.montantTimbrePaye || 0) > 0) {
-              <div class="flex justify-between"><span class="text-oas-muted">Timbre déjà encaissé en espèces</span><span class="font-semibold">{{ fmt(selectedNote.montantTimbrePaye || 0) }} FCFA</span></div>
+              <div class="flex justify-between"><span class="text-oas-muted">Timbre historique déjà encaissé</span><span class="font-semibold">{{ fmt(selectedNote.montantTimbrePaye || 0) }} FCFA</span></div>
               <div class="flex justify-between"><span class="text-oas-muted">Total encaissé</span><span class="font-semibold">{{ fmt(selectedNote.montantEncaisse || 0) }} FCFA</span></div>
             }
             @if (selectedNote.tvaApplicable ?? ((selectedNote.montantTVA || 0) > 0)) {
@@ -620,15 +620,9 @@
                 <option value="ESPECE_HT">Espèce HT</option>
                 <option value="CHEQUE_HT">Chèque HT</option>
               </select>
-
-              @if (form.get('modePaiement')?.value === 'ESPECE_TTC' || form.get('modePaiement')?.value === 'ESPECE_HT' || form.get('modePaiement')?.value === 'ESPECE') {
-                <div class="mt-2 rounded-lg bg-amber-50 border border-amber-200 p-2.5 text-xs text-amber-900 flex items-start gap-2">
-                  <span class="text-sm font-bold">⚠️</span>
-                  <span>Si le client veut payer en espèce, il doit ajouter le timbre de 1 %.</span>
-                </div>
-              }
+              <p class="text-xs text-oas-muted mt-2">Aucun timbre fiscal n’est appliqué à une note de prix.</p>
               @if (form.get('modePaiement')?.value === 'ESPECE_HT' || form.get('modePaiement')?.value === 'CHEQUE_HT') {
-                <p class="text-xs text-amber-800 mt-1">Note de prix Hors Taxe : le timbre fiscal de 1 % est appliqué sur le montant HT sans TVA.</p>
+                <p class="text-xs text-amber-800 mt-1">Le régime HT désactive la TVA; aucun timbre n’est ajouté.</p>
               }
             </div>
           </div>
@@ -712,16 +706,9 @@
             <option value="VIREMENT">Virement</option>
           </select>
         </div>
-        <div class="rounded-xl p-4 border border-amber-200 bg-amber-50 text-amber-950 space-y-1.5">
-          @if (payMethode === 'ESPECE') {
-            <div class="p-2 rounded-lg bg-amber-100/70 border border-amber-300 text-amber-950 text-xs font-semibold flex items-center gap-2">
-              <span class="text-sm">⚠️</span>
-              <span>Si le client veut payer en espèce, il doit ajouter le timbre de 1 %.</span>
-            </div>
-            <div class="flex justify-between text-sm"><span>Timbre fiscal espèces ({{ timbreFiscalRate }} %)</span><strong>{{ fmt(payTimbreEspeces) }} FCFA</strong></div>
-          }
-          <div class="flex justify-between text-sm font-bold"><span>Total à remettre</span><strong>{{ fmt(payTotalEncaisse) }} FCFA</strong></div>
-          <p class="text-xs">Le timbre s’applique uniquement au montant réglé en espèces. Il ne réduit pas le reste à payer de la note.</p>
+        <div class="rounded-xl p-4 border border-oas-line bg-oas-bg text-oas-ink space-y-1.5">
+          <div class="flex justify-between text-sm font-bold"><span>Total à remettre</span><strong>{{ fmt(payMontant) }} FCFA</strong></div>
+          <p class="text-xs text-oas-muted">Aucun timbre fiscal n’est appliqué au règlement d’une note de prix.</p>
         </div>
       </div>
 

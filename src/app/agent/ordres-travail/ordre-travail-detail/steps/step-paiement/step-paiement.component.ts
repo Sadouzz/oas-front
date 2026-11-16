@@ -7,7 +7,6 @@ import { StepPaiementResponseDto, StatutOrdreTravail, OrdreTravail } from '../..
 import { FactureService } from '../../../../factures/facture.service';
 import { FactureCreateRequest } from '../../../../factures/models/facture.model';
 import { AlertComponent } from '../../../../../shared/components/alert/alert.component';
-import { FiscalConfigurationService } from '../../../../gestion-tva/fiscal-configuration.service';
 
 @Component({
   selector: 'app-step-paiement',
@@ -22,19 +21,7 @@ export class StepPaiementComponent implements OnInit {
   private factureService = inject(FactureService);
   private cdr = inject(ChangeDetectorRef);
   private ngZone = inject(NgZone);
-  private fiscalConfigurationService = inject(FiscalConfigurationService);
-  timbreFiscalRate = 1;
-
-  get payTimbreEspeces(): number {
-    const rate = Number(this.data?.facture?.timbreFiscalRate ?? this.timbreFiscalRate);
-    return this.payMethode === 'ESPECE' ? Math.round((Number(this.payMontant) || 0) * rate) / 100 : 0;
-  }
-
-  get tauxTimbrePaiement(): number {
-    return Number(this.data?.facture?.timbreFiscalRate ?? this.timbreFiscalRate);
-  }
-
-  get payTotalEncaisse(): number { return (Number(this.payMontant) || 0) + this.payTimbreEspeces; }
+  get payTotalEncaisse(): number { return Number(this.payMontant) || 0; }
 
   otId!: number;
   data: StepPaiementResponseDto | null = null;
@@ -63,10 +50,6 @@ export class StepPaiementComponent implements OnInit {
       return;
     }
     this.otId = +idParam;
-    this.fiscalConfigurationService.getCurrent().subscribe({
-      next: config => { this.timbreFiscalRate = Number(config.timbreFiscalRate) || 0; this.cdr.markForCheck(); },
-      error: () => undefined,
-    });
     this.loadData();
     this.loadOTSummary();
   }
