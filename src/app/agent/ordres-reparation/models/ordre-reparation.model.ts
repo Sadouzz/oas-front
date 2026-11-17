@@ -156,6 +156,23 @@ export interface OrdreReparation {
   hasOrdreTravail?: boolean;
 }
 
+export interface OrdreReparationHistoriqueClient {
+  id: number;
+  numero: string;
+  descriptionTravaux: string | null;
+  dateCreation: string;
+  updatedAt: string | null;
+  dateSortie: string | null;
+  statut: string;
+  vehicule: {
+    immatriculation: string;
+    marque: string;
+    modele: string;
+    client: { firstName: string; lastName: string } | null;
+  } | null;
+  hasPiecesOrMo: boolean | null;
+}
+
 export interface OrdreReparationRequest {
   numero: string;
   descriptionTravaux: string;

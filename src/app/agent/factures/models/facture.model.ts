@@ -3,6 +3,7 @@ export interface FactureModel {
   numero: string;
   dateCreation: string;
   dateModification: string;
+  dateEcheance?: string | null;
   montantHT: number;
   montantTVA: number;
   tvaApplicable?: boolean | null;
@@ -56,11 +57,11 @@ export interface FactureModel {
 }
 
 export type FactureListModel = Pick<FactureModel,
-  'id' | 'numero' | 'dateCreation' | 'montantHT' | 'montantTVA' | 'tvaApplicable' | 'montantTTC'
+  'id' | 'numero' | 'dateCreation' | 'dateEcheance' | 'montantHT' | 'montantTVA' | 'tvaApplicable' | 'montantTTC'
   | 'montantTimbre' | 'timbreFiscalRate' | 'montantAutre' | 'montantTotal' | 'tauxRemiseClient'
   | 'montantRemiseClient' | 'modePaiement' | 'agentNom' | 'remarque' | 'kilometrage' | 'clientId' | 'clientNom'
   | 'clientNumero' | 'numeroClient' | 'clientMatricule' | 'immatriculation' | 'vehiculeImmatriculation'
-  | 'marque' | 'modele' | 'annee' | 'montantPaye' | 'resteAPayer' | 'statutPaiement'>;
+  | 'marque' | 'modele' | 'annee' | 'montantPaye' | 'resteAPayer' | 'statutPaiement' | 'ordreReparationId' | 'numeroOrdreReparation'>;
 
 export type FactureDetailsViewModel = FactureListModel & Pick<FactureModel,
   'lignesPieces' | 'lignesMainDoeuvres' | 'recus'> & Partial<Pick<FactureModel,

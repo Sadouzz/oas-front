@@ -37,6 +37,8 @@ import {
   StepLivraisonResponseDto
 } from './models/responses';
 import { StepFacturationDto } from './models/steps';
+import { OrdreReparationHistoriqueClient } from './models/ordre-reparation.model';
+import { PageResponse } from '../../shared/models';
 
 @Injectable({ providedIn: 'root' })
 export class OrdreReparationService {
@@ -68,6 +70,12 @@ export class OrdreReparationService {
       p['search'] = params.keyword;
     }
     return this.http.get<any>(this.api, { params: p });
+  }
+
+  getHistoriqueClient(clientId: number, page = 0, size = 8): Observable<PageResponse<OrdreReparationHistoriqueClient>> {
+    return this.http.get<PageResponse<OrdreReparationHistoriqueClient>>(`${this.api}/client/${clientId}/historique`, {
+      params: { page: String(page), size: String(size) }
+    });
   }
 
   private orderCache = new Map<number, { data: Observable<OrdreReparation>, timestamp: number }>();

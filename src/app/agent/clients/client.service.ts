@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ClientModel, ClientListResponse, CreateClientPayload, UpdateClientPayload, FidelePayload, CompteFinancierPayload, CompteFinancierResponse, PortefeuilleClientResponse } from './models/client-model';
+import { ClientModel, ClientListResponse, CreateClientPayload, UpdateClientPayload, FidelePayload, CompteFinancierPayload, CompteFinancierResponse, PortefeuilleClientResponse, SyntheseFinanciereClientResponse } from './models/client-model';
 import { PageParams } from '../../shared/models';
 
 @Injectable({ providedIn: 'root' })
@@ -68,6 +68,10 @@ export class ClientService {
 
   getCompteFinancier(id: number): Observable<CompteFinancierResponse> {
     return this.http.get<CompteFinancierResponse>(`${this.api}/${id}/compte-financier`);
+  }
+
+  getSyntheseFinanciere(id: number): Observable<SyntheseFinanciereClientResponse> {
+    return this.http.get<SyntheseFinanciereClientResponse>(`${this.api}/${id}/synthese-financiere`);
   }
 
   configurerCompteFinancier(id: number, payload: CompteFinancierPayload): Observable<CompteFinancierResponse> {

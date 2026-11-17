@@ -9,17 +9,21 @@ import { VehiculeService } from '../vehicules/vehicule.service';
 import { BonDeSortieService } from '../bons-de-sortie/bon-de-sortie.service';
 import { FactureService } from '../factures/facture.service';
 import { ClientModel, ClientListResponse, VehiculeModel, extractContent, PageParams } from '../../shared/models/index';
-import { CompteFinancierPayload, CompteFinancierResponse, PortefeuilleClientResponse } from './models/client-model';
+import { CompteFinancierPayload, CompteFinancierResponse, PortefeuilleClientResponse, SyntheseFinanciereClientResponse } from './models/client-model';
+import { FactureListModel } from '../factures/models/facture.model';
+import { OrdreReparationHistoriqueClient } from '../ordres-reparation/models/ordre-reparation.model';
+import { OrdreReparationService } from '../ordres-reparation/ordre-reparation.service';
 import { AlertComponent } from '../../shared/components/alert/alert.component';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 import { PhoneInputComponent } from '../../shared/components/phone-input/phone-input.component';
+import { RouterLink } from '@angular/router';
 import { LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, LucideArchiveRestore, LucideX, LucideCheck, LucideUser, LucideArrowRight, LucideEye, LucideEyeOff } from '@lucide/angular';
 
 @Component({
   selector: 'app-clients',
   standalone: true,
-  imports: [ReactiveFormsModule, NgClass, DatePipe, DecimalPipe, AlertComponent, PaginationComponent, PhoneInputComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, LucideArchiveRestore, LucideX, LucideCheck, LucideUser, LucideEye, LucideEyeOff],
+  imports: [ReactiveFormsModule, NgClass, DatePipe, DecimalPipe, RouterLink, AlertComponent, PaginationComponent, PhoneInputComponent, LucideSearch, LucidePlus, LucidePencil, LucideTrash2, LucideArchive, LucideArchiveRestore, LucideX, LucideCheck, LucideUser, LucideEye, LucideEyeOff],
   templateUrl: './clients.component.html',
 })
 export class ClientsComponent extends BasePaginatedComponent implements OnInit {
@@ -32,6 +36,7 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   private vehiculeService = inject(VehiculeService);
   private bonService = inject(BonDeSortieService);
   private factureService = inject(FactureService);
+  private ordreReparationService = inject(OrdreReparationService);
 
   clients: ClientListResponse[] = [];
   filtered: ClientListResponse[] = [];
@@ -77,7 +82,7 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
 
   // Detail panel
   selectedClient: ClientListResponse | null = null;
-  detailTab: 'profil' | 'vehicules.component' = 'profil';
+  detailTab: 'profil' | 'vehicules.component' | 'historique' | 'factures' = 'profil';
   clientVehicules: VehiculeModel[] = [];
   loadingVehicules = false;
   vehiculesError = '';
@@ -86,6 +91,28 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   vehiculeTotal = 0;
   vehiculeTotalPages = 0;
   private vehiculeLoadSequence = 0;
+  situationFinanciere: SyntheseFinanciereClientResponse | null = null;
+  loadingSituationFinanciere = false;
+  situationFinanciereError = '';
+  private situationLoadSequence = 0;
+  clientFactures: FactureListModel[] = [];
+  loadingClientFactures = false;
+  clientFacturesError = '';
+  clientFacturePage = 1;
+  clientFacturePageSize = 8;
+  clientFacturesTotal = 0;
+  clientFacturesTotalPages = 0;
+  private clientFacturesLoadSequence = 0;
+  private facturesLoadedForClientId: number | null = null;
+  clientHistorique: OrdreReparationHistoriqueClient[] = [];
+  loadingClientHistorique = false;
+  clientHistoriqueError = '';
+  clientHistoriquePage = 1;
+  clientHistoriquePageSize = 8;
+  clientHistoriqueTotal = 0;
+  clientHistoriqueTotalPages = 0;
+  private clientHistoriqueLoadSequence = 0;
+  private historiqueLoadedForClientId: number | null = null;
 
   createForm = this.fb.group({
     typeClient: ['PARTICULIER' as 'PARTICULIER' | 'ENTREPRISE', Validators.required],
@@ -248,25 +275,184 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
 
   // Detail panel
   selectClient(client: ClientListResponse) {
+    this.vehiculeLoadSequence++;
+    this.clientFacturesLoadSequence++;
+    this.clientHistoriqueLoadSequence++;
     this.selectedClient = client;
-    this.detailTab = 'vehicules.component';
+    this.detailTab = 'profil';
     this.clientVehicules = [];
-    this.vehiculePage = 1;
-    this.loadClientVehicules(client.id);
+    this.vehiculeTotal = 0;
+    this.vehiculeTotalPages = 0;
+    this.situationFinanciere = null;
+    this.situationFinanciereError = '';
+    this.loadingVehicules = false;
+    this.loadingClientFactures = false;
+    this.loadingClientHistorique = false;
+    this.clientFactures = [];
+    this.clientFacturesTotal = 0;
+    this.clientFacturesTotalPages = 0;
+    this.clientHistorique = [];
+    this.clientHistoriqueTotal = 0;
+    this.clientHistoriqueTotalPages = 0;
+    this.facturesLoadedForClientId = null;
+    this.historiqueLoadedForClientId = null;
+    this.clientFacturePage = 1;
+    this.clientHistoriquePage = 1;
+    if (this.peutConfigurerConditionsFinancieres) {
+      this.loadSituationFinanciere(client.id);
+    }
   }
 
   closeDetail() {
     this.selectedClient = null;
     this.clientVehicules = [];
+    this.situationFinanciere = null;
+    this.clientFactures = [];
+    this.clientHistorique = [];
     this.vehiculesError = '';
     this.vehiculeLoadSequence++;
+    this.situationLoadSequence++;
+    this.clientFacturesLoadSequence++;
+    this.clientHistoriqueLoadSequence++;
   }
 
-  setDetailTab(tab: 'profil' | 'vehicules.component') {
+  setDetailTab(tab: 'profil' | 'vehicules.component' | 'historique' | 'factures') {
+    if (tab === 'historique' && !this.peutVoirHistoriqueReparation) return;
     this.detailTab = tab;
-    if (tab === 'vehicules.component' && this.selectedClient) {
+    if (!this.selectedClient) return;
+    if (tab === 'vehicules.component' && this.clientVehicules.length === 0 && !this.loadingVehicules) {
+      this.vehiculePage = 1;
       this.loadClientVehicules(this.selectedClient.id);
+    } else if (tab === 'historique' && this.historiqueLoadedForClientId !== this.selectedClient.id) {
+      this.loadClientHistorique(this.selectedClient.id, 1);
+    } else if (tab === 'factures' && this.facturesLoadedForClientId !== this.selectedClient.id) {
+      this.loadClientFactures(this.selectedClient.id, 1);
     }
+  }
+
+  loadSituationFinanciere(clientId: number) {
+    this.loadingSituationFinanciere = true;
+    this.situationFinanciereError = '';
+    const sequence = ++this.situationLoadSequence;
+    this.clientService.getSyntheseFinanciere(clientId).subscribe({
+      next: situation => {
+        if (sequence !== this.situationLoadSequence || this.selectedClient?.id !== clientId) return;
+        this.situationFinanciere = situation;
+        this.loadingSituationFinanciere = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        if (sequence !== this.situationLoadSequence) return;
+        this.loadingSituationFinanciere = false;
+        this.situationFinanciereError = 'Impossible de charger la situation financière de ce client.';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  loadClientFactures(clientId: number, page = this.clientFacturePage) {
+    this.clientFacturePage = page;
+    this.loadingClientFactures = true;
+    this.clientFacturesError = '';
+    const sequence = ++this.clientFacturesLoadSequence;
+    this.factureService.getAll({ clientId, page: page - 1, size: this.clientFacturePageSize }).subscribe({
+      next: response => {
+        if (sequence !== this.clientFacturesLoadSequence || this.selectedClient?.id !== clientId) return;
+        this.clientFactures = response.content ?? [];
+        this.clientFacturesTotal = response.totalElements ?? this.clientFactures.length;
+        this.clientFacturesTotalPages = response.totalPages ?? Math.ceil(this.clientFacturesTotal / this.clientFacturePageSize);
+        this.loadingClientFactures = false;
+        this.facturesLoadedForClientId = clientId;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        if (sequence !== this.clientFacturesLoadSequence) return;
+        this.loadingClientFactures = false;
+        this.clientFacturesError = 'Impossible de charger les factures de ce client.';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  loadClientHistorique(clientId: number, page = this.clientHistoriquePage) {
+    this.clientHistoriquePage = page;
+    this.loadingClientHistorique = true;
+    this.clientHistoriqueError = '';
+    const sequence = ++this.clientHistoriqueLoadSequence;
+    this.ordreReparationService.getHistoriqueClient(clientId, page - 1, this.clientHistoriquePageSize).subscribe({
+      next: response => {
+        if (sequence !== this.clientHistoriqueLoadSequence || this.selectedClient?.id !== clientId) return;
+        this.clientHistorique = response.content ?? [];
+        this.clientHistoriqueTotal = response.totalElements ?? this.clientHistorique.length;
+        this.clientHistoriqueTotalPages = response.totalPages ?? Math.ceil(this.clientHistoriqueTotal / this.clientHistoriquePageSize);
+        this.loadingClientHistorique = false;
+        this.historiqueLoadedForClientId = clientId;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        if (sequence !== this.clientHistoriqueLoadSequence) return;
+        this.loadingClientHistorique = false;
+        this.clientHistoriqueError = 'Impossible de charger l’historique des réparations de ce client.';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  onClientFacturePageChange(page: number) {
+    if (this.selectedClient && page >= 1 && page <= this.clientFacturesTotalPages && page !== this.clientFacturePage) {
+      this.loadClientFactures(this.selectedClient.id, page);
+    }
+  }
+
+  onClientHistoriquePageChange(page: number) {
+    if (this.selectedClient && page >= 1 && page <= this.clientHistoriqueTotalPages && page !== this.clientHistoriquePage) {
+      this.loadClientHistorique(this.selectedClient.id, page);
+    }
+  }
+
+  montantRestantFacture(facture: FactureListModel): number {
+    if (facture.resteAPayer != null) return Math.max(0, Number(facture.resteAPayer));
+    return Math.max(0, Number(facture.montantTotal ?? 0) - Number(facture.montantPaye ?? 0));
+  }
+
+  statutPaiementFacture(facture: FactureListModel): 'PAYE' | 'PARTIEL' | 'NON_PAYE' {
+    const reste = this.montantRestantFacture(facture);
+    if (reste <= 0) return 'PAYE';
+    return Number(facture.montantPaye ?? 0) > 0 ? 'PARTIEL' : 'NON_PAYE';
+  }
+
+  dateEcheanceFacture(facture: FactureListModel): Date | null {
+    if (facture.dateEcheance) return new Date(facture.dateEcheance);
+    const jours = this.situationFinanciere?.echeanceJours;
+    if (!facture.dateCreation || !jours || jours <= 0) return null;
+    const date = new Date(facture.dateCreation);
+    date.setDate(date.getDate() + jours);
+    return date;
+  }
+
+  etatEcheanceFacture(facture: FactureListModel): 'PAYEE' | 'RETARD' | 'PROCHE' | 'A_JOUR' | 'SANS_ECHEANCE' {
+    if (this.montantRestantFacture(facture) <= 0) return 'PAYEE';
+    const echeance = this.dateEcheanceFacture(facture);
+    if (!echeance || Number.isNaN(echeance.getTime())) return 'SANS_ECHEANCE';
+    const jours = (echeance.getTime() - Date.now()) / 86_400_000;
+    if (jours < 0) return 'RETARD';
+    if (jours <= 7) return 'PROCHE';
+    return 'A_JOUR';
+  }
+
+  libelleStatutOrdre(statut: string): string {
+    const libelles: Record<string, string> = {
+      RECEPTION: 'Réception', DIAGNOSTIC: 'Diagnostic', PIECES_MO: 'Pièces & main-d’œuvre',
+      PROFORMA: 'Proforma', ORDRE_DE_TRAVAIL: 'Ordre de travail', BL: 'Bon de livraison',
+      FACTURATION: 'Facturation', LIVRE: 'Livré', PRET_A_LIVRER: 'Prêt à livrer'
+    };
+    return libelles[statut] ?? statut.replaceAll('_', ' ');
+  }
+
+  get plafondUtilisationPourcent(): number {
+    const plafond = this.situationFinanciere?.plafondEncours;
+    if (!plafond || plafond <= 0) return 0;
+    return Math.min(100, (this.situationFinanciere!.encoursImpayes / plafond) * 100);
   }
 
   loadClientVehicules(clientId: number, page = this.vehiculePage) {
@@ -665,6 +851,7 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
     if (this.conditionsForm.invalid || !this.conditionsClient || this.saving) return;
     this.saving = true;
     const value = this.conditionsForm.getRawValue();
+    const clientId = this.conditionsClient.id;
     this.clientService.updateConditionsFinancieres(this.conditionsClient.id, {
       echeanceJours: value.echeanceJours,
       plafondPeriode: value.plafondPeriode,
@@ -674,6 +861,7 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
         this.showSuccess(`Conditions de paiement mises à jour pour ${this.conditionsClient?.firstName ?? 'le client'}.`);
         this.closeConditionsModal();
         this.loadAll();
+        if (this.selectedClient?.id === clientId) this.loadSituationFinanciere(clientId);
       },
       error: (err: any) => {
         this.saving = false;
@@ -702,6 +890,7 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
         this.showSuccess(`Compte entreprise enregistré pour ${this.fideleClient?.firstName ?? 'le client'}.`);
         this.closeFideleModal();
         this.loadAll();
+        if (this.selectedClient?.id === id) this.loadSituationFinanciere(id);
       },
       error: (err: any) => {
         this.saving = false;
@@ -826,8 +1015,17 @@ export class ClientsComponent extends BasePaginatedComponent implements OnInit {
   }
 
   get peutConfigurerRemise(): boolean {
-    const role = this.authService.getRole();
-    return role === 'ROLE_MASTER' || role === 'ROLE_SUPER_AGENT';
+    const role = this.authService.getRole()?.replace(/^ROLE_/, '').toUpperCase();
+    return role === 'MASTER' || role === 'SUPER_AGENT';
+  }
+
+  get peutConfigurerConditionsFinancieres(): boolean {
+    return this.peutConfigurerRemise;
+  }
+
+  get peutVoirHistoriqueReparation(): boolean {
+    const role = this.authService.getRole()?.replace(/^ROLE_/, '').toUpperCase();
+    return ['AGENT', 'SUPER_AGENT', 'MASTER', 'CHEF_ATELIER'].includes(role ?? '');
   }
 
   get fCreate() { return this.createForm.controls; }

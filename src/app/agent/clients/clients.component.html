@@ -223,7 +223,7 @@
         </div>
 
         <!-- Tabs -->
-        <div class="flex -mb-px mt-3">
+        <div class="flex -mb-px mt-3 overflow-x-auto">
           <button (click)="setDetailTab('profil')"
                   class="px-4 py-2.5 text-xs font-bold border-b-2 transition cursor-pointer"
                   [ngClass]="detailTab === 'profil' ? 'border-oas-accent text-oas-accent' : 'border-transparent text-oas-muted hover:text-oas-ink'">
@@ -234,11 +234,17 @@
                   [ngClass]="detailTab === 'vehicules.component' ? 'border-oas-accent text-oas-accent' : 'border-transparent text-oas-muted hover:text-oas-ink'">
             Véhicules ({{ clientVehicleCount(selectedClient.id) }})
           </button>
-          <button disabled class="px-4 py-2.5 text-xs font-bold border-b-2 border-transparent text-oas-faint cursor-not-allowed opacity-40">
-            Historique
-          </button>
-          <button disabled class="px-4 py-2.5 text-xs font-bold border-b-2 border-transparent text-oas-faint cursor-not-allowed opacity-40">
-            Factures
+          @if (peutVoirHistoriqueReparation) {
+            <button (click)="setDetailTab('historique')"
+                    class="px-4 py-2.5 text-xs font-bold border-b-2 transition cursor-pointer whitespace-nowrap"
+                    [ngClass]="detailTab === 'historique' ? 'border-oas-accent text-oas-accent' : 'border-transparent text-oas-muted hover:text-oas-ink'">
+              Historique@if (clientHistoriqueTotal) { ({{ clientHistoriqueTotal }}) }
+            </button>
+          }
+          <button (click)="setDetailTab('factures')"
+                  class="px-4 py-2.5 text-xs font-bold border-b-2 transition cursor-pointer whitespace-nowrap"
+                  [ngClass]="detailTab === 'factures' ? 'border-oas-accent text-oas-accent' : 'border-transparent text-oas-muted hover:text-oas-ink'">
+            Factures@if (clientFacturesTotal) { ({{ clientFacturesTotal }}) }
           </button>
         </div>
       </div>
@@ -268,6 +274,98 @@
                 <p class="text-sm font-semibold text-oas-ink">&#64;{{ selectedClient.username }}</p>
               </div>
             </div>
+            @if (peutConfigurerConditionsFinancieres) {
+            <section class="rounded-lg border border-oas-line overflow-hidden">
+              <div class="px-3 py-2.5 bg-oas-bg border-b border-oas-line flex items-center justify-between gap-2">
+                <div>
+                  <p class="text-sm font-bold text-oas-ink">Plafond et encours</p>
+                  <p class="text-[10px] text-oas-muted">Règles appliquées aux nouvelles demandes</p>
+                </div>
+                @if (peutConfigurerConditionsFinancieres) {
+                  <button (click)="openConditionsModal(selectedClient)" class="text-[10px] font-bold text-oas-info hover:underline cursor-pointer whitespace-nowrap">Configurer</button>
+                }
+              </div>
+              @if (loadingSituationFinanciere) {
+                <div class="px-3 py-5 text-center text-xs text-oas-muted">Chargement de la situation financière…</div>
+              } @else if (situationFinanciereError) {
+                <div class="px-3 py-4 space-y-2">
+                  <p class="text-xs text-oas-bad">{{ situationFinanciereError }}</p>
+                  <button (click)="loadSituationFinanciere(selectedClient.id)" class="text-xs font-bold text-oas-info hover:underline cursor-pointer">Réessayer</button>
+                </div>
+              } @else if (situationFinanciere; as situation) {
+                <div class="p-3 space-y-3">
+                  @if (situation.conditionsConfigurees) {
+                    <div class="grid grid-cols-2 gap-2">
+                      <div class="rounded-md bg-oas-bg p-2.5">
+                        <p class="text-[10px] text-oas-muted">Plafond d’encours</p>
+                        <p class="text-xs font-bold text-oas-ink">{{ situation.plafondEncours | number:'1.0-0' }} FCFA</p>
+                      </div>
+                      <div class="rounded-md bg-oas-bg p-2.5">
+                        <p class="text-[10px] text-oas-muted">Encours impayé</p>
+                        <p class="text-xs font-bold" [ngClass]="situation.plafondAtteint ? 'text-oas-bad' : 'text-oas-ink'">{{ situation.encoursImpayes | number:'1.0-0' }} FCFA</p>
+                      </div>
+                      <div class="rounded-md bg-oas-bg p-2.5">
+                        <p class="text-[10px] text-oas-muted">Disponible avant plafond</p>
+                        <p class="text-xs font-bold text-oas-ok">{{ situation.montantDisponible | number:'1.0-0' }} FCFA</p>
+                      </div>
+                      <div class="rounded-md bg-oas-bg p-2.5">
+                        <p class="text-[10px] text-oas-muted">Délai d’échéance</p>
+                        <p class="text-xs font-bold text-oas-ink">{{ situation.echeanceJours }} jours</p>
+                      </div>
+                    </div>
+                    <div>
+                      <div class="h-1.5 rounded-full bg-oas-bg overflow-hidden">
+                        <div class="h-full rounded-full transition-all" [ngClass]="situation.plafondAtteint ? 'bg-oas-bad' : 'bg-oas-ok'" [style.width.%]="plafondUtilisationPourcent"></div>
+                      </div>
+                      <div class="mt-1 flex items-center justify-between text-[10px] text-oas-muted">
+                        <span>Utilisation du plafond</span><span>{{ plafondUtilisationPourcent | number:'1.0-0' }}%</span>
+                      </div>
+                    </div>
+                  } @else {
+                    <p class="text-xs text-oas-muted">Aucun plafond d’encours n’est configuré pour ce client.</p>
+                  }
+
+                  @if (situation.nouvelleDemandeAutorisee) {
+                    <div class="rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-2 text-xs font-semibold text-emerald-700">Aucun blocage financier pour une nouvelle demande.</div>
+                  } @else {
+                    <div class="rounded-md border border-red-200 bg-red-50 px-2.5 py-2 space-y-1">
+                      <p class="text-xs font-bold text-red-700">{{ situation.derogationEnAttente ? 'Demande en attente de décision' : 'Nouvelle demande bloquée' }}</p>
+                      @if (situation.derogationEnAttente) { <p class="text-[10px] text-red-700">Un Super Agent doit traiter la demande avant une nouvelle prise de rendez-vous.</p> }
+                      @if (situation.plafondAtteint) { <p class="text-[10px] text-red-700">Le plafond d’encours est atteint.</p> }
+                      @if (situation.facturesBloquantes.length) { <p class="text-[10px] text-red-700">{{ situation.facturesBloquantes.length }} facture(s) impayée(s) ont dépassé leur échéance.</p> }
+                      @if (situation.motifBlocage) { <p class="text-[10px] text-red-700 whitespace-pre-line">{{ situation.motifBlocage }}</p> }
+                    </div>
+                  }
+
+                  @if (situation.facturesBloquantes.length) {
+                    <div class="space-y-1.5">
+                      <p class="text-[10px] font-bold uppercase tracking-wide text-oas-bad">Factures en retard · {{ situation.facturesBloquantes.length }}</p>
+                      @for (facture of situation.facturesBloquantes; track facture.factureId ?? facture.numero) {
+                        <div class="flex items-center justify-between gap-2 text-[10px]">
+                          <span class="min-w-0 truncate font-semibold text-oas-ink">{{ facture.numero }} · échéance {{ facture.dateEcheance ? (facture.dateEcheance | date:'dd/MM/yyyy') : 'inconnue' }}</span>
+                          <span class="shrink-0 font-bold text-oas-bad">{{ facture.resteAPayer | number:'1.0-0' }} FCFA</span>
+                        </div>
+                      }
+                    </div>
+                  }
+                  @if (situation.prochainesEcheances.length) {
+                    <div class="space-y-1.5">
+                      <p class="text-[10px] font-bold uppercase tracking-wide text-amber-700">Échéances proches · aperçu des 5 plus proches</p>
+                      @for (facture of situation.prochainesEcheances; track facture.factureId) {
+                        <div class="flex items-center justify-between gap-2 text-[10px]">
+                          <span class="min-w-0 truncate font-semibold text-oas-ink">{{ facture.numero }} · {{ facture.dateEcheance | date:'dd/MM/yyyy' }}</span>
+                          <span class="shrink-0 text-oas-muted">{{ facture.resteAPayer | number:'1.0-0' }} FCFA</span>
+                        </div>
+                      }
+                    </div>
+                  }
+                  @if (situation.facturesBloquantes.length || situation.prochainesEcheances.length) {
+                    <button (click)="setDetailTab('factures')" class="w-full text-center text-xs font-bold text-oas-info hover:underline cursor-pointer">Consulter toutes les factures</button>
+                  }
+                </div>
+              }
+            </section>
+            }
             <div class="pt-4 border-t border-oas-line space-y-3">
               <div class="flex items-center justify-between">
                 <div>
@@ -284,23 +382,27 @@
                   </span>
                 }
               </div>
-              @if (selectedClient.clientFidele) {
-                <div class="flex gap-2">
-                  <button (click)="openFideleModal(selectedClient)" class="flex-1 border border-orange-200 text-orange-500 hover:bg-orange-50 text-xs font-bold px-3 py-2 rounded-lg transition cursor-pointer text-center">
-                    Modifier compte
+              @if (peutConfigurerConditionsFinancieres) {
+                @if (selectedClient.clientFidele) {
+                  <div class="flex gap-2">
+                    <button (click)="openFideleModal(selectedClient)" class="flex-1 border border-orange-200 text-orange-500 hover:bg-orange-50 text-xs font-bold px-3 py-2 rounded-lg transition cursor-pointer text-center">
+                      Modifier compte
+                    </button>
+                    <button (click)="retirerFidele(selectedClient)" title="Retirer" class="p-2 border border-oas-bad/40 text-oas-bad hover:bg-oas-bad-bg rounded-lg transition cursor-pointer">
+                      <svg lucideShieldOff class="w-4 h-4"></svg>
+                    </button>
+                  </div>
+                } @else {
+                  <button (click)="openFideleModal(selectedClient)" class="w-full flex items-center justify-center gap-1.5 bg-orange-50 text-orange-600 hover:bg-orange-100 border border-orange-200 text-xs font-bold px-3 py-2.5 rounded-lg transition cursor-pointer">
+                    <svg lucideAward class="w-3.5 h-3.5"></svg>Ouvrir / gérer le compte entreprise
                   </button>
-                  <button (click)="retirerFidele(selectedClient)" title="Retirer" class="p-2 border border-oas-bad/40 text-oas-bad hover:bg-oas-bad-bg rounded-lg transition cursor-pointer">
-                    <svg lucideShieldOff class="w-4 h-4"></svg>
-                  </button>
-                </div>
-              } @else {
-                <button (click)="openFideleModal(selectedClient)" class="w-full flex items-center justify-center gap-1.5 bg-orange-50 text-orange-600 hover:bg-orange-100 border border-orange-200 text-xs font-bold px-3 py-2.5 rounded-lg transition cursor-pointer">
-                  <svg lucideAward class="w-3.5 h-3.5"></svg>Ouvrir / gérer le compte entreprise
+                }
+              }
+              @if (peutConfigurerConditionsFinancieres) {
+                <button (click)="openConditionsModal(selectedClient)" class="mt-2 w-full flex items-center justify-center gap-1.5 bg-oas-info-bg text-oas-info hover:bg-blue-100 border border-blue-200 text-xs font-bold px-3 py-2.5 rounded-lg transition cursor-pointer">
+                  Configurer le plafond et le délai de ce client
                 </button>
               }
-              <button (click)="openConditionsModal(selectedClient)" class="mt-2 w-full flex items-center justify-center gap-1.5 bg-oas-info-bg text-oas-info hover:bg-blue-100 border border-blue-200 text-xs font-bold px-3 py-2.5 rounded-lg transition cursor-pointer">
-                Définir les conditions de paiement (tous clients)
-              </button>
               <div class="pt-3 border-t border-oas-line space-y-2">
                 <div class="flex items-center justify-between">
                   <div>
@@ -393,13 +495,115 @@
             <div class="border-t border-oas-line pt-4">
               <div class="flex items-center justify-between mb-3">
                 <p class="text-sm font-bold text-oas-ink">Historique des interventions</p>
-                <span class="text-xs font-semibold text-oas-accent opacity-50 cursor-not-allowed">Voir tout</span>
+                @if (peutVoirHistoriqueReparation) {
+                  <button (click)="setDetailTab('historique')" class="text-xs font-semibold text-oas-accent hover:underline cursor-pointer">Voir tout</button>
+                }
               </div>
               <div class="py-5 text-center">
-                <p class="text-xs text-oas-muted">L'historique des interventions sera disponible prochainement</p>
+                <p class="text-xs text-oas-muted">Consultez les ordres de réparation dans l’onglet Historique.</p>
               </div>
             </div>
 
+          </div>
+        }
+
+        @if (detailTab === 'historique') {
+          <div class="p-5">
+            <div class="mb-4">
+              <p class="text-sm font-bold text-oas-ink">Historique des réparations</p>
+              <p class="text-xs text-oas-muted mt-0.5">Ordres de réparation associés à ce client</p>
+            </div>
+            @if (loadingClientHistorique) {
+              <div class="py-10 text-center text-sm text-oas-muted">Chargement de l’historique…</div>
+            } @else if (clientHistoriqueError) {
+              <div class="py-6 text-center space-y-2">
+                <p class="text-sm text-oas-bad">{{ clientHistoriqueError }}</p>
+                <button (click)="loadClientHistorique(selectedClient.id)" class="text-xs font-bold text-oas-info hover:underline cursor-pointer">Réessayer</button>
+              </div>
+            } @else if (clientHistorique.length === 0) {
+              <div class="py-10 text-center text-sm text-oas-muted">Aucune réparation enregistrée pour ce client.</div>
+            } @else {
+              <div class="space-y-3">
+                @for (ordre of clientHistorique; track ordre.id) {
+                  <article class="rounded-lg border border-oas-line p-3 space-y-2">
+                    <div class="flex items-start justify-between gap-2">
+                      <div>
+                        <p class="font-mono text-xs font-bold text-oas-accent">{{ ordre.numero }}</p>
+                        <p class="text-xs text-oas-muted mt-0.5">{{ ordre.dateCreation | date:'dd/MM/yyyy à HH:mm' }}</p>
+                      </div>
+                      <span class="rounded-full bg-oas-bg px-2 py-1 text-[10px] font-bold text-oas-ink">{{ libelleStatutOrdre(ordre.statut) }}</span>
+                    </div>
+                    @if (ordre.vehicule) {
+                      <p class="text-xs font-semibold text-oas-ink">{{ ordre.vehicule.marque }} {{ ordre.vehicule.modele }} · {{ ordre.vehicule.immatriculation }}</p>
+                    }
+                    @if (ordre.descriptionTravaux) {
+                      <p class="text-xs text-oas-muted line-clamp-2">{{ ordre.descriptionTravaux }}</p>
+                    }
+                    @if (ordre.dateSortie) {
+                      <p class="text-[10px] text-oas-muted">Sortie enregistrée le {{ ordre.dateSortie | date:'dd/MM/yyyy' }}</p>
+                    }
+                  </article>
+                }
+              </div>
+              <app-pagination [page]="clientHistoriquePage" [pageSize]="clientHistoriquePageSize" [total]="clientHistoriqueTotal" [totalPages]="clientHistoriqueTotalPages" (pageChange)="onClientHistoriquePageChange($event)" />
+            }
+          </div>
+        }
+
+        @if (detailTab === 'factures') {
+          <div class="p-5">
+            <div class="mb-4 flex items-start justify-between gap-2">
+              <div>
+                <p class="text-sm font-bold text-oas-ink">Factures du client</p>
+                <p class="text-xs text-oas-muted mt-0.5">{{ clientFacturesTotal }} facture(s) · échéance calculée selon les conditions du client</p>
+              </div>
+            </div>
+            @if (loadingClientFactures) {
+              <div class="py-10 text-center text-sm text-oas-muted">Chargement des factures…</div>
+            } @else if (clientFacturesError) {
+              <div class="py-6 text-center space-y-2">
+                <p class="text-sm text-oas-bad">{{ clientFacturesError }}</p>
+                <button (click)="loadClientFactures(selectedClient.id)" class="text-xs font-bold text-oas-info hover:underline cursor-pointer">Réessayer</button>
+              </div>
+            } @else if (clientFactures.length === 0) {
+              <div class="py-10 text-center text-sm text-oas-muted">Aucune facture enregistrée pour ce client.</div>
+            } @else {
+              <div class="space-y-3">
+                @for (facture of clientFactures; track facture.id) {
+                  <article class="rounded-lg border border-oas-line p-3 space-y-2">
+                    <div class="flex items-start justify-between gap-2">
+                      <div class="min-w-0">
+                        <p class="font-mono text-xs font-bold text-oas-accent truncate">{{ facture.numero }}</p>
+                        <p class="text-[10px] text-oas-muted mt-0.5">Émise le {{ facture.dateCreation | date:'dd/MM/yyyy' }}</p>
+                      </div>
+                      <span class="rounded-full px-2 py-1 text-[10px] font-bold whitespace-nowrap"
+                            [ngClass]="statutPaiementFacture(facture) === 'PAYE' ? 'bg-emerald-50 text-emerald-700' : statutPaiementFacture(facture) === 'PARTIEL' ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'">
+                        {{ statutPaiementFacture(facture) === 'PAYE' ? 'Payée' : statutPaiementFacture(facture) === 'PARTIEL' ? 'Partiellement payée' : 'Impayée' }}
+                      </span>
+                    </div>
+                    @if (facture.immatriculation || facture.numeroOrdreReparation) {
+                      <p class="text-[10px] text-oas-muted">{{ facture.numeroOrdreReparation ? 'OR ' + facture.numeroOrdreReparation : '' }}{{ facture.immatriculation ? ' · ' + facture.immatriculation : '' }}</p>
+                    }
+                    <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px]">
+                      <span class="text-oas-muted">Montant total</span><span class="text-right font-semibold text-oas-ink">{{ facture.montantTotal | number:'1.0-0' }} FCFA</span>
+                      <span class="text-oas-muted">Déjà payé</span><span class="text-right font-semibold text-oas-ok">{{ facture.montantPaye | number:'1.0-0' }} FCFA</span>
+                      <span class="text-oas-muted">Reste à payer</span><span class="text-right font-bold" [ngClass]="montantRestantFacture(facture) > 0 ? 'text-oas-bad' : 'text-oas-ink'">{{ montantRestantFacture(facture) | number:'1.0-0' }} FCFA</span>
+                      <span class="text-oas-muted">Échéance</span>
+                      <span class="text-right font-semibold" [ngClass]="etatEcheanceFacture(facture) === 'RETARD' ? 'text-oas-bad' : etatEcheanceFacture(facture) === 'PROCHE' ? 'text-amber-700' : 'text-oas-ink'">
+                        @if (dateEcheanceFacture(facture); as dateEcheance) { {{ dateEcheance | date:'dd/MM/yyyy' }} } @else { Sans échéance }
+                      </span>
+                    </div>
+                    @if (montantRestantFacture(facture) > 0) {
+                      <p class="text-[10px] font-semibold" [ngClass]="etatEcheanceFacture(facture) === 'RETARD' ? 'text-oas-bad' : etatEcheanceFacture(facture) === 'PROCHE' ? 'text-amber-700' : 'text-oas-muted'">
+                        {{ etatEcheanceFacture(facture) === 'RETARD' ? 'Échéance dépassée · bloque une nouvelle demande' : etatEcheanceFacture(facture) === 'PROCHE' ? 'Échéance dans les 7 jours' : etatEcheanceFacture(facture) === 'SANS_ECHEANCE' ? 'Aucune échéance configurée' : 'Dans le délai de paiement' }}
+                      </p>
+                    }
+                    <a [routerLink]="['/app/factures']" [queryParams]="{ detailId: facture.id }" class="inline-flex text-[10px] font-bold text-oas-info hover:underline">Ouvrir la facture →</a>
+                  </article>
+                }
+              </div>
+              <app-pagination [page]="clientFacturePage" [pageSize]="clientFacturePageSize" [total]="clientFacturesTotal" [totalPages]="clientFacturesTotalPages" (pageChange)="onClientFacturePageChange($event)" />
+            }
           </div>
         }
 
@@ -1022,10 +1226,10 @@
                  class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition"/>
         </div>
         <div>
-          <label class="block text-sm font-semibold text-oas-ink mb-1">Plafond facturé sur la période (FCFA) *</label>
+          <label class="block text-sm font-semibold text-oas-ink mb-1">Plafond d’encours impayé (FCFA) *</label>
           <input type="number" formControlName="montantPlafondEcheance" placeholder="ex: 500000" min="0.01" required
                  class="w-full px-3 py-2.5 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-400 transition"/>
-          <p class="text-[10px] text-oas-muted mt-1">Cumul des factures émises pendant le nombre de jours défini ci-dessus.</p>
+          <p class="text-[10px] text-oas-muted mt-1">Somme des montants restant dus sur toutes les factures impayées du client.</p>
         </div>
         
         <div class="pt-3 border-t border-oas-line space-y-4">

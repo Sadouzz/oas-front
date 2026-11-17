@@ -12,7 +12,7 @@ export class FactureService {
   private http = inject(HttpClient);
   private api = `${environment.apiUrl}/api/factures`;
 
-  getAll(params?: PageParams): Observable<PageResponse<FactureListModel>> {
+  getAll(params?: PageParams & { clientId?: number }): Observable<PageResponse<FactureListModel>> {
     const p: Record<string, string> = {};
     for (const [key, value] of Object.entries(params ?? {})) {
       if (value !== undefined && value !== null && value !== '') p[key] = String(value);

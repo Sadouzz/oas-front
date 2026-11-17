@@ -111,6 +111,35 @@ export interface CompteFinancierResponse {
   compteCreeLe: string | null;
 }
 
+export interface FactureEcheanceClientResponse {
+  factureId: number | null;
+  numero: string;
+  dateEmission: string | null;
+  dateEcheance: string | null;
+  resteAPayer: number;
+  ordreReparationId: number | null;
+  numeroOrdreReparation: string | null;
+  immatriculation: string | null;
+  marque: string | null;
+  modele: string | null;
+}
+
+export interface SyntheseFinanciereClientResponse {
+  clientId: number;
+  echeanceJours: number | null;
+  plafondEncours: number | null;
+  encoursImpayes: number;
+  montantDisponible: number | null;
+  conditionsConfigurees: boolean;
+  plafondAtteint: boolean;
+  facturesEnRetard: boolean;
+  derogationEnAttente: boolean;
+  nouvelleDemandeAutorisee: boolean;
+  motifBlocage: string | null;
+  facturesBloquantes: FactureEcheanceClientResponse[];
+  prochainesEcheances: FactureEcheanceClientResponse[];
+}
+
 export interface PortefeuilleClientResponse {
   clientId: number;
   solde: number;

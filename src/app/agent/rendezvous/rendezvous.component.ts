@@ -520,7 +520,6 @@ export class RendezVousComponent implements OnInit {
 
     this.saving = true;
     this.modalErrorMessage = '';
-    const whatsappWindow = this.reserveWhatsAppWindow();
     const raw = this.createForm.value;
 
     const payload: CreateRendezVousRequest = {
@@ -537,20 +536,17 @@ export class RendezVousComponent implements OnInit {
         this.saving = false;
         this.closeCreate();
         if (result.type === 'DEROGATION_EN_ATTENTE') {
-          whatsappWindow?.close();
           this.notify(result.message);
           if (this.isSuperAgent) this.loadQuotaDerogations();
         } else if (result.rendezVous) {
           this.load();
-          this.openWhatsApp(whatsappWindow, result.rendezVous);
+          this.openWhatsApp(result.rendezVous);
           this.notify('Rendez-vous créé avec succès.');
         } else {
-          whatsappWindow?.close();
           this.notify('La réponse du serveur ne contient pas le rendez-vous attendu.');
         }
       },
       error: (err: any) => {
-        whatsappWindow?.close();
         this.saving = false;
         this.modalErrorMessage = err.error?.message || err.error || 'Erreur lors de la création du rendez-vous.';
         this.cdr.markForCheck();
@@ -613,17 +609,15 @@ export class RendezVousComponent implements OnInit {
       this.modalErrorMessage = "Le motif est obligatoire pour annuler le rendez-vous.";
       return;
     }
-    const whatsappWindow = this.reserveWhatsAppWindow();
     this.service.updateStatut(this.editingRdv.id, statut, commentaire || undefined,
       statut === 'ANNULE' ? String(motifAnnulation).trim() : undefined).subscribe({
       next: (updated) => {
         this.closeModals();
         this.load();
-        this.openWhatsApp(whatsappWindow, updated, String(motifAnnulation || ''));
+        this.openWhatsApp(updated, String(motifAnnulation || ''));
         this.notify('Statut mis à jour.');
       },
       error: (err: any) => {
-        whatsappWindow?.close();
         this.saving = false;
         this.modalErrorMessage = err.error?.message || 'Erreur lors de la mise à jour.';
       },
@@ -639,18 +633,16 @@ export class RendezVousComponent implements OnInit {
     this.saving = true;
     this.modalErrorMessage = '';
     const shouldNotifyWhatsApp = this.isValiderAction && this.editingRdv.statut === 'EN_ATTENTE';
-    const whatsappWindow = shouldNotifyWhatsApp ? this.reserveWhatsAppWindow() : null;
 
     const doValider = () => {
       this.service.valider(this.editingRdv!.id).subscribe({
         next: (updated) => {
           this.closeModals();
           this.load();
-          this.openWhatsApp(whatsappWindow, updated);
+          this.openWhatsApp(updated);
           this.notify('Rendez-vous confirmé.');
         },
         error: (err: any) => {
-          whatsappWindow?.close();
           this.saving = false;
           this.modalErrorMessage = err.error?.message || 'Erreur lors de la confirmation.';
         },
@@ -669,12 +661,11 @@ export class RendezVousComponent implements OnInit {
           } else {
             this.closeModals();
             this.load();
-            this.openWhatsApp(whatsappWindow, updated, '', true);
+            this.openWhatsApp(updated, '', true);
             this.notify('Date du rendez-vous modifiée avec succès.');
           }
         },
         error: (err: any) => {
-          whatsappWindow?.close();
           this.saving = false;
           this.modalErrorMessage = err.error?.message || 'Erreur lors de la mise à jour de la date.';
         },
@@ -749,14 +740,7 @@ export class RendezVousComponent implements OnInit {
     this.clientPhone = rdv.clientPhone || '';
   }
 
-  private reserveWhatsAppWindow(): Window | null {
-    if (!toWhatsAppNumber(this.clientPhone)) return null;
-    const popup = window.open('about:blank', '_blank');
-    if (popup) popup.opener = null;
-    return popup;
-  }
-
-  private openWhatsApp(popup: Window | null, rdv: RendezVous, reason = '', dateModified = false): void {
+  private openWhatsApp(rdv: RendezVous, reason = '', dateModified = false): void {
     const phone = toWhatsAppNumber(this.clientPhone);
     if (!phone) {
       this.whatsappNotice = 'Le changement est enregistré, mais aucun numéro de téléphone client ne permet de préparer le message WhatsApp.';
@@ -774,7 +758,6 @@ export class RendezVousComponent implements OnInit {
           : `Votre rendez-vous prévu à la date du ${date} a été confirmé.`;
     this.whatsappFallbackUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
     this.whatsappNotice = 'Message WhatsApp préparé. Vérifiez-le puis appuyez sur Envoyer dans WhatsApp.';
-    if (popup) popup.location.href = this.whatsappFallbackUrl;
   }
 
   get paged(): RendezVous[] {
