@@ -257,7 +257,7 @@
           <button type="button" (click)="convertFacture(selectedBon)"
             [disabled]="!!(selectedBon.factureId || selectedBon.factureNumero || selectedBon.noteDePrixId || selectedBon.noteDePrixNumero) || actionLoading"
             class="px-3 py-2 rounded-lg bg-oas-ok text-white text-xs font-bold hover:opacity-90 disabled:opacity-50 cursor-pointer">
-            {{ selectedBon.factureNumero ? 'Facture ' + selectedBon.factureNumero : selectedBon.noteDePrixNumero ? 'Déjà converti en note de prix' : 'Créer la facture' }}
+            {{ selectedBon.factureNumero ? 'Facture ' + selectedBon.factureNumero : selectedBon.noteDePrixNumero ? 'Déjà converti en note de prix' : 'Convertir en facture' }}
           </button>
         </div>
         <button type="button" (click)="print(selectedBon)" class="px-3 py-2 rounded-lg bg-oas-accent hover:bg-oas-accent-dark text-white text-xs font-bold cursor-pointer">Télécharger le PDF</button>
