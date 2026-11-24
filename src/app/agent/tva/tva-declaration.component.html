@@ -1,0 +1,441 @@
+<div class="space-y-6">
+  <!-- En-tête & barre d'actions -->
+  <div class="bg-white border border-oas-line rounded-xl shadow-sm px-5 py-4 flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-oas-ink">Liste des factures achetées / vendues</h1>
+      <p class="text-sm text-oas-muted mt-1">
+        Gestion mensuelle de la TVA : ventes, avoirs sur ventes, factures achetées, avoirs TVA achetée, report et solde.
+      </p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2.5">
+      <input type="month" [(ngModel)]="selectedMonth" (change)="onMonthChange()"
+             aria-label="Mois de déclaration TVA"
+             class="px-3 h-10 rounded-lg border border-oas-line bg-oas-bg text-sm font-semibold text-oas-ink focus:outline-none focus:ring-2 focus:ring-oas-accent/40" />
+      <button type="button" (click)="openAvoirAcheteModal()"
+              class="px-3.5 h-10 rounded-lg border border-oas-line bg-white hover:bg-oas-bg text-xs font-bold text-oas-ink transition cursor-pointer">
+        + Ajouter Avoir TVA achetée
+      </button>
+      <button type="button" (click)="openFactureAcheteeModal()"
+              class="px-3.5 h-10 rounded-lg bg-oas-accent hover:bg-oas-accent-dark text-white text-xs font-bold transition cursor-pointer">
+        + Ajouter facture achetée
+      </button>
+    </div>
+  </div>
+
+  <app-alert [error]="errorMessage" [success]="successMessage" />
+
+  @if (loading && !data) {
+    <div class="bg-white rounded-xl border border-oas-line p-12 text-center text-sm text-oas-muted shadow-card">
+      Chargement de la déclaration TVA...
+    </div>
+  } @else if (data) {
+    <!-- Ligne 1 : Factures vendues & Avoirs sur ventes côte à côte -->
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-5 items-start">
+      <!-- Factures vendues -->
+      <section class="bg-white rounded-xl border border-oas-line shadow-card overflow-hidden">
+        <div class="px-4 py-3 border-b border-oas-line bg-oas-bg/60 flex items-center justify-between">
+          <h2 class="text-sm font-bold text-oas-ink">Factures vendues ({{ data.facturesVendues.totalElements }})</h2>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="border-b border-oas-line bg-oas-bg/40 text-oas-muted uppercase text-[11px]">
+                <th class="text-left px-3 py-2.5">Date</th>
+                <th class="text-left px-3 py-2.5">Numéro facture</th>
+                <th class="text-right px-3 py-2.5">TVA vendu</th>
+                <th class="text-right px-3 py-2.5">Timbre</th>
+                <th class="text-right px-3 py-2.5">Action</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-oas-line">
+              @if (vendues.length === 0) {
+                <tr>
+                  <td colspan="5" class="py-8 text-center text-oas-muted">Aucune facture vendue sur {{ data.month }}.</td>
+                </tr>
+              } @else {
+                @for (v of vendues; track v.id) {
+                  <tr class="hover:bg-oas-bg/60 transition">
+                    <td class="px-3 py-2.5 text-oas-muted whitespace-nowrap">
+                      {{ v.date ? (v.date | date:'yyyy-MM-dd HH:mm:ss') : '–' }}
+                    </td>
+                    <td class="px-3 py-2.5 font-mono font-bold text-oas-ink whitespace-nowrap">{{ v.numero }}</td>
+                    <td class="px-3 py-2.5 text-right font-semibold text-oas-ink whitespace-nowrap">{{ v.montantTva | number:'1.0-2' }}</td>
+                    <td class="px-3 py-2.5 text-right text-oas-ink whitespace-nowrap">{{ v.montantTimbre | number:'1.0-2' }}</td>
+                    <td class="px-3 py-2.5 text-right whitespace-nowrap">
+                      <a [routerLink]="['/app/factures']" [queryParams]="{ detailId: v.id }"
+                         class="inline-flex items-center px-2.5 py-1 rounded-lg bg-oas-bg hover:bg-blue-50 text-oas-accent font-semibold border border-oas-line transition">
+                        Voir
+                      </a>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="border-t border-oas-line px-4 py-3 bg-oas-bg/40 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-5">
+            <div>
+              <span class="text-oas-muted">TVA : </span>
+              <strong class="text-blue-700 font-bold">{{ data.totalTvaVendue | number:'1.0-2' }} F CFA</strong>
+            </div>
+            <div>
+              <span class="text-oas-muted">Timbre : </span>
+              <strong class="text-emerald-700 font-bold">{{ data.totalTimbreVendu | number:'1.0-2' }} F CFA</strong>
+            </div>
+          </div>
+          <app-pagination [page]="pageVendu" [pageSize]="pageSize" [total]="data.facturesVendues.totalElements"
+                          [totalPages]="data.facturesVendues.totalPages || 1" (pageChange)="onPageVenduChange($event)" />
+        </div>
+      </section>
+
+      <!-- Avoirs sur ventes -->
+      <section class="bg-white rounded-xl border border-oas-line shadow-card overflow-hidden">
+        <div class="px-4 py-3 border-b border-oas-line bg-oas-bg/60 flex items-center justify-between">
+          <h2 class="text-sm font-bold text-oas-ink">Avoirs sur ventes ({{ data.avoirsVendus.totalElements }})</h2>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="border-b border-oas-line bg-oas-bg/40 text-oas-muted uppercase text-[11px]">
+                <th class="text-left px-3 py-2.5">Date</th>
+                <th class="text-left px-3 py-2.5">Numéro avoir</th>
+                <th class="text-right px-3 py-2.5">TVA avoir</th>
+                <th class="text-right px-3 py-2.5">Timbre avoir</th>
+                <th class="text-right px-3 py-2.5">Action</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-oas-line">
+              @if (avoirsVendus.length === 0) {
+                <tr>
+                  <td colspan="5" class="py-8 text-center text-oas-muted">Aucun avoir sur vente sur {{ data.month }}.</td>
+                </tr>
+              } @else {
+                @for (a of avoirsVendus; track a.id) {
+                  <tr class="hover:bg-oas-bg/60 transition">
+                    <td class="px-3 py-2.5 text-oas-muted whitespace-nowrap">
+                      {{ a.date ? (a.date | date:'yyyy-MM-dd HH:mm:ss') : '–' }}
+                    </td>
+                    <td class="px-3 py-2.5 font-mono font-bold text-oas-ink whitespace-nowrap">{{ a.numero }}</td>
+                    <td class="px-3 py-2.5 text-right font-semibold text-oas-ink whitespace-nowrap">{{ a.montantTva | number:'1.0-2' }}</td>
+                    <td class="px-3 py-2.5 text-right text-oas-ink whitespace-nowrap">{{ a.montantTimbre | number:'1.0-2' }}</td>
+                    <td class="px-3 py-2.5 text-right whitespace-nowrap">
+                      <a [routerLink]="['/app/avoirs-ttc']"
+                         class="inline-flex items-center px-2.5 py-1 rounded-lg bg-oas-bg hover:bg-blue-50 text-oas-accent font-semibold border border-oas-line transition">
+                        Voir
+                      </a>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="border-t border-oas-line px-4 py-3 bg-oas-bg/40 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-5">
+            <div>
+              <span class="text-oas-muted">TVA : </span>
+              <strong class="text-blue-700 font-bold">{{ data.totalTvaAvoirVendu | number:'1.0-2' }} F CFA</strong>
+            </div>
+            <div>
+              <span class="text-oas-muted">Timbre : </span>
+              <strong class="text-emerald-700 font-bold">{{ data.totalTimbreAvoirVendu | number:'1.0-2' }} F CFA</strong>
+            </div>
+          </div>
+          <app-pagination [page]="pageAvoirVendu" [pageSize]="pageSize" [total]="data.avoirsVendus.totalElements"
+                          [totalPages]="data.avoirsVendus.totalPages || 1" (pageChange)="onPageAvoirVenduChange($event)" />
+        </div>
+      </section>
+    </div>
+
+    <!-- Total TVA & Total Timbre nets (ventes - avoirs) -->
+    <div class="bg-white rounded-xl border border-oas-line px-5 py-3.5 shadow-xs flex flex-wrap items-center gap-8 text-sm">
+      <div>
+        <span class="font-bold text-oas-ink mr-3">Total TVA :</span>
+        <strong class="text-blue-700 font-extrabold">{{ data.rapportTvaVendue | number:'1.0-2' }} F CFA</strong>
+      </div>
+      <div>
+        <span class="font-bold text-oas-ink mr-3">Total timbre :</span>
+        <strong class="text-emerald-700 font-extrabold">{{ data.totalTimbre | number:'1.0-2' }} F CFA</strong>
+      </div>
+    </div>
+
+    <!-- Tableau 3 : Factures achetées -->
+    <section class="bg-white rounded-xl border border-oas-line shadow-card overflow-hidden">
+      <div class="px-4 py-3 border-b border-oas-line bg-oas-bg/60 flex items-center justify-between">
+        <h2 class="text-sm font-bold text-oas-ink">Factures achetées ({{ data.facturesAchetees.totalElements }})</h2>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead>
+            <tr class="border-b border-oas-line bg-oas-bg/40 text-oas-muted uppercase text-[11px]">
+              <th class="text-left px-4 py-2.5">Date</th>
+              <th class="text-left px-4 py-2.5">Numéro Facture</th>
+              <th class="text-right px-4 py-2.5">TVA Acheté</th>
+              <th class="text-right px-4 py-2.5">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-oas-line">
+            @if (achetees.length === 0) {
+              <tr>
+                <td colspan="4" class="py-8 text-center text-oas-muted">Aucune facture achetée enregistrée sur {{ data.month }}.</td>
+              </tr>
+            } @else {
+              @for (f of achetees; track f.id) {
+                <tr class="hover:bg-oas-bg/60 transition">
+                  <td class="px-4 py-2.5 text-oas-muted whitespace-nowrap">{{ f.dateFacture }}</td>
+                  <td class="px-4 py-2.5 font-mono font-bold text-oas-ink whitespace-nowrap">{{ f.numeroFacture }}</td>
+                  <td class="px-4 py-2.5 text-right font-semibold text-oas-ink whitespace-nowrap">{{ f.montantTva | number:'1.0-2' }}</td>
+                  <td class="px-4 py-2.5 text-right whitespace-nowrap">
+                    <button type="button" (click)="deleteFactureAchetee(f)" title="Supprimer"
+                            class="p-1.5 rounded-lg hover:bg-rose-50 text-oas-muted hover:text-rose-600 transition cursor-pointer">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="border-t border-oas-line px-4 py-3 bg-oas-bg/40 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div>
+          <span class="text-oas-muted">TVA achetée : </span>
+          <strong class="text-blue-700 font-bold">{{ data.totalTvaAchetee | number:'1.0-2' }} F CFA</strong>
+        </div>
+        <app-pagination [page]="pageAchete" [pageSize]="pageSize" [total]="data.facturesAchetees.totalElements"
+                        [totalPages]="data.facturesAchetees.totalPages || 1" (pageChange)="onPageAcheteChange($event)" />
+      </div>
+    </section>
+
+    <!-- Tableau 4 : Avoir TVA achetée -->
+    <section class="bg-white rounded-xl border border-oas-line shadow-card overflow-hidden">
+      <div class="px-4 py-3 border-b border-oas-line bg-oas-bg/60 flex items-center justify-between">
+        <h2 class="text-sm font-bold text-oas-ink">Avoir TVA achetée ({{ data.avoirsTvaAchetees.totalElements }})</h2>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead>
+            <tr class="border-b border-oas-line bg-oas-bg/40 text-oas-muted uppercase text-[11px]">
+              <th class="text-left px-4 py-2.5">Date</th>
+              <th class="text-left px-4 py-2.5">Désignation</th>
+              <th class="text-right px-4 py-2.5">Avoir TVA achetée</th>
+              <th class="text-right px-4 py-2.5">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-oas-line">
+            @if (avoirsAchetes.length === 0) {
+              <tr>
+                <td colspan="4" class="py-8 text-center text-oas-muted">Aucun avoir TVA achetée enregistré sur {{ data.month }}.</td>
+              </tr>
+            } @else {
+              @for (a of avoirsAchetes; track a.id) {
+                <tr class="hover:bg-oas-bg/60 transition">
+                  <td class="px-4 py-2.5 text-oas-muted whitespace-nowrap">{{ a.dateOperation }}</td>
+                  <td class="px-4 py-2.5 text-oas-ink font-medium">{{ a.designation }}</td>
+                  <td class="px-4 py-2.5 text-right font-semibold text-oas-ink whitespace-nowrap">{{ a.montantTva | number:'1.0-2' }}</td>
+                  <td class="px-4 py-2.5 text-right whitespace-nowrap">
+                    <button type="button" (click)="deleteAvoirTvaAchetee(a)" title="Supprimer"
+                            class="p-1.5 rounded-lg hover:bg-rose-50 text-oas-muted hover:text-rose-600 transition cursor-pointer">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="border-t border-oas-line px-4 py-3 bg-oas-bg/40 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex flex-wrap items-center gap-5">
+          <div>
+            <span class="text-oas-muted">TVA avoir achetée : </span>
+            <strong class="text-blue-700 font-bold">{{ data.totalAvoirTvaAchetee | number:'1.0-2' }} F CFA</strong>
+          </div>
+          <div>
+            <span class="text-oas-muted">Rapport TVA achetée (nette) : </span>
+            <strong class="text-oas-ink font-bold">{{ data.rapportTvaAchetee | number:'1.0-2' }} F CFA</strong>
+          </div>
+        </div>
+        <app-pagination [page]="pageAvoirAchete" [pageSize]="pageSize" [total]="data.avoirsTvaAchetees.totalElements"
+                        [totalPages]="data.avoirsTvaAchetees.totalPages || 1" (pageChange)="onPageAvoirAcheteChange($event)" />
+      </div>
+    </section>
+
+    <!-- Bas de page : Synthèse Rapport / Différence / Solde + Actions -->
+    <section class="bg-white rounded-xl border border-oas-line p-5 shadow-card space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="rounded-xl border border-oas-line bg-oas-bg/50 px-4 py-3 flex items-center justify-between gap-2">
+          <div>
+            <span class="text-xs font-semibold text-oas-muted block">Rapport ({{ data.previousMonth }})</span>
+            <strong class="text-lg font-extrabold text-rose-600">{{ data.rapport | number:'1.0-2' }} F CFA</strong>
+          </div>
+          @if (canEditRapport) {
+            <button type="button" (click)="openRapportModal()"
+                    class="px-2.5 py-1 rounded-lg border border-oas-line bg-white hover:bg-oas-bg text-[11px] font-semibold text-oas-ink transition cursor-pointer">
+              Modifier
+            </button>
+          }
+        </div>
+
+        <div class="rounded-xl border border-oas-line bg-oas-bg/50 px-4 py-3">
+          <span class="text-xs font-semibold text-oas-muted block">Différence</span>
+          <strong class="text-lg font-extrabold text-emerald-700">{{ data.difference | number:'1.0-2' }} F CFA</strong>
+        </div>
+
+        <div class="rounded-xl border border-oas-line bg-oas-bg/50 px-4 py-3">
+          <span class="text-xs font-semibold text-oas-muted block">Solde</span>
+          <strong class="text-lg font-extrabold text-blue-700">{{ data.solde | number:'1.0-2' }} F CFA</strong>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-3 pt-2 border-t border-oas-line">
+        <button type="button" (click)="loadDeclaration()" [disabled]="loading"
+                class="px-4 h-10 rounded-lg border border-oas-line bg-white hover:bg-oas-bg text-xs font-bold text-oas-ink transition cursor-pointer disabled:opacity-50">
+          {{ loading ? 'Actualisation...' : 'Actualiser' }}
+        </button>
+        <button type="button" (click)="voirImprimerPdf()" [disabled]="printingPdf"
+                class="px-4 h-10 rounded-lg bg-oas-accent hover:bg-oas-accent-dark text-white text-xs font-bold transition cursor-pointer disabled:opacity-50">
+          {{ printingPdf ? 'Génération PDF...' : 'Voir / Imprimer liste' }}
+        </button>
+      </div>
+    </section>
+  }
+</div>
+
+<!-- Modal Ajouter facture achetée -->
+@if (showFactureAcheteeModal) {
+  <div class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" (click)="closeFactureAcheteeModal()">
+    <div class="bg-white rounded-2xl border border-oas-line shadow-xl w-full max-w-md p-6 space-y-4" (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-oas-ink">Ajouter une facture achetée</h3>
+        <button type="button" (click)="closeFactureAcheteeModal()" class="text-oas-muted hover:text-oas-ink text-xl leading-none cursor-pointer">×</button>
+      </div>
+
+      <app-alert [error]="factureAcheteeError" />
+
+      <form (ngSubmit)="saveFactureAchetee()" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-oas-muted mb-1">Numéro facture *</label>
+          <input type="text" [(ngModel)]="newFactureNumero" name="newFactureNumero" required
+                 placeholder="Ex: TOP PNEUS N°2025/960"
+                 class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm text-oas-ink focus:outline-none focus:ring-2 focus:ring-oas-accent/40" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-oas-muted mb-1">Date facture *</label>
+          <input type="date" [(ngModel)]="newFactureDate" name="newFactureDate" required
+                 class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm text-oas-ink focus:outline-none focus:ring-2 focus:ring-oas-accent/40" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-oas-muted mb-1">Montant TVA (F CFA) *</label>
+          <input type="number" min="0" step="0.01" [(ngModel)]="newFactureMontantTva" name="newFactureMontantTva" required
+                 placeholder="Ex: 15077"
+                 class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm text-oas-ink focus:outline-none focus:ring-2 focus:ring-oas-accent/40" />
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" (click)="closeFactureAcheteeModal()" [disabled]="savingFactureAchetee"
+                  class="px-4 h-10 rounded-lg border border-oas-line text-sm font-semibold text-oas-ink cursor-pointer">
+            Annuler
+          </button>
+          <button type="submit" [disabled]="savingFactureAchetee"
+                  class="px-5 h-10 rounded-lg bg-oas-accent hover:bg-oas-accent-dark text-white text-sm font-bold cursor-pointer disabled:opacity-50">
+            {{ savingFactureAchetee ? 'Enregistrement...' : 'Enregistrer' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- Modal Ajouter Avoir TVA achetée -->
+@if (showAvoirAcheteModal) {
+  <div class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" (click)="closeAvoirAcheteModal()">
+    <div class="bg-white rounded-2xl border border-oas-line shadow-xl w-full max-w-md p-6 space-y-4" (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-oas-ink">Ajouter un avoir TVA achetée</h3>
+        <button type="button" (click)="closeAvoirAcheteModal()" class="text-oas-muted hover:text-oas-ink text-xl leading-none cursor-pointer">×</button>
+      </div>
+
+      <app-alert [error]="avoirAcheteError" />
+
+      <form (ngSubmit)="saveAvoirAchete()" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-oas-muted mb-1">Désignation *</label>
+          <input type="text" [(ngModel)]="newAvoirDesignation" name="newAvoirDesignation" required
+                 placeholder="Ex: Remise fournisseur"
+                 class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm text-oas-ink focus:outline-none focus:ring-2 focus:ring-oas-accent/40" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-oas-muted mb-1">Date opération *</label>
+          <input type="date" [(ngModel)]="newAvoirDate" name="newAvoirDate" required
+                 class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm text-oas-ink focus:outline-none focus:ring-2 focus:ring-oas-accent/40" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-oas-muted mb-1">Montant TVA (F CFA) *</label>
+          <input type="number" min="0" step="0.01" [(ngModel)]="newAvoirMontantTva" name="newAvoirMontantTva" required
+                 placeholder="Ex: 1500"
+                 class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm text-oas-ink focus:outline-none focus:ring-2 focus:ring-oas-accent/40" />
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" (click)="closeAvoirAcheteModal()" [disabled]="savingAvoirAchete"
+                  class="px-4 h-10 rounded-lg border border-oas-line text-sm font-semibold text-oas-ink cursor-pointer">
+            Annuler
+          </button>
+          <button type="submit" [disabled]="savingAvoirAchete"
+                  class="px-5 h-10 rounded-lg bg-oas-accent hover:bg-oas-accent-dark text-white text-sm font-bold cursor-pointer disabled:opacity-50">
+            {{ savingAvoirAchete ? 'Enregistrement...' : 'Enregistrer' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- Modal Modifier Report (SUPER_AGENT / MASTER) -->
+@if (showRapportModal) {
+  <div class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" (click)="closeRapportModal()">
+    <div class="bg-white rounded-2xl border border-oas-line shadow-xl w-full max-w-md p-6 space-y-4" (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-oas-ink">Corriger le report TVA ({{ selectedMonth }})</h3>
+        <button type="button" (click)="closeRapportModal()" class="text-oas-muted hover:text-oas-ink text-xl leading-none cursor-pointer">×</button>
+      </div>
+
+      <app-alert [error]="rapportError" />
+
+      <form (ngSubmit)="saveRapport()" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-oas-muted mb-1">Montant report (&lt;= 0 F CFA) *</label>
+          <input type="number" max="0" step="0.01" [(ngModel)]="editRapportMontant" name="editRapportMontant" required
+                 class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm text-oas-ink focus:outline-none focus:ring-2 focus:ring-oas-accent/40" />
+        </div>
+        <label class="flex items-center gap-2 text-xs text-oas-ink cursor-pointer">
+          <input type="checkbox" [(ngModel)]="editRapportVerrouille" name="editRapportVerrouille" class="rounded border-oas-line" />
+          <span>Verrouiller manuellement ce report</span>
+        </label>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" (click)="closeRapportModal()" [disabled]="savingRapport"
+                  class="px-4 h-10 rounded-lg border border-oas-line text-sm font-semibold text-oas-ink cursor-pointer">
+            Annuler
+          </button>
+          <button type="submit" [disabled]="savingRapport"
+                  class="px-5 h-10 rounded-lg bg-oas-accent hover:bg-oas-accent-dark text-white text-sm font-bold cursor-pointer disabled:opacity-50">
+            {{ savingRapport ? 'Enregistrement...' : 'Enregistrer' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

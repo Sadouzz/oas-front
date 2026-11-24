@@ -344,6 +344,12 @@ export const AGENT_PORTAL_ROUTES: Routes = [
             import('./historique-facturation/historique-facturation.component').then(m => m.HistoriqueFacturationComponent),
         },
         {
+          path: 'tva',
+          canActivate: [multiRoleGuard(['ROLE_AGENT', 'ROLE_SUPER_AGENT', 'ROLE_MASTER'])],
+          loadComponent: () =>
+            import('./tva/tva-declaration.component').then(m => m.TvaDeclarationComponent),
+        },
+        {
           path: 'admin',
           canActivate: [multiRoleGuard(['ROLE_SUPER_AGENT', 'ROLE_MASTER'])],
           children: [

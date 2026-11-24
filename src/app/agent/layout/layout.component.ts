@@ -110,6 +110,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
     '/devis-previsionnels': { label: 'Devis Prévisionnel', section: 'Facture HT' },
     '/avoirs-ht': { label: 'Avoir note de prix', section: 'Facture HT' },
     '/gestion-tva': { label: 'Configuration fiscale globale' },
+    '/tva': { label: 'Gestion TVA' },
     '/gestion-recu': { label: 'Gestion reçu' },
     '/historique-facturation': { label: 'Historique facture HT et TTC' },
     '/admin/main-doeuvre': { label: "Main d'œuvre" },
