@@ -135,6 +135,13 @@
                         {{ activatingVehicules.has(v.id) ? 'Activation…' : 'Activer véhicule' }}
                       </button>
                     }
+                    <a [routerLink]="['/app/historique-vehicules']" [queryParams]="{ vehiculeId: v.id }"
+                       title="Historique du véhicule"
+                       class="p-1.5 rounded-lg hover:bg-blue-50 text-oas-muted hover:text-oas-accent transition cursor-pointer">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                      </svg>
+                    </a>
                     <button (click)="openEdit(v)" title="Modifier"
                             class="p-1.5 rounded-lg hover:bg-oas-info-bg text-oas-muted hover:text-oas-info transition cursor-pointer">
                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

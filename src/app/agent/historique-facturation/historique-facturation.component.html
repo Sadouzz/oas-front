@@ -1,0 +1,386 @@
+<div class="space-y-6">
+  <!-- En-tête -->
+  <div class="bg-white border border-oas-line rounded-xl shadow-sm px-5 py-4 flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-oas-ink">Historique Factures TTC et HT</h1>
+      <p class="text-sm text-oas-muted mt-1">
+        Consultation journalière ou par période des entrées/sorties de pièces détachées et des opérations BL, Factures TTC, Avoirs TTC, Notes de prix et Avoirs HT.
+      </p>
+    </div>
+    <button type="button" (click)="exportFacturationCSV()" [disabled]="facturationRows.length === 0"
+            class="inline-flex items-center gap-2 px-4 h-10 rounded-lg border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold transition cursor-pointer disabled:opacity-50">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+      </svg>
+      Export CSV Facturation
+    </button>
+  </div>
+
+  <!-- Formulaire de recherche (Date / Plage + Numéro client + Mot-clé) -->
+  <form (ngSubmit)="validerRecherche()" class="bg-white rounded-xl border border-oas-line p-5 shadow-card space-y-4">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <h2 class="text-sm font-bold text-oas-ink">Formulaire historique Facture TTC et HT</h2>
+      <span class="text-xs text-oas-muted">
+        1 date renseignée = journée exacte · 2 dates renseignées = plage
+      </span>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+      <div class="md:col-span-2">
+        <label class="block text-xs font-semibold text-oas-muted mb-1">Date (ou début)</label>
+        <input type="date" [(ngModel)]="filterDateDebut" name="filterDateDebut"
+               class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm text-oas-ink focus:outline-none focus:ring-2 focus:ring-oas-accent/40" />
+      </div>
+      <div class="md:col-span-2">
+        <label class="block text-xs font-semibold text-oas-muted mb-1">Date fin (optionnel)</label>
+        <input type="date" [(ngModel)]="filterDateFin" name="filterDateFin"
+               class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm text-oas-ink focus:outline-none focus:ring-2 focus:ring-oas-accent/40" />
+      </div>
+
+      <div class="md:col-span-3">
+        <label class="block text-xs font-semibold text-oas-muted mb-1">Entrer le numéro d'un client</label>
+        <input type="text" [(ngModel)]="filterClientNumero" name="filterClientNumero"
+               placeholder="N° client, matricule, téléphone ou nom..."
+               class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm text-oas-ink focus:outline-none focus:ring-2 focus:ring-oas-accent/40" />
+      </div>
+
+      <div class="md:col-span-3">
+        <label class="block text-xs font-semibold text-oas-muted mb-1">Mot-clé document / véhicule</label>
+        <input type="text" [(ngModel)]="filterKeyword" name="filterKeyword"
+               placeholder="N° facture, BL, immatriculation, OR..."
+               class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm text-oas-ink focus:outline-none focus:ring-2 focus:ring-oas-accent/40" />
+      </div>
+
+      <div class="md:col-span-2 flex items-center gap-2">
+        <button type="submit"
+                class="flex-1 h-10 px-4 rounded-lg bg-oas-accent hover:bg-oas-accent-dark text-white text-sm font-bold transition cursor-pointer">
+          Valider
+        </button>
+        <button type="button" (click)="reinitialiserRecherche()" title="Réinitialiser et afficher toutes les dates"
+                class="h-10 px-3 rounded-lg border border-oas-line bg-white hover:bg-oas-bg text-xs font-semibold text-oas-ink transition cursor-pointer">
+          Tout
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <!-- KPIs Synthèse Facturation -->
+  @if (facturationData) {
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div class="bg-white rounded-xl border border-oas-line p-3.5 shadow-xs">
+        <span class="text-[11px] text-oas-muted block">Total opérations</span>
+        <strong class="text-lg font-extrabold text-oas-ink">{{ facturationData.totalOperations }}</strong>
+      </div>
+      <div class="bg-white rounded-xl border border-oas-line p-3.5 shadow-xs">
+        <span class="text-[11px] text-oas-muted block">BL ({{ facturationData.totalBonsLivraison }})</span>
+        <strong class="text-sm font-extrabold text-cyan-700">{{ facturationData.montantTotalBonsLivraisonTTC | number:'1.0-2' }} F</strong>
+      </div>
+      <div class="bg-white rounded-xl border border-oas-line p-3.5 shadow-xs">
+        <span class="text-[11px] text-oas-muted block">Factures TTC ({{ facturationData.totalFactures }})</span>
+        <strong class="text-sm font-extrabold text-emerald-700">{{ facturationData.montantTotalFacturesTTC | number:'1.0-2' }} F</strong>
+      </div>
+      <div class="bg-white rounded-xl border border-oas-line p-3.5 shadow-xs">
+        <span class="text-[11px] text-oas-muted block">Avoirs TTC ({{ facturationData.totalAvoirsTTC }})</span>
+        <strong class="text-sm font-extrabold text-rose-700">{{ facturationData.montantTotalAvoirsTTC | number:'1.0-2' }} F</strong>
+      </div>
+      <div class="bg-white rounded-xl border border-oas-line p-3.5 shadow-xs">
+        <span class="text-[11px] text-oas-muted block">Notes de prix HT ({{ facturationData.totalNotesDePrix }})</span>
+        <strong class="text-sm font-extrabold text-blue-700">{{ facturationData.montantTotalNotesDePrixHT | number:'1.0-2' }} F</strong>
+      </div>
+      <div class="bg-white rounded-xl border border-oas-line p-3.5 shadow-xs">
+        <span class="text-[11px] text-oas-muted block">Avoirs HT ({{ facturationData.totalAvoirsHT }})</span>
+        <strong class="text-sm font-extrabold text-amber-700">{{ facturationData.montantTotalAvoirsHT | number:'1.0-2' }} F</strong>
+      </div>
+    </div>
+  }
+
+  <!-- SECTION 1 : Historique des entrées et sorties des pièces détachées -->
+  <section class="bg-white rounded-xl border border-oas-line shadow-card overflow-hidden">
+    <div class="px-5 py-4 border-b border-oas-line bg-oas-bg/50 flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <h2 class="text-base font-bold text-oas-ink">
+          Historique des entrées et sorties des pièces détachées pour {{ periodeLibelle }}
+        </h2>
+        <p class="text-xs text-oas-muted mt-0.5">{{ pieceTotalElements }} mouvement(s) enregistré(s)</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2.5">
+        <input type="text" [ngModel]="pieceSerialKeyword" (ngModelChange)="onPieceSerialInput($event)"
+               placeholder="Recherche par numéro de série, doc, pièce..."
+               class="w-64 px-3 py-2 rounded-lg border border-oas-line bg-white text-xs text-oas-ink focus:outline-none focus:ring-2 focus:ring-oas-accent/40" />
+        <select [(ngModel)]="pieceActionFilter" (change)="onPieceActionChange()"
+                class="px-3 py-2 rounded-lg border border-oas-line bg-white text-xs font-semibold text-oas-ink focus:outline-none focus:ring-2 focus:ring-oas-accent/40">
+          <option value="">Toutes les actions</option>
+          <option value="ENTREE">Entrée</option>
+          <option value="SORTIE">Sortie</option>
+          <option value="AJUSTEMENT">Ajustement</option>
+          <option value="INVENTAIRE">Inventaire</option>
+        </select>
+      </div>
+    </div>
+
+    <app-alert [error]="piecesError" />
+
+    @if (loadingPieces) {
+      <div class="py-10 text-center text-sm text-oas-muted">Chargement des mouvements de pièces...</div>
+    } @else if (pieceMouvements.length === 0) {
+      <div class="py-10 text-center text-sm text-oas-muted">Aucun mouvement de pièce détachée pour {{ periodeLibelle }}.</div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead>
+            <tr class="border-b border-oas-line bg-oas-bg/60 text-oas-muted uppercase text-[11px]">
+              <th class="text-left px-3 py-3">Prénom</th>
+              <th class="text-left px-3 py-3">Nom</th>
+              <th class="text-left px-3 py-3">Document</th>
+              <th class="text-left px-3 py-3">Num doc</th>
+              <th class="text-left px-3 py-3">Num série</th>
+              <th class="text-left px-3 py-3">Désignation</th>
+              <th class="text-left px-3 py-3">Action</th>
+              <th class="text-right px-3 py-3">Qté</th>
+              <th class="text-right px-3 py-3">Stock</th>
+              <th class="text-left px-3 py-3">Heure</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-oas-line">
+            @for (m of pieceMouvements; track m.id) {
+              <tr class="hover:bg-oas-bg/60 transition">
+                <td class="px-3 py-2.5 text-oas-ink whitespace-nowrap">{{ m.prenom || '–' }}</td>
+                <td class="px-3 py-2.5 text-oas-ink whitespace-nowrap">{{ m.nom || '–' }}</td>
+                <td class="px-3 py-2.5 text-oas-ink whitespace-nowrap">{{ m.typeDoc || '–' }}</td>
+                <td class="px-3 py-2.5 font-mono font-semibold text-oas-ink whitespace-nowrap">{{ m.numDoc || '–' }}</td>
+                <td class="px-3 py-2.5 font-mono text-oas-ink whitespace-nowrap">{{ m.numeroSerie || '–' }}</td>
+                <td class="px-3 py-2.5 text-oas-ink max-w-[220px] truncate" [title]="m.designation || ''">{{ m.designation || '–' }}</td>
+                <td class="px-3 py-2.5 whitespace-nowrap">
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border" [ngClass]="actionPieceBadgeClass(m.action)">
+                    {{ m.action || '–' }}
+                  </span>
+                </td>
+                <td class="px-3 py-2.5 text-right font-bold text-oas-ink whitespace-nowrap">{{ m.quantite ?? 0 }}</td>
+                <td class="px-3 py-2.5 text-right text-oas-muted whitespace-nowrap">
+                  @if (m.stockReel != null) {
+                    <strong class="text-oas-ink">{{ m.stockReel }}</strong>
+                    <span class="text-[10px] ml-1">(M:{{ m.stockMagasin ?? 0 }} / A:{{ m.stockAtelier ?? 0 }})</span>
+                  } @else {
+                    <span>M:{{ m.stockMagasin ?? 0 }} / A:{{ m.stockAtelier ?? 0 }}</span>
+                  }
+                </td>
+                <td class="px-3 py-2.5 text-oas-muted whitespace-nowrap">
+                  {{ m.date ? (m.date | date:'dd/MM/yyyy HH:mm:ss') : '–' }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="border-t border-oas-line px-4 py-2.5 bg-oas-bg/30 flex flex-wrap items-center justify-between gap-2">
+        <span class="text-xs text-oas-muted">{{ pieceMouvements.length }} mouvement(s) affiché(s) sur {{ pieceTotalElements }}</span>
+        <app-pagination [page]="piecePage" [pageSize]="piecePageSize" [total]="pieceTotalElements" [totalPages]="pieceTotalPages"
+                        (pageChange)="onPiecePageChange($event)" />
+      </div>
+    }
+  </section>
+
+  <!-- SECTION 2 : Historique des factures TTC et HT -->
+  <section class="space-y-4">
+    <div class="bg-white rounded-xl border border-oas-line p-4 shadow-card space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="text-base font-bold text-oas-ink">
+            Historique des factures TTC et HT pour {{ periodeLibelle }}
+          </h2>
+          @if (filterClientNumero.trim()) {
+            <p class="text-xs text-oas-muted mt-0.5">Filtre client : <strong>{{ filterClientNumero.trim() }}</strong></p>
+          }
+        </div>
+      </div>
+
+      <div class="flex flex-wrap gap-1.5 pt-1">
+        @for (t of tabs; track t.key) {
+          <button type="button" (click)="setActiveTab(t.key)"
+                  class="px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer border"
+                  [ngClass]="activeTab === t.key
+                    ? 'bg-oas-accent text-white border-oas-accent'
+                    : 'bg-oas-bg/60 text-oas-ink border-oas-line hover:bg-oas-bg'">
+            {{ t.label }} ({{ tabCount(t.key) }})
+          </button>
+        }
+      </div>
+    </div>
+
+    <app-alert [error]="facturationError" />
+
+    @if (loadingFacturation) {
+      <div class="bg-white rounded-xl border border-oas-line p-12 text-center text-sm text-oas-muted shadow-card">
+        <svg class="animate-spin h-5 w-5 mx-auto mb-2 text-oas-accent" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+        </svg>
+        Chargement de l'historique des factures TTC et HT...
+      </div>
+    } @else if (activeTab === 'ALL') {
+      <!-- Vue des 5 tableaux séparés : BL, FACTURE, AVOIR TTC, NOTE DE PRIX, AVOIR NOTE DE PRIX -->
+      @for (group of groupedSections; track group.type) {
+        <div class="bg-white rounded-xl border border-oas-line shadow-card overflow-hidden">
+          <div class="px-5 py-3 border-b border-oas-line bg-oas-bg/60 flex items-center justify-between">
+            <h3 class="text-sm font-extrabold tracking-wide text-oas-ink uppercase">{{ group.title }}</h3>
+            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-white border border-oas-line text-oas-muted">
+              {{ group.items.length }} élément(s)
+            </span>
+          </div>
+
+          @if (group.items.length === 0) {
+            <div class="py-6 text-center text-xs text-oas-muted">Aucun document dans {{ group.title }} pour {{ periodeLibelle }}.</div>
+          } @else {
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs">
+                <thead>
+                  <tr class="border-b border-oas-line bg-oas-bg/40 text-oas-muted uppercase text-[11px]">
+                    <th class="text-left px-3 py-2.5">{{ group.numeroHeader }}</th>
+                    <th class="text-left px-3 py-2.5">Im. automobile</th>
+                    <th class="text-left px-3 py-2.5">Num client</th>
+                    <th class="text-left px-3 py-2.5">Nom client</th>
+                    <th class="text-left px-3 py-2.5">Date</th>
+                    <th class="text-left px-3 py-2.5">Date Modification</th>
+                    <th class="text-right px-3 py-2.5">{{ group.montantHeader }}</th>
+                    <th class="text-left px-3 py-2.5">Statut</th>
+                    <th class="text-right px-3 py-2.5">Action</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-oas-line">
+                  @for (item of group.items; track item.type + '-' + item.id) {
+                    @let nav = resolveRoute(item);
+                    <tr class="hover:bg-oas-bg/60 transition">
+                      <td class="px-3 py-2.5 font-mono font-bold text-oas-ink whitespace-nowrap">{{ item.numero }}</td>
+                      <td class="px-3 py-2.5 font-mono text-oas-ink whitespace-nowrap">{{ item.immatriculation || '–' }}</td>
+                      <td class="px-3 py-2.5 font-mono text-oas-ink whitespace-nowrap">{{ item.clientNumero || item.clientId || '–' }}</td>
+                      <td class="px-3 py-2.5 text-oas-ink whitespace-nowrap">{{ item.clientNom || '–' }}</td>
+                      <td class="px-3 py-2.5 text-oas-muted whitespace-nowrap">
+                        {{ item.dateCreation ? (item.dateCreation | date:'dd/MM/yyyy HH:mm:ss') : '–' }}
+                      </td>
+                      <td class="px-3 py-2.5 text-oas-muted whitespace-nowrap">
+                        {{ item.dateModification ? (item.dateModification | date:'dd/MM/yyyy HH:mm:ss') : '–' }}
+                      </td>
+                      <td class="px-3 py-2.5 text-right whitespace-nowrap">
+                        <span class="font-bold text-oas-ink">{{ item.montantTotal | number:'1.0-2' }} FCFA</span>
+                        @if (item.resteAPayer && item.resteAPayer > 0) {
+                          <span class="block text-[10px] text-rose-600 font-semibold">Reste : {{ item.resteAPayer | number:'1.0-2' }} FCFA</span>
+                        }
+                      </td>
+                      <td class="px-3 py-2.5 whitespace-nowrap">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border" [ngClass]="statutDocBadgeClass(item.statut)">
+                          {{ item.statut }}
+                        </span>
+                      </td>
+                      <td class="px-3 py-2.5 text-right whitespace-nowrap">
+                        <div class="inline-flex items-center gap-1.5">
+                          <a [routerLink]="nav.commands" [queryParams]="nav.queryParams"
+                             class="px-2.5 py-1 rounded-lg bg-oas-bg hover:bg-blue-50 text-oas-accent font-semibold border border-oas-line transition">
+                            Ouvrir
+                          </a>
+                          <button type="button" (click)="downloadItemPdf(item)" [disabled]="downloadingPdfKey === (item.type + '-' + item.id)"
+                                  class="px-2.5 py-1 rounded-lg bg-white hover:bg-oas-bg text-oas-ink font-semibold border border-oas-line transition cursor-pointer disabled:opacity-50">
+                            {{ downloadingPdfKey === (item.type + '-' + item.id) ? '...' : 'PDF' }}
+                          </button>
+                          @if (item.ordreReparationId) {
+                            <a [routerLink]="['/app/ordres-reparation', item.ordreReparationId]"
+                               [title]="item.ordreReparationNumero || 'Ordre de réparation'"
+                               class="px-2 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold border border-indigo-200 transition">
+                              OR
+                            </a>
+                          }
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      }
+    } @else {
+      <!-- Vue filtrée paginée pour un type précis -->
+      <div class="bg-white rounded-xl border border-oas-line shadow-card overflow-hidden">
+        <div class="px-5 py-3 border-b border-oas-line bg-oas-bg/60 flex items-center justify-between">
+          <h3 class="text-sm font-extrabold tracking-wide text-oas-ink uppercase">{{ activeSectionMeta.title }}</h3>
+          <span class="text-xs text-oas-muted">{{ facturationTotalElements }} élément(s)</span>
+        </div>
+
+        @if (facturationRows.length === 0) {
+          <div class="py-10 text-center text-sm text-oas-muted">Aucun document trouvé pour {{ periodeLibelle }}.</div>
+        } @else {
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs">
+              <thead>
+                <tr class="border-b border-oas-line bg-oas-bg/40 text-oas-muted uppercase text-[11px]">
+                  <th class="text-left px-3 py-2.5">{{ activeSectionMeta.numeroHeader }}</th>
+                  <th class="text-left px-3 py-2.5">Im. automobile</th>
+                  <th class="text-left px-3 py-2.5">Num client</th>
+                  <th class="text-left px-3 py-2.5">Nom client</th>
+                  <th class="text-left px-3 py-2.5">Date</th>
+                  <th class="text-left px-3 py-2.5">Date Modification</th>
+                  <th class="text-right px-3 py-2.5">{{ activeSectionMeta.montantHeader }}</th>
+                  <th class="text-left px-3 py-2.5">Statut</th>
+                  <th class="text-right px-3 py-2.5">Action</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-oas-line">
+                @for (item of facturationRows; track item.type + '-' + item.id) {
+                  @let nav = resolveRoute(item);
+                  <tr class="hover:bg-oas-bg/60 transition">
+                    <td class="px-3 py-2.5 font-mono font-bold text-oas-ink whitespace-nowrap">{{ item.numero }}</td>
+                    <td class="px-3 py-2.5 font-mono text-oas-ink whitespace-nowrap">{{ item.immatriculation || '–' }}</td>
+                    <td class="px-3 py-2.5 font-mono text-oas-ink whitespace-nowrap">{{ item.clientNumero || item.clientId || '–' }}</td>
+                    <td class="px-3 py-2.5 text-oas-ink whitespace-nowrap">{{ item.clientNom || '–' }}</td>
+                    <td class="px-3 py-2.5 text-oas-muted whitespace-nowrap">
+                      {{ item.dateCreation ? (item.dateCreation | date:'dd/MM/yyyy HH:mm:ss') : '–' }}
+                    </td>
+                    <td class="px-3 py-2.5 text-oas-muted whitespace-nowrap">
+                      {{ item.dateModification ? (item.dateModification | date:'dd/MM/yyyy HH:mm:ss') : '–' }}
+                    </td>
+                    <td class="px-3 py-2.5 text-right whitespace-nowrap">
+                      <span class="font-bold text-oas-ink">{{ item.montantTotal | number:'1.0-2' }} FCFA</span>
+                      @if (item.resteAPayer && item.resteAPayer > 0) {
+                        <span class="block text-[10px] text-rose-600 font-semibold">Reste : {{ item.resteAPayer | number:'1.0-2' }} FCFA</span>
+                      }
+                    </td>
+                    <td class="px-3 py-2.5 whitespace-nowrap">
+                      <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border" [ngClass]="statutDocBadgeClass(item.statut)">
+                        {{ item.statut }}
+                      </span>
+                    </td>
+                    <td class="px-3 py-2.5 text-right whitespace-nowrap">
+                      <div class="inline-flex items-center gap-1.5">
+                        <a [routerLink]="nav.commands" [queryParams]="nav.queryParams"
+                           class="px-2.5 py-1 rounded-lg bg-oas-bg hover:bg-blue-50 text-oas-accent font-semibold border border-oas-line transition">
+                          Ouvrir
+                        </a>
+                        <button type="button" (click)="downloadItemPdf(item)" [disabled]="downloadingPdfKey === (item.type + '-' + item.id)"
+                                class="px-2.5 py-1 rounded-lg bg-white hover:bg-oas-bg text-oas-ink font-semibold border border-oas-line transition cursor-pointer disabled:opacity-50">
+                          {{ downloadingPdfKey === (item.type + '-' + item.id) ? '...' : 'PDF' }}
+                        </button>
+                        @if (item.ordreReparationId) {
+                          <a [routerLink]="['/app/ordres-reparation', item.ordreReparationId]"
+                             [title]="item.ordreReparationNumero || 'Ordre de réparation'"
+                             class="px-2 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold border border-indigo-200 transition">
+                            OR
+                          </a>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <div class="border-t border-oas-line px-4 py-3 bg-oas-bg/30 flex flex-wrap items-center justify-between gap-2">
+            <span class="text-xs text-oas-muted">{{ facturationRows.length }} élément(s) affiché(s) sur {{ facturationTotalElements }}</span>
+            <app-pagination [page]="facturationPage" [pageSize]="facturationPageSize" [total]="facturationTotalElements"
+                            [totalPages]="facturationTotalPages" (pageChange)="onFacturationPageChange($event)" />
+          </div>
+        }
+      </div>
+    }
+  </section>
+</div>

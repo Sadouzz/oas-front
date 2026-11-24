@@ -37,6 +37,11 @@ export const AGENT_PORTAL_ROUTES: Routes = [
             import('./vehicules/vehicules.component').then(m => m.VehiculesComponent),
         },
         {
+          path: 'historique-vehicules',
+          loadComponent: () =>
+            import('./vehicules/historique-vehicules/historique-vehicules.component').then(m => m.HistoriqueVehiculesComponent),
+        },
+        {
           path: 'pdp',
           loadComponent: () =>
             import('./pieces-detachees/pieces-detachees.component').then(m => m.PiecesDetacheesComponent),
@@ -331,6 +336,12 @@ export const AGENT_PORTAL_ROUTES: Routes = [
           path: 'gestion-recu',
           loadComponent: () =>
             import('./gestion-recu/gestion-recu.component').then(m => m.GestionRecuComponent),
+        },
+        {
+          path: 'historique-facturation',
+          canActivate: [multiRoleGuard(['ROLE_AGENT', 'ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER', 'ROLE_AGENT_MAGASIN'])],
+          loadComponent: () =>
+            import('./historique-facturation/historique-facturation.component').then(m => m.HistoriqueFacturationComponent),
         },
         {
           path: 'admin',

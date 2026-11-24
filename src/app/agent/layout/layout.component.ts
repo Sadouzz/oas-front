@@ -87,7 +87,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
     '/profil': { label: 'Mon profil' },
     '/dashboard': { label: 'Tableau de bord' },
     '/clients': { label: 'Clients' },
-    '/vehicules': { label: 'Véhicules' },
+    '/vehicules': { label: 'Liste des véhicules', section: 'Véhicules' },
+    '/historique-vehicules': { label: 'Historique des véhicules', section: 'Véhicules' },
     '/bons-de-sortie': { label: 'Bon de sortie', section: 'Gestion Stock' },
     '/historique-bs': { label: 'Historique', section: 'Gestion Stock' },
     '/inventaire': { label: 'Inventaire', section: 'PDP' },
@@ -110,6 +111,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
     '/avoirs-ht': { label: 'Avoir note de prix', section: 'Facture HT' },
     '/gestion-tva': { label: 'Configuration fiscale globale' },
     '/gestion-recu': { label: 'Gestion reçu' },
+    '/historique-facturation': { label: 'Historique facture HT et TTC' },
     '/admin/main-doeuvre': { label: "Main d'œuvre" },
     '/admin/parametres': { label: 'Paramètres', section: 'Administration' },
     '/admin/parametres/depots': { label: 'Dépôts', section: 'Paramètres' },
@@ -307,6 +309,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
     const relUrl = this.getRelativeUrl(url);
     if (['/fiches-atelier', '/ordres-reparation', '/ordres-travail', '/diagnostics', '/diagnostic', '/techniciens'].some(p => relUrl.startsWith(p))) {
       this.openSection = 'atelier';
+    } else if (relUrl.startsWith('/vehicules') || relUrl.startsWith('/historique-vehicules')) {
+      this.openSection = 'vehicules';
     } else if (relUrl.startsWith('/pieces-generees') || relUrl.startsWith('/pdg')) {
       this.openSection = 'pieces';
       this.openSubSection = 'pdg';
@@ -510,6 +514,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
   getSectionTitle(section: string | null): string {
     switch (section) {
       case 'atelier': return 'Processus de réparation';
+      case 'vehicules': return 'Véhicules';
       case 'pieces': return 'Pièces détachées';
       case 'facture-ht': return 'Facture HT';
       case 'facture-ttc': return 'Facture TTC';
@@ -555,6 +560,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
     switch (section) {
       case 'atelier':
         return ['/fiches-atelier', '/ordres-reparation', '/ordres-travail', '/diagnostics', '/diagnostic', '/techniciens'].some(p => relUrl.startsWith(p));
+      case 'vehicules':
+        return ['/vehicules', '/historique-vehicules'].some(p => relUrl.startsWith(p));
       case 'pieces':
         return ['/pieces-detachees', '/pieces-generees', '/pdp', '/pdg', '/historique-pieces', '/stock', '/seuil-alertes', '/inventaire'].some(p => relUrl.startsWith(p)) && !relUrl.startsWith('/historique-bs');
       case 'facture-ht':

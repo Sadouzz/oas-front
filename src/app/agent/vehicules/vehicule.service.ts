@@ -2,9 +2,23 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { VehiculeModel, VehiculeRequest } from '../../shared/models';
+import {
+  TypeHistoriqueVehicule,
+  VehiculeHistoriqueItemDto,
+  VehiculeHistoriqueQueryParams,
+  VehiculeHistoriqueResponseDto,
+  VehiculeModel,
+  VehiculeRequest,
+} from '../../shared/models';
 
-export type { VehiculeModel, VehiculeRequest };
+export type {
+  TypeHistoriqueVehicule,
+  VehiculeHistoriqueItemDto,
+  VehiculeHistoriqueQueryParams,
+  VehiculeHistoriqueResponseDto,
+  VehiculeModel,
+  VehiculeRequest,
+};
 
 @Injectable({ providedIn: 'root' })
 export class VehiculeService {
@@ -25,6 +39,17 @@ export class VehiculeService {
 
   getById(id: number): Observable<VehiculeModel> {
     return this.http.get<VehiculeModel>(`${this.api}/${id}`);
+  }
+
+  getHistorique(id: number, params: VehiculeHistoriqueQueryParams = {}): Observable<VehiculeHistoriqueResponseDto> {
+    const queryParams: Record<string, string> = {};
+    if (params.type && params.type !== 'ALL') queryParams['type'] = params.type;
+    if (params.keyword?.trim()) queryParams['keyword'] = params.keyword.trim();
+    if (params.dateDebut) queryParams['dateDebut'] = params.dateDebut;
+    if (params.dateFin) queryParams['dateFin'] = params.dateFin;
+    if (params.page !== undefined) queryParams['page'] = params.page.toString();
+    if (params.size !== undefined) queryParams['size'] = params.size.toString();
+    return this.http.get<VehiculeHistoriqueResponseDto>(`${this.api}/${id}/historique`, { params: queryParams });
   }
 
   getByClient(clientId: number): Observable<VehiculeModel[]> {

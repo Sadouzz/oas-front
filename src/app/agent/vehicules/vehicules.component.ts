@@ -1,6 +1,7 @@
 import { ConfirmationService } from '../../shared/components/confirmation/confirmation.service';
 import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subject, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, catchError, takeUntil } from 'rxjs/operators';
@@ -16,7 +17,7 @@ import { SearchableSelectComponent } from '../../shared/components/searchable-se
 @Component({
   selector: 'app-vehicules',
   standalone: true,
-  imports: [FormsModule, ReactiveFormsModule, DecimalPipe, DatePipe, AlertComponent, PaginationComponent, SearchableSelectComponent],
+  imports: [FormsModule, ReactiveFormsModule, RouterLink, DecimalPipe, DatePipe, AlertComponent, PaginationComponent, SearchableSelectComponent],
   templateUrl: './vehicules.component.html',
 })
 export class VehiculesComponent extends BasePaginatedComponent implements OnInit, OnDestroy {
