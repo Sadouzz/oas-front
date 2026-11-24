@@ -51,6 +51,18 @@ export class OrdreReparationDetailComponent implements OnInit, OnDestroy {
     return !!this.loadedOrdre?.hasOrdreTravail || !!this.activeChild?.isReadOnly;
   }
 
+  getStepLabel(step: { step: number; label: string }): string {
+    if (step.step === 7 && this.currentStep === 7 && this.activeChild) {
+      if (this.activeChild.noteDePrix || this.activeChild.data?.typeDocument === 'NOTE_DE_PRIX') {
+        return 'Note de prix';
+      }
+      if (this.activeChild.facture || this.activeChild.data?.typeDocument === 'FACTURE') {
+        return 'Facture';
+      }
+    }
+    return step.label;
+  }
+
   onActivate(componentRef: any): void {
     this.activeChild = componentRef;
     if (typeof componentRef?.saveStep2ThenGoNext === 'function') {

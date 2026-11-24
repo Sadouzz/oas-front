@@ -61,7 +61,7 @@
         <button (click)="goToStep(stepNumber)" [disabled]="!isAllowed"
           class="flex flex-col items-center flex-shrink-0 transition select-none"
           [ngClass]="isAllowed ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'"
-          [title]="isAllowed ? ('Aller à l\'étape ' + stepNumber + ' : ' + step.label) : 'Étape non débloquée'">
+          [title]="isAllowed ? ('Aller à l\'étape ' + stepNumber + ' : ' + getStepLabel(step)) : 'Étape non débloquée'">
           <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all"
             [ngClass]="{
               'bg-oas-accent text-white shadow-md shadow-oas-accent/40 ring-4 ring-oas-accent/20': active,
@@ -78,7 +78,7 @@
           </div>
           <span class="text-[11px] font-bold mt-2 whitespace-nowrap"
             [ngClass]="active ? 'text-oas-accent font-extrabold' : (done ? 'text-emerald-600' : 'text-oas-muted')">
-            {{ step.label }}
+            {{ getStepLabel(step) }}
           </span>
         </button>
 

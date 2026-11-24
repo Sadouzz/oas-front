@@ -91,6 +91,26 @@ export class StepPretALivrerComponent implements OnInit {
         || (this.fullPaymentWalletBalance !== null && this.fullPaymentWalletBalance >= this.factureResteAPayer));
   }
 
+  get stepTitle(): string {
+    if (this.noteDePrix || this.data?.typeDocument === 'NOTE_DE_PRIX') {
+      return 'Note de prix';
+    }
+    if (this.facture || this.data?.typeDocument === 'FACTURE') {
+      return 'Facture';
+    }
+    return 'Facture / Note de prix';
+  }
+
+  get stepSubtitle(): string {
+    if (this.noteDePrix || this.data?.typeDocument === 'NOTE_DE_PRIX') {
+      return 'Consultation de la note de prix associée et vérification finale avant livraison.';
+    }
+    if (this.facture || this.data?.typeDocument === 'FACTURE') {
+      return 'Consultation de la facture associée et vérification finale avant livraison.';
+    }
+    return 'Consultation de la facture ou de la note de prix associée et vérification finale avant livraison.';
+  }
+
   ngOnInit(): void {
     const idParam = this.route.snapshot.paramMap.get('id') || this.route.parent?.snapshot.paramMap.get('id');
     if (!idParam) {
