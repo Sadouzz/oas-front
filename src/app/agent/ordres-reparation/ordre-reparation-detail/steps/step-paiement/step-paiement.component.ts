@@ -314,7 +314,7 @@ export class StepPaiementComponent implements OnInit {
             this.showCreateFactureModal = false;
             this.createdFacture = res;
             this.successMessage = `Facture ${res?.numero || ''} créée. Vous pouvez enregistrer le règlement sur cet ordre.`.trim();
-            this.loadData();
+            void this.router.navigate(['/app/ordres-reparation', this.ordreId, 'facturation']);
           });
         },
         error: (err) => {
@@ -368,7 +368,7 @@ export class StepPaiementComponent implements OnInit {
             this.showConfirmNoteModal = false;
             this.createdNoteDePrix = res;
             this.successMessage = `Note de prix ${res?.numero || ''} créée. Vous pouvez suivre son règlement sur cet ordre.`.trim();
-            this.loadData();
+            void this.router.navigate(['/app/ordres-reparation', this.ordreId, 'facturation']);
           });
         },
         error: (err) => {

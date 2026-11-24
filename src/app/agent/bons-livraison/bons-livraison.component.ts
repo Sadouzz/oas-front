@@ -359,7 +359,7 @@ export class BonsLivraisonComponent extends BasePaginatedComponent implements On
   }
   private naviguerVersPaiementOr(ordreId: number, conversionMessage: string): boolean {
     if (!Number.isInteger(ordreId) || ordreId <= 0) return false;
-    void this.router.navigate(['/app/ordres-reparation', ordreId, 'bl'], {
+    void this.router.navigate(['/app/ordres-reparation', ordreId, 'facturation'], {
       state: { conversionMessage }
     });
     return true;
