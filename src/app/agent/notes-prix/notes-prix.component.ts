@@ -9,7 +9,7 @@ import { NoteDePrixModel, NoteDePrixCreateRequest } from './models/note-de-prix.
 import { ClientService } from '../clients/client.service';
 import { VehiculeService } from '../vehicules/vehicule.service';
 import { OrdreReparationService } from '../ordres-reparation/ordre-reparation.service';
-import { LucideSearch, LucidePlus, LucideX, LucideDownload, LucideReceipt, LucideEye } from '@lucide/angular';
+import { LucideSearch, LucidePlus, LucideX, LucideDownload, LucideEye, LucideBadgeCheck } from '@lucide/angular';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 import { UserModel, VehiculeModel, OrdreReparation, extractContent } from '../../shared/models';
@@ -25,7 +25,7 @@ import {
 @Component({
   selector: 'app-notes-prix',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, NgClass, PaginationComponent, LucideSearch, LucidePlus, LucideX, LucideDownload, LucideReceipt, LucideEye],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, NgClass, PaginationComponent, LucideSearch, LucidePlus, LucideX, LucideDownload, LucideEye, LucideBadgeCheck],
   templateUrl: './notes-prix.component.html',
 })
 export class NotesPrixComponent extends BasePaginatedComponent implements OnInit, OnDestroy {
@@ -271,10 +271,13 @@ export class NotesPrixComponent extends BasePaginatedComponent implements OnInit
 
   applyFilter() {
     let data = this.notes || [];
+    // Soldé par le reçu mais pas encore validé : reste « en cours » jusqu'à la validation.
     if (this.filterStatut === 'EN_COURS') {
-      data = data.filter(f => f.statutPaiement !== 'PAYE');
+      data = data.filter(f => f.statutPaiement !== 'PAYE' || !f.dateValidation);
     } else if (this.filterStatut === 'PAYE') {
-      data = data.filter(f => f.statutPaiement === 'PAYE');
+      data = data.filter(f => f.statutPaiement === 'PAYE' && !!f.dateValidation);
+    } else if (this.filterStatut === 'A_VALIDER') {
+      data = data.filter(f => this.peutValider(f));
     }
     if (this.searchNumero.trim()) {
       const q = this.searchNumero.trim().toLowerCase();
@@ -702,6 +705,43 @@ export class NotesPrixComponent extends BasePaginatedComponent implements OnInit
     if (!this.hasActiveFilters) return this.filtered;
     const start = (this.page - 1) * this.pageSize;
     return this.filtered.slice(start, start + this.pageSize);
+  }
+
+  // ── Validation (document payé depuis le reçu du client) ─────────
+
+  validatingId: number | null = null;
+
+  /** Payé en totalité mais pas encore validé : badge « À valider » et action Valider. */
+  peutValider(d: { statutPaiement?: string | null; dateValidation?: string | null } | null | undefined): boolean {
+    return !!d && d.statutPaiement === 'PAYE' && !d.dateValidation;
+  }
+
+  async valider(d: { id?: number | null; numero?: string | null; statutPaiement?: string | null; dateValidation?: string | null }) {
+    const id = d.id;
+    if (!id || !this.peutValider(d) || this.validatingId !== null) return;
+    const ok = await this.confirmation.confirm(
+      `Valider la note de prix ${d.numero ?? ''} ? Elle passera au statut « Payé ».`,
+      { title: 'Valider la note de prix', confirmLabel: 'Valider' }
+    );
+    if (!ok) return;
+    this.validatingId = id;
+    this.cdr.markForCheck();
+    this.service.valider(id).subscribe({
+      next: updated => {
+        this.validatingId = null;
+        const date = updated?.dateValidation ?? new Date().toISOString();
+        d.dateValidation = date;
+        if (this.selectedNote?.id === id) this.selectedNote.dateValidation = date;
+        this.notify(`Note de prix ${d.numero ?? ''} validée.`);
+        this.load();
+        this.cdr.markForCheck();
+      },
+      error: (err: any) => {
+        this.validatingId = null;
+        this.notifyError(err?.error?.message || 'Erreur lors de la validation.');
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   private notify(msg: string) {

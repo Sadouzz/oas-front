@@ -1400,6 +1400,10 @@ export class BonsDeSortieComponent extends BasePaginatedComponent implements OnI
   closeCreate() {
     this.ordresTravailLoadVersion++;
     this.showCreateModal = false;
+    // Retire ?action=new : le lien « Nouveau BS » du menu pourra rouvrir le formulaire.
+    if (this.route.snapshot.queryParamMap.get('action') === 'new') {
+      this.router.navigate([], { relativeTo: this.route, queryParams: { action: null }, queryParamsHandling: 'merge', replaceUrl: true });
+    }
     this.errorMessage = '';
     this.saving = false;
     this.lignesPieces = [];

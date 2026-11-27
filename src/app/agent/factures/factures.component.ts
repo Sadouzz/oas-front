@@ -5,9 +5,10 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule, NgClass } from '@angular/common';
 import { catchError, finalize, of, Subscription } from 'rxjs';
 import { FactureService } from './facture.service';
+import { RecuService } from '../gestion-recu/recu.service';
 import { FactureDetailsViewModel, FactureListModel, FactureModel } from './models/facture.model';
 import { ClientService } from '../clients/client.service';
-import { LucideSearch, LucidePlus, LucideX, LucideDownload, LucideReceipt, LucideEye } from '@lucide/angular';
+import { LucideSearch, LucidePlus, LucideX, LucideDownload, LucideEye, LucideBadgeCheck } from '@lucide/angular';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { BasePaginatedComponent } from '../../shared/components/base-paginated.component';
 import { extractContent } from '../../shared/models';
@@ -24,7 +25,7 @@ import {
 @Component({
   selector: 'app-factures',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgClass, PaginationComponent, LucideSearch, LucidePlus, LucideX, LucideDownload, LucideReceipt, LucideEye],
+  imports: [CommonModule, FormsModule, NgClass, PaginationComponent, LucideSearch, LucidePlus, LucideX, LucideDownload, LucideEye, LucideBadgeCheck],
   templateUrl: './factures.component.html',
 })
 export class FacturesComponent extends BasePaginatedComponent implements OnInit, OnDestroy {
@@ -35,6 +36,7 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit,
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private clientService = inject(ClientService);
+  private recuService = inject(RecuService);
   private pdfLayoutDialog = inject(PdfLayoutDialogService);
 
   factures: FactureListModel[] = [];
@@ -256,10 +258,13 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit,
 
   applyFilter() {
     let data = this.factures || [];
+    // Soldé par le reçu mais pas encore validé : reste « en cours » jusqu'à la validation.
     if (this.filterStatut === 'EN_COURS') {
-      data = data.filter(f => f.statutPaiement !== 'PAYE');
+      data = data.filter(f => f.statutPaiement !== 'PAYE' || !f.dateValidation);
     } else if (this.filterStatut === 'PAYE') {
-      data = data.filter(f => f.statutPaiement === 'PAYE');
+      data = data.filter(f => f.statutPaiement === 'PAYE' && !!f.dateValidation);
+    } else if (this.filterStatut === 'A_VALIDER') {
+      data = data.filter(f => this.peutValider(f));
     }
     if (this.searchNumero.trim()) {
       const q = this.searchNumero.trim().toLowerCase();
@@ -469,7 +474,8 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit,
 
     this.paySaving = true;
     const factureId = this.factureToPay.id;
-    this.service.payFacture(factureId, this.payMontant, this.payMethode).subscribe({
+    // Encaissement via le reçu du client : le versement règle d'abord ses documents les plus anciens.
+    this.recuService.verserPourClient(this.factureToPay.clientId, { montant: this.payMontant, modePaiement: this.payMethode }).subscribe({
       next: () => {
         this.paySaving = false;
         this.closePayModal();
@@ -571,6 +577,43 @@ export class FacturesComponent extends BasePaginatedComponent implements OnInit,
     if (!this.hasActiveFilters) return this.filtered;
     const start = (this.page - 1) * this.pageSize;
     return this.filtered.slice(start, start + this.pageSize);
+  }
+
+  // ── Validation (document payé depuis le reçu du client) ─────────
+
+  validatingId: number | null = null;
+
+  /** Payé en totalité mais pas encore validé : badge « À valider » et action Valider. */
+  peutValider(d: { statutPaiement?: string | null; dateValidation?: string | null } | null | undefined): boolean {
+    return !!d && d.statutPaiement === 'PAYE' && !d.dateValidation;
+  }
+
+  async valider(d: { id?: number | null; numero?: string | null; statutPaiement?: string | null; dateValidation?: string | null }) {
+    const id = d.id;
+    if (!id || !this.peutValider(d) || this.validatingId !== null) return;
+    const ok = await this.confirmation.confirm(
+      `Valider la facture ${d.numero ?? ''} ? Elle passera au statut « Payé ».`,
+      { title: 'Valider la facture', confirmLabel: 'Valider' }
+    );
+    if (!ok) return;
+    this.validatingId = id;
+    this.cdr.markForCheck();
+    this.service.valider(id).subscribe({
+      next: updated => {
+        this.validatingId = null;
+        const date = updated?.dateValidation ?? new Date().toISOString();
+        d.dateValidation = date;
+        if (this.selectedFacture?.id === id) this.selectedFacture.dateValidation = date;
+        this.notify(`Facture ${d.numero ?? ''} validée.`);
+        this.load();
+        this.cdr.markForCheck();
+      },
+      error: (err: any) => {
+        this.validatingId = null;
+        this.notifyError(err?.error?.message || 'Erreur lors de la validation.');
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   private notify(msg: string) {

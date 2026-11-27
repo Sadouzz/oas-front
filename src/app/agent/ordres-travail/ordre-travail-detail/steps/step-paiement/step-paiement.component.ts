@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { OrdreTravailService } from '../../../ordre-travail.service';
 import { StepPaiementResponseDto, StatutOrdreTravail, OrdreTravail } from '../../../models/ordre-travail.model';
 import { FactureService } from '../../../../factures/facture.service';
+import { RecuService } from '../../../../gestion-recu/recu.service';
 import { FactureCreateRequest } from '../../../../factures/models/facture.model';
 import { AlertComponent } from '../../../../../shared/components/alert/alert.component';
 
@@ -19,6 +20,7 @@ export class StepPaiementComponent implements OnInit {
   private router = inject(Router);
   private otService = inject(OrdreTravailService);
   private factureService = inject(FactureService);
+  private recuService = inject(RecuService);
   private cdr = inject(ChangeDetectorRef);
   private ngZone = inject(NgZone);
   get payTotalEncaisse(): number { return Number(this.payMontant) || 0; }
@@ -224,13 +226,20 @@ export class StepPaiementComponent implements OnInit {
 
   enregistrerPaiement(): void {
     if (!this.data?.facture?.id || this.payMontant <= 0) return;
+    const clientId = this.loadedOT?.client?.id || this.loadedOT?.vehicule?.client?.id;
+    if (!clientId) {
+      this.errorMessage = 'Client de la facture introuvable : impossible d’ouvrir son reçu.';
+      this.cdr.detectChanges();
+      return;
+    }
 
     this.paying = true;
     this.errorMessage = '';
     this.successMessage = '';
     this.cdr.detectChanges();
 
-    this.factureService.payFacture(this.data.facture.id, this.payMontant, this.payMethode).subscribe({
+    // Encaissement via le reçu du client : le versement règle d'abord ses documents les plus anciens.
+    this.recuService.verserPourClient(clientId, { montant: this.payMontant, modePaiement: this.payMethode }).subscribe({
       next: () => {
         this.ngZone.run(() => {
           this.paying = false;

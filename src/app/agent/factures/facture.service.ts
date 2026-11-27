@@ -32,24 +32,17 @@ export class FactureService {
     return this.http.get<FactureModel[]>(`${this.api}/recent`);
   }
 
+  /** Valide une facture entièrement payée : elle passe de « À valider » à « Payé ». */
+  valider(id: number): Observable<FactureModel> {
+    return this.http.post<FactureModel>(`${this.api}/${id}/valider`, null);
+  }
+
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.api}/${id}`);
   }
 
   create(data: FactureCreateRequest): Observable<FactureModel> {
     return this.http.post<FactureModel>(`${this.api}/creer`, data);
-  }
-
-  payFacture(id: number, montant: number, methodePaiement: string): Observable<any> {
-    return this.http.post(`${environment.apiUrl}/api/recus/payer`, null, {
-      params: { factureId: id.toString(), montant: montant.toString(), methodePaiement }
-    });
-  }
-
-  payFactureTotal(id: number, methodePaiement: string): Observable<any> {
-    return this.http.post(`${environment.apiUrl}/api/recus/payer-integral`, null, {
-      params: { factureId: id.toString(), methodePaiement }
-    });
   }
 
   downloadPdf(id: number, layoutKey: 'AVEC_ENTETE' | 'SANS_ENTETE' = 'AVEC_ENTETE'): Observable<Blob> {

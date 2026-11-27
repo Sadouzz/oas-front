@@ -7,6 +7,7 @@ import { OrdreReparationService } from '../../../ordre-reparation.service';
 import { StepPaiementResponseDto } from '../../../models/responses/step-paiement-response.dto';
 import { LignePieceBLDto, LigneMainDoeuvreBLDto, NoteDePrixSummaryDto } from '../../../models/responses/step-bl-response.dto';
 import { FactureService } from '../../../../factures/facture.service';
+import { RecuService } from '../../../../gestion-recu/recu.service';
 import { BonDeLivraisonService, BonDeLivraisonOrdreContext } from '../../../../bons-livraison/bon-de-livraison.service';
 import { NoteDePrixService } from '../../../../notes-prix/note-de-prix.service';
 import { AlertComponent } from '../../../../../shared/components/alert/alert.component';
@@ -23,6 +24,7 @@ export class StepPaiementComponent implements OnInit {
   private router = inject(Router);
   private ordreService = inject(OrdreReparationService);
   private factureService = inject(FactureService);
+  private recuService = inject(RecuService);
   private bonDeLivraisonService = inject(BonDeLivraisonService);
   private noteDePrixService = inject(NoteDePrixService);
   private cdr = inject(ChangeDetectorRef);
@@ -406,14 +408,21 @@ export class StepPaiementComponent implements OnInit {
 
   enregistrerPaiement(): void {
     const factureId = this.factureCourante?.id;
+    const clientId = this.factureCourante?.clientId ?? this.data?.clientId;
     if (!factureId || this.payMontant <= 0) return;
+    if (!clientId) {
+      this.errorMessage = 'Client de la facture introuvable : impossible d’ouvrir son reçu.';
+      this.cdr.detectChanges();
+      return;
+    }
 
     this.paying = true;
     this.errorMessage = '';
     this.successMessage = '';
     this.cdr.detectChanges();
 
-    this.factureService.payFacture(factureId, this.payMontant, this.payMethode).subscribe({
+    // Encaissement via le reçu du client : le versement règle d'abord ses documents les plus anciens.
+    this.recuService.verserPourClient(clientId, { montant: this.payMontant, modePaiement: this.payMethode }).subscribe({
       next: () => {
         this.ngZone.run(() => {
           this.paying = false;

@@ -1,0 +1,261 @@
+<div class="space-y-6">
+
+  <button type="button" (click)="retour()"
+          class="inline-flex items-center gap-1.5 text-sm font-semibold text-oas-muted hover:text-oas-ink transition cursor-pointer">
+    <svg lucideArrowLeft class="w-4 h-4"></svg> Retour aux reçus
+  </button>
+
+  @if (loading) {
+    <div class="bg-white rounded-lg border border-oas-line shadow-sm flex flex-col items-center justify-center py-20 text-oas-muted">
+      <svg lucideLoader2 class="animate-spin h-6 w-6 text-oas-accent mb-4"></svg>
+      <p class="text-sm">Chargement du reçu...</p>
+    </div>
+  } @else if (loadError) {
+    <div class="bg-white rounded-lg border border-oas-line shadow-sm flex flex-col items-center justify-center py-16 px-6 text-center">
+      <div class="w-16 h-16 bg-oas-bad-bg rounded-full flex items-center justify-center mb-4">
+        <svg lucideReceipt class="w-8 h-8 text-oas-bad"></svg>
+      </div>
+      <p class="text-oas-ink font-bold">{{ loadError }}</p>
+      <a routerLink="/app/gestion-recu" class="mt-4 text-sm font-bold text-oas-info hover:underline">Voir la liste des reçus</a>
+    </div>
+  } @else if (recu) {
+
+    <!-- En-tête -->
+    <div class="bg-white border border-oas-line rounded-lg shadow-sm px-5 py-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-3 flex-wrap">
+          <h1 class="text-2xl font-bold text-oas-ink">Reçu n° {{ recu.numeroRecu }}</h1>
+          @if (recu.enCours) {
+            <span class="px-2 py-1 rounded-md text-xs font-bold bg-amber-100 text-amber-800">En cours</span>
+          } @else {
+            <span class="px-2 py-1 rounded-md text-xs font-bold bg-emerald-100 text-emerald-800">Payé</span>
+            @if (recu.valide) {
+              <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <svg lucideCheck class="w-3.5 h-3.5"></svg> Validé le {{ formatDate(recu.dateValidation) }}
+              </span>
+            }
+          }
+        </div>
+        <p class="text-sm text-oas-ink mt-2">
+          <span class="font-bold">{{ recu.nomClient || '—' }}</span>
+          @if (recu.numeroClient) { <span class="text-oas-muted"> · {{ recu.numeroClient }}</span> }
+          @if (recu.telephone) { <span class="text-oas-muted"> · {{ recu.telephone }}</span> }
+        </p>
+        <p class="text-xs text-oas-muted mt-1">
+          Ouvert le {{ formatDate(recu.dateDebut) }}
+          @if (recu.dateFin) { · soldé le {{ formatDate(recu.dateFin) }} }
+        </p>
+      </div>
+      <div class="flex items-center gap-2 flex-wrap">
+        <button type="button" (click)="imprimer()" [disabled]="printing"
+                class="inline-flex items-center justify-center gap-1.5 border border-oas-line text-oas-ink text-sm font-bold px-4 py-2 rounded-lg hover:bg-oas-bg transition cursor-pointer disabled:opacity-50">
+          @if (printing) { <svg lucideLoader2 class="w-4 h-4 animate-spin"></svg> } @else { <svg lucidePrinter class="w-4 h-4"></svg> }
+          Voir/Imprimer reçu
+        </button>
+        @if (!recu.enCours && !recu.valide) {
+          <button type="button" (click)="valider()" [disabled]="validating"
+                  class="inline-flex items-center justify-center gap-1.5 bg-emerald-600 text-white text-sm font-bold px-4 py-2 rounded-lg hover:bg-emerald-700 transition cursor-pointer disabled:opacity-50">
+            <svg lucideCheck class="w-4 h-4"></svg> {{ validating ? 'Validation...' : 'Valider le reçu' }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <app-alert [success]="successMessage" [error]="errorMessage" />
+
+    <!-- Totaux -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div class="bg-white border border-oas-line rounded-lg p-4 shadow-sm">
+        <p class="text-xs font-semibold text-oas-muted uppercase tracking-wide">Total reçu</p>
+        <p class="text-xl font-extrabold text-oas-ink mt-1">{{ fmt(recu.montant) }} F</p>
+      </div>
+      <div class="bg-white border border-oas-line rounded-lg p-4 shadow-sm">
+        <p class="text-xs font-semibold text-oas-muted uppercase tracking-wide">Total payé</p>
+        <p class="text-xl font-extrabold text-emerald-600 mt-1">{{ fmt(recu.montantPaye) }} F</p>
+      </div>
+      <div class="bg-white border border-oas-line rounded-lg p-4 shadow-sm">
+        <p class="text-xs font-semibold text-oas-muted uppercase tracking-wide">Total restant</p>
+        <p class="text-xl font-extrabold mt-1" [ngClass]="recu.resteAPayer > 0 ? 'text-oas-bad' : 'text-oas-ink'">{{ fmt(recu.resteAPayer) }} F</p>
+      </div>
+    </div>
+
+    <!-- Documents -->
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <!-- Factures -->
+      <div class="bg-white rounded-lg border border-oas-line shadow-card overflow-hidden">
+        <div class="px-5 py-3 border-b border-oas-line flex items-center justify-between">
+          <h2 class="font-bold text-oas-ink">Factures</h2>
+          <span class="text-xs text-oas-muted">{{ recu.factures.length }} document(s)</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm whitespace-nowrap">
+            <thead class="bg-oas-bg/50 border-b border-oas-line text-oas-muted text-xs font-semibold">
+              <tr>
+                <th class="px-4 py-2">Date</th>
+                <th class="px-4 py-2">Numéro</th>
+                <th class="px-4 py-2 text-right">Total HT</th>
+                <th class="px-4 py-2 text-right">Total TTC</th>
+                <th class="px-4 py-2 text-right">Payé</th>
+                <th class="px-4 py-2 text-right">Reste</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-oas-line">
+              @for (f of recu.factures; track trackDoc(f)) {
+                <tr>
+                  <td class="px-4 py-2 text-oas-muted">{{ formatDate(f.date, false) }}</td>
+                  <td class="px-4 py-2 font-semibold text-oas-ink">{{ f.numero }}</td>
+                  <td class="px-4 py-2 text-right">{{ fmt(f.montantHT) }}</td>
+                  <td class="px-4 py-2 text-right">{{ fmt(f.montantTotal) }}</td>
+                  <td class="px-4 py-2 text-right text-emerald-600">{{ fmt(f.montantPaye) }}</td>
+                  <td class="px-4 py-2 text-right font-semibold" [ngClass]="f.resteAPayer > 0 ? 'text-oas-bad' : 'text-oas-muted'">{{ fmt(f.resteAPayer) }}</td>
+                </tr>
+              } @empty {
+                <tr><td colspan="6" class="px-4 py-6 text-center text-oas-muted text-sm">Aucune facture</td></tr>
+              }
+            </tbody>
+            <tfoot class="border-t border-oas-line bg-oas-bg/40">
+              <tr>
+                <td colspan="3" class="px-4 py-2 font-bold text-oas-ink">Total factures</td>
+                <td class="px-4 py-2 text-right font-bold text-oas-ink">{{ fmt(recu.totalFactures) }}</td>
+                <td colspan="2"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- Notes de prix -->
+      <div class="bg-white rounded-lg border border-oas-line shadow-card overflow-hidden">
+        <div class="px-5 py-3 border-b border-oas-line flex items-center justify-between">
+          <h2 class="font-bold text-oas-ink">Notes de prix</h2>
+          <span class="text-xs text-oas-muted">{{ recu.notesDePrix.length }} document(s)</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm whitespace-nowrap">
+            <thead class="bg-oas-bg/50 border-b border-oas-line text-oas-muted text-xs font-semibold">
+              <tr>
+                <th class="px-4 py-2">Date</th>
+                <th class="px-4 py-2">Numéro</th>
+                <th class="px-4 py-2 text-right">Montant</th>
+                <th class="px-4 py-2 text-right">Payé</th>
+                <th class="px-4 py-2 text-right">Reste</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-oas-line">
+              @for (n of recu.notesDePrix; track trackDoc(n)) {
+                <tr>
+                  <td class="px-4 py-2 text-oas-muted">{{ formatDate(n.date, false) }}</td>
+                  <td class="px-4 py-2 font-semibold text-oas-ink">{{ n.numero }}</td>
+                  <td class="px-4 py-2 text-right">{{ fmt(n.montantTotal) }}</td>
+                  <td class="px-4 py-2 text-right text-emerald-600">{{ fmt(n.montantPaye) }}</td>
+                  <td class="px-4 py-2 text-right font-semibold" [ngClass]="n.resteAPayer > 0 ? 'text-oas-bad' : 'text-oas-muted'">{{ fmt(n.resteAPayer) }}</td>
+                </tr>
+              } @empty {
+                <tr><td colspan="5" class="px-4 py-6 text-center text-oas-muted text-sm">Aucune note de prix</td></tr>
+              }
+            </tbody>
+            <tfoot class="border-t border-oas-line bg-oas-bg/40">
+              <tr>
+                <td colspan="2" class="px-4 py-2 font-bold text-oas-ink">Total notes de prix</td>
+                <td class="px-4 py-2 text-right font-bold text-oas-ink">{{ fmt(recu.totalNotesDePrix) }}</td>
+                <td colspan="2"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Formulaire de versement -->
+    @if (recu.enCours) {
+      <form class="bg-white rounded-lg border border-oas-line shadow-card p-5 space-y-4" (submit)="$event.preventDefault(); payer()">
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+          <h2 class="font-bold text-oas-ink">Nouveau versement</h2>
+          <p class="text-xs text-oas-muted">Réparti automatiquement sur les documents impayés, du plus ancien au plus récent.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <label class="text-xs font-semibold text-oas-muted">
+            Montant (F CFA)
+            <div class="mt-1 flex gap-2">
+              <input type="number" name="montant" min="0.01" step="0.01" [max]="plafondVersement"
+                     [(ngModel)]="montant" (ngModelChange)="formError = ''" [disabled]="paying" required
+                     class="w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm text-oas-ink focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
+              <button type="button" (click)="remplirReste()" [disabled]="paying" title="Saisir le montant maximal"
+                      class="shrink-0 border border-oas-line text-oas-ink text-xs font-bold px-3 rounded-lg hover:bg-oas-bg transition cursor-pointer">
+                Max
+              </button>
+            </div>
+          </label>
+          <label class="text-xs font-semibold text-oas-muted">
+            Remarque <span class="font-normal">(facultatif)</span>
+            <input type="text" name="remarque" [(ngModel)]="remarque" [disabled]="paying" maxlength="255" placeholder="Ex. Acompte"
+                   class="mt-1 w-full px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm text-oas-ink focus:outline-none focus:ring-2 focus:ring-oas-accent/40 focus:border-oas-accent transition"/>
+          </label>
+        </div>
+
+
+        @if (formError) {
+          <div class="px-4 py-3 bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-sm rounded-lg">{{ formError }}</div>
+        }
+
+        <div class="flex justify-end">
+          <button type="submit" [disabled]="paying"
+                  class="inline-flex items-center gap-1.5 bg-oas-accent text-white text-sm font-bold px-5 py-2 rounded-lg hover:opacity-90 transition cursor-pointer disabled:opacity-50">
+            @if (paying) { <svg lucideLoader2 class="w-4 h-4 animate-spin"></svg> Enregistrement... } @else { Payer }
+          </button>
+        </div>
+      </form>
+    }
+
+    <!-- Historique des versements -->
+    <div class="bg-white rounded-lg border border-oas-line shadow-card overflow-hidden">
+      <div class="px-5 py-3 border-b border-oas-line flex items-center justify-between">
+        <h2 class="font-bold text-oas-ink">Historique des versements</h2>
+        <span class="text-xs text-oas-muted">{{ recu.versements.length }} versement(s)</span>
+      </div>
+      @if (recu.versements.length === 0) {
+        <p class="px-5 py-8 text-center text-sm text-oas-muted">Aucun versement enregistré pour ce reçu.</p>
+      } @else {
+        <ul class="divide-y divide-oas-line">
+          @for (v of versementsPage; track v.id) {
+            <li class="px-5 py-4">
+              <div class="flex items-center justify-between gap-3 flex-wrap">
+                <div class="flex items-center gap-3">
+                  <span class="font-extrabold text-emerald-600">{{ fmt(v.montant) }} F</span>
+                  @if (v.remarque) { <span class="text-xs text-oas-muted italic">{{ v.remarque }}</span> }
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs text-oas-muted">{{ formatDate(v.dateVersement) }}</span>
+                  @if (!recu.valide) {
+                    <button type="button" (click)="annulerVersement(v)" [disabled]="annulantId !== null"
+                            title="Supprimer ce versement"
+                            class="p-1.5 rounded-lg text-oas-bad hover:bg-oas-bad-bg transition cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed">
+                      @if (annulantId === v.id) { <svg lucideLoader2 class="w-4 h-4 animate-spin"></svg> } @else { <svg lucideTrash2 class="w-4 h-4"></svg> }
+                    </button>
+                  }
+                </div>
+              </div>
+              @if (v.imputations.length) {
+                <ul class="mt-2 space-y-1 pl-3 border-l-2 border-oas-line">
+                  @for (i of v.imputations; track $index) {
+                    <li class="text-xs text-oas-muted flex items-center gap-2 flex-wrap">
+                      <span class="font-semibold text-oas-ink">{{ i.numeroDocument }}</span>
+                      <span>({{ i.type === 'FACTURE' ? 'facture' : 'note de prix' }})</span>
+                      <span>· {{ fmt(i.montant) }} F</span>
+                      @if (i.numeroRecuFacture) {
+                        <span class="px-1.5 py-0.5 rounded bg-oas-info-bg text-oas-info font-semibold">{{ i.numeroRecuFacture }}</span>
+                      }
+                    </li>
+                  }
+                </ul>
+              }
+            </li>
+          }
+        </ul>
+        <app-pagination [page]="versementsPageNum" [totalPages]="versementsTotalPages" [total]="recu.versements.length"
+                        [pageSize]="versementsPageSize" (prev)="prevVersements()" (next)="nextVersements()" />
+      }
+    </div>
+  }
+</div>

@@ -84,7 +84,8 @@
         class="px-3 py-2 rounded-lg border border-oas-line bg-oas-bg text-sm focus:outline-none focus:ring-2 focus:ring-oas-accent/40 transition text-oas-ink min-w-[180px]">
         <option value="">Tous les statuts</option>
         <option value="EN_COURS">En cours (non soldées)</option>
-        <option value="PAYE">Payées</option>
+        <option value="A_VALIDER">À valider (soldées, non validées)</option>
+        <option value="PAYE">Payées (validées)</option>
       </select>
       <button type="button" (click)="showDateFilter = !showDateFilter"
         class="px-3 py-2 rounded-lg border text-sm font-medium transition flex items-center gap-1.5 cursor-pointer"
@@ -176,7 +177,12 @@
                   <td class="px-5 py-4 text-xs text-oas-muted whitespace-nowrap">{{ formatDate(f.dateCreation) }}</td>
                   <td class="px-5 py-4 text-right font-semibold text-oas-ink whitespace-nowrap">{{ fmt(f.montantTotal) }} FCFA</td>
                   <td class="px-5 py-4">
-                    @if (f.statutPaiement === 'PAYE') {
+                    @if (peutValider(f)) {
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-800"
+                            title="Entièrement payée depuis le reçu du client : à valider">
+                        <svg lucideBadgeCheck class="w-3.5 h-3.5"></svg> À valider
+                      </span>
+                    } @else if (f.statutPaiement === 'PAYE') {
                       <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">Payé</span>
                     } @else if (f.statutPaiement === 'PARTIEL') {
                       <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-800">Partiel</span>
@@ -186,10 +192,10 @@
                   </td>
                   <td class="px-5 py-4" (click)="$event.stopPropagation()">
                     <div class="flex items-center gap-1 justify-end">
-                      @if (f.resteAPayer > 0) {
-                        <button (click)="openPayModal(f)"
-                                class="p-1.5 rounded-lg hover:bg-emerald-50 text-emerald-600 hover:text-emerald-700 transition cursor-pointer" title="Encaisser paiement">
-                          <svg lucideReceipt class="w-4 h-4"></svg>
+                      @if (peutValider(f)) {
+                        <button (click)="valider(f)" [disabled]="validatingId !== null"
+                                class="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600 hover:text-blue-700 transition cursor-pointer disabled:opacity-40" title="Valider la note de prix">
+                          <svg lucideBadgeCheck class="w-4 h-4"></svg>
                         </button>
                       }
                       <button (click)="downloadPdf(f.id)"
@@ -401,11 +407,11 @@
           <svg lucideDownload class="w-4 h-4"></svg>
           Télécharger PDF
         </button>
-        @if (selectedNote.resteAPayer > 0) {
-          <button (click)="openPayModal(selectedNote)"
-                  class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold transition text-xs cursor-pointer flex items-center gap-1.5 shadow-sm">
-            <svg lucideReceipt class="w-4 h-4"></svg>
-            Encaisser Paiement
+        @if (peutValider(selectedNote)) {
+          <button (click)="valider(selectedNote)" [disabled]="validatingId !== null"
+                  class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition text-xs cursor-pointer flex items-center gap-1.5 shadow-sm disabled:opacity-50">
+            <svg lucideBadgeCheck class="w-4 h-4"></svg>
+            Valider la note de prix
           </button>
         }
         <button (click)="closeDetail()"

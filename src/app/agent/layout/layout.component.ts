@@ -352,6 +352,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
     } else if (relUrl.startsWith('/avoirs-ht')) {
       this.openSection = 'facture-ht';
       this.openSubSection = 'avoir-ht';
+    } else if (relUrl.startsWith('/gestion-recu')) {
+      this.openSection = 'recu';
     } else if (relUrl.startsWith('/gestion-tva')) {
       this.openSection = 'admin';
       this.openSubSection = 'parametres';

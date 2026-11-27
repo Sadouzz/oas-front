@@ -416,6 +416,11 @@
                 <button (click)="openPortefeuilleModal(selectedClient)" class="w-full flex items-center justify-center gap-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 text-xs font-bold px-3 py-2.5 rounded-lg transition cursor-pointer">
                   Gérer le solde prépayé
                 </button>
+                <a [routerLink]="['/app/gestion-recu/client', selectedClient.id]"
+                   title="Ouvre le reçu en cours du client (factures et notes de prix impayées)"
+                   class="mt-2 w-full flex items-center justify-center gap-1.5 bg-oas-info-bg text-oas-info hover:bg-blue-100 border border-blue-200 text-xs font-bold px-3 py-2.5 rounded-lg transition cursor-pointer">
+                  Ouvrir le reçu / encaisser
+                </a>
               </div>
             </div>
             

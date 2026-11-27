@@ -53,7 +53,7 @@
                 <td class="px-5 py-4 text-xs font-mono font-semibold text-oas-ink2">{{ bon.immatriculation }}</td>
                 <td class="px-5 py-4">
                   @if (bon.ordreReparationNumero) {
-                    <span class="inline-flex px-2 py-0.5 rounded text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200">{{ bon.ordreReparationNumero }}</span>
+                    <span class=" font-semibold text-purple-700 ">{{ bon.ordreReparationNumero }}</span>
                   } @else {
                     <span class="text-xs text-oas-muted">—</span>
                   }
@@ -248,17 +248,37 @@
         @if (errorMessage) { <div class="px-3 py-2 bg-oas-bad-bg border border-oas-bad/30 text-oas-bad text-xs rounded-lg">{{ errorMessage }}</div> }
       </div>
       <div class="px-6 py-4 border-t border-oas-line flex flex-wrap items-center justify-between gap-2 flex-shrink-0">
-        <div class="flex gap-2">
-          <button type="button" (click)="convertNote(selectedBon)"
-            [disabled]="!!(selectedBon.noteDePrixId || selectedBon.noteDePrixNumero || selectedBon.factureId || selectedBon.factureNumero) || actionLoading"
-            class="px-3 py-2 rounded-lg border border-oas-line text-oas-ink text-xs font-semibold hover:bg-oas-bg disabled:opacity-50 cursor-pointer">
-            {{ selectedBon.noteDePrixNumero ? 'Note ' + selectedBon.noteDePrixNumero : selectedBon.factureNumero ? 'Déjà converti en facture' : 'Convertir en note de prix' }}
-          </button>
-          <button type="button" (click)="convertFacture(selectedBon)"
-            [disabled]="!!(selectedBon.factureId || selectedBon.factureNumero || selectedBon.noteDePrixId || selectedBon.noteDePrixNumero) || actionLoading"
-            class="px-3 py-2 rounded-lg bg-oas-ok text-white text-xs font-bold hover:opacity-90 disabled:opacity-50 cursor-pointer">
-            {{ selectedBon.factureNumero ? 'Facture ' + selectedBon.factureNumero : selectedBon.noteDePrixNumero ? 'Déjà converti en note de prix' : 'Convertir en facture' }}
-          </button>
+        <div class="flex flex-wrap items-center gap-2">
+          @if (selectedBon.factureId) {
+            <span class="px-3 py-2 rounded-lg border border-oas-line text-oas-muted text-xs font-semibold">
+              Converti en facture {{ selectedBon.factureNumero || ('#' + selectedBon.factureId) }}
+            </span>
+            <button type="button" (click)="ouvrirDocumentLie('facture', selectedBon.factureId)"
+              class="px-3 py-2 rounded-lg bg-oas-accent hover:bg-oas-accent-dark text-white text-xs font-bold cursor-pointer">
+              Ouvrir la facture
+            </button>
+          } @else if (selectedBon.noteDePrixId) {
+            <span class="px-3 py-2 rounded-lg border border-oas-line text-oas-muted text-xs font-semibold">
+              Converti en note de prix {{ selectedBon.noteDePrixNumero || ('#' + selectedBon.noteDePrixId) }}
+            </span>
+            <button type="button" (click)="ouvrirDocumentLie('note', selectedBon.noteDePrixId)"
+              class="px-3 py-2 rounded-lg bg-oas-accent hover:bg-oas-accent-dark text-white text-xs font-bold cursor-pointer">
+              Ouvrir la note de prix
+            </button>
+          } @else if (selectedBon.factureNumero || selectedBon.noteDePrixNumero) {
+            <span class="px-3 py-2 rounded-lg border border-oas-line text-oas-muted text-xs font-semibold">
+              Converti en {{ selectedBon.factureNumero ? 'facture ' + selectedBon.factureNumero : 'note de prix ' + selectedBon.noteDePrixNumero }}
+            </span>
+          } @else {
+            <button type="button" (click)="convertNote(selectedBon)" [disabled]="actionLoading"
+              class="px-3 py-2 rounded-lg border border-oas-line text-oas-ink text-xs font-semibold hover:bg-oas-bg disabled:opacity-50 cursor-pointer">
+              Convertir en note de prix
+            </button>
+            <button type="button" (click)="convertFacture(selectedBon)" [disabled]="actionLoading"
+              class="px-3 py-2 rounded-lg bg-oas-ok text-white text-xs font-bold hover:opacity-90 disabled:opacity-50 cursor-pointer">
+              Convertir en facture
+            </button>
+          }
         </div>
         <button type="button" (click)="print(selectedBon)" class="px-3 py-2 rounded-lg bg-oas-accent hover:bg-oas-accent-dark text-white text-xs font-bold cursor-pointer">Télécharger le PDF</button>
       </div>

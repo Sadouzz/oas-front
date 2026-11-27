@@ -51,6 +51,8 @@ export interface FactureModel {
   montantPaye: number;
   resteAPayer: number;
   statutPaiement: 'NON_PAYE' | 'PARTIEL' | 'PAYE';
+  /** Date de validation par l'agent ; null tant qu'une facture payée n'est pas validée. */
+  dateValidation?: string | null;
   recus: import('../../gestion-recu/models/recu.model').RecuModel[];
   ordreReparationId?: number | null;
   numeroOrdreReparation?: string | null;
@@ -61,7 +63,7 @@ export type FactureListModel = Pick<FactureModel,
   | 'montantTimbre' | 'timbreFiscalRate' | 'montantAutre' | 'montantTotal' | 'tauxRemiseClient'
   | 'montantRemiseClient' | 'modePaiement' | 'agentNom' | 'remarque' | 'kilometrage' | 'clientId' | 'clientNom'
   | 'clientNumero' | 'numeroClient' | 'clientMatricule' | 'immatriculation' | 'vehiculeImmatriculation'
-  | 'marque' | 'modele' | 'annee' | 'montantPaye' | 'resteAPayer' | 'statutPaiement' | 'ordreReparationId' | 'numeroOrdreReparation'>;
+  | 'marque' | 'modele' | 'annee' | 'montantPaye' | 'resteAPayer' | 'statutPaiement' | 'dateValidation' | 'ordreReparationId' | 'numeroOrdreReparation'>;
 
 export type FactureDetailsViewModel = FactureListModel & Pick<FactureModel,
   'lignesPieces' | 'lignesMainDoeuvres' | 'recus'> & Partial<Pick<FactureModel,

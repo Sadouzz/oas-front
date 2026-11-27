@@ -294,6 +294,13 @@ export class BonsLivraisonComponent extends BasePaginatedComponent implements On
     });
   }
   closeDetail(): void { this.showDetailModal = false; this.selectedBon = null; this.errorMessage = ''; this.loadingDetail = false; }
+
+  /** Ouvre la facture ou la note de prix issue de la conversion du BL (détail ouvert via ?detailId=). */
+  ouvrirDocumentLie(type: 'facture' | 'note', id: number | null | undefined): void {
+    if (!id) return;
+    this.closeDetail();
+    void this.router.navigate([type === 'facture' ? '/app/factures' : '/app/notes-prix'], { queryParams: { detailId: id } });
+  }
   openInvoiceModal(id: number, numero: string, tvaApplicable?: boolean | null): void {
     if (this.actionLoading) return;
     this.invoiceBonId = id;

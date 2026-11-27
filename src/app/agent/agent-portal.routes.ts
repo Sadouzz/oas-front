@@ -3,6 +3,9 @@ import { clientGuard } from '../core/guards/client.guard';
 import { staffGuard } from '../core/guards/staff.guard';
 import { multiRoleGuard } from '../core/guards/multi-role.guard';
 
+/** Rôles autorisés sur /api/recus */
+const RECU_ROLES = ['ROLE_AGENT', 'ROLE_SUPER_AGENT', 'ROLE_MASTER', 'ROLE_CHEF_ATELIER', 'ROLE_AGENT_MAGASIN'];
+
 export const AGENT_PORTAL_ROUTES: Routes = [
   { path: 'connexion', redirectTo: '/login', pathMatch: 'full' },
   { path: 'inscription', redirectTo: '/register', pathMatch: 'full' },
@@ -334,8 +337,21 @@ export const AGENT_PORTAL_ROUTES: Routes = [
         },
         {
           path: 'gestion-recu',
+          canActivate: [multiRoleGuard(RECU_ROLES)],
           loadComponent: () =>
             import('./gestion-recu/gestion-recu.component').then(m => m.GestionRecuComponent),
+        },
+        {
+          path: 'gestion-recu/client/:clientId',
+          canActivate: [multiRoleGuard(RECU_ROLES)],
+          loadComponent: () =>
+            import('./gestion-recu/recu-detail/recu-detail.component').then(m => m.RecuDetailComponent),
+        },
+        {
+          path: 'gestion-recu/:id',
+          canActivate: [multiRoleGuard(RECU_ROLES)],
+          loadComponent: () =>
+            import('./gestion-recu/recu-detail/recu-detail.component').then(m => m.RecuDetailComponent),
         },
         {
           path: 'historique-facturation',

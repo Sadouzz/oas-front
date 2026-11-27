@@ -12,6 +12,8 @@ export interface NoteDePrixModel {
   montantEncaisse?: number;
   resteAPayer: number;
   statutPaiement?: 'NON_PAYE' | 'PARTIEL' | 'PAYE' | string;
+  /** Date de validation par l'agent ; null tant qu'une note payée n'est pas validée. */
+  dateValidation?: string | null;
   statut?: string;
   agentId?: number;
   agentNom?: string;

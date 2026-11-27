@@ -8,6 +8,7 @@ import { OrdreReparationService } from '../../../ordre-reparation.service';
 import { StepPretALivrerResponseDto } from '../../../models/responses/step-pret-a-livrer-response.dto';
 import { BonDeLivraisonService } from '../../../../bons-livraison/bon-de-livraison.service';
 import { FactureService } from '../../../../factures/facture.service';
+import { RecuService } from '../../../../gestion-recu/recu.service';
 import { FactureModel } from '../../../../factures/models/facture.model';
 import { modePaiementRecu } from '../../../../factures/models/facture-mode-paiement';
 import { ClientService } from '../../../../clients/client.service';
@@ -36,6 +37,7 @@ export class StepPretALivrerComponent implements OnInit {
   private ordreService = inject(OrdreReparationService);
   private bonDeLivraisonService = inject(BonDeLivraisonService);
   private factureService = inject(FactureService);
+  private recuService = inject(RecuService);
   private clientService = inject(ClientService);
   private noteDePrixService = inject(NoteDePrixService);
   private pdfLayoutDialog = inject(PdfLayoutDialogService);
@@ -348,13 +350,23 @@ export class StepPretALivrerComponent implements OnInit {
 
   confirmerPaiementIntegral(): void {
     if (!this.facture?.id || !this.canConfirmFullPayment) return;
+    const clientId = this.facture.clientId;
+    if (!clientId) {
+      this.fullPaymentErrorMessage = 'Client de la facture introuvable : impossible d’ouvrir son reçu.';
+      return;
+    }
     this.fullPaymentSaving = true;
     this.fullPaymentErrorMessage = '';
-    this.factureService.payFactureTotal(this.facture.id, this.fullPaymentMethod).subscribe({
-      next: (recu: any) => {
+    // Versement du reste de la facture sur le reçu du client. Si le client a une facture
+    // plus ancienne impayée, le serveur la règle en premier.
+    this.recuService.verserPourClient(clientId, {
+      montant: Math.round(this.factureResteAPayer * 100) / 100,
+      modePaiement: this.fullPaymentMethod,
+    }).subscribe({
+      next: recu => {
         this.fullPaymentSaving = false;
         this.showFullPaymentModal = false;
-        this.successMessage = `Paiement intégral enregistré${recu?.numero ? ` · reçu ${recu.numero}` : ''}.`;
+        this.successMessage = `Paiement intégral enregistré${recu?.numeroRecu ? ` · reçu n° ${recu.numeroRecu}` : ''}.`;
         this.cdr.markForCheck();
         this.router.navigate(['/app/ordres-reparation', this.ordreId, 'livraison']);
       },

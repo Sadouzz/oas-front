@@ -29,6 +29,11 @@ export class NoteDePrixService {
     return this.http.put<NoteDePrixModel>(`${this.api}/${id}`, data);
   }
 
+  /** Valide une note de prix entièrement payée : elle passe de « À valider » à « Payé ». */
+  valider(id: number): Observable<NoteDePrixModel> {
+    return this.http.post<NoteDePrixModel>(`${this.api}/${id}/valider`, null);
+  }
+
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.api}/${id}`);
   }

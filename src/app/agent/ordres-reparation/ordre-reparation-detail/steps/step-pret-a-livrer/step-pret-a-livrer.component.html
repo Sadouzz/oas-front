@@ -224,11 +224,11 @@
                   @for (recu of facture.recus; track recu.id) {
                     <div class="py-2 first:pt-0 last:pb-0 text-xs space-y-0.5">
                       <div class="flex justify-between gap-2">
-                        <strong class="font-mono text-oas-ink">{{ recu.numero }}</strong>
+                        <strong class="font-mono text-oas-ink" [class.line-through]="recu.annule">{{ recu.numero }}</strong>
                         <span class="text-oas-muted">{{ formatDate(recu.datePaiement) }}</span>
                       </div>
                       <div class="flex justify-between text-oas-muted">
-                        <span>{{ modePaiementLabel(recu.modePaiement) }}</span>
+                        <span [class.text-oas-bad]="recu.annule">{{ recu.annule ? 'Annulé' : 'Encaissé' }}</span>
                         <span class="font-bold text-oas-ink">{{ fmt(recu.montantEncaisse ?? recu.montant) }} FCFA</span>
                       </div>
                     </div>
